@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { generateSEOMetadata } from "./lib/utils/seoMetadata";
 import { Urbanist } from "next/font/google";
 import dynamicImport from "next/dynamic";
 import "./globals.css";
@@ -21,39 +22,14 @@ const urbanist = Urbanist({
   variable: "--font-urbanist",
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://sayso-nine.vercel.app'),
-  title: "sayso - Discover trusted sayso near you",
+import { generateSEOMetadata } from "./lib/utils/seoMetadata";
+
+export const metadata: Metadata = generateSEOMetadata({
+  title: "SAYSO (Home) | Discover trusted local gems near you",
   description: "Find amazing local businesses, restaurants, and experiences in your area with personalized recommendations and trusted reviews.",
   keywords: ["local business", "restaurants", "reviews", "recommendations", "sayso"],
-  authors: [{ name: "sayso" }],
-  creator: "sayso",
-  openGraph: {
-    title: "sayso - Discover trusted local gems near you!",
-    description: "Find amazing local businesses, restaurants, and experiences in your area with personalized recommendations and trusted reviews.",
-    url: "/",
-    siteName: "sayso",
-    images: [], // Empty array is valid for OpenGraph
-    locale: "en_US",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "sayso - Discover trusted sayso near you",
-    description: "Find amazing local businesses, restaurants, and experiences in your area with personalized recommendations and trusted reviews.",
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-    },
-  },
-};
+  url: "/",
+});
 
 export const runtime = "nodejs";
 // Force dynamic rendering at layout level to prevent static generation issues

@@ -8,6 +8,7 @@
 import { memo, useState, useEffect, useMemo } from "react";
 import nextDynamic from "next/dynamic";
 import { ChevronUp } from "react-feather";
+import { usePredefinedPageTitle } from "../hooks/usePageTitle";
 import HeroCarousel from "../components/Hero/HeroCarousel";
 import BusinessRow from "../components/BusinessRow/BusinessRow";
 import BusinessRowSkeleton from "../components/BusinessRow/BusinessRowSkeleton";
@@ -46,6 +47,7 @@ const Footer = nextDynamic(() => import("../components/Footer/Footer"), {
 const MemoizedBusinessRow = memo(BusinessRow);
 
 export default function Home() {
+  usePredefinedPageTitle('home');
   const { businesses: forYouBusinesses, loading: forYouLoading, error: forYouError } = useForYouBusinesses(10);
   const { businesses: trendingBusinesses, loading: trendingLoading, error: trendingError } = useTrendingBusinesses(10);
   const { businesses: allBusinesses } = useBusinesses({ limit: 200, sortBy: "total_rating", sortOrder: "desc", feedStrategy: "mixed" });

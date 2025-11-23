@@ -12,6 +12,7 @@ import SearchInput from "../components/SearchInput/SearchInput";
 import FilterModal, { FilterState } from "../components/FilterModal/FilterModal";
 import { ChevronLeft, ChevronRight, ChevronUp } from "react-feather";
 import { Loader } from "../components/Loader/Loader";
+import { usePredefinedPageTitle } from "../hooks/usePageTitle";
 
 // Note: dynamic and revalidate cannot be exported from client components
 // Client components are automatically dynamic
@@ -19,6 +20,7 @@ import { Loader } from "../components/Loader/Loader";
 const ITEMS_PER_PAGE = 12;
 
 export default function ForYouPage() {
+  usePredefinedPageTitle('forYou');
   const { interests, subcategories, dealbreakers } = useUserPreferences();
   const dealbreakerIds = useMemo(
     () => (dealbreakers || []).map((dealbreaker) => dealbreaker.id),

@@ -9,6 +9,7 @@ import VerifiedBadge from "../VerifiedBadge/VerifiedBadge";
 import OptimizedImage from "../Performance/OptimizedImage";
 import Tooltip from "../Tooltip/Tooltip";
 import { useSavedItems } from "../../contexts/SavedItemsContext";
+import { useToast } from "../../contexts/ToastContext";
 import { getCategoryPng, getCategoryPngFromLabels, isPngIcon } from "../../utils/categoryToPngMapping";
 
 type Percentiles = {
@@ -73,6 +74,7 @@ function BusinessCard({
 }) {
   const router = useRouter();
   const { toggleSavedItem, isItemSaved } = useSavedItems();
+  const { showToast } = useToast();
   const idForSnap = useMemo(() => `business-${business.id}`, [business.id]);
 
   const [imgError, setImgError] = useState(false);
@@ -128,8 +130,15 @@ function BusinessCard({
   };
 
   const handleWriteReview = () => router.push(reviewRoute);
-  const handleBookmark = () => {
-    toggleSavedItem(business.id);
+  
+  const handleBookmark = async () => {
+    const wasSaved = isItemSaved(business.id);
+    const success = await toggleSavedItem(business.id);
+    
+    if (success) {
+      // Toast notification is handled by SavedItemsContext
+    }
+    
     setShowInfoPopup(false);
   };
   
@@ -138,15 +147,32 @@ function BusinessCard({
       const shareUrl = `${window.location.origin}${businessProfileRoute}`;
       const shareText = `Check out ${business.name} on sayso!`;
       
-      if (navigator.share) {
-        await navigator.share({
-          title: business.name,
-          text: shareText,
-          url: shareUrl,
-        });
-      } else {
+      // Try Web Share API first (mobile/native apps)
+      if (navigator.share && navigator.canShare && navigator.canShare({ title: business.name, text: shareText, url: shareUrl })) {
+        try {
+          await navigator.share({
+            title: business.name,
+            text: shareText,
+            url: shareUrl,
+          });
+          showToast('Shared successfully!', 'success', 2000);
+          setShowInfoPopup(false);
+          return;
+        } catch (shareError: any) {
+          // If user cancelled, don't show error
+          if (shareError.name === 'AbortError') {
+            return;
+          }
+          // If share failed, fall through to clipboard
+        }
+      }
+      
+      // Fallback to clipboard
+      try {
         await navigator.clipboard.writeText(shareUrl);
-        // Show a brief visual feedback
+        showToast('Link copied to clipboard!', 'success', 2000);
+        
+        // Show visual feedback on button
         const shareBtn = infoPopupRef.current?.querySelector('[data-share-btn]') as HTMLElement;
         if (shareBtn) {
           const originalText = shareBtn.getAttribute('aria-label');
@@ -155,11 +181,16 @@ function BusinessCard({
             if (originalText) shareBtn.setAttribute('aria-label', originalText);
           }, 2000);
         }
+        
+        setShowInfoPopup(false);
+      } catch (clipboardError) {
+        // Clipboard API failed - show error
+        showToast('Failed to copy link. Please copy manually.', 'sage', 3000);
+        console.error('Clipboard error:', clipboardError);
       }
-      setShowInfoPopup(false);
     } catch (error) {
-      // User cancelled or error occurred
-      console.log('Share cancelled or failed:', error);
+      console.error('Share error:', error);
+      showToast('Failed to share. Please try again.', 'sage', 3000);
     }
   };
 

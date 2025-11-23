@@ -6,6 +6,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { Loader } from "@/app/components/Loader/Loader";
+import { usePredefinedPageTitle } from "@/app/hooks/usePageTitle";
 import {
   ArrowLeft,
   Award,
@@ -887,5 +888,6 @@ function ProfileContent() {
 }
 
 export default function ProfilePage() {
+  usePredefinedPageTitle('profile');
   return <ProfileContent />;
 }

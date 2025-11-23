@@ -12,6 +12,7 @@ import { useUserPreferences } from "../hooks/useUserPreferences";
 import SearchInput from "../components/SearchInput/SearchInput";
 import FilterModal, { FilterState } from "../components/FilterModal/FilterModal";
 import { Loader } from "../components/Loader/Loader";
+import { usePredefinedPageTitle } from "../hooks/usePageTitle";
 
 // Note: dynamic and revalidate cannot be exported from client components
 // Client components are automatically dynamic
@@ -19,6 +20,7 @@ import { Loader } from "../components/Loader/Loader";
 const ITEMS_PER_PAGE = 12;
 
 export default function TrendingPage() {
+  usePredefinedPageTitle('trending');
   const [currentPage, setCurrentPage] = useState(1);
   const { interests, subcategories, dealbreakers } = useUserPreferences();
 

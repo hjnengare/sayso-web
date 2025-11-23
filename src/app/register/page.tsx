@@ -8,6 +8,7 @@ import { useToast } from "../contexts/ToastContext";
 import { usePrefersReducedMotion } from "../utils/hooks/usePrefersReducedMotion";
 import { useScrollReveal } from "../hooks/useScrollReveal";
 import { RateLimiter } from "../lib/rateLimiting";
+import { usePredefinedPageTitle } from "../hooks/usePageTitle";
 
 // Import shared components
 import { authStyles } from "../components/Auth/Shared/authStyles";
@@ -22,6 +23,7 @@ import { RegistrationProgress } from "../components/Auth/Register/RegistrationPr
 import { usePasswordStrength, validatePassword } from "../components/Auth/Register/usePasswordStrength";
 
 export default function RegisterPage() {
+  usePredefinedPageTitle('register');
   const prefersReduced = usePrefersReducedMotion();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");

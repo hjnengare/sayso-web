@@ -15,6 +15,7 @@ import BusinessInfoModal, { BusinessInfo } from "../../../components/BusinessInf
 import { PremiumReviewCard } from "../../../components/Business/PremiumReviewCard";
 import { TestimonialCarousel } from "../../../components/Business/TestimonialCarousel";
 import Footer from "../../../components/Footer/Footer";
+import { usePageTitle } from "../../../hooks/usePageTitle";
 
 // CSS animations matching business profile
 const animations = `
@@ -160,6 +161,13 @@ function WriteReviewContent() {
 
   // Memoize computed values
   const businessName = useMemo(() => business?.name || "Loading...", [business?.name]);
+  
+  // Update page title dynamically when business name is available
+  useEffect(() => {
+    if (businessName && businessName !== "Loading...") {
+      document.title = `SAYSO (Review ${businessName}) | Write a review for this business`;
+    }
+  }, [businessName]);
   
   const isPngPlaceholder = (url: string | null | undefined) => {
     if (!url) return true;

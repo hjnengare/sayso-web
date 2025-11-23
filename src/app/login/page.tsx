@@ -6,6 +6,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
 import { useScrollReveal } from "../hooks/useScrollReveal";
 import { RateLimiter } from "../lib/rateLimiting";
+import { usePredefinedPageTitle } from "../hooks/usePageTitle";
 
 // Import shared components
 import { authStyles } from "../components/Auth/Shared/authStyles";
@@ -15,6 +16,7 @@ import { PasswordInput } from "../components/Auth/Shared/PasswordInput";
 import { SocialLoginButtons } from "../components/Auth/Shared/SocialLoginButtons";
 
 export default function LoginPage() {
+  usePredefinedPageTitle('login');
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
