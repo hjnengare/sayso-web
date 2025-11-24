@@ -187,7 +187,31 @@ export class AuthService {
   static async getCurrentUser(): Promise<AuthUser | null> {
     const supabase = this.getClient();
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error } = await supabase.auth.getUser();
+
+      // Handle refresh token errors - clear invalid session
+      if (error) {
+        const errorMessage = error.message?.toLowerCase() || '';
+        if (
+          errorMessage.includes('refresh token') ||
+          errorMessage.includes('invalid refresh token') ||
+          errorMessage.includes('refresh token not found') ||
+          error.code === 'refresh_token_not_found'
+        ) {
+          console.warn('Invalid refresh token detected, clearing session:', error.message);
+          // Clear the invalid session
+          try {
+            await supabase.auth.signOut();
+          } catch (signOutError) {
+            // Ignore sign out errors - we're already handling an error state
+            console.warn('Error during sign out after refresh token failure:', signOutError);
+          }
+          return null;
+        }
+        // For other errors, log and return null
+        console.error('Error getting current user:', error);
+        return null;
+      }
 
       if (!user) return null;
 
@@ -202,7 +226,26 @@ export class AuthService {
         profile: profile
       };
     } catch (error) {
-      console.error('Error getting current user:', error);
+      // Handle unexpected errors
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const lowerMessage = errorMessage.toLowerCase();
+      
+      // Check if it's a refresh token error
+      if (
+        lowerMessage.includes('refresh token') ||
+        lowerMessage.includes('invalid refresh token') ||
+        lowerMessage.includes('refresh token not found')
+      ) {
+        console.warn('Invalid refresh token detected in catch block, clearing session:', errorMessage);
+        try {
+          const supabase = this.getClient();
+          await supabase.auth.signOut();
+        } catch (signOutError) {
+          console.warn('Error during sign out after refresh token failure:', signOutError);
+        }
+      } else {
+        console.error('Error getting current user:', error);
+      }
       return null;
     }
   }

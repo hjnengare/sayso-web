@@ -41,9 +41,6 @@ const nextConfig: NextConfig = {
   // Compress output
   compress: true,
   
-  // Enable SWC minification
-  swcMinify: true,
-  
   // Headers for static asset caching
   async headers() {
     return [

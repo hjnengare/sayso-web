@@ -41,7 +41,7 @@ export function SavedItemsProvider({ children }: SavedItemsProviderProps) {
       
       if (!response.ok) {
         if (response.status === 401) {
-          // User not authenticated
+          // User not authenticated - this is expected for logged out users
           setSavedItems([]);
           setIsLoading(false);
           return;
@@ -49,35 +49,47 @@ export function SavedItemsProvider({ children }: SavedItemsProviderProps) {
         
         // Try to get error details from response
         let errorMessage = 'Failed to fetch saved businesses';
+        let errorCode: string | undefined;
         try {
           const errorData = await response.json();
-          errorMessage = errorData.error || errorMessage;
+          errorMessage = errorData.error || errorData.message || errorMessage;
+          errorCode = errorData.code;
         } catch {
           // If JSON parsing fails, use default message
         }
         
-        // Log error details for debugging
-        const errorDetails = {
-          status: response.status,
-          statusText: response.statusText,
-          message: errorMessage,
-        };
-        
         // Check if it's a table/permission error (similar to rate limiting)
         const isTableError = response.status === 500 && (
-          errorMessage.includes('relation') ||
-          errorMessage.includes('does not exist') ||
-          errorMessage.includes('permission')
+          errorCode === '42P01' || // relation does not exist
+          errorCode === '42501' || // insufficient privilege
+          errorMessage.toLowerCase().includes('relation') ||
+          errorMessage.toLowerCase().includes('does not exist') ||
+          errorMessage.toLowerCase().includes('permission denied')
         );
         
+        // Only log meaningful errors, not expected ones
         if (isTableError) {
-          console.warn('Saved businesses table not accessible:', errorDetails);
-        } else {
-          console.error('Error fetching saved items:', errorDetails);
+          console.warn('Saved businesses table not accessible, feature disabled:', {
+            status: response.status,
+            code: errorCode,
+          });
+        } else if (response.status >= 500) {
+          // Only log server errors, not client errors (4xx)
+          const errorDetails = {
+            status: response.status,
+            statusText: response.statusText,
+            message: errorMessage,
+            code: errorCode,
+          };
+          console.warn('Error fetching saved items (non-critical):', errorDetails);
         }
         
         // Don't throw error - just keep existing saved items
         // This prevents loss of data if API temporarily fails
+        // Set empty array if no items were previously loaded
+        if (savedItems.length === 0) {
+          setSavedItems([]);
+        }
         return;
       }
 
@@ -85,18 +97,31 @@ export function SavedItemsProvider({ children }: SavedItemsProviderProps) {
       const businessIds = (data.businesses || []).map((b: any) => b.id);
       setSavedItems(businessIds);
     } catch (error) {
-      // Better error logging
+      // Better error logging - only log if it's a network/unexpected error
       const errorMessage = error instanceof Error ? error.message : String(error);
-      const errorStack = error instanceof Error ? error.stack : undefined;
       
-      console.error('Error fetching saved items:', {
-        message: errorMessage,
-        stack: errorStack,
-        error,
-      });
+      // Check if it's a network error
+      const isNetworkError = errorMessage.includes('fetch') || 
+                           errorMessage.includes('network') ||
+                           errorMessage.includes('Failed to fetch');
+      
+      if (isNetworkError) {
+        console.warn('Network error fetching saved items (non-critical):', errorMessage);
+      } else {
+        // Only log unexpected errors
+        const errorStack = error instanceof Error ? error.stack : undefined;
+        console.warn('Error fetching saved items (non-critical):', {
+          message: errorMessage,
+          stack: errorStack,
+        });
+      }
       
       // On error, keep existing saved items (don't clear them)
       // This prevents loss of data if API temporarily fails
+      // Set empty array if no items were previously loaded
+      if (savedItems.length === 0) {
+        setSavedItems([]);
+      }
     } finally {
       setIsLoading(false);
     }

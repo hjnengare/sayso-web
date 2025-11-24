@@ -4,9 +4,9 @@ import { getServerSupabase } from "@/app/lib/supabase/server";
 const INTERESTS_DATA = [
   { id: 'food-drink', name: 'Food & Drink' },
   { id: 'beauty-wellness', name: 'Beauty & Wellness' },
-  { id: 'home-services', name: 'Home & Services' },
+  { id: 'professional-services', name: 'Professional Services' },
   { id: 'outdoors-adventure', name: 'Outdoors & Adventure' },
-  { id: 'nightlife-entertainment', name: 'Nightlife & Entertainment' },
+  { id: 'experiences-entertainment', name: 'Entertainment & Experiences' },
   { id: 'arts-culture', name: 'Arts & Culture' },
   { id: 'family-pets', name: 'Family & Pets' },
   { id: 'shopping-lifestyle', name: 'Shopping & Lifestyle' }

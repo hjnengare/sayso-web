@@ -1,12 +1,27 @@
 import { MetadataRoute } from 'next';
-import { getServerSupabase } from './lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 
 /**
  * Dynamic XML Sitemap Generator
  * Generates sitemap with all static pages and dynamic business pages
+ * 
+ * Note: This sitemap is dynamic and uses direct Supabase connection
+ * to avoid cookie dependencies during static generation
  */
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://sayso-nine.vercel.app';
+
+// Force dynamic rendering for sitemap
+export const dynamic = 'force-dynamic';
+export const revalidate = 3600; // Revalidate every hour
+
+// Create a direct Supabase client for sitemap (no cookies needed)
+function getSitemapSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+}
 
 // Static pages with their priorities and change frequencies
 const staticPages = [
@@ -77,7 +92,7 @@ const staticPages = [
  */
 async function getBusinesses(): Promise<Array<{ slug: string; updated_at: string }>> {
   try {
-    const supabase = await getServerSupabase();
+    const supabase = getSitemapSupabase();
     
     // Fetch only active businesses with slugs
     const { data: businesses, error } = await supabase
@@ -112,7 +127,7 @@ async function getBusinesses(): Promise<Array<{ slug: string; updated_at: string
  */
 async function getCategories(): Promise<Array<{ slug: string }>> {
   try {
-    const supabase = await getServerSupabase();
+    const supabase = getSitemapSupabase();
     
     // Get unique categories
     const { data, error } = await supabase
@@ -143,7 +158,7 @@ async function getCategories(): Promise<Array<{ slug: string }>> {
  */
 async function getCityCategorySlugs(): Promise<Array<{ slug: string }>> {
   try {
-    const supabase = await getServerSupabase();
+    const supabase = getSitemapSupabase();
     
     // Get unique location-category combinations
     const { data, error } = await supabase

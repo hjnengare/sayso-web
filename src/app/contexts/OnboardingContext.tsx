@@ -59,9 +59,9 @@ const ONBOARDING_STEPS = [
 const FALLBACK_INTERESTS: Interest[] = [
   { id: 'food-drink', name: 'Food & Drink', description: 'Restaurants, cafes, and culinary experiences', icon: 'restaurant' },
   { id: 'beauty-wellness', name: 'Beauty & Wellness', description: 'Gyms, spas, and personal care services', icon: 'cut' },
-  { id: 'home-services', name: 'Home & Services', description: 'Home improvement and professional services', icon: 'home' },
+  { id: 'professional-services', name: 'Professional Services', description: 'Home improvement and professional services', icon: 'home' },
   { id: 'outdoors-adventure', name: 'Outdoors & Adventure', description: 'Outdoor activities and adventures', icon: 'bicycle' },
-  { id: 'nightlife-entertainment', name: 'Nightlife & Entertainment', description: 'Movies, shows, and nightlife', icon: 'musical-notes' },
+  { id: 'experiences-entertainment', name: 'Entertainment & Experiences', description: 'Movies, shows, and nightlife', icon: 'musical-notes' },
   { id: 'arts-culture', name: 'Arts & Culture', description: 'Museums, galleries, and cultural experiences', icon: 'color-palette' },
   { id: 'family-pets', name: 'Family & Pets', description: 'Family activities and pet services', icon: 'heart' },
   { id: 'shopping-lifestyle', name: 'Shopping & Lifestyle', description: 'Retail stores and lifestyle services', icon: 'bag' }
