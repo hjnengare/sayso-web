@@ -187,23 +187,6 @@ function InterestsContent() {
     }
   }, [canProceed, nextStep, selectedInterests.length]);
 
-  const handleSkip = useCallback(async () => {
-    if (isNavigating) return;
-    setIsNavigating(true);
-
-    console.log("Analytics: Skip button clicked", {
-      selections: selectedInterests.length,
-    });
-
-    try {
-      // Move to next step in onboarding workflow
-      await nextStep();
-    } catch (error) {
-      console.error("Error skipping:", error);
-      setIsNavigating(false);
-    }
-  }, [isNavigating, nextStep]);
-
   const hydratedSelected = mounted ? selectedInterests : [];
   const list = INTERESTS;
 
@@ -247,7 +230,6 @@ function InterestsContent() {
             selectedCount={hydratedSelected.length}
             minSelections={MIN_SELECTIONS}
             onContinue={handleNext}
-            onSkip={handleSkip}
           />
         </div>
       </OnboardingLayout>

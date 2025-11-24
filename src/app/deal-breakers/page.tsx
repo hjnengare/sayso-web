@@ -144,14 +144,6 @@ function DealBreakersContent() {
 
   const canProceed = selectedDealbreakers.length > 0 && !isNavigating;
 
-  const handleSkip = async () => {
-    try {
-      await handleNext();
-    } catch (error) {
-      console.error("Error skipping deal-breakers:", error);
-    }
-  };
-
   return (
     <>
       <DealBreakerStyles />
@@ -172,7 +164,6 @@ function DealBreakersContent() {
             isNavigating={isNavigating}
             selectedCount={selectedDealbreakers.length}
             onComplete={handleNext}
-            onSkip={handleSkip}
           />
         </div>
       </OnboardingLayout>

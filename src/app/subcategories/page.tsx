@@ -144,14 +144,6 @@ function SubcategoriesContent() {
     );
   }
 
-  const handleSkip = async () => {
-    try {
-      await handleNext();
-    } catch (error) {
-      console.error("Error skipping subcategories:", error);
-    }
-  };
-
   return (
     <>
       <SubcategoryStyles />
@@ -186,7 +178,6 @@ function SubcategoriesContent() {
             isLoading={isLoading}
             selectedCount={selectedSubcategories?.length || 0}
             onContinue={handleNext}
-            onSkip={handleSkip}
           />
         </div>
       </OnboardingLayout>

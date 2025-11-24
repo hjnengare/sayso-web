@@ -8,7 +8,6 @@ interface InterestActionsProps {
   selectedCount: number;
   minSelections: number;
   onContinue: () => void;
-  onSkip: () => void;
 }
 
 export default function InterestActions({ 
@@ -16,8 +15,7 @@ export default function InterestActions({
   isNavigating, 
   selectedCount, 
   minSelections, 
-  onContinue, 
-  onSkip 
+  onContinue
 }: InterestActionsProps) {
   const sfPro = {
     fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
@@ -49,26 +47,6 @@ export default function InterestActions({
           </>
         )}
       </button>
-
-      <div className="text-center">
-        <button
-          type="button"
-          className="inline-block text-sm text-charcoal/60 hover:text-charcoal transition-colors duration-300 focus:outline-none focus:underline underline decoration-dotted"
-          aria-label="Skip interest selection for now"
-          style={sfPro}
-          onClick={onSkip}
-          disabled={isNavigating}
-        >
-          Skip for now
-        </button>
-        <div className="mt-1 text-sm sm:text-xs text-charcoal/50 max-w-sm mx-auto" style={sfPro}>
-          {selectedCount < minSelections ? (
-            <span>We&apos;ll suggest popular local businesses instead</span>
-          ) : (
-            <span>You can always update your interests later in settings</span>
-          )}
-        </div>
-      </div>
     </div>
   );
 }

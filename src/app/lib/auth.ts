@@ -253,7 +253,7 @@ export class AuthService {
           console.warn('Error during sign out after session failure:', signOutError);
         }
       } else {
-        console.error('Error getting current user:', error);
+      console.error('Error getting current user:', error);
       }
       return null;
     }

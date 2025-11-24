@@ -5,15 +5,13 @@ interface DealBreakerActionsProps {
   isNavigating: boolean;
   selectedCount: number;
   onComplete: () => void;
-  onSkip: () => void;
 }
 
 export default function DealBreakerActions({ 
   canProceed, 
   isNavigating, 
   selectedCount, 
-  onComplete, 
-  onSkip 
+  onComplete
 }: DealBreakerActionsProps) {
   const sfPro = {
     fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
@@ -41,19 +39,6 @@ export default function DealBreakerActions({
           ) : (
             `Complete Setup ${selectedCount > 0 ? `(${selectedCount} selected)` : ''}`
           )}
-        </button>
-      </div>
-
-      {/* Skip for now */}
-      <div className="text-center mt-3">
-        <button
-          type="button"
-          className="inline-block text-sm text-charcoal/60 hover:text-charcoal transition-colors duration-300 focus:outline-none focus:underline underline decoration-dotted"
-          aria-label="Skip deal-breakers for now"
-          style={sfPro}
-          onClick={onSkip}
-        >
-          Skip for now
         </button>
       </div>
     </>

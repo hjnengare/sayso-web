@@ -36,37 +36,56 @@ export class RateLimiter {
 
       if (fetchError) {
         // Extract error details with fallbacks
-        const errorMessage = fetchError.message || String(fetchError) || 'Unknown error';
+        let errorMessage = fetchError.message || '';
+        const stringError = String(fetchError);
+        // Only use String(fetchError) if it's not the generic object string
+        if (!errorMessage && stringError && stringError !== '[object Object]') {
+          errorMessage = stringError;
+        }
+        errorMessage = errorMessage || 'Unknown error';
+        
         const errorCode = fetchError.code || (fetchError as any)?.code || 'unknown';
         const errorDetails = fetchError.details || (fetchError as any)?.details || null;
         const errorHint = fetchError.hint || (fetchError as any)?.hint || null;
         
-        // Build error details object only if we have meaningful data
-        const errorInfo: Record<string, any> = {
-          message: errorMessage,
-          code: errorCode,
-        };
-        
-        if (errorDetails) errorInfo.details = errorDetails;
-        if (errorHint) errorInfo.hint = errorHint;
+        // Check if error is completely empty/unstructured
+        const isEmptyError = 
+          (errorMessage === 'Unknown error' || errorMessage === '[object Object]' || !errorMessage) &&
+          (errorCode === 'unknown' || !errorCode) &&
+          !errorDetails &&
+          !errorHint &&
+          (!fetchError || Object.keys(fetchError).length === 0);
         
         // Check if it's a table/permission error
         const isTableError = errorCode === '42P01' || // relation does not exist
                             errorCode === '42501' || // insufficient privilege
-                            errorMessage.toLowerCase().includes('relation') ||
-                            errorMessage.toLowerCase().includes('does not exist') ||
-                            errorMessage.toLowerCase().includes('permission denied');
+                            (errorMessage && (
+                              errorMessage.toLowerCase().includes('relation') ||
+                              errorMessage.toLowerCase().includes('does not exist') ||
+                              errorMessage.toLowerCase().includes('permission denied')
+                            ));
         
         if (isTableError) {
+          // Build error info for table errors
+          const errorInfo: Record<string, any> = {
+            message: errorMessage,
+            code: errorCode,
+          };
+          if (errorDetails) errorInfo.details = errorDetails;
+          if (errorHint) errorInfo.hint = errorHint;
           console.warn('Rate limit table not accessible, rate limiting disabled:', errorInfo);
+        } else if (isEmptyError) {
+          // If error is completely empty/unstructured, silently allow (no logging)
+          // This prevents console spam from empty error objects
         } else {
-          // Only log if we have meaningful error information
-          if (errorMessage !== 'Unknown error' || errorCode !== 'unknown') {
-            console.error('Error fetching rate limit:', errorInfo);
-          } else {
-            // If error is completely empty/unstructured, log the raw error
-            console.warn('Rate limit check failed with unstructured error, allowing attempt:', fetchError);
-          }
+          // Build error details object only if we have meaningful data
+          const errorInfo: Record<string, any> = {
+            message: errorMessage,
+            code: errorCode,
+          };
+          if (errorDetails) errorInfo.details = errorDetails;
+          if (errorHint) errorInfo.hint = errorHint;
+          console.warn('Rate limit check encountered an error, allowing attempt:', errorInfo);
         }
         
         // Allow the attempt on error to avoid blocking legitimate users
