@@ -675,7 +675,7 @@ function BusinessCard({
                 </div>
 
                 {/* Percentile chips - Inside wrapper */}
-                <div className="flex items-center justify-center gap-2 flex-wrap min-h-[32px] py-2 md:bg-off-white/40 md:rounded-[20px] md:border md:border-white/30">
+                <div className="flex items-center justify-center gap-1 flex-wrap min-h-[28px] max-h-[56px] py-1 md:bg-off-white/40 md:rounded-[20px] md:border md:border-white/30">
                   <PercentileChip
                     label="punctuality"
                     value={business.percentiles?.punctuality || 0}

@@ -46,14 +46,55 @@ export function SavedItemsProvider({ children }: SavedItemsProviderProps) {
           setIsLoading(false);
           return;
         }
-        throw new Error('Failed to fetch saved businesses');
+        
+        // Try to get error details from response
+        let errorMessage = 'Failed to fetch saved businesses';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          // If JSON parsing fails, use default message
+        }
+        
+        // Log error details for debugging
+        const errorDetails = {
+          status: response.status,
+          statusText: response.statusText,
+          message: errorMessage,
+        };
+        
+        // Check if it's a table/permission error (similar to rate limiting)
+        const isTableError = response.status === 500 && (
+          errorMessage.includes('relation') ||
+          errorMessage.includes('does not exist') ||
+          errorMessage.includes('permission')
+        );
+        
+        if (isTableError) {
+          console.warn('Saved businesses table not accessible:', errorDetails);
+        } else {
+          console.error('Error fetching saved items:', errorDetails);
+        }
+        
+        // Don't throw error - just keep existing saved items
+        // This prevents loss of data if API temporarily fails
+        return;
       }
 
       const data = await response.json();
       const businessIds = (data.businesses || []).map((b: any) => b.id);
       setSavedItems(businessIds);
     } catch (error) {
-      console.error('Error fetching saved items:', error);
+      // Better error logging
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      
+      console.error('Error fetching saved items:', {
+        message: errorMessage,
+        stack: errorStack,
+        error,
+      });
+      
       // On error, keep existing saved items (don't clear them)
       // This prevents loss of data if API temporarily fails
     } finally {

@@ -1,7 +1,5 @@
 "use client";
 
-"use client";
-
 import { getBrowserSupabase } from './supabase/client';
 
 export interface RateLimitResult {
@@ -37,7 +35,26 @@ export class RateLimiter {
         .maybeSingle();
 
       if (fetchError) {
-        console.error('Error fetching rate limit:', fetchError);
+        // Log error details properly
+        const errorDetails = {
+          message: fetchError.message || 'Unknown error',
+          code: fetchError.code || 'unknown',
+          details: fetchError.details || null,
+          hint: fetchError.hint || null,
+        };
+        
+        // Check if it's a table/permission error
+        const isTableError = fetchError.code === '42P01' || // relation does not exist
+                            fetchError.code === '42501' || // insufficient privilege
+                            fetchError.message?.includes('relation') ||
+                            fetchError.message?.includes('does not exist');
+        
+        if (isTableError) {
+          console.warn('Rate limit table not accessible, rate limiting disabled:', errorDetails);
+        } else {
+          console.error('Error fetching rate limit:', errorDetails);
+        }
+        
         // Allow the attempt on error to avoid blocking legitimate users
         return { allowed: true };
       }
@@ -106,7 +123,14 @@ export class RateLimiter {
         remainingAttempts: this.MAX_ATTEMPTS - newAttempts
       };
     } catch (error) {
-      console.error('Rate limiting error:', error);
+      // Better error logging for unexpected errors
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      console.error('Rate limiting error:', {
+        message: errorMessage,
+        stack: errorStack,
+        error,
+      });
       // Allow the attempt on error to avoid blocking legitimate users
       return { allowed: true };
     }

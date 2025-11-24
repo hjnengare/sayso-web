@@ -56,9 +56,32 @@ export async function GET(req: Request) {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching saved businesses:', error);
+      // Log detailed error information
+      const errorDetails = {
+        message: error.message || 'Unknown error',
+        code: error.code || 'unknown',
+        details: error.details || null,
+        hint: error.hint || null,
+      };
+      
+      // Check if it's a table/permission error
+      const isTableError = error.code === '42P01' || // relation does not exist
+                          error.code === '42501' || // insufficient privilege
+                          error.message?.includes('relation') ||
+                          error.message?.includes('does not exist');
+      
+      if (isTableError) {
+        console.warn('Saved businesses table not accessible:', errorDetails);
+      } else {
+        console.error('Error fetching saved businesses:', errorDetails);
+      }
+      
       return NextResponse.json(
-        { error: 'Failed to fetch saved businesses', details: error.message },
+        { 
+          error: 'Failed to fetch saved businesses',
+          details: errorDetails.message,
+          code: errorDetails.code
+        },
         { status: 500 }
       );
     }
@@ -102,9 +125,18 @@ export async function GET(req: Request) {
       count: businesses.length,
     });
   } catch (error) {
-    console.error('Error in saved businesses API:', error);
+    // Better error logging for unexpected errors
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    
+    console.error('Error in saved businesses API:', {
+      message: errorMessage,
+      stack: errorStack,
+      error,
+    });
+    
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: errorMessage },
       { status: 500 }
     );
   }

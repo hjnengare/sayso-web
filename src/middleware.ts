@@ -95,7 +95,8 @@ export async function middleware(request: NextRequest) {
   }
 
   // Check if user has completed onboarding and redirect from onboarding routes
-  if (isOnboardingRoute && user) {
+  // BUT allow access to /complete page (the celebration page)
+  if (isOnboardingRoute && user && request.nextUrl.pathname !== '/complete') {
     try {
       const { data: profile } = await supabase
         .from('profiles')

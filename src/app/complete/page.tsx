@@ -81,6 +81,10 @@ function CompletePageContent() {
 
       // Dynamically import canvas-confetti to avoid SSR issues
       import('canvas-confetti').then((confetti) => {
+        if (cancelled) return;
+        
+        console.log('🎉 Starting confetti celebration!');
+        
         const duration = 3000; // 3 seconds
         const end = Date.now() + duration;
 
@@ -107,13 +111,15 @@ function CompletePageContent() {
 
           if (Date.now() < end) requestAnimationFrame(frame);
         })();
+      }).catch((error) => {
+        console.error('Failed to load confetti:', error);
       });
 
       return () => {
         cancelled = true;
       };
     }
-  }, [updateUser, reducedMotion]);
+  }, [reducedMotion]);
 
   return (
     <>

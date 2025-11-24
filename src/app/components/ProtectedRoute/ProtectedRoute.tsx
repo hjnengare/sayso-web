@@ -87,11 +87,13 @@ export default function ProtectedRoute({
     }
 
     // If user has completed onboarding but is trying to access onboarding pages, redirect to home
+    // BUT allow access to /complete page (the celebration page that shows confetti)
     // Check if current route is an onboarding route
     const onboardingRoutes = ['/onboarding', '/interests', '/subcategories', '/deal-breakers', '/complete'];
     const isOnboardingRoute = onboardingRoutes.some(route => pathname === route || pathname?.startsWith(route + '/'));
     
-    if (user && user.profile?.onboarding_complete && isOnboardingRoute) {
+    // Allow access to /complete page even if onboarding is complete (it's the celebration page)
+    if (user && user.profile?.onboarding_complete && isOnboardingRoute && pathname !== '/complete') {
       console.log('ProtectedRoute: User completed onboarding, redirecting from onboarding route to home');
       router.push('/home');
       return;
