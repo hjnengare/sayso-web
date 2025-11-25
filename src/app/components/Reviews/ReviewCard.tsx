@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { formatDistanceToNow } from 'date-fns';
-import { Trash2, Image as ImageIcon, ChevronUp, Heart, X } from 'react-feather';
+import { Trash2, Image as ImageIcon, ChevronUp, Heart, X, MoreHorizontal, MessageCircle, Send } from 'react-feather';
 import type { ReviewWithUser } from '../../lib/types/database';
 import { useAuth } from '../../contexts/AuthContext';
 import { useReviewSubmission } from '../../hooks/useReviews';
@@ -24,14 +24,128 @@ export default function ReviewCard({
   const { likeReview, deleteReview } = useReviewSubmission();
   const [showAllImages, setShowAllImages] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
-  const [isLiked, setIsLiked] = useState(false); // In real app, this would come from backend
+  const [isLiked, setIsLiked] = useState(false);
   const [helpfulCount, setHelpfulCount] = useState(review.helpful_count);
+  const [loadingHelpful, setLoadingHelpful] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [showReplyForm, setShowReplyForm] = useState(false);
+  const [replyText, setReplyText] = useState('');
+  const [submittingReply, setSubmittingReply] = useState(false);
+  const [replies, setReplies] = useState<any[]>([]);
+  const [loadingReplies, setLoadingReplies] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const replyFormRef = useRef<HTMLDivElement>(null);
+
+  // Fetch helpful status and count on mount
+  useEffect(() => {
+    const fetchHelpfulData = async () => {
+      try {
+        // Fetch count
+        const countRes = await fetch(`/api/reviews/${review.id}/helpful/count`);
+        if (countRes.ok) {
+          const countData = await countRes.json();
+          if (typeof countData.count === 'number') {
+            setHelpfulCount(countData.count);
+          }
+        }
+
+        // Fetch current user status
+        const statusRes = await fetch(`/api/reviews/${review.id}/helpful`);
+        if (statusRes.ok) {
+          const statusData = await statusRes.json();
+          if (typeof statusData.helpful === 'boolean') {
+            setIsLiked(statusData.helpful);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching helpful data:', err);
+      }
+    };
+
+    if (user) {
+      fetchHelpfulData();
+    }
+  }, [review.id, user]);
+
+  // Fetch replies on mount
+  useEffect(() => {
+    const fetchReplies = async () => {
+      try {
+        setLoadingReplies(true);
+        const res = await fetch(`/api/reviews/${review.id}/replies`);
+        if (res.ok) {
+          const data = await res.json();
+          setReplies(data.replies || []);
+        }
+      } catch (err) {
+        console.error('Error fetching replies:', err);
+      } finally {
+        setLoadingReplies(false);
+      }
+    };
+
+    fetchReplies();
+  }, [review.id]);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showMenu]);
 
   const handleLike = async () => {
-    const result = await likeReview(review.id);
-    if (result !== null) {
-      setIsLiked(result);
-      setHelpfulCount(prev => result ? prev + 1 : prev - 1);
+    if (loadingHelpful || !user) return;
+    
+    setLoadingHelpful(true);
+    const prevHelpful = isLiked;
+    const prevCount = helpfulCount;
+
+    // Optimistic update
+    if (prevHelpful) {
+      setIsLiked(false);
+      setHelpfulCount((c) => Math.max(0, c - 1));
+    } else {
+      setIsLiked(true);
+      setHelpfulCount((c) => c + 1);
+    }
+
+    try {
+      const method = prevHelpful ? 'DELETE' : 'POST';
+      const res = await fetch(`/api/reviews/${review.id}/helpful`, {
+        method,
+      });
+
+      if (!res.ok) {
+        // Revert if server failed
+        setIsLiked(prevHelpful);
+        setHelpfulCount(prevCount);
+        const errorData = await res.json().catch(() => ({}));
+        console.error('Failed to toggle helpful:', errorData);
+      } else {
+        // Update count from server response if needed
+        const countRes = await fetch(`/api/reviews/${review.id}/helpful/count`);
+        if (countRes.ok) {
+          const countData = await countRes.json();
+          if (typeof countData.count === 'number') {
+            setHelpfulCount(countData.count);
+          }
+        }
+      }
+    } catch (err) {
+      // Revert on network error
+      console.error('Error toggling helpful:', err);
+      setIsLiked(prevHelpful);
+      setHelpfulCount(prevCount);
+    } finally {
+      setLoadingHelpful(false);
     }
   };
 
@@ -42,6 +156,35 @@ export default function ReviewCard({
       if (success && onUpdate) {
         onUpdate();
       }
+    }
+    setShowMenu(false);
+  };
+
+  const handleSubmitReply = async () => {
+    if (!replyText.trim() || !user || submittingReply) return;
+
+    setSubmittingReply(true);
+    try {
+      const res = await fetch(`/api/reviews/${review.id}/replies`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: replyText.trim() }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setReplies(prev => [data.reply, ...prev]);
+        setReplyText('');
+        setShowReplyForm(false);
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Failed to submit reply');
+      }
+    } catch (err) {
+      console.error('Error submitting reply:', err);
+      alert('Failed to submit reply');
+    } finally {
+      setSubmittingReply(false);
     }
   };
 
@@ -75,7 +218,7 @@ export default function ReviewCard({
               <div className="w-12 h-12 rounded-full p-0.5 bg-off-white ring-2 ring-white/40">
                 <Image
                   src={review.user.avatar_url}
-                  alt={review.user.name || 'User'}
+                  alt={review.user?.name || 'User'}
                   width={48}
                   height={48}
                   className="w-full h-full rounded-full object-cover group-hover:ring-2 group-hover:ring-sage/40 transition-all duration-300"
@@ -85,7 +228,7 @@ export default function ReviewCard({
           ) : (
             <div className="w-12 h-12 bg-gradient-to-br from-sage/20 to-sage/10 rounded-full flex items-center justify-center ring-2 ring-white/40 transition-shadow duration-300">
               <span className="font-urbanist text-lg font-700 text-sage">
-                {review.user.name?.[0] || 'U'}
+                {(review.user?.name || 'U')?.[0]?.toUpperCase() || 'U'}
               </span>
             </div>
           )}
@@ -95,8 +238,8 @@ export default function ReviewCard({
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-3 space-y-2 md:space-y-0">
             <div className="flex items-center space-x-3">
-              <span className="font-urbanist text-lg font-600 text-charcoal group-hover:text-sage transition-colors duration-300">
-                {review.user.name || 'Anonymous User'}
+              <span className="font-urbanist text-lg font-600 text-charcoal-700 group-hover:text-sage transition-colors duration-300">
+                {review.user?.name || 'User'}
               </span>
               <div className="flex items-center space-x-1">
                 {[...Array(5)].map((_, i) => (
@@ -131,16 +274,54 @@ export default function ReviewCard({
               <span className="font-urbanist text-sm font-600 text-charcoal/60">
                 {formatDate(review.created_at)}
               </span>
-              {user?.id === review.user_id && (
+              
+              {/* Three dots menu */}
+              <div className="relative" ref={menuRef}>
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  onClick={handleDelete}
-                  className="text-red-500 hover:text-red-600 transition-colors duration-200"
+                  onClick={() => setShowMenu(!showMenu)}
+                  className="text-charcoal/60 hover:text-charcoal transition-colors duration-200 p-1"
+                  aria-label="More options"
                 >
-                  <Trash2 size={16} />
+                  <MoreHorizontal size={18} />
                 </motion.button>
-              )}
+                
+                {showMenu && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="absolute right-0 top-full mt-2 min-w-max bg-gradient-to-br from-off-white via-off-white to-off-white/95 border border-white/60 rounded-lg shadow-lg z-50 overflow-visible backdrop-blur-md"
+                  >
+                    <div className="flex flex-row items-stretch">
+                      {user?.id === review.user_id && (
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={handleDelete}
+                          className="px-5 py-3 text-sm font-medium text-coral hover:bg-coral/10 flex items-center gap-2 transition-colors whitespace-nowrap min-w-fit"
+                        >
+                          <Trash2 size={16} />
+                          <span>Delete</span>
+                        </motion.button>
+                      )}
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => {
+                          setShowReplyForm(!showReplyForm);
+                          setShowMenu(false);
+                        }}
+                        className="px-5 py-3 text-sm font-medium text-charcoal hover:bg-sage/10 flex items-center gap-2 transition-colors whitespace-nowrap min-w-fit"
+                      >
+                        <MessageCircle size={16} />
+                        <span>Reply</span>
+                      </motion.button>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -237,29 +418,121 @@ export default function ReviewCard({
 
           {/* Actions */}
           <div className="flex items-center justify-between pt-3 border-t border-sage/10">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleLike}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-full transition-all duration-300 ${
-                isLiked
-                  ? 'bg-sage/10 text-sage'
-                  : 'text-charcoal/60 hover:bg-sage/10 hover:text-sage'
-              }`}
-              disabled={!user}
-            >
-              <Heart size={18} fill={isLiked ? "currentColor" : "none"} />
-              <span className="font-urbanist text-sm font-500">
-                Helpful ({helpfulCount})
-              </span>
-            </motion.button>
+            <div className="flex items-center gap-3">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleLike}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-full transition-all duration-300 ${
+                  isLiked
+                    ? 'bg-sage/10 text-sage'
+                    : 'text-charcoal/60 hover:bg-sage/10 hover:text-sage'
+                } ${loadingHelpful ? 'opacity-60 cursor-not-allowed' : ''}`}
+                disabled={!user || loadingHelpful}
+              >
+                <Heart size={18} fill={isLiked ? "currentColor" : "none"} />
+                <span className="font-urbanist text-sm font-500">
+                  Helpful ({helpfulCount})
+                </span>
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowReplyForm(!showReplyForm)}
+                className="flex items-center space-x-2 px-3 py-2 rounded-full transition-all duration-300 text-charcoal/60 hover:bg-sage/10 hover:text-sage"
+                disabled={!user}
+              >
+                <MessageCircle size={18} />
+                <span className="font-urbanist text-sm font-500">
+                  Reply {replies.length > 0 && `(${replies.length})`}
+                </span>
+              </motion.button>
+            </div>
 
             {!user && (
               <span className="font-urbanist text-sm sm:text-xs text-charcoal/40">
-                Login to like reviews
+                Login to interact
               </span>
             )}
           </div>
+
+          {/* Reply Form */}
+          <AnimatePresence>
+            {showReplyForm && user && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mt-4 pt-4 border-t border-sage/10"
+                ref={replyFormRef}
+              >
+                <div className="space-y-3">
+                  <textarea
+                    value={replyText}
+                    onChange={(e) => setReplyText(e.target.value)}
+                    placeholder="Write a reply..."
+                    className="w-full px-4 py-3 rounded-lg border border-sage/20 bg-off-white/50 focus:outline-none focus:ring-2 focus:ring-sage/30 focus:border-sage/40 resize-none font-urbanist text-sm"
+                    rows={3}
+                    disabled={submittingReply}
+                  />
+                  <div className="flex items-center justify-end gap-2">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => {
+                        setShowReplyForm(false);
+                        setReplyText('');
+                      }}
+                      className="px-4 py-2 text-sm font-medium text-charcoal/60 hover:text-charcoal transition-colors"
+                      disabled={submittingReply}
+                    >
+                      Cancel
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={handleSubmitReply}
+                      disabled={!replyText.trim() || submittingReply}
+                      className="px-4 py-2 text-sm font-medium bg-sage text-white rounded-lg hover:bg-sage/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                      <Send size={16} />
+                      <span>{submittingReply ? 'Sending...' : 'Send'}</span>
+                    </motion.button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Replies List */}
+          {replies.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-sage/10 space-y-3">
+              <h5 className="font-urbanist text-sm font-semibold text-charcoal/70 mb-3">
+                Replies ({replies.length})
+              </h5>
+              {replies.map((reply) => (
+                <motion.div
+                  key={reply.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="pl-4 border-l-2 border-sage/20 bg-off-white/30 rounded-r-lg p-3"
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-urbanist text-sm font-semibold text-charcoal-700">
+                      {reply.user?.name || 'User'}
+                    </span>
+                    <span className="font-urbanist text-xs text-charcoal/50">
+                      {formatDate(reply.created_at)}
+                    </span>
+                  </div>
+                  <p className="font-urbanist text-sm text-charcoal/80">
+                    {reply.content}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

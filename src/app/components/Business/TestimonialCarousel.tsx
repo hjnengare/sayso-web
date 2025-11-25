@@ -86,7 +86,12 @@ export function TestimonialCarousel({ reviews, onDelete }: TestimonialCarouselPr
         {reviews.map((review, index) => {
           const profile = review.profile || {};
           const authorName =
-            profile.display_name || profile.username || review.author || "Anonymous";
+            profile.display_name || profile.username || review.author;
+          
+          // All reviewers are authenticated, so we should always have a name
+          if (!authorName) {
+            console.warn('Review missing author name:', review);
+          }
 
           const prevIndex = getPrevIndex();
           const nextIndex = getNextIndex();

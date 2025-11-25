@@ -38,6 +38,8 @@ import { useSavedItems } from "@/app/contexts/SavedItemsContext";
 import { EditProfileModal } from "@/app/components/EditProfile/EditProfileModal";
 // Removed mock data import - use API calls instead
 import { useMemo } from "react";
+import StaggeredContainer from "../components/Animations/StaggeredContainer";
+import AnimatedElement from "../components/Animations/AnimatedElement";
 
 const animations = `
   @keyframes fadeInUp {
@@ -628,22 +630,24 @@ function ProfileContent() {
           </div>
         </header>
 
-        <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
-          <div className="py-1 pt-20 md:px-20 sm:px-4">
-            <main
-              className="relative font-urbanist pt-4 sm:pt-6"
-              id="main-content"
-              role="main"
-              aria-label="User profile content"
-            >
-              <div className="mx-auto w-full max-w-[2000px] px-3 sm:px-6 lg:px-10 2xl:px-16 relative z-10">
-                <div className="pt-2 pb-12 sm:pb-16 md:pb-20">
-                  <div className="space-y-6">
-                    <article
-                      className="w-full sm:mx-0"
-                      aria-labelledby="profile-heading"
-                    >
-                      <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg relative overflow-hidden animate-fade-in-up">
+        <StaggeredContainer>
+          <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
+            <div className="py-1 pt-20 md:px-20 sm:px-4">
+              <main
+                className="relative font-urbanist pt-4 sm:pt-6"
+                id="main-content"
+                role="main"
+                aria-label="User profile content"
+              >
+                <div className="mx-auto w-full max-w-[2000px] px-3 sm:px-6 lg:px-10 2xl:px-16 relative z-10">
+                  <div className="pt-2 pb-12 sm:pb-16 md:pb-20">
+                    <div className="space-y-6">
+                      <AnimatedElement index={0} direction="top">
+                        <article
+                          className="w-full sm:mx-0"
+                          aria-labelledby="profile-heading"
+                        >
+                          <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-sage/10 to-transparent rounded-full blur-lg"></div>
                         <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-coral/10 to-transparent rounded-full blur-lg"></div>
 
@@ -738,13 +742,15 @@ function ProfileContent() {
                           </div>
                         </div>
                       </div>
-                    </article>
+                        </article>
+                      </AnimatedElement>
 
-                    <section
-                      className="grid grid-cols-2 sm:grid-cols-4 gap-4"
-                      aria-label="Profile statistics"
-                    >
-                      <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-4 animate-fade-in-up animate-delay-100">
+                      <AnimatedElement index={1} direction="left">
+                        <section
+                          className="grid grid-cols-2 sm:grid-cols-4 gap-4"
+                          aria-label="Profile statistics"
+                        >
+                          <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-4">
                         <div className="flex items-center gap-2 mb-2">
                           <ThumbsUp className="w-5 h-5 text-coral" />
                           <span className="text-sm text-charcoal/70">Helpful votes</span>
@@ -754,50 +760,54 @@ function ProfileContent() {
                         </p>
                         <p className="text-xs text-charcoal/60">Community reactions</p>
                       </div>
-                      <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-4 animate-fade-in-up animate-delay-200">
-                        <div className="flex items-center gap-2 mb-2">
-                          <StarIcon className="w-5 h-5 text-coral" />
-                          <span className="text-sm text-charcoal/70">Reviews</span>
-                        </div>
-                        <p className="text-2xl font-bold text-charcoal">{reviewsCount}</p>
-                        <p className="text-xs text-charcoal/60">Total contributions</p>
-                      </div>
-                      <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-4 animate-fade-in-up animate-delay-300">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Award className="w-5 h-5 text-coral" />
-                          <span className="text-sm text-charcoal/70">Badges</span>
-                        </div>
-                        <p className="text-2xl font-bold text-charcoal">{badgesCount}</p>
-                        <p className="text-xs text-charcoal/60">Achievements unlocked</p>
-                      </div>
-                      <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-4 animate-fade-in-up animate-delay-300">
+                          <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                              <StarIcon className="w-5 h-5 text-coral" />
+                              <span className="text-sm text-charcoal/70">Reviews</span>
+                            </div>
+                            <p className="text-2xl font-bold text-charcoal">{reviewsCount}</p>
+                            <p className="text-xs text-charcoal/60">Total contributions</p>
+                          </div>
+                          <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Award className="w-5 h-5 text-coral" />
+                              <span className="text-sm text-charcoal/70">Badges</span>
+                            </div>
+                            <p className="text-2xl font-bold text-charcoal">{badgesCount}</p>
+                            <p className="text-xs text-charcoal/60">Achievements unlocked</p>
+                          </div>
+                          <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-4">
                         <div className="flex items-center gap-2 mb-2">
                           <Eye className="w-5 h-5 text-coral" />
                           <span className="text-sm text-charcoal/70">Interests</span>
                         </div>
                         <p className="text-2xl font-bold text-charcoal">{interestsCount}</p>
-                        <p className="text-xs text-charcoal/60">Communities followed</p>
-                      </div>
-                    </section>
+                            <p className="text-xs text-charcoal/60">Communities followed</p>
+                          </div>
+                        </section>
+                      </AnimatedElement>
 
-                    {/* Saved Businesses - Mobile Only */}
-                    {savedBusinesses.length > 0 && (
-                      <section
-                        className="md:hidden bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-6 space-y-4 animate-fade-in-up animate-delay-300"
-                        aria-label="Saved businesses"
-                      >
+                      {/* Saved Businesses - Mobile Only */}
+                      {savedBusinesses.length > 0 && (
+                        <AnimatedElement index={2} direction="right">
+                          <section
+                            className="md:hidden bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-6 space-y-4"
+                            aria-label="Saved businesses"
+                          >
                         <SavedBusinessRow
                           title="Your Saved Gems"
                           businesses={savedBusinesses}
                           showCount={true}
-                        />
-                      </section>
-                    )}
+                          />
+                        </section>
+                      </AnimatedElement>
+                      )}
 
-                    <section
-                      className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-6 sm:p-8 space-y-4"
-                      aria-label="Business management"
-                    >
+                      <AnimatedElement index={3} direction="bottom">
+                        <section
+                          className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-6 sm:p-8 space-y-4"
+                          aria-label="Business management"
+                        >
                       <div className="flex items-center justify-between">
                         <h3 className="text-base font-semibold text-charcoal flex items-center gap-3">
                           <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-sage/20 to-sage/10">
@@ -814,14 +824,16 @@ function ProfileContent() {
                         className="inline-flex items-center gap-2 px-4 py-2.5 bg-coral/90 hover:bg-coral text-white rounded-full text-sm font-semibold transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-lg shadow-coral/20 border border-coral/30 w-fit"
                       >
                         <Briefcase className="w-4 h-4" />
-                        Manage Businesses
-                      </Link>
-                    </section>
+                          Manage Businesses
+                        </Link>
+                      </section>
+                    </AnimatedElement>
 
-                    <section
-                      className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-6 sm:p-8"
-                      aria-label="Your contributions"
-                    >
+                    <AnimatedElement index={4} direction="scale">
+                      <section
+                        className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-6 sm:p-8"
+                        aria-label="Your contributions"
+                      >
                       {reviewsLoading ? (
                         <div className="flex items-center justify-center py-8">
                           <Loader size="md" variant="pulse" color="sage" text="Loading Reviews" />
@@ -845,22 +857,26 @@ function ProfileContent() {
                           </Link>
                         </div>
                       )}
-                    </section>
+                      </section>
+                    </AnimatedElement>
 
-                    <section
-                      className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-6 sm:p-8"
-                      aria-label="Your achievements"
-                    >
-                      <AchievementsList
-                        achievements={achievementsData}
-                        title="Your Achievements"
-                      />
-                    </section>
+                    <AnimatedElement index={5} direction="scale">
+                      <section
+                        className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-6 sm:p-8"
+                        aria-label="Your achievements"
+                      >
+                        <AchievementsList
+                          achievements={achievementsData}
+                          title="Your Achievements"
+                        />
+                      </section>
+                    </AnimatedElement>
 
-                    <section
-                      className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-6 sm:p-8 space-y-4"
-                      aria-label="Account actions"
-                    >
+                    <AnimatedElement index={6} direction="bottom">
+                      <section
+                        className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-6 sm:p-8 space-y-4"
+                        aria-label="Account actions"
+                      >
                       <div className="flex items-center gap-3">
                         <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-coral/20 to-coral/10">
                           <AlertTriangle className="w-5 h-5 text-coral" />
@@ -896,13 +912,18 @@ function ProfileContent() {
                         />
                       </div>
                     </section>
+                    </AnimatedElement>
                   </div>
                 </div>
               </div>
             </main>
           </div>
+        </div>
+
+        <AnimatedElement index={7} direction="bottom">
           <Footer />
-          </div>
+        </AnimatedElement>
+      </StaggeredContainer>
         </motion.div>
       </AnimatePresence>
 

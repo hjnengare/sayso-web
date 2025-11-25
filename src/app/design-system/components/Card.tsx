@@ -116,7 +116,7 @@ const cardVariants = {
 
   states: {
     loading: [
-      'animate-pulse bg-charcoal-50',
+      'animate-pulse bg-navbar-bg/50',
       'pointer-events-none',
     ],
   },

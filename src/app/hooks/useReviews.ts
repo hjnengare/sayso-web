@@ -47,7 +47,33 @@ export function useReviews(businessId?: string) {
         }
 
         const result = await response.json();
-        const data = result.reviews || [];
+        const rawReviews = result.reviews || [];
+        
+        // Transform reviews to match ReviewWithUser type - ensure user name is set
+        const data = rawReviews.map((review: any) => {
+          // Handle profile - it might be an object or array
+          const profile = Array.isArray(review.profile) ? review.profile[0] : (review.profile || {});
+          const displayName = profile?.display_name || profile?.username;
+          
+          // Debug logging
+          if (!displayName) {
+            console.warn('Review missing user name:', {
+              review_id: review.id,
+              user_id: review.user_id,
+              profile: profile
+            });
+          }
+          
+          return {
+            ...review,
+            user: {
+              id: review.user_id || profile?.user_id || '',
+              name: displayName || 'User', // Fallback to 'User' if no name found
+              avatar_url: profile?.avatar_url || undefined,
+            },
+            profile: profile, // Keep profile for backward compatibility
+          };
+        });
 
         if (mounted) {
           setReviews(data);
@@ -87,7 +113,34 @@ export function useReviews(businessId?: string) {
       }
 
       const result = await response.json();
-      const data = result.reviews || [];
+      const rawReviews = result.reviews || [];
+      
+      // Transform reviews to match ReviewWithUser type - ensure user name is set
+      const data = rawReviews.map((review: any) => {
+        // Handle profile - it might be an object or array
+        const profile = Array.isArray(review.profile) ? review.profile[0] : (review.profile || {});
+        const displayName = profile?.display_name || profile?.username;
+        
+        // Debug logging
+        if (!displayName) {
+          console.warn('Review missing user name (refetch):', {
+            review_id: review.id,
+            user_id: review.user_id,
+            profile: profile
+          });
+        }
+        
+        return {
+          ...review,
+          user: {
+            id: review.user_id || profile?.user_id || '',
+            name: displayName || 'User', // Fallback to 'User' if no name found
+            avatar_url: profile?.avatar_url || undefined,
+          },
+          profile: profile, // Keep profile for backward compatibility
+        };
+      });
+      
       setReviews(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to refetch reviews');
@@ -225,11 +278,20 @@ export function useReviewSubmission() {
         body: formData,
       });
 
-      const result = await response.json();
-
+      // Check if response is ok before trying to parse JSON
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to submit review');
+        let errorMessage = 'Failed to submit review';
+        try {
+          const errorResult = await response.json();
+          errorMessage = errorResult.error || errorResult.details || errorMessage;
+        } catch (parseError) {
+          // If JSON parsing fails, use the status text
+          errorMessage = response.statusText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
+
+      const result = await response.json();
 
       showToast('Review submitted successfully! 🎉', 'success', 5000);
       return true;
@@ -285,8 +347,15 @@ export function useReviewSubmission() {
     }
 
     try {
+      // Check current status first
+      const statusRes = await fetch(`/api/reviews/${reviewId}/helpful`);
+      const statusData = await statusRes.json();
+      const isCurrentlyHelpful = statusData.helpful === true;
+
+      // Toggle the vote
+      const method = isCurrentlyHelpful ? 'DELETE' : 'POST';
       const response = await fetch(`/api/reviews/${reviewId}/helpful`, {
-        method: 'POST',
+        method,
       });
 
       const result = await response.json();
@@ -295,11 +364,12 @@ export function useReviewSubmission() {
         throw new Error(result.error || 'Failed to toggle helpful vote');
       }
 
+      const newStatus = result.helpful === true;
       showToast(
-        result.has_voted ? 'Review marked as helpful!' : 'Helpful vote removed',
+        newStatus ? 'Review marked as helpful!' : 'Helpful vote removed',
         'success'
       );
-      return result.has_voted;
+      return newStatus;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to like review';
       showToast(errorMessage, 'error');

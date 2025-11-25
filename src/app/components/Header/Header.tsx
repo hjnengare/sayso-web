@@ -472,7 +472,7 @@ export default function Header({
                             }}
                           >
                             <div className="px-5 pt-4 pb-3 border-b border-charcoal/10 bg-off-white flex items-center gap-2">
-                              <span className="text-sm font-semibold text-charcoal">Discover</span>
+                              <h3 className="text-sm md:text-base font-semibold text-charcoal" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>Discover</h3>
                             </div>
                             <div className="py-3">
                               {DISCOVER_LINKS.map(({ key: subKey, label: subLabel, description, href: subHref }) => {

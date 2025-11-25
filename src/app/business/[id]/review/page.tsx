@@ -16,11 +16,13 @@ import { PremiumReviewCard } from "../../../components/Business/PremiumReviewCar
 import { TestimonialCarousel } from "../../../components/Business/TestimonialCarousel";
 import Footer from "../../../components/Footer/Footer";
 import { usePageTitle } from "../../../hooks/usePageTitle";
+import StaggeredContainer from "../../../components/Animations/StaggeredContainer";
+import AnimatedElement from "../../../components/Animations/AnimatedElement";
 
-// CSS animations matching business profile
+// CSS animations with elements spawning from different sides
 const animations = `
   @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(20px); }
+    from { opacity: 0; transform: translateY(30px); }
     to { opacity: 1; transform: translateY(0); }
   }
   
@@ -34,30 +36,59 @@ const animations = `
     to { opacity: 1; transform: translateY(0); }
   }
   
+  @keyframes slideInFromLeft {
+    from { opacity: 0; transform: translateX(-40px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  
+  @keyframes slideInFromRight {
+    from { opacity: 0; transform: translateX(40px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  
   @keyframes fadeInScale {
     from { opacity: 0; transform: scale(0.96) translateY(-12px); }
     to { opacity: 1; transform: scale(1) translateY(0); }
   }
   
+  @keyframes gentleFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
   .animate-fade-in-up {
-    animation: fadeInUp 0.6s ease-out forwards;
+    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
   
   .animate-fade-in {
-    animation: fadeIn 0.4s ease-out forwards;
+    animation: fadeIn 0.6s ease-out forwards;
   }
   
   .animate-slide-in-top {
-    animation: slideInFromTop 0.5s ease-out forwards;
+    animation: slideInFromTop 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  
+  .animate-slide-in-left {
+    animation: slideInFromLeft 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  
+  .animate-slide-in-right {
+    animation: slideInFromRight 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
   
   .animate-fade-in-scale {
-    animation: fadeInScale 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: fadeInScale 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  
+  .animate-gentle-fade {
+    animation: gentleFadeIn 0.7s ease-out forwards;
   }
   
   .animate-delay-100 { animation-delay: 0.1s; opacity: 0; }
   .animate-delay-200 { animation-delay: 0.2s; opacity: 0; }
   .animate-delay-300 { animation-delay: 0.3s; opacity: 0; }
+  .animate-delay-400 { animation-delay: 0.4s; opacity: 0; }
+  .animate-delay-500 { animation-delay: 0.5s; opacity: 0; }
 `;
 
 // Lazy load BusinessCarousel for mobile
@@ -375,18 +406,20 @@ function WriteReviewContent() {
           </div>
         </header>
 
-        <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
-          <div className="py-1 pt-20 sm:px-4">
-            <main className="relative font-sf-pro pt-4 sm:pt-6" id="main-content" role="main" aria-label="Write review content">
-              <div className="mx-auto w-full max-w-[2000px] px-3 relative z-10">
-                <div className="pt-2 pb-12 sm:pb-16 md:pb-20">
-                  <div className="space-y-6">
-                    <div className="grid gap-6 lg:grid-cols-3 items-start">
-                      {/* Main Content Section */}
-                      <div className="lg:col-span-2 space-y-6">
-                        {/* Image Gallery Section - Separated from form */}
-                        <article className="w-full sm:mx-0 flex items-center justify-center" aria-labelledby="business-images-heading">
-                          <div className="bg-card-bg backdrop-blur-xl border-0 sm:border border-white/60 rounded-2xl sm:rounded-[20px] shadow-none sm:shadow-lg relative overflow-hidden animate-fade-in-up mx-auto w-full">
+        <StaggeredContainer>
+          <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
+            <div className="py-1 pt-20 sm:px-4">
+              <main className="relative font-sf-pro pt-4 sm:pt-6" id="main-content" role="main" aria-label="Write review content">
+                <div className="mx-auto w-full max-w-[2000px] px-3 relative z-10">
+                  <div className="pt-2 pb-12 sm:pb-16 md:pb-20">
+                    <div className="space-y-6">
+                      <div className="grid gap-6 lg:grid-cols-3 items-start">
+                        {/* Main Content Section */}
+                        <div className="lg:col-span-2 space-y-6">
+                          {/* Image Gallery Section - Separated from form */}
+                          <AnimatedElement index={0} direction="left">
+                            <article className="w-full sm:mx-0 flex items-center justify-center" aria-labelledby="business-images-heading">
+                              <div className="bg-card-bg backdrop-blur-xl border-0 sm:border border-white/60 rounded-2xl sm:rounded-[20px] shadow-none sm:shadow-lg relative overflow-hidden mx-auto w-full">
                             <div className="relative z-10">
                               {/* Business Info and Carousel */}
                               <div className="flex flex-col px-4 pt-4 pb-4 md:pb-6">
@@ -411,11 +444,13 @@ function WriteReviewContent() {
                               </div>
                             </div>
                           </div>
-                        </article>
+                            </article>
+                          </AnimatedElement>
 
-                        {/* Review Form Section - Separated from images */}
-                        <article className="w-full sm:mx-0 flex items-center justify-center" aria-labelledby="review-form-heading">
-                          <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border-0 sm:border border-white/60 rounded-2xl sm:rounded-[20px] shadow-none sm:shadow-lg relative overflow-hidden animate-fade-in-up mx-auto w-full">
+                          {/* Review Form Section - Separated from images */}
+                          <AnimatedElement index={1} direction="right">
+                            <article className="w-full sm:mx-0 flex items-center justify-center" aria-labelledby="review-form-heading">
+                              <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border-0 sm:border border-white/60 rounded-2xl sm:rounded-[20px] shadow-none sm:shadow-lg relative overflow-hidden mx-auto w-full">
                             {/* Gradient overlays matching user profile */}
                             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-sage/10 to-transparent rounded-full blur-lg"></div>
                             <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-coral/10 to-transparent rounded-full blur-lg"></div>
@@ -444,22 +479,27 @@ function WriteReviewContent() {
                             </div>
                           </div>
                         </article>
-                      </div>
+                      </AnimatedElement>
+                        </div>
 
-                      {/* Sidebar - Business Info (Desktop Only) */}
-                      <div className="hidden lg:block space-y-6">
-                        <BusinessInfoAside
-                          businessInfo={businessInfo}
-                          className="self-start lg:sticky lg:top-28"
-                        />
-                      </div>
+                        {/* Sidebar - Business Info (Desktop Only) */}
+                        <AnimatedElement index={2} direction="right">
+                          <div className="hidden lg:block space-y-6">
+                            <BusinessInfoAside
+                              businessInfo={businessInfo}
+                              className="self-start lg:sticky lg:top-28"
+                            />
+                          </div>
+                        </AnimatedElement>
                     </div>
+                  </div>
 
-                    {/* What Others Are Saying Section */}
+                  {/* What Others Are Saying Section */}
+                  <AnimatedElement index={3} direction="bottom">
                     <div className="lg:col-span-3 space-y-6">
-                      <section className="space-y-6" aria-labelledby="what-others-saying-heading">
-                        <div className="flex justify-center">
-                          <div className="flex flex-col gap-3">
+                        <section className="space-y-6" aria-labelledby="what-others-saying-heading">
+                          <div className="flex justify-center">
+                            <div className="flex flex-col gap-3">
                             <h2
                               id="what-others-saying-heading"
                               className="text-h3 font-semibold text-charcoal border-b border-charcoal/10 pb-2"
@@ -500,7 +540,7 @@ function WriteReviewContent() {
                                   return {
                                     id: review.id,
                                     userId: review.user_id,
-                                    author: profile.display_name || profile.username || review.author || 'Anonymous',
+                                    author: profile.display_name || profile.username || review.author,
                                     rating: review.rating,
                                     text: review.content || review.text || review.title || '',
                                     date: review.created_at ? new Date(review.created_at).toLocaleDateString('en-US', {
@@ -533,7 +573,7 @@ function WriteReviewContent() {
                         )}
                       </section>
                     </div>
-                  </div>
+                  </AnimatedElement>
                 </div>
               </div>
             </main>
@@ -556,7 +596,10 @@ function WriteReviewContent() {
           </button>
         )}
 
-        <Footer />
+        <AnimatedElement index={3} direction="bottom">
+          <Footer />
+        </AnimatedElement>
+      </StaggeredContainer>
 
         {/* Business Info Modal - Mobile Only */}
         {businessInfo && (

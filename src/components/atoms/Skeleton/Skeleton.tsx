@@ -43,7 +43,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
   return (
     <div
       className={`
-        animate-pulse bg-charcoal/10
+        animate-pulse bg-navbar-bg/10
         ${!width ? defaultWidth : ''}
         ${!height ? defaultHeight : ''}
         ${variantStyles[variant]}

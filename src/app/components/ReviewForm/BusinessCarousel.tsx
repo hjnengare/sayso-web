@@ -31,8 +31,8 @@ export default function BusinessCarousel({ businessName, businessImages }: Busin
   // If no valid images, show a placeholder with star icon
   if (!hasImages) {
     return (
-      <div className="mb-0 md:mb-8 mx-0 md:mx-0 relative h-[calc(100vh-120px)] md:h-auto">
-        <div className="relative overflow-hidden rounded-2xl md:rounded-lg bg-card-bg h-full md:aspect-[16/9] flex flex-col items-center justify-center md:justify-center">
+      <div className="mb-0 md:mb-8 mx-0 md:mx-0 relative h-[60vh]">
+        <div className="relative overflow-hidden rounded-2xl md:rounded-lg bg-card-bg h-full flex flex-col items-center justify-center">
           <div className="w-full h-full md:h-auto flex flex-col items-center justify-center gap-3">
             <Star size={80} className="text-coral/30" strokeWidth={1.2} />
             <span className="text-sm font-semibold tracking-wide uppercase text-charcoal/50">
@@ -71,9 +71,9 @@ export default function BusinessCarousel({ businessName, businessImages }: Busin
   };
 
   return (
-    <div className="mb-0 md:mb-8 mx-0 md:mx-0 relative h-[calc(100vh-120px)] md:h-auto">
+    <div className="mb-0 md:mb-8 mx-0 md:mx-0 relative h-[60vh]">
       <div
-        className="relative overflow-hidden rounded-2xl md:rounded-lg bg-card-bg h-full md:h-screen"
+        className="relative overflow-hidden rounded-2xl md:rounded-lg bg-card-bg h-full"
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}

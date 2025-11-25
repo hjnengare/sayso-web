@@ -96,14 +96,16 @@ export default function SimilarBusinesses({
 
       <div className="flex justify-center relative z-10">
         <div className="flex flex-col gap-4 items-center">
-          <div className="inline-flex items-center gap-3">
-          
+          <div className="inline-flex flex-col items-center gap-2">
+            <div className="flex items-center gap-2">
+              <p className="text-[11px] uppercase tracking-[0.15em] text-charcoal/50 font-bold">Similar Businesses</p>
+            </div>
             <h2
               id="similar-businesses-heading"
-              className="text-h3 font-bold text-charcoal"
+              className="text-2xl sm:text-3xl font-bold text-charcoal"
               style={{ fontFamily: '"Urbanist", system-ui, sans-serif' }}
             >
-              Similar Businesses
+              You Might Also Like
             </h2>
           </div>
         </div>

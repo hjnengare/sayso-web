@@ -37,11 +37,10 @@ export async function GET(
           // Handle profile - could be object, array, or undefined
           const profile = Array.isArray(review.profile) ? review.profile[0] : review.profile;
           
-          // Extract author name with proper fallback chain
+          // Extract author name - all reviewers are authenticated, so we should always have display_name or username
           const author = profile?.display_name 
             || profile?.username 
-            || review.author 
-            || 'Anonymous';
+            || review.author;
           
           return {
             id: review.id,
@@ -218,7 +217,7 @@ export async function GET(
         return {
           id: review.id,
           userId: review.user_id,
-          author: profile?.display_name || profile?.username || 'Anonymous',
+          author: profile?.display_name || profile?.username || undefined,
           rating: review.rating,
           text: review.content || review.title || '',
           date: new Date(review.created_at).toLocaleDateString('en-US', {

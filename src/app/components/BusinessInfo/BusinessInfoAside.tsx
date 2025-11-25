@@ -23,60 +23,61 @@ export default function BusinessInfoAside({ businessInfo, className = "" }: Busi
     {
       icon: (
         <CheckCircle
-          className={`w-4 h-4 flex-shrink-0 ${
-            businessInfo.verified ? "text-sage" : "text-charcoal/40"
+          className={`w-5 h-5 flex-shrink-0 ${
+            businessInfo.verified ? "text-navbar-bg" : "text-navbar-bg/40"
           }`}
+          strokeWidth={2.5}
         />
       ),
       label: "Verification",
       render: () => (
-        <span className={`text-body-sm font-medium ${businessInfo.verified ? "text-sage" : "text-charcoal/60"}`}>
+        <span className={`text-sm font-semibold ${businessInfo.verified ? "text-sage" : "text-charcoal/60"}`}>
           {businessInfo.verified ? "Verified Business" : "Not Verified"}
         </span>
       ),
     },
     {
-      icon: <MapPin className="w-4 h-4 flex-shrink-0 text-navbar-bg/90" />,
+      icon: <MapPin className="w-5 h-5 flex-shrink-0 text-navbar-bg" strokeWidth={2.5} />,
       label: "Location",
       value: businessInfo.location,
     },
     {
-      icon: <MapPin className="w-4 h-4 flex-shrink-0 text-navbar-bg/90" />,
+      icon: <MapPin className="w-5 h-5 flex-shrink-0 text-navbar-bg" strokeWidth={2.5} />,
       label: "Address",
       value: businessInfo.address,
     },
     {
-      icon: <Phone className="w-4 h-4 flex-shrink-0 text-navbar-bg/90" />,
+      icon: <Phone className="w-5 h-5 flex-shrink-0 text-navbar-bg" strokeWidth={2.5} />,
       label: "Phone",
       render: () =>
         businessInfo.phone ? (
           <a
             href={`tel:${businessInfo.phone}`}
-            className="text-body-sm text-navbar-bg/90 hover:text-sage transition-colors"
+            className="text-sm font-semibold text-charcoal/90"
           >
             {businessInfo.phone}
           </a>
         ) : (
-          <span className="text-body-sm italic text-charcoal/40">Phone number not provided</span>
+          <span className="text-sm italic text-charcoal/40">Phone number not provided</span>
         ),
     },
     {
-      icon: <Mail className="w-4 h-4 flex-shrink-0 text-navbar-bg/90" />,
+      icon: <Mail className="w-5 h-5 flex-shrink-0 text-navbar-bg" strokeWidth={2.5} />,
       label: "Email",
       render: () =>
         businessInfo.email ? (
           <a
             href={`mailto:${businessInfo.email}`}
-            className="text-body-sm text-navbar-bg/90 hover:text-sage transition-colors break-all"
+            className="text-sm font-semibold text-charcoal/90 break-all"
           >
             {businessInfo.email}
           </a>
         ) : (
-          <span className="text-body-sm italic text-charcoal/40">Email not provided</span>
+          <span className="text-sm italic text-charcoal/40">Email not provided</span>
         ),
     },
     {
-      icon: <Globe className="w-4 h-4 flex-shrink-0 text-navbar-bg/90" />,
+      icon: <Globe className="w-5 h-5 flex-shrink-0 text-navbar-bg" strokeWidth={2.5} />,
       label: "Website",
       render: () =>
         businessInfo.website ? (
@@ -88,23 +89,23 @@ export default function BusinessInfoAside({ businessInfo, className = "" }: Busi
             }
             target="_blank"
             rel="noopener noreferrer"
-            className="text-body-sm text-navbar-bg/90 hover:text-sage transition-colors break-all"
+            className="text-sm font-semibold text-charcoal/90 break-all"
           >
             {businessInfo.website}
           </a>
         ) : (
-          <span className="text-body-sm italic text-charcoal/40">Website not provided</span>
+          <span className="text-sm italic text-charcoal/40">Website not provided</span>
         ),
     },
     {
-      icon: <DollarSign className="w-4 h-4 flex-shrink-0 text-navbar-bg/90" />,
+      icon: <DollarSign className="w-5 h-5 flex-shrink-0 text-navbar-bg" strokeWidth={2.5} />,
       label: "Price Range",
       value: businessInfo.price_range,
     },
   ];
 
   const asideClasses =
-    "bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] p-5 sm:p-6 space-y-5 relative overflow-hidden";
+    "rounded-2xl bg-gradient-to-br from-card-bg via-card-bg/98 to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[24px] p-6 sm:p-7 space-y-6 relative overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.08),0_4px_16px_rgba(0,0,0,0.04)]";
 
   return (
     <aside
@@ -114,42 +115,53 @@ export default function BusinessInfoAside({ businessInfo, className = "" }: Busi
         fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
       }}
     >
-      {/* Gradient overlays matching user profile */}
-      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-sage/10 to-transparent rounded-full blur-lg"></div>
-      <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-coral/10 to-transparent rounded-full blur-lg"></div>
+      {/* Premium gradient overlays */}
+      <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-sage/15 via-sage/8 to-transparent rounded-full blur-2xl opacity-60"></div>
+      <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-coral/15 via-coral/8 to-transparent rounded-full blur-2xl opacity-60"></div>
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-gradient-to-br from-sage/5 to-coral/5 rounded-full blur-3xl opacity-40"></div>
       
       <div className="relative z-10">
-      <header className="space-y-1">
-        <p className="text-caption uppercase tracking-wide text-charcoal/50 font-semibold">Business Info</p>
-        <h2 id="business-info-heading" className="text-h3 font-semibold text-charcoal" style={sectionTitleStyle}>
+      <header className="space-y-3 pb-4 border-b border-white/20 mb-4">
+        <div className="flex items-center gap-2">
+          <p className="text-[11px] uppercase tracking-[0.15em] text-charcoal/50 font-bold letter-spacing-wide">Business Info</p>
+        </div>
+        <h2 id="business-info-heading" className="text-xl sm:text-2xl font-bold text-charcoal leading-tight" style={sectionTitleStyle}>
           {businessInfo.name || "Business Information"}
         </h2>
-        <p className={`text-body-sm text-charcoal/70 leading-relaxed mb-4 ${businessInfo.description ? "" : "italic text-charcoal/40"}`}>
+        <p className={`text-sm text-charcoal/75 leading-relaxed ${businessInfo.description ? "" : "italic text-charcoal/40"}`}>
           {businessInfo.description || "No description available."}
         </p>
         {businessInfo.category && (
-          <div className="inline-flex items-center gap-1.5 px-2 py-1 mb-4 rounded-full border border-white/40 bg-white/20 text-caption font-semibold text-charcoal/80">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-sage/30 bg-gradient-to-r from-sage/10 via-sage/5 to-transparent text-xs font-bold text-white shadow-sm">
             <span>{businessInfo.category}</span>
           </div>
         )}
       </header>
 
-      <ul className="space-y-4">
-        {infoRows.map((row) => (
-          <li key={row.label} className="flex gap-3">
-            <span className="w-10 h-10 rounded-full bg-white/30 border border-white/40 text-navbar-bg/90 grid place-items-center flex-shrink-0">
+      <ul className="space-y-3">
+        {infoRows.map((row, index) => (
+          <li 
+            key={row.label} 
+            className="flex gap-4 p-3 rounded-xl bg-white/20 border border-white/30"
+            style={{
+              animationDelay: `${index * 0.05}s`,
+            }}
+          >
+            <span className="w-12 h-12 rounded-xl bg-gradient-to-br from-white/50 via-white/30 to-white/20 border border-white/60 shadow-sm grid place-items-center flex-shrink-0 backdrop-blur-sm">
               {row.icon}
             </span>
-            <div className="flex-1">
-              <p className="text-body-sm font-semibold text-charcoal mb-0.5" style={sectionTitleStyle}>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold text-charcoal/60 mb-1 uppercase tracking-wide" style={sectionTitleStyle}>
                 {row.label}
               </p>
               {row.render ? (
-                row.render()
+                <div>
+                  {row.render()}
+                </div>
               ) : (
                 <p
-                  className={`text-body-sm ${
-                    row.value ? "text-charcoal/70" : "italic text-charcoal/40"
+                  className={`text-sm font-medium ${
+                    row.value ? "text-charcoal/90" : "italic text-charcoal/40"
                   }`}
                 >
                   {row.value || "Not provided"}

@@ -1,119 +1,45 @@
-# Backend Implementation Plan - Making KLIO Fully Functional
+# Backend Implementation Plan - User Features Focus
 
-This document outlines all backend work required to make the application fully functional.
+This document outlines all backend work required for user-facing features that need immediate attention. Business-related features are excluded and will be handled separately.
 
-## 🎯 Critical Missing Features
+## 🎯 Critical Missing User Features
 
-### 1. Business Claim API Endpoint ⚠️ CRITICAL
-**Status:** Frontend exists, no API endpoint  
+### 1. Review Helpful Votes ⚠️ INCOMPLETE
+**Status:** Partially implemented (UI exists, backend incomplete)  
 **Priority:** HIGH  
-**Location:** `src/app/claim-business/page.tsx` uses client-side service
-
-**Required:**
-- `POST /api/businesses/claim` - Create ownership claim request
-- `GET /api/businesses/claim/status` - Check claim status
-- `GET /api/businesses/my-claims` - List user's claims
-- Database: `business_ownership_requests` table (check if exists in migrations)
-
-**Implementation:**
-- Verify ownership request creation
-- Handle document uploads for verification
-- Email verification flow for business email/phone
-- Return claim request ID and status
-
----
-
-### 2. Review Management for Business Owners ⚠️ INCOMPLETE
-**Status:** Partially implemented (mark helpful exists in UI)  
-**Priority:** HIGH  
-**Current:** Review display works, but business owner actions missing
+**Location:** `src/app/components/Reviews/ReviewCard.tsx` has helpful button
 
 **Required Endpoints:**
-- `POST /api/reviews/[id]/response` - Business owner responds to review
 - `POST /api/reviews/[id]/helpful` - Mark review as helpful (vote)
-- `GET /api/reviews/helpful/[id]` - Check if user marked helpful
-- `POST /api/reviews/[id]/flag` - Flag inappropriate review
-- `GET /api/businesses/[id]/reviews` - Get all reviews for business owner's businesses
-
-**Database Schema Needed:**
-- `review_responses` table:
-  ```sql
-  id UUID PRIMARY KEY
-  review_id UUID REFERENCES reviews(id)
-  business_owner_id UUID REFERENCES profiles(user_id)
-  response_text TEXT
-  created_at TIMESTAMPTZ
-  updated_at TIMESTAMPTZ
-  ```
-- `review_helpful_votes` table:
-  ```sql
-  review_id UUID REFERENCES reviews(id)
-  user_id UUID REFERENCES profiles(user_id)
-  created_at TIMESTAMPTZ
-  PRIMARY KEY (review_id, user_id)
-  ```
-- `review_flags` table:
-  ```sql
-  id UUID PRIMARY KEY
-  review_id UUID REFERENCES reviews(id)
-  flagged_by UUID REFERENCES profiles(user_id)
-  reason TEXT
-  status TEXT ('pending', 'reviewed', 'dismissed')
-  admin_notes TEXT
-  created_at TIMESTAMPTZ
-  ```
-
----
-
-### 3. Admin APIs for Business Approval 🔮 PLANNED
-**Status:** No implementation  
-**Priority:** MEDIUM-HIGH
-
-**Required Endpoints:**
-- `GET /api/admin/business-claims` - List pending claims (admin only)
-- `POST /api/admin/business-claims/[id]/approve` - Approve ownership claim
-- `POST /api/admin/business-claims/[id]/reject` - Reject with reason
-- `GET /api/admin/review-flags` - List flagged reviews
-- `POST /api/admin/review-flags/[id]/resolve` - Resolve flag (remove/dismiss)
-- `POST /api/admin/reviews/[id]/remove` - Remove inappropriate review
-- `POST /api/admin/users/[id]/ban` - Ban abusive user
+- `DELETE /api/reviews/[id]/helpful` - Remove helpful vote
+- `GET /api/reviews/[id]/helpful` - Check if current user marked helpful
+- `GET /api/reviews/[id]/helpful/count` - Get helpful vote count
 
 **Database Schema:**
-- Add `admin_notes` to `business_ownership_requests`
-- Create `admin_actions` audit log table
+```sql
+CREATE TABLE review_helpful_votes (
+  review_id UUID REFERENCES reviews(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES profiles(user_id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  PRIMARY KEY (review_id, user_id)
+);
 
-**Authorization:**
-- Implement admin role check
-- Use Supabase RLS policies for admin access
+CREATE INDEX idx_review_helpful_votes_review_id ON review_helpful_votes(review_id);
+CREATE INDEX idx_review_helpful_votes_user_id ON review_helpful_votes(user_id);
+```
 
----
-
-### 4. Email Notification System 📧 MISSING
-**Status:** Not implemented  
-**Priority:** MEDIUM
-
-**Required:**
-- Email service integration (SendGrid/Resend/Supabase Auth emails)
-- Notification templates
-- Queue system for async email sending
-
-**Notification Types:**
-- Welcome email after signup
-- Email verification reminder
-- Review received notification (business owners)
-- Business claim approved/rejected
-- Review response notification (to reviewer)
-- Weekly digest (optional)
-
-**Endpoints:**
-- `POST /api/notifications/send` - Trigger notification (internal)
-- Background job/trigger for automated emails
+**Implementation:**
+- Prevent duplicate votes (enforced by primary key)
+- Update review helpful count in real-time
+- Return vote status with review data
+- Handle vote removal gracefully
 
 ---
 
-### 5. Review Update/Delete ⚠️ MISSING
+### 2. Review Update/Delete ⚠️ MISSING
 **Status:** Users can edit/delete in UI but no API  
-**Priority:** MEDIUM
+**Priority:** HIGH  
+**Location:** Review components show edit/delete buttons
 
 **Required Endpoints:**
 - `PUT /api/reviews/[id]` - Update review (owner only)
@@ -121,76 +47,171 @@ This document outlines all backend work required to make the application fully f
 - `PUT /api/reviews/[id]/images` - Update review images
 - Recalculate business stats after update/delete
 
+**Validation:**
+- Verify user owns the review before allowing edit/delete
+- Validate content length (10-5000 characters)
+- Sanitize input to prevent XSS
+- Validate image uploads (type, size limits)
+
+**Implementation:**
+- Update review content, rating, tags
+- Handle image replacement/removal
+- Recalculate business statistics after changes
+- Soft delete option (mark as deleted, hide from public)
+- Audit trail for review modifications
+
 ---
 
-### 6. Saved/Bookmarked Businesses 🔖 MISSING
-**Status:** Frontend context exists (`SavedItemsContext`) but no backend  
-**Priority:** MEDIUM
+### 3. Review Flagging System 🚩 MISSING
+**Status:** Not implemented  
+**Priority:** MEDIUM-HIGH
 
 **Required Endpoints:**
-- `POST /api/saved/businesses` - Save business
-- `DELETE /api/saved/businesses/[id]` - Unsave business
-- `GET /api/saved/businesses` - List saved businesses
+- `POST /api/reviews/[id]/flag` - Flag inappropriate review
+- `GET /api/reviews/[id]/flag/status` - Check if user flagged this review
+- `DELETE /api/reviews/[id]/flag` - Remove flag (if user changes mind)
+
+**Database Schema:**
+```sql
+CREATE TABLE review_flags (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  review_id UUID REFERENCES reviews(id) ON DELETE CASCADE,
+  flagged_by UUID REFERENCES profiles(user_id) ON DELETE CASCADE,
+  reason TEXT NOT NULL,
+  details TEXT,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'reviewed', 'dismissed')),
+  reviewed_by UUID REFERENCES profiles(user_id),
+  reviewed_at TIMESTAMPTZ,
+  admin_notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(review_id, flagged_by)
+);
+
+CREATE INDEX idx_review_flags_review_id ON review_flags(review_id);
+CREATE INDEX idx_review_flags_status ON review_flags(status);
+CREATE INDEX idx_review_flags_flagged_by ON review_flags(flagged_by);
+```
+
+**Flag Reasons:**
+- Spam or fake review
+- Inappropriate content
+- Harassment or hate speech
+- Off-topic content
+- Other (with details)
+
+**Implementation:**
+- Prevent duplicate flags from same user
+- Rate limit flagging (max 10 flags per hour)
+- Auto-hide review if flagged by multiple users (threshold: 5)
+- Notification to admins for review
+
+---
+
+### 4. Saved/Bookmarked Businesses 🔖 MISSING
+**Status:** Frontend context exists (`SavedItemsContext`) but no backend  
+**Priority:** MEDIUM-HIGH  
+**Location:** `src/app/contexts/SavedItemsContext.tsx`
+
+**Required Endpoints:**
+- `POST /api/saved/businesses` - Save business to user's list
+- `DELETE /api/saved/businesses/[id]` - Remove business from saved list
+- `GET /api/saved/businesses` - List user's saved businesses (paginated)
+- `GET /api/saved/businesses/[id]` - Check if business is saved
+- `GET /api/saved/businesses/count` - Get count of saved businesses
 
 **Database Schema:**
 ```sql
 CREATE TABLE saved_businesses (
-  user_id UUID REFERENCES profiles(user_id),
-  business_id UUID REFERENCES businesses(id),
+  user_id UUID REFERENCES profiles(user_id) ON DELETE CASCADE,
+  business_id UUID REFERENCES businesses(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
+  notes TEXT, -- Optional user notes about why they saved it
   PRIMARY KEY (user_id, business_id)
 );
+
+CREATE INDEX idx_saved_businesses_user_id ON saved_businesses(user_id);
+CREATE INDEX idx_saved_businesses_business_id ON saved_businesses(business_id);
+CREATE INDEX idx_saved_businesses_created_at ON saved_businesses(created_at DESC);
 ```
+
+**Implementation:**
+- Return saved businesses with full business data
+- Support pagination (20 per page)
+- Include business stats (rating, review count)
+- Sort by saved date (newest first) or alphabetically
+- Return saved status with business listings
 
 ---
 
-### 7. Business Hours Management 📅 MISSING
-**Status:** Not implemented  
-**Priority:** LOW-MEDIUM
+### 5. User Profile Enhancements 👤 PARTIAL
+**Status:** Basic profile exists, needs enhancements  
+**Priority:** MEDIUM
 
-**Required:**
-- `GET /api/businesses/[id]/hours` - Get business hours
-- `PUT /api/businesses/[id]/hours` - Update hours (owner only)
+**Required Endpoints:**
+- `GET /api/user/profile` - Get current user's full profile
+- `PUT /api/user/profile` - Update user profile
+- `GET /api/user/stats` - Get user statistics (reviews written, helpful votes given, etc.)
+- `GET /api/user/activity` - Get user activity feed (reviews, saves, etc.)
+- `PUT /api/user/preferences` - Update user preferences (interests, deal-breakers)
+- `GET /api/user/reviews` - Get all reviews by user (paginated)
 
-**Database Schema:**
+**Database Schema Updates:**
 ```sql
-CREATE TABLE business_hours (
-  business_id UUID PRIMARY KEY REFERENCES businesses(id),
-  monday_open TIME,
-  monday_close TIME,
-  tuesday_open TIME,
-  tuesday_close TIME,
-  -- ... for all days
-  is_24_hours BOOLEAN DEFAULT FALSE,
-  special_hours JSONB, -- For holidays, special events
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+-- Add to profiles table if not exists:
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS bio TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS location TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS website_url TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS social_links JSONB;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS privacy_settings JSONB;
 ```
+
+**User Stats to Track:**
+- Total reviews written
+- Total helpful votes given
+- Total businesses saved
+- Account creation date
+- Last active date
+- Review helpful votes received (on user's reviews)
 
 ---
 
-### 8. Enhanced Search & Filtering 🔍 PARTIAL
+### 6. Enhanced Search & Filtering 🔍 PARTIAL
 **Status:** Basic search exists  
-**Priority:** LOW-MEDIUM
+**Priority:** MEDIUM
 
 **Missing Features:**
 - Distance-based search (requires user location)
-- "Open now" filter (requires business hours)
 - Advanced sorting (by distance, price, rating combo)
 - Full-text search improvements
+- Search history for users
+- Saved searches
 
 **Endpoints:**
 - Enhance `GET /api/businesses` with:
-  - `lat`, `lng` query params for location
+  - `lat`, `lng` query params for location-based search
   - `radius_km` for distance filter
-  - `open_now` boolean filter
   - Better text search ranking
+  - Search result highlighting
+
+**Database Schema:**
+```sql
+CREATE TABLE user_search_history (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES profiles(user_id) ON DELETE CASCADE,
+  search_query TEXT NOT NULL,
+  filters JSONB,
+  result_count INT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_user_search_history_user_id ON user_search_history(user_id, created_at DESC);
+```
 
 ---
 
 ## 🛠️ Backend Infrastructure Improvements
 
-### 9. Rate Limiting ⚠️ PARTIAL
+### 7. Rate Limiting ⚠️ PARTIAL
 **Status:** Basic rate limiting exists for auth  
 **Priority:** HIGH
 
@@ -202,14 +223,21 @@ CREATE TABLE business_hours (
 - Error handling for rate limit exceeded
 
 **Endpoints to Protect:**
-- `/api/reviews` - Limit review submissions
-- `/api/businesses/claim` - Prevent spam
-- `/api/reviews/[id]/helpful` - Prevent vote manipulation
-- All search endpoints
+- `/api/reviews` - Limit review submissions (10/hour per user)
+- `/api/reviews/[id]/helpful` - Prevent vote manipulation (50/hour per user)
+- `/api/reviews/[id]/flag` - Limit flagging (10/hour per user)
+- `/api/saved/businesses` - Limit saves (100/hour per user)
+- All search endpoints - Limit searches (100/hour per IP)
+
+**Implementation:**
+- Use existing `rateLimiting.ts` utilities
+- Add rate limit middleware to all routes
+- Return `429 Too Many Requests` with retry-after header
+- Log rate limit violations for monitoring
 
 ---
 
-### 10. Input Validation & Sanitization ✅ PARTIAL
+### 8. Input Validation & Sanitization ✅ PARTIAL
 **Status:** Basic validation exists  
 **Priority:** HIGH
 
@@ -220,10 +248,30 @@ CREATE TABLE business_hours (
 - File upload validation (type, size limits)
 - Email format validation
 - Phone number validation
+- URL validation for profile links
+
+**Validation Schemas Needed:**
+```typescript
+// Review validation
+const ReviewSchema = z.object({
+  content: z.string().min(10).max(5000),
+  rating: z.number().int().min(1).max(5),
+  title: z.string().max(200).optional(),
+  tags: z.array(z.string().max(50)).max(10).optional(),
+});
+
+// Profile update validation
+const ProfileUpdateSchema = z.object({
+  display_name: z.string().min(1).max(100).optional(),
+  bio: z.string().max(500).optional(),
+  website_url: z.string().url().optional(),
+  location: z.string().max(200).optional(),
+});
+```
 
 ---
 
-### 11. Error Handling & Logging 📊 MISSING
+### 9. Error Handling & Logging 📊 MISSING
 **Status:** Console.log used throughout  
 **Priority:** MEDIUM
 
@@ -234,27 +282,85 @@ CREATE TABLE business_hours (
 - Error notification system
 - Remove all `console.log` statements (362 instances found)
 
+**Implementation:**
+```typescript
+// lib/logger.ts
+import pino from 'pino';
+
+export const logger = pino({
+  level: process.env.LOG_LEVEL || 'info',
+  transport: {
+    target: 'pino-pretty',
+    options: {
+      colorize: true,
+    },
+  },
+});
+
+// Usage in API routes
+logger.info({ userId, action: 'review_created' }, 'Review created');
+logger.error({ error, userId }, 'Failed to create review');
+```
+
+**Error Response Standard:**
+```typescript
+{
+  success: false,
+  error: {
+    code: 'REVIEW_NOT_FOUND',
+    message: 'Review not found',
+    details?: any
+  }
+}
+```
+
 ---
 
-### 12. Database Functions & Triggers 🔧 PARTIAL
+### 10. Database Functions & Triggers 🔧 PARTIAL
 **Status:** Some RPC functions exist  
 **Priority:** MEDIUM
 
 **Check/Implement:**
-- `update_business_stats` - Verify it updates correctly
 - `complete_onboarding_atomic` - Verify exists and works
-- `list_businesses_optimized` - Verify performance
-- Trigger for auto-updating business stats on review changes
-- Trigger for updating `updated_at` timestamps
+- Trigger for updating `updated_at` timestamps on user tables
+- Function to calculate user review statistics
+- Function to update helpful vote counts
 
 **Missing Functions:**
-- Function to calculate review percentiles
-- Function to update trending businesses materialized view
-- Function to handle review flagging workflow
+```sql
+-- Calculate user review stats
+CREATE OR REPLACE FUNCTION get_user_review_stats(user_uuid UUID)
+RETURNS TABLE (
+  total_reviews INT,
+  avg_rating NUMERIC,
+  helpful_votes_received INT,
+  total_helpful_votes_given INT
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    COUNT(DISTINCT r.id)::INT as total_reviews,
+    COALESCE(AVG(r.rating), 0)::NUMERIC(3,2) as avg_rating,
+    COALESCE(SUM(rhv_count.count), 0)::INT as helpful_votes_received,
+    COALESCE((
+      SELECT COUNT(*)::INT 
+      FROM review_helpful_votes rhv 
+      WHERE rhv.user_id = user_uuid
+    ), 0) as total_helpful_votes_given
+  FROM reviews r
+  LEFT JOIN (
+    SELECT review_id, COUNT(*) as count
+    FROM review_helpful_votes
+    GROUP BY review_id
+  ) rhv_count ON r.id = rhv_count.review_id
+  WHERE r.user_id = user_uuid;
+END;
+$$ LANGUAGE plpgsql;
+```
 
 ---
 
-### 13. API Response Standardization 📐 MISSING
+### 11. API Response Standardization 📐 MISSING
 **Status:** Inconsistent response formats  
 **Priority:** LOW-MEDIUM
 
@@ -264,101 +370,188 @@ CREATE TABLE business_hours (
   {
     success: boolean
     data?: any
-    error?: string
+    error?: {
+      code: string
+      message: string
+      details?: any
+    }
     message?: string
-    meta?: { pagination, etc }
+    meta?: { 
+      pagination?: {
+        page: number
+        limit: number
+        total: number
+        totalPages: number
+      }
+      timestamp: string
+    }
   }
   ```
 - Consistent error codes
-- API versioning strategy
+- API versioning strategy (v1 prefix)
+
+**Helper Function:**
+```typescript
+// lib/api-response.ts
+export function successResponse(data: any, meta?: any) {
+  return {
+    success: true,
+    data,
+    meta: {
+      ...meta,
+      timestamp: new Date().toISOString(),
+    },
+  };
+}
+
+export function errorResponse(code: string, message: string, details?: any) {
+  return {
+    success: false,
+    error: { code, message, details },
+    meta: {
+      timestamp: new Date().toISOString(),
+    },
+  };
+}
+```
 
 ---
 
 ## 🔐 Security Enhancements
 
-### 14. Row Level Security (RLS) Audit 🔒 PARTIAL
+### 12. Row Level Security (RLS) Audit 🔒 PARTIAL
 **Status:** Some RLS policies exist  
 **Priority:** HIGH
 
 **Required:**
-- Audit all tables for proper RLS policies
+- Audit all user-related tables for proper RLS policies
 - Ensure users can only edit their own data
-- Ensure business owners can only edit their businesses
-- Ensure admins have proper access
+- Ensure users can only see their own saved businesses
+- Ensure users can only flag reviews (not delete)
 - Test RLS policies in production-like environment
 
 **Tables to Verify:**
-- `profiles`
-- `reviews`
-- `review_images`
-- `businesses`
-- `business_owners`
-- `business_ownership_requests`
-- `user_interests`
-- `user_subcategories`
-- `user_dealbreakers`
+- `profiles` - Users can only read/update their own profile
+- `reviews` - Users can read all, but only update/delete their own
+- `review_images` - Users can only manage images for their own reviews
+- `review_helpful_votes` - Users can only manage their own votes
+- `review_flags` - Users can only create flags, not see others' flags
+- `saved_businesses` - Users can only see/manage their own saved businesses
+- `user_interests` - Users can only manage their own interests
+- `user_subcategories` - Users can only manage their own subcategories
+- `user_dealbreakers` - Users can only manage their own deal-breakers
+- `user_search_history` - Users can only see their own search history
+
+**RLS Policy Examples:**
+```sql
+-- Users can only manage their own saved businesses
+CREATE POLICY "Users can view their own saved businesses"
+  ON saved_businesses FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own saved businesses"
+  ON saved_businesses FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own saved businesses"
+  ON saved_businesses FOR DELETE
+  USING (auth.uid() = user_id);
+```
 
 ---
 
-### 15. API Authentication & Authorization 🔐 PARTIAL
+### 13. API Authentication & Authorization 🔐 PARTIAL
 **Status:** Basic auth exists  
 **Priority:** HIGH
 
 **Required:**
 - Verify all protected endpoints check authentication
-- Implement role-based access control (RBAC)
-- Admin role verification helper
-- Business owner verification helper
+- Implement consistent auth middleware
 - Proper error messages for unauthorized access
+- Session validation on all protected routes
+
+**Auth Middleware:**
+```typescript
+// lib/middleware/auth.ts
+export async function requireAuth(request: Request) {
+  const supabase = getServerSupabase();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    return NextResponse.json(
+      errorResponse('UNAUTHORIZED', 'Authentication required'),
+      { status: 401 }
+    );
+  }
+
+  return { user, supabase };
+}
+```
 
 ---
 
-## 📊 Analytics & Monitoring
+## 📊 User Analytics & Monitoring
 
-### 16. Analytics Endpoints 📈 MISSING
+### 14. User Activity Tracking 📈 MISSING
 **Status:** Not implemented  
 **Priority:** LOW
 
-**Required (for business owners):**
-- `GET /api/businesses/[id]/analytics` - Business stats
-  - Review trends over time
-  - Rating distribution
-  - Review response rate
-  - Traffic/views (if tracking implemented)
+**Required:**
+- Track user engagement metrics
+- User activity feed
+- Review writing patterns
+- Search behavior
+
+**Endpoints:**
+- `GET /api/user/activity` - Get user activity feed
+- `GET /api/user/stats` - Get user statistics
+
+**Database Schema:**
+```sql
+CREATE TABLE user_activity (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES profiles(user_id) ON DELETE CASCADE,
+  activity_type TEXT NOT NULL, -- 'review_created', 'business_saved', 'helpful_voted', etc.
+  activity_data JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_user_activity_user_id ON user_activity(user_id, created_at DESC);
+```
 
 ---
 
 ## 🗄️ Database Schema Updates
 
-### 17. Missing Tables ⚠️
+### 15. Missing Tables ⚠️
 **Priority:** HIGH
 
 **Required:**
-1. `review_responses` - Business owner responses
-2. `review_helpful_votes` - User votes on reviews
-3. `review_flags` - Flagged reviews for moderation
-4. `saved_businesses` - User bookmarks
-5. `business_hours` - Operating hours
-6. `admin_actions` - Audit log for admin actions
-7. `notifications` - User notifications (optional, for in-app)
+1. `review_helpful_votes` - User votes on reviews
+2. `review_flags` - Flagged reviews for moderation
+3. `saved_businesses` - User bookmarks
+4. `user_search_history` - Search history tracking
+5. `user_activity` - User activity feed (optional)
 
-### 18. Index Optimization 🗂️
+### 16. Index Optimization 🗂️
 **Priority:** MEDIUM
 
 **Check:**
-- Review query performance
+- Review query performance for user-related queries
 - Add indexes on frequently queried columns:
-  - `reviews.business_id`
-  - `reviews.user_id`
-  - `businesses.category`
-  - `businesses.location`
-  - `business_ownership_requests.status`
+  - `reviews.user_id` - For user's reviews
+  - `review_helpful_votes.user_id` - For user's votes
+  - `saved_businesses.user_id` - For user's saved businesses
+  - `profiles.user_id` - For profile lookups
 
 ---
 
 ## 🚀 Deployment & Production Readiness
 
-### 19. Environment Configuration 🌍
+### 17. Environment Configuration 🌍
 **Priority:** HIGH
 
 **Required:**
@@ -368,7 +561,7 @@ CREATE TABLE business_hours (
 - Database connection pooling
 - CDN configuration for images
 
-### 20. Database Migrations 🗄️
+### 18. Database Migrations 🗄️
 **Priority:** HIGH
 
 **Required:**
@@ -382,30 +575,30 @@ CREATE TABLE business_hours (
 ## 📝 Implementation Priority
 
 ### Phase 1: Critical (Week 1-2)
-1. Business Claim API endpoint
-2. Review helpful votes backend
+1. Review helpful votes backend
+2. Review update/delete endpoints
 3. Rate limiting on all endpoints
 4. RLS policy audit and fixes
 5. Input validation with Zod
 
 ### Phase 2: High Priority (Week 3-4)
-6. Review responses for business owners
-7. Review flagging system
-8. Admin APIs for business approval
-9. Review update/delete endpoints
-10. Structured logging system
+6. Review flagging system
+7. Saved/bookmarked businesses
+8. User profile enhancements
+9. Structured logging system
+10. API response standardization
 
 ### Phase 3: Medium Priority (Week 5-6)
-11. Email notification system
-12. Saved/bookmarked businesses
-13. Business hours management
-14. Analytics endpoints
-15. API response standardization
+11. Email notification system (user-focused)
+12. Enhanced search with location
+13. User activity tracking
+14. Database function optimizations
+15. User analytics endpoints
 
 ### Phase 4: Nice to Have (Week 7-8)
-16. Enhanced search with location
-17. Database function optimizations
-18. Advanced analytics
+16. Search history
+17. Saved searches
+18. Advanced user preferences
 19. Notification system improvements
 
 ---
@@ -416,17 +609,20 @@ CREATE TABLE business_hours (
 - API endpoint tests
 - Service layer tests
 - Database function tests
+- Validation schema tests
 
 ### Integration Tests
 - Authentication flows
-- Business ownership workflow
-- Review submission and management
-- Admin actions
+- Review creation and management
+- Saved businesses workflow
+- Review helpful votes
+- Review flagging
 
 ### E2E Tests
 - Complete user journeys
-- Business owner workflows
-- Admin workflows
+- Review writing and editing
+- Saving and unsaving businesses
+- User profile management
 
 ---
 
@@ -434,8 +630,7 @@ CREATE TABLE business_hours (
 
 - API endpoint documentation (OpenAPI/Swagger)
 - Database schema documentation updates
-- Deployment guide
-- Environment setup guide
+- User feature documentation
 - Testing guide
 
 ---
@@ -453,12 +648,13 @@ CREATE TABLE business_hours (
 
 ## 📊 Summary
 
-**Total Missing Features:** ~20 major backend features  
+**Total Missing User Features:** ~15 major backend features  
 **Critical:** 5 features  
 **High Priority:** 5 features  
-**Medium Priority:** 7 features  
-**Low Priority:** 3 features  
+**Medium Priority:** 4 features  
+**Low Priority:** 1 feature  
 
-**Estimated Timeline:** 6-8 weeks for full implementation with 1 developer  
-**Risk Areas:** Security (RLS), Rate limiting, Email system integration
+**Estimated Timeline:** 4-6 weeks for full implementation with 1 developer  
+**Risk Areas:** Security (RLS), Rate limiting, Data validation
 
+**Note:** Business-related features (business claims, business owner management, admin approval workflows) are excluded from this plan and will be addressed separately.

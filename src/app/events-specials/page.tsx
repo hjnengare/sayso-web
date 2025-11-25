@@ -15,6 +15,8 @@ import { EVENTS_AND_SPECIALS, Event } from "../data/eventsData";
 import { useToast } from "../contexts/ToastContext";
 import { ChevronUp, Search } from "react-feather";
 import { Loader } from "../components/Loader/Loader";
+import StaggeredContainer from "../components/Animations/StaggeredContainer";
+import AnimatedElement from "../components/Animations/AnimatedElement";
 
 const ITEMS_PER_PAGE = 12;
 
@@ -112,63 +114,71 @@ export default function EventsSpecialsPage() {
         whiteText
       />
 
-      <main
-        className="bg-off-white pt-20 sm:pt-24 pb-28"
-        style={{
-          fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-        }}
-      >
-        <div className="mx-auto w-full max-w-[2000px] px-2">
-          <nav className="px-2" aria-label="Breadcrumb">
+      <StaggeredContainer>
+        <main
+          className="bg-off-white pt-20 sm:pt-24 pb-28"
+          style={{
+            fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+          }}
+        >
+          <div className="mx-auto w-full max-w-[2000px] px-2">
+            <AnimatedElement index={0} direction="top">
+              <nav className="px-2" aria-label="Breadcrumb">
                 <ol className="flex items-center gap-1 text-body-sm text-charcoal/60">
                   <li>
-                <Link
-                  href="/home"
-                  className="hover:text-charcoal transition-colors"
-                  style={{
-                    fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                    fontWeight: 600,
-                  }}
-                >
+                    <Link
+                      href="/home"
+                      className="hover:text-charcoal transition-colors"
+                      style={{
+                        fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                        fontWeight: 600,
+                      }}
+                    >
                       Home
                     </Link>
                   </li>
                   <li className="text-charcoal/40">/</li>
-              <li
-                className="text-charcoal font-medium"
-                style={{
-                  fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                  fontWeight: 600,
-                }}
-              >
-                Events & Specials
-              </li>
+                  <li
+                    className="text-charcoal font-medium"
+                    style={{
+                      fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Events & Specials
+                  </li>
                 </ol>
               </nav>
+            </AnimatedElement>
 
-          <div className="py-4 relative">
-            <SearchInput
-              variant="header"
-              placeholder="Search events and limited-time offers..."
-              mobilePlaceholder="Search events & specials..."
-              onSearch={handleSearch}
-              showFilter={false}
-            />
-            <button
-              className="absolute inset-y-0 right-0 pr-2 flex items-center text-charcoal/60 hover:text-charcoal transition-colors z-10"
-              aria-label="Search"
-              title="Search"
-            >
-              <Search className="w-5 h-5" strokeWidth={2} />
-            </button>
-                </div>
+            <AnimatedElement index={1} direction="left">
+              <div className="py-4 relative">
+                <SearchInput
+                  variant="header"
+                  placeholder="Search events and limited-time offers..."
+                  mobilePlaceholder="Search events & specials..."
+                  onSearch={handleSearch}
+                  showFilter={false}
+                />
+                <button
+                  className="absolute inset-y-0 right-0 pr-2 flex items-center text-charcoal/60 hover:text-charcoal transition-colors z-10"
+                  aria-label="Search"
+                  title="Search"
+                >
+                  <Search className="w-5 h-5" strokeWidth={2} />
+                </button>
+              </div>
+            </AnimatedElement>
 
-          <div className="py-4 flex flex-col gap-4">
-            <FilterTabs selectedFilter={selectedFilter} onFilterChange={handleFilterChange} />
-            <ResultsCount count={filteredEvents.length} filterType={selectedFilter} />
-            </div>
+            <AnimatedElement index={2} direction="right">
+              <div className="py-4 flex flex-col gap-4">
+                <FilterTabs selectedFilter={selectedFilter} onFilterChange={handleFilterChange} />
+                <ResultsCount count={filteredEvents.length} filterType={selectedFilter} />
+              </div>
+            </AnimatedElement>
 
-          <div className="py-4">
+            <AnimatedElement index={3} direction="bottom">
+              <div className="py-4">
                 {currentEvents.length > 0 ? (
                   <>
                     {/* Loading Spinner Overlay for Pagination */}
@@ -205,8 +215,10 @@ export default function EventsSpecialsPage() {
                   <EmptyState filterType={selectedFilter} />
                 )}
               </div>
-            </div>
-      </main>
+            </AnimatedElement>
+          </div>
+        </main>
+      </StaggeredContainer>
 
       {showScrollTop && (
         <button
@@ -218,7 +230,9 @@ export default function EventsSpecialsPage() {
         </button>
       )}
 
-          <Footer />
+          <AnimatedElement index={4} direction="bottom">
+            <Footer />
+          </AnimatedElement>
     </div>
   );
 }

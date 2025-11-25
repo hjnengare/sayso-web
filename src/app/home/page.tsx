@@ -20,6 +20,9 @@ import {
 } from "../data/communityHighlightsData";
 import { useBusinesses, useForYouBusinesses, useTrendingBusinesses } from "../hooks/useBusinesses";
 import { useRoutePrefetch } from "../hooks/useRoutePrefetch";
+import StaggeredContainer from "../components/Animations/StaggeredContainer";
+import AnimatedElement from "../components/Animations/AnimatedElement";
+import { getDirectionByIndex } from "../hooks/useStaggeredAnimation";
 
 // Note: dynamic and revalidate cannot be exported from client components
 // Client components are automatically dynamic
@@ -147,66 +150,80 @@ export default function Home() {
       {/* Premium floating orbs background */}
       <HomeBackgroundOrbs />
       
-      <div className="relative">
-        <HeroCarousel />
-      </div>
+      <StaggeredContainer>
+        <AnimatedElement index={0} direction="top">
+          <div className="relative">
+            <HeroCarousel />
+          </div>
+        </AnimatedElement>
 
-      <div className="bg-off-white relative">
-        <div className="pb-12 sm:pb-16 md:pb-20">
-          <section className="pt-4 sm:pt-8 md:pt-10 relative overflow-hidden">
-            <div className="relative z-10">
-              {forYouLoading && <BusinessRowSkeleton title="For You Now" />}
-              {!forYouLoading && hasForYouBusinesses && (
-                <MemoizedBusinessRow title="For You Now" businesses={forYouBusinesses} cta="See More" href="/for-you" />
-              )}
-              {!forYouLoading && !hasForYouBusinesses && !forYouError && (
-                <MemoizedBusinessRow title="For You Now" businesses={[]} cta="See More" href="/for-you" />
-              )}
-              {forYouError && !forYouLoading && (
-                <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral">
-                  Couldn't load personalized picks right now. We'll retry in the background.
+        <div className="bg-off-white relative">
+          <div className="pb-12 sm:pb-16 md:pb-20">
+            <AnimatedElement index={1} direction="left">
+              <section className="pt-4 sm:pt-8 md:pt-10 relative overflow-hidden">
+                <div className="relative z-10">
+                  {forYouLoading && <BusinessRowSkeleton title="For You Now" />}
+                  {!forYouLoading && hasForYouBusinesses && (
+                    <MemoizedBusinessRow title="For You Now" businesses={forYouBusinesses} cta="See More" href="/for-you" />
+                  )}
+                  {!forYouLoading && !hasForYouBusinesses && !forYouError && (
+                    <MemoizedBusinessRow title="For You Now" businesses={[]} cta="See More" href="/for-you" />
+                  )}
+                  {forYouError && !forYouLoading && (
+                    <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral">
+                      Couldn't load personalized picks right now. We'll retry in the background.
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          </section>
+              </section>
+            </AnimatedElement>
 
-          <section className="pt-4 sm:pt-8 md:pt-10 relative overflow-hidden">
-            <div className="relative z-10">
-              {trendingLoading && <BusinessRowSkeleton title="Trending Now" />}
-              {!trendingLoading && hasTrendingBusinesses && (
-                <MemoizedBusinessRow title="Trending Now" businesses={trendingBusinesses} cta="See More" href="/trending" />
-              )}
-              {!trendingLoading && !hasTrendingBusinesses && !trendingError && (
-                <MemoizedBusinessRow title="Trending Now" businesses={[]} cta="See More" href="/trending" />
-              )}
-              {trendingError && !trendingLoading && (
-                <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral">
-                  Trending businesses are still loading. Refresh to try again.
+            <AnimatedElement index={2} direction="right">
+              <section className="pt-4 sm:pt-8 md:pt-10 relative overflow-hidden">
+                <div className="relative z-10">
+                  {trendingLoading && <BusinessRowSkeleton title="Trending Now" />}
+                  {!trendingLoading && hasTrendingBusinesses && (
+                    <MemoizedBusinessRow title="Trending Now" businesses={trendingBusinesses} cta="See More" href="/trending" />
+                  )}
+                  {!trendingLoading && !hasTrendingBusinesses && !trendingError && (
+                    <MemoizedBusinessRow title="Trending Now" businesses={[]} cta="See More" href="/trending" />
+                  )}
+                  {trendingError && !trendingLoading && (
+                    <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral">
+                      Trending businesses are still loading. Refresh to try again.
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          </section>
+              </section>
+            </AnimatedElement>
 
-          <section className="pt-4 sm:pt-8 md:pt-10 relative overflow-hidden">
-            <div className="relative z-10">
-              <EventsSpecials events={EVENTS_AND_SPECIALS.slice(0, 5)} />
-            </div>
-          </section>
+            <AnimatedElement index={3} direction="bottom">
+              <section className="pt-4 sm:pt-8 md:pt-10 relative overflow-hidden">
+                <div className="relative z-10">
+                  <EventsSpecials events={EVENTS_AND_SPECIALS.slice(0, 5)} />
+                </div>
+              </section>
+            </AnimatedElement>
 
-          <section className="pt-4 sm:pt-8 md:pt-10 relative overflow-hidden">
-            <div className="relative z-10">
-              <CommunityHighlights
-                reviews={FEATURED_REVIEWS}
-                topReviewers={TOP_REVIEWERS}
-                businessesOfTheMonth={featuredByCategory}
-                variant="reviews"
-              />
-            </div>
-          </section>
+            <AnimatedElement index={4} direction="scale">
+              <section className="pt-4 sm:pt-8 md:pt-10 relative overflow-hidden">
+                <div className="relative z-10">
+                  <CommunityHighlights
+                    reviews={FEATURED_REVIEWS}
+                    topReviewers={TOP_REVIEWERS}
+                    businessesOfTheMonth={featuredByCategory}
+                    variant="reviews"
+                  />
+                </div>
+              </section>
+            </AnimatedElement>
+          </div>
+
+          <AnimatedElement index={5} direction="bottom">
+            <Footer />
+          </AnimatedElement>
         </div>
-
-        <Footer />
-      </div>
+      </StaggeredContainer>
 
       {/* Scroll to Top Button - Mobile Only */}
       {showScrollTop && (

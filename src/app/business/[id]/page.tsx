@@ -34,6 +34,8 @@ import BusinessInfoAside from "../../components/BusinessInfo/BusinessInfoAside";
 import SimilarBusinesses from "../../components/SimilarBusinesses/SimilarBusinesses";
 import { useAuth } from "../../contexts/AuthContext";
 import Logo from "../../components/Logo/Logo";
+import StaggeredContainer from "../../components/Animations/StaggeredContainer";
+import AnimatedElement from "../../components/Animations/AnimatedElement";
 
 // CSS animations to replace framer-motion
 const animations = `
@@ -123,11 +125,14 @@ export default function BusinessProfilePage() {
         }
     }, [showSpecialsModal]);
 
-    // Handle scroll to top button visibility
+    // Handle scroll to top button visibility - show after scrolling more than 100px
     useEffect(() => {
         const handleScroll = () => {
             setShowScrollTop(window.scrollY > 100);
         };
+
+        // Check initial scroll position
+        handleScroll();
 
         const options: AddEventListenerOptions = { passive: true };
         window.addEventListener('scroll', handleScroll, options);
@@ -195,12 +200,17 @@ export default function BusinessProfilePage() {
             const urlParams = new URLSearchParams(window.location.search);
             const refreshed = urlParams.get('refreshed') || forceRefresh;
             
-            // Use stale-while-revalidate for better performance (unless explicitly refreshing)
-            const cacheOption = refreshed ? 'no-store' : 'force-cache';
+            // In development, always use no-store to prevent caching issues
+            // In production, use stale-while-revalidate for better performance
+            // Check if we're in development by checking the hostname (localhost = dev)
+            const isDevelopment = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+            const cacheOption = (refreshed || isDevelopment) ? 'no-store' : 'force-cache';
+            const revalidateTime = (refreshed || isDevelopment) ? 0 : 600; // 10 minutes in production, 0 in dev
+            
             const response = await fetch(`/api/businesses/${businessId}${forceRefresh ? `?refreshed=${Date.now()}` : ''}`, {
                 cache: cacheOption,
-                next: refreshed ? { revalidate: 0 } : { revalidate: 600 }, // Revalidate after 10 minutes unless refreshing
-                headers: refreshed ? { 'Cache-Control': 'no-cache' } : undefined,
+                next: { revalidate: revalidateTime },
+                headers: (refreshed || isDevelopment) ? { 'Cache-Control': 'no-cache' } : undefined,
             });
             
             if (!response.ok) {
@@ -545,18 +555,18 @@ export default function BusinessProfilePage() {
                     </div>
                 </div>
 
-                <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white ">
+                <StaggeredContainer>
+                  <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white ">
                     <div className="py-1 pt-20 sm:px-4">
-                        <main className="relative font-sf-pro pt-4 sm:pt-6" id="main-content" role="main" aria-label="Business profile content">
-                            <div className="mx-auto w-full max-w-[2000px] px-3 relative z-10">
-                                <div className="pt-2 pb-12 sm:pb-16 md:pb-20">
-
-
-                                    <div className="space-y-6">
-                                        <div className="grid gap-6 lg:grid-cols-3 items-start">
-                                            <div className="lg:col-span-2">
-                                                <article className="w-full sm:mx-0 flex items-center justify-center" aria-labelledby="photos-heading">
-                                                    <div className="bg-card-bg backdrop-blur-xl border-0 sm:border border-white/60 rounded-2xl sm:rounded-[20px] shadow-none sm:shadow-lg relative overflow-hidden animate-fade-in-up mx-auto w-full">
+                      <main className="relative font-sf-pro pt-4 sm:pt-6" id="main-content" role="main" aria-label="Business profile content">
+                        <div className="mx-auto w-full max-w-[2000px] px-3 relative z-10">
+                          <div className="pt-2 pb-12 sm:pb-16 md:pb-20">
+                            <div className="space-y-6">
+                              <div className="grid gap-6 lg:grid-cols-3 items-start">
+                                <AnimatedElement index={0} direction="left">
+                                  <div className="lg:col-span-2">
+                                    <article className="w-full sm:mx-0 flex items-center justify-center" aria-labelledby="photos-heading">
+                                      <div className="bg-card-bg backdrop-blur-xl border-0 sm:border border-white/60 rounded-2xl sm:rounded-[20px] shadow-none sm:shadow-lg relative overflow-hidden mx-auto w-full">
                                                         <div className="relative z-10">
                                                             <ImageCarousel
                                                                 images={businessData.images}
@@ -569,21 +579,25 @@ export default function BusinessProfilePage() {
                                                                 ]}
                                                             />
                                                         </div>
-                                                    </div>
-                                                </article>
-                                            </div>
+                                      </div>
+                                    </article>
+                                  </div>
+                                </AnimatedElement>
 
-                                            <div className="space-y-6">
-                                                <BusinessInfoAside
-                                                    businessInfo={businessInfo}
-                                                    className="self-start lg:sticky lg:top-28"
-                                                />
-                                            </div>
+                                <AnimatedElement index={1} direction="right">
+                                  <div className="space-y-6">
+                                    <BusinessInfoAside
+                                      businessInfo={businessInfo}
+                                      className="self-start lg:sticky lg:top-28"
+                                    />
+                                  </div>
+                                </AnimatedElement>
                                         </div>
 
-                                        <section className="space-y-6" aria-labelledby="reviews-heading">
-                                                <div className="flex justify-center">
-                                                    <div className="flex flex-col gap-3">
+                                <AnimatedElement index={2} direction="bottom">
+                                  <section className="space-y-6" aria-labelledby="reviews-heading">
+                                    <div className="flex justify-center">
+                                      <div className="flex flex-col gap-3">
                                                         <h2
                                                             id="reviews-heading"
                                                             className="text-h3 font-semibold text-charcoal border-b border-charcoal/10 pb-2"
@@ -637,21 +651,29 @@ export default function BusinessProfilePage() {
                                                         </Link>
                                                     </div>
                                                 )}
-                                            </section>
+                                    </section>
+                                  </AnimatedElement>
 
-                                        {/* Similar Businesses Section */}
-                                        <SimilarBusinesses
-                                            currentBusinessId={businessId}
-                                            category={businessData.category}
-                                            location={businessData.location}
-                                            limit={6}
-                                        />
-                                    </div>
+                                  {/* Similar Businesses Section */}
+                                  <AnimatedElement index={3} direction="scale">
+                                    <SimilarBusinesses
+                                      currentBusinessId={businessId}
+                                      category={businessData.category}
+                                      location={businessData.location}
+                                      limit={6}
+                                    />
+                                  </AnimatedElement>
                                 </div>
+                              </div>
                             </div>
-                        </main>
-                    </div>
-                </div>
+                          </main>
+                        </div>
+                      </div>
+
+                      <AnimatedElement index={4} direction="bottom">
+                        <Footer />
+                      </AnimatedElement>
+                  </StaggeredContainer>
 
                 {/* Events and Specials Modal */}
                 {showSpecialsModal && modalPosition && (
@@ -749,8 +771,6 @@ export default function BusinessProfilePage() {
                     <ChevronUp className="w-5 h-5 sm:w-6 sm:h-6" />
                 </button>
             )}
-
-            <Footer />
                 </motion.div>
             </AnimatePresence>
         </>

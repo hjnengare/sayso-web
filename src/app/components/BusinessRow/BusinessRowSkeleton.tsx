@@ -24,7 +24,7 @@ export default function BusinessRowSkeleton({ title, cards = DEFAULT_CARD_COUNT 
         <div className="flex gap-3 items-stretch pt-2">
           {Array.from({ length: cards }).map((_, index) => (
             <div key={index} className="list-none flex">
-              <div className="w-[240px] sm:w-[260px] md:w-[280px] h-[320px] rounded-[28px] bg-off-white border border-charcoal/5 shadow-sm shadow-charcoal/5 animate-pulse" />
+              <div className="w-[240px] sm:w-[260px] md:w-[280px] h-[320px] rounded-[28px] bg-off-white border border-navbar-bg/5 shadow-sm shadow-navbar-bg/5 animate-pulse" />
             </div>
           ))}
         </div>

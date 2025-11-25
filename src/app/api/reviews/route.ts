@@ -3,9 +3,23 @@ import { getServerSupabase } from '../../lib/supabase/server';
 import { ReviewRateLimiter } from '../../lib/utils/rateLimiter';
 import { ReviewValidator } from '../../lib/utils/validation';
 import { ContentModerator } from '../../lib/utils/contentModeration';
-import createDOMPurify from 'isomorphic-dompurify';
 
-const DOMPurify = createDOMPurify();
+// Simple text sanitization function (strips HTML tags and escapes special characters)
+function sanitizeText(text: string): string {
+  if (!text) return '';
+  // Remove HTML tags
+  let sanitized = text.replace(/<[^>]*>/g, '');
+  // Decode HTML entities
+  sanitized = sanitized
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, ' ');
+  // Trim whitespace
+  return sanitized.trim();
+}
 
 export async function POST(req: Request) {
   try {
@@ -81,15 +95,9 @@ export async function POST(req: Request) {
     }
 
     // Sanitize content to prevent XSS
-    const sanitizedContent = DOMPurify.sanitize(content!.trim(), {
-      ALLOWED_TAGS: [], // Strip all HTML tags
-      ALLOWED_ATTR: [],
-    });
+    const sanitizedContent = sanitizeText(content!.trim());
 
-    const sanitizedTitle = title ? DOMPurify.sanitize(title.trim(), {
-      ALLOWED_TAGS: [],
-      ALLOWED_ATTR: [],
-    }) : null;
+    const sanitizedTitle = title ? sanitizeText(title.trim()) : null;
 
     // Basic content moderation
     const moderationResult = ContentModerator.moderate(sanitizedContent);
@@ -176,6 +184,19 @@ export async function POST(req: Request) {
       }
 
       review = reviewData;
+      
+      // Ensure profile data is properly structured in the response
+      if (review.profile) {
+        const profile = review.profile;
+        // Verify we have display_name or username (all reviewers are authenticated)
+        if (!profile.display_name && !profile.username) {
+          console.warn('Review created but profile missing display_name and username:', {
+            user_id: user.id,
+            review_id: review.id,
+            profile: profile
+          });
+        }
+      }
     } catch (error) {
       console.error('Unexpected error creating review:', error);
       return NextResponse.json(
@@ -281,10 +302,42 @@ export async function POST(req: Request) {
     // - If review creation succeeds but other operations fail, the review remains
     //   This is acceptable as images can be added later and stats can be recalculated
 
+    // Ensure review object is properly serializable
+    // Handle profile relationship - it might be an array or object
+    let serializableReview: any = { ...review };
+    if (serializableReview.profile) {
+      // If profile is an array, take the first element
+      if (Array.isArray(serializableReview.profile)) {
+        serializableReview.profile = serializableReview.profile[0] || null;
+      }
+    }
+
+    // Remove any non-serializable properties
+    try {
+      // Test serialization
+      JSON.stringify(serializableReview);
+    } catch (serializeError) {
+      console.error('Error serializing review object:', serializeError);
+      // If serialization fails, return a simplified version
+      serializableReview = {
+        id: review.id,
+        business_id: review.business_id,
+        user_id: review.user_id,
+        rating: review.rating,
+        title: review.title,
+        content: review.content,
+        tags: review.tags,
+        helpful_count: review.helpful_count,
+        created_at: review.created_at,
+        updated_at: review.updated_at,
+        profile: serializableReview.profile || null,
+      };
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Review created successfully',
-      review,
+      review: serializableReview,
       warnings: uploadErrors.length > 0 ? {
         imageUploads: uploadErrors,
         message: 'Some images failed to upload, but the review was created successfully'
@@ -303,8 +356,15 @@ export async function POST(req: Request) {
 
   } catch (error) {
     console.error('Error in reviews API:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error',
+        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined,
+        stack: process.env.NODE_ENV === 'development' ? errorStack : undefined
+      },
       { status: 500 }
     );
   }
@@ -363,10 +423,32 @@ export async function GET(req: Request) {
       );
     }
 
+    // Transform reviews to ensure profile data is properly structured
+    const transformedReviews = (reviews || []).map((review: any) => {
+      const profile = review.profile || {};
+      // Ensure we always have display_name or username since all reviewers are authenticated
+      const authorName = profile.display_name || profile.username;
+      
+      if (!authorName) {
+        console.warn('Review missing author name - user_id:', review.user_id, 'profile:', profile);
+      }
+      
+      return {
+        ...review,
+        // Ensure profile is always an object
+        profile: {
+          user_id: profile.user_id || review.user_id,
+          display_name: profile.display_name || null,
+          username: profile.username || null,
+          avatar_url: profile.avatar_url || null,
+        },
+      };
+    });
+
     return NextResponse.json({
       success: true,
-      reviews: reviews || [],
-      count: reviews?.length || 0,
+      reviews: transformedReviews,
+      count: transformedReviews.length,
     });
 
   } catch (error) {

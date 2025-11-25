@@ -11,6 +11,8 @@ import LeaderboardPodium from "../components/Leaderboard/LeaderboardPodium";
 import LeaderboardList from "../components/Leaderboard/LeaderboardList";
 import LeaderboardTitle from "../components/Leaderboard/LeaderboardTitle";
 import { Tabs } from "@/components/atoms/Tabs";
+import StaggeredContainer from "../components/Animations/StaggeredContainer";
+import AnimatedElement from "../components/Animations/AnimatedElement";
 
 // Dynamically import BusinessOfMonthLeaderboard to improve initial load time
 const BusinessOfMonthLeaderboard = nextDynamic(
@@ -170,80 +172,89 @@ function LeaderboardPage() {
           whiteText={true}
         />
 
-        <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
-          <div className="py-1 pt-20">
-            {/* Hero Section */}
-            <section className="relative z-10 pb-6 sm:pb-8 md:pb-12">
-              <div className="mx-auto w-full max-w-[2000px] px-2">
-                {/* Breadcrumb */}
-                <nav className="px-2 py-4" aria-label="Breadcrumb">
-                  <ol className="flex items-center gap-1 text-body-sm text-charcoal/60">
-                    <li>
-                      <Link href="/home" className="hover:text-charcoal transition-colors font-urbanist">
-                        Home
-                      </Link>
-                    </li>
-                    <li className="text-charcoal/40">/</li>
-                    <li className="text-charcoal font-medium font-urbanist">Community Highlights</li>
-                  </ol>
-                </nav>
-              </div>
-            </section>
-
-            {/* Main Content Section */}
-            <section
-              className="relative pb-12 sm:pb-16 md:pb-20"
-              style={{
-                fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-              }}
-            >
-              <div className="mx-auto w-full max-w-[2000px] px-2 relative z-10">
-                <div className="max-w-[800px] mx-auto pt-4 sm:pt-6 md:pt-8">
-
-                  {/* Tabs */}
-                  <div className="flex justify-center mb-4 sm:mb-6 md:mb-8 px-2">
-                    <Tabs tabs={tabs} activeTab={activeTab} onTabChange={handleTabChange} />
+        <StaggeredContainer>
+          <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
+            <div className="py-1 pt-20">
+              {/* Hero Section */}
+              <AnimatedElement index={0} direction="top">
+                <section className="relative z-10 pb-6 sm:pb-8 md:pb-12">
+                  <div className="mx-auto w-full max-w-[2000px] px-2">
+                    {/* Breadcrumb */}
+                    <nav className="px-2 py-4" aria-label="Breadcrumb">
+                      <ol className="flex items-center gap-1 text-body-sm text-charcoal/60">
+                        <li>
+                          <Link href="/home" className="hover:text-charcoal transition-colors font-urbanist">
+                            Home
+                          </Link>
+                        </li>
+                        <li className="text-charcoal/40">/</li>
+                        <li className="text-charcoal font-medium font-urbanist">Community Highlights</li>
+                      </ol>
+                    </nav>
                   </div>
+                </section>
+              </AnimatedElement>
 
-                  {/* Leaderboard Content */}
-                  <motion.div
-                    key={activeTab}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.1 }}
-                    className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-xl ring-1 ring-white/20 p-3 sm:p-4 md:p-6 lg:p-8 mb-6 sm:mb-8 md:mb-12 relative overflow-hidden"
-                  >
-                    {/* Card decorative elements */}
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-sage/10 to-transparent rounded-full blur-lg"></div>
-                    <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-coral/10 to-transparent rounded-full blur-lg"></div>
+              {/* Main Content Section */}
+              <AnimatedElement index={1} direction="scale">
+                <section
+                  className="relative pb-12 sm:pb-16 md:pb-20"
+                  style={{
+                    fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                  }}
+                >
+                  <div className="mx-auto w-full max-w-[2000px] px-2 relative z-10">
+                    <div className="max-w-[800px] mx-auto pt-4 sm:pt-6 md:pt-8">
 
-                    <div className="relative z-10">
-                      {activeTab === "contributors" ? (
-                        <>
-                          {/* Podium - visible on all screens */}
-                          <LeaderboardPodium topReviewers={topReviewers} />
-                          <LeaderboardList
-                            users={topReviewers}
-                            showFullLeaderboard={showFullLeaderboard}
-                            onToggleFullLeaderboard={handleToggleFullLeaderboard}
-                          />
-                        </>
-                      ) : (
-                        <BusinessOfMonthLeaderboard
-                          businesses={featuredBusinesses}
-                          showFullLeaderboard={showFullBusinessLeaderboard}
-                          onToggleFullLeaderboard={handleToggleFullBusinessLeaderboard}
-                        />
-                      )}
+                      {/* Tabs */}
+                      <AnimatedElement index={2} direction="left">
+                        <div className="flex justify-center mb-4 sm:mb-6 md:mb-8 px-2">
+                          <Tabs tabs={tabs} activeTab={activeTab} onTabChange={handleTabChange} />
+                        </div>
+                      </AnimatedElement>
+
+                      {/* Leaderboard Content */}
+                      <AnimatedElement index={3} direction="right">
+                        <motion.div
+                          key={activeTab}
+                          className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-xl ring-1 ring-white/20 p-3 sm:p-4 md:p-6 lg:p-8 mb-6 sm:mb-8 md:mb-12 relative overflow-hidden"
+                        >
+                          {/* Card decorative elements */}
+                          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-sage/10 to-transparent rounded-full blur-lg"></div>
+                          <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-coral/10 to-transparent rounded-full blur-lg"></div>
+
+                          <div className="relative z-10">
+                            {activeTab === "contributors" ? (
+                              <>
+                                {/* Podium - visible on all screens */}
+                                <LeaderboardPodium topReviewers={topReviewers} />
+                                <LeaderboardList
+                                  users={topReviewers}
+                                  showFullLeaderboard={showFullLeaderboard}
+                                  onToggleFullLeaderboard={handleToggleFullLeaderboard}
+                                />
+                              </>
+                            ) : (
+                              <BusinessOfMonthLeaderboard
+                                businesses={featuredBusinesses}
+                                showFullLeaderboard={showFullBusinessLeaderboard}
+                                onToggleFullLeaderboard={handleToggleFullBusinessLeaderboard}
+                              />
+                            )}
+                          </div>
+                        </motion.div>
+                      </AnimatedElement>
                     </div>
-                  </motion.div>
-                </div>
-              </div>
-            </section>
-          </div>
+                  </div>
+                </section>
+              </AnimatedElement>
+            </div>
 
-          <Footer />
-        </div>
+            <AnimatedElement index={4} direction="bottom">
+              <Footer />
+            </AnimatedElement>
+          </div>
+        </StaggeredContainer>
       </div>
     </EmailVerificationGuard>
   );

@@ -1,127 +1,108 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSupabase } from '../../../../lib/supabase/server';
 
-interface RouteParams {
-  params: Promise<{ id: string }>;
-}
+type RouteContext = {
+  params: { id: string };
+};
 
 /**
  * POST /api/reviews/[id]/helpful
- * Toggle helpful vote on a review
+ * Mark review as helpful (add vote)
  */
-export async function POST(req: Request, { params }: RouteParams) {
+export async function POST(_req: NextRequest, { params }: RouteContext) {
+  const reviewId = params.id;
+
   try {
-    const { id } = await params;
     const supabase = await getServerSupabase();
-    
-    // Check if user is authenticated
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
     if (authError || !user) {
       return NextResponse.json(
-        { error: 'You must be logged in to vote on reviews' },
+        { error: 'You must be logged in to vote' },
         { status: 401 }
       );
     }
 
-    // Check if review exists
-    const { data: review, error: reviewError } = await supabase
-      .from('reviews')
-      .select('id, helpful_count')
-      .eq('id', id)
-      .single();
-
-    if (reviewError || !review) {
-      return NextResponse.json(
-        { error: 'Review not found' },
-        { status: 404 }
-      );
-    }
-
-    // Check if user has already voted
-    const { data: existingVote, error: voteCheckError } = await supabase
+    const { error } = await supabase
       .from('review_helpful_votes')
-      .select('review_id, user_id')
-      .eq('review_id', id)
-      .eq('user_id', user.id)
-      .single();
+      .insert({
+        review_id: reviewId,
+        user_id: user.id,
+      });
 
-    if (voteCheckError && voteCheckError.code !== 'PGRST116') {
-      // PGRST116 = not found, which is fine
-      console.error('Error checking existing vote:', voteCheckError);
+    // Handle duplicate vote gracefully
+    if (error) {
+      // PostgreSQL unique violation
+      if (error.code === '23505') {
+        return NextResponse.json(
+          { helpful: true, alreadyVoted: true },
+          { status: 200 }
+        );
+      }
+
+      console.error('Error inserting helpful vote:', error);
       return NextResponse.json(
-        { error: 'Failed to check vote status' },
+        { error: 'Failed to add helpful vote' },
         { status: 500 }
       );
     }
 
-    const hasVoted = !!existingVote;
-    let newHelpfulCount = review.helpful_count;
-
-    if (hasVoted) {
-      // Remove vote - delete from review_helpful_votes
-      const { error: deleteError } = await supabase
-        .from('review_helpful_votes')
-        .delete()
-        .eq('review_id', id)
-        .eq('user_id', user.id);
-
-      if (deleteError) {
-        console.error('Error removing vote:', deleteError);
-        return NextResponse.json(
-          { error: 'Failed to remove vote' },
-          { status: 500 }
-        );
-      }
-
-      // Decrement helpful_count (ensure it doesn't go below 0)
-      newHelpfulCount = Math.max(0, review.helpful_count - 1);
-    } else {
-      // Add vote - insert into review_helpful_votes
-      const { error: insertError } = await supabase
-        .from('review_helpful_votes')
-        .insert({
-          review_id: id,
-          user_id: user.id,
-        });
-
-      if (insertError) {
-        console.error('Error adding vote:', insertError);
-        return NextResponse.json(
-          { error: 'Failed to add vote', details: insertError.message },
-          { status: 500 }
-        );
-      }
-
-      // Increment helpful_count
-      newHelpfulCount = review.helpful_count + 1;
-    }
-
-    // Update helpful_count in reviews table
-    const { error: updateError } = await supabase
-      .from('reviews')
-      .update({ helpful_count: newHelpfulCount })
-      .eq('id', id);
-
-    if (updateError) {
-      console.error('Error updating helpful count:', updateError);
-      return NextResponse.json(
-        { error: 'Failed to update helpful count' },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      has_voted: !hasVoted, // Toggled state
-      helpful_count: newHelpfulCount,
-      message: hasVoted ? 'Vote removed successfully' : 'Vote added successfully',
-    });
-
-  } catch (error) {
-    console.error('Error in helpful vote toggle API:', error);
+    return NextResponse.json({ helpful: true, alreadyVoted: false });
+  } catch (err) {
+    console.error('POST /reviews/[id]/helpful unexpected error:', err);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Unexpected server error' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * DELETE /api/reviews/[id]/helpful
+ * Remove helpful vote
+ */
+export async function DELETE(_req: NextRequest, { params }: RouteContext) {
+  const reviewId = params.id;
+
+  try {
+    const supabase = await getServerSupabase();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'You must be logged in to unvote' },
+        { status: 401 }
+      );
+    }
+
+    const { error } = await supabase
+      .from('review_helpful_votes')
+      .delete()
+      .match({
+        review_id: reviewId,
+        user_id: user.id,
+      });
+
+    if (error) {
+      console.error('Error deleting helpful vote:', error);
+      return NextResponse.json(
+        { error: 'Failed to remove helpful vote' },
+        { status: 500 }
+      );
+    }
+
+    // Even if nothing was deleted, returning success keeps UX simple
+    return NextResponse.json({ helpful: false });
+  } catch (err) {
+    console.error('DELETE /reviews/[id]/helpful unexpected error:', err);
+    return NextResponse.json(
+      { error: 'Unexpected server error' },
       { status: 500 }
     );
   }
@@ -129,66 +110,44 @@ export async function POST(req: Request, { params }: RouteParams) {
 
 /**
  * GET /api/reviews/[id]/helpful
- * Get helpful vote status for current user
+ * Check if current user marked this review as helpful
  */
-export async function GET(req: Request, { params }: RouteParams) {
+export async function GET(_req: NextRequest, { params }: RouteContext) {
+  const reviewId = params.id;
+
   try {
-    const { id } = await params;
     const supabase = await getServerSupabase();
-    
-    // Check if user is authenticated
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    // If no user, they obviously haven't voted
     if (authError || !user) {
-      return NextResponse.json(
-        { error: 'You must be logged in to check vote status' },
-        { status: 401 }
-      );
+      return NextResponse.json({ helpful: false });
     }
 
-    // Check if review exists
-    const { data: review, error: reviewError } = await supabase
-      .from('reviews')
-      .select('id, helpful_count')
-      .eq('id', id)
-      .single();
-
-    if (reviewError || !review) {
-      return NextResponse.json(
-        { error: 'Review not found' },
-        { status: 404 }
-      );
-    }
-
-    // Check if user has voted
-    const { data: vote, error: voteError } = await supabase
+    const { data, error } = await supabase
       .from('review_helpful_votes')
-      .select('review_id, user_id')
-      .eq('review_id', id)
+      .select('review_id')
+      .eq('review_id', reviewId)
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
-    if (voteError && voteError.code !== 'PGRST116') {
-      // PGRST116 = not found, which is fine
-      console.error('Error checking vote:', voteError);
+    if (error) {
+      console.error('Error checking helpful status:', error);
       return NextResponse.json(
-        { error: 'Failed to check vote status' },
+        { error: 'Failed to check helpful status' },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      has_voted: !!vote,
-      helpful_count: review.helpful_count,
-    });
-
-  } catch (error) {
-    console.error('Error in helpful vote status API:', error);
+    return NextResponse.json({ helpful: !!data });
+  } catch (err) {
+    console.error('GET /reviews/[id]/helpful unexpected error:', err);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Unexpected server error' },
       { status: 500 }
     );
   }
 }
-
