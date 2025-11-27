@@ -117,7 +117,7 @@ export default function SimilarBusinesses({
         <ul className="list-none grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 md:gap-2 relative z-10">
           {similarBusinesses.map((business, index) => (
             <AnimatedElement key={business.id} index={index} direction="bottom">
-              <li>
+              <li className="h-full w-full">
                 <SimilarBusinessCard
                   id={business.id}
                   name={business.name}

@@ -49,7 +49,7 @@ export default function SimilarBusinessCard({
   return (
     <Link
       href={`/business/${id}`}
-      className="group block bg-gradient-to-br from-card-bg via-card-bg/98 to-card-bg/95 rounded-2xl overflow-hidden border border-white/60 backdrop-blur-xl shadow-[0_8px_24px_rgba(0,0,0,0.08),0_4px_12px_rgba(0,0,0,0.04)] relative transition-all duration-500 ease-out hover:scale-[1.08] hover:z-20 hover:shadow-[0_16px_40px_rgba(0,0,0,0.15),0_8px_20px_rgba(0,0,0,0.08)] hover:border-white/80"
+      className="group block bg-gradient-to-br from-card-bg via-card-bg/98 to-card-bg/95 rounded-2xl overflow-visible border border-white/60 backdrop-blur-xl shadow-[0_8px_24px_rgba(0,0,0,0.08),0_4px_12px_rgba(0,0,0,0.04)] relative transition-all duration-500 ease-out hover:z-20 hover:shadow-[0_16px_40px_rgba(0,0,0,0.15),0_8px_20px_rgba(0,0,0,0.08)] hover:border-white/80 h-full w-full flex flex-col min-h-[320px]"
     >
       {/* Premium glass depth overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-white/5 to-transparent pointer-events-none z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -59,7 +59,7 @@ export default function SimilarBusinessCard({
       <div className="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-coral/10 to-transparent rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-0" />
       
       {/* Image Section - Premium */}
-      <div className="relative h-48 sm:h-52 overflow-hidden bg-gradient-to-br from-off-white/95 to-off-white/85 rounded-t-2xl group-hover:rounded-t-2xl transition-all duration-500">
+      <div className="relative h-48 sm:h-52 flex-shrink-0 overflow-hidden bg-gradient-to-br from-off-white/95 to-off-white/85 rounded-t-2xl group-hover:rounded-t-2xl transition-all duration-500">
         {isImagePng ? (
           <div className="w-full h-full flex items-center justify-center">
             <OptimizedImage
@@ -114,18 +114,21 @@ export default function SimilarBusinessCard({
       </div>
 
       {/* Content Section - Premium Enhanced */}
-      <div className="p-4 sm:p-5 space-y-2.5 relative z-10 bg-gradient-to-b from-transparent via-off-white/20 to-off-white/40">
+      <div className="p-4 sm:p-5 space-y-2.5 relative z-10 bg-gradient-to-b from-transparent via-off-white/20 to-off-white/40 flex-1 flex flex-col rounded-b-2xl">
         {/* Business Name - Premium */}
-        <h3
-          className="text-sm sm:text-[15px] font-bold text-charcoal line-clamp-2 group-hover:text-navbar-bg transition-colors duration-300 leading-tight"
-          style={{
-            fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-            fontWeight: 700,
-            letterSpacing: '-0.02em',
-          }}
-        >
-          {name}
-        </h3>
+        <div className="min-h-[1.5em]">
+          <h3
+            className="text-sm sm:text-[15px] font-bold text-charcoal line-clamp-1 group-hover:line-clamp-none group-hover:text-navbar-bg transition-all duration-300 leading-tight"
+            style={{
+              fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+              fontWeight: 700,
+              letterSpacing: '-0.02em',
+            }}
+            title={name}
+          >
+            {name}
+          </h3>
+        </div>
 
         {/* Category and Location - Premium */}
         <div className="flex items-center gap-2 text-xs text-charcoal/75" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
