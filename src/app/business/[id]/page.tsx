@@ -27,6 +27,8 @@ import {
     BusinessActionCard,
     BusinessContactInfo,
 } from "../../components/BusinessDetail";
+import StaggeredContainer from "../../components/Animations/StaggeredContainer";
+import AnimatedElement from "../../components/Animations/AnimatedElement";
 
 export default function BusinessProfilePage() {
     const params = useParams();
@@ -285,61 +287,77 @@ export default function BusinessProfilePage() {
                         >
                             <div className="mx-auto w-full max-w-[2000px] px-2 relative z-10">
                                 <div className="pt-2 pb-12 sm:pb-16 md:pb-20">
-                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8">
-                                        {/* Left Column - Main Content */}
-                                        <div className="lg:col-span-2 space-y-4 sm:space-y-6 lg:space-y-8">
-                                            <BusinessHeroImage
-                                                image={businessData.image || businessData.images[0] || ""}
-                                                alt={businessData.name}
-                                                rating={businessData.rating}
-                                                isLiked={isLiked}
-                                                onLike={handleLike}
-                                                verified={businessData.verified}
-                                            />
-                                            <BusinessInfoComponent
-                                                name={businessData.name}
-                                                rating={businessData.rating}
-                                                location={businessData.location}
-                                                category={businessData.category}
-                                            />
-                                            <BusinessDetailsCard
-                                                priceRange={businessData.price_range}
-                                                verified={businessData.verified}
-                                                hours={business.hours || business.opening_hours || business.openingHours || undefined}
-                                            />
-                                            <BusinessDescription description={businessData.description} />
+                                    <StaggeredContainer>
+                                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8">
+                                            {/* Left Column - Main Content */}
+                                            <div className="lg:col-span-2 space-y-4 sm:space-y-6 lg:space-y-8">
+                                                <AnimatedElement index={0} direction="bottom">
+                                                    <BusinessHeroImage
+                                                        image={businessData.image || businessData.images[0] || ""}
+                                                        alt={businessData.name}
+                                                        rating={businessData.rating}
+                                                        isLiked={isLiked}
+                                                        onLike={handleLike}
+                                                        verified={businessData.verified}
+                                                    />
+                                                </AnimatedElement>
+                                                <AnimatedElement index={1} direction="bottom">
+                                                    <BusinessInfoComponent
+                                                        name={businessData.name}
+                                                        rating={businessData.rating}
+                                                        location={businessData.location}
+                                                        category={businessData.category}
+                                                    />
+                                                </AnimatedElement>
+                                                <AnimatedElement index={2} direction="bottom">
+                                                    <BusinessDescription description={businessData.description} />
+                                                </AnimatedElement>
+                                                <AnimatedElement index={3} direction="bottom">
+                                                    <BusinessDetailsCard
+                                                        priceRange={businessData.price_range}
+                                                        verified={businessData.verified}
+                                                        hours={business.hours || business.opening_hours || business.openingHours || undefined}
+                                                    />
+                                                </AnimatedElement>
 
-                                            {/* Contact Information - Mobile Only */}
-                                            <div className="lg:hidden">
-                                                <BusinessContactInfo
-                                                    phone={businessData.phone}
-                                                    website={businessData.website}
-                                                    address={businessData.address}
-                                                    email={businessData.email}
-                                                    location={businessData.location}
-                                                />
+                                                {/* Contact Information - Mobile Only */}
+                                                <AnimatedElement index={4} direction="bottom">
+                                                    <div className="lg:hidden">
+                                                        <BusinessContactInfo
+                                                            phone={businessData.phone}
+                                                            website={businessData.website}
+                                                            address={businessData.address}
+                                                            email={businessData.email}
+                                                            location={businessData.location}
+                                                        />
+                                                    </div>
+                                                </AnimatedElement>
+                                            </div>
+
+                                            {/* Right Column - Sidebar */}
+                                            <div className="space-y-4 sm:space-y-6">
+                                                <AnimatedElement index={5} direction="bottom">
+                                                    <BusinessActionCard
+                                                        businessSlug={businessSlug}
+                                                        businessId={businessId}
+                                                        isBusinessOwner={isBusinessOwner}
+                                                    />
+                                                </AnimatedElement>
+                                                {/* Contact Information - Desktop Only */}
+                                                <AnimatedElement index={6} direction="bottom">
+                                                    <div className="hidden lg:block">
+                                                        <BusinessContactInfo
+                                                            phone={businessData.phone}
+                                                            website={businessData.website}
+                                                            address={businessData.address}
+                                                            email={businessData.email}
+                                                            location={businessData.location}
+                                                        />
+                                                    </div>
+                                                </AnimatedElement>
                                             </div>
                                         </div>
-
-                                        {/* Right Column - Sidebar */}
-                                        <div className="space-y-4 sm:space-y-6">
-                                            <BusinessActionCard
-                                                businessSlug={businessSlug}
-                                                businessId={businessId}
-                                                isBusinessOwner={isBusinessOwner}
-                                            />
-                                            {/* Contact Information - Desktop Only */}
-                                            <div className="hidden lg:block">
-                                                <BusinessContactInfo
-                                                    phone={businessData.phone}
-                                                    website={businessData.website}
-                                                    address={businessData.address}
-                                                    email={businessData.email}
-                                                    location={businessData.location}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
+                                    </StaggeredContainer>
                                 </div>
                             </div>
                         </section>

@@ -48,10 +48,37 @@ export function PremiumReviewCard({
     const [isDragging, setIsDragging] = useState(false);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
     const menuRef = useRef<HTMLDivElement>(null);
+    const buttonRef = useRef<HTMLButtonElement>(null);
+    const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
     const imageRef = useRef<HTMLDivElement>(null);
     const { user } = useAuth();
     const { deleteReview } = useReviewSubmission();
     const router = useRouter();
+
+    // Use current user's profile data if this is the current user's review
+    const displayAuthor = (() => {
+        if (userId && user?.id === userId) {
+            // Use current user's profile data for real-time updates
+            const profile = user?.profile;
+            return profile?.display_name || profile?.username || author;
+        }
+        return author;
+    })();
+
+    // Use current user's avatar if this is the current user's review
+    const displayProfileImage = (() => {
+        if (userId && user?.id === userId && user?.profile?.avatar_url) {
+            return user.profile.avatar_url;
+        }
+        return profileImage;
+    })();
+
+    // Reset image error when profile image changes
+    useEffect(() => {
+        if (displayProfileImage) {
+            setImageError(false);
+        }
+    }, [displayProfileImage]);
 
     // Check if current user owns this review
     const isOwner = user && userId && user.id === userId;
@@ -123,17 +150,58 @@ export function PremiumReviewCard({
         setIsDragging(false);
     };
 
-    // Close menu when clicking outside
+    // Calculate menu position when it opens - position above the button at bottom of card
     useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        if (showMenu && buttonRef.current) {
+            const buttonRect = buttonRef.current.getBoundingClientRect();
+            const menuHeight = 88; // Approximate height of menu (2 buttons)
+            const menuWidth = 192; // w-48 = 192px
+            const spacing = 8; // spacing above button
+            const padding = 16; // Viewport padding
+            
+            // Always position above the button (at bottom of card)
+            let top = buttonRect.top - menuHeight - spacing;
+            
+            // Ensure menu doesn't go off-screen at top
+            if (top < padding) {
+                top = padding;
+            }
+            
+            // Calculate right position, ensuring it doesn't go off-screen
+            let right = window.innerWidth - buttonRect.right;
+            const minRight = padding;
+            const maxRight = window.innerWidth - menuWidth - padding;
+            right = Math.max(minRight, Math.min(right, maxRight));
+            
+            setMenuPosition({
+                top,
+                right,
+            });
+        }
+    }, [showMenu]);
+
+    // Close menu when clicking or touching outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+            const target = event.target as Node;
+            if (
+                menuRef.current && 
+                !menuRef.current.contains(target) &&
+                buttonRef.current &&
+                !buttonRef.current.contains(target)
+            ) {
                 setShowMenu(false);
             }
         };
 
         if (showMenu) {
+            // Listen for both mouse and touch events
             document.addEventListener('mousedown', handleClickOutside);
-            return () => document.removeEventListener('mousedown', handleClickOutside);
+            document.addEventListener('touchstart', handleClickOutside);
+            return () => {
+                document.removeEventListener('mousedown', handleClickOutside);
+                document.removeEventListener('touchstart', handleClickOutside);
+            };
         }
     }, [showMenu]);
 
@@ -194,15 +262,16 @@ export function PremiumReviewCard({
             <div className={`flex items-start gap-2 sm:gap-3 relative z-10 ${compact ? 'gap-1.5 sm:gap-2' : 'gap-2 sm:gap-3'}`}>
                 {/* Avatar */}
                 <div className="relative shrink-0">
-                    {profileImage && !imageError ? (
+                    {displayProfileImage && !imageError ? (
                         <div
                             className={`rounded-full overflow-hidden ring-1 ring-white/30 ${
                                 compact ? 'h-7 w-7 sm:h-8 sm:w-8' : 'h-8 w-8 sm:h-10 sm:w-10'
                             }`}
                         >
                             <img
-                                src={profileImage}
-                                alt={`${author} profile`}
+                                key={displayProfileImage} // Force re-render when image URL changes
+                                src={displayProfileImage}
+                                alt={`${displayAuthor} profile`}
                                 className="w-full h-full object-cover"
                                 loading="lazy"
                                 decoding="async"
@@ -235,7 +304,7 @@ export function PremiumReviewCard({
                         <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                                 <span className={`truncate font-semibold text-charcoal ${compact ? 'text-xs sm:text-sm' : 'text-sm sm:text-base'}`}>
-                                    {author}
+                                    {displayAuthor}
                                 </span>
                                 {highlight && !compact && (
                                     <span
@@ -348,8 +417,9 @@ export function PremiumReviewCard({
                                     <span className="hidden sm:inline">Report</span>
                                 </button>
                                 {isOwner && (
-                                    <div className="relative" ref={menuRef}>
+                                    <>
                                         <button
+                                            ref={buttonRef}
                                             onClick={() => setShowMenu(!showMenu)}
                                             className="inline-flex rounded-full border p-1.5 sm:p-1.5 transition border-charcoal/10 text-charcoal/60 hover:bg-charcoal/5 min-h-[32px] sm:min-h-[36px] min-w-[32px] sm:min-w-[36px] items-center justify-center"
                                             aria-label="More options"
@@ -358,16 +428,31 @@ export function PremiumReviewCard({
                                         </button>
                                         
                                         {showMenu && (
-                                            <div className="absolute right-0 bottom-full mb-2 w-48 sm:w-52 bg-gradient-to-br from-off-white via-off-white to-off-white/95 border border-white/60 rounded-lg shadow-lg z-[100] overflow-hidden backdrop-blur-md">
+                                            <div 
+                                                ref={menuRef}
+                                                className="fixed w-48 sm:w-52 bg-gradient-to-br from-off-white via-off-white to-off-white/95 border border-white/60 rounded-lg shadow-xl z-[9999] overflow-hidden backdrop-blur-md"
+                                                style={{
+                                                    top: `${menuPosition.top}px`,
+                                                    right: `${menuPosition.right}px`,
+                                                }}
+                                            >
                                                 <button
-                                                    onClick={handleEdit}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleEdit();
+                                                        setShowMenu(false);
+                                                    }}
                                                     className="w-full px-4 py-2.5 sm:py-3 text-left text-sm font-medium text-charcoal hover:bg-sage/10 flex items-center gap-2 transition-colors border-b border-charcoal/5 whitespace-nowrap min-h-[44px]"
                                                 >
                                                     <Edit className="h-4 w-4 text-sage flex-shrink-0" />
                                                     <span>Edit Review</span>
                                                 </button>
                                                 <button
-                                                    onClick={handleDelete}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleDelete();
+                                                        setShowMenu(false);
+                                                    }}
                                                     className="w-full px-4 py-2.5 sm:py-3 text-left text-sm font-medium text-coral hover:bg-coral/10 flex items-center gap-2 transition-colors whitespace-nowrap min-h-[44px]"
                                                 >
                                                     <Trash2 className="h-4 w-4 flex-shrink-0" />
@@ -375,7 +460,7 @@ export function PremiumReviewCard({
                                                 </button>
                                             </div>
                                         )}
-                                    </div>
+                                    </>
                                 )}
                                 {!isOwner && (
                                     <button
