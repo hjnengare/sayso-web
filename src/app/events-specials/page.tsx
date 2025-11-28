@@ -184,7 +184,7 @@ export default function EventsSpecialsPage() {
                     {/* Loading Spinner Overlay for Pagination */}
                     {isPaginationLoading && (
                       <div className="fixed inset-0 z-[9998] bg-off-white/95 backdrop-blur-sm flex items-center justify-center min-h-screen">
-                        <Loader size="lg" variant="pulse" color="sage" text="Loading Events & Specials" />
+                        <Loader size="lg" variant="pulse" color="sage"  />
                       </div>
                     )}
 

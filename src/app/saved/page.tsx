@@ -156,7 +156,7 @@ export default function SavedPage() {
           <div className="py-1 pt-20 pb-12 sm:pb-16 md:pb-20">
             {isLoading || savedItemsLoading ? (
               <div className="flex items-center justify-center py-12">
-                <PageLoader size="md" variant="pulse" color="sage" text="Loading Saved" />
+                <PageLoader size="md" variant="pulse" color="sage" />
               </div>
             ) : error ? (
               <div className="pt-4 relative z-10">

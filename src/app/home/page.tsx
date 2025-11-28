@@ -167,11 +167,6 @@ export default function Home() {
       {/* Premium floating orbs background */}
       <HomeBackgroundOrbs />
       
-      <div className="relative">
-        <HeroCarousel />
-      </div>
-
-      <StaggeredContainer>
       <div className="bg-off-white relative">
         <div className="pb-12 sm:pb-16 md:pb-20">
             <AnimatedElement index={0} direction="left">
@@ -238,7 +233,6 @@ export default function Home() {
         <Footer />
           </AnimatedElement>
       </div>
-      </StaggeredContainer>
 
       {/* Scroll to Top Button - Mobile Only */}
       {showScrollTop && (

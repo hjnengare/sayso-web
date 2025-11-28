@@ -79,7 +79,7 @@ export default function ClaimBusinessPage() {
   };
 
   if (authLoading) {
-    return <PageLoader size="lg" variant="pulse" color="sage" text="Loading Claim Business" />;
+    return <PageLoader size="lg" variant="pulse" color="sage"  />;
   }
 
   if (!user) {
@@ -190,7 +190,7 @@ export default function ClaimBusinessPage() {
                 <div className="space-y-3 mb-8">
                   {isSearching && (
                     <div className="flex items-center justify-center py-8">
-                      <Loader size="md" variant="pulse" color="sage" text="Searching Businesses" />
+                      <Loader size="md" variant="pulse" color="sage"  />
                     </div>
                   )}
                   {!isSearching && businesses.map((business) => (

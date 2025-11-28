@@ -178,7 +178,7 @@ export default function TrendingPage() {
             <div className="py-4">
             {loading && (
               <div className="flex items-center justify-center py-12">
-                <Loader size="md" variant="pulse" color="sage" text="Loading Trending" />
+                <Loader size="md" variant="pulse" color="sage"  />
               </div>
             )}
             {!loading && error && (
@@ -215,7 +215,7 @@ export default function TrendingPage() {
                     {/* Loading Spinner Overlay for Pagination */}
                     {isPaginationLoading && (
                       <div className="fixed inset-0 z-[9998] bg-off-white/95 backdrop-blur-sm flex items-center justify-center min-h-screen">
-                        <Loader size="lg" variant="pulse" color="sage" text="Loading Trending" />
+                        <Loader size="lg" variant="pulse" color="sage"  />
                       </div>
                     )}
 

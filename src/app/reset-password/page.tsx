@@ -150,7 +150,7 @@ export default function ResetPasswordPage() {
     return (
       <>
         <style dangerouslySetInnerHTML={{ __html: authStyles }} />
-        <PageLoader size="xl" variant="pulse" color="sage" text="Loading Reset Password" />
+        <PageLoader size="xl" variant="pulse" color="sage" />
       </>
     );
   }

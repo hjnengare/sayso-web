@@ -206,7 +206,7 @@ export default function BusinessEditPage() {
     ];
 
     if (!businessId || isChecking) {
-        return <PageLoader size="lg" variant="pulse" color="sage" text="Loading Edit Business" />;
+        return <PageLoader size="lg" variant="pulse" color="sage"  />;
     }
 
     if (!hasAccess) {
@@ -518,7 +518,7 @@ export default function BusinessEditPage() {
 
                                 {uploadingImages && (
                                     <div className="text-center py-4">
-                                        <PageLoader size="sm" variant="pulse" color="sage" text="Uploading Images" />
+                                        <PageLoader size="sm" variant="pulse" color="sage"  />
                                     </div>
                                 )}
                             </div>

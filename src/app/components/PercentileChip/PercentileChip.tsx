@@ -39,7 +39,7 @@ function PercentileChip({ label, value }: PercentileChipProps) {
 
   // Render icon based on label with coral stroke (outlined, not filled)
   const renderIcon = () => {
-    const baseClasses = "w-2.5 h-2.5 flex-shrink-0 text-coral";
+    const baseClasses = "w-4 h-4 sm:w-2.5 sm:h-2.5 flex-shrink-0 text-coral";
 
     switch (normalizedLabel) {
       case 'punctuality':
@@ -71,14 +71,14 @@ function PercentileChip({ label, value }: PercentileChipProps) {
           event.preventDefault();
         }
       }}
-      className="inline-flex items-center gap-0.5 px-1.5 sm:px-2 cursor-help group relative flex-shrink-0">
+      className="inline-flex items-center gap-1 sm:gap-0.5 px-3 sm:px-2 cursor-help group relative flex-shrink-0">
       <div 
         className="relative cursor-pointer"
         title={isPlaceholder ? tooltipText : `${value}%`}
       >
         {icon}
       </div>
-      <span className={`text-[9px] sm:text-[10px] font-600 whitespace-nowrap leading-tight ${
+      <span className={`text-xs sm:text-[10px] font-600 whitespace-nowrap leading-tight ${
         isPlaceholder ? 'text-charcoal/40' : 'text-charcoal'
       }`}>
         {percentageText}

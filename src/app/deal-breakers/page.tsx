@@ -177,7 +177,7 @@ export default function DealBreakersPage() {
       <Suspense fallback={
         <OnboardingLayout step={3} backHref="/interests">
           <div className="flex items-center justify-center min-h-[400px]">
-            <Loader size="md" variant="pulse" color="sage" text="Loading Deal-breakers" />
+            <Loader size="md" variant="pulse" color="sage" />
           </div>
         </OnboardingLayout>
       }>

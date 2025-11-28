@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 // =============================================================================
 
 export type LoaderSize = "xs" | "sm" | "md" | "lg" | "xl";
-export type LoaderVariant = "spinner" | "dots" | "pulse" | "bars";
+export type LoaderVariant = "spinner" | "dots" | "pulse" | "bars" | "wavy";
 export type LoaderColor = "sage" | "coral" | "charcoal" | "white" | "current";
 
 export interface LoaderProps {
@@ -63,30 +63,36 @@ const SpinnerLoader: React.FC<{ size: LoaderSize; color: LoaderColor }> = ({ siz
   );
 };
 
-const DotsLoader: React.FC<{ size: LoaderSize; color: LoaderColor }> = ({ size, color }) => {
+const WavyDotsLoader: React.FC<{ size: LoaderSize; color: LoaderColor }> = ({ size, color }) => {
   const dotClass = sizeConfig[size].dot;
   const bgClass = colorConfig[color].bg;
 
   return (
     <div className="flex items-center gap-1.5" role="status" aria-label="Loading">
-      {[0, 1, 2].map((i) => (
+      {[0, 1, 2, 3].map((i) => ( // 4 dots
         <motion.div
           key={i}
           className={`${dotClass} ${bgClass} rounded-full`}
           animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.5, 1, 0.5],
+            y: [0, -5, 0], // Wavy animation on y-axis
+            scale: [1, 1.1, 1],
+            opacity: [0.7, 1, 0.7],
           }}
           transition={{
-            duration: 0.8,
+            duration: 0.6,
             repeat: Infinity,
-            delay: i * 0.15,
+            delay: i * 0.1, // Staggered delay
             ease: "easeInOut",
           }}
         />
       ))}
     </div>
   );
+};
+
+const DotsLoader: React.FC<{ size: LoaderSize; color: LoaderColor }> = ({ size, color }) => {
+  // Use the 4-dot wavy loader for consistency
+  return <WavyDotsLoader size={size} color={color} />;
 };
 
 const PulseLoader: React.FC<{ size: LoaderSize; color: LoaderColor }> = ({ size, color }) => {
@@ -102,28 +108,8 @@ const PulseLoader: React.FC<{ size: LoaderSize; color: LoaderColor }> = ({ size,
 };
 
 const BarsLoader: React.FC<{ size: LoaderSize; color: LoaderColor }> = ({ size, color }) => {
-  const barClass = sizeConfig[size].bar;
-  const bgClass = colorConfig[color].bg;
-
-  return (
-    <div className="flex items-end gap-1" role="status" aria-label="Loading">
-      {[0, 1, 2].map((i) => (
-        <motion.div
-          key={i}
-          className={`${barClass} ${bgClass} rounded-sm`}
-          animate={{
-            scaleY: [1, 1.5, 1],
-          }}
-          transition={{
-            duration: 0.6,
-            repeat: Infinity,
-            delay: i * 0.15,
-            ease: "easeInOut",
-          }}
-        />
-      ))}
-    </div>
-  );
+  // Use the 4-dot wavy loader for consistency
+  return <WavyDotsLoader size={size} color={color} />;
 };
 
 // =============================================================================
@@ -151,6 +137,7 @@ export const Loader: React.FC<LoaderProps> = ({
       {variant === "dots" && <DotsLoader size={size} color={color} />}
       {variant === "pulse" && <PulseLoader size={size} color={color} />}
       {variant === "bars" && <BarsLoader size={size} color={color} />}
+      {variant === "wavy" && <WavyDotsLoader size={size} color={color} />}
       
       {text && (
         <p className={`${textClass} ${textColorClass} opacity-70 font-urbanist font-500`}>
@@ -185,9 +172,9 @@ export const InlineLoader: React.FC<Omit<LoaderProps, "fullPage" | "text">> = (p
   <Loader {...props} size={props.size || "xs"} />
 );
 
-/** Content loader with default text */
-export const ContentLoader: React.FC<Omit<LoaderProps, "fullPage">> = ({ text, ...props }) => (
-  <Loader {...props} text={text || "Loading..."} />
+/** Content loader */
+export const ContentLoader: React.FC<Omit<LoaderProps, "fullPage">> = (props) => (
+  <Loader {...props} />
 );
 
 export default Loader;

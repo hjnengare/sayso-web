@@ -353,7 +353,7 @@ export default function VerifyEmailPage() {
       <>
         <style dangerouslySetInnerHTML={{ __html: styles }} />
         <div className="min-h-[100dvh] bg-off-white flex items-center justify-center ios-inertia hide-scrollbar">
-          <AppLoader size="lg" variant="pulse" color="sage" text="Loading Verify Email" />
+          <AppLoader size="lg" variant="pulse" color="sage" />
         </div>
       </>
     );

@@ -92,7 +92,7 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
             transition={{ duration: 0.2 }}
             className="fixed inset-0 z-[9999] bg-off-white min-h-screen w-full flex items-center justify-center"
           >
-            <Loader size="lg" variant="pulse" color="sage" text="Loading Event" />
+            <Loader size="lg" variant="pulse" color="sage"  />
           </motion.div>
         </AnimatePresence>
       </div>

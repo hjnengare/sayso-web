@@ -125,7 +125,7 @@ export default function ManageBusinessPage() {
     }, [businessCards]);
 
     if (isChecking) {
-        return <PageLoader size="lg" variant="pulse" color="sage" text="Loading Manage Business" />;
+        return <PageLoader size="lg" variant="pulse" color="sage" />;
     }
 
     if (!hasAccess) {

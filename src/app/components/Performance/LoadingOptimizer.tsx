@@ -33,7 +33,7 @@ export default function LoadingOptimizer({
   if (isLoading) {
     return (
       <div style={{ minHeight }} className="flex items-center justify-center">
-        {fallback || <Loader size="md" color="sage" text="Loading..." />}
+        {fallback || <Loader size="md" color="sage" />}
       </div>
     );
   }
