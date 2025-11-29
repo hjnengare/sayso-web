@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, Search, User, Check, Edit3 } from "react-feather";
+import { MessageCircle, Search, User, Check, Edit3, MessageSquare, Send, MoreVertical, Trash2, AlertTriangle, UserX, ArrowLeft } from "react-feather";
+import { createPortal } from "react-dom";
 import SearchInput from "../components/SearchInput/SearchInput";
 import { TOP_REVIEWERS, type Reviewer } from "../data/communityHighlightsData";
 import Footer from "../components/Footer/Footer";
@@ -20,6 +21,14 @@ interface Chat {
   timestamp: string;
   unreadCount: number;
   online: boolean;
+}
+
+interface Message {
+  id: string;
+  senderId: string;
+  text: string;
+  timestamp: string;
+  read: boolean;
 }
 
 // Instagram-like Chat Item Component
@@ -145,17 +154,157 @@ const generateDummyChats = (): Chat[] => {
   }));
 };
 
+// Generate mock messages for a chat
+const generateMockMessages = (chatId: string): Message[] => {
+  return [
+    {
+      id: "1",
+      senderId: chatId,
+      text: "Hey! Thanks for reaching out. I'd love to chat about your recent review!",
+      timestamp: "2 hours ago",
+      read: true,
+    },
+    {
+      id: "2",
+      senderId: "current-user",
+      text: "Hi! I really enjoyed reading your reviews. You have great insights!",
+      timestamp: "1 hour ago",
+      read: true,
+    },
+    {
+      id: "3",
+      senderId: chatId,
+      text: "Thank you so much! That means a lot. I try to be thorough and honest in my reviews.",
+      timestamp: "45 minutes ago",
+      read: true,
+    },
+  ];
+};
+
 export default function DMChatListPage() {
   const router = useRouter();
   const [chats] = useState<Chat[]>(generateDummyChats());
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [message, setMessage] = useState("");
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [menuPosition, setMenuPosition] = useState<{ top: number; right: number } | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const menuButtonRef = useRef<HTMLDivElement>(null);
 
   const filteredChats = chats.filter((chat) =>
     chat.user.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const selectedChat = selectedChatId ? chats.find(c => c.id === selectedChatId) : null;
+
+  // Load messages when chat is selected
+  useEffect(() => {
+    if (selectedChatId) {
+      const mockMessages = generateMockMessages(selectedChatId);
+      setMessages(mockMessages);
+    } else {
+      setMessages([]);
+    }
+  }, [selectedChatId]);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // Handle send message
+  const handleSend = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!message.trim() || !selectedChatId) return;
+
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      senderId: "current-user",
+      text: message.trim(),
+      timestamp: "Just now",
+      read: false,
+    };
+
+    setMessages([...messages, newMessage]);
+    setMessage("");
+
+    // Auto-resize textarea
+    if (inputRef.current) {
+      inputRef.current.style.height = "auto";
+    }
+  };
+
+  // Auto-resize textarea
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setMessage(e.target.value);
+    e.target.style.height = "auto";
+    e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
+  };
+
+  // Handle Enter key (Shift+Enter for new line, Enter to send)
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend(e);
+    }
+  };
+
+  // Handle menu toggle
+  const handleMenuToggle = () => {
+    if (!isMenuOpen && menuButtonRef.current) {
+      const button = menuButtonRef.current.querySelector('button');
+      if (button) {
+        const rect = button.getBoundingClientRect();
+        setMenuPosition({
+          top: rect.bottom + 8,
+          right: window.innerWidth - rect.right,
+        });
+      }
+    }
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isMenuOpen && menuButtonRef.current && !menuButtonRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener('click', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [isMenuOpen]);
+
+  // Handle clear chat
+  const handleClearChat = () => {
+    if (confirm('Are you sure you want to clear all messages in this chat? This action cannot be undone.')) {
+      setMessages([]);
+      setIsMenuOpen(false);
+    }
+  };
+
+  // Handle block user
+  const handleBlockUser = () => {
+    if (selectedChat && confirm(`Are you sure you want to block ${selectedChat.user.name}? You will no longer receive messages from them.`)) {
+      setIsMenuOpen(false);
+      setSelectedChatId(null);
+    }
+  };
+
+  // Handle report user
+  const handleReportUser = () => {
+    alert('Report functionality coming soon');
+    setIsMenuOpen(false);
+  };
 
   return (
     <AnimatePresence mode="wait">
@@ -257,21 +406,79 @@ export default function DMChatListPage() {
           </div>
 
           {/* Right Side - Conversation View */}
-          <div className="hidden lg:flex flex-1 flex-col bg-off-white border-l border-charcoal/10">
+          <div className="hidden lg:flex flex-1 flex-col bg-off-white border-l border-charcoal/10 overflow-hidden">
             {selectedChat ? (
-              <div className="flex-1 flex flex-col">
-               
-                {/* Conversation content - redirect to detail page for now */}
-                <div className="flex-1 flex items-center justify-center bg-off-white">
-                  <motion.button
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    onClick={() => router.push(`/dm/${selectedChat.id}`)}
-                    className="px-6 py-3 bg-sage text-white rounded-full text-body-sm font-semibold shadow-sm hover:shadow-md transition-all duration-200"
-                    style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
-                  >
-                    Open Conversation
-                  </motion.button>
+              <div className="flex-1 flex flex-col h-full overflow-hidden bg-off-white">
+                {/* Messages Container */}
+                <div className="flex-1 overflow-y-auto px-4 py-6 min-h-0 bg-off-white">
+                  <div className="max-w-3xl mx-auto space-y-4">
+                    {messages.map((msg) => {
+                      const isCurrentUser = msg.senderId === "current-user";
+                      return (
+                        <div
+                          key={msg.id}
+                          className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
+                        >
+                          <div
+                            className={`max-w-[65%] lg:max-w-[60%] rounded-xl sm:rounded-2xl px-3 py-2.5 sm:px-4 sm:py-3 ${
+                              isCurrentUser
+                                ? 'bg-gradient-to-br from-coral to-coral/90 text-white border border-white/30'
+                                : 'bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl text-charcoal border border-white/60 ring-1 ring-white/30'
+                            }`}
+                            style={{
+                              fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                            }}
+                          >
+                            <p className="text-sm sm:text-body-sm md:text-body leading-relaxed whitespace-pre-wrap break-words" style={{
+                              fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                            }}>
+                              {msg.text}
+                            </p>
+                            <div className={`flex items-center gap-1 mt-1.5 sm:mt-2 text-xs sm:text-caption ${
+                              isCurrentUser ? 'text-white/70' : 'text-charcoal/50'
+                            }`} style={{
+                              fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                            }}>
+                              <span>{msg.timestamp}</span>
+                              {isCurrentUser && msg.read && (
+                                <Check className="w-3 h-3" strokeWidth={2.5} />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <div ref={messagesEndRef} />
+                  </div>
+                </div>
+
+                {/* Message Input */}
+                <div className="flex-shrink-0 bg-off-white border-t border-charcoal/10 px-4 py-3">
+                  <form onSubmit={handleSend} className="flex items-end gap-3 max-w-3xl mx-auto">
+                    <div className="flex-1 relative">
+                      <textarea
+                        ref={inputRef}
+                        value={message}
+                        onChange={handleInputChange}
+                        onKeyDown={handleKeyDown}
+                        placeholder="Type a message..."
+                        rows={1}
+                        className="w-full bg-white border border-charcoal/10 rounded-2xl sm:rounded-[20px] px-4 py-3 pr-12 text-sm sm:text-body-sm md:text-body text-charcoal placeholder:text-sm sm:placeholder:text-body-sm md:placeholder:text-body placeholder-charcoal/40 resize-none focus:outline-none focus:ring-2 focus:ring-sage/30 focus:border-sage/50 transition-all duration-300 max-h-[120px] overflow-y-auto"
+                        style={{
+                          fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                          lineHeight: '1.5',
+                        }}
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={!message.trim()}
+                      className="w-12 h-12 bg-gradient-to-br from-coral to-coral/90 hover:bg-coral/90 disabled:bg-charcoal/20 disabled:cursor-not-allowed text-white rounded-full flex items-center justify-center border border-white/30 transition-all duration-300 hover:scale-110 active:scale-95 min-h-[48px] min-w-[48px]"
+                      aria-label="Send message"
+                    >
+                      <Send className="w-5 h-5" strokeWidth={2.5} />
+                    </button>
+                  </form>
                 </div>
               </div>
             ) : (
@@ -284,18 +491,8 @@ export default function DMChatListPage() {
                 >
                   {/* Empty State Illustration */}
                   <div className="relative mb-8 flex items-center justify-center">
-                    <div className="relative w-32 h-32">
-                      {/* Envelope */}
-                      <svg width="128" height="96" viewBox="0 0 128 96" className="absolute inset-0">
-                        <rect x="16" y="32" width="96" height="64" rx="6" fill="white" stroke="#9BA19B" strokeWidth="2.5" />
-                        <path d="M16 32 L64 64 L112 32" stroke="#9BA19B" strokeWidth="2.5" fill="none" />
-                        <path d="M24 44 Q36 56 48 44 T72 56 T96 44 T112 56" stroke="#1a1a1a" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-                      </svg>
-                      {/* Pen - positioned diagonally over envelope */}
-                      <svg width="48" height="48" viewBox="0 0 48 48" className="absolute -top-2 right-4 transform rotate-12">
-                        <path d="M10 38 L36 12 L32 8 L8 32 Z" fill="#1a1a1a" />
-                        <circle cx="36" cy="12" r="4" fill="white" />
-                      </svg>
+                    <div className="relative w-32 h-32 flex items-center justify-center">
+                      <MessageSquare className="w-24 h-24 text-navbar-bg" strokeWidth={1.5} />
                       {/* Brand color blobs underneath */}
                       <div className="absolute bottom-0 left-0 w-20 h-20 bg-sage/20 rounded-full blur-2xl"></div>
                       <div className="absolute bottom-2 right-4 w-16 h-16 bg-coral/20 rounded-full blur-2xl"></div>

@@ -67,7 +67,7 @@ export default function WriteReviewPage() {
           className="min-h-screen bg-off-white relative overflow-hidden"
         >
       {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-navbar-bg/95 backdrop-blur-sm border-b border-charcoal/10 shadow-md md:shadow-none">
+      <div className="fixed top-0 left-0 right-0 z-50 bg-navbar-bg backdrop-blur-sm border-b border-charcoal/10 shadow-md md:shadow-none">
         <div className="mx-auto w-full max-w-[2000px] px-2 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <button

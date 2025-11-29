@@ -14,7 +14,7 @@ export default function LeaderboardHeader() {
       initial={{ y: -80, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ type: "spring", stiffness: 80, damping: 20, mass: 1 }}
-      className="bg-navbar-bg/95 backdrop-blur-sm fixed top-0 left-0 right-0 z-50 border-b border-charcoal/10"
+      className="bg-navbar-bg backdrop-blur-sm fixed top-0 left-0 right-0 z-50 border-b border-charcoal/10"
       style={sf}
     >
       <div className="max-w-[1300px] mx-auto px-4 sm:px-6 md:px-8 pt-2 pb-4">

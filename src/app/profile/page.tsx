@@ -591,7 +591,7 @@ function ProfileContent() {
           }}
         >
         <header
-          className="fixed top-0 left-0 right-0 z-50 bg-navbar-bg/95 backdrop-blur-sm border-b border-charcoal/10 shadow-md md:shadow-none animate-slide-in-top"
+          className="fixed top-0 left-0 right-0 z-50 bg-navbar-bg backdrop-blur-sm border-b border-charcoal/10 shadow-md md:shadow-none animate-slide-in-top"
           role="banner"
         >
           <div className="mx-auto w-full max-w-[2000px] px-4 sm:px-6 lg:px-10 2xl:px-16 py-4">

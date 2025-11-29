@@ -90,7 +90,7 @@ export default function ClaimBusinessPage() {
     <div className="min-h-dvh bg-off-white">
       {/* Header */}
       <div
-        className="fixed top-0 left-0 right-0 z-50 bg-navbar-bg/95 backdrop-blur-sm border-b border-charcoal/10"
+        className="fixed top-0 left-0 right-0 z-50 bg-navbar-bg backdrop-blur-sm border-b border-charcoal/10"
         style={{
           fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
         }}
