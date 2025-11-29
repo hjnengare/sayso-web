@@ -6,6 +6,7 @@ import { ArrowRight } from "react-feather";
 import EventCard from "../EventCard/EventCard";
 import { Event } from "../../data/eventsData";
 import ScrollableSection from "../ScrollableSection/ScrollableSection";
+import { useToast } from "../../contexts/ToastContext";
 
 export default function EventsSpecials({
   title = "Events & Specials",
@@ -19,6 +20,18 @@ export default function EventsSpecials({
   href?: string;
 }) {
   const router = useRouter();
+  const { showToast } = useToast();
+
+  const handleBookmark = (event: Event) => {
+    // In production, this would save to the backend
+    // For now, show a toast notification
+    showToast({
+      type: "success",
+      title: "Event saved",
+      message: `${event.title} has been saved to your favorites`,
+      duration: 3000,
+    });
+  };
 
   if (!events || events.length === 0) return null;
 
@@ -59,7 +72,7 @@ export default function EventsSpecials({
               <div className="flex gap-3 items-stretch">
                 {events.slice(0, 4).map((event) => (
                   <div key={event.id} className="snap-start snap-always flex-shrink-0 w-[100vw] list-none flex">
-                    <EventCard event={event} />
+                    <EventCard event={event} onBookmark={handleBookmark} />
                   </div>
                 ))}
               </div>
@@ -70,7 +83,7 @@ export default function EventsSpecials({
           <div className="hidden md:grid md:grid-cols-2 xl:grid-cols-4 gap-3">
             {events.slice(0, 4).map((event) => (
               <div key={event.id} className="list-none flex">
-                <EventCard event={event} />
+                <EventCard event={event} onBookmark={handleBookmark} />
               </div>
             ))}
           </div>
