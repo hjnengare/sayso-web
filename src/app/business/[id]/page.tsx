@@ -160,7 +160,7 @@ export default function BusinessProfilePage() {
                         transition={{ duration: 0.2 }}
                         className="fixed inset-0 z-[9999] bg-off-white min-h-screen w-full flex items-center justify-center"
                     >
-                        <Loader size="lg" variant="pulse" color="sage" />
+                        <Loader size="lg" variant="wavy" color="sage" />
                     </motion.div>
                 </AnimatePresence>
             </div>

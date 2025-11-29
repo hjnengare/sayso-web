@@ -314,7 +314,7 @@ function WriteReviewContent() {
 
   // Loading state
   if (loading) {
-    return <PageLoader size="lg" variant="pulse" color="sage"  />;
+    return <PageLoader size="lg" variant="wavy" color="sage"  />;
   }
 
   // Error state
@@ -481,7 +481,7 @@ function WriteReviewContent() {
 
                         {reviewsLoading ? (
                           <div className="flex items-center justify-center py-12">
-                            <PageLoader size="md" variant="pulse" color="sage"  />
+                            <PageLoader size="md" variant="wavy" color="sage"  />
                           </div>
                         ) : reviews.length > 0 ? (
                           <div style={{ minHeight: '480px' }}>
@@ -586,7 +586,7 @@ function WriteReviewContent() {
 // Wrapper component with Suspense for useSearchParams
 export default function WriteReviewPage() {
   return (
-    <Suspense fallback={<PageLoader size="xl" variant="pulse" color="sage"  />}>
+    <Suspense fallback={<PageLoader size="xl" variant="wavy" color="sage"  />}>
       <WriteReviewContent />
     </Suspense>
   );
