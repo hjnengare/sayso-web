@@ -210,9 +210,10 @@ export default function FilterModal({
           left: style.left,
           width: style.width || (typeof window !== 'undefined' ? `calc(100vw - 32px)` : 400),
           maxWidth: "calc(100vw - 32px)", // 16px padding on each side
+          // Reserve generous space at the bottom on mobile so footer buttons stay above the address bar
           maxHeight: typeof window !== 'undefined' && window.innerWidth < 768
-            ? `calc(100vh - ${style.top + 20}px - env(safe-area-inset-bottom, 0px) - 20px)` // Extra space for mobile browser UI
-            : `calc(100vh - ${style.top + 20}px)`, // Dynamic based on position
+            ? `calc(100vh - ${style.top + 80}px - env(safe-area-inset-bottom, 0px))`
+            : `calc(100vh - ${style.top + 40}px)`, // Slight extra gap on larger screens
           display: 'flex',
           flexDirection: 'column',
           outline: "none",
@@ -371,7 +372,7 @@ export default function FilterModal({
           className="flex gap-3 px-4 sm:px-5 md:px-6 py-3 sm:py-4 border-t border-white/60 bg-off-white/80 backdrop-blur-sm flex-shrink-0"
           style={{
             paddingBottom: typeof window !== 'undefined' && window.innerWidth < 768 
-              ? `max(1rem, calc(1rem + env(safe-area-inset-bottom, 0px) + 20px))` 
+              ? `max(1rem, calc(1rem + env(safe-area-inset-bottom, 0px) + 32px))` 
               : undefined,
           }}
         >
