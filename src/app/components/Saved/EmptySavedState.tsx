@@ -8,12 +8,12 @@ export default function EmptySavedState() {
 
   return (
     <div
-      className="mx-auto w-full max-w-[2000px] px-2 font-urbanist min-h-[calc(100vh-80px)] flex items-center justify-center"
+      className="mx-auto w-full max-w-[2000px] px-2 font-urbanist w-full"
       style={{
         fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
       }}
     >
-      <div className="text-center py-20 w-full">
+      <div className="text-center w-full">
         <div className="w-20 h-20 mx-auto mb-6 bg-sage/10 rounded-full flex items-center justify-center">
           <Bookmark className="w-8 h-8 text-sage" />
         </div>

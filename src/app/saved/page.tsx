@@ -182,7 +182,7 @@ export default function SavedPage() {
                 />
               </div>
             ) : (
-              <div className="pt-4 relative z-10">
+              <div className="relative z-10 min-h-[calc(100vh-200px)] flex items-center justify-center">
                 <EmptySavedState />
               </div>
             )}

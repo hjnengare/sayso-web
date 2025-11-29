@@ -9,6 +9,7 @@ import FilterModal, { FilterState } from "../FilterModal/FilterModal";
 import SearchInput from "../SearchInput/SearchInput";
 import { useSavedItems } from "../../contexts/SavedItemsContext";
 import { useNotifications } from "../../contexts/NotificationsContext";
+import { useMessages } from "../../contexts/MessagesContext";
 import Logo from "../Logo/Logo";
 import OptimizedLink from "../Navigation/OptimizedLink";
 
@@ -74,6 +75,7 @@ export default function Header({
   const [discoverMenuPos, setDiscoverMenuPos] = useState<{left:number; top:number} | null>(null);
   const { savedCount } = useSavedItems();
   const { unreadCount } = useNotifications();
+  const { unreadCount: unreadMessagesCount } = useMessages();
   const [isShrunk, setIsShrunk] = useState(false);
 
   // Use refs to track state without causing re-renders
@@ -672,10 +674,15 @@ export default function Header({
               {/* Messages/DM Icon - Mobile Only */}
               <OptimizedLink
                 href="/dm"
-                className="md:hidden group w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center transition-colors duration-200 min-h-[44px] min-w-[44px] touch-manipulation"
+                className="md:hidden group w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center transition-colors duration-200 min-h-[44px] min-w-[44px] touch-manipulation relative"
                 aria-label="Messages"
               >
                 <MessageCircle className={`w-6 h-6 sm:w-5 sm:h-5 ${whiteText ? 'text-white hover:text-white/80' : 'text-charcoal/80 hover:text-sage'}`} />
+                {unreadMessagesCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-5 px-1.5 text-white text-[11px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
+                    {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
+                  </span>
+                )}
               </OptimizedLink>
 
               {/* Mobile menu toggle */}
@@ -719,6 +726,11 @@ export default function Header({
                 aria-label="Messages"
               >
                 <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-200 group-hover:scale-110" />
+                {unreadMessagesCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-5 px-1.5 text-white text-[11px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
+                    {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
+                  </span>
+                )}
               </OptimizedLink>
 
               {/* Profile */}

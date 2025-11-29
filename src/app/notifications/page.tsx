@@ -30,18 +30,8 @@ export default function NotificationsPage() {
   };
 
   const getNotificationColor = (type: string) => {
-    switch (type) {
-      case 'review':
-        return 'bg-sage/10 text-sage border-sage/20';
-      case 'business':
-        return 'bg-coral/10 text-coral border-coral/20';
-      case 'user':
-        return 'bg-charcoal/10 text-charcoal border-charcoal/20';
-      case 'highlyRated':
-        return 'bg-sage/20 text-sage border-sage/30';
-      default:
-        return 'bg-charcoal/10 text-charcoal border-charcoal/20';
-    }
+    // All icons use charcoal color like the heart icon
+    return 'bg-charcoal/10 text-charcoal border-charcoal/20';
   };
 
   const unreadCount = notifications.filter(n => !readNotifications.has(n.id)).length;
@@ -91,8 +81,8 @@ export default function NotificationsPage() {
                       <div className="mb-6 sm:mb-8">
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-sage/20 to-sage/10 rounded-full flex items-center justify-center border border-sage/20">
-                              <Bell className="w-6 h-6 sm:w-7 sm:h-7 text-sage" strokeWidth={2.5} />
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-charcoal/20 to-charcoal/10 rounded-full flex items-center justify-center border border-charcoal/20">
+                              <Bell className="w-6 h-6 sm:w-7 sm:h-7 text-charcoal" strokeWidth={2.5} />
                             </div>
                             <div>
                               <h1 
@@ -132,8 +122,8 @@ export default function NotificationsPage() {
                     ) : notifications.length === 0 ? (
                       <AnimatedElement index={1} direction="scale">
                         <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-12 sm:p-16 text-center">
-                          <div className="w-20 h-20 mx-auto mb-6 bg-sage/10 rounded-full flex items-center justify-center">
-                            <Bell className="w-10 h-10 text-sage/60" strokeWidth={1.5} />
+                          <div className="w-20 h-20 mx-auto mb-6 bg-charcoal/10 rounded-full flex items-center justify-center">
+                            <Bell className="w-10 h-10 text-charcoal/60" strokeWidth={1.5} />
                           </div>
                           <h3 
                             className="text-h2 font-semibold text-charcoal mb-2"
@@ -185,7 +175,7 @@ export default function NotificationsPage() {
                                           {notification.message} {notification.title}
                                         </p>
                                         <div className="flex items-center gap-2 text-body-sm text-charcoal/60">
-                                          <Clock className="w-3.5 h-3.5" strokeWidth={2} />
+                                          <Clock className="w-3.5 h-3.5 text-charcoal/60" strokeWidth={2} />
                                           <span style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                                             {notification.timeAgo} ago
                                           </span>
@@ -197,10 +187,10 @@ export default function NotificationsPage() {
                                         {!isRead && (
                                           <button
                                             onClick={() => markAsRead(notification.id)}
-                                            className="p-2 hover:bg-sage/10 rounded-full transition-colors"
+                                            className="p-2 hover:bg-charcoal/10 rounded-full transition-colors"
                                             aria-label="Mark as read"
                                           >
-                                            <Check className="w-4 h-4 text-sage" strokeWidth={2.5} />
+                                            <Check className="w-4 h-4 text-charcoal" strokeWidth={2.5} />
                                           </button>
                                         )}
                                         <button
