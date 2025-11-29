@@ -54,10 +54,10 @@ export default function Home() {
   const { businesses: forYouBusinesses, loading: forYouLoading, error: forYouError } = useForYouBusinesses(10);
   const { businesses: trendingBusinesses, loading: trendingLoading, error: trendingError } = useTrendingBusinesses(10);
   const { businesses: allBusinesses } = useBusinesses({ limit: 200, sortBy: "total_rating", sortOrder: "desc", feedStrategy: "mixed" });
-  
+
   // Note: Prioritization of recently reviewed businesses is now handled on the backend
   // The API automatically prioritizes businesses the user has reviewed within the last 24 hours
-  
+
   // Scroll to top button state (mobile only)
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -185,7 +185,7 @@ export default function Home() {
   ]);
   const hasForYouBusinesses = forYouBusinesses.length > 0;
   const hasTrendingBusinesses = trendingBusinesses.length > 0;
-  
+
   return (
     <div className="min-h-dvh bg-off-white relative overflow-hidden" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
       {/* Premium floating orbs background */}
@@ -201,7 +201,7 @@ export default function Home() {
         reducedPadding={true}
         whiteText={true}
       />
-      
+
       <main className="bg-off-white relative pt-20 sm:pt-24 pb-28">
         <div className="mx-auto w-full max-w-[2000px]">
           {/* Search Input at top of home content */}
@@ -219,63 +219,61 @@ export default function Home() {
           </div>
 
           <div className="py-4">
-          {/* For You Section */}
-          <section className="pt-4 sm:pt-8 md:pt-10 relative overflow-hidden">
-            <div className="relative z-10">
-              {forYouLoading && <BusinessRowSkeleton title="For You Now" />}
-              {!forYouLoading && hasForYouBusinesses && (
-                <MemoizedBusinessRow title="For You Now" businesses={forYouBusinesses} cta="See More" href="/for-you" />
-              )}
-              {!forYouLoading && !hasForYouBusinesses && !forYouError && (
-                <MemoizedBusinessRow title="For You Now" businesses={[]} cta="See More" href="/for-you" />
-              )}
-              {forYouError && !forYouLoading && (
-                <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral">
-                  Couldn't load personalized picks right now. We'll retry in the background.
-                </div>
-              )}
-            </div>
-          </section>
+            {/* For You Section */}
+            <section className="pt-4 sm:pt-8 md:pt-10 relative overflow-hidden">
+              <div className="relative z-10">
+                {forYouLoading && <BusinessRowSkeleton title="For You Now" />}
+                {!forYouLoading && hasForYouBusinesses && (
+                  <MemoizedBusinessRow title="For You Now" businesses={forYouBusinesses} cta="See More" href="/for-you" />
+                )}
+                {!forYouLoading && !hasForYouBusinesses && !forYouError && (
+                  <MemoizedBusinessRow title="For You Now" businesses={[]} cta="See More" href="/for-you" />
+                )}
+                {forYouError && !forYouLoading && (
+                  <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral">
+                    Couldn't load personalized picks right now. We'll retry in the background.
+                  </div>
+                )}
+              </div>
+            </section>
 
-          <section className="pt-4 sm:pt-8 md:pt-10 relative overflow-hidden">
-            <div className="relative z-10">
-              {trendingLoading && <BusinessRowSkeleton title="Trending Now" />}
-              {!trendingLoading && hasTrendingBusinesses && (
-                <MemoizedBusinessRow title="Trending Now" businesses={trendingBusinesses} cta="See More" href="/trending" />
-              )}
-              {!trendingLoading && !hasTrendingBusinesses && !trendingError && (
-                <MemoizedBusinessRow title="Trending Now" businesses={[]} cta="See More" href="/trending" />
-              )}
-              {trendingError && !trendingLoading && (
-                <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral">
-                  Trending businesses are still loading. Refresh to try again.
-                </div>
-              )}
-            </div>
-          </section>
+            <section className="pt-4 sm:pt-8 md:pt-10 relative overflow-hidden">
+              <div className="relative z-10">
+                {trendingLoading && <BusinessRowSkeleton title="Trending Now" />}
+                {!trendingLoading && hasTrendingBusinesses && (
+                  <MemoizedBusinessRow title="Trending Now" businesses={trendingBusinesses} cta="See More" href="/trending" />
+                )}
+                {!trendingLoading && !hasTrendingBusinesses && !trendingError && (
+                  <MemoizedBusinessRow title="Trending Now" businesses={[]} cta="See More" href="/trending" />
+                )}
+                {trendingError && !trendingLoading && (
+                  <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral">
+                    Trending businesses are still loading. Refresh to try again.
+                  </div>
+                )}
+              </div>
+            </section>
 
-          <section className="pt-4 sm:pt-8 md:pt-10 relative overflow-hidden">
-            <div className="relative z-10">
-              <EventsSpecials events={EVENTS_AND_SPECIALS.slice(0, 5)} />
-            </div>
-          </section>
+            <section className="pt-4 sm:pt-8 md:pt-10 relative overflow-hidden">
+              <div className="relative z-10">
+                <EventsSpecials events={EVENTS_AND_SPECIALS.slice(0, 5)} />
+              </div>
+            </section>
 
-          <section className="pt-4 sm:pt-8 md:pt-10 relative overflow-hidden">
-            <div className="relative z-10">
-              <CommunityHighlights
-                reviews={FEATURED_REVIEWS}
-                topReviewers={TOP_REVIEWERS}
-                businessesOfTheMonth={featuredByCategory}
-                variant="reviews"
-              />
-            </div>
-          </section>
+            <section className="pt-4 sm:pt-8 md:pt-10 relative overflow-hidden">
+              <div className="relative z-10">
+                <CommunityHighlights
+                  reviews={FEATURED_REVIEWS}
+                  topReviewers={TOP_REVIEWERS}
+                  businessesOfTheMonth={featuredByCategory}
+                  variant="reviews"
+                />
+              </div>
+            </section>
           </div>
         </div>
-
-          <Footer />
       </main>
-
+      <Footer />
       {/* Anchored Filter Modal for home search */}
       <FilterModal
         isOpen={isFilterOpen}
