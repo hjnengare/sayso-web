@@ -150,7 +150,15 @@ export default function SavedPage() {
           fontFamily: '"Urbanist", -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
         }}
       >
-        <Header whiteText={true} />
+        <Header
+          showSearch={true}
+          variant="frosty"
+          backgroundClassName="bg-navbar-bg"
+          searchLayout="floating"
+          topPosition="top-0"
+          reducedPadding={true}
+          whiteText={true}
+        />
 
         <div className="relative z-0">
           <div className="py-1 pt-20 pb-12 sm:pb-16 md:pb-20">
