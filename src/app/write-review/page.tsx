@@ -112,7 +112,7 @@ export default function WriteReviewPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search businesses..."
-              className="w-full pl-12 pr-4 py-3.5 bg-white/80 backdrop-blur-sm border-2 border-charcoal/20 rounded-xl
+              className="w-full pl-12 pr-2 sm:pr-4 py-3.5 bg-white/80 backdrop-blur-sm border-2 border-charcoal/20 rounded-xl
                          text-sm placeholder:text-charcoal/50 text-charcoal
                          focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20
                          hover:border-charcoal/30 transition-all duration-200"

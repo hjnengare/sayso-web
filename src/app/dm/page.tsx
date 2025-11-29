@@ -186,7 +186,7 @@ export default function DMChatListPage() {
         />
          
         {/* Split Layout for Larger Screens */}
-        <div className="flex h-[calc(100vh-80px)] lg:h-[calc(100vh-96px)] pt-20 lg:pt-20 overflow-hidden">
+        <div className="flex  pt-20 lg:pt-20 overflow-hidden">
 
           {/* Left Sidebar - Chat List */}
           <div className="w-full lg:w-[400px] xl:w-[450px] flex flex-col bg-off-white border-r border-charcoal/10 lg:border-r h-full overflow-hidden relative">
@@ -348,7 +348,7 @@ export default function DMChatListPage() {
                     placeholder="Search"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-charcoal/5 rounded-lg px-4 py-2.5 text-body-sm placeholder:text-charcoal/40 font-normal text-charcoal focus:outline-none focus:bg-charcoal/10 focus:ring-2 focus:ring-sage/20 transition-all duration-200 pr-10 touch-manipulation"
+                    className="w-full bg-charcoal/5 rounded-lg px-2 sm:px-4 py-2.5 text-body-sm placeholder:text-charcoal/40 font-normal text-charcoal focus:outline-none focus:bg-charcoal/10 focus:ring-2 focus:ring-sage/20 transition-all duration-200 pr-10 touch-manipulation"
                     style={{
                       fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
                     }}

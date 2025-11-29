@@ -205,7 +205,7 @@ export default function Home() {
       <main className="bg-off-white relative pt-20 sm:pt-24">
         <div className="mx-auto w-full max-w-[2000px] px-2 pb-12 sm:pb-16 md:pb-20">
           {/* Search Input at top of home content */}
-          <div ref={searchWrapRef} className="py-4 px-8">
+          <div ref={searchWrapRef} className="py-4">
             <SearchInput
               variant="header"
               placeholder="Discover exceptional local hidden gems..."
