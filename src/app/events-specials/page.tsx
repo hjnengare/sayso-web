@@ -107,11 +107,12 @@ export default function EventsSpecialsPage() {
   return (
     <div className="min-h-dvh bg-off-white">
       <Header
-        showSearch={false}
+        showSearch={true}
+        variant="white"
         backgroundClassName="bg-navbar-bg"
         topPosition="top-0"
-        reducedPadding
-        whiteText
+        reducedPadding={true}
+        whiteText={true}
       />
 
       <StaggeredContainer>

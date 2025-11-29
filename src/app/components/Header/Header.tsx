@@ -641,14 +641,14 @@ export default function Header({
 
             {/* Right side */}
             <div className="flex items-center gap-2 lg:gap-3 flex-shrink-0">
-              {/* Search Toggle (manual close/open) */}
+              {/* Notifications Icon (replaces search toggle) */}
               {showSearch && !(forceSearchOpen || isStackedLayout) && (
               <button
                 onClick={handleSearchToggle}
                 className={`group w-11 h-11 sm:w-12 sm:h-12 md:w-12 md:h-12 flex items-center justify-center rounded-lg transition-all duration-200 ${whiteText ? 'text-white hover:text-white/80 hover:bg-white/10' : 'text-charcoal/80 hover:text-sage hover:bg-sage/5'}`}
-                aria-label="Toggle search"
+                aria-label="Notifications"
               >
-                <Search className="w-6 h-6 sm:w-5 sm:h-5 transition-transform duration-200 group-hover:scale-110" />
+                <Bell className="w-6 h-6 sm:w-5 sm:h-5 transition-transform duration-200 group-hover:scale-110" />
               </button>
               )}
 
