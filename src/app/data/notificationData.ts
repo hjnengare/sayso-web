@@ -1,5 +1,7 @@
 import { ToastNotificationData } from "../components/ToastNotification/ToastNotification";
 
+export type { ToastNotificationData };
+
 const NOTIFICATION_MESSAGES = {
   review: [
     "Someone just reviewed",
