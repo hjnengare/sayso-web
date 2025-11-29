@@ -62,7 +62,7 @@ const SearchInput = forwardRef<HTMLFormElement, SearchInputProps>(
     return (
       <form onSubmit={handleSubmit} className={`${containerClass} ${className}`} ref={ref}>
         <div className="relative">
-          {/* right icon (filters) - positioned on the far right */}
+          {/* right icon (filters or search) - positioned on the far right */}
           {showFilter && onFilterClick && (
             <button
               type="button"
@@ -72,6 +72,12 @@ const SearchInput = forwardRef<HTMLFormElement, SearchInputProps>(
             >
               <Sliders className="w-5 h-5" strokeWidth={2} />
             </button>
+          )}
+          {/* Search icon on the right when showFilter is false */}
+          {!showFilter && (
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+              <Search className="w-5 h-5 text-charcoal/40" strokeWidth={2} />
+            </div>
           )}
 
           {/* input - no left icon, simple underline */}
@@ -87,7 +93,7 @@ const SearchInput = forwardRef<HTMLFormElement, SearchInputProps>(
               text-base placeholder:text-base placeholder:text-charcoal/40 font-normal text-charcoal
               focus:outline-none focus:border-charcoal/60
               hover:border-charcoal/30 transition-all duration-200
-              ${showFilter && onFilterClick ? "pr-12" : "pr-2"}
+              ${showFilter && onFilterClick ? "pr-12" : "pr-10"}
               py-3 px-0
             `}
             style={{

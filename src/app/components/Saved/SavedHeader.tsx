@@ -25,9 +25,9 @@ export default function SavedHeader() {
               <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 text-white group-hover:text-sage transition-colors duration-300" />
             </div>
             <h3 
-              className="font-urbanist text-h1 font-700 text-white transition-all duration-300 group-hover:text-white/80 relative"
+              className="text-h2 sm:text-h1 font-semibold text-white transition-all duration-300 group-hover:text-white/80 relative"
               style={{
-                fontFamily: '"Urbanist", -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
               }}
             >
               Your Saved Gems
@@ -38,9 +38,9 @@ export default function SavedHeader() {
             <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-sage/20 to-coral/20 rounded-full backdrop-blur-sm border border-sage/20">
               <Bookmark className="w-4 h-4 text-sage" />
               <span 
-                className="font-urbanist text-sm font-600 text-white"
+                className="text-body-sm font-semibold text-white"
                 style={{
-                  fontFamily: '"Urbanist", -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                  fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
                 }}
               >
                 {savedCount} {savedCount === 1 ? ' Item' : ' Items'}

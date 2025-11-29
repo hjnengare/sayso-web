@@ -6,6 +6,7 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, Search, User, Check, Edit3 } from "react-feather";
+import SearchInput from "../components/SearchInput/SearchInput";
 import { TOP_REVIEWERS, type Reviewer } from "../data/communityHighlightsData";
 import Footer from "../components/Footer/Footer";
 import Header from "../components/Header/Header";
@@ -190,40 +191,17 @@ export default function DMChatListPage() {
 
           {/* Left Sidebar - Chat List */}
           <div className="w-full lg:w-[400px] xl:w-[450px] flex flex-col bg-off-white border-r border-charcoal/10 lg:border-r h-full overflow-hidden relative">
-            {/* Search Bar - Instagram style */}
+            {/* Search Bar */}
             <div className="px-4 sm:px-6 py-4 border-b border-charcoal/10 flex-shrink-0 bg-off-white">
-              <form onSubmit={(e) => e.preventDefault()} className="w-full">
-                <div className="relative group">
-                  <input
-                    type="text"
-                    placeholder="Search conversations..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-charcoal/5 rounded-xl px-4 py-3 pl-11 pr-11 text-body-sm placeholder:text-body-sm placeholder:text-charcoal/40 font-normal text-charcoal focus:outline-none focus:bg-white focus:ring-2 focus:ring-sage/30 focus:shadow-lg focus:shadow-sage/10 border border-transparent hover:border-charcoal/10 transition-all duration-300 touch-manipulation"
-                    style={{
-                      fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                    }}
-                    aria-label="Search conversations"
-                  />
-                  {searchQuery ? (
-                    <motion.button
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      exit={{ scale: 0, opacity: 0 }}
-                      onClick={() => setSearchQuery("")}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-charcoal/50 hover:text-charcoal hover:bg-charcoal/5 rounded-r-xl transition-all duration-200 z-10"
-                      aria-label="Clear search"
-                      type="button"
-                    >
-                      <span className="text-charcoal/60 text-xl font-light leading-none">×</span>
-                    </motion.button>
-                  ) : (
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-200 group-focus-within:text-sage">
-                      <Search className="w-4.5 h-4.5 text-charcoal/40 group-focus-within:text-sage/60" strokeWidth={2.5} />
-                    </div>
-                  )}
-                </div>
-              </form>
+              <SearchInput
+                variant="header"
+                placeholder="Search conversations..."
+                mobilePlaceholder="Search conversations..."
+                onSearch={(q) => {
+                  setSearchQuery(q);
+                }}
+                showFilter={false}
+              />
             </div>
             
             {/* Chat List - Scrollable */}
@@ -342,38 +320,13 @@ export default function DMChatListPage() {
           <main className="relative z-10 mx-auto w-full max-w-[2000px] px-4 sm:px-6 pt-20 sm:pt-24 pb-20 sm:pb-8">
             {/* Search Bar */}
             <div className="mb-4 pb-3">
-              <div className="relative group">
-                <form onSubmit={(e) => e.preventDefault()} className="w-full">
-                  <input
-                    type="text"
-                    placeholder="Search conversations..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-charcoal/5 rounded-xl px-2 sm:px-4 py-3 pl-10 pr-10 text-body-sm placeholder:text-charcoal/40 font-normal text-charcoal focus:outline-none focus:bg-white focus:ring-2 focus:ring-sage/30 focus:shadow-lg focus:shadow-sage/10 border border-transparent hover:border-charcoal/10 transition-all duration-300 touch-manipulation"
-                    style={{
-                      fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                    }}
-                    aria-label="Search conversations"
-                  />
-                  {searchQuery ? (
-                    <motion.button
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      exit={{ scale: 0, opacity: 0 }}
-                      onClick={() => setSearchQuery("")}
-                      className="absolute inset-y-0 right-0 pr-2 sm:pr-3 flex items-center text-charcoal/50 hover:text-charcoal hover:bg-charcoal/5 rounded-r-xl transition-all duration-200 z-10"
-                      aria-label="Clear search"
-                      type="button"
-                    >
-                      <span className="text-charcoal/60 text-xl font-light leading-none">×</span>
-                    </motion.button>
-                  ) : (
-                    <div className="absolute inset-y-0 left-0 pl-3 sm:pl-3.5 flex items-center pointer-events-none transition-colors duration-200 group-focus-within:text-sage">
-                      <Search className="w-4.5 h-4.5 text-charcoal/40 group-focus-within:text-sage/60" strokeWidth={2.5} />
-                    </div>
-                  )}
-                </form>
-              </div>
+              <SearchInput
+                variant="header"
+                placeholder="Search conversations..."
+                mobilePlaceholder="Search conversations..."
+                onSearch={(q) => setSearchQuery(q)}
+                showFilter={false}
+              />
             </div>
 
             {/* Chat List */}
