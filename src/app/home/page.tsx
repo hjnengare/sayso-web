@@ -202,10 +202,10 @@ export default function Home() {
         whiteText={true}
       />
       
-      <main className="bg-off-white relative pt-20 sm:pt-24">
-        <div className="mx-auto w-full max-w-[2000px] px-2 pb-12 sm:pb-16 md:pb-20">
+      <main className="bg-off-white relative pt-20 sm:pt-24 pb-28">
+        <div className="mx-auto w-full max-w-[2000px] px-2">
           {/* Search Input at top of home content */}
-          <div ref={searchWrapRef} className="py-4">
+          <div ref={searchWrapRef} className="py-4 px-4">
             <SearchInput
               variant="header"
               placeholder="Discover exceptional local hidden gems..."
@@ -218,6 +218,7 @@ export default function Home() {
             />
           </div>
 
+          <div className="py-4">
           {/* For You Section */}
           <section className="pt-4 sm:pt-8 md:pt-10 relative overflow-hidden">
             <div className="relative z-10">
@@ -269,6 +270,7 @@ export default function Home() {
               />
             </div>
           </section>
+          </div>
         </div>
 
           <Footer />
