@@ -350,6 +350,7 @@ export default function DMChatListPage() {
                   setSearchQuery(q);
                 }}
                 showFilter={false}
+                showSearchIcon={false}
               />
             </div>
             
@@ -523,6 +524,7 @@ export default function DMChatListPage() {
                 mobilePlaceholder="Search conversations..."
                 onSearch={(q) => setSearchQuery(q)}
                 showFilter={false}
+                showSearchIcon={false}
               />
             </div>
 

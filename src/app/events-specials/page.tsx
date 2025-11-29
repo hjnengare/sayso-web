@@ -13,7 +13,7 @@ import EmptyState from "../components/EventsPage/EmptyState";
 import SearchInput from "../components/SearchInput/SearchInput";
 import { EVENTS_AND_SPECIALS, Event } from "../data/eventsData";
 import { useToast } from "../contexts/ToastContext";
-import { ChevronUp, Search } from "react-feather";
+import { ChevronUp } from "react-feather";
 import { Loader } from "../components/Loader/Loader";
 import StaggeredContainer from "../components/Animations/StaggeredContainer";
 import AnimatedElement from "../components/Animations/AnimatedElement";
@@ -153,21 +153,15 @@ export default function EventsSpecialsPage() {
             </AnimatedElement>
 
             <AnimatedElement index={1} direction="left">
-              <div className="py-4 px-4 relative">
+              <div className="py-4 px-4">
                 <SearchInput
                   variant="header"
                   placeholder="Search events and limited-time offers..."
                   mobilePlaceholder="Search events & specials..."
                   onSearch={handleSearch}
                   showFilter={false}
+                  showSearchIcon={false}
                 />
-                <button
-                  className="absolute inset-y-0 right-0 pr-2 flex items-center text-charcoal/60 hover:text-charcoal transition-colors z-10"
-                  aria-label="Search"
-                  title="Search"
-                >
-                  <Search className="w-5 h-5" strokeWidth={2} />
-                </button>
               </div>
             </AnimatedElement>
 

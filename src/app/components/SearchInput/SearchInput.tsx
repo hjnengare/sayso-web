@@ -12,6 +12,7 @@ interface SearchInputProps {
   onFilterClick?: () => void;
   onFocusOpenFilters?: () => void;
   showFilter?: boolean;
+  showSearchIcon?: boolean;
   className?: string;
   variant?: "header" | "page";
 }
@@ -26,6 +27,7 @@ const SearchInput = forwardRef<HTMLFormElement, SearchInputProps>(
       onFilterClick,
       onFocusOpenFilters,
       showFilter = true,
+      showSearchIcon = true,
       className = "",
       variant = "header",
     },
@@ -73,8 +75,8 @@ const SearchInput = forwardRef<HTMLFormElement, SearchInputProps>(
               <Sliders className="w-5 h-5" strokeWidth={2} />
             </button>
           )}
-          {/* Search icon on the right when showFilter is false */}
-          {!showFilter && (
+          {/* Search icon on the right when showFilter is false and showSearchIcon is true */}
+          {!showFilter && showSearchIcon && (
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
               <Search className="w-5 h-5 text-charcoal/40" strokeWidth={2} />
             </div>
@@ -93,7 +95,7 @@ const SearchInput = forwardRef<HTMLFormElement, SearchInputProps>(
               text-base placeholder:text-base placeholder:text-charcoal/40 font-normal text-charcoal
               focus:outline-none focus:border-charcoal/60
               hover:border-charcoal/30 transition-all duration-200
-              ${showFilter && onFilterClick ? "pr-12" : "pr-10"}
+              ${showFilter && onFilterClick ? "pr-12" : showSearchIcon ? "pr-10" : "pr-0"}
               py-3 px-0
             `}
             style={{
