@@ -112,19 +112,27 @@ export default function ScrollableSection({
               className={`
                 scroll-arrow scroll-arrow-left
                 absolute left-2 top-1/2 -translate-y-1/2 z-10
-                w-10 h-10 sm:w-12 sm:h-12
-                bg-card-bg/90 backdrop-blur-sm
-                rounded-full shadow-lg 
+                w-14 h-14 sm:w-12 sm:h-12
+                bg-off-white
+                rounded-full
                 flex items-center justify-center
                 transition-all duration-300 ease-out
-                hover:bg-navbar-bg hover:shadow-xl
                 active:scale-95
-                text-charcoal hover:text-white
+                text-charcoal
+                touch-manipulation
+                /* Neomorphic styling for mobile */
+                shadow-[4px_4px_8px_rgba(0,0,0,0.1),-4px_-4px_8px_rgba(255,255,255,0.8)]
+                sm:shadow-lg
+                hover:shadow-[6px_6px_12px_rgba(0,0,0,0.12),-6px_-6px_12px_rgba(255,255,255,0.9)]
+                sm:hover:bg-navbar-bg sm:hover:shadow-xl sm:hover:text-white
+                active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.1),inset_-2px_-2px_4px_rgba(255,255,255,0.8)]
+                sm:active:shadow-lg
+                border border-white/20
               `}
               aria-label="Scroll left"
             >
               <svg
-                className="w-4 h-4 sm:w-5 sm:h-5 rotate-180 arrow-bounce"
+                className="w-5 h-5 sm:w-5 sm:h-5 rotate-180 arrow-bounce"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -144,19 +152,27 @@ export default function ScrollableSection({
               className={`
                 scroll-arrow scroll-arrow-right
                 absolute right-2 top-1/2 -translate-y-1/2 z-10
-                w-10 h-10 sm:w-12 sm:h-12
-                bg-card-bg/90 backdrop-blur-sm
-                rounded-full shadow-lg 
+                w-14 h-14 sm:w-12 sm:h-12
+                bg-off-white
+                rounded-full
                 flex items-center justify-center
                 transition-all duration-300 ease-out
-                hover:bg-navbar-bg hover:shadow-xl
                 active:scale-95
-                text-charcoal hover:text-white
+                text-charcoal
+                touch-manipulation
+                /* Neomorphic styling for mobile */
+                shadow-[4px_4px_8px_rgba(0,0,0,0.1),-4px_-4px_8px_rgba(255,255,255,0.8)]
+                sm:shadow-lg
+                hover:shadow-[6px_6px_12px_rgba(0,0,0,0.12),-6px_-6px_12px_rgba(255,255,255,0.9)]
+                sm:hover:bg-navbar-bg sm:hover:shadow-xl sm:hover:text-white
+                active:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.1),inset_-2px_-2px_4px_rgba(255,255,255,0.8)]
+                sm:active:shadow-lg
+                border border-white/20
               `}
               aria-label="Scroll right"
             >
               <svg
-                className="w-4 h-4 sm:w-5 sm:h-5 arrow-bounce"
+                className="w-5 h-5 sm:w-5 sm:h-5 arrow-bounce"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"

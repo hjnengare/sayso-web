@@ -26,9 +26,9 @@ export default function AnimatedElement({
   children,
   index = 0,
   direction = 'bottom',
-  delay = 0.1,
-  duration = 0.6,
-  distance = 40,
+  delay = 0.05, // Reduced for premium subtlety
+  duration = 0.5, // Reduced for snappier feel
+  distance = 24, // Reduced for subtle movement
   className = '',
   ...props
 }: AnimatedElementProps) {
