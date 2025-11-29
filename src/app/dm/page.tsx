@@ -5,9 +5,10 @@ import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, Search, User, Check, ArrowLeft, MoreVertical, Filter, Archive, CheckCircle, Settings } from "react-feather";
+import { MessageCircle, Search, User, Check, Edit3 } from "react-feather";
 import { TOP_REVIEWERS, type Reviewer } from "../data/communityHighlightsData";
 import Footer from "../components/Footer/Footer";
+import Header from "../components/Header/Header";
 import StaggeredContainer from "../components/Animations/StaggeredContainer";
 import AnimatedElement from "../components/Animations/AnimatedElement";
 
@@ -20,98 +21,91 @@ interface Chat {
   online: boolean;
 }
 
-// Premium Chat Item Component
-function ChatItem({ chat, index }: { chat: Chat; index: number }) {
+// Instagram-like Chat Item Component
+function ChatItem({ chat, index, isSelected, onClick }: { chat: Chat; index: number; isSelected?: boolean; onClick?: () => void }) {
   const [imgError, setImgError] = useState(false);
 
   return (
     <AnimatedElement index={index} direction="bottom">
-      <Link
-        href={`/dm/${chat.id}`}
-        className="group relative block"
+      <motion.button
+        onClick={onClick}
+        className="group relative block w-full text-left"
+        whileHover={{ x: 2 }}
+        transition={{ duration: 0.2 }}
       >
-        <motion.div
-          whileHover={{ scale: 1.01 }}
-          whileTap={{ scale: 0.99 }}
-          className="relative overflow-hidden bg-card-bg/95 backdrop-blur-xl rounded-2xl border border-card-bg/60 ring-1 ring-white/20 shadow-lg hover:shadow-xl transition-all duration-300"
-          style={{
-            boxShadow: '0 8px 32px rgba(157, 171, 155, 0.15), 0 2px 8px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-          }}
+        <div
+          className={`relative flex items-center gap-4 px-4 py-3 transition-all duration-200 ${
+            isSelected 
+              ? 'bg-sage/5 border-l-2 border-sage' 
+              : 'hover:bg-charcoal/5 border-l-2 border-transparent'
+          }`}
         >
-          {/* Premium gradient overlay on hover with brand colors */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-navbar-bg/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-          
-          <div className="relative flex items-center gap-4 p-4 sm:p-5">
-            {/* Profile Picture with Premium Styling */}
-            <div className="relative flex-shrink-0">
-              <div className="relative">
-                {!imgError && chat.user.profilePicture && chat.user.profilePicture.trim() !== "" ? (
-                  <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden ring-2 ring-white/60 ring-offset-2 ring-offset-card-bg/50 shadow-lg">
-                    <Image
-                      src={chat.user.profilePicture}
-                      alt={chat.user.name}
-                      width={64}
-                      height={64}
-                      className="w-full h-full object-cover"
-                      onError={() => setImgError(true)}
-                    />
-                  </div>
-                ) : (
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center bg-gradient-to-br from-white/20 to-white/10 text-white rounded-full ring-2 ring-white/60 ring-offset-2 ring-offset-card-bg/50 shadow-lg">
-                    <User className="text-white/90 w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2} />
-                  </div>
-                )}
-              </div>
-
-              {/* Online Status with Premium Glow */}
-              {chat.online && (
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute -bottom-0.5 -right-0.5 w-4 h-4 sm:w-5 sm:h-5 bg-green-500 rounded-full border-2 border-card-bg shadow-lg ring-2 ring-green-500/30"
-                  style={{
-                    boxShadow: '0 0 0 2px rgba(34, 197, 94, 0.2), 0 0 8px rgba(34, 197, 94, 0.4)',
-                  }}
+          {/* Profile Picture - Larger Instagram style */}
+          <div className="relative flex-shrink-0">
+            {!imgError && chat.user.profilePicture && chat.user.profilePicture.trim() !== "" ? (
+              <div className="relative w-14 h-14 rounded-full overflow-hidden">
+                <Image
+                  src={chat.user.profilePicture}
+                  alt={chat.user.name}
+                  width={56}
+                  height={56}
+                  className="w-full h-full object-cover"
+                  onError={() => setImgError(true)}
                 />
-              )}
-
-              {/* Verified Badge */}
-              {chat.user.badge === "verified" && (
-                <div className="absolute -top-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center ring-2 ring-card-bg shadow-lg">
-                  <Check className="text-white w-3 h-3" strokeWidth={3} />
-                </div>
-              )}
-            </div>
-
-            {/* Chat Info */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between mb-1.5 gap-3">
-                <h3 className="text-base sm:text-lg font-semibold text-white truncate group-hover:text-white/90 transition-colors duration-200" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                  {chat.user.name}
-                </h3>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <span className="text-xs sm:text-sm text-white/70 font-medium whitespace-nowrap" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                    {chat.timestamp}
-                  </span>
-                  {chat.unreadCount > 0 && (
-                    <motion.span
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="min-w-[24px] h-6 px-2 bg-gradient-to-br from-navbar-bg to-navbar-bg/90 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg ring-2 ring-white/20"
-                      style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
-                    >
-                      {chat.unreadCount > 99 ? "99+" : chat.unreadCount}
-                    </motion.span>
-                  )}
-                </div>
               </div>
-              <p className="text-sm sm:text-base text-white/80 truncate leading-relaxed" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+            ) : (
+              <div className="w-14 h-14 flex items-center justify-center bg-gradient-to-br from-sage/30 to-sage/20 text-sage rounded-full">
+                <User className="text-sage w-7 h-7" strokeWidth={2} />
+              </div>
+            )}
+
+            {/* Online Status */}
+            {chat.online && (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-white"
+              />
+            )}
+
+            {/* Verified Badge */}
+            {chat.user.badge === "verified" && (
+              <div className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center ring-2 ring-white">
+                <Check className="text-white w-3 h-3" strokeWidth={3} />
+              </div>
+            )}
+          </div>
+
+          {/* Chat Info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-0.5 gap-2">
+              <h3 className={`text-body font-semibold truncate transition-colors duration-200 ${isSelected ? 'text-sage' : 'text-charcoal'}`} style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                {chat.user.name}
+              </h3>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <span className="text-caption text-charcoal/40 font-normal whitespace-nowrap" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                  {chat.timestamp}
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-body-sm text-charcoal/60 truncate leading-snug flex-1" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
                 {chat.lastMessage}
               </p>
+              {chat.unreadCount > 0 && (
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="min-w-[20px] h-5 px-1.5 bg-sage text-white text-caption font-bold rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
+                >
+                  {chat.unreadCount > 99 ? "99+" : chat.unreadCount}
+                </motion.span>
+              )}
             </div>
           </div>
-        </motion.div>
-      </Link>
+        </div>
+      </motion.button>
     </AnimatedElement>
   );
 }
@@ -154,52 +148,13 @@ export default function DMChatListPage() {
   const router = useRouter();
   const [chats] = useState<Chat[]>(generateDummyChats());
   const [searchQuery, setSearchQuery] = useState("");
-  const [showMenu, setShowMenu] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
 
   const filteredChats = chats.filter((chat) =>
     chat.user.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Handle click outside to close menu
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
-      if (
-        menuRef.current &&
-        buttonRef.current &&
-        !menuRef.current.contains(event.target as Node) &&
-        !buttonRef.current.contains(event.target as Node)
-      ) {
-        setShowMenu(false);
-      }
-    };
-
-    if (showMenu) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('touchstart', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
-    };
-  }, [showMenu]);
-
-  // Calculate menu position
-  const [menuPosition, setMenuPosition] = useState<{ top: number; right: number } | null>(null);
-
-  useEffect(() => {
-    if (showMenu && buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      setMenuPosition({
-        top: rect.bottom + 8,
-        right: window.innerWidth - rect.right,
-      });
-    } else {
-      setMenuPosition(null);
-    }
-  }, [showMenu]);
+  const selectedChat = selectedChatId ? chats.find(c => c.id === selectedChatId) : null;
 
   return (
     <AnimatePresence mode="wait">
@@ -209,7 +164,7 @@ export default function DMChatListPage() {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
-        className="min-h-dvh bg-gradient-to-br from-off-white via-white to-off-white font-urbanist relative overflow-hidden"
+        className="min-h-dvh bg-off-white font-urbanist relative overflow-hidden"
         style={{
           fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
         }}
@@ -219,128 +174,187 @@ export default function DMChatListPage() {
           <div className="absolute top-0 left-0 w-96 h-96 bg-card-bg/8 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-navbar-bg/8 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
         </div>
+        
+        {/* Main Header */}
+        <Header
+          showSearch={false}
+          variant="white"
+          backgroundClassName="bg-navbar-bg"
+          topPosition="top-0"
+          reducedPadding={true}
+          whiteText={true}
+        />
+         
+        {/* Split Layout for Larger Screens */}
+        <div className="flex h-[calc(100vh-80px)] lg:h-[calc(100vh-96px)] pt-20 lg:pt-20 overflow-hidden">
 
-        {/* Header with navbar-bg */}
-        <header className="fixed top-0 left-0 right-0 z-50 bg-navbar-bg/95 backdrop-blur-xl border-b border-white/30 shadow-sm">
-          <div className="mx-auto w-full max-w-[2000px] px-4 sm:px-6 py-4">
-            <div className="flex items-center justify-between">
-              <button
-                onClick={() => router.back()}
-                className="group flex items-center touch-manipulation"
-                aria-label="Go back"
-              >
-                <motion.div
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="w-11 h-11 sm:w-12 sm:h-12 bg-gradient-to-br from-white/10 to-white/5 hover:from-white/20 hover:to-white/10 rounded-full flex items-center justify-center transition-all duration-300 border border-white/20 hover:border-white/30 shadow-sm hover:shadow-md mr-3"
-                >
-                  <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 text-white group-hover:text-white/80 transition-colors duration-300" strokeWidth={2.5} />
-                </motion.div>
-                <h3 className="font-urbanist text-base font-bold text-white group-hover:text-white/80 transition-colors duration-200 " style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                  Messages
-                </h3>
-              </button>
-              
-              <div className="relative">
-                <motion.button
-                  ref={buttonRef}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setShowMenu(!showMenu)}
-                  className="w-11 h-11 sm:w-12 sm:h-12 bg-gradient-to-br from-white/10 to-white/5 hover:from-white/20 hover:to-white/10 rounded-full flex items-center justify-center transition-all duration-300 border border-white/20 hover:border-white/30 shadow-sm hover:shadow-md"
-                  aria-label="More options"
-                  aria-expanded={showMenu}
-                >
-                  <MoreVertical className="w-5 h-5 text-white/80" strokeWidth={2} />
-                </motion.button>
-
-                {/* Dropdown Menu */}
-                <AnimatePresence>
-                  {showMenu && menuPosition && (
-                    <motion.div
-                      ref={menuRef}
-                      initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                      transition={{ duration: 0.2 }}
-                      className="fixed z-[60] bg-white rounded-xl shadow-xl border border-white/60 ring-1 ring-white/30 min-w-[200px] overflow-hidden"
-                      style={{
-                        top: `${menuPosition.top}px`,
-                        right: `${menuPosition.right}px`,
-                      }}
-                    >
-                      <div className="py-2">
-                        <button
-                          onClick={() => {
-                            // Mark all as read functionality
-                            setShowMenu(false);
-                          }}
-                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-off-white/50 transition-colors text-left"
-                        >
-                          <CheckCircle className="w-5 h-5 text-charcoal/70" strokeWidth={2} />
-                          <span className="text-sm font-medium text-charcoal" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                            Mark all as read
-                          </span>
-                        </button>
-                        <button
-                          onClick={() => {
-                            // Archive all functionality
-                            setShowMenu(false);
-                          }}
-                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-off-white/50 transition-colors text-left"
-                        >
-                          <Archive className="w-5 h-5 text-charcoal/70" strokeWidth={2} />
-                          <span className="text-sm font-medium text-charcoal" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                            Archive all
-                          </span>
-                        </button>
-                        <div className="border-t border-charcoal/10 my-1" />
-                        <button
-                          onClick={() => {
-                            router.push('/settings');
-                            setShowMenu(false);
-                          }}
-                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-off-white/50 transition-colors text-left"
-                        >
-                          <Settings className="w-5 h-5 text-charcoal/70" strokeWidth={2} />
-                          <span className="text-sm font-medium text-charcoal" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                            Settings
-                          </span>
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        {/* Main Content */}
-        <main className="relative z-10 mx-auto w-full max-w-[2000px] px-4 sm:px-6 pt-24 sm:pt-28 pb-8">
-          {/* Search Bar - Matching Events & Specials Style */}
-          <div className="mb-6 sm:mb-8">
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="py-4 relative"
-            >
+          {/* Left Sidebar - Chat List */}
+          <div className="w-full lg:w-[400px] xl:w-[450px] flex flex-col bg-off-white border-r border-charcoal/10 lg:border-r h-full overflow-hidden relative">
+            {/* Search Bar - Instagram style */}
+            <div className="px-4 sm:px-6 py-4 border-b border-charcoal/10 flex-shrink-0 bg-off-white">
               <form onSubmit={(e) => e.preventDefault()} className="w-full">
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Search conversations..."
+                    placeholder="Search"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-transparent border-0 border-b-2 border-charcoal/20 text-base placeholder:text-base placeholder:text-charcoal/40 font-normal text-charcoal focus:outline-none focus:border-charcoal/60 hover:border-charcoal/30 transition-all duration-200 py-3 px-0 pr-2 touch-manipulation"
+                    className="w-full bg-charcoal/5 rounded-lg px-4 py-2.5 pl-10 text-body-sm placeholder:text-body-sm placeholder:text-charcoal/40 font-normal text-charcoal focus:outline-none focus:bg-charcoal/10 focus:ring-2 focus:ring-sage/20 transition-all duration-200 pr-10 touch-manipulation"
                     style={{
                       fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                      fontSize: '16px',
                     }}
                     aria-label="Search conversations"
                   />
-                  {searchQuery && (
+                  {searchQuery ? (
+                    <motion.button
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      onClick={() => setSearchQuery("")}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-charcoal/60 hover:text-charcoal transition-colors z-10"
+                      aria-label="Clear search"
+                      type="button"
+                    >
+                      <span className="text-charcoal/60 text-lg">×</span>
+                    </motion.button>
+                  ) : (
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Search className="w-4 h-4 text-charcoal/40" strokeWidth={2} />
+                    </div>
+                  )}
+                </div>
+              </form>
+            </div>
+            
+            {/* Chat List - Scrollable */}
+            <div className="flex-1 overflow-y-auto min-h-0">
+              {filteredChats.length === 0 ? (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="flex flex-col items-center justify-center py-16 text-center"
+                >
+                  <div className="relative mb-6">
+                    <div className="absolute inset-0 bg-card-bg/15 rounded-full blur-2xl" />
+                    <MessageCircle className="relative w-16 h-16 text-charcoal/20" strokeWidth={1.5} />
+                  </div>
+                  <h3 className="text-body font-semibold text-charcoal mb-2" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                    No conversations found
+                  </h3>
+                  <p className="text-body-sm text-charcoal/60 max-w-md" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                    Try adjusting your search
+                  </p>
+                </motion.div>
+              ) : (
+                <StaggeredContainer>
+                  <div className="space-y-0">
+                    {filteredChats.map((chat, index) => (
+                      <ChatItem
+                        key={chat.id}
+                        chat={chat}
+                        index={index}
+                        isSelected={selectedChatId === chat.id}
+                        onClick={() => setSelectedChatId(chat.id)}
+                      />
+                    ))}
+                  </div>
+                </StaggeredContainer>
+              )}
+            </div>
+
+            {/* Compose Button - Floating Instagram style */}
+            <div className="absolute bottom-6 right-6 flex-shrink-0 lg:block hidden">
+              <motion.button
+                whileHover={{ scale: 1.1, rotate: 90 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => {
+                  router.push('/dm/new');
+                }}
+                className="w-14 h-14 bg-sage text-white rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300"
+                aria-label="New conversation"
+              >
+                <Edit3 className="w-6 h-6" strokeWidth={2.5} />
+              </motion.button>
+            </div>
+          </div>
+
+          {/* Right Side - Conversation View */}
+          <div className="hidden lg:flex flex-1 flex-col bg-off-white border-l border-charcoal/10">
+            {selectedChat ? (
+              <div className="flex-1 flex flex-col">
+               
+                {/* Conversation content - redirect to detail page for now */}
+                <div className="flex-1 flex items-center justify-center bg-off-white">
+                  <motion.button
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    onClick={() => router.push(`/dm/${selectedChat.id}`)}
+                    className="px-6 py-3 bg-sage text-white rounded-full text-body-sm font-semibold shadow-sm hover:shadow-md transition-all duration-200"
+                    style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
+                  >
+                    Open Conversation
+                  </motion.button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex-1 flex items-center justify-center p-8">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="text-center max-w-md"
+                >
+                  {/* Empty State Illustration */}
+                  <div className="relative mb-8 flex items-center justify-center">
+                    <div className="relative w-32 h-32">
+                      {/* Envelope */}
+                      <svg width="128" height="96" viewBox="0 0 128 96" className="absolute inset-0">
+                        <rect x="16" y="32" width="96" height="64" rx="6" fill="white" stroke="#9BA19B" strokeWidth="2.5" />
+                        <path d="M16 32 L64 64 L112 32" stroke="#9BA19B" strokeWidth="2.5" fill="none" />
+                        <path d="M24 44 Q36 56 48 44 T72 56 T96 44 T112 56" stroke="#1a1a1a" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+                      </svg>
+                      {/* Pen - positioned diagonally over envelope */}
+                      <svg width="48" height="48" viewBox="0 0 48 48" className="absolute -top-2 right-4 transform rotate-12">
+                        <path d="M10 38 L36 12 L32 8 L8 32 Z" fill="#1a1a1a" />
+                        <circle cx="36" cy="12" r="4" fill="white" />
+                      </svg>
+                      {/* Brand color blobs underneath */}
+                      <div className="absolute bottom-0 left-0 w-20 h-20 bg-sage/20 rounded-full blur-2xl"></div>
+                      <div className="absolute bottom-2 right-4 w-16 h-16 bg-coral/20 rounded-full blur-2xl"></div>
+                    </div>
+                  </div>
+
+                  <h2 className="text-h3 font-bold text-charcoal mb-3" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                    This space is feeling a little... empty
+                  </h2>
+                  <p className="text-body text-charcoal/60 mb-6" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                    Why not be the first to say hi? Hit that pen icon and slide into a new convo.
+                  </p>
+                </motion.div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Mobile Layout - Full Width */}
+        <div className="lg:hidden">
+          {/* Mobile Main Content */}
+          <main className="relative z-10 mx-auto w-full max-w-[2000px] px-4 sm:px-6 pt-24 sm:pt-28 pb-8">
+            {/* Search Bar */}
+            <div className="mb-4 pb-3">
+              <div className="relative">
+                <form onSubmit={(e) => e.preventDefault()} className="w-full">
+                  <input
+                    type="text"
+                    placeholder="Search"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-charcoal/5 rounded-lg px-4 py-2.5 text-body-sm placeholder:text-charcoal/40 font-normal text-charcoal focus:outline-none focus:bg-charcoal/10 focus:ring-2 focus:ring-sage/20 transition-all duration-200 pr-10 touch-manipulation"
+                    style={{
+                      fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                    }}
+                    aria-label="Search conversations"
+                  />
+                  {searchQuery ? (
                     <motion.button
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
@@ -351,68 +365,77 @@ export default function DMChatListPage() {
                     >
                       <span className="text-charcoal/60 text-lg">×</span>
                     </motion.button>
+                  ) : (
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Search className="w-4 h-4 text-charcoal/40" strokeWidth={2} />
+                    </div>
                   )}
-                </div>
-              </form>
-            </motion.div>
-          </div>
+                </form>
+              </div>
+            </div>
 
-          {/* Chat List */}
-          {filteredChats.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="flex flex-col items-center justify-center py-16 sm:py-20 text-center px-4"
-            >
-              <div className="relative mb-6">
-                <div className="absolute inset-0 bg-card-bg/15 rounded-full blur-2xl" />
-                <MessageCircle className="relative w-16 h-16 sm:w-20 sm:h-20 text-charcoal/20" strokeWidth={1.5} />
-              </div>
-              <h3 className="text-lg sm:text-xl font-semibold text-charcoal mb-2" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                No conversations found
-              </h3>
-              <p className="text-sm sm:text-base text-charcoal/60 max-w-md" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                Try adjusting your search or start a new conversation
-              </p>
-            </motion.div>
-          ) : (
-            <StaggeredContainer>
-              <div className="space-y-3 sm:space-y-4">
-                {filteredChats.map((chat, index) => (
-                  <ChatItem key={chat.id} chat={chat} index={index} />
-                ))}
-              </div>
-            </StaggeredContainer>
-          )}
-
-          {/* Empty State for No Chats */}
-          {chats.length === 0 && filteredChats.length === 0 && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="flex flex-col items-center justify-center py-20 sm:py-24 text-center px-4"
-            >
-              <div className="relative mb-8">
-                <div className="absolute inset-0 bg-gradient-to-br from-card-bg/20 to-navbar-bg/20 rounded-full blur-3xl" />
-                <MessageCircle className="relative w-20 h-20 sm:w-24 sm:h-24 text-charcoal/20" strokeWidth={1.5} />
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-charcoal mb-3" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                No messages yet
-              </h2>
-              <p className="text-base sm:text-lg text-charcoal/60 max-w-md mb-6" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                Start a conversation with reviewers and community members to get started!
-              </p>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-6 py-3 bg-gradient-to-br from-card-bg to-card-bg/90 text-white rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-                style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
+            {/* Chat List */}
+            {filteredChats.length === 0 ? (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex flex-col items-center justify-center py-16 sm:py-20 text-center px-4"
               >
-                Start New Conversation
-              </motion.button>
-            </motion.div>
-          )}
-        </main>
+                <div className="relative mb-6">
+                  <div className="absolute inset-0 bg-card-bg/15 rounded-full blur-2xl" />
+                  <MessageCircle className="relative w-16 h-16 sm:w-20 sm:h-20 text-charcoal/20" strokeWidth={1.5} />
+                </div>
+                <h3 className="text-body font-semibold text-charcoal mb-2" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                  No conversations found
+                </h3>
+                <p className="text-body-sm text-charcoal/60 max-w-md" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                  Try adjusting your search or start a new conversation
+                </p>
+              </motion.div>
+            ) : (
+              <StaggeredContainer>
+                <div className="space-y-0">
+                  {filteredChats.map((chat, index) => (
+                    <ChatItem
+                      key={chat.id}
+                      chat={chat}
+                      index={index}
+                      onClick={() => router.push(`/dm/${chat.id}`)}
+                    />
+                  ))}
+                </div>
+              </StaggeredContainer>
+            )}
+
+            {/* Empty State for No Chats */}
+            {chats.length === 0 && filteredChats.length === 0 && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex flex-col items-center justify-center py-20 sm:py-24 text-center px-4"
+              >
+                <div className="relative mb-8">
+                  <div className="absolute inset-0 bg-gradient-to-br from-card-bg/20 to-navbar-bg/20 rounded-full blur-3xl" />
+                  <MessageCircle className="relative w-20 h-20 sm:w-24 sm:h-24 text-charcoal/20" strokeWidth={1.5} />
+                </div>
+                <h2 className="text-h3 font-bold text-charcoal mb-3" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                  No messages yet
+                </h2>
+                <p className="text-body text-charcoal/60 max-w-md mb-6" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                  Start a conversation with reviewers and community members to get started!
+                </p>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-6 py-3 bg-sage text-white rounded-full font-semibold shadow-sm hover:shadow-md transition-all duration-200"
+                  style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
+                >
+                  Start New Conversation
+                </motion.button>
+              </motion.div>
+            )}
+          </main>
+        </div>
 
         <Footer />
       </motion.div>
