@@ -19,7 +19,6 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../contexts/ToastContext";
 import nextDynamic from "next/dynamic";
 import {
-    BusinessDetailHeader,
     BusinessHeroImage,
     BusinessInfo as BusinessInfoComponent,
     BusinessDetailsCard,
@@ -27,6 +26,7 @@ import {
     BusinessActionCard,
     BusinessContactInfo,
 } from "../../components/BusinessDetail";
+import Header from "../../components/Header/Header";
 import StaggeredContainer from "../../components/Animations/StaggeredContainer";
 import AnimatedElement from "../../components/Animations/AnimatedElement";
 
@@ -271,13 +271,14 @@ export default function BusinessProfilePage() {
                         '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif',
                 }}
             >
-                {/* Header */}
-                <BusinessDetailHeader
-                    isBookmarked={isBookmarked}
-                    onBookmark={handleBookmark}
-                    onShare={handleShare}
-                    onSpecials={handleSpecials}
-                    businessName={businessData.name}
+                {/* Main Header */}
+                <Header
+                  showSearch={false}
+                  variant="white"
+                  backgroundClassName="bg-navbar-bg"
+                  topPosition="top-0"
+                  reducedPadding={true}
+                  whiteText={true}
                 />
 
                 <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
