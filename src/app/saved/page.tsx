@@ -150,7 +150,7 @@ export default function SavedPage() {
           fontFamily: '"Urbanist", -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
         }}
       >
-        <Header />
+        <Header whiteText={true} />
 
         <div className="relative z-0">
           <div className="py-1 pt-20 pb-12 sm:pb-16 md:pb-20">
