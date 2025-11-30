@@ -10,8 +10,13 @@ export const effects = {
     xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
     '2xl': '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
     inner: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.06)',
-    premium: '0 10px 30px rgba(0,0,0,0.06), 0 22px 70px rgba(0,0,0,0.10)',
-    premiumHover: '0 12px 36px rgba(0,0,0,0.08), 0 30px 90px rgba(0,0,0,0.14)',
+    // Premium all-sided shadows - symmetrical, floating, 3D aesthetic
+    // Layered shadows with low opacity, wide spread, subtle blur for Apple/Airbnb/Notion style
+    premium: '0 0 0 1px rgba(0, 0, 0, 0.02), 0 0 20px 0 rgba(0, 0, 0, 0.03), 0 0 40px 0 rgba(0, 0, 0, 0.02), 0 0 60px 0 rgba(0, 0, 0, 0.015)',
+    premiumHover: '0 0 0 1px rgba(0, 0, 0, 0.03), 0 0 24px 0 rgba(0, 0, 0, 0.04), 0 0 48px 0 rgba(0, 0, 0, 0.03), 0 0 72px 0 rgba(0, 0, 0, 0.02)',
+    // Alternative premium shadow with more depth (for elevated cards)
+    premiumElevated: '0 0 0 1px rgba(0, 0, 0, 0.02), 0 0 24px 0 rgba(0, 0, 0, 0.04), 0 0 48px 0 rgba(0, 0, 0, 0.03), 0 0 80px 0 rgba(0, 0, 0, 0.02), 0 0 120px 0 rgba(0, 0, 0, 0.015)',
+    premiumElevatedHover: '0 0 0 1px rgba(0, 0, 0, 0.03), 0 0 32px 0 rgba(0, 0, 0, 0.05), 0 0 64px 0 rgba(0, 0, 0, 0.04), 0 0 96px 0 rgba(0, 0, 0, 0.03), 0 0 140px 0 rgba(0, 0, 0, 0.02)',
   },
 
   // Border radius
@@ -49,10 +54,12 @@ export const effects = {
 
 // Common effect classes
 export const effectClasses = {
-  // Cards
-  card: 'rounded-lg border border-black/5 shadow-md',
-  cardPremium: 'rounded-lg border border-white/30 backdrop-blur-xl shadow-premium hover:shadow-premiumHover',
-  cardGlass: 'rounded-lg border border-black/5 backdrop-blur-xl bg-off-white/90',
+  // Cards - Premium all-sided shadows with overflow-visible
+  card: 'rounded-lg border border-black/5 shadow-md overflow-visible',
+  cardPremium: 'rounded-lg border border-white/30 backdrop-blur-xl overflow-visible',
+  cardPremiumShadow: 'shadow-premium hover:shadow-premiumHover',
+  cardPremiumElevated: 'shadow-premiumElevated hover:shadow-premiumElevatedHover',
+  cardGlass: 'rounded-lg border border-black/5 backdrop-blur-xl bg-off-white/90 overflow-visible',
 
   // Buttons
   buttonShadow: 'shadow-md hover:shadow-lg transition-shadow',

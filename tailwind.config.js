@@ -139,6 +139,12 @@ module.exports = {
         '3xl': '0 35px 60px -12px rgba(0, 0, 0, 0.3)',
         'sage': '0 10px 40px rgba(125, 155, 118, 0.3)',
         'sage-lg': '0 20px 60px rgba(125, 155, 118, 0.4)',
+        // Premium all-sided shadows - symmetrical, floating, 3D aesthetic
+        // Layered shadows with low opacity, wide spread, subtle blur for Apple/Airbnb/Notion style
+        'premium': '0 0 0 1px rgba(0, 0, 0, 0.02), 0 0 20px 0 rgba(0, 0, 0, 0.03), 0 0 40px 0 rgba(0, 0, 0, 0.02), 0 0 60px 0 rgba(0, 0, 0, 0.015)',
+        'premiumHover': '0 0 0 1px rgba(0, 0, 0, 0.03), 0 0 24px 0 rgba(0, 0, 0, 0.04), 0 0 48px 0 rgba(0, 0, 0, 0.03), 0 0 72px 0 rgba(0, 0, 0, 0.02)',
+        'premiumElevated': '0 0 0 1px rgba(0, 0, 0, 0.02), 0 0 24px 0 rgba(0, 0, 0, 0.04), 0 0 48px 0 rgba(0, 0, 0, 0.03), 0 0 80px 0 rgba(0, 0, 0, 0.02), 0 0 120px 0 rgba(0, 0, 0, 0.015)',
+        'premiumElevatedHover': '0 0 0 1px rgba(0, 0, 0, 0.03), 0 0 32px 0 rgba(0, 0, 0, 0.05), 0 0 64px 0 rgba(0, 0, 0, 0.04), 0 0 96px 0 rgba(0, 0, 0, 0.03), 0 0 140px 0 rgba(0, 0, 0, 0.02)',
       },
       borderRadius: {
         3: '3px',

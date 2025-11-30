@@ -111,7 +111,7 @@ export default function ScrollableSection({
               onClick={scrollLeft}
               className={`
                 scroll-arrow scroll-arrow-left
-                absolute left-2 top-1/2 -translate-y-1/2 z-10
+                absolute left-2 top-1/2 -translate-y-1/2 z-40
                 w-14 h-14 sm:w-12 sm:h-12
                 bg-navbar-bg
                 rounded-full
@@ -151,7 +151,7 @@ export default function ScrollableSection({
               onClick={scrollRight}
               className={`
                 scroll-arrow scroll-arrow-right
-                absolute right-2 top-1/2 -translate-y-1/2 z-10
+                absolute right-2 top-1/2 -translate-y-1/2 z-40
                 w-14 h-14 sm:w-12 sm:h-12
                 bg-navbar-bg
                 rounded-full

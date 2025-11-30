@@ -16,10 +16,10 @@ export interface CardProps {
 }
 
 const variantStyles: Record<CardVariant, string> = {
-  default: 'bg-off-white border border-black/5 shadow-md',
-  glass: 'bg-off-white/90 border border-black/5 backdrop-blur-xl shadow-sm',
-  premium: 'bg-off-white/95 border border-white/30 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.06),0_22px_70px_rgba(0,0,0,0.10)]',
-  bordered: 'bg-off-white border-2 border-light-gray',
+  default: 'bg-off-white border border-black/5 shadow-premium overflow-visible',
+  glass: 'bg-off-white/90 border border-black/5 backdrop-blur-xl shadow-premium overflow-visible',
+  premium: 'bg-off-white/95 border border-white/30 backdrop-blur-xl shadow-premiumElevated hover:shadow-premiumElevatedHover overflow-visible',
+  bordered: 'bg-off-white border-2 border-light-gray overflow-visible',
 };
 
 const paddingStyles: Record<CardPadding, string> = {
@@ -41,7 +41,7 @@ export const Card: React.FC<CardProps> = ({
   const baseStyles = 'rounded-lg transition-all duration-300';
 
   const hoverStyles = hoverable || clickable
-    ? 'hover:shadow-lg hover:-translate-y-0.5'
+    ? 'hover:shadow-premiumHover hover:-translate-y-0.5'
     : '';
 
   const cursorStyle = clickable ? 'cursor-pointer' : '';

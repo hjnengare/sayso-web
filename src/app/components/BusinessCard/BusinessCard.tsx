@@ -301,7 +301,7 @@ function BusinessCard({
       }}
     >
       <div
-        className={`relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden group cursor-pointer w-full flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-lg transition-all duration-300 hover:border-white/80 hover:-translate-y-1 hover:shadow-xl ${compact ? "md:h-[416px]" : "h-[650px] sm:h-auto md:w-[340px]"
+        className={`relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-visible group cursor-pointer w-full flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-premiumElevated transition-all duration-300 hover:border-white/80 hover:-translate-y-1 hover:shadow-premiumElevatedHover ${compact ? "md:h-[416px]" : "h-[650px] sm:h-auto md:w-[340px]"
           }`}
         style={{
           maxWidth: compact ? "100%" : "540px",
@@ -418,14 +418,14 @@ function BusinessCard({
           )}
 
           {/* Mobile Info Icon - Shows popup with Share and Save */}
-          <div className="md:hidden absolute left-4 bottom-4 z-20">
+          <div className="md:hidden absolute left-4 bottom-4 z-[50]">
             <button
               data-info-button
               onClick={(e) => {
                 e.stopPropagation();
                 setShowInfoPopup(!showInfoPopup);
               }}
-              className="w-10 h-10 bg-off-white/95 backdrop-blur-xl rounded-full flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40 touch-manipulation"
+              className="w-10 h-10 bg-off-white/95 backdrop-blur-xl rounded-full flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40 touch-manipulation relative z-[51]"
               aria-label="More options"
               aria-expanded={showInfoPopup}
             >
@@ -436,7 +436,7 @@ function BusinessCard({
             {showInfoPopup && (
               <div
                 ref={infoPopupRef}
-                className="absolute bottom-full left-0 mb-2 bg-off-white/95 backdrop-blur-xl rounded-2xl border border-white/40 p-2 z-30 min-w-[140px] whitespace-nowrap"
+                className="absolute bottom-full left-0 mb-2 bg-off-white/95 backdrop-blur-xl rounded-2xl border border-white/40 p-2 z-[60] min-w-[140px] max-w-[calc(100vw-8rem)] whitespace-nowrap shadow-premiumElevated"
                 style={{
                   animation: 'fadeInUp 0.2s ease-out forwards',
                   transformOrigin: 'bottom left',

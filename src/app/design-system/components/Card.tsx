@@ -58,7 +58,7 @@ export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 const cardVariants = {
   base: [
     // Base styles
-    'relative  bg-card-bg  -100 overflow-hidden',
+    'relative  bg-card-bg  -100 overflow-visible',
     'transition-all duration-normal ease-out',
 
     // Motion-safe animations
@@ -67,12 +67,12 @@ const cardVariants = {
 
   variants: {
     default: [
-      'border border-charcoal-100 shadow-sm',
+      'border border-charcoal-100 shadow-premium',
     ],
 
     elevated: [
-      'shadow-lg',
-      'hover:shadow-xl',
+      'shadow-premiumElevated',
+      'hover:shadow-premiumElevatedHover',
     ],
 
     outlined: [
@@ -99,7 +99,7 @@ const cardVariants = {
 
   interactions: {
     hoverable: [
-      'hover:shadow-md hover:border-sage-200',
+      'hover:shadow-premiumHover hover:border-sage-200',
       'hover:bg-card-bg  ',
     ],
 

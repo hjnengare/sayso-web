@@ -8,6 +8,8 @@ import {
   Instagram,
   Facebook,
   Linkedin,
+  Mail,
+  Heart,
 } from "lucide-react";
 import Logo from "../Logo/Logo";
 
@@ -32,18 +34,30 @@ export default function Footer() {
   };
 
   const socialLinks = [
-    { name: "Twitter", icon: Twitter, href: "#" },
-    { name: "Instagram", icon: Instagram, href: "#" },
-    { name: "Facebook", icon: Facebook, href: "#" },
-    { name: "LinkedIn", icon: Linkedin, href: "#" }
+    { name: "Twitter", icon: Twitter, href: "https://twitter.com", color: "hover:text-blue-400" },
+    { name: "Instagram", icon: Instagram, href: "https://instagram.com", color: "hover:text-pink-400" },
+    { name: "Facebook", icon: Facebook, href: "https://facebook.com", color: "hover:text-blue-500" },
+    { name: "LinkedIn", icon: Linkedin, href: "https://linkedin.com", color: "hover:text-blue-600" },
   ];
 
   return (
-    <footer className="relative overflow-hidden pb-safe-area-bottom bg-charcoal text-off-white">
+    <footer className="relative overflow-hidden pb-safe-area-bottom bg-gradient-to-b from-charcoal via-charcoal to-charcoal/95 text-off-white">
+      {/* Decorative background elements */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute top-0 left-0 w-96 h-96 bg-sage rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-coral rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
+      </div>
+      
+      {/* Subtle grid pattern */}
+      <div className="absolute inset-0 opacity-[0.02]" style={{
+        backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+                          linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
+        backgroundSize: '50px 50px'
+      }} />
    
-      <div className="relative z-10 mx-auto w-full max-w-[2000px] px-2 pt-8 sm:pt-12 md:pt-16">
+      <div className="relative z-10 mx-auto w-full max-w-[2000px] px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 md:pt-20">
         {/* Main footer content */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 md:gap-12 mb-8 md:mb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 md:gap-12 mb-10 md:mb-16">
           {/* Brand section */}
           <div className="lg:col-span-1">
             <motion.div
@@ -53,28 +67,38 @@ export default function Footer() {
               viewport={{ once: true }}
             >
               <Link href="/" className="inline-block group">
-                <div className="mb-4 group-hover:scale-105 transition-all duration-300">
+                <div className="mb-6 group-hover:scale-105 transition-all duration-300">
                   <Logo variant="footer" />
                 </div>
               </Link>
-              <p className="font-urbanist text-6 text-off-white/70 leading-relaxed mb-6 max-w-sm">
+              <p className="font-urbanist text-sm sm:text-base text-off-white/80 leading-relaxed mb-6 max-w-sm">
                 Discover trusted local businesses and authentic experiences in your community.
               </p>
-
-              {/* Social links */}
-              <div className="flex space-x-4">
+              
+              {/* Social Media Links */}
+              <div className="flex items-center gap-3 mb-6">
                 {socialLinks.map((social, index) => {
                   const Icon = social.icon;
                   return (
                     <motion.a
                       key={social.name}
                       href={social.href}
-                      initial={{ opacity: 0, scale: 0.8 }}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      initial={{ opacity: 0, scale: 0 }}
                       whileInView={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.4, delay: index * 0.1 }}
+                      transition={{ duration: 0.4, delay: 0.5 + index * 0.1 }}
                       viewport={{ once: true }}
-                      whileHover={{ scale: 1.1, y: -2 }}
-                      className="w-10 h-10 bg-off-white/10 hover:bg-off-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-off-white hover:text-off-white/80 transition-all duration-300 border border-off-white/20 hover:border-off-white/30 shadow-lg hover:shadow-xl"
+                      className={`
+                        w-10 h-10 rounded-full bg-off-white/5 backdrop-blur-sm
+                        border border-off-white/10
+                        flex items-center justify-center
+                        text-off-white/60 ${social.color}
+                        hover:bg-off-white/10 hover:border-off-white/20
+                        hover:scale-110 active:scale-95
+                        transition-all duration-300
+                        shadow-premium
+                      `}
                       aria-label={social.name}
                     >
                       <Icon className="w-5 h-5" />
@@ -95,17 +119,20 @@ export default function Footer() {
                 transition={{ duration: 0.6, delay: 0.1 }}
                 viewport={{ once: true }}
               >
-                <h3 className="font-urbanist text-5 font-600 text-off-white mb-4">Company</h3>
-                <ul className="space-y-3">
+                <h3 className="font-urbanist text-base sm:text-lg font-semibold text-off-white mb-5 relative inline-block">
+                  Company
+                  <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-gradient-to-r from-sage to-coral rounded-full" />
+                </h3>
+                <ul className="space-y-3.5">
                   {footerLinks.company.map((link) => (
                     <li key={link.name}>
                       <Link
                         href={link.href}
-                        className="font-urbanist text-6 text-off-white/70 hover:text-off-white transition-colors duration-300 group"
+                        className="font-urbanist text-sm sm:text-base text-off-white/70 hover:text-off-white transition-all duration-300 group inline-block"
                       >
                         <span className="relative">
                           {link.name}
-                          <div className="absolute inset-x-0 -bottom-0.5 h-0.5 bg-off-white/50 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                          <span className="absolute inset-x-0 -bottom-1 h-px bg-gradient-to-r from-sage/50 via-coral/50 to-sage/50 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-full" />
                         </span>
                       </Link>
                     </li>
@@ -120,17 +147,20 @@ export default function Footer() {
                 transition={{ duration: 0.6, delay: 0.2 }}
                 viewport={{ once: true }}
               >
-                <h3 className="font-urbanist text-5 font-600 text-off-white mb-4">Support</h3>
-                <ul className="space-y-3">
+                <h3 className="font-urbanist text-base sm:text-lg font-semibold text-off-white mb-5 relative inline-block">
+                  Support
+                  <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-gradient-to-r from-sage to-coral rounded-full" />
+                </h3>
+                <ul className="space-y-3.5">
                   {footerLinks.support.map((link) => (
                     <li key={link.name}>
                       <Link
                         href={link.href}
-                        className="font-urbanist text-6 text-off-white/70 hover:text-off-white transition-colors duration-300 group"
+                        className="font-urbanist text-sm sm:text-base text-off-white/70 hover:text-off-white transition-all duration-300 group inline-block"
                       >
                         <span className="relative">
                           {link.name}
-                          <div className="absolute inset-x-0 -bottom-0.5 h-0.5 bg-off-white/50 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                          <span className="absolute inset-x-0 -bottom-1 h-px bg-gradient-to-r from-sage/50 via-coral/50 to-sage/50 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-full" />
                         </span>
                       </Link>
                     </li>
@@ -145,17 +175,20 @@ export default function Footer() {
                 transition={{ duration: 0.6, delay: 0.3 }}
                 viewport={{ once: true }}
               >
-                <h3 className="font-urbanist text-5 font-600 text-off-white mb-4">Legal</h3>
-                <ul className="space-y-3">
+                <h3 className="font-urbanist text-base sm:text-lg font-semibold text-off-white mb-5 relative inline-block">
+                  Legal
+                  <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-gradient-to-r from-sage to-coral rounded-full" />
+                </h3>
+                <ul className="space-y-3.5">
                   {footerLinks.legal.map((link) => (
                     <li key={link.name}>
                       <Link
                         href={link.href}
-                        className="font-urbanist text-6 text-off-white/70 hover:text-off-white transition-colors duration-300 group"
+                        className="font-urbanist text-sm sm:text-base text-off-white/70 hover:text-off-white transition-all duration-300 group inline-block"
                       >
                         <span className="relative">
                           {link.name}
-                          <div className="absolute inset-x-0 -bottom-0.5 h-0.5 bg-off-white/50 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                          <span className="absolute inset-x-0 -bottom-1 h-px bg-gradient-to-r from-sage/50 via-coral/50 to-sage/50 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-full" />
                         </span>
                       </Link>
                     </li>
@@ -172,18 +205,29 @@ export default function Footer() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
           viewport={{ once: true }}
-          className="pt-6 md:pt-8 border-t border-off-white/20"
+          className="pt-8 md:pt-10 border-t border-off-white/10"
         >
           <div className="flex flex-col md:flex-row items-center justify-center md:justify-between space-y-4 md:space-y-0">
             {/* Copyright */}
-            <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-center md:text-left">
-              <p className="font-urbanist text-7 text-off-white/60">
+            <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4 text-center md:text-left">
+              <p className="font-urbanist text-xs sm:text-sm text-off-white/70">
                 © {currentYear} sayso. All rights reserved.
               </p>
-              <span className="hidden md:inline text-off-white/40">•</span>
-              <p className="font-urbanist text-7 text-off-white/60">
-                Product of ChitChat
+              <span className="hidden md:inline text-off-white/30 text-lg">•</span>
+              <p className="font-urbanist text-xs sm:text-sm text-off-white/70 flex items-center gap-1.5">
+                Made with <Heart className="w-3.5 h-3.5 text-coral fill-coral" /> by ChitChat
               </p>
+            </div>
+            
+            {/* Newsletter signup or additional CTA */}
+            <div className="flex items-center gap-2">
+              <a
+                href="mailto:hello@sayso.com"
+                className="font-urbanist text-xs sm:text-sm text-off-white/70 hover:text-off-white transition-colors duration-300 flex items-center gap-2 group"
+              >
+                <Mail className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
+                <span>Get in touch</span>
+              </a>
             </div>
           </div>
         </motion.div>
