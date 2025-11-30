@@ -369,7 +369,7 @@ export default function FilterModal({
 
         {/* footer */}
         <div 
-          className="flex gap-3 px-4 sm:px-5 md:px-6 py-3 sm:py-4 border-t border-white/60 bg-off-white/80 backdrop-blur-sm flex-shrink-0"
+          className="flex gap-3 px-4 sm:px-5 md:px-6 py-2 border-t border-white/60 bg-off-white/80 backdrop-blur-sm flex-shrink-0"
           style={{
             paddingBottom: typeof window !== 'undefined' && window.innerWidth < 768 
               ? `max(1rem, calc(1rem + env(safe-area-inset-bottom, 0px) + 32px))` 
