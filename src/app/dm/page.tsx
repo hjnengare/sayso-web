@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, Search, User, Check, Edit3, MessageSquare, Send, MoreVertical, Trash2, AlertTriangle, UserX, ArrowLeft } from "react-feather";
+import { MessageCircle, Search, User, Check, Edit3, MessageSquare, Send, MoreVertical, Trash2, AlertTriangle, UserX, ArrowLeft, ChevronRight } from "react-feather";
 import { createPortal } from "react-dom";
 import SearchInput from "../components/SearchInput/SearchInput";
 import { TOP_REVIEWERS, type Reviewer } from "../data/communityHighlightsData";
@@ -516,6 +516,24 @@ export default function DMChatListPage() {
         <div className="lg:hidden">
           {/* Mobile Main Content */}
           <main className="relative z-10 mx-auto w-full max-w-[2000px] px-4 sm:px-6 pt-20 sm:pt-24 pb-20 sm:pb-8">
+            {/* Breadcrumb Navigation */}
+            <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
+              <ol className="flex items-center gap-2 text-sm sm:text-base">
+                <li>
+                  <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                    Home
+                  </Link>
+                </li>
+                <li className="flex items-center">
+                  <ChevronRight className="w-4 h-4 text-charcoal/40" />
+                </li>
+                <li>
+                  <span className="text-charcoal font-semibold" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                    Messages
+                  </span>
+                </li>
+              </ol>
+            </nav>
             {/* Search Bar */}
             <div className="mb-4 pb-3">
               <SearchInput

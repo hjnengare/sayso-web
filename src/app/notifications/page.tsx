@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, Check, X, MessageSquare, Star, Heart, TrendingUp, Clock } from "react-feather";
+import { Bell, Check, X, MessageSquare, Star, Heart, TrendingUp, Clock, ChevronRight } from "react-feather";
 import Header from "../components/Header/Header";
 import Footer from "../components/Footer/Footer";
 import { PageLoader } from "../components/Loader";
@@ -74,6 +75,24 @@ export default function NotificationsPage() {
               }}
             >
               <div className="mx-auto w-full max-w-[2000px] px-2 relative z-10">
+                {/* Breadcrumb Navigation */}
+                <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
+                  <ol className="flex items-center gap-2 text-sm sm:text-base">
+                    <li>
+                      <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                        Home
+                      </Link>
+                    </li>
+                    <li className="flex items-center">
+                      <ChevronRight className="w-4 h-4 text-charcoal/40" />
+                    </li>
+                    <li>
+                      <span className="text-charcoal font-semibold" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                        Notifications
+                      </span>
+                    </li>
+                  </ol>
+                </nav>
                 <div className="pt-2 pb-12 sm:pb-16 md:pb-20">
                   <StaggeredContainer>
                     {/* Page Header */}

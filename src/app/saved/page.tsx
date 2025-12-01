@@ -1,7 +1,9 @@
 "use client";
 
 import nextDynamic from "next/dynamic";
+import Link from "next/link";
 import { useState, useEffect, useMemo } from "react";
+import { ChevronRight } from "react-feather";
 import EmailVerificationGuard from "../components/Auth/EmailVerificationGuard";
 import { useSavedItems } from "../contexts/SavedItemsContext";
 import Header from "../components/Header/Header";
@@ -162,6 +164,26 @@ export default function SavedPage() {
 
         <div className="relative z-0">
           <div className="py-1 pt-20 pb-12 sm:pb-16 md:pb-20">
+            <div className="mx-auto w-full max-w-[2000px] px-3 relative z-10 mb-4">
+              {/* Breadcrumb Navigation */}
+              <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
+                <ol className="flex items-center gap-2 text-sm sm:text-base">
+                  <li>
+                    <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                      Home
+                    </Link>
+                  </li>
+                  <li className="flex items-center">
+                    <ChevronRight className="w-4 h-4 text-charcoal/40" />
+                  </li>
+                  <li>
+                    <span className="text-charcoal font-semibold" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                      Saved
+                    </span>
+                  </li>
+                </ol>
+              </nav>
+            </div>
             {isLoading || savedItemsLoading ? (
               <div className="flex items-center justify-center py-12">
                 <PageLoader size="md" variant="wavy" color="sage" />

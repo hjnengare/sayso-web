@@ -1,6 +1,8 @@
 "use client";
 
+import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { ChevronRight } from 'react-feather';
 import Header from '../../components/Header/Header';
 import Footer from '../../components/Footer/Footer';
 import BusinessCard from '../../components/BusinessCard/BusinessCard';
@@ -57,6 +59,24 @@ export default function CategoryPageClient({
           transition={{ duration: 0.6 }}
           className="max-w-7xl mx-auto"
         >
+          {/* Breadcrumb Navigation */}
+          <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
+            <ol className="flex items-center gap-2 text-sm sm:text-base">
+              <li>
+                <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                  Home
+                </Link>
+              </li>
+              <li className="flex items-center">
+                <ChevronRight className="w-4 h-4 text-charcoal/40" />
+              </li>
+              <li>
+                <span className="text-charcoal font-semibold" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                  {categoryName}
+                </span>
+              </li>
+            </ol>
+          </nav>
           {/* Page Header */}
           <div className="mb-8">
             <h1 className="text-3xl md:text-4xl font-bold text-charcoal mb-2" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>

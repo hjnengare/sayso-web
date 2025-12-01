@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import React, { useMemo, useState } from "react";
+import { ChevronRight } from "react-feather";
 import {
     Store,
     Save,
@@ -278,6 +279,32 @@ export default function BusinessEditPage() {
                             }}
                         >
                             <div className="container mx-auto max-w-[1300px] px-4 sm:px-6 relative z-10">
+                                {/* Breadcrumb Navigation */}
+                                <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
+                                    <ol className="flex items-center gap-2 text-sm sm:text-base">
+                                        <li>
+                                            <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                                                Home
+                                            </Link>
+                                        </li>
+                                        <li className="flex items-center">
+                                            <ChevronRight className="w-4 h-4 text-charcoal/40" />
+                                        </li>
+                                        <li>
+                                            <Link href={`/business/${businessId}`} className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium truncate max-w-[150px] sm:max-w-none" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                                                Business
+                                            </Link>
+                                        </li>
+                                        <li className="flex items-center">
+                                            <ChevronRight className="w-4 h-4 text-charcoal/40" />
+                                        </li>
+                                        <li>
+                                            <span className="text-charcoal font-semibold" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                                                Edit
+                                            </span>
+                                        </li>
+                                    </ol>
+                                </nav>
                                 <div className="max-w-6xl mx-auto pt-8 pb-8">
                     <div className="space-y-6">
                         {/* Basic Information Section */}

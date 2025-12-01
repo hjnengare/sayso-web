@@ -22,7 +22,8 @@ import {
   Star as StarIcon,
   Briefcase,
   AlertTriangle,
-  X
+  X,
+  ChevronRight
 } from "react-feather";
 import { getBrowserSupabase } from "@/app/lib/supabase/client";
 
@@ -147,7 +148,7 @@ function ProfileContent() {
   const [userReviews, setUserReviews] = useState<Review[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(true);
 
-  // Get saved businesses for mobile display
+  // Get saved businesses for mobile display - only fetch if user has saved items
   const [savedBusinesses, setSavedBusinesses] = useState<any[]>([]);
   const [savedBusinessesLoading, setSavedBusinessesLoading] = useState(false);
 
@@ -155,20 +156,20 @@ function ProfileContent() {
     const fetchSavedBusinesses = async () => {
       if (!user?.id || savedItems.length === 0) {
         setSavedBusinesses([]);
+        setSavedBusinessesLoading(false);
         return;
       }
 
       try {
         setSavedBusinessesLoading(true);
-        const response = await fetch('/api/saved/businesses?limit=1000');
+        // Limit to 20 for faster loading - user can see more on saved page
+        const response = await fetch('/api/saved/businesses?limit=20&page=1');
         
         if (!response.ok) {
           if (response.status === 401) {
-            // User not authenticated - this is expected for logged out users
             setSavedBusinesses([]);
             return;
           }
-          // For other errors, just log and keep empty array
           console.warn('Error fetching saved businesses for profile:', response.status);
           setSavedBusinesses([]);
           return;
@@ -203,18 +204,6 @@ function ProfileContent() {
       created_at: rawProfile.created_at ?? (user?.created_at ?? new Date().toISOString()),
       ...rawProfile,
     };
-    console.log('Profile memo recomputed:', {
-      username: profileData.username,
-      display_name: profileData.display_name,
-      avatar_url: profileData.avatar_url,
-      type: typeof profileData.avatar_url,
-      rawProfile_username: rawProfile.username,
-      rawProfile_display_name: rawProfile.display_name,
-      rawProfile_avatar_url: rawProfile.avatar_url,
-      user_profile_username: user?.profile?.username,
-      user_profile_display_name: user?.profile?.display_name,
-      user_profile_avatar_url: user?.profile?.avatar_url
-    });
     return profileData;
   }, [user?.profile?.avatar_url, user?.profile?.username, user?.profile?.display_name, user?.email, user?.created_at]);
 
@@ -226,12 +215,9 @@ function ProfileContent() {
     }
   }, [isEditOpen]);
 
-  // Log profile changes for debugging
-  useEffect(() => {
-    console.log('Profile page - user.profile changed:', user?.profile);
-  }, [user?.profile]);
+  // Removed debug logging useEffect - was causing unnecessary re-renders
 
-  // Fetch user's reviews
+  // Fetch user's reviews - use API endpoint for better performance
   useEffect(() => {
     const fetchUserReviews = async () => {
       if (!user?.id) {
@@ -241,35 +227,20 @@ function ProfileContent() {
 
       try {
         setReviewsLoading(true);
-        const supabase = getBrowserSupabase();
         
-        // Fetch reviews by user_id
-        const { data: reviewsData, error: reviewsError } = await supabase
-          .from('reviews')
-          .select(`
-            id,
-            rating,
-            title,
-            content,
-            created_at,
-            business:businesses!reviews_business_id_fkey (
-              id,
-              name,
-              image_url,
-              uploaded_image,
-              slug
-            )
-          `)
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(20);
-
-        if (reviewsError) {
-          console.error('Error fetching user reviews:', reviewsError);
+        // Use API endpoint instead of direct Supabase query for better performance
+        const response = await fetch(`/api/reviews?user_id=${user.id}&limit=20`);
+        
+        if (!response.ok) {
+          console.error('Error fetching user reviews:', response.status);
           setUserReviews([]);
-        } else {
+          return;
+        }
+
+        const data = await response.json();
+        if (data.reviews && Array.isArray(data.reviews)) {
           // Transform the data to match Review interface
-          const transformedReviews: Review[] = (reviewsData || []).map((r: any) => ({
+          const transformedReviews: Review[] = data.reviews.map((r: any) => ({
             id: r.id,
             business_name: r.business?.name || 'Unknown Business',
             rating: r.rating,
@@ -280,6 +251,8 @@ function ProfileContent() {
             business_slug: r.business?.slug || r.business?.id, // Store for navigation
           }));
           setUserReviews(transformedReviews);
+        } else {
+          setUserReviews([]);
         }
       } catch (err) {
         console.error('Error fetching user reviews:', err);
@@ -640,6 +613,24 @@ function ProfileContent() {
               aria-label="User profile content"
             >
               <div className="mx-auto w-full max-w-[2000px] px-3 sm:px-6 lg:px-10 2xl:px-16 relative z-10">
+                {/* Breadcrumb Navigation */}
+                <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
+                  <ol className="flex items-center gap-2 text-sm sm:text-base">
+                    <li>
+                      <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                        Home
+                      </Link>
+                    </li>
+                    <li className="flex items-center">
+                      <ChevronRight className="w-4 h-4 text-charcoal/40" />
+                    </li>
+                    <li>
+                      <span className="text-charcoal font-semibold" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                        Profile
+                      </span>
+                    </li>
+                  </ol>
+                </nav>
                 <div className="pt-2 pb-12 sm:pb-16 md:pb-20">
                   <div className="space-y-6">
                       <AnimatedElement index={0} direction="top">

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import React, { useMemo, useState, useEffect, useRef } from "react";
@@ -13,6 +14,7 @@ import {
     Trash2,
     AlertTriangle,
     UserX,
+    ChevronRight,
 } from "react-feather";
 import { createPortal } from "react-dom";
 import Footer from "../../components/Footer/Footer";
@@ -382,6 +384,32 @@ export default function DMPage() {
                 {/* Messages Container - Mobile First */}
                 <div className="flex-1 flex flex-col pt-16 sm:pt-20 pb-20 sm:pb-24 md:pb-28 overflow-hidden">
                     <div className="flex-1 overflow-y-auto px-3 sm:px-4 md:px-6 lg:px-8">
+                        {/* Breadcrumb Navigation */}
+                        <nav className="mb-4 sm:mb-6 px-2 pt-4" aria-label="Breadcrumb">
+                            <ol className="flex items-center gap-2 text-sm sm:text-base">
+                                <li>
+                                    <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                                        Home
+                                    </Link>
+                                </li>
+                                <li className="flex items-center">
+                                    <ChevronRight className="w-4 h-4 text-charcoal/40" />
+                                </li>
+                                <li>
+                                    <Link href="/dm" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                                        Messages
+                                    </Link>
+                                </li>
+                                <li className="flex items-center">
+                                    <ChevronRight className="w-4 h-4 text-charcoal/40" />
+                                </li>
+                                <li>
+                                    <span className="text-charcoal font-semibold truncate max-w-[150px] sm:max-w-none" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                                        {recipient.name}
+                                    </span>
+                                </li>
+                            </ol>
+                        </nav>
                         <div className="max-w-3xl mx-auto py-4 sm:py-6 space-y-3 sm:space-y-4">
                             {messages.map((msg) => {
                                 const isCurrentUser = msg.senderId === "current-user";

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { usePathname } from "next/navigation";
+import { ChevronRight } from "react-feather";
 import {
     Store,
     Plus,
@@ -197,6 +198,24 @@ export default function ManageBusinessPage() {
                             }}
                         >
                             <div className="mx-auto w-full max-w-[2000px] px-2 relative z-10">
+                                {/* Breadcrumb Navigation */}
+                                <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
+                                    <ol className="flex items-center gap-2 text-sm sm:text-base">
+                                        <li>
+                                            <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                                                Home
+                                            </Link>
+                                        </li>
+                                        <li className="flex items-center">
+                                            <ChevronRight className="w-4 h-4 text-charcoal/40" />
+                                        </li>
+                                        <li>
+                                            <span className="text-charcoal font-semibold" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                                                Manage Business
+                                            </span>
+                                        </li>
+                                    </ol>
+                                </nav>
                                 <div className="max-w-6xl mx-auto pt-8 pb-8">
                     <div className="space-y-6">
                         {/* Welcome Section */}

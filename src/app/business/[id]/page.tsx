@@ -9,6 +9,7 @@ import { PageLoader, Loader } from "../../components/Loader";
 import {
     MessageSquare,
     X,
+    ChevronRight,
 } from "react-feather";
 import { PremiumReviewCard } from "../../components/Business/PremiumReviewCard";
 import { getCategoryPng, isPngIcon } from "../../utils/categoryToPngMapping";
@@ -294,6 +295,24 @@ export default function BusinessProfilePage() {
                             }}
                         >
                             <div className="mx-auto w-full max-w-[2000px] px-2 relative z-10">
+                                {/* Breadcrumb Navigation */}
+                                <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
+                                    <ol className="flex items-center gap-2 text-sm sm:text-base">
+                                        <li>
+                                            <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                                                Home
+                                            </Link>
+                                        </li>
+                                        <li className="flex items-center">
+                                            <ChevronRight className="w-4 h-4 text-charcoal/40" />
+                                        </li>
+                                        <li>
+                                            <span className="text-charcoal font-semibold truncate max-w-[200px] sm:max-w-none" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                                                {business?.name || 'Business'}
+                                            </span>
+                                        </li>
+                                    </ol>
+                                </nav>
                                 <div className="pt-2 pb-12 sm:pb-16 md:pb-20">
                                     <StaggeredContainer>
                                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8">

@@ -394,9 +394,40 @@ export async function GET(req: Request) {
     const offset = Math.max(requestedOffset, 0);
 
     // Optimize: Select only necessary fields for faster queries
-    let query = supabase
-      .from('reviews')
-      .select(`
+    // Include business data when fetching user reviews (for profile page)
+    const includeBusiness = !!userId;
+    
+    // Build select query - conditionally include business data
+    const selectFields = includeBusiness
+      ? `
+        id,
+        user_id,
+        business_id,
+        rating,
+        content,
+        title,
+        tags,
+        created_at,
+        helpful_count,
+        profile:profiles!reviews_user_id_fkey (
+          user_id,
+          display_name,
+          username,
+          avatar_url
+        ),
+        business:businesses!reviews_business_id_fkey (
+          id,
+          name,
+          image_url,
+          uploaded_image,
+          slug
+        ),
+        review_images (
+          review_id,
+          image_url
+        )
+      `
+      : `
         id,
         user_id,
         business_id,
@@ -416,7 +447,11 @@ export async function GET(req: Request) {
           review_id,
           image_url
         )
-      `)
+      `;
+    
+    let query = supabase
+      .from('reviews')
+      .select(selectFields)
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
@@ -464,6 +499,8 @@ export async function GET(req: Request) {
           email: null, // Email not included in profile join for security
           avatar_url: profile.avatar_url || null,
         },
+        // Include business data if available (for profile page)
+        business: review.business || null,
       };
     });
 

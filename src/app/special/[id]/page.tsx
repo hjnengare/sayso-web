@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ChevronRight } from "react-feather";
 import {
   ArrowLeft,
   Calendar,
@@ -154,6 +155,32 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
 
         {/* Main Content */}
         <div className="relative z-10 mx-auto w-full max-w-[2000px] px-2 pt-20 py-4 sm:py-6 md:py-8 pb-12 sm:pb-16">
+          {/* Breadcrumb Navigation */}
+          <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
+            <ol className="flex items-center gap-2 text-sm sm:text-base">
+              <li>
+                <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                  Home
+                </Link>
+              </li>
+              <li className="flex items-center">
+                <ChevronRight className="w-4 h-4 text-charcoal/40" />
+              </li>
+              <li>
+                <Link href="/events-specials" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                  Events & Specials
+                </Link>
+              </li>
+              <li className="flex items-center">
+                <ChevronRight className="w-4 h-4 text-charcoal/40" />
+              </li>
+              <li>
+                <span className="text-charcoal font-semibold truncate max-w-[200px] sm:max-w-none" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                  {special?.title || 'Special'}
+                </span>
+              </li>
+            </ol>
+          </nav>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {/* Left Column - Main Content */}
             <div className="lg:col-span-2 space-y-4 sm:space-y-6 lg:space-y-8">
