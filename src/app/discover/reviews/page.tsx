@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useMemo } from "react";
-import { ArrowLeft, Briefcase, Image as ImageIcon, ThumbsUp, FileText, Star } from "react-feather";
+import { ArrowLeft, Briefcase, Image as ImageIcon, ThumbsUp, FileText, Star, ChevronRight } from "react-feather";
 import VerifiedBadge from "../../components/VerifiedBadge/VerifiedBadge";
 
 // Mock reviews data - in production this would come from API
