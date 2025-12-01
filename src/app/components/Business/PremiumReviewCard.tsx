@@ -641,7 +641,24 @@ export function PremiumReviewCard({
                                     </span>
                                 )}
                             </div>
-                            <span className={`text-charcoal/60 ${compact ? 'text-[10px] sm:text-[11px]' : 'text-[11px] sm:text-[12px]'}`}>{date}</span>
+                            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                                <span className={`text-charcoal/60 ${compact ? 'text-[10px] sm:text-[11px]' : 'text-sm sm:text-[12px]'}`}>{date}</span>
+                                {/* Show counts on smaller screens */}
+                                <div className="flex items-center gap-3 sm:hidden">
+                                    {helpfulCount > 0 && (
+                                        <span className="text-xs text-charcoal/70 flex items-center gap-1">
+                                            <ThumbsUp className="h-3 w-3 text-charcoal/60" />
+                                            {helpfulCount}
+                                        </span>
+                                    )}
+                                    {replies.length > 0 && (
+                                        <span className="text-xs text-charcoal/70 flex items-center gap-1">
+                                            <Reply className="h-3 w-3 text-charcoal/60" />
+                                            {replies.length}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                         {/* Stars */}
                         <div className="flex items-center shrink-0">
@@ -658,7 +675,9 @@ export function PremiumReviewCard({
 
                     <p
                         className={`leading-relaxed text-charcoal/90 ${
-                            compact ? 'text-xs sm:text-sm mb-1.5 line-clamp-4' : 'text-xs sm:text-sm md:text-[0.92rem] mb-2 sm:mb-3'
+                            compact 
+                                ? 'text-base sm:text-sm mb-1.5 line-clamp-4 font-semibold sm:font-normal' 
+                                : 'text-base sm:text-sm md:text-[0.92rem] mb-2 sm:mb-3 font-semibold sm:font-normal'
                         }`}
                     >
                         {text}
