@@ -386,6 +386,7 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     
     const businessId = searchParams.get('business_id');
+    const userId = searchParams.get('user_id');
     // Enforce pagination limits (max 50 reviews per request)
     const requestedLimit = parseInt(searchParams.get('limit') || '10');
     const limit = Math.min(Math.max(requestedLimit, 1), 50);
@@ -421,6 +422,10 @@ export async function GET(req: Request) {
 
     if (businessId) {
       query = query.eq('business_id', businessId);
+    }
+
+    if (userId) {
+      query = query.eq('user_id', userId);
     }
 
     const { data: reviews, error } = await query;

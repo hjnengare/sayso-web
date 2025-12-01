@@ -9,9 +9,10 @@ interface BusinessActionCardProps {
   businessSlug: string;
   businessId: string;
   isBusinessOwner?: boolean;
+  hasReviewed?: boolean;
 }
 
-export default function BusinessActionCard({ businessSlug, businessId, isBusinessOwner = false }: BusinessActionCardProps) {
+export default function BusinessActionCard({ businessSlug, businessId, isBusinessOwner = false, hasReviewed = false }: BusinessActionCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -33,11 +34,22 @@ export default function BusinessActionCard({ businessSlug, businessId, isBusines
 
         <div className="space-y-3">
           <Link
-            href={`/business/${businessSlug}/review`}
-            className="block w-full bg-gradient-to-br from-navbar-bg to-navbar-bg/90 text-white font-semibold py-3 px-5 rounded-full transition-all duration-300 hover:bg-navbar-bg border border-white/30 text-body-sm text-center"
+            href={hasReviewed ? '#' : `/business/${businessSlug}/review`}
+            className={`block w-full font-semibold py-3 px-5 rounded-full transition-all duration-300 border text-body-sm text-center ${
+              hasReviewed
+                ? 'bg-charcoal/20 text-charcoal/50 cursor-not-allowed border-charcoal/20'
+                : 'bg-gradient-to-br from-navbar-bg to-navbar-bg/90 text-white hover:bg-navbar-bg border-white/30'
+            }`}
             style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+            onClick={(e) => {
+              if (hasReviewed) {
+                e.preventDefault();
+              }
+            }}
+            aria-disabled={hasReviewed}
+            title={hasReviewed ? 'You have already reviewed this business' : 'Leave a Review'}
           >
-            Leave a Review
+            {hasReviewed ? 'Already Reviewed' : 'Leave a Review'}
           </Link>
 
           {isBusinessOwner && (

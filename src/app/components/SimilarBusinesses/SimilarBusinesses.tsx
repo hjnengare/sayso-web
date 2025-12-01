@@ -18,7 +18,7 @@ export default function SimilarBusinesses({
   currentBusinessId,
   category,
   location,
-  limit = 6,
+  limit = 3,
 }: SimilarBusinessesProps) {
   const { businesses, loading } = useBusinesses({
     category,
@@ -74,7 +74,7 @@ export default function SimilarBusinesses({
           </div>
         </div>
         <ul className="list-none grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 md:gap-2 relative z-10">
-          {[...Array(6)].map((_, i) => (
+          {[...Array(limit)].map((_, i) => (
             <li key={i}>
               <div className="h-[240px] bg-gradient-to-br from-off-white/90 via-off-white/85 to-off-white/90 rounded-xl border border-white/60 backdrop-blur-xl shadow-lg animate-pulse" />
             </li>

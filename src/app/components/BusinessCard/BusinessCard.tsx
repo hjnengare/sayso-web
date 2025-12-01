@@ -11,6 +11,7 @@ import Tooltip from "../Tooltip/Tooltip";
 import { useSavedItems } from "../../contexts/SavedItemsContext";
 import { useToast } from "../../contexts/ToastContext";
 import { getCategoryPng, getCategoryPngFromLabels, isPngIcon } from "../../utils/categoryToPngMapping";
+import { useUserHasReviewed } from "../../hooks/useReviews";
 
 type Percentiles = {
   punctuality?: number;
@@ -75,6 +76,7 @@ function BusinessCard({
   const router = useRouter();
   const { toggleSavedItem, isItemSaved } = useSavedItems();
   const { showToast } = useToast();
+  const { hasReviewed } = useUserHasReviewed(business.id);
   const idForSnap = useMemo(() => `business-${business.id}`, [business.id]);
 
   const [imgError, setImgError] = useState(false);
@@ -129,7 +131,11 @@ function BusinessCard({
     router.push(businessProfileRoute);
   };
 
-  const handleWriteReview = () => router.push(reviewRoute);
+  const handleWriteReview = () => {
+    if (!hasReviewed) {
+      router.push(reviewRoute);
+    }
+  };
   
   const handleBookmark = async () => {
     const wasSaved = isItemSaved(business.id);
@@ -491,15 +497,20 @@ function BusinessCard({
           {/* Premium floating actions - desktop only */}
           <div className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-20 flex-col items-center gap-2 transition-all duration-300 ease-out translate-x-12 opacity-0 md:group-hover:translate-x-0 md:group-hover:opacity-100">
             <button
-              className="w-12 h-10 bg-off-white/95 backdrop-blur-sm rounded-[20px] flex items-center justify-center hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40"
+              className={`w-12 h-10 bg-off-white/95 backdrop-blur-sm rounded-[20px] flex items-center justify-center transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40 ${
+                hasReviewed
+                  ? 'opacity-50 cursor-not-allowed'
+                  : 'hover:scale-110'
+              }`}
               onClick={(e) => {
                 e.stopPropagation();
                 handleWriteReview();
               }}
-              aria-label={`Write a review for ${business.name}`}
-              title="Write a review"
+              disabled={hasReviewed}
+              aria-label={hasReviewed ? `You have already reviewed ${business.name}` : `Write a review for ${business.name}`}
+              title={hasReviewed ? 'Already reviewed' : 'Write a review'}
             >
-              <Edit className="w-4 h-4 text-primary" />
+              <Edit className={`w-4 h-4 ${hasReviewed ? 'text-charcoal/50' : 'text-primary'}`} />
             </button>
             <button
               className="w-12 h-10 bg-off-white/95 backdrop-blur-sm rounded-[20px] flex items-center justify-center hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40"
@@ -644,24 +655,32 @@ function BusinessCard({
                     ) : (
                       <span
                         role="button"
-                        tabIndex={0}
+                        tabIndex={hasReviewed ? -1 : 0}
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleWriteReview();
+                          if (!hasReviewed) {
+                            handleWriteReview();
+                          }
                         }}
                         onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
+                          if (!hasReviewed && (e.key === 'Enter' || e.key === ' ')) {
                             e.preventDefault();
                             handleWriteReview();
                           }
                         }}
-                        className={`inline-flex items-center justify-center text-sm font-normal text-charcoal underline-offset-2 cursor-pointer transition-colors duration-200 hover:text-coral min-w-[92px] text-center ${compact ? 'lg:order-1 lg:mb-1' : ''}`}
+                        className={`inline-flex items-center justify-center text-sm font-normal underline-offset-2 min-w-[92px] text-center transition-colors duration-200 ${
+                          hasReviewed
+                            ? 'text-charcoal/50 cursor-not-allowed'
+                            : 'text-charcoal cursor-pointer hover:text-coral'
+                        } ${compact ? 'lg:order-1 lg:mb-1' : ''}`}
                         style={{
                           fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
                           fontWeight: 400
                         }}
+                        aria-disabled={hasReviewed}
+                        title={hasReviewed ? 'You have already reviewed this business' : 'Be the first to review'}
                       >
-                        Be the first to review
+                        {hasReviewed ? 'Already reviewed' : 'Be the first to review'}
                       </span>
                     )}
                   </div>
@@ -702,19 +721,26 @@ function BusinessCard({
           {/* Mobile actions - Minimal */}
           <div className="flex md:hidden items-center justify-center pt-4 border-t border-off-white/30">
             <button
-              className="flex-1 flex items-center justify-center gap-1.5 px-4 py-3 bg-gradient-to-br from-navbar-bg to-navbar-bg/90 text-white rounded-full text-caption sm:text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-sage/40 border border-sage/50 transition-all active:scale-95 min-h-[48px]"
+              className={`flex-1 flex items-center justify-center gap-1.5 px-4 py-3 rounded-full text-caption sm:text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-sage/40 border transition-all min-h-[48px] ${
+                hasReviewed
+                  ? 'bg-charcoal/20 text-charcoal/50 cursor-not-allowed border-charcoal/20'
+                  : 'bg-gradient-to-br from-navbar-bg to-navbar-bg/90 text-white border-sage/50 active:scale-95'
+              }`}
               onClick={(e) => {
                 e.stopPropagation();
-                handleWriteReview();
+                if (!hasReviewed) {
+                  handleWriteReview();
+                }
               }}
-              aria-label={`Write a review for ${business.name}`}
+              disabled={hasReviewed}
+              aria-label={hasReviewed ? `You have already reviewed ${business.name}` : `Write a review for ${business.name}`}
               style={{
                 fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
                 fontWeight: 600,
               }}
             >
               <Edit className="w-3.5 h-3.5" />
-              <span>Review</span>
+              <span>{hasReviewed ? 'Already Reviewed' : 'Review'}</span>
             </button>
           </div>
         </div>

@@ -86,9 +86,6 @@ export default function SimilarBusinessCard({
           </div>
         )}
         
-        {/* Premium gradient overlay with enhanced depth */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent group-hover:from-black/60 group-hover:via-black/25 transition-all duration-500" />
-        
         {/* Shine effect on hover */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
         

@@ -17,6 +17,7 @@ import { BusinessInfo } from "../../components/BusinessInfo/BusinessInfoModal";
 import SimilarBusinesses from "../../components/SimilarBusinesses/SimilarBusinesses";
 import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../contexts/ToastContext";
+import { useUserHasReviewed } from "../../hooks/useReviews";
 import nextDynamic from "next/dynamic";
 import {
     BusinessHeroImage,
@@ -38,6 +39,7 @@ export default function BusinessProfilePage() {
     const [isBookmarked, setIsBookmarked] = useState(false);
     const [isLiked, setIsLiked] = useState(false);
     const { showToast } = useToast();
+    const { hasReviewed } = useUserHasReviewed(businessId);
 
 
     const handleBookmark = () => {
@@ -347,6 +349,7 @@ export default function BusinessProfilePage() {
                                                         businessSlug={businessSlug}
                                                         businessId={businessId}
                                                         isBusinessOwner={isBusinessOwner}
+                                                        hasReviewed={hasReviewed}
                                                     />
                                                 </AnimatedElement>
                                                 {/* Contact Information - Desktop Only */}
@@ -412,12 +415,23 @@ export default function BusinessProfilePage() {
                                             Be the first to review this business!
                                         </p>
                                         <Link
-                                            href={`/business/${businessSlug}/review`}
-                                            prefetch={true}
-                                            className="inline-block px-6 py-3 bg-coral text-white rounded-full text-body font-semibold hover:bg-coral/90 transition-colors"
+                                            href={hasReviewed ? '#' : `/business/${businessSlug}/review`}
+                                            prefetch={!hasReviewed}
+                                            className={`inline-block px-6 py-3 rounded-full text-body font-semibold transition-colors ${
+                                                hasReviewed
+                                                    ? 'bg-charcoal/20 text-charcoal/50 cursor-not-allowed'
+                                                    : 'bg-coral text-white hover:bg-coral/90'
+                                            }`}
                                             style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                                            onClick={(e) => {
+                                                if (hasReviewed) {
+                                                    e.preventDefault();
+                                                }
+                                            }}
+                                            aria-disabled={hasReviewed}
+                                            title={hasReviewed ? 'You have already reviewed this business' : 'Write First Review'}
                                         >
-                                            Write First Review
+                                            {hasReviewed ? 'Already Reviewed' : 'Write First Review'}
                                         </Link>
                                     </div>
                                 )}
@@ -428,7 +442,7 @@ export default function BusinessProfilePage() {
                                 currentBusinessId={businessId}
                                 category={businessData.category}
                                 location={businessData.location}
-                                limit={6}
+                                limit={3}
                             />
                         </section>
 
