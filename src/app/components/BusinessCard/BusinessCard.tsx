@@ -431,11 +431,11 @@ function BusinessCard({
                 e.stopPropagation();
                 setShowInfoPopup(!showInfoPopup);
               }}
-              className="w-10 h-10 bg-off-white/95 backdrop-blur-xl rounded-full flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40 touch-manipulation relative z-[51]"
+              className="w-10 h-10 bg-navbar-bg rounded-full flex items-center justify-center hover:bg-navbar-bg/90 active:scale-95 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40 touch-manipulation relative z-[51]"
               aria-label="More options"
               aria-expanded={showInfoPopup}
             >
-              <Info className="w-5 h-5 text-charcoal" />
+              <Info className="w-5 h-5 text-white" />
             </button>
 
             {/* Popup with Share and Save options */}
@@ -497,10 +497,10 @@ function BusinessCard({
           {/* Premium floating actions - desktop only */}
           <div className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-20 flex-col items-center gap-2 transition-all duration-300 ease-out translate-x-12 opacity-0 md:group-hover:translate-x-0 md:group-hover:opacity-100">
             <button
-              className={`w-12 h-10 bg-off-white/95 backdrop-blur-sm rounded-[20px] flex items-center justify-center transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40 ${
+              className={`w-12 h-10 bg-navbar-bg rounded-[20px] flex items-center justify-center transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40 ${
                 hasReviewed
                   ? 'opacity-50 cursor-not-allowed'
-                  : 'hover:scale-110'
+                  : 'hover:bg-navbar-bg/90 hover:scale-110'
               }`}
               onClick={(e) => {
                 e.stopPropagation();
@@ -510,10 +510,10 @@ function BusinessCard({
               aria-label={hasReviewed ? `You have already reviewed ${business.name}` : `Write a review for ${business.name}`}
               title={hasReviewed ? 'Already reviewed' : 'Write a review'}
             >
-              <Edit className={`w-4 h-4 ${hasReviewed ? 'text-charcoal/50' : 'text-primary'}`} />
+              <Edit className={`w-4 h-4 ${hasReviewed ? 'text-white/50' : 'text-white'}`} />
             </button>
             <button
-              className="w-12 h-10 bg-off-white/95 backdrop-blur-sm rounded-[20px] flex items-center justify-center hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40"
+              className="w-12 h-10 bg-navbar-bg rounded-[20px] flex items-center justify-center hover:bg-navbar-bg/90 hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40"
               onClick={(e) => {
                 e.stopPropagation();
                 handleBookmark();
@@ -522,11 +522,11 @@ function BusinessCard({
               title={isItemSaved(business.id) ? 'Remove from saved' : 'Save'}
             >
               <Bookmark
-                className={`w-4 h-4 ${isItemSaved(business.id) ? 'text-coral fill-coral' : 'text-primary'}`}
+                className={`w-4 h-4 ${isItemSaved(business.id) ? 'text-white fill-white' : 'text-white'}`}
               />
             </button>
             <button
-              className="w-12 h-10 bg-off-white/95 backdrop-blur-sm rounded-[20px] flex items-center justify-center hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40"
+              className="w-12 h-10 bg-navbar-bg rounded-[20px] flex items-center justify-center hover:bg-navbar-bg/90 hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40"
               onClick={(e) => {
                 e.stopPropagation();
                 handleShare();
@@ -534,7 +534,7 @@ function BusinessCard({
               aria-label={`Share ${business.name}`}
               title="Share"
             >
-              <Share2 className="w-4 h-4 text-primary" />
+              <Share2 className="w-4 h-4 text-white" />
             </button>
           </div>
         </div>
@@ -622,7 +622,7 @@ function BusinessCard({
                               handleCardClick();
                             }
                           }}
-                          className="inline-flex items-center justify-center text-body-sm sm:text-base font-bold leading-none text-charcoal underline-offset-2 cursor-pointer transition-colors duration-200 hover:text-coral"
+                          className="inline-flex items-center justify-center text-body-sm sm:text-base font-bold leading-none text-navbar-bg underline-offset-2 cursor-pointer transition-colors duration-200 hover:text-coral"
                           style={{
                             fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
                             fontWeight: 700
@@ -643,13 +643,13 @@ function BusinessCard({
                               handleCardClick();
                             }
                           }}
-                          className="inline-flex items-center justify-center text-caption sm:text-xs leading-none text-charcoal/50 underline-offset-2 cursor-pointer transition-colors duration-200 hover:text-coral"
+                          className="inline-flex items-center justify-center text-sm leading-none text-navbar-bg underline-offset-2 cursor-pointer transition-colors duration-200 hover:text-coral"
                           style={{
                             fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
                             fontWeight: 400
                           }}
                         >
-                          reviews
+                          Reviews
                         </span>
                       </>
                     ) : (

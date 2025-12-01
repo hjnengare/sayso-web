@@ -388,6 +388,12 @@ export default function Header({
     ({ href }) => pathname === href || pathname?.startsWith(href)
   );
 
+  // Icon active states
+  const isNotificationsActive = pathname === '/notifications' || pathname?.startsWith('/notifications');
+  const isSavedActive = pathname === '/saved' || pathname?.startsWith('/saved');
+  const isMessagesActive = pathname === '/dm' || pathname?.startsWith('/dm');
+  const isProfileActive = pathname === '/profile' || pathname?.startsWith('/profile');
+
   // Padding classes
   const currentPaddingClass = reducedPadding ? "py-3.5 md:py-4" : "py-3.5 md:py-6";
   const mobileRevealClass = `transform transition-all duration-500 ease-out ${
@@ -590,11 +596,13 @@ export default function Header({
                       </div>
 
                       <div className="px-5 sm:px-6 py-4 space-y-1.5" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                        {BUSINESS_LINKS.map(({ key, label, description, href }) => (
+                        {BUSINESS_LINKS.map(({ key, label, description, href }) => {
+                          const isActive = pathname === href || pathname?.startsWith(href);
+                          return (
                           <OptimizedLink
                             key={key}
                             href={href}
-                            className="group flex items-start gap-3 px-4 py-3 rounded-xl hover:bg-gradient-to-r hover:from-sage/10 hover:to-coral/5 transition-all duration-200"
+                            className={`group flex items-start gap-3 px-4 py-3 rounded-xl hover:bg-gradient-to-r hover:from-sage/10 hover:to-coral/5 transition-all duration-200 ${isActive ? 'bg-gradient-to-r from-sage/10 to-sage/5' : ''}`}
                           style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                           onClick={() => {
                             clearBusinessHoverTimeout();
@@ -602,7 +610,7 @@ export default function Header({
                           }}
                         >
                           <div className="flex-1">
-                              <div className="text-sm font-semibold text-charcoal group-hover:text-coral transition-colors">
+                              <div className={`text-sm font-semibold ${isActive ? 'text-sage' : 'text-charcoal group-hover:text-coral'} transition-colors`}>
                                 {label}
                           </div>
                               <div className="text-sm sm:text-xs text-charcoal/60 mt-0.5">
@@ -610,7 +618,8 @@ export default function Header({
                           </div>
                           </div>
                           </OptimizedLink>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>,
                     document.body
@@ -626,10 +635,10 @@ export default function Header({
                   // Navigate to notifications page or open notifications dropdown
                   router.push('/notifications');
                 }}
-                className={`group w-11 h-11 sm:w-12 sm:h-12 md:w-12 md:h-12 flex items-center justify-center rounded-lg transition-all duration-200 relative ${whiteText ? 'text-white hover:text-white/80 hover:bg-white/10' : 'text-charcoal/80 hover:text-sage hover:bg-sage/5'}`}
+                className={`group w-11 h-11 sm:w-12 sm:h-12 md:w-12 md:h-12 flex items-center justify-center rounded-lg transition-all duration-200 relative ${isNotificationsActive ? 'text-sage bg-sage/5' : whiteText ? 'text-white hover:text-white/80 hover:bg-white/10' : 'text-charcoal/80 hover:text-sage hover:bg-sage/5'}`}
                 aria-label="Notifications"
               >
-                <Bell className="w-6 h-6 sm:w-5 sm:h-5 transition-transform duration-200 group-hover:scale-110" />
+                <Bell className={`w-6 h-6 sm:w-5 sm:h-5 transition-transform duration-200 group-hover:scale-110 ${isNotificationsActive ? 'text-sage' : ''}`} />
                 {unreadCount > 0 && (
                   <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-5 px-1.5 text-white text-[11px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
                     {unreadCount > 99 ? '99+' : unreadCount}
@@ -640,10 +649,10 @@ export default function Header({
               {/* Saved Bookmark Icon - Mobile Only */}
               <OptimizedLink
                 href="/saved"
-                className="md:hidden group w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center transition-colors duration-200 min-h-[44px] min-w-[44px] touch-manipulation relative"
+                className={`md:hidden group w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center transition-colors duration-200 min-h-[44px] min-w-[44px] touch-manipulation relative ${isSavedActive ? 'text-sage bg-sage/5' : ''}`}
                 aria-label="View saved businesses"
               >
-                <Bookmark className={`w-6 h-6 sm:w-5 sm:h-5 ${whiteText ? 'text-white hover:text-white/80' : 'text-charcoal/80 hover:text-sage'}`} fill="none" />
+                <Bookmark className={`w-6 h-6 sm:w-5 sm:h-5 ${isSavedActive ? 'text-sage' : whiteText ? 'text-white hover:text-white/80' : 'text-charcoal/80 hover:text-sage'}`} fill={isSavedActive ? 'currentColor' : 'none'} />
                 {savedCount > 0 && (
                   <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-5 px-1.5 text-white text-[11px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
                     {savedCount > 99 ? '99+' : savedCount}
@@ -654,10 +663,10 @@ export default function Header({
               {/* Messages/DM Icon - Mobile Only */}
               <OptimizedLink
                 href="/dm"
-                className="md:hidden group w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center transition-colors duration-200 min-h-[44px] min-w-[44px] touch-manipulation relative"
+                className={`md:hidden group w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center transition-colors duration-200 min-h-[44px] min-w-[44px] touch-manipulation relative ${isMessagesActive ? 'text-sage bg-sage/5' : ''}`}
                 aria-label="Messages"
               >
-                <MessageCircle className={`w-6 h-6 sm:w-5 sm:h-5 ${whiteText ? 'text-white hover:text-white/80' : 'text-charcoal/80 hover:text-sage'}`} />
+                <MessageCircle className={`w-6 h-6 sm:w-5 sm:h-5 ${isMessagesActive ? 'text-sage' : whiteText ? 'text-white hover:text-white/80' : 'text-charcoal/80 hover:text-sage'}`} />
                 {unreadMessagesCount > 0 && (
                   <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-5 px-1.5 text-white text-[11px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
                     {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
@@ -688,10 +697,10 @@ export default function Header({
               {/* Saved */}
               <OptimizedLink
                 href="/saved"
-                className={`group hidden md:flex w-9 h-9 lg:w-10 lg:h-10 items-center justify-center rounded-lg transition-all duration-200 relative ${whiteText ? 'text-white hover:text-white/85 hover:bg-white/10' : 'text-charcoal/80 hover:text-sage hover:bg-sage/5'}`}
+                className={`group hidden md:flex w-9 h-9 lg:w-10 lg:h-10 items-center justify-center rounded-lg transition-all duration-200 relative ${isSavedActive ? 'text-sage bg-sage/5' : whiteText ? 'text-white hover:text-white/85 hover:bg-white/10' : 'text-charcoal/80 hover:text-sage hover:bg-sage/5'}`}
                 aria-label="Saved"
               >
-                <Bookmark className="w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-200 group-hover:scale-110" />
+                <Bookmark className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-200 group-hover:scale-110 ${isSavedActive ? 'text-sage' : ''}`} fill={isSavedActive ? 'currentColor' : 'none'} />
                 {savedCount > 0 && (
                   <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-5 px-1.5 text-white text-[11px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
                     {savedCount > 99 ? '99+' : savedCount}
@@ -702,10 +711,10 @@ export default function Header({
               {/* Messages/DM */}
               <OptimizedLink
                 href="/dm"
-                className={`group hidden md:flex w-9 h-9 lg:w-10 lg:h-10 items-center justify-center rounded-lg transition-all duration-200 relative ${whiteText ? 'text-white hover:text-white/85 hover:bg-white/10' : 'text-charcoal/80 hover:text-sage hover:bg-sage/5'}`}
+                className={`group hidden md:flex w-9 h-9 lg:w-10 lg:h-10 items-center justify-center rounded-lg transition-all duration-200 relative ${isMessagesActive ? 'text-sage bg-sage/5' : whiteText ? 'text-white hover:text-white/85 hover:bg-white/10' : 'text-charcoal/80 hover:text-sage hover:bg-sage/5'}`}
                 aria-label="Messages"
               >
-                <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-200 group-hover:scale-110" />
+                <MessageCircle className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-200 group-hover:scale-110 ${isMessagesActive ? 'text-sage' : ''}`} />
                 {unreadMessagesCount > 0 && (
                   <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-5 px-1.5 text-white text-[11px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
                     {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
@@ -716,10 +725,10 @@ export default function Header({
               {/* Profile */}
               <OptimizedLink
                 href="/profile"
-                className={`group hidden md:flex w-9 h-9 lg:w-10 lg:h-10 items-center justify-center rounded-lg transition-all duration-200 ${whiteText ? 'text-white hover:text-white/85 hover:bg-white/10' : 'text-charcoal/80 hover:text-sage hover:bg-sage/5'}`}
+                className={`group hidden md:flex w-9 h-9 lg:w-10 lg:h-10 items-center justify-center rounded-lg transition-all duration-200 ${isProfileActive ? 'text-sage bg-sage/5' : whiteText ? 'text-white hover:text-white/85 hover:bg-white/10' : 'text-charcoal/80 hover:text-sage hover:bg-sage/5'}`}
                 aria-label="Profile"
               >
-                <User className="w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-200 group-hover:scale-110" />
+                <User className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-200 group-hover:scale-110 ${isProfileActive ? 'text-sage' : ''}`} />
               </OptimizedLink>
             </div>
           </div>

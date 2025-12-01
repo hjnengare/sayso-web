@@ -272,7 +272,7 @@ export default function BusinessOfTheMonthCard({ business }: { business: Busines
             <Stars value={business.rating} color="navbar-bg" />
             {hasReviews ? (
               <>
-                <p className="text-body-sm sm:text-base font-bold leading-none text-charcoal" style={{ 
+                <p className="text-body-sm sm:text-base font-bold leading-none text-charcoal/90" style={{ 
                   fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif", 
                   fontWeight: 700,
                   WebkitFontSmoothing: 'antialiased',
@@ -281,13 +281,13 @@ export default function BusinessOfTheMonthCard({ business }: { business: Busines
                 }}>
                   {business.reviews}
                 </p>
-                <p className="text-caption sm:text-xs leading-none text-charcoal/50" style={{ 
+                <p className="text-sm leading-none text-navbar-bg" style={{ 
                   fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif", 
                   fontWeight: 400,
                   WebkitFontSmoothing: 'antialiased',
                   MozOsxFontSmoothing: 'grayscale',
                   textRendering: 'optimizeLegibility'
-                }}>reviews</p>
+                }}>Reviews</p>
               </>
             ) : (
               <p className="text-sm sm:text-xs leading-none text-charcoal/60" style={{ 

@@ -94,50 +94,50 @@ export default function SimilarBusinessCard({
         <div className="relative w-full h-full">
           {isImagePng || displayImage.includes('/png/') || displayImage.endsWith('.png') ? (
             <div className="relative w-full h-full flex items-center justify-center bg-gradient-to-br from-off-white/95 to-off-white/85">
-              <OptimizedImage
-                src={displayImage}
-                alt={name}
+            <OptimizedImage
+              src={displayImage}
+              alt={name}
                 width={320}
                 height={350}
                 sizes="(max-width: 768px) 540px, 340px"
                 className="w-32 h-32 md:w-36 md:h-36 object-contain"
-                priority={false}
-                quality={90}
-              />
-            </div>
-          ) : (
+              priority={false}
+              quality={90}
+            />
+          </div>
+        ) : (
             <div className="relative w-full h-full overflow-hidden">
               <OptimizedImage
-                src={displayImage}
-                alt={name}
+              src={displayImage}
+              alt={name}
                 width={340}
                 height={400}
                 sizes="(max-width: 768px) 540px, 340px"
                 className="w-full h-full object-cover"
-                priority={false}
+              priority={false}
                 quality={90}
-              />
-            </div>
-          )}
-
+            />
+          </div>
+        )}
+        
           {/* Premium glass badges */}
-          {verified && (
+        {verified && (
             <div className="absolute left-4 top-4 z-20">
-              <VerifiedBadge />
-            </div>
-          )}
-
+            <VerifiedBadge />
+          </div>
+        )}
+        
           {hasRating && displayRating !== undefined && (
             <div className="absolute right-4 top-4 z-20 inline-flex items-center gap-1 rounded-full bg-off-white/95 backdrop-blur-xl px-3 py-1.5 text-charcoal border border-white/40">
               <Star className="w-3.5 h-3.5 text-navbar-bg fill-navbar-bg" aria-hidden />
               <span className="text-sm font-semibold text-charcoal" style={{ 
-                fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', 
+              fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', 
                 fontWeight: 600
-              }}>
-                {Number(displayRating).toFixed(1)}
-              </span>
-            </div>
-          )}
+            }}>
+              {Number(displayRating).toFixed(1)}
+            </span>
+          </div>
+        )}
 
           {!hasRating && (
             <div className="absolute right-4 top-4 z-20 inline-flex items-center gap-1 rounded-full bg-off-white/95 backdrop-blur-xl px-3 py-1.5 text-charcoal border border-white/40">
@@ -163,22 +163,22 @@ export default function SimilarBusinessCard({
             <div className="flex flex-col items-center text-center relative z-10 space-y-1">
               {/* Business Name - Inside wrapper */}
               <div className="flex items-center justify-center w-full min-w-0 h-[3.5rem] sm:h-[4rem]">
-                <h3
+          <h3
                   className="text-h2 sm:text-h1 font-bold text-charcoal text-center leading-[1.3] truncate tracking-tight transition-colors duration-300 group-hover:text-navbar-bg/90 w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
-                  style={{
-                    fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                    fontWeight: 700,
+            style={{
+              fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+              fontWeight: 700,
                     WebkitFontSmoothing: 'antialiased',
                     MozOsxFontSmoothing: 'grayscale',
                     textRendering: 'optimizeLegibility',
                     letterSpacing: '-0.01em'
-                  }}
-                  title={name}
-                >
-                  {name}
-                </h3>
-              </div>
-              
+            }}
+            title={name}
+          >
+            {name}
+          </h3>
+        </div>
+
               {/* Category and Location - Combined with bullet separator */}
               <div
                 className="flex items-center justify-center gap-1.5 text-caption sm:text-xs text-charcoal/60 h-5 min-h-[20px] max-h-[20px]"
@@ -208,7 +208,7 @@ export default function SimilarBusinessCard({
                     </a>
                   </>
                 )}
-              </div>
+        </div>
 
               {/* Reviews - Refined */}
               <div className="flex flex-col items-center gap-2 mb-2">
@@ -256,9 +256,9 @@ export default function SimilarBusinessCard({
                         }}
                       >
                         reviews
-                      </span>
+            </span>
                     </>
-                  ) : (
+          ) : (
                     <span
                       className="inline-flex items-center justify-center text-sm font-normal underline-offset-2 min-w-[92px] text-center transition-colors duration-200 text-charcoal cursor-pointer hover:text-coral"
                       style={{
@@ -267,8 +267,8 @@ export default function SimilarBusinessCard({
                       }}
                     >
                       Be the first to review
-                    </span>
-                  )}
+            </span>
+          )}
                 </div>
                 <div className="flex items-center justify-center gap-2">
                   <div
