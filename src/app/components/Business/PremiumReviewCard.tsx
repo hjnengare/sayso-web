@@ -722,9 +722,10 @@ export function PremiumReviewCard({
                                     className={`flex items-center justify-center gap-1 sm:gap-1.5 rounded-full px-2.5 sm:px-3 py-2 sm:py-2 text-xs sm:text-sm transition min-h-[44px] min-w-[44px] flex-1 sm:flex-initial bg-navbar-bg hover:bg-navbar-bg/90 ${
                                         loadingHelpful ? 'opacity-60 cursor-not-allowed' : ''
                                     }`}
+                                    aria-label={`Helpful ${helpfulCount > 0 ? `(${helpfulCount})` : ''}`}
                                 >
                                     <ThumbsUp className={`h-4 w-4 sm:h-4 sm:w-4 text-white ${isLiked ? 'fill-current' : ''}`} strokeWidth={2.5} />
-                                    <span className="font-urbanist font-700 text-white">
+                                    <span className="font-urbanist font-700 text-white hidden sm:inline">
                                         Helpful {helpfulCount > 0 && `(${helpfulCount})`}
                                     </span>
                                 </button>
@@ -732,9 +733,10 @@ export function PremiumReviewCard({
                                     onClick={() => setShowReplyForm(!showReplyForm)}
                                     disabled={!user}
                                     className="flex items-center justify-center gap-1 sm:gap-1.5 rounded-full px-2.5 sm:px-3 py-2 sm:py-2 text-xs sm:text-sm transition bg-navbar-bg hover:bg-navbar-bg/90 min-h-[44px] min-w-[44px] flex-1 sm:flex-initial disabled:opacity-50"
+                                    aria-label={`Reply ${replies.length > 0 ? `(${replies.length})` : ''}`}
                                 >
                                     <Reply className="h-4 w-4 sm:h-4 sm:w-4 text-white" strokeWidth={2.5} />
-                                    <span className="font-urbanist font-700 text-white">
+                                    <span className="font-urbanist font-700 text-white hidden sm:inline">
                                         Reply {replies.length > 0 && `(${replies.length})`}
                                     </span>
                                 </button>
