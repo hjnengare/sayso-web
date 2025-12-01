@@ -3,7 +3,7 @@
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
-import { Edit, Star, ChevronUp, Info } from "react-feather";
+import { Edit, Star, ChevronUp, Info, ChevronRight } from "react-feather";
 import Link from "next/link";
 import confetti from "canvas-confetti";
 import { useReviewForm } from "../../../hooks/useReviewForm";
@@ -373,6 +373,28 @@ function WriteReviewContent() {
           <div className="py-1 pt-20">
             <main className="relative font-sf-pro pt-4 sm:pt-6" id="main-content" role="main" aria-label="Write review content">
               <div className="mx-auto w-full max-w-[2000px] px-3 relative z-10">
+                {/* Breadcrumb Navigation */}
+                <nav className="mb-4 sm:mb-6" aria-label="Breadcrumb">
+                  <ol className="flex items-center gap-2 text-sm sm:text-base">
+                    <li>
+                      <Link 
+                        href={`/business/${business?.slug || business?.id || businessId}`}
+                        className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium truncate max-w-[200px] sm:max-w-none"
+                        style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                      >
+                        {businessName}
+                      </Link>
+                    </li>
+                    <li className="flex items-center">
+                      <ChevronRight className="w-4 h-4 text-charcoal/40" />
+                    </li>
+                    <li>
+                      <span className="text-charcoal font-semibold" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                        Review
+                      </span>
+                    </li>
+                  </ol>
+                </nav>
                 <div className="pt-2 pb-12 sm:pb-16 md:pb-20">
                   <div className="space-y-6">
                     <div className="grid gap-6 lg:grid-cols-3 items-start">

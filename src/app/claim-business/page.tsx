@@ -11,6 +11,7 @@ import {
   Check,
   ArrowLeft,
 } from "lucide-react";
+import { ChevronRight } from "react-feather";
 import { PageLoader, Loader } from "../components/Loader";
 import { BusinessService } from "../lib/services/businessService";
 import { BusinessOwnershipService } from "../lib/services/businessOwnershipService";
@@ -121,32 +122,31 @@ export default function ClaimBusinessPage() {
               fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
             }}
           > {/* Breadcrumb */}
-            <nav className="px-2 sm:px-4 py-4 mb-4" aria-label="Breadcrumb">
-              <ol className="flex items-center gap-1 text-sm text-charcoal/60">
+            <nav className="mb-4 sm:mb-6 px-2 sm:px-4 py-4" aria-label="Breadcrumb">
+              <ol className="flex items-center gap-2 text-sm sm:text-base">
                 <li>
                   <Link
                     href="/home"
-                    className="hover:text-charcoal transition-colors"
+                    className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium"
                     style={{
                       fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                      fontWeight: 600
                     }}
                   >
                     Home
                   </Link>
                 </li>
-                <li className="text-charcoal/40">/</li>
+                <li className="flex items-center">
+                  <ChevronRight className="w-4 h-4 text-charcoal/40" />
+                </li>
                 <li>
-                  <Link
-                    href="/claim-business"
-                    className="text-charcoal font-medium hover:text-charcoal transition-colors"
+                  <span
+                    className="text-charcoal font-semibold"
                     style={{
                       fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                      fontWeight: 600
                     }}
                   >
                     Claim Business
-                  </Link>
+                  </span>
                 </li>
               </ol>
             </nav>

@@ -231,29 +231,34 @@ export function PremiumReviewCard({
     // Calculate menu position when it opens - position above the button at bottom of card
     useEffect(() => {
         if (showMenu && buttonRef.current) {
-            const buttonRect = buttonRef.current.getBoundingClientRect();
-            const menuHeight = 88; // Approximate height of menu (2 buttons)
-            const menuWidth = 192; // w-48 = 192px
-            const spacing = 8; // spacing above button
-            const padding = 16; // Viewport padding
-            
-            // Always position above the button (at bottom of card)
-            let top = buttonRect.top - menuHeight - spacing;
-            
-            // Ensure menu doesn't go off-screen at top
-            if (top < padding) {
-                top = padding;
-            }
-            
-            // Calculate right position, ensuring it doesn't go off-screen
-            let right = window.innerWidth - buttonRect.right;
-            const minRight = padding;
-            const maxRight = window.innerWidth - menuWidth - padding;
-            right = Math.max(minRight, Math.min(right, maxRight));
-            
-            setMenuPosition({
-                top,
-                right,
+            // Use requestAnimationFrame to ensure DOM is ready
+            requestAnimationFrame(() => {
+                if (buttonRef.current) {
+                    const buttonRect = buttonRef.current.getBoundingClientRect();
+                    const menuHeight = 88; // Approximate height of menu (2 buttons)
+                    const menuWidth = 192; // w-48 = 192px
+                    const spacing = 8; // spacing above button
+                    const padding = 16; // Viewport padding
+                    
+                    // Always position above the button (at bottom of card)
+                    let top = buttonRect.top - menuHeight - spacing;
+                    
+                    // Ensure menu doesn't go off-screen at top
+                    if (top < padding) {
+                        top = buttonRect.bottom + spacing; // Position below if no room above
+                    }
+                    
+                    // Calculate right position, ensuring it doesn't go off-screen
+                    let right = window.innerWidth - buttonRect.right;
+                    const minRight = padding;
+                    const maxRight = window.innerWidth - menuWidth - padding;
+                    right = Math.max(minRight, Math.min(right, maxRight));
+                    
+                    setMenuPosition({
+                        top,
+                        right,
+                    });
+                }
             });
         }
     }, [showMenu]);
@@ -630,67 +635,60 @@ export function PremiumReviewCard({
 
                     {/* Actions - hide in compact mode */}
                     {!compact && (
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 pt-1 sm:pt-2">
-                            <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
+                        <div className="pt-1 sm:pt-2">
+                            <div className="flex items-center justify-between gap-1 sm:justify-around">
                                 <button
                                     onClick={handleHelpful}
                                     disabled={!user || loadingHelpful}
-                                    className={`inline-flex items-center gap-1 sm:gap-1.5 rounded-full border px-2 sm:px-2.5 py-1.5 sm:py-2 text-[9px] sm:text-[10px] md:text-[11px] transition min-h-[32px] sm:min-h-[36px] ${
-                                        isLiked
-                                            ? 'border-sage/20 bg-sage/10 text-sage'
-                                            : 'border-charcoal/10 text-charcoal/80 hover:bg-charcoal/5'
-                                    } ${loadingHelpful ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                    className={`flex items-center justify-center gap-1 sm:gap-1.5 rounded-full px-2.5 sm:px-3 py-2 sm:py-2 text-xs sm:text-sm transition min-h-[44px] min-w-[44px] flex-1 sm:flex-initial bg-navbar-bg hover:bg-navbar-bg/90 ${
+                                        loadingHelpful ? 'opacity-60 cursor-not-allowed' : ''
+                                    }`}
                                 >
-                                    <ThumbsUp className={`h-3 w-3 sm:h-3.5 sm:w-3.5 ${isLiked ? 'fill-current' : ''}`} />
-                                    <span className="hidden sm:inline">Helpful {helpfulCount > 0 && `(${helpfulCount})`}</span>
+                                    <ThumbsUp className={`h-4 w-4 sm:h-4 sm:w-4 text-white ${isLiked ? 'fill-current' : ''}`} strokeWidth={2.5} />
+                                    <span className="font-urbanist font-700 text-white">
+                                        Helpful {helpfulCount > 0 && `(${helpfulCount})`}
+                                    </span>
                                 </button>
                                 <button
                                     onClick={() => setShowReplyForm(!showReplyForm)}
                                     disabled={!user}
-                                    className="inline-flex items-center gap-1 sm:gap-1.5 rounded-full border px-2 sm:px-2.5 py-1.5 sm:py-2 text-[9px] sm:text-[10px] md:text-[11px] transition border-charcoal/10 text-charcoal/80 hover:bg-charcoal/5 min-h-[32px] sm:min-h-[36px] disabled:opacity-50"
+                                    className="flex items-center justify-center gap-1 sm:gap-1.5 rounded-full px-2.5 sm:px-3 py-2 sm:py-2 text-xs sm:text-sm transition bg-navbar-bg hover:bg-navbar-bg/90 min-h-[44px] min-w-[44px] flex-1 sm:flex-initial disabled:opacity-50"
                                 >
-                                    <Reply className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                                    <span className="hidden sm:inline">Reply {replies.length > 0 && `(${replies.length})`}</span>
+                                    <Reply className="h-4 w-4 sm:h-4 sm:w-4 text-white" strokeWidth={2.5} />
+                                    <span className="font-urbanist font-700 text-white">
+                                        Reply {replies.length > 0 && `(${replies.length})`}
+                                    </span>
                                 </button>
-                            </div>
-                            <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
                                 <button
                                     onClick={handleShare}
-                                    className="inline-flex items-center gap-1 sm:gap-1.5 rounded-full border px-2 sm:px-2.5 py-1.5 sm:py-2 text-[9px] sm:text-[10px] md:text-[11px] transition border-charcoal/10 text-charcoal/70 hover:bg-charcoal/5 min-h-[32px] sm:min-h-[36px]"
+                                    className="flex items-center justify-center gap-1 sm:gap-1.5 rounded-full px-2.5 sm:px-3 py-2 sm:py-2 text-xs sm:text-sm transition bg-navbar-bg hover:bg-navbar-bg/90 min-h-[44px] min-w-[44px] flex-1 sm:flex-initial"
                                 >
-                                    <Share2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                                    <span className="hidden sm:inline">Share</span>
-                                </button>
-                                <button
-                                    onClick={handleFlag}
-                                    disabled={!user || flagging || isFlagged || isOwner}
-                                    className={`inline-flex items-center gap-1 sm:gap-1.5 rounded-full border px-2 sm:px-2.5 py-1.5 sm:py-2 text-[9px] sm:text-[10px] md:text-[11px] transition min-h-[32px] sm:min-h-[36px] ${
-                                        isFlagged
-                                            ? 'border-coral/20 bg-coral/10 text-coral'
-                                            : 'border-charcoal/10 text-charcoal/70 hover:bg-charcoal/5'
-                                    } ${flagging || isOwner ? 'opacity-60 cursor-not-allowed' : ''}`}
-                                >
-                                    <Flag className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                                    <span className="hidden sm:inline">{isFlagged ? 'Reported' : 'Report'}</span>
+                                    <Share2 className="h-4 w-4 sm:h-4 sm:w-4 text-white" strokeWidth={2.5} />
+                                    <span className="font-urbanist font-700 text-white hidden sm:inline">Share</span>
                                 </button>
                                 {isOwner && (
                                     <>
                                         <button
                                             ref={buttonRef}
-                                            onClick={() => setShowMenu(!showMenu)}
-                                            className="inline-flex rounded-full border p-1.5 sm:p-1.5 transition border-charcoal/10 text-charcoal/60 hover:bg-charcoal/5 min-h-[32px] sm:min-h-[36px] min-w-[32px] sm:min-w-[36px] items-center justify-center"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setShowMenu(!showMenu);
+                                            }}
+                                            className="flex items-center justify-center rounded-full p-2 transition bg-navbar-bg hover:bg-navbar-bg/90 min-h-[44px] min-w-[44px] flex-1 sm:flex-initial"
                                             aria-label="More options"
                                         >
-                                            <MoreHorizontal className="h-3.5 w-3.5 sm:h-3.5 sm:w-3.5" />
+                                            <MoreHorizontal className="h-4 w-4 sm:h-4 sm:w-4 text-white" strokeWidth={2.5} />
                                         </button>
                                         
-                                        {showMenu && (
+                                        {showMenu && menuPosition.top > 0 && (
                                             <div 
                                                 ref={menuRef}
-                                                className="fixed w-48 sm:w-52 bg-gradient-to-br from-off-white via-off-white to-off-white/95 border border-white/60 rounded-lg shadow-xl z-[9999] overflow-hidden backdrop-blur-md"
+                                                className="fixed w-48 sm:w-52 bg-gradient-to-br from-off-white via-off-white to-off-white/95 border border-white/60 rounded-lg shadow-xl z-[99999] overflow-hidden backdrop-blur-md"
                                                 style={{
                                                     top: `${menuPosition.top}px`,
                                                     right: `${menuPosition.right}px`,
+                                                    position: 'fixed',
+                                                    visibility: menuPosition.top > 0 ? 'visible' : 'hidden',
                                                 }}
                                             >
                                                 <button
@@ -720,12 +718,26 @@ export function PremiumReviewCard({
                                     </>
                                 )}
                                 {!isOwner && (
-                                    <button
-                                        className="inline-flex rounded-full border p-1.5 sm:p-1.5 transition border-charcoal/10 text-charcoal/60 hover:bg-charcoal/5 min-h-[32px] sm:min-h-[36px] min-w-[32px] sm:min-w-[36px] items-center justify-center"
-                                        aria-label="More"
-                                    >
-                                        <MoreHorizontal className="h-3.5 w-3.5 sm:h-3.5 sm:w-3.5" />
-                                    </button>
+                                    <>
+                                        <button
+                                            onClick={handleFlag}
+                                            disabled={!user || flagging || isFlagged || isOwner}
+                                            className={`flex items-center justify-center gap-1 sm:gap-1.5 rounded-full px-2.5 sm:px-3 py-2 sm:py-2 text-xs sm:text-sm transition min-h-[44px] min-w-[44px] flex-1 sm:flex-initial bg-navbar-bg hover:bg-navbar-bg/90 ${
+                                                flagging || isOwner ? 'opacity-60 cursor-not-allowed' : ''
+                                            }`}
+                                        >
+                                            <Flag className="h-4 w-4 sm:h-4 sm:w-4 text-white" strokeWidth={2.5} />
+                                            <span className="font-urbanist font-700 text-white hidden sm:inline">
+                                                {isFlagged ? 'Reported' : 'Report'}
+                                            </span>
+                                        </button>
+                                        <button
+                                            className="flex items-center justify-center rounded-full p-2 transition bg-navbar-bg hover:bg-navbar-bg/90 min-h-[44px] min-w-[44px] flex-1 sm:flex-initial"
+                                            aria-label="More"
+                                        >
+                                            <MoreHorizontal className="h-4 w-4 sm:h-4 sm:w-4 text-white" strokeWidth={2.5} />
+                                        </button>
+                                    </>
                                 )}
                             </div>
                         </div>

@@ -149,15 +149,21 @@ export default function TrendingPage() {
       <main className="pt-20 sm:pt-24 pb-28">
         <div className="mx-auto w-full max-w-[2000px] px-2">
           {/* Breadcrumb */}
-          <nav className="px-2" aria-label="Breadcrumb">
-            <ol className="flex items-center gap-1 text-body-sm text-charcoal/60">
+          <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
+            <ol className="flex items-center gap-2 text-sm sm:text-base">
               <li>
-                <Link href="/home" className="hover:text-charcoal transition-colors" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
+                <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                   Home
                 </Link>
               </li>
-              <li className="text-charcoal/40">/</li>
-              <li className="text-charcoal font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>Trending</li>
+              <li className="flex items-center">
+                <ChevronRight className="w-4 h-4 text-charcoal/40" />
+              </li>
+              <li>
+                <span className="text-charcoal font-semibold" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                  Trending
+                </span>
+              </li>
             </ol>
           </nav>
 

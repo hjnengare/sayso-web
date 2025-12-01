@@ -13,7 +13,7 @@ import EmptyState from "../components/EventsPage/EmptyState";
 import SearchInput from "../components/SearchInput/SearchInput";
 import { EVENTS_AND_SPECIALS, Event } from "../data/eventsData";
 import { useToast } from "../contexts/ToastContext";
-import { ChevronUp } from "react-feather";
+import { ChevronUp, ChevronRight } from "react-feather";
 import { Loader } from "../components/Loader/Loader";
 import StaggeredContainer from "../components/Animations/StaggeredContainer";
 import AnimatedElement from "../components/Animations/AnimatedElement";
@@ -124,29 +124,31 @@ export default function EventsSpecialsPage() {
         >
           <div className="mx-auto w-full max-w-[2000px] px-2">
             <AnimatedElement index={0} direction="top">
-              <nav className="px-2" aria-label="Breadcrumb">
-                <ol className="flex items-center gap-1 text-body-sm text-charcoal/60">
+              <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
+                <ol className="flex items-center gap-2 text-sm sm:text-base">
                   <li>
                     <Link
                       href="/home"
-                      className="hover:text-charcoal transition-colors"
+                      className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium"
                       style={{
                         fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                        fontWeight: 600,
                       }}
                     >
                       Home
                     </Link>
                   </li>
-                  <li className="text-charcoal/40">/</li>
-                  <li
-                    className="text-charcoal font-medium"
-                    style={{
-                      fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                      fontWeight: 600,
-                    }}
-                  >
-                    Events & Specials
+                  <li className="flex items-center">
+                    <ChevronRight className="w-4 h-4 text-charcoal/40" />
+                  </li>
+                  <li>
+                    <span
+                      className="text-charcoal font-semibold"
+                      style={{
+                        fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                      }}
+                    >
+                      Events & Specials
+                    </span>
                   </li>
                 </ol>
               </nav>

@@ -5,6 +5,7 @@ import { useState, useMemo, memo } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import nextDynamic from "next/dynamic";
+import { ChevronRight } from "react-feather";
 import EmailVerificationGuard from "../components/Auth/EmailVerificationGuard";
 import Header from "../components/Header/Header";
 import LeaderboardPodium from "../components/Leaderboard/LeaderboardPodium";
@@ -180,15 +181,21 @@ function LeaderboardPage() {
                 <section className="relative z-10 pb-6 sm:pb-8 md:pb-12">
                   <div className="mx-auto w-full max-w-[2000px] px-2">
                     {/* Breadcrumb */}
-                    <nav className="px-2" aria-label="Breadcrumb">
-                      <ol className="flex items-center gap-1 text-body-sm text-charcoal/60">
+                    <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
+                      <ol className="flex items-center gap-2 text-sm sm:text-base">
                         <li>
-                          <Link href="/home" className="hover:text-charcoal transition-colors" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
+                          <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                             Home
                           </Link>
                         </li>
-                        <li className="text-charcoal/40">/</li>
-                        <li className="text-charcoal font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>Community Highlights</li>
+                        <li className="flex items-center">
+                          <ChevronRight className="w-4 h-4 text-charcoal/40" />
+                        </li>
+                        <li>
+                          <span className="text-charcoal font-semibold" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                            Community Highlights
+                          </span>
+                        </li>
                       </ol>
                     </nav>
                   </div>
