@@ -870,7 +870,7 @@ export function PremiumReviewCard({
                                                     setShowReplyForm(false);
                                                     setReplyText('');
                                                 }}
-                                                className="px-4 py-2 text-sm font-medium text-charcoal/60 hover:text-charcoal transition-colors"
+                                                className="px-4 py-2 text-sm font-bold bg-navbar-bg text-white rounded-lg hover:bg-navbar-bg/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                                 disabled={submittingReply}
                                                 style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                                             >
@@ -879,7 +879,7 @@ export function PremiumReviewCard({
                                             <button
                                                 onClick={handleSubmitReply}
                                                 disabled={!replyText.trim() || submittingReply}
-                                                className="px-4 py-2 text-sm font-medium bg-sage text-white rounded-lg hover:bg-sage/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                                className="px-4 py-2 text-sm font-bold bg-navbar-bg text-white rounded-lg hover:bg-navbar-bg/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                                 style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                                             >
                                                 <Send size={16} />
@@ -947,7 +947,8 @@ export function PremiumReviewCard({
                                                 <div className="flex items-center gap-2">
                                                     <button
                                                         onClick={handleUpdateReply}
-                                                        className="px-3 py-1.5 bg-sage text-white rounded-lg text-xs font-semibold hover:bg-sage/90 transition-colors"
+                                                        disabled={!editReplyText.trim() || submittingReply}
+                                                        className="px-3 py-1.5 bg-navbar-bg text-white rounded-lg text-xs font-bold hover:bg-navbar-bg/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                                         style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                                                     >
                                                         Save
@@ -957,7 +958,7 @@ export function PremiumReviewCard({
                                                             setEditingReplyId(null);
                                                             setEditReplyText('');
                                                         }}
-                                                        className="px-3 py-1.5 bg-charcoal/10 text-charcoal rounded-lg text-xs font-semibold hover:bg-charcoal/20 transition-colors"
+                                                        className="px-3 py-1.5 bg-navbar-bg text-white rounded-lg text-xs font-bold hover:bg-navbar-bg/90 transition-colors"
                                                         style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                                                     >
                                                         Cancel

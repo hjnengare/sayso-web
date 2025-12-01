@@ -500,7 +500,7 @@ export default function ReviewCard({
                         setShowReplyForm(false);
                         setReplyText('');
                       }}
-                      className="px-4 py-2 text-sm font-medium text-charcoal/60 hover:text-charcoal transition-colors"
+                      className="px-4 py-2 text-sm font-bold bg-navbar-bg text-white rounded-lg hover:bg-navbar-bg/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       disabled={submittingReply}
                     >
                       Cancel
@@ -510,7 +510,7 @@ export default function ReviewCard({
                       whileTap={{ scale: 0.95 }}
                       onClick={handleSubmitReply}
                       disabled={!replyText.trim() || submittingReply}
-                      className="px-4 py-2 text-sm font-medium bg-sage text-white rounded-lg hover:bg-sage/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      className="px-4 py-2 text-sm font-bold bg-navbar-bg text-white rounded-lg hover:bg-navbar-bg/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     >
                       <Send size={16} />
                       <span>{submittingReply ? 'Sending...' : 'Send'}</span>
