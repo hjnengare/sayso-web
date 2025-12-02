@@ -28,6 +28,17 @@ export interface Profile {
   dealbreakers_count?: number;
   created_at: string;
   updated_at: string;
+  // Profile enhancements
+  bio?: string;
+  location?: string;
+  website_url?: string;
+  social_links?: Record<string, string>;
+  privacy_settings?: {
+    showActivity?: boolean;
+    showStats?: boolean;
+    showSavedBusinesses?: boolean;
+  };
+  last_active_at?: string;
 }
 
 export interface UserInterest {

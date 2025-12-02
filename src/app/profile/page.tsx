@@ -86,6 +86,8 @@ const animations = `
 
 
 // Types
+import type { EnhancedProfile, UserStats } from '@/app/lib/types/user';
+
 interface UserProfile {
   user_id: string;
   username: string | null;
@@ -100,6 +102,17 @@ interface UserProfile {
   last_interests_updated: string | null;
   created_at: string;
   updated_at: string;
+  // Enhanced profile fields
+  bio?: string;
+  location?: string;
+  website_url?: string;
+  social_links?: Record<string, string>;
+  privacy_settings?: {
+    showActivity?: boolean;
+    showStats?: boolean;
+    showSavedBusinesses?: boolean;
+  };
+  last_active_at?: string;
 }
 
 interface Review {
@@ -142,11 +155,88 @@ function ProfileContent() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [imgError, setImgError] = useState(false);
+  const [enhancedProfile, setEnhancedProfile] = useState<EnhancedProfile | null>(null);
+  const [userStats, setUserStats] = useState<UserStats | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(true);
   const supabase = getBrowserSupabase();
 
   // Fetch user's reviews - MUST be before any early returns
   const [userReviews, setUserReviews] = useState<Review[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(true);
+
+  // Fetch enhanced profile data from API
+  useEffect(() => {
+    const fetchEnhancedProfile = async () => {
+      if (!user?.id) {
+        setProfileLoading(false);
+        return;
+      }
+
+      try {
+        setProfileLoading(true);
+        const response = await fetch('/api/user/profile');
+        
+        if (!response.ok) {
+          if (response.status === 401) {
+            console.warn('Not authenticated for profile fetch');
+            setProfileLoading(false);
+            return;
+          }
+          console.error('Error fetching enhanced profile:', response.status);
+          setProfileLoading(false);
+          return;
+        }
+
+        const result = await response.json();
+        if (result.data) {
+          setEnhancedProfile(result.data);
+        }
+      } catch (err) {
+        console.error('Error fetching enhanced profile:', err);
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    fetchEnhancedProfile();
+  }, [user?.id]);
+
+  // Fetch user stats from API
+  useEffect(() => {
+    const fetchUserStats = async () => {
+      if (!user?.id) {
+        setStatsLoading(false);
+        return;
+      }
+
+      try {
+        setStatsLoading(true);
+        const response = await fetch('/api/user/stats');
+        
+        if (!response.ok) {
+          if (response.status === 401) {
+            setStatsLoading(false);
+            return;
+          }
+          console.error('Error fetching user stats:', response.status);
+          setStatsLoading(false);
+          return;
+        }
+
+        const result = await response.json();
+        if (result.data) {
+          setUserStats(result.data);
+        }
+      } catch (err) {
+        console.error('Error fetching user stats:', err);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
+    fetchUserStats();
+  }, [user?.id]);
 
   // Get saved businesses for mobile display - only fetch if user has saved items
   const [savedBusinesses, setSavedBusinesses] = useState<any[]>([]);
@@ -192,20 +282,35 @@ function ProfileContent() {
     fetchSavedBusinesses();
   }, [user?.id, savedItems.length]);
 
-  const profile = React.useMemo(() => {
+  const profile = React.useMemo((): UserProfile => {
     const rawProfile: any = user?.profile || {};
-    const profileData = {
-      username: rawProfile.username ?? (user?.email ? user.email.split('@')[0] : 'user'),
-      display_name: rawProfile.display_name ?? null,
-      avatar_url: rawProfile.avatar_url ?? null,
+    const enhanced: any = enhancedProfile || {};
+    
+    // Merge enhanced profile data with existing profile
+    const profileData: UserProfile = {
+      user_id: user?.id || '',
+      username: (enhanced.username ?? rawProfile.username ?? (user?.email ? user.email.split('@')[0] : 'user')) as string | null,
+      display_name: (enhanced.display_name ?? rawProfile.display_name ?? null) as string | null,
+      avatar_url: (enhanced.avatar_url ?? rawProfile.avatar_url ?? null) as string | null,
+      locale: (rawProfile.locale || 'en') as string,
+      onboarding_step: (rawProfile.onboarding_step || 'interests') as string,
       is_top_reviewer: rawProfile.is_top_reviewer ?? false,
       reviews_count: rawProfile.reviews_count ?? 0,
       badges_count: rawProfile.badges_count ?? 0,
-      created_at: rawProfile.created_at ?? (user?.created_at ?? new Date().toISOString()),
-      ...rawProfile,
+      interests_count: rawProfile.interests_count ?? 0,
+      last_interests_updated: (rawProfile.last_interests_updated ?? null) as string | null,
+      created_at: (enhanced.created_at ?? rawProfile.created_at ?? (user?.created_at ?? new Date().toISOString())) as string,
+      updated_at: (enhanced.updated_at ?? rawProfile.updated_at ?? new Date().toISOString()) as string,
+      // Enhanced fields
+      bio: enhanced.bio as string | undefined,
+      location: enhanced.location as string | undefined,
+      website_url: enhanced.website_url as string | undefined,
+      social_links: (enhanced.social_links || {}) as Record<string, string> | undefined,
+      privacy_settings: enhanced.privacy_settings as { showActivity?: boolean; showStats?: boolean; showSavedBusinesses?: boolean } | undefined,
+      last_active_at: enhanced.last_active_at as string | undefined,
     };
     return profileData;
-  }, [user?.profile?.avatar_url, user?.profile?.username, user?.profile?.display_name, user?.email, user?.created_at]);
+  }, [user?.profile, enhancedProfile, user?.email, user?.created_at, user?.id]);
 
   // Note: Username and displayName state are now managed by EditProfileModal
   // This effect is kept for backwards compatibility but modal will initialize its own state
@@ -228,8 +333,8 @@ function ProfileContent() {
       try {
         setReviewsLoading(true);
         
-        // Use API endpoint instead of direct Supabase query for better performance
-        const response = await fetch(`/api/reviews?user_id=${user.id}&limit=20`);
+        // Use new user reviews API endpoint
+        const response = await fetch(`/api/user/reviews?page=1&pageSize=20`);
         
         if (!response.ok) {
           console.error('Error fetching user reviews:', response.status);
@@ -237,17 +342,17 @@ function ProfileContent() {
           return;
         }
 
-        const data = await response.json();
-        if (data.reviews && Array.isArray(data.reviews)) {
+        const result = await response.json();
+        if (result.data?.data && Array.isArray(result.data.data)) {
           // Transform the data to match Review interface
-          const transformedReviews: Review[] = data.reviews.map((r: any) => ({
+          const transformedReviews: Review[] = result.data.data.map((r: any) => ({
             id: r.id,
             business_name: r.business?.name || 'Unknown Business',
             rating: r.rating,
-            review_text: r.content || r.title || null,
+            review_text: r.body || r.title || null,
             is_featured: false,
             created_at: r.created_at,
-            business_image_url: r.business?.uploaded_image || r.business?.image_url || null,
+            business_image_url: r.business?.image_url || null,
             business_slug: r.business?.slug || r.business?.id, // Store for navigation
           }));
           setUserReviews(transformedReviews);
@@ -370,6 +475,7 @@ function ProfileContent() {
       const usernameValue = usernameToSave.trim() || null;
       const displayNameValue = displayNameToSave.trim() || null;
       
+      // Update via AuthContext (for username, display_name, avatar_url)
       await updateUser({
         profile: {
           ...(user.profile || {}),
@@ -378,6 +484,15 @@ function ProfileContent() {
           display_name: displayNameValue,
         } as any,
       });
+
+      // Refresh enhanced profile from API to get latest data
+      const profileResponse = await fetch('/api/user/profile');
+      if (profileResponse.ok) {
+        const profileResult = await profileResponse.json();
+        if (profileResult.data) {
+          setEnhancedProfile(profileResult.data);
+        }
+      }
 
       // Update local state if not already updated
       if (data) {
@@ -490,16 +605,19 @@ function ProfileContent() {
     user?.email?.split("@")[0] ||
     "Your Profile";
   const profileLocation =
-    (profile.location as string) ||
-    (profile.city as string) ||
-    (profile.locale as string) ||
+    enhancedProfile?.location ||
+    profile.location ||
+    profile.locale ||
     "Location not set";
-  const reviewsCount = profile.reviews_count ?? 0;
+  const reviewsCount = userStats?.totalReviewsWritten ?? profile.reviews_count ?? 0;
   const badgesCount = profile.badges_count ?? 0;
   const interestsCount = profile.interests_count ?? 0;
-  const helpfulVotesCount =
-    profile.helpful_votes ?? Math.max(0, reviewsCount * 3);
-  const memberSinceLabel = profile.created_at
+  const helpfulVotesCount = userStats?.helpfulVotesReceived ?? 
+    userStats?.totalHelpfulVotesGiven ?? 
+    Math.max(0, reviewsCount * 3);
+  const memberSinceLabel = userStats?.accountCreationDate 
+    ? formatMemberSince(userStats.accountCreationDate)
+    : profile.created_at
     ? formatMemberSince(profile.created_at)
     : "—";
 
@@ -688,16 +806,66 @@ function ProfileContent() {
                                   </div>
                                 )}
                               </div>
+                              {/* Bio */}
+                              {enhancedProfile?.bio && (
+                                <p className="text-body-sm text-charcoal/80 mb-4 leading-relaxed">
+                                  {enhancedProfile.bio}
+                                </p>
+                              )}
+                              
                               <div className="flex items-center gap-4 mb-4 text-body-sm text-charcoal/70 flex-wrap">
-                                <div className="flex items-center gap-1">
-                                  <MapPin size={14} />
-                                  <span>{profileLocation}</span>
-                                </div>
+                                {profileLocation && profileLocation !== "Location not set" && (
+                                  <div className="flex items-center gap-1">
+                                    <MapPin size={14} />
+                                    <span>{profileLocation}</span>
+                                  </div>
+                                )}
                                 <div className="flex items-center gap-1">
                                   <Calendar size={14} />
                                   <span>Member since {memberSinceLabel}</span>
                                 </div>
+                                {enhancedProfile?.website_url && (
+                                  <a
+                                    href={enhancedProfile.website_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-1 hover:text-coral transition-colors"
+                                  >
+                                    <Briefcase size={14} />
+                                    <span>Website</span>
+                                  </a>
+                                )}
                               </div>
+                              
+                              {/* Social Links */}
+                              {enhancedProfile?.social_links && Object.keys(enhancedProfile.social_links).length > 0 && (
+                                <div className="flex items-center gap-3 mb-4">
+                                  {Object.entries(enhancedProfile.social_links).map(([platform, url]) => {
+                                    if (!url) return null;
+                                    const platformIcons: Record<string, any> = {
+                                      instagram: '📷',
+                                      x: '𝕏',
+                                      twitter: '🐦',
+                                      tiktok: '🎵',
+                                      facebook: '👤',
+                                      linkedin: '💼',
+                                      youtube: '▶️',
+                                    };
+                                    return (
+                                      <a
+                                        key={platform}
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-charcoal/70 hover:text-coral transition-colors"
+                                        aria-label={platform}
+                                      >
+                                        {platformIcons[platform.toLowerCase()] || '🔗'}
+                                      </a>
+                                    );
+                                  })}
+                                </div>
+                              )}
                               <div className="flex items-center gap-6 mb-4 flex-wrap">
                                 <div className="flex items-center gap-1">
                                   <StarIcon className="w-5 h-5 fill-coral text-coral" />
@@ -747,17 +915,19 @@ function ProfileContent() {
                           <span className="text-sm text-charcoal/70">Helpful votes</span>
                         </div>
                         <p className="text-2xl font-bold text-charcoal">
-                          {helpfulVotesCount}
+                          {statsLoading ? '—' : helpfulVotesCount}
                         </p>
-                        <p className="text-xs text-charcoal/60">Community reactions</p>
+                        <p className="text-xs text-charcoal/60">Received</p>
                       </div>
                           <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-4">
                         <div className="flex items-center gap-2 mb-2">
                           <StarIcon className="w-5 h-5 text-coral" />
                           <span className="text-sm text-charcoal/70">Reviews</span>
                         </div>
-                        <p className="text-2xl font-bold text-charcoal">{reviewsCount}</p>
-                        <p className="text-xs text-charcoal/60">Total contributions</p>
+                        <p className="text-2xl font-bold text-charcoal">
+                          {statsLoading ? '—' : reviewsCount}
+                        </p>
+                        <p className="text-xs text-charcoal/60">Total written</p>
                       </div>
                           <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-4">
                         <div className="flex items-center gap-2 mb-2">
@@ -775,6 +945,18 @@ function ProfileContent() {
                         <p className="text-2xl font-bold text-charcoal">{interestsCount}</p>
                         <p className="text-xs text-charcoal/60">Communities followed</p>
                       </div>
+                      {userStats && (
+                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-4 sm:col-span-2">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Briefcase className="w-5 h-5 text-coral" />
+                            <span className="text-sm text-charcoal/70">Saved Businesses</span>
+                          </div>
+                          <p className="text-2xl font-bold text-charcoal">
+                            {statsLoading ? '—' : userStats.totalBusinessesSaved}
+                          </p>
+                          <p className="text-xs text-charcoal/60">Your saved gems</p>
+                        </div>
+                      )}
                     </section>
                       </AnimatedElement>
 

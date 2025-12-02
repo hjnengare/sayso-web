@@ -1,165 +1,132 @@
 /**
- * Validation utilities for review content
+ * Validation utilities for user profile data and reviews
  */
 
-export const REVIEW_CONSTRAINTS = {
-  CONTENT_MAX_LENGTH: 5000,
-  CONTENT_MIN_LENGTH: 10,
-  TITLE_MAX_LENGTH: 200,
-  TITLE_MIN_LENGTH: 0, // Optional
-  TAGS_MAX_COUNT: 10,
-  TAG_MAX_LENGTH: 50,
-} as const;
-
-export interface ValidationResult {
+interface ValidationResult {
   isValid: boolean;
   errors: string[];
+  warnings?: string[];
 }
 
+/**
+ * Review Validator Class
+ */
 export class ReviewValidator {
-  /**
-   * Validate review content
-   */
-  static validateContent(content: string | null | undefined): ValidationResult {
-    const errors: string[] = [];
+  private static readonly MIN_CONTENT_LENGTH = 10;
+  private static readonly MAX_CONTENT_LENGTH = 5000;
+  private static readonly MAX_TITLE_LENGTH = 200;
+  private static readonly MIN_RATING = 1;
+  private static readonly MAX_RATING = 5;
 
-    if (!content || typeof content !== 'string') {
-      errors.push('Review content is required');
-      return { isValid: false, errors };
-    }
-
-    const trimmed = content.trim();
-
-    if (trimmed.length === 0) {
-      errors.push('Review content cannot be empty');
-    }
-
-    if (trimmed.length < REVIEW_CONSTRAINTS.CONTENT_MIN_LENGTH) {
-      errors.push(`Review content must be at least ${REVIEW_CONSTRAINTS.CONTENT_MIN_LENGTH} characters`);
-    }
-
-    if (trimmed.length > REVIEW_CONSTRAINTS.CONTENT_MAX_LENGTH) {
-      errors.push(`Review content cannot exceed ${REVIEW_CONSTRAINTS.CONTENT_MAX_LENGTH} characters`);
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors,
-    };
-  }
-
-  /**
-   * Validate review title
-   */
-  static validateTitle(title: string | null | undefined): ValidationResult {
-    const errors: string[] = [];
-
-    // Title is optional, so empty/null is valid
-    if (!title || title.trim().length === 0) {
-      return { isValid: true, errors: [] };
-    }
-
-    const trimmed = title.trim();
-
-    if (trimmed.length > REVIEW_CONSTRAINTS.TITLE_MAX_LENGTH) {
-      errors.push(`Review title cannot exceed ${REVIEW_CONSTRAINTS.TITLE_MAX_LENGTH} characters`);
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors,
-    };
-  }
-
-  /**
-   * Validate tags
-   */
-  static validateTags(tags: string[]): ValidationResult {
-    const errors: string[] = [];
-
-    if (!Array.isArray(tags)) {
-      errors.push('Tags must be an array');
-      return { isValid: false, errors };
-    }
-
-    if (tags.length > REVIEW_CONSTRAINTS.TAGS_MAX_COUNT) {
-      errors.push(`Cannot have more than ${REVIEW_CONSTRAINTS.TAGS_MAX_COUNT} tags`);
-    }
-
-    tags.forEach((tag, index) => {
-      if (typeof tag !== 'string') {
-        errors.push(`Tag at index ${index} must be a string`);
-      } else if (tag.trim().length === 0) {
-        errors.push(`Tag at index ${index} cannot be empty`);
-      } else if (tag.trim().length > REVIEW_CONSTRAINTS.TAG_MAX_LENGTH) {
-        errors.push(`Tag at index ${index} cannot exceed ${REVIEW_CONSTRAINTS.TAG_MAX_LENGTH} characters`);
-      }
-    });
-
-    return {
-      isValid: errors.length === 0,
-      errors,
-    };
-  }
-
-  /**
-   * Validate rating
-   */
-  static validateRating(rating: number | null | undefined): ValidationResult {
-    const errors: string[] = [];
-
-    if (rating === null || rating === undefined) {
-      errors.push('Rating is required');
-      return { isValid: false, errors };
-    }
-
-    const numRating = typeof rating === 'string' ? parseInt(rating, 10) : rating;
-
-    if (Number.isNaN(numRating)) {
-      errors.push('Rating must be a number');
-    } else if (numRating < 1 || numRating > 5) {
-      errors.push('Rating must be between 1 and 5');
-    } else if (!Number.isInteger(numRating)) {
-      errors.push('Rating must be a whole number');
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors,
-    };
-  }
-
-  /**
-   * Validate entire review data
-   */
   static validateReviewData(data: {
-    content: string | null | undefined;
-    title?: string | null | undefined;
-    rating: number | null | undefined;
+    content: string;
+    title?: string;
+    rating: number;
     tags?: string[];
   }): ValidationResult {
-    const allErrors: string[] = [];
+    const errors: string[] = [];
+    const warnings: string[] = [];
 
-    const contentResult = this.validateContent(data.content);
-    allErrors.push(...contentResult.errors);
-
-    if (data.title !== undefined) {
-      const titleResult = this.validateTitle(data.title);
-      allErrors.push(...titleResult.errors);
+    // Validate content
+    if (!data.content || typeof data.content !== 'string') {
+      errors.push('Review content is required');
+    } else {
+      const contentLength = data.content.trim().length;
+      if (contentLength < this.MIN_CONTENT_LENGTH) {
+        errors.push(`Review content must be at least ${this.MIN_CONTENT_LENGTH} characters`);
+      }
+      if (contentLength > this.MAX_CONTENT_LENGTH) {
+        errors.push(`Review content must not exceed ${this.MAX_CONTENT_LENGTH} characters`);
+      }
     }
 
-    const ratingResult = this.validateRating(data.rating);
-    allErrors.push(...ratingResult.errors);
+    // Validate title (optional)
+    if (data.title && data.title.length > this.MAX_TITLE_LENGTH) {
+      errors.push(`Review title must not exceed ${this.MAX_TITLE_LENGTH} characters`);
+    }
 
-    if (data.tags && Array.isArray(data.tags)) {
-      const tagsResult = this.validateTags(data.tags);
-      allErrors.push(...tagsResult.errors);
+    // Validate rating
+    if (typeof data.rating !== 'number' || isNaN(data.rating)) {
+      errors.push('Rating must be a number');
+    } else {
+      if (data.rating < this.MIN_RATING || data.rating > this.MAX_RATING) {
+        errors.push(`Rating must be between ${this.MIN_RATING} and ${this.MAX_RATING}`);
+      }
+    }
+
+    // Validate tags (optional)
+    if (data.tags && !Array.isArray(data.tags)) {
+      errors.push('Tags must be an array');
     }
 
     return {
-      isValid: allErrors.length === 0,
-      errors: allErrors,
+      isValid: errors.length === 0,
+      errors,
+      warnings,
     };
   }
 }
 
+/**
+ * Validate website URL format
+ */
+export function isValidUrl(url: string): boolean {
+  if (!url) return false;
+  try {
+    const urlObj = new URL(url);
+    return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Validate bio length
+ */
+export function isValidBio(bio: string | undefined): boolean {
+  if (!bio) return true; // Empty is valid
+  return bio.length <= 2000;
+}
+
+/**
+ * Validate social links object
+ */
+export function isValidSocialLinks(
+  links: Record<string, string> | undefined
+): boolean {
+  if (!links) return true;
+  return Object.values(links).every((url) => !url || isValidUrl(url));
+}
+
+/**
+ * Sanitize and validate profile update payload
+ */
+export function validateProfileUpdate(payload: {
+  bio?: string;
+  location?: string;
+  website_url?: string;
+  social_links?: Record<string, string>;
+}): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+
+  if (payload.bio !== undefined && !isValidBio(payload.bio)) {
+    errors.push('Bio must be 2000 characters or less');
+  }
+
+  if (payload.website_url !== undefined && payload.website_url) {
+    if (!isValidUrl(payload.website_url)) {
+      errors.push('Website URL must be a valid HTTP/HTTPS URL');
+    }
+  }
+
+  if (payload.social_links !== undefined) {
+    if (!isValidSocialLinks(payload.social_links)) {
+      errors.push('All social links must be valid URLs');
+    }
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+  };
+}
