@@ -79,7 +79,7 @@ export default function Footer() {
               >
                 <h3 className="font-urbanist text-base sm:text-lg font-semibold text-off-white mb-5 relative inline-block">
                   Company
-                  <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-gradient-to-r from-sage to-coral rounded-full" />
+                  <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-sage rounded-full" />
                 </h3>
                 <ul className="space-y-3.5">
                   {footerLinks.company.map((link) => (
@@ -90,7 +90,7 @@ export default function Footer() {
                       >
                         <span className="relative">
                           {link.name}
-                          <span className="absolute inset-x-0 -bottom-1 h-px bg-gradient-to-r from-sage/50 via-coral/50 to-sage/50 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-full" />
+                          <span className="absolute inset-x-0 -bottom-1 h-px bg-sage scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-full" />
                         </span>
                       </Link>
                     </li>
@@ -107,7 +107,7 @@ export default function Footer() {
               >
                 <h3 className="font-urbanist text-base sm:text-lg font-semibold text-off-white mb-5 relative inline-block">
                   Support
-                  <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-gradient-to-r from-sage to-coral rounded-full" />
+                  <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-sage rounded-full" />
                 </h3>
                 <ul className="space-y-3.5">
                   {footerLinks.support.map((link) => (
@@ -118,7 +118,7 @@ export default function Footer() {
                       >
                         <span className="relative">
                           {link.name}
-                          <span className="absolute inset-x-0 -bottom-1 h-px bg-gradient-to-r from-sage/50 via-coral/50 to-sage/50 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-full" />
+                          <span className="absolute inset-x-0 -bottom-1 h-px bg-sage scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-full" />
                         </span>
                       </Link>
                     </li>
@@ -135,7 +135,7 @@ export default function Footer() {
               >
                 <h3 className="font-urbanist text-base sm:text-lg font-semibold text-off-white mb-5 relative inline-block">
                   Legal
-                  <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-gradient-to-r from-sage to-coral rounded-full" />
+                  <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-sage rounded-full" />
                 </h3>
                 <ul className="space-y-3.5">
                   {footerLinks.legal.map((link) => (
@@ -146,7 +146,7 @@ export default function Footer() {
                       >
                         <span className="relative">
                           {link.name}
-                          <span className="absolute inset-x-0 -bottom-1 h-px bg-gradient-to-r from-sage/50 via-coral/50 to-sage/50 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-full" />
+                          <span className="absolute inset-x-0 -bottom-1 h-px bg-sage scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-full" />
                         </span>
                       </Link>
                     </li>

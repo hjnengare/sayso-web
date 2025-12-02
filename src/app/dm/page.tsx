@@ -193,6 +193,7 @@ export default function DMChatListPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const menuButtonRef = useRef<HTMLDivElement>(null);
+  const previousMessagesLength = useRef(0);
 
   const filteredChats = chats.filter((chat) =>
     chat.user.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -205,14 +206,26 @@ export default function DMChatListPage() {
     if (selectedChatId) {
       const mockMessages = generateMockMessages(selectedChatId);
       setMessages(mockMessages);
+      // Reset previous messages length when chat changes
+      previousMessagesLength.current = mockMessages.length;
+      // Scroll to top when chat is selected
+      const messagesContainer = document.querySelector('.overflow-y-auto');
+      if (messagesContainer) {
+        messagesContainer.scrollTop = 0;
+      }
     } else {
       setMessages([]);
+      previousMessagesLength.current = 0;
     }
   }, [selectedChatId]);
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom when new messages arrive (only for new messages, not initial load)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Only scroll to bottom if a new message was added (not on initial load)
+    if (messages.length > previousMessagesLength.current && messages.length > 0) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+    previousMessagesLength.current = messages.length;
   }, [messages]);
 
   // Handle send message

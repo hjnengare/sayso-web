@@ -52,7 +52,7 @@ export default function CategoryPageClient({
     <div className="min-h-dvh bg-off-white">
       <Header showSearch={true} variant="white" backgroundClassName="bg-navbar-bg" />
       
-      <main className="pt-20 pb-16 px-4 sm:px-6 md:px-8">
+      <main className="pt-20 sm:pt-24 pb-16 px-4 sm:px-6 md:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

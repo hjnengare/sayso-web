@@ -87,8 +87,8 @@ export default function WriteReviewPage() {
       </div>
 
       <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
-        <div className="py-1 pt-20">
-          <section className="relative font-sf-pro pt-16 sm:pt-20">
+        <div className="pt-20 sm:pt-24">
+          <section className="relative font-sf-pro">
             <div className="mx-auto w-full max-w-[2000px] px-2 relative z-10">
               {/* Breadcrumb Navigation */}
               <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">

@@ -370,11 +370,11 @@ function WriteReviewContent() {
         />
 
         <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
-          <div className="py-1 pt-20">
-            <main className="relative font-sf-pro pt-4 sm:pt-6" id="main-content" role="main" aria-label="Write review content">
+          <div className="pt-20 sm:pt-24">
+            <main className="relative font-sf-pro" id="main-content" role="main" aria-label="Write review content">
               <div className="mx-auto w-full max-w-[2000px] px-3 relative z-10">
                 {/* Breadcrumb Navigation */}
-                <nav className="mb-4 sm:mb-6" aria-label="Breadcrumb">
+                <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
                   <ol className="flex items-center gap-2 text-sm sm:text-base">
                     <li>
                       <Link 

@@ -605,9 +605,9 @@ function ProfileContent() {
 
         <StaggeredContainer>
         <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
-          <div className="py-1 pt-20 md:px-20 sm:px-4">
+          <div className="pt-20 sm:pt-24 md:px-20 sm:px-4">
             <main
-              className="relative font-urbanist pt-4 sm:pt-6"
+              className="relative font-urbanist"
               id="main-content"
               role="main"
               aria-label="User profile content"

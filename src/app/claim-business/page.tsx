@@ -114,7 +114,7 @@ export default function ClaimBusinessPage() {
       </div>
 
       <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
-        <div className="py-1 pt-20">
+        <div className="pt-20 sm:pt-24">
           {/* Main Content Section */}
           <section
             className="relative pb-12 sm:pb-16 md:pb-20"
@@ -122,7 +122,7 @@ export default function ClaimBusinessPage() {
               fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
             }}
           > {/* Breadcrumb */}
-            <nav className="mb-4 sm:mb-6 px-2 sm:px-4 py-4" aria-label="Breadcrumb">
+            <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
               <ol className="flex items-center gap-2 text-sm sm:text-base">
                 <li>
                   <Link

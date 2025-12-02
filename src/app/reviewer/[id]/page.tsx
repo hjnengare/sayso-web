@@ -255,8 +255,8 @@ export default function ReviewerProfilePage() {
                 </header>
 
                 <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
-                    <div className="py-1 pt-20 md:px-20 sm:px-4">
-                        <main className="relative font-sf-pro pt-4 sm:pt-6" id="main-content" role="main" aria-label="Reviewer profile content">
+                    <div className="pt-20 sm:pt-24 md:px-20 sm:px-4">
+                        <main className="relative font-sf-pro" id="main-content" role="main" aria-label="Reviewer profile content">
                             <div className="mx-auto w-full max-w-[2000px] px-3 sm:px-6 lg:px-10 2xl:px-16 relative z-10">
                                 {/* Breadcrumb Navigation */}
                                 <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">

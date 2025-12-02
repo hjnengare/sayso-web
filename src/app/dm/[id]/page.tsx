@@ -92,6 +92,7 @@ export default function DMPage() {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const menuButtonRef = useRef<HTMLDivElement>(null);
+    const previousMessagesLength = useRef(0);
 
     // Mock recipient data (replace with API in production)
     const recipient: DMUser = useMemo(() => {
@@ -132,11 +133,23 @@ export default function DMPage() {
             },
         ];
         setMessages(mockMessages);
+        // Reset previous messages length when chat changes
+        previousMessagesLength.current = mockMessages.length;
+        // Scroll to top when chat is opened
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        const messagesContainer = document.querySelector('.overflow-y-auto');
+        if (messagesContainer) {
+            messagesContainer.scrollTop = 0;
+        }
     }, [recipientId]);
 
-    // Auto-scroll to bottom when new messages arrive
+    // Auto-scroll to bottom when new messages arrive (only for new messages, not initial load)
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        // Only scroll to bottom if a new message was added (not on initial load)
+        if (messages.length > previousMessagesLength.current && messages.length > 0) {
+            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        }
+        previousMessagesLength.current = messages.length;
     }, [messages]);
 
     // Handle send message
@@ -382,10 +395,10 @@ export default function DMPage() {
                 </header>
 
                 {/* Messages Container - Mobile First */}
-                <div className="flex-1 flex flex-col pt-16 sm:pt-20 pb-20 sm:pb-24 md:pb-28 overflow-hidden">
+                <div className="flex-1 flex flex-col pt-20 sm:pt-24 pb-20 sm:pb-24 md:pb-28 overflow-hidden">
                     <div className="flex-1 overflow-y-auto px-3 sm:px-4 md:px-6 lg:px-8">
                         {/* Breadcrumb Navigation */}
-                        <nav className="mb-4 sm:mb-6 px-2 pt-4" aria-label="Breadcrumb">
+                        <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
                             <ol className="flex items-center gap-2 text-sm sm:text-base">
                                 <li>
                                     <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>

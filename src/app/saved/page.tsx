@@ -231,11 +231,11 @@ export default function SavedPage() {
         />
 
         <div className="relative">
-          <div className="py-1 pt-20 pb-12 sm:pb-16 md:pb-20">
+          <div className="pt-20 sm:pt-24 pb-12 sm:pb-16 md:pb-20">
             <div className="mx-auto w-full max-w-[2000px] px-3 relative mb-4">
               {/* Breadcrumb Navigation */}
               <nav
-                className="md:pt-4 mb-4 sm:mb-6 px-2"
+                className="mb-4 sm:mb-6 px-2"
                 aria-label="Breadcrumb"
               >
                 <ol className="flex items-center gap-2 text-sm sm:text-base">

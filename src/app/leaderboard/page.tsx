@@ -175,13 +175,13 @@ function LeaderboardPage() {
 
         <StaggeredContainer>
           <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
-            <div className="py-1 pt-20">
+            <div className="pt-20 sm:pt-24">
               {/* Hero Section */}
               <AnimatedElement index={0} direction="top">
                 <section className="relative z-10 pb-6 sm:pb-8 md:pb-12">
                   <div className="mx-auto w-full max-w-[2000px] px-2">
                     {/* Breadcrumb */}
-                    <nav className="pt-4 mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
+                    <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
                       <ol className="flex items-center gap-2 text-sm sm:text-base">
                         <li>
                           <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>

@@ -190,7 +190,7 @@ export default function ManageBusinessPage() {
                 />
 
                 <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
-                    <div className="py-1 pt-20">
+                    <div className="pt-20 sm:pt-24">
                         <section
                             className="relative"
                             style={{
