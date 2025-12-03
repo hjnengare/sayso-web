@@ -1,0 +1,199 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSupabase } from '@/app/lib/supabase/server';
+
+export const dynamic = 'force-dynamic';
+
+/**
+ * GET /api/notifications
+ * Fetch notifications for the authenticated user
+ * Query parameters:
+ *   - unread: boolean - filter by unread status (true = only unread, false = only read, undefined = all)
+ *   - type: string - filter by notification type ('review', 'business', 'user', 'highlyRated')
+ *   - limit: number - limit the number of results (default: no limit)
+ *   - offset: number - offset for pagination (default: 0)
+ */
+export async function GET(req: NextRequest) {
+  try {
+    const supabase = await getServerSupabase();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    // Parse query parameters
+    const { searchParams } = new URL(req.url);
+    const unreadParam = searchParams.get('unread');
+    const typeParam = searchParams.get('type');
+    const limitParam = searchParams.get('limit');
+    const offsetParam = searchParams.get('offset');
+
+    // Build query
+    let query = supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', user.id);
+
+    // Filter by read status
+    if (unreadParam !== null) {
+      const unread = unreadParam === 'true';
+      query = query.eq('read', !unread);
+    }
+
+    // Filter by type
+    if (typeParam) {
+      const validTypes = ['review', 'business', 'user', 'highlyRated'];
+      if (validTypes.includes(typeParam)) {
+        query = query.eq('type', typeParam);
+      }
+    }
+
+    // Order by created_at descending
+    query = query.order('created_at', { ascending: false });
+
+    // Apply pagination (limit and offset)
+    const limit = limitParam ? parseInt(limitParam, 10) : null;
+    const offset = offsetParam ? parseInt(offsetParam, 10) : 0;
+
+    if (limit && !isNaN(limit) && limit > 0) {
+      const end = offset + limit - 1;
+      query = query.range(offset, end);
+    } else if (offset > 0) {
+      // If only offset is provided, use a large range
+      query = query.range(offset, offset + 999);
+    }
+
+    const { data: notifications, error } = await query;
+
+    if (error) {
+      console.error('Error fetching notifications:', error);
+      return NextResponse.json(
+        { error: 'Failed to fetch notifications', details: error.message },
+        { status: 500 }
+      );
+    }
+
+    // Count unread notifications
+    const { count: unreadCount } = await supabase
+      .from('notifications')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('read', false);
+
+    return NextResponse.json({
+      notifications: notifications || [],
+      count: notifications?.length || 0,
+      unreadCount: unreadCount || 0
+    });
+  } catch (error) {
+    console.error('Error in GET /api/notifications:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * POST /api/notifications
+ * Create a new notification for a user
+ * Body: {
+ *   user_id: string (optional, defaults to authenticated user),
+ *   type: 'review' | 'business' | 'user' | 'highlyRated',
+ *   message: string,
+ *   title: string,
+ *   image?: string,
+ *   image_alt?: string,
+ *   link?: string
+ * }
+ */
+export async function POST(req: NextRequest) {
+  try {
+    const supabase = await getServerSupabase();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const body = await req.json();
+    const {
+      user_id: targetUserId,
+      type,
+      message,
+      title,
+      image,
+      image_alt,
+      link
+    } = body;
+
+    // Validate required fields
+    if (!type || !message || !title) {
+      return NextResponse.json(
+        { error: 'Missing required fields: type, message, and title are required' },
+        { status: 400 }
+      );
+    }
+
+    // Validate type
+    const validTypes = ['review', 'business', 'user', 'highlyRated'];
+    if (!validTypes.includes(type)) {
+      return NextResponse.json(
+        { error: `Invalid type. Must be one of: ${validTypes.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
+    // Use target user_id if provided, otherwise use authenticated user
+    const notificationUserId = targetUserId || user.id;
+
+    // Only allow users to create notifications for themselves unless they're creating for another user
+    // (In production, you might want to add admin checks here)
+    if (targetUserId && targetUserId !== user.id) {
+      // For now, allow it but you might want to restrict this
+      // You could add an admin check here
+    }
+
+    const { data: notification, error } = await supabase
+      .from('notifications')
+      .insert({
+        user_id: notificationUserId,
+        type,
+        message,
+        title,
+        image: image || null,
+        image_alt: image_alt || null,
+        link: link || null,
+        read: false
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating notification:', error);
+      return NextResponse.json(
+        { error: 'Failed to create notification', details: error.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      notification
+    }, { status: 201 });
+  } catch (error) {
+    console.error('Error in POST /api/notifications:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+

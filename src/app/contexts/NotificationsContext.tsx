@@ -2,7 +2,8 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { useAuth } from "./AuthContext";
-import { generateNotificationBatch, type ToastNotificationData } from "../data/notificationData";
+import type { ToastNotificationData } from "../data/notificationData";
+import { formatTimeAgo } from "../utils/formatTimeAgo";
 
 interface NotificationsContextType {
   notifications: ToastNotificationData[];
@@ -21,52 +22,158 @@ interface NotificationsProviderProps {
   children: ReactNode;
 }
 
+interface DatabaseNotification {
+  id: string;
+  user_id: string;
+  type: 'review' | 'business' | 'user' | 'highlyRated';
+  message: string;
+  title: string;
+  image: string | null;
+  image_alt: string | null;
+  link: string | null;
+  read: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export function NotificationsProvider({ children }: NotificationsProviderProps) {
   const [notifications, setNotifications] = useState<ToastNotificationData[]>([]);
   const [readNotifications, setReadNotifications] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
 
+  // Convert database notification to ToastNotificationData format
+  const convertToToastNotification = useCallback((dbNotification: DatabaseNotification): ToastNotificationData => {
+    return {
+      id: dbNotification.id,
+      type: dbNotification.type,
+      message: dbNotification.message,
+      title: dbNotification.title,
+      timeAgo: formatTimeAgo(dbNotification.created_at),
+      image: dbNotification.image || '/png/restaurants.png',
+      imageAlt: dbNotification.image_alt || 'Notification',
+      link: dbNotification.link || undefined,
+    };
+  }, []);
+
   const fetchNotifications = useCallback(async () => {
     if (!user) {
       setNotifications([]);
+      setReadNotifications(new Set());
       setIsLoading(false);
       return;
     }
 
     try {
       setIsLoading(true);
-      // For now, generate mock notifications
-      // In production, this would fetch from an API
-      const mockNotifications = generateNotificationBatch(10);
-      setNotifications(mockNotifications);
+      const response = await fetch('/api/notifications');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch notifications');
+      }
+
+      const data = await response.json();
+      const dbNotifications: DatabaseNotification[] = data.notifications || [];
+      
+      // Convert database notifications to ToastNotificationData format
+      const convertedNotifications = dbNotifications.map(convertToToastNotification);
+      setNotifications(convertedNotifications);
+      
+      // Set read notifications from database
+      const readIds = new Set(
+        dbNotifications
+          .filter(n => n.read)
+          .map(n => n.id)
+      );
+      setReadNotifications(readIds);
+      
       setIsLoading(false);
     } catch (error) {
       console.error('Error fetching notifications:', error);
+      setNotifications([]);
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, convertToToastNotification]);
 
   useEffect(() => {
     fetchNotifications();
   }, [fetchNotifications]);
 
-  const markAsRead = useCallback((id: string) => {
+  const markAsRead = useCallback(async (id: string) => {
+    // Optimistically update UI
     setReadNotifications(prev => new Set(prev).add(id));
+    
+    try {
+      const response = await fetch(`/api/notifications/${id}`, {
+        method: 'PATCH',
+      });
+      
+      if (!response.ok) {
+        // Revert on error
+        setReadNotifications(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(id);
+          return newSet;
+        });
+        throw new Error('Failed to mark notification as read');
+      }
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
   }, []);
 
-  const markAllAsRead = useCallback(() => {
-    setReadNotifications(new Set(notifications.map(n => n.id)));
-  }, [notifications]);
+  const markAllAsRead = useCallback(async () => {
+    // Optimistically update UI
+    const allIds = new Set(notifications.map(n => n.id));
+    setReadNotifications(allIds);
+    
+    try {
+      const response = await fetch('/api/notifications/read-all', {
+        method: 'PATCH',
+      });
+      
+      if (!response.ok) {
+        // Revert on error - restore previous read state
+        const previousRead = notifications
+          .filter(n => readNotifications.has(n.id))
+          .map(n => n.id);
+        setReadNotifications(new Set(previousRead));
+        throw new Error('Failed to mark all notifications as read');
+      }
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+    }
+  }, [notifications, readNotifications]);
 
-  const deleteNotification = useCallback((id: string) => {
+  const deleteNotification = useCallback(async (id: string) => {
+    // Optimistically update UI
+    const notificationToDelete = notifications.find(n => n.id === id);
     setNotifications(prev => prev.filter(n => n.id !== id));
     setReadNotifications(prev => {
       const newSet = new Set(prev);
       newSet.delete(id);
       return newSet;
     });
-  }, []);
+    
+    try {
+      const response = await fetch(`/api/notifications/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        // Revert on error
+        if (notificationToDelete) {
+          setNotifications(prev => [...prev, notificationToDelete].sort((a, b) => {
+            // Sort by original order (we'd need to track this, but for now just append)
+            return 0;
+          }));
+        }
+        throw new Error('Failed to delete notification');
+      }
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+    }
+  }, [notifications]);
 
   const unreadCount = notifications.filter(n => !readNotifications.has(n.id)).length;
 

@@ -164,3 +164,37 @@ export interface BusinessSearchFilters {
   verified_only?: boolean;
   within_miles?: number;
 }
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  type: 'review' | 'business' | 'user' | 'highlyRated';
+  message: string;
+  title: string;
+  image?: string | null;
+  image_alt?: string | null;
+  link?: string | null;
+  read: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateNotificationData {
+  user_id?: string; // Optional, defaults to authenticated user
+  type: 'review' | 'business' | 'user' | 'highlyRated';
+  message: string;
+  title: string;
+  image?: string;
+  image_alt?: string;
+  link?: string;
+}
+
+export interface NotificationListResponse {
+  notifications: Notification[];
+  count: number;
+  unreadCount: number;
+}
+
+export interface NotificationUnreadCountResponse {
+  unreadCount: number;
+}
