@@ -8,13 +8,11 @@ import { useAuth } from "@/app/contexts/AuthContext";
 import { Loader } from "@/app/components/Loader/Loader";
 import { usePredefinedPageTitle } from "@/app/hooks/usePageTitle";
 import {
-  ArrowLeft,
   Award,
   Calendar,
   Check,
   MapPin,
   MessageSquare,
-  Share2,
   ThumbsUp,
   User,
   Eye,
@@ -42,6 +40,7 @@ import StaggeredContainer from "../components/Animations/StaggeredContainer";
 import AnimatedElement from "../components/Animations/AnimatedElement";
 import { useReviewSubmission } from "@/app/hooks/useReviews";
 import { useRouter } from "next/navigation";
+import Header from "../components/Header/Header";
 
 const animations = `
   @keyframes fadeInUp {
@@ -738,49 +737,18 @@ function ProfileContent() {
               "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
           }}
         >
-        <header
-          className="fixed top-0 left-0 right-0 z-50 bg-navbar-bg backdrop-blur-sm border-b border-charcoal/10 shadow-md md:shadow-none animate-slide-in-top"
-          role="banner"
-        >
-          <div className="mx-auto w-full max-w-[2000px] px-4 sm:px-6 lg:px-10 2xl:px-16 py-4">
-            <nav
-              className="flex items-center justify-between"
-              aria-label="Profile navigation"
-            >
-              <Link
-                href="/home"
-                className="group flex items-center focus:outline-none rounded-lg px-1 -mx-1"
-                aria-label="Go back to home"
-              >
-                <div
-                  className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-white/10 to-white/5 hover:from-white/20 hover:to-white/10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 border border-white/20 hover:border-white/40 mr-2 sm:mr-3"
-                  aria-hidden="true"
-                >
-                  <ArrowLeft
-                    className="w-6 h-6 text-white group-hover:text-white transition-colors duration-300"
-                    strokeWidth={2.5}
-                  />
-                </div>
-                <h3 className="text-h3 sm:text-h2 font-semibold text-white animate-delay-100 animate-fade-in truncate max-w-[150px] sm:max-w-none" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                  {displayLabel}
-                </h3>
-              </Link>
-
-              <div className="flex items-center gap-2 sm:gap-3">
-                <button
-                  className="w-10 h-10 bg-gradient-to-br from-white/10 to-white/5 hover:from-white/20 hover:to-white/10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 border border-white/20 hover:border-white/40 min-h-[44px] min-w-[44px]"
-                  aria-label="Share profile"
-                >
-                  <Share2 className="w-5 h-5 text-white" strokeWidth={2.5} />
-                </button>
-              </div>
-            </nav>
-          </div>
-        </header>
+        <Header
+          showSearch={false}
+          variant="white"
+          backgroundClassName="bg-navbar-bg"
+          topPosition="top-0"
+          reducedPadding={true}
+          whiteText={true}
+        />
 
         <StaggeredContainer>
         <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
-          <div className="pt-20 sm:pt-24 md:px-20 sm:px-4">
+          <div className="pt-20 sm:pt-24">
             <main
               className="relative font-urbanist"
               id="main-content"
