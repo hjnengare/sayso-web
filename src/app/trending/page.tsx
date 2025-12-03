@@ -9,8 +9,9 @@ import AnimatedElement from "../components/Animations/AnimatedElement";
 import Footer from "../components/Footer/Footer";
 import Header from "../components/Header/Header";
 import { ChevronLeft, ChevronRight, ChevronUp } from "react-feather";
-import { useTrendingBusinesses } from "../hooks/useBusinesses";
+import { useBusinesses } from "../hooks/useBusinesses";
 import { useUserPreferences } from "../hooks/useUserPreferences";
+import { useDebounce } from "../hooks/useDebounce";
 import SearchInput from "../components/SearchInput/SearchInput";
 import FilterModal, { FilterState } from "../components/FilterModal/FilterModal";
 import { Loader } from "../components/Loader/Loader";
@@ -38,21 +39,39 @@ export default function TrendingPage() {
     return undefined;
   }, [dealbreakerIds]);
 
-  const { businesses: trendingBusinesses, loading, error, refetch } = useTrendingBusinesses(50, {
-    priceRanges: preferredPriceRanges,
-    dealbreakerIds: dealbreakerIds.length ? dealbreakerIds : undefined,
-  });
-
-  // Trending section should be consistent for all users based on actual trending metrics
-  // No personal prioritization here - keep original order from API
-
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isPaginationLoading, setIsPaginationLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const searchWrapRef = useRef<HTMLDivElement>(null);
   const previousPageRef = useRef(currentPage);
+
+  // Debounce search query for real-time filtering (300ms delay)
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+  // Determine sort strategy based on search query
+  const sortStrategy = useMemo((): 'relevance' | 'distance' | 'rating_desc' | 'price_asc' | 'combo' | undefined => {
+    if (debouncedSearchQuery.trim().length > 0) {
+      return 'relevance'; // Use relevance sorting when searching
+    }
+    return undefined; // Use default sorting
+  }, [debouncedSearchQuery]);
+
+  const { businesses: trendingBusinesses, loading, error, refetch } = useBusinesses({
+    limit: 50,
+    sortBy: "total_rating",
+    sortOrder: "desc",
+    feedStrategy: debouncedSearchQuery.trim().length > 0 ? "standard" : "mixed",
+    priceRanges: preferredPriceRanges,
+    dealbreakerIds: dealbreakerIds.length ? dealbreakerIds : undefined,
+    searchQuery: debouncedSearchQuery.trim().length > 0 ? debouncedSearchQuery : null,
+    sort: sortStrategy,
+  });
+
+  // Trending section should be consistent for all users based on actual trending metrics
+  // No personal prioritization here - keep original order from API
 
   const totalPages = useMemo(() => Math.ceil(trendingBusinesses.length / ITEMS_PER_PAGE), [trendingBusinesses.length]);
   const currentBusinesses = useMemo(() => {
@@ -76,8 +95,17 @@ export default function TrendingPage() {
     console.log("filters:", f);
   };
 
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+    // Reset to first page when search changes
+    if (query !== debouncedSearchQuery) {
+      setCurrentPage(1);
+    }
+  };
+
   const handleSubmitQuery = (query: string) => {
-    console.log("submit query:", query);
+    setSearchQuery(query);
+    setCurrentPage(1); // Reset to first page
     if (isFilterVisible) closeFilters();
   };
 
@@ -173,7 +201,7 @@ export default function TrendingPage() {
               variant="header"
               placeholder="Search trending businesses..."
               mobilePlaceholder="Search trending..."
-              onSearch={(q) => console.log("search change:", q)}
+              onSearch={handleSearchChange}
               onSubmitQuery={handleSubmitQuery}
               onFilterClick={openFilters}
               onFocusOpenFilters={openFilters}

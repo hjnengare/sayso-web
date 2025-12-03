@@ -11,6 +11,7 @@ import StaggeredContainer from "../components/Animations/StaggeredContainer";
 import AnimatedElement from "../components/Animations/AnimatedElement";
 import { useBusinesses } from "../hooks/useBusinesses";
 import { useUserPreferences } from "../hooks/useUserPreferences";
+import { useDebounce } from "../hooks/useDebounce";
 import SearchInput from "../components/SearchInput/SearchInput";
 import FilterModal, { FilterState } from "../components/FilterModal/FilterModal";
 import { ChevronLeft, ChevronRight, ChevronUp } from "react-feather";
@@ -47,8 +48,12 @@ function ExplorePageContent() {
   const [isPaginationLoading, setIsPaginationLoading] = useState(false);
   const [filters, setFilters] = useState<FilterState>(initialFilters);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const searchWrapRef = useRef<HTMLDivElement>(null);
   const previousPageRef = useRef(currentPage);
+
+  // Debounce search query for real-time filtering (300ms delay)
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   // Update filters when URL params change
   useEffect(() => {
@@ -85,6 +90,14 @@ function ExplorePageContent() {
     return preferenceIds.length ? preferenceIds : undefined;
   }, [filters.categories, preferenceIds]);
 
+  // Determine sort strategy based on search query
+  const sortStrategy = useMemo((): 'relevance' | 'distance' | 'rating_desc' | 'price_asc' | 'combo' | undefined => {
+    if (debouncedSearchQuery.trim().length > 0) {
+      return 'relevance'; // Use relevance sorting when searching
+    }
+    return undefined; // Use default sorting
+  }, [debouncedSearchQuery]);
+
   const {
     businesses,
     loading,
@@ -94,14 +107,16 @@ function ExplorePageContent() {
     limit: 120,
     sortBy: "created_at",
     sortOrder: "desc",
-    feedStrategy: "mixed",
-    interestIds: activeInterestIds,
+    feedStrategy: debouncedSearchQuery.trim().length > 0 ? "standard" : "mixed", // Use standard feed when searching
+    interestIds: debouncedSearchQuery.trim().length > 0 ? undefined : activeInterestIds, // Disable interest filtering when searching
     priceRanges: preferredPriceRanges,
     dealbreakerIds: dealbreakerIds.length ? dealbreakerIds : undefined,
     minRating: filters.minRating,
-    radius: radiusKm,
+    radiusKm: radiusKm,
     latitude: userLocation?.lat ?? null,
     longitude: userLocation?.lng ?? null,
+    searchQuery: debouncedSearchQuery.trim().length > 0 ? debouncedSearchQuery : null,
+    sort: sortStrategy,
   });
 
   const totalPages = useMemo(() => Math.ceil(businesses.length / ITEMS_PER_PAGE), [businesses.length]);
@@ -148,8 +163,17 @@ function ExplorePageContent() {
     }
   };
 
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+    // Reset to first page when search changes
+    if (query !== debouncedSearchQuery) {
+      setCurrentPage(1);
+    }
+  };
+
   const handleSubmitQuery = (query: string) => {
-    console.log("submit query:", query);
+    setSearchQuery(query);
+    setCurrentPage(1); // Reset to first page
     if (isFilterVisible) closeFilters();
   };
 
@@ -247,13 +271,19 @@ function ExplorePageContent() {
               variant="header"
               placeholder="Discover exceptional local hidden gems..."
               mobilePlaceholder="Search places, coffee, yoga…"
-              onSearch={(q) => console.log("search change:", q)}
+              onSearch={handleSearchChange}
               onSubmitQuery={handleSubmitQuery}
               onFilterClick={openFilters}
               onFocusOpenFilters={openFilters}
               showFilter
             />
-            </div>
+            {/* Show search status indicator */}
+            {debouncedSearchQuery.trim().length > 0 && (
+              <div className="mt-2 px-2 text-sm text-charcoal/60" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                Searching for "{debouncedSearchQuery}"...
+              </div>
+            )}
+          </div>
 
           <div className="py-4">
           {loading && (

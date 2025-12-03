@@ -23,6 +23,7 @@ import {
 } from "../data/communityHighlightsData";
 import { useBusinesses, useForYouBusinesses, useTrendingBusinesses } from "../hooks/useBusinesses";
 import { useRoutePrefetch } from "../hooks/useRoutePrefetch";
+import { useDebounce } from "../hooks/useDebounce";
 
 // Note: dynamic and revalidate cannot be exported from client components
 // Client components are automatically dynamic
@@ -51,19 +52,39 @@ const MemoizedBusinessRow = memo(BusinessRow);
 
 export default function Home() {
   usePredefinedPageTitle('home');
-  const { businesses: forYouBusinesses, loading: forYouLoading, error: forYouError } = useForYouBusinesses(10);
-  const { businesses: trendingBusinesses, loading: trendingLoading, error: trendingError } = useTrendingBusinesses(10);
-  const { businesses: allBusinesses } = useBusinesses({ limit: 200, sortBy: "total_rating", sortOrder: "desc", feedStrategy: "mixed" });
-
-  // Note: Prioritization of recently reviewed businesses is now handled on the backend
-  // The API automatically prioritizes businesses the user has reviewed within the last 24 hours
-
+  
   // Scroll to top button state (mobile only)
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const searchWrapRef = useRef<HTMLDivElement | null>(null);
+
+  // Debounce search query for real-time filtering (300ms delay)
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+  // Determine sort strategy based on search query
+  const sortStrategy = useMemo((): 'relevance' | 'distance' | 'rating_desc' | 'price_asc' | 'combo' | undefined => {
+    if (debouncedSearchQuery.trim().length > 0) {
+      return 'relevance'; // Use relevance sorting when searching
+    }
+    return undefined; // Use default sorting
+  }, [debouncedSearchQuery]);
+
+  const { businesses: forYouBusinesses, loading: forYouLoading, error: forYouError } = useForYouBusinesses(10);
+  const { businesses: trendingBusinesses, loading: trendingLoading, error: trendingError } = useTrendingBusinesses(10);
+  const { businesses: allBusinesses } = useBusinesses({ 
+    limit: 200, 
+    sortBy: "total_rating", 
+    sortOrder: "desc", 
+    feedStrategy: debouncedSearchQuery.trim().length > 0 ? "standard" : "mixed",
+    searchQuery: debouncedSearchQuery.trim().length > 0 ? debouncedSearchQuery : null,
+    sort: sortStrategy,
+  });
+
+  // Note: Prioritization of recently reviewed businesses is now handled on the backend
+  // The API automatically prioritizes businesses the user has reviewed within the last 24 hours
 
   // Set mounted state on client side
   useEffect(() => {
@@ -113,8 +134,12 @@ export default function Home() {
     closeFilters();
   };
 
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+  };
+
   const handleSubmitQuery = (query: string) => {
-    console.log("home search query:", query);
+    setSearchQuery(query);
     if (isFilterVisible) closeFilters();
   };
 
@@ -210,7 +235,7 @@ export default function Home() {
               variant="header"
               placeholder="Discover exceptional local hidden gems..."
               mobilePlaceholder="Search places, coffee, yoga…"
-              onSearch={(q) => console.log("home search change:", q)}
+              onSearch={handleSearchChange}
               onSubmitQuery={handleSubmitQuery}
               onFilterClick={openFilters}
               onFocusOpenFilters={openFilters}

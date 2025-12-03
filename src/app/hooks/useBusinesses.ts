@@ -9,7 +9,7 @@ import { useUserPreferences } from './useUserPreferences';
 export interface UseBusinessesOptions {
   limit?: number;
   category?: string;
-  sortBy?: 'total_rating' | 'total_reviews' | 'reviews' | 'created_at' | 'name';
+  sortBy?: 'total_rating' | 'total_reviews' | 'reviews' | 'created_at' | 'name' | 'relevance' | 'distance' | 'rating' | 'price' | 'combo';
   sortOrder?: 'asc' | 'desc';
   verified?: boolean;
   badge?: string;
@@ -24,6 +24,9 @@ export interface UseBusinessesOptions {
   radius?: number | null; // Distance radius in km
   latitude?: number | null; // User latitude for distance filtering
   longitude?: number | null; // User longitude for distance filtering
+  searchQuery?: string | null; // Search query (q parameter)
+  radiusKm?: number | null; // Distance radius in km (new parameter name)
+  sort?: 'relevance' | 'distance' | 'rating_desc' | 'price_asc' | 'combo'; // New sort parameter
 }
 
 export interface UseBusinessesResult {
@@ -74,7 +77,24 @@ export function useBusinesses(options: UseBusinessesOptions = {}): UseBusinesses
       if (options.minRating !== null && options.minRating !== undefined) {
         params.set('min_rating', options.minRating.toString());
       }
-      if (options.radius !== null && options.radius !== undefined && options.latitude && options.longitude) {
+      // Enhanced search query parameter
+      if (options.searchQuery && options.searchQuery.trim().length > 0) {
+        params.set('q', options.searchQuery.trim());
+      }
+
+      // Enhanced sorting
+      if (options.sort) {
+        params.set('sort', options.sort);
+      }
+
+      // Distance-based filtering (support both old and new parameter names)
+      const radius = options.radiusKm ?? options.radius;
+      if (radius !== null && radius !== undefined && options.latitude && options.longitude) {
+        params.set('radius_km', radius.toString());
+        params.set('lat', options.latitude.toString());
+        params.set('lng', options.longitude.toString());
+      } else if (options.radius !== null && options.radius !== undefined && options.latitude && options.longitude) {
+        // Legacy support
         params.set('radius', options.radius.toString());
         params.set('lat', options.latitude.toString());
         params.set('lng', options.longitude.toString());
@@ -119,8 +139,11 @@ export function useBusinesses(options: UseBusinessesOptions = {}): UseBusinesses
     options.skip,
     options.minRating,
     options.radius,
+    options.radiusKm,
     options.latitude,
     options.longitude,
+    options.searchQuery, // Include search query in dependencies
+    options.sort, // Include sort in dependencies
   ]);
 
   return {

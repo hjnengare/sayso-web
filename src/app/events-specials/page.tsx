@@ -13,6 +13,7 @@ import EmptyState from "../components/EventsPage/EmptyState";
 import SearchInput from "../components/SearchInput/SearchInput";
 import { EVENTS_AND_SPECIALS, Event } from "../data/eventsData";
 import { useToast } from "../contexts/ToastContext";
+import { useDebounce } from "../hooks/useDebounce";
 import { ChevronUp, ChevronRight } from "react-feather";
 import { Loader } from "../components/Loader/Loader";
 import StaggeredContainer from "../components/Animations/StaggeredContainer";
@@ -29,18 +30,47 @@ export default function EventsSpecialsPage() {
   const { showToast } = useToast();
   const previousPageRef = useRef(currentPage);
 
+  // Debounce search query for smoother real-time filtering (300ms delay)
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+  // Enhanced text-based search with debouncing
   const filteredEvents = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
+    const query = debouncedSearchQuery.trim().toLowerCase();
+    
+    // If no search query, just filter by type
+    if (query.length === 0) {
+      return EVENTS_AND_SPECIALS.filter((event) => 
+        selectedFilter === "all" || event.type === selectedFilter
+      );
+    }
+
+    // Enhanced search: search across multiple fields
     return EVENTS_AND_SPECIALS.filter((event) => {
       const matchesFilter = selectedFilter === "all" || event.type === selectedFilter;
-      const matchesQuery =
-        query.length === 0 ||
-        event.title.toLowerCase().includes(query) ||
-        event.description?.toLowerCase().includes(query) ||
-        event.location?.toLowerCase().includes(query);
-      return matchesFilter && matchesQuery;
+      
+      if (!matchesFilter) return false;
+
+      // Search in title, description, location, price, and startDate
+      const searchableText = [
+        event.title,
+        event.description,
+        event.location,
+        event.price,
+        event.startDate,
+        event.endDate,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      // Check if query matches any part of the searchable text
+      const matchesQuery = searchableText.includes(query) ||
+        // Also check individual words for better matching
+        query.split(/\s+/).every((word) => searchableText.includes(word));
+
+      return matchesQuery;
     });
-  }, [selectedFilter, searchQuery]);
+  }, [selectedFilter, debouncedSearchQuery]);
 
   const totalPages = Math.max(1, Math.ceil(filteredEvents.length / ITEMS_PER_PAGE));
 
@@ -70,6 +100,14 @@ export default function EventsSpecialsPage() {
   };
 
   const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    // Reset to first page when search changes
+    if (query !== debouncedSearchQuery) {
+      setCurrentPage(1);
+    }
+  };
+
+  const handleSubmitQuery = (query: string) => {
     setSearchQuery(query);
     setCurrentPage(1);
   };
@@ -161,9 +199,19 @@ export default function EventsSpecialsPage() {
                   placeholder="Search events and limited-time offers..."
                   mobilePlaceholder="Search events & specials..."
                   onSearch={handleSearch}
+                  onSubmitQuery={handleSubmitQuery}
                   showFilter={false}
                   showSearchIcon={false}
                 />
+                {/* Show search status indicator */}
+                {debouncedSearchQuery.trim().length > 0 && (
+                  <div className="mt-2 px-2 text-sm text-charcoal/60" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                    {filteredEvents.length > 0 
+                      ? `Found ${filteredEvents.length} ${filteredEvents.length === 1 ? 'result' : 'results'} for "${debouncedSearchQuery}"`
+                      : `No results found for "${debouncedSearchQuery}"`
+                    }
+                  </div>
+                )}
               </div>
             </AnimatedElement>
 

@@ -1,9 +1,49 @@
 import { NextResponse } from "next/server";
 import { getServerSupabase } from "@/app/lib/supabase/server";
 import { CachePresets } from "@/app/lib/utils/httpCache";
+import {
+  calculateDistanceKm,
+  highlightText,
+  extractSnippet,
+  calculateComboScore,
+  priceRangeToLevel,
+  isValidLatitude,
+  isValidLongitude,
+} from "@/app/lib/utils/searchHelpers";
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs'; // Use Node.js runtime to avoid Edge Runtime warnings with Supabase
+
+/**
+ * Log search history (non-blocking, doesn't fail main request)
+ */
+async function logSearchHistory(
+  supabase: Awaited<ReturnType<typeof getServerSupabase>>,
+  userId: string | null,
+  query: string | null,
+  lat: number | null,
+  lng: number | null,
+  radiusKm: number | null,
+  sort: string | null
+) {
+  if (!userId || !query || query.trim().length === 0) {
+    return; // Only log if user_id and query are provided
+  }
+
+  try {
+    await supabase.from('search_history').insert({
+      user_id: userId,
+      query: query.trim(),
+      lat: lat !== null && isValidLatitude(lat) ? lat : null,
+      lng: lng !== null && isValidLongitude(lng) ? lng : null,
+      radius_km: radiusKm !== null && radiusKm > 0 ? radiusKm : null,
+      sort: sort || null,
+    });
+  } catch (error) {
+    // Silently fail - don't break the main request
+    console.warn('[BUSINESSES API] Failed to log search history:', error);
+  }
+}
 
 // Type for the RPC response
 interface BusinessRPCResult {
@@ -130,12 +170,70 @@ export async function GET(req: Request) {
       subcategories: subcategoriesToFilter,
     });
 
-    // Search parameters
-    const search = searchParams.get('search') || null;
+    // Enhanced search parameters
+    // Support both 'q' (new) and 'search' (backward compatible)
+    const q = searchParams.get('q') || searchParams.get('search') || null;
+    const search = q; // Keep for backward compatibility
 
-    // Sorting parameters
-    const sortBy = searchParams.get('sort_by') || 'created_at';
-    const sortOrder = searchParams.get('sort_order') || 'desc';
+    // Enhanced location parameters
+    // Support both 'lat'/'lng' (new) and existing 'lat'/'lng' params
+    const latParam = searchParams.get('lat');
+    const lngParam = searchParams.get('lng');
+    const lat = latParam ? parseFloat(latParam) : null;
+    const lng = lngParam ? parseFloat(lngParam) : null;
+    const radiusKm = searchParams.get('radius_km') ? parseFloat(searchParams.get('radius_km')!) : null;
+
+    // Enhanced sorting parameters
+    // New 'sort' param: 'relevance', 'distance', 'rating_desc', 'price_asc', 'combo'
+    // Backward compatible with 'sort_by' and 'sort_order'
+    const sortParam = searchParams.get('sort');
+    let sortBy = searchParams.get('sort_by') || 'created_at';
+    let sortOrder = searchParams.get('sort_order') || 'desc';
+    
+    // Map new 'sort' param to sortBy/sortOrder
+    if (sortParam) {
+      switch (sortParam) {
+        case 'relevance':
+          sortBy = q ? 'relevance' : 'rating';
+          sortOrder = 'desc';
+          break;
+        case 'distance':
+          if (lat !== null && lng !== null) {
+            sortBy = 'distance';
+            sortOrder = 'asc';
+          }
+          break;
+        case 'rating_desc':
+          sortBy = 'rating';
+          sortOrder = 'desc';
+          break;
+        case 'price_asc':
+          sortBy = 'price';
+          sortOrder = 'asc';
+          break;
+        case 'combo':
+          if (lat !== null && lng !== null) {
+            sortBy = 'combo';
+            sortOrder = 'desc';
+          }
+          break;
+      }
+    } else if (q && !sortParam) {
+      // Default to relevance when q is present
+      sortBy = 'relevance';
+      sortOrder = 'desc';
+    }
+
+    // Get user ID from auth for search history (more secure than query param)
+    const supabase = await getServerSupabase();
+    let userId: string | null = null;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      userId = user?.id || null;
+    } catch {
+      // Silently fail - search history is optional
+      userId = null;
+    }
     const preferredPriceRanges = searchParams.get('preferred_price_ranges')
       ? searchParams.get('preferred_price_ranges')!.split(',').map(range => range.trim()).filter(Boolean)
       : [];
@@ -145,12 +243,8 @@ export async function GET(req: Request) {
 
     const feedStrategy = (searchParams.get('feed_strategy') as 'mixed' | 'standard' | null) || 'standard';
 
-    // Location-based parameters
-    const lat = searchParams.get('lat') ? parseFloat(searchParams.get('lat')!) : null;
-    const lng = searchParams.get('lng') ? parseFloat(searchParams.get('lng')!) : null;
-    const radius = searchParams.get('radius') ? parseFloat(searchParams.get('radius')!) : 10;
-
-    const supabase = await getServerSupabase();
+    // Legacy location parameters (keep for backward compatibility)
+    const radius = searchParams.get('radius') ? parseFloat(searchParams.get('radius')!) : (radiusKm || 10);
 
     if (feedStrategy === 'mixed') {
       return await handleMixedFeed({
@@ -203,7 +297,24 @@ export async function GET(req: Request) {
         throw new Error('RPC not found');
       }
 
-      businesses = data as BusinessRPCResult[];
+      // Calculate distance for RPC results if lat/lng provided
+      if (lat !== null && lng !== null && isValidLatitude(lat) && isValidLongitude(lng)) {
+        businesses = (data as BusinessRPCResult[]).map((b) => {
+          if (b.latitude !== null && b.longitude !== null) {
+            b.distance_km = calculateDistanceKm(lat, lng, b.latitude, b.longitude);
+          }
+          return b;
+        });
+        
+        // Apply radius filter if provided
+        if (radiusKm !== null && radiusKm > 0) {
+          businesses = businesses.filter(
+            (b) => b.distance_km !== null && b.distance_km <= radiusKm
+          );
+        }
+      } else {
+        businesses = data as BusinessRPCResult[];
+      }
       error = rpcError;
     } catch (rpcError: any) {
       // Fallback to regular query if RPC doesn't exist
@@ -233,8 +344,9 @@ export async function GET(req: Request) {
       if (verified !== null) query = query.eq('verified', verified);
       if (priceRange) query = query.eq('price_range', priceRange);
       if (location) query = query.ilike('location', `%${location}%`);
-      if (search) {
-        query = query.textSearch('search_vector', search, {
+      // Enhanced full-text search
+      if (q) {
+        query = query.textSearch('search_vector', q, {
           type: 'websearch',
           config: 'english'
         });
@@ -249,19 +361,26 @@ export async function GET(req: Request) {
         }
       }
 
-      // Sorting - use random order when filtering by interests, otherwise use specified sort
+      // Fetch more results if we need to apply distance filtering or custom sorting
+      const fetchLimit = (lat !== null && lng !== null) || sortBy === 'combo' || sortBy === 'relevance'
+        ? limit * 3 // Fetch more to filter/sort
+        : limit;
+
+      // Basic sorting - we'll apply advanced sorting after fetching
       if (interestIds.length > 0) {
         console.log('[BUSINESSES API] Using random sort for interest-filtered results');
-        // Supabase doesn't have native random, so we'll randomize client-side after fetch
-        query = query.limit(limit * 2); // Fetch extra to randomize from
+        query = query.limit(fetchLimit);
       } else {
-        // Default sorting for non-interest queries
-        if (sortBy === 'total_rating') {
-          query = query.order('total_reviews', { ascending: sortOrder === 'asc' });
+        // Apply basic sorting that Supabase supports
+        if (sortBy === 'rating' || sortBy === 'total_rating') {
+          // Note: We'll need to sort by business_stats after fetch
+          query = query.order('created_at', { ascending: sortOrder === 'asc' });
+        } else if (sortBy === 'price') {
+          query = query.order('price_range', { ascending: sortOrder === 'asc' });
         } else {
           query = query.order('created_at', { ascending: sortOrder === 'asc' });
         }
-        query = query.limit(limit);
+        query = query.limit(fetchLimit);
       }
 
       const { data: fallbackData, error: fallbackError } = await query;
@@ -279,20 +398,86 @@ export async function GET(req: Request) {
         );
       }
 
-      // Transform fallback data to match RPC format
-      let transformedFallbackData = (fallbackData || []).map((b: any) => ({
-        ...b,
-        interest_id: b.interest_id,
-        sub_interest_id: b.sub_interest_id,
-        latitude: null,
-        longitude: null,
-        total_reviews: b.business_stats?.[0]?.total_reviews || 0,
-        average_rating: b.business_stats?.[0]?.average_rating || 0,
-        percentiles: b.business_stats?.[0]?.percentiles || null,
-        distance_km: null,
-        cursor_id: b.id,
-        cursor_created_at: b.created_at,
-      }));
+      // Transform fallback data to match RPC format with distance calculation
+      let transformedFallbackData = (fallbackData || []).map((b: any) => {
+        // Calculate distance if lat/lng provided
+        let distanceKm: number | null = null;
+        if (lat !== null && lng !== null && isValidLatitude(lat) && isValidLongitude(lng)) {
+          if (b.latitude !== null && b.longitude !== null) {
+            distanceKm = calculateDistanceKm(lat, lng, b.latitude, b.longitude);
+          }
+        }
+
+        return {
+          ...b,
+          interest_id: b.interest_id,
+          sub_interest_id: b.sub_interest_id,
+          latitude: b.latitude,
+          longitude: b.longitude,
+          total_reviews: b.business_stats?.[0]?.total_reviews || 0,
+          average_rating: b.business_stats?.[0]?.average_rating || 0,
+          percentiles: b.business_stats?.[0]?.percentiles || null,
+          distance_km: distanceKm,
+          cursor_id: b.id,
+          cursor_created_at: b.created_at,
+        };
+      });
+
+      // Apply distance filtering if radius_km is provided
+      if (radiusKm !== null && radiusKm > 0 && lat !== null && lng !== null) {
+        transformedFallbackData = transformedFallbackData.filter(
+          (b) => b.distance_km !== null && b.distance_km <= radiusKm
+        );
+      }
+
+      // Apply advanced sorting
+      if (sortBy === 'distance' && lat !== null && lng !== null) {
+        transformedFallbackData.sort((a, b) => {
+          const distA = a.distance_km ?? Infinity;
+          const distB = b.distance_km ?? Infinity;
+          return distA - distB;
+        });
+      } else if (sortBy === 'rating' || sortBy === 'rating_desc') {
+        transformedFallbackData.sort((a, b) => {
+          const ratingA = a.average_rating || 0;
+          const ratingB = b.average_rating || 0;
+          if (ratingA !== ratingB) return ratingB - ratingA;
+          return (b.total_reviews || 0) - (a.total_reviews || 0);
+        });
+      } else if (sortBy === 'price' || sortBy === 'price_asc') {
+        transformedFallbackData.sort((a, b) => {
+          const priceA = priceRangeToLevel(a.price_range) ?? 999;
+          const priceB = priceRangeToLevel(b.price_range) ?? 999;
+          if (priceA !== priceB) return priceA - priceB;
+          return (b.average_rating || 0) - (a.average_rating || 0);
+        });
+      } else if (sortBy === 'combo' && lat !== null && lng !== null) {
+        transformedFallbackData.forEach((b) => {
+          (b as any).combo_score = calculateComboScore(
+            b.distance_km,
+            b.average_rating,
+            priceRangeToLevel(b.price_range)
+          );
+        });
+        transformedFallbackData.sort((a, b) => {
+          const scoreA = (a as any).combo_score ?? 0;
+          const scoreB = (b as any).combo_score ?? 0;
+          return scoreB - scoreA;
+        });
+      } else if (sortBy === 'relevance' && q) {
+        // Relevance sorting: businesses with search matches first
+        // This is already handled by textSearch, but we can refine by rating
+        transformedFallbackData.sort((a, b) => {
+          const ratingA = a.average_rating || 0;
+          const ratingB = b.average_rating || 0;
+          const reviewsA = a.total_reviews || 0;
+          const reviewsB = b.total_reviews || 0;
+          // Combine rating and review count for relevance
+          const scoreA = ratingA * 2 + Math.log(reviewsA + 1);
+          const scoreB = ratingB * 2 + Math.log(reviewsB + 1);
+          return scoreB - scoreA;
+        });
+      }
 
       // Randomize results when filtering by interests
       if (interestIds && interestIds.length > 0 && transformedFallbackData.length > 0) {
@@ -302,9 +487,10 @@ export async function GET(req: Request) {
           const j = Math.floor(Math.random() * (i + 1));
           [transformedFallbackData[i], transformedFallbackData[j]] = [transformedFallbackData[j], transformedFallbackData[i]];
         }
-        // Return only the requested limit after randomizing
-        transformedFallbackData = transformedFallbackData.slice(0, limit);
       }
+
+      // Apply limit after all filtering and sorting
+      transformedFallbackData = transformedFallbackData.slice(0, limit);
 
       businesses = transformedFallbackData;
     }
@@ -319,15 +505,39 @@ export async function GET(req: Request) {
 
     const typedBusinesses = (businesses || []) as BusinessRPCResult[];
 
+    // Log search history (non-blocking)
+    if (userId && q) {
+      logSearchHistory(supabase, userId, q, lat, lng, radiusKm, sortParam || null).catch(() => {
+        // Silently fail
+      });
+    }
+
     console.log(`[BUSINESSES API] Successfully fetched ${typedBusinesses.length} businesses`);
     console.log('[BUSINESSES API] Query params:', {
-      category, badge, verified, priceRange, location, search,
-      sortBy, sortOrder, limit, cursorId
+      category, badge, verified, priceRange, location, q, search,
+      sortBy, sortOrder, sort: sortParam, limit, cursorId, lat, lng, radiusKm
     });
 
-    // Transform database format to BusinessCard component format
+    // Transform database format to BusinessCard component format with highlighting
     // Only select fields needed for card display (not full business data)
-    const transformedBusinesses = typedBusinesses.map(transformBusinessForCard);
+    const transformedBusinesses = typedBusinesses.map((business) => {
+      const transformed = transformBusinessForCard(business);
+      
+      // Add highlighting if search query is present
+      if (q) {
+        (transformed as any).highlighted_name = highlightText(business.name, q);
+        if (business.description) {
+          (transformed as any).highlighted_snippet = extractSnippet(business.description, q);
+        }
+      }
+      
+      // Add combo_score if present
+      if ((business as any).combo_score !== undefined) {
+        (transformed as any).combo_score = (business as any).combo_score;
+      }
+      
+      return transformed;
+    });
 
     // Get cursor for next page from last item
     const nextCursor = typedBusinesses.length > 0 

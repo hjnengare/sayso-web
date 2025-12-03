@@ -4,10 +4,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { formatDistanceToNow } from 'date-fns';
-import { Trash2, Image as ImageIcon, ChevronUp, Heart, X, MessageCircle, Send, Edit } from 'react-feather';
+import { useRouter } from 'next/navigation';
+import { Trash2, Image as ImageIcon, ChevronUp, Heart, X, MessageCircle, Send, Edit, Bookmark } from 'react-feather';
 import type { ReviewWithUser } from '../../lib/types/database';
 import { useAuth } from '../../contexts/AuthContext';
 import { useReviewSubmission } from '../../hooks/useReviews';
+import { useSavedItems } from '../../contexts/SavedItemsContext';
 import { getDisplayUsername } from '../../utils/generateUsername';
 
 interface ReviewCardProps {
@@ -22,7 +24,34 @@ export default function ReviewCard({
   showBusinessInfo = false
 }: ReviewCardProps) {
   const { user } = useAuth();
+  const router = useRouter();
   const { likeReview, deleteReview } = useReviewSubmission();
+  const { toggleSavedItem, isItemSaved } = useSavedItems();
+
+  // Helper function to check if current user owns this review with fallback logic
+  const isReviewOwner = (): boolean => {
+    if (!user) return false;
+
+    // Primary check: user ID matches review user_id
+    if (user.id === review.user_id) return true;
+    
+    // Fallback 1: user ID matches review.user.id
+    if (user.id === review.user?.id) return true;
+    
+    // Fallback 2: email match (if both exist)
+    if (user.email && review.user?.email && user.email === review.user.email) return true;
+    
+    // Fallback 3: email + display_name combination (if both exist)
+    const userIdentifier = user.email && user.profile?.display_name 
+      ? `${user.email}:${user.profile.display_name}` 
+      : null;
+    const reviewIdentifier = review.user?.email && review.user?.display_name
+      ? `${review.user.email}:${review.user.display_name}`
+      : null;
+    if (userIdentifier && reviewIdentifier && userIdentifier === reviewIdentifier) return true;
+
+    return false;
+  };
   const [showAllImages, setShowAllImages] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [isLiked, setIsLiked] = useState(false);
@@ -143,6 +172,16 @@ export default function ReviewCard({
     }
   };
 
+  const handleEdit = () => {
+    if (!review.id) return;
+    // Get the current business ID from the URL or review
+    const pathParts = window.location.pathname.split('/');
+    const businessSlugOrId = pathParts[pathParts.indexOf('business') + 1] || review.business_id;
+    
+    // Navigate to write review page with edit mode (query param)
+    router.push(`/business/${businessSlugOrId}/review?edit=${review.id}`);
+  };
+
   const handleDelete = async () => {
     const confirmed = confirm('Are you sure you want to delete this review?');
     if (confirmed) {
@@ -152,6 +191,14 @@ export default function ReviewCard({
       }
     }
   };
+
+  const handleBookmark = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!review.business_id) return;
+    await toggleSavedItem(review.business_id);
+  };
+
+  const isBusinessSaved = review.business_id ? isItemSaved(review.business_id) : false;
 
   const handleSubmitReply = async () => {
     if (!replyText.trim() || !user || submittingReply) return;
@@ -344,21 +391,51 @@ export default function ReviewCard({
                 {formatDate(review.created_at)}
               </span>
               
-              {/* Direct action icons */}
-              <div className="flex items-center gap-1">
-                {user?.id === review.user_id && (
+              {/* Direct action icons - Mobile-first design */}
+              <div className="flex items-center gap-1 sm:gap-1.5">
+                {/* Bookmark button - Save/Unsave business */}
+                {review.business_id && (
                   <motion.button
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
-                    onClick={handleDelete}
-                    className="w-7 h-7 bg-navbar-bg rounded-full flex items-center justify-center hover:bg-navbar-bg/90 transition-colors"
-                    aria-label="Delete review"
-                    title="Delete review"
+                    onClick={handleBookmark}
+                    className="min-w-[44px] min-h-[44px] sm:min-w-[28px] sm:min-h-[28px] w-11 h-11 sm:w-7 sm:h-7 bg-navbar-bg rounded-full flex items-center justify-center hover:bg-navbar-bg/90 active:scale-95 transition-all duration-300 touch-manipulation"
+                    aria-label={isBusinessSaved ? "Unsave business" : "Save business"}
+                    title={isBusinessSaved ? "Unsave business" : "Save business"}
                   >
-                    <Trash2 className="w-[18px] h-[18px] text-white" />
+                    <Bookmark 
+                      className="w-5 h-5 sm:w-[18px] sm:h-[18px] text-white transition-all duration-200" 
+                      fill={isBusinessSaved ? "currentColor" : "none"}
+                      strokeWidth={2.5}
+                    />
                   </motion.button>
                 )}
-                <motion.button
+                {isReviewOwner() && (
+                  <>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={handleEdit}
+                      className="min-w-[44px] min-h-[44px] sm:min-w-[28px] sm:min-h-[28px] w-11 h-11 sm:w-7 sm:h-7 bg-navbar-bg rounded-full flex items-center justify-center hover:bg-navbar-bg/90 active:scale-95 transition-all duration-300 touch-manipulation"
+                      aria-label="Edit review"
+                      title="Edit review"
+                    >
+                      <Edit className="w-5 h-5 sm:w-[18px] sm:h-[18px] text-white" />
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={handleDelete}
+                      className="min-w-[44px] min-h-[44px] sm:min-w-[28px] sm:min-h-[28px] w-11 h-11 sm:w-7 sm:h-7 bg-navbar-bg rounded-full flex items-center justify-center hover:bg-navbar-bg/90 active:scale-95 transition-all duration-300 touch-manipulation"
+                      aria-label="Delete review"
+                      title="Delete review"
+                    >
+                      <Trash2 className="w-5 h-5 sm:w-[18px] sm:h-[18px] text-white" />
+                    </motion.button>
+                  </>
+                )}
+                {/* Reply functionality commented out */}
+                {/* <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setShowReplyForm(!showReplyForm)}
@@ -368,7 +445,7 @@ export default function ReviewCard({
                   disabled={!user}
                 >
                   <MessageCircle className="w-[18px] h-[18px] text-white" />
-                </motion.button>
+                </motion.button> */}
               </div>
             </div>
           </div>
@@ -484,7 +561,8 @@ export default function ReviewCard({
                 </span>
               </motion.button>
 
-              <motion.button
+              {/* Reply functionality commented out */}
+              {/* <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowReplyForm(!showReplyForm)}
@@ -495,7 +573,7 @@ export default function ReviewCard({
                 <span className="font-urbanist text-sm font-500">
                   Reply {replies.length > 0 && `(${replies.length})`}
                 </span>
-              </motion.button>
+              </motion.button> */}
             </div>
 
             {!user && (
@@ -505,8 +583,8 @@ export default function ReviewCard({
             )}
           </div>
 
-          {/* Reply Form */}
-          <AnimatePresence>
+          {/* Reply Form - Commented out */}
+          {/* <AnimatePresence>
             {showReplyForm && user && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
@@ -551,10 +629,10 @@ export default function ReviewCard({
                 </div>
               </motion.div>
             )}
-          </AnimatePresence>
+          </AnimatePresence> */}
 
-          {/* Replies List */}
-          {replies.length > 0 && (
+          {/* Replies List - Commented out */}
+          {/* {replies.length > 0 && (
             <div className="mt-4 pt-4 border-t border-sage/10 space-y-3">
               <h5 className="font-urbanist text-sm font-bold text-charcoal/70 mb-3">
                 Replies ({replies.length})
@@ -644,7 +722,7 @@ export default function ReviewCard({
                 );
               })}
             </div>
-          )}
+          )} */}
         </div>
       </div>
 

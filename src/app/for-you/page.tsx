@@ -8,8 +8,9 @@ import Footer from "../components/Footer/Footer";
 import BusinessCard from "../components/BusinessCard/BusinessCard";
 import StaggeredContainer from "../components/Animations/StaggeredContainer";
 import AnimatedElement from "../components/Animations/AnimatedElement";
-import { useForYouBusinesses } from "../hooks/useBusinesses";
+import { useBusinesses } from "../hooks/useBusinesses";
 import { useUserPreferences } from "../hooks/useUserPreferences";
+import { useDebounce } from "../hooks/useDebounce";
 import SearchInput from "../components/SearchInput/SearchInput";
 import FilterModal, { FilterState } from "../components/FilterModal/FilterModal";
 import { ChevronLeft, ChevronRight, ChevronUp } from "react-feather";
@@ -35,23 +36,51 @@ export default function ForYouPage() {
     return undefined;
   }, [dealbreakerIds]);
 
-  const {
-    businesses,
-    loading,
-    error,
-    refetch,
-  } = useForYouBusinesses(120);
-
-  // Note: Prioritization of recently reviewed businesses is now handled on the backend
-  // The API automatically prioritizes businesses the user has reviewed within the last 24 hours
-
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [isPaginationLoading, setIsPaginationLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const searchWrapRef = useRef<HTMLDivElement>(null);
   const previousPageRef = useRef(currentPage);
+
+  // Debounce search query for real-time filtering (300ms delay)
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+  // Determine sort strategy based on search query
+  const sortStrategy = useMemo((): 'relevance' | 'distance' | 'rating_desc' | 'price_asc' | 'combo' | undefined => {
+    if (debouncedSearchQuery.trim().length > 0) {
+      return 'relevance'; // Use relevance sorting when searching
+    }
+    return undefined; // Use default sorting
+  }, [debouncedSearchQuery]);
+
+  // Combine user preferences with applied filters
+  const preferenceIds = useMemo(
+    () => (interests || []).map((interest) => interest.id).concat((subcategories || []).map((sub) => sub.id)),
+    [interests, subcategories]
+  );
+
+  const {
+    businesses,
+    loading,
+    error,
+    refetch,
+  } = useBusinesses({
+    limit: 120,
+    sortBy: "created_at",
+    sortOrder: "desc",
+    feedStrategy: debouncedSearchQuery.trim().length > 0 ? "standard" : "mixed",
+    interestIds: debouncedSearchQuery.trim().length > 0 ? undefined : preferenceIds.length > 0 ? preferenceIds : undefined,
+    priceRanges: preferredPriceRanges,
+    dealbreakerIds: dealbreakerIds.length ? dealbreakerIds : undefined,
+    searchQuery: debouncedSearchQuery.trim().length > 0 ? debouncedSearchQuery : null,
+    sort: sortStrategy,
+  });
+
+  // Note: Prioritization of recently reviewed businesses is now handled on the backend
+  // The API automatically prioritizes businesses the user has reviewed within the last 24 hours
 
   const totalPages = useMemo(() => Math.ceil(businesses.length / ITEMS_PER_PAGE), [businesses.length]);
   const currentBusinesses = useMemo(() => {
@@ -77,8 +106,17 @@ export default function ForYouPage() {
     console.log("filters:", f);
   };
 
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+    // Reset to first page when search changes
+    if (query !== debouncedSearchQuery) {
+      setCurrentPage(1);
+    }
+  };
+
   const handleSubmitQuery = (query: string) => {
-    console.log("submit query:", query);
+    setSearchQuery(query);
+    setCurrentPage(1); // Reset to first page
     if (isFilterVisible) closeFilters();
   };
 
@@ -157,7 +195,7 @@ export default function ForYouPage() {
               variant="header"
               placeholder="Discover exceptional local hidden gems..."
               mobilePlaceholder="Search places, coffee, yoga…"
-              onSearch={(q) => console.log("search change:", q)}
+              onSearch={handleSearchChange}
               onSubmitQuery={handleSubmitQuery}
               onFilterClick={openFilters}
               onFocusOpenFilters={openFilters}
