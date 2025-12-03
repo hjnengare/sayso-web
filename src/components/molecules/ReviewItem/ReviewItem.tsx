@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { Star as StarIcon, Briefcase } from 'react-feather';
+import { Star as StarIcon, Briefcase, Edit, Trash2 } from 'react-feather';
 import { Badge } from '@/components/atoms/Badge';
 
 export interface ReviewItemProps {
@@ -13,6 +13,8 @@ export interface ReviewItemProps {
   isFeatured?: boolean;
   createdAt: string;
   onViewClick?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
   className?: string;
 }
 
@@ -86,6 +88,8 @@ export const ReviewItem: React.FC<ReviewItemProps> = ({
   isFeatured = false,
   createdAt,
   onViewClick,
+  onEdit,
+  onDelete,
   className = '',
 }) => {
   const formatDate = (d: string) =>
@@ -112,15 +116,49 @@ export const ReviewItem: React.FC<ReviewItemProps> = ({
           <span className="text-sm text-charcoal/60" style={{ fontFamily: '"SF Pro New", -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif', fontWeight: 600 }}>{formatDate(createdAt)}</span>
         </div>
       </div>
-      <div className="text-right ml-3">
-        <button
-          onClick={onViewClick}
-          className="text-coral text-sm font-500 hover:text-coral/80 transition-colors duration-200"
-          style={{ fontFamily: '"SF Pro New", -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif', fontWeight: 600 }}
-        >
-          Click to see
-        </button>
-        <div className="text-xs text-charcoal/50 mt-1" style={{ fontFamily: '"SF Pro New", -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif', fontWeight: 600 }}>full review</div>
+      <div className="flex items-center gap-2 ml-3">
+        {(onEdit || onDelete) && (
+          <div className="flex items-center gap-1.5">
+            {onEdit && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit();
+                }}
+                className="flex items-center justify-center rounded-full bg-navbar-bg hover:bg-navbar-bg/90 transition-colors min-h-[36px] min-w-[36px] p-2"
+                aria-label="Edit review"
+                title="Edit review"
+              >
+                <Edit className="w-4 h-4 text-white" strokeWidth={2.5} />
+              </button>
+            )}
+            {onDelete && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+                className="flex items-center justify-center rounded-full bg-navbar-bg hover:bg-navbar-bg/90 transition-colors min-h-[36px] min-w-[36px] p-2"
+                aria-label="Delete review"
+                title="Delete review"
+              >
+                <Trash2 className="w-4 h-4 text-white" strokeWidth={2.5} />
+              </button>
+            )}
+          </div>
+        )}
+        {onViewClick && (
+          <div className="text-right">
+            <button
+              onClick={onViewClick}
+              className="text-coral text-sm font-500 hover:text-coral/80 transition-colors duration-200"
+              style={{ fontFamily: '"SF Pro New", -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif', fontWeight: 600 }}
+            >
+              Click to see
+            </button>
+            <div className="text-xs text-charcoal/50 mt-1" style={{ fontFamily: '"SF Pro New", -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif', fontWeight: 600 }}>full review</div>
+          </div>
+        )}
       </div>
     </div>
   );

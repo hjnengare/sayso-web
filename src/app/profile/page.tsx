@@ -40,6 +40,8 @@ import { EditProfileModal } from "@/app/components/EditProfile/EditProfileModal"
 import { useMemo } from "react";
 import StaggeredContainer from "../components/Animations/StaggeredContainer";
 import AnimatedElement from "../components/Animations/AnimatedElement";
+import { useReviewSubmission } from "@/app/hooks/useReviews";
+import { useRouter } from "next/navigation";
 
 const animations = `
   @keyframes fadeInUp {
@@ -142,6 +144,8 @@ interface UserAchievement {
 function ProfileContent() {
   const { user, updateUser, isLoading, logout } = useAuth();
   const { savedItems } = useSavedItems();
+  const { deleteReview } = useReviewSubmission();
+  const router = useRouter();
 
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -163,6 +167,8 @@ function ProfileContent() {
   // Fetch user's reviews - MUST be before any early returns
   const [userReviews, setUserReviews] = useState<Review[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [reviewToDelete, setReviewToDelete] = useState<string | null>(null);
+  const [reviewToEdit, setReviewToEdit] = useState<{ reviewId: string; businessSlug: string } | null>(null);
 
   // Fetch enhanced profile data from API
   useEffect(() => {
@@ -632,26 +638,66 @@ function ProfileContent() {
     ? formatMemberSince(profile.created_at)
     : "—";
 
+  // Handle review edit
+  const handleEditReview = (reviewId: string, businessSlug: string) => {
+    router.push(`/business/${businessSlug}/review?edit=${reviewId}`);
+  };
+
+  // Handle review delete
+  const handleDeleteReviewClick = (reviewId: string) => {
+    setReviewToDelete(reviewId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDeleteReview = async () => {
+    if (!reviewToDelete) return;
+
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    try {
+      const success = await deleteReview(reviewToDelete);
+      if (success) {
+        // Remove the review from the list
+        setUserReviews(prev => prev.filter(r => r.id !== reviewToDelete));
+        setIsDeleteDialogOpen(false);
+        setReviewToDelete(null);
+        
+        // Refresh reviews count in stats if available
+        if (userStats) {
+          setUserStats(prev => prev ? { ...prev, totalReviewsWritten: Math.max(0, prev.totalReviewsWritten - 1) } : null);
+        }
+      } else {
+        setDeleteError('Failed to delete review');
+      }
+    } catch (err) {
+      console.error('Error deleting review:', err);
+      setDeleteError('Failed to delete review');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   // Prepare reviews data
-  const reviewsData = userReviews.map((review) => ({
-    businessName: review.business_name,
-    businessImageUrl: review.business_image_url,
-    rating: review.rating,
-    reviewText: review.review_text,
-    isFeatured: review.is_featured,
-    createdAt: review.created_at,
-            onViewClick: () => {
-              // Navigate to business page
-              const reviewData = userReviews.find(r => r.id === review.id);
-              if (reviewData) {
-                // Get business slug or ID from the review data
-                const businessSlug = (reviewData as any).business_slug;
-                if (businessSlug) {
-                  window.location.href = `/business/${businessSlug}`;
-                }
-              }
-            },
-  }));
+  const reviewsData = userReviews.map((review) => {
+    const businessSlug = (review as any).business_slug || review.id;
+    return {
+      businessName: review.business_name,
+      businessImageUrl: review.business_image_url,
+      rating: review.rating,
+      reviewText: review.review_text,
+      isFeatured: review.is_featured,
+      createdAt: review.created_at,
+      onViewClick: () => {
+        // Navigate to business page
+        if (businessSlug) {
+          window.location.href = `/business/${businessSlug}`;
+        }
+      },
+      onEdit: () => handleEditReview(review.id, businessSlug),
+      onDelete: () => handleDeleteReviewClick(review.id),
+    };
+  });
 
   // Prepare achievements data (using empty list if none available)
   const achievements: UserAchievement[] = [];
@@ -1109,6 +1155,24 @@ function ProfileContent() {
         currentAvatarUrl={profile.avatar_url || null}
         saving={saving}
         error={error}
+      />
+
+      {/* Delete Review Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => {
+          setIsDeleteDialogOpen(false);
+          setReviewToDelete(null);
+          setDeleteError(null);
+        }}
+        onConfirm={handleConfirmDeleteReview}
+        title="Delete Review"
+        message="Are you sure you want to delete this review? This action cannot be undone."
+        confirmText={isDeleting ? "Deleting..." : "Delete"}
+        cancelText="Cancel"
+        variant="danger"
+        isLoading={isDeleting}
+        error={deleteError}
       />
     </>
   );

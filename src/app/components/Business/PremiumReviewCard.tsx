@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Star, BadgeCheck, ShieldCheck, ThumbsUp, Reply, Share2, Flag, MoreHorizontal, User, Edit, Trash2, X, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, ZoomIn, Send, MessageCircle } from "lucide-react";
+import { Star, BadgeCheck, ShieldCheck, ThumbsUp, Share2, Flag, MoreHorizontal, User, Edit, Trash2, X, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, ZoomIn } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../contexts/AuthContext";
 import { useReviewSubmission } from "../../hooks/useReviews";
@@ -55,29 +55,17 @@ export function PremiumReviewCard({
     const buttonRef = useRef<HTMLButtonElement>(null);
     const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
     const imageRef = useRef<HTMLDivElement>(null);
-    const replyFormRef = useRef<HTMLDivElement>(null);
     const { user } = useAuth();
     const { deleteReview } = useReviewSubmission();
     const { showToast } = useToast();
     const router = useRouter();
 
-    // State for helpful, replies, and flag
+    // State for helpful and flag
     const [isLiked, setIsLiked] = useState(false);
     const [helpfulCount, setHelpfulCount] = useState(0);
     const [loadingHelpful, setLoadingHelpful] = useState(false);
-    const [showReplyForm, setShowReplyForm] = useState(false);
-    const [replyText, setReplyText] = useState('');
-    const [submittingReply, setSubmittingReply] = useState(false);
-    const [replies, setReplies] = useState<any[]>([]);
-    const [loadingReplies, setLoadingReplies] = useState(false);
     const [isFlagged, setIsFlagged] = useState(false);
     const [flagging, setFlagging] = useState(false);
-    const [editingReplyId, setEditingReplyId] = useState<string | null>(null);
-    const [editReplyText, setEditReplyText] = useState('');
-    const [showAllReplies, setShowAllReplies] = useState(false);
-    const [deleteReplyId, setDeleteReplyId] = useState<string | null>(null);
-    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-    const REPLIES_TO_SHOW = 3; // Show first 3 replies by default
 
     // Use current user's profile data if this is the current user's review
     const displayAuthor = (() => {
@@ -149,28 +137,6 @@ export function PremiumReviewCard({
 
         fetchHelpfulData();
     }, [reviewId, user]);
-
-    // Fetch replies on mount
-    useEffect(() => {
-        if (!reviewId) return;
-
-        const fetchReplies = async () => {
-            try {
-                setLoadingReplies(true);
-                const res = await fetch(`/api/reviews/${reviewId}/replies`);
-                if (res.ok) {
-                    const data = await res.json();
-                    setReplies(data.replies || []);
-                }
-            } catch (err) {
-                console.error('Error fetching replies:', err);
-            } finally {
-                setLoadingReplies(false);
-            }
-        };
-
-        fetchReplies();
-    }, [reviewId]);
 
     // Check if current user owns this review
     const isOwner = user && userId && user.id === userId;
@@ -390,101 +356,6 @@ export function PremiumReviewCard({
         }
     };
 
-    // Handle reply submission
-    const handleSubmitReply = async () => {
-        if (!replyText.trim() || !user || submittingReply || !reviewId) return;
-
-        setSubmittingReply(true);
-        try {
-            const res = await fetch(`/api/reviews/${reviewId}/replies`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content: replyText.trim() }),
-            });
-
-            if (res.ok) {
-                const data = await res.json();
-                setReplies(prev => [data.reply, ...prev]);
-                setReplyText('');
-                setShowReplyForm(false);
-                showToast('Reply posted successfully', 'success');
-            } else {
-                const error = await res.json();
-                showToast(error.error || 'Failed to submit reply', 'error');
-            }
-        } catch (err) {
-            console.error('Error submitting reply:', err);
-            showToast('Failed to submit reply', 'error');
-        } finally {
-            setSubmittingReply(false);
-        }
-    };
-
-    // Handle reply edit
-    const handleEditReply = (reply: any) => {
-        setEditingReplyId(reply.id);
-        setEditReplyText(reply.content);
-    };
-
-    // Handle reply update
-    const handleUpdateReply = async () => {
-        if (!editReplyText.trim() || !editingReplyId || !reviewId || !user) return;
-
-        try {
-            const res = await fetch(`/api/reviews/${reviewId}/replies`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ replyId: editingReplyId, content: editReplyText.trim() }),
-            });
-
-            if (res.ok) {
-                const data = await res.json();
-                setReplies(prev => prev.map(r => r.id === editingReplyId ? data.reply : r));
-                setEditingReplyId(null);
-                setEditReplyText('');
-                showToast('Reply updated successfully', 'success');
-            } else {
-                const error = await res.json().catch(() => ({ error: 'Failed to update reply' }));
-                showToast(error.error || 'Failed to update reply', 'error');
-            }
-        } catch (err) {
-            console.error('Error updating reply:', err);
-            showToast('Failed to update reply', 'error');
-        }
-    };
-
-    // Handle reply delete confirmation
-    const handleDeleteReplyClick = (replyId: string) => {
-        setDeleteReplyId(replyId);
-        setShowDeleteDialog(true);
-    };
-
-    // Handle reply delete
-    const handleDeleteReply = async () => {
-        if (!reviewId || !user || !deleteReplyId) return;
-
-        try {
-            const res = await fetch(`/api/reviews/${reviewId}/replies`, {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ replyId: deleteReplyId }),
-            });
-
-            if (res.ok) {
-                setReplies(prev => prev.filter(r => r.id !== deleteReplyId));
-                showToast('Reply deleted successfully', 'success');
-                setShowDeleteDialog(false);
-                setDeleteReplyId(null);
-            } else {
-                const error = await res.json().catch(() => ({ error: 'Failed to delete reply' }));
-                showToast(error.error || 'Failed to delete reply', 'error');
-            }
-        } catch (err) {
-            console.error('Error deleting reply:', err);
-            showToast('Failed to delete reply', 'error');
-        }
-    };
-
     // Handle share
     const handleShare = async () => {
         if (!reviewId) return;
@@ -651,12 +522,6 @@ export function PremiumReviewCard({
                                             {helpfulCount}
                                         </span>
                                     )}
-                                    {replies.length > 0 && (
-                                        <span className="text-xs text-charcoal/70 flex items-center gap-1">
-                                            <Reply className="h-3 w-3 text-charcoal/60" />
-                                            {replies.length}
-                                        </span>
-                                    )}
                                 </div>
                             </div>
                         </div>
@@ -749,17 +614,6 @@ export function PremiumReviewCard({
                                     </span>
                                 </button>
                                 <button
-                                    onClick={() => setShowReplyForm(!showReplyForm)}
-                                    disabled={!user}
-                                    className="flex items-center justify-center gap-1 sm:gap-1.5 rounded-full px-2.5 sm:px-3 py-2 sm:py-2 text-xs sm:text-sm transition bg-navbar-bg hover:bg-navbar-bg/90 min-h-[44px] min-w-[44px] flex-1 sm:flex-initial disabled:opacity-50"
-                                    aria-label={`Reply ${replies.length > 0 ? `(${replies.length})` : ''}`}
-                                >
-                                    <Reply className="h-4 w-4 sm:h-4 sm:w-4 text-white" strokeWidth={2.5} />
-                                    <span className="font-urbanist font-700 text-white hidden sm:inline">
-                                        Reply {replies.length > 0 && `(${replies.length})`}
-                                    </span>
-                                </button>
-                                <button
                                     onClick={handleShare}
                                     className="flex items-center justify-center gap-1 sm:gap-1.5 rounded-full px-2.5 sm:px-3 py-2 sm:py-2 text-xs sm:text-sm transition bg-navbar-bg hover:bg-navbar-bg/90 min-h-[44px] min-w-[44px] flex-1 sm:flex-initial"
                                 >
@@ -835,157 +689,6 @@ export function PremiumReviewCard({
                         </div>
                     )}
 
-                    {/* Reply Form */}
-                    {!compact && (
-                        <AnimatePresence>
-                            {showReplyForm && user && (
-                                <motion.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: 'auto' }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                    className="mt-4 pt-4 border-t border-charcoal/10"
-                                    ref={replyFormRef}
-                                >
-                                    <div className="space-y-3">
-                                        <textarea
-                                            value={replyText}
-                                            onChange={(e) => setReplyText(e.target.value)}
-                                            placeholder="Write a reply..."
-                                            className="w-full px-4 py-3 rounded-lg border border-charcoal/20 bg-off-white/50 focus:outline-none focus:ring-2 focus:ring-sage/30 focus:border-sage/40 resize-none text-sm"
-                                            rows={3}
-                                            disabled={submittingReply}
-                                            style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-                                        />
-                                        <div className="flex items-center justify-end gap-2">
-                                            <button
-                                                onClick={() => {
-                                                    setShowReplyForm(false);
-                                                    setReplyText('');
-                                                }}
-                                                className="px-4 py-2 text-sm font-bold bg-navbar-bg text-white rounded-lg hover:bg-navbar-bg/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                                disabled={submittingReply}
-                                                style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-                                            >
-                                                Cancel
-                                            </button>
-                                            <button
-                                                onClick={handleSubmitReply}
-                                                disabled={!replyText.trim() || submittingReply}
-                                                className="px-4 py-2 text-sm font-bold bg-navbar-bg text-white rounded-lg hover:bg-navbar-bg/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                                                style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-                                            >
-                                                <Send size={16} />
-                                                <span>{submittingReply ? 'Sending...' : 'Send'}</span>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    )}
-
-                    {/* Replies List */}
-                    {!compact && replies.length > 0 && (
-                        <div className="mt-4 pt-4 border-t border-charcoal/10 space-y-3">
-                            <h5 className="text-sm font-bold text-charcoal/70 mb-3" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                                Replies ({replies.length})
-                            </h5>
-                            {(showAllReplies ? replies : replies.slice(0, REPLIES_TO_SHOW)).map((reply) => {
-                                const isReplyOwner = user?.id === reply.user_id;
-                                const isEditing = editingReplyId === reply.id;
-
-                                return (
-                                    <div
-                                        key={reply.id}
-                                        className="pl-4 border-l-2 border-sage/20 bg-off-white/30 rounded-r-lg p-3"
-                                    >
-                                        <div className="flex items-start justify-between gap-2 mb-1">
-                                            <div className="flex items-center gap-2 flex-1 min-w-0">
-                                                <span className="text-sm font-semibold text-charcoal-700" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                                                    {reply.user?.name || 'User'}
-                                                </span>
-                                                <span className="text-xs font-semibold text-charcoal/50" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                                                    {formatDistanceToNow(new Date(reply.created_at), { addSuffix: true })}
-                                                </span>
-                                            </div>
-                                            {isReplyOwner && !isEditing && (
-                                                <div className="flex items-center gap-1.5 flex-shrink-0">
-                                                    <button
-                                                        onClick={() => handleEditReply(reply)}
-                                                        className="flex items-center justify-center rounded-full bg-navbar-bg hover:bg-navbar-bg/90 transition-colors min-h-[44px] min-w-[44px] p-2"
-                                                        aria-label="Edit reply"
-                                                    >
-                                                        <Edit className="w-4 h-4 text-white" strokeWidth={2.5} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDeleteReplyClick(reply.id)}
-                                                        className="flex items-center justify-center rounded-full bg-navbar-bg hover:bg-navbar-bg/90 transition-colors min-h-[44px] min-w-[44px] p-2"
-                                                        aria-label="Delete reply"
-                                                    >
-                                                        <Trash2 className="w-4 h-4 text-white" strokeWidth={2.5} />
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </div>
-                                        {isEditing ? (
-                                            <div className="space-y-2">
-                                                <textarea
-                                                    value={editReplyText}
-                                                    onChange={(e) => setEditReplyText(e.target.value)}
-                                                    className="w-full p-2 border border-charcoal/20 rounded-lg text-sm text-charcoal bg-white focus:outline-none focus:ring-2 focus:ring-sage/30 resize-none"
-                                                    rows={3}
-                                                    style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-                                                />
-                                                <div className="flex items-center gap-2">
-                                                    <button
-                                                        onClick={handleUpdateReply}
-                                                        disabled={!editReplyText.trim() || submittingReply}
-                                                        className="px-3 py-1.5 bg-navbar-bg text-white rounded-lg text-xs font-bold hover:bg-navbar-bg/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                                        style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-                                                    >
-                                                        Save
-                                                    </button>
-                                                    <button
-                                                        onClick={() => {
-                                                            setEditingReplyId(null);
-                                                            setEditReplyText('');
-                                                        }}
-                                                        className="px-3 py-1.5 bg-navbar-bg text-white rounded-lg text-xs font-bold hover:bg-navbar-bg/90 transition-colors"
-                                                        style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-                                                    >
-                                                        Cancel
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <p className="text-sm font-semibold text-charcoal/80" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                                                {reply.content}
-                                            </p>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                            {replies.length > REPLIES_TO_SHOW && (
-                                <button
-                                    onClick={() => setShowAllReplies(!showAllReplies)}
-                                    className="text-sm font-semibold text-sage hover:text-sage/80 transition-colors flex items-center gap-1"
-                                    style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-                                >
-                                    {showAllReplies ? (
-                                        <>
-                                            <span>Show Less</span>
-                                            <ChevronUp className="w-4 h-4" />
-                                        </>
-                                    ) : (
-                                        <>
-                                            <span>Show More ({replies.length - REPLIES_TO_SHOW} more)</span>
-                                            <ChevronDown className="w-4 h-4" />
-                                        </>
-                                    )}
-                                </button>
-                            )}
-                        </div>
-                    )}
                 </div>
             </div>
         </div>
@@ -1136,20 +839,6 @@ export function PremiumReviewCard({
             />
         )}
 
-        {/* Delete Reply Confirmation Dialog */}
-        <ConfirmationDialog
-            isOpen={showDeleteDialog}
-            onClose={() => {
-                setShowDeleteDialog(false);
-                setDeleteReplyId(null);
-            }}
-            onConfirm={handleDeleteReply}
-            title="Delete Reply"
-            message="Are you sure you want to delete this reply? This action cannot be undone."
-            confirmText="Delete"
-            cancelText="Cancel"
-            variant="danger"
-        />
         </>
     );
 }
