@@ -75,7 +75,7 @@ export default function Home() {
   const { businesses: forYouBusinesses, loading: forYouLoading, error: forYouError } = useForYouBusinesses(10);
   const { businesses: trendingBusinesses, loading: trendingLoading, error: trendingError } = useTrendingBusinesses(10);
   const { businesses: allBusinesses } = useBusinesses({ 
-    limit: 200, 
+    limit: 500, // Increased to ensure we get businesses from more subcategories
     sortBy: "total_rating", 
     sortOrder: "desc", 
     feedStrategy: debouncedSearchQuery.trim().length > 0 ? "standard" : "mixed",
@@ -146,7 +146,7 @@ export default function Home() {
   const featuredByCategory = (() => {
     if (!allBusinesses || !Array.isArray(allBusinesses) || allBusinesses.length === 0) return [];
 
-    const byCategory = new Map<string, any>();
+    const bySubCategory = new Map<string, any>();
 
     const getDisplayRating = (b: any) =>
       (typeof b.totalRating === "number" && b.totalRating) ||
@@ -167,18 +167,20 @@ export default function Home() {
         .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
         .join(" ");
 
+    // Group by subInterestLabel or subInterestId first (more specific), fallback to category
     for (const b of allBusinesses) {
-      const cat = (b.category || "Business") as string;
-      const existing = byCategory.get(cat);
+      // Use subInterestLabel or subInterestId for more granular grouping
+      const subCat = (b.subInterestLabel || b.subInterestId || b.category || "Business") as string;
+      const existing = bySubCategory.get(subCat);
       if (!existing || getDisplayRating(b) > getDisplayRating(existing)) {
-        byCategory.set(cat, b);
+        bySubCategory.set(subCat, b);
       }
     }
 
-    const results = Array.from(byCategory.entries()).map(([cat, b]) => {
+    const results = Array.from(bySubCategory.entries()).map(([subCat, b]) => {
       const rating = getDisplayRating(b);
       const reviews = getReviews(b);
-      const categoryLabel = toTitle(b.subInterestLabel || cat);
+      const categoryLabel = toTitle(b.subInterestLabel || b.subInterestId || b.category || subCat);
       return {
         id: b.id,
         name: b.name,

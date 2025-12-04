@@ -91,14 +91,14 @@ export default function CommunityHighlights({
         {/* Top Reviewers */}
         {topReviewers && topReviewers.length > 0 && (
           <div className="mt-1">
-            <div className="mb-2 flex justify-center">
-              <h3
-                className="text-sm font-semibold text-charcoal px-4 sm:px-6 py-2 backdrop-blur-md border border-white/50 rounded-full shadow-lg text-center my-4 md:mb-4"
-                style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-              >
-                Top Reviewers This Month In Claremont
-              </h3>
-            </div>
+            <div className="pb-4 sm:pb-8 md:pb-10 flex flex-wrap items-center justify-between gap-2">
+                <h3
+                  className="text-base font-bold text-charcoal transition-all duration-300 px-3 sm:px-4 py-1 rounded-lg cursor-none"
+                  style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                >
+                  Top Contributors This Month 
+                </h3>
+              </div>
 
             <ScrollableSection>
               <div className="flex gap-3 items-stretch py-2">
@@ -137,26 +137,36 @@ export default function CommunityHighlights({
 
         {/* Businesses of the Month */}
         {businessesOfTheMonth && businessesOfTheMonth.length > 0 && (
-          <div className="mt-3">
-            <div className="mb-2 flex justify-center">
-              <h3
-                className="text-sm font-semibold text-charcoal px-4 sm:px-6 py-2 backdrop-blur-md border border-white/50 rounded-full shadow-lg text-center my-4 md:mb-4"
-                style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-              >
-                Featured Businesses of the Month by Category
-              </h3>
-            </div>
-            <ScrollableSection>
-              <div className="flex gap-3 py-2">
-                {businessesOfTheMonth.map((business) => (
-                  <BusinessOfTheMonthCard
-                    key={business.id}
-                    business={business}
-                  />
-                ))}
+          <section
+            className="relative m-0 p-0 w-full mt-3 list-none"
+            aria-label="Featured Businesses of the Month by Category"
+            style={{
+              fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+            }}
+          >
+            <div className="mx-auto w-full max-w-[2000px] relative z-10 px-2">
+              <div className="pb-4 sm:pb-8 md:pb-10 flex flex-wrap items-center justify-between gap-2">
+                <h3
+                  className="text-base font-bold text-charcoal transition-all duration-300 px-3 sm:px-4 py-1 rounded-lg cursor-default"
+                  style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                >
+                  Featured Businesses of the Month by Category
+                </h3>
               </div>
-            </ScrollableSection>
-          </div>
+
+              <ScrollableSection>
+                {/* Gap harmonizes with card radius/shadows; list semantics preserved via <li> inside cards */}
+                <div className="flex gap-3 items-stretch pt-2 list-none">
+                  {businessesOfTheMonth.map((business) => (
+                    <BusinessOfTheMonthCard
+                      key={business.id}
+                      business={business}
+                    />
+                  ))}
+                </div>
+              </ScrollableSection>
+            </div>
+          </section>
         )}
       </div>
     </section>
