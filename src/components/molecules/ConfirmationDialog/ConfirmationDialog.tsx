@@ -68,12 +68,12 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
 
   const variantStyles = {
     danger: {
-      icon: 'bg-coral/20 text-coral',
-      button: 'bg-coral hover:bg-coral/90 text-white',
+      icon: 'bg-navbar-bg/20 text-navbar-bg',
+      button: 'bg-navbar-bg hover:bg-navbar-bg/90 text-white',
     },
     warning: {
-      icon: 'bg-orange-500/20 text-orange-500',
-      button: 'bg-orange-500 hover:bg-orange-600 text-white',
+      icon: 'bg-navbar-bg/20 text-navbar-bg',
+      button: 'bg-navbar-bg hover:bg-navbar-bg/90 text-white',
     },
     info: {
       icon: 'bg-blue-500/20 text-blue-500',
@@ -93,7 +93,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-0 bg-charcoal/60 backdrop-blur-sm z-[9998]"
+            className="fixed inset-0 bg-charcoal/60 z-[9998]"
             onClick={onClose}
           />
 

@@ -144,6 +144,8 @@ export async function updateUserProfile(
 
 /**
  * Get user statistics
+ * Uses cached user_stats table for better performance
+ * Falls back to computing on-demand if stats table doesn't exist or is missing data
  */
 export async function getUserStats(
   supabase: SupabaseClient,
@@ -170,6 +172,57 @@ export async function getUserStats(
       console.warn('[getUserStats] No profile found for user:', userId);
       return null;
     }
+
+    // Try to get stats from user_stats table first (faster)
+    let cachedStats = null;
+    let statsError = null;
+    
+    try {
+      const result = await supabase
+        .from('user_stats')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+      
+      cachedStats = result.data;
+      statsError = result.error;
+      
+      // Check if error is because table doesn't exist (42P01) or no row found (PGRST116)
+      const isTableMissing = statsError?.code === '42P01' || statsError?.message?.includes('does not exist');
+      const isNoRowFound = statsError?.code === 'PGRST116';
+      
+      // If stats table exists and has data, use it
+      if (!statsError && cachedStats) {
+        return {
+          totalReviewsWritten: cachedStats.total_reviews_written || 0,
+          totalHelpfulVotesGiven: cachedStats.total_helpful_votes_given || 0,
+          totalBusinessesSaved: cachedStats.total_businesses_saved || 0,
+          accountCreationDate: profile.created_at,
+          lastActiveDate: profile.last_active_at || profile.created_at,
+          helpfulVotesReceived: cachedStats.helpful_votes_received || 0,
+        };
+      }
+      
+      // If table doesn't exist, silently fall through to compute on-demand
+      if (isTableMissing) {
+        console.warn('[getUserStats] user_stats table does not exist, computing on-demand');
+      } else if (isNoRowFound) {
+        // Row doesn't exist yet - compute on-demand and optionally initialize
+        console.warn('[getUserStats] Stats row not found, computing on-demand');
+      } else if (statsError) {
+        // Other error - log it but still fall through to compute on-demand
+        console.warn('[getUserStats] Error querying user_stats table, computing on-demand:', {
+          error: statsError.message,
+          code: statsError.code,
+        });
+      }
+    } catch (err) {
+      // Catch any unexpected errors when querying user_stats
+      console.warn('[getUserStats] Exception querying user_stats, computing on-demand:', err);
+    }
+
+    // Fallback: Compute stats on-demand (for backwards compatibility or if table doesn't exist)
+    // This handles cases where the migration hasn't run yet or stats haven't been initialized
 
     // Get total reviews written
     const { count: totalReviews, error: reviewsError } = await supabase
@@ -249,6 +302,22 @@ export async function getUserStats(
         userId,
         error: err instanceof Error ? err.message : 'Unknown error',
       });
+    }
+
+    // If stats table exists but was empty, try to initialize it now
+    // Only try if we know the table exists (no 42P01 error)
+    if (statsError && statsError.code === 'PGRST116') {
+      // Table exists but no record found - try to create it
+      try {
+        const { error: rpcError } = await supabase.rpc('update_user_stats', { p_user_id: userId });
+        if (rpcError) {
+          // Function might not exist yet - that's okay
+          console.warn('[getUserStats] Failed to initialize stats via RPC:', rpcError.message);
+        }
+      } catch (initError: any) {
+        // Silently fail - will be created on next trigger or when migration runs
+        console.warn('[getUserStats] Exception initializing stats:', initError?.message);
+      }
     }
 
     return {
