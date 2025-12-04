@@ -4,7 +4,7 @@ import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, ChevronRight } from "react-feather";
-import { EVENTS_AND_SPECIALS, Event } from "../../data/eventsData";
+import { Event } from "../../data/eventsData";
 import { useToast } from "../../contexts/ToastContext";
 import nextDynamic from "next/dynamic";
 import { PageLoader, Loader } from "../../components/Loader";
@@ -43,12 +43,98 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
   const resolvedParams = use(params);
 
   useEffect(() => {
-    // Find the event by ID
-    const foundEvent = EVENTS_AND_SPECIALS.find(e => e.id === resolvedParams.id);
-    if (foundEvent) {
-      setEvent(foundEvent);
-    }
-    setLoading(false);
+    const fetchEvent = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/events/${resolvedParams.id}`);
+        
+        if (!response.ok) {
+          if (response.status === 404) {
+            setEvent(null);
+            setLoading(false);
+            return;
+          }
+          throw new Error(`Failed to fetch event: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const dbEvent = data.event;
+
+        if (!dbEvent) {
+          setEvent(null);
+          setLoading(false);
+          return;
+        }
+
+        // Transform database event to Event type
+        const formatDate = (dateString: string | null) => {
+          if (!dateString) return '';
+          const date = new Date(dateString);
+          return date.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric',
+          });
+        };
+
+        const formatPrice = (priceRange: any) => {
+          if (!priceRange || !Array.isArray(priceRange) || priceRange.length === 0) {
+            return null;
+          }
+          const price = priceRange[0];
+          if (price.min && price.max) {
+            return `£${price.min} - £${price.max}`;
+          }
+          if (price.min) {
+            return `From £${price.min}`;
+          }
+          return null;
+        };
+
+        const getIcon = (segment: string | null, genre: string | null) => {
+          const segmentLower = (segment || '').toLowerCase();
+          const genreLower = (genre || '').toLowerCase();
+          
+          if (segmentLower.includes('music') || genreLower.includes('music')) {
+            return 'musical-notes-outline';
+          }
+          if (segmentLower.includes('sport')) {
+            return 'basketball-outline';
+          }
+          if (segmentLower.includes('art') || segmentLower.includes('theatre')) {
+            return 'brush-outline';
+          }
+          if (segmentLower.includes('comedy')) {
+            return 'happy-outline';
+          }
+          return 'calendar-outline';
+        };
+
+        const transformedEvent: Event = {
+          id: dbEvent.ticketmaster_id || dbEvent.id,
+          title: dbEvent.title || 'Untitled Event',
+          type: 'event' as const,
+          image: dbEvent.image_url || null,
+          alt: `${dbEvent.title} at ${dbEvent.venue_name || dbEvent.city || 'location'}`,
+          icon: getIcon(dbEvent.segment, dbEvent.genre),
+          location: dbEvent.venue_name || dbEvent.city || 'Location TBD',
+          rating: 4.5,
+          startDate: formatDate(dbEvent.start_date),
+          endDate: dbEvent.end_date ? formatDate(dbEvent.end_date) : undefined,
+          price: formatPrice(dbEvent.price_range),
+          description: dbEvent.description || undefined,
+          href: `/event/${dbEvent.ticketmaster_id || dbEvent.id}`,
+        };
+
+        setEvent(transformedEvent);
+      } catch (err) {
+        console.error('[EventDetailPage] Error fetching event:', err);
+        setEvent(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvent();
   }, [resolvedParams.id]);
 
   const handleBookmark = () => {

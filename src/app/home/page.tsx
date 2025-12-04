@@ -16,12 +16,12 @@ import HeroCarousel from "../components/Hero/HeroCarousel";
 import BusinessRow from "../components/BusinessRow/BusinessRow";
 import BusinessRowSkeleton from "../components/BusinessRow/BusinessRowSkeleton";
 import HomeBackgroundOrbs from "../components/Home/HomeBackgroundOrbs";
-import { EVENTS_AND_SPECIALS } from "../data/eventsData";
 import {
   FEATURED_REVIEWS,
   TOP_REVIEWERS,
 } from "../data/communityHighlightsData";
 import { useBusinesses, useForYouBusinesses, useTrendingBusinesses } from "../hooks/useBusinesses";
+import { useEvents } from "../hooks/useEvents";
 import { useRoutePrefetch } from "../hooks/useRoutePrefetch";
 import { useDebounce } from "../hooks/useDebounce";
 
@@ -74,6 +74,7 @@ export default function Home() {
 
   const { businesses: forYouBusinesses, loading: forYouLoading, error: forYouError } = useForYouBusinesses(10);
   const { businesses: trendingBusinesses, loading: trendingLoading, error: trendingError } = useTrendingBusinesses(10);
+  const { events, loading: eventsLoading } = useEvents({ limit: 5, upcoming: true });
   const { businesses: allBusinesses } = useBusinesses({ 
     limit: 200, 
     sortBy: "total_rating", 
@@ -281,7 +282,13 @@ export default function Home() {
 
             <section className="pt-4 sm:pt-8 md:pt-10 relative overflow-hidden">
               <div className="relative z-10">
-                <EventsSpecials events={EVENTS_AND_SPECIALS.slice(0, 5)} />
+                {eventsLoading ? (
+                  <div className="h-96 bg-off-white/50 flex items-center justify-center">
+                    <div className="text-charcoal/60">Loading events...</div>
+                  </div>
+                ) : (
+                  <EventsSpecials events={events.length > 0 ? events : []} />
+                )}
               </div>
             </section>
 

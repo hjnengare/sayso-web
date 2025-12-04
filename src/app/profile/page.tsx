@@ -156,6 +156,9 @@ function ProfileContent() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isDeactivateDialogOpen, setIsDeactivateDialogOpen] = useState(false);
+  const [isDeactivating, setIsDeactivating] = useState(false);
+  const [deactivateError, setDeactivateError] = useState<string | null>(null);
   const [imgError, setImgError] = useState(false);
   const [enhancedProfile, setEnhancedProfile] = useState<EnhancedProfile | null>(null);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
@@ -187,15 +190,22 @@ function ProfileContent() {
             setProfileLoading(false);
             return;
           }
+          // Get error details from response
+          const errorData = await response.json().catch(() => ({ error: { message: 'Unknown error' } }));
+          
           // Handle 404 gracefully - profile might not exist yet, use existing profile data
           if (response.status === 404) {
-            console.warn('Profile not found, using existing profile data');
+            console.warn('Profile not found, using existing profile data:', errorData.error);
             setEnhancedProfile(null);
             setProfileLoading(false);
             return;
           }
           // For other errors, log but don't break the page
-          console.warn('Error fetching enhanced profile:', response.status);
+          console.warn('Error fetching enhanced profile:', {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorData.error,
+          });
           setEnhancedProfile(null);
           setProfileLoading(false);
           return;
@@ -235,7 +245,13 @@ function ProfileContent() {
             setStatsLoading(false);
             return;
           }
-          console.error('Error fetching user stats:', response.status);
+          // Get error details from response
+          const errorData = await response.json().catch(() => ({ error: { message: 'Unknown error' } }));
+          console.error('Error fetching user stats:', {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorData.error,
+          });
           setStatsLoading(false);
           return;
         }
@@ -545,11 +561,14 @@ function ProfileContent() {
     window.location.href = "/login";
   };
 
-  const handleDeactivate = async () => {
-    if (!confirm("Are you sure you want to deactivate your account? You can reactivate it anytime by logging in.")) {
-      return;
-    }
+  const handleDeactivate = () => {
+    setIsDeactivateDialogOpen(true);
+  };
 
+  const confirmDeactivateAccount = async () => {
+    setIsDeactivating(true);
+    setDeactivateError(null);
+    
     try {
       const response = await fetch('/api/user/deactivate-account', {
         method: 'POST',
@@ -561,10 +580,12 @@ function ProfileContent() {
       }
 
       // Account successfully deactivated, redirect to login
+      setIsDeactivateDialogOpen(false);
       window.location.href = '/login?message=Account deactivated. Log in to reactivate.';
     } catch (error: any) {
       console.error('Error deactivating account:', error);
-      alert(`Failed to deactivate account: ${error.message}`);
+      setIsDeactivating(false);
+      setDeactivateError(`Failed to deactivate account: ${error.message}`);
     }
   };
 
@@ -1134,6 +1155,23 @@ function ProfileContent() {
         variant="danger"
         isLoading={isDeleting}
         error={deleteError}
+      />
+
+      {/* Deactivate Account Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={isDeactivateDialogOpen}
+        onClose={() => {
+          setIsDeactivateDialogOpen(false);
+          setDeactivateError(null);
+        }}
+        onConfirm={confirmDeactivateAccount}
+        title="Deactivate Account"
+        message="Are you sure you want to deactivate your account? You can reactivate it anytime by logging in."
+        confirmText={isDeactivating ? "Deactivating..." : "Deactivate Account"}
+        cancelText="Cancel"
+        variant="warning"
+        isLoading={isDeactivating}
+        error={deactivateError}
       />
     </>
   );

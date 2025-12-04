@@ -11,9 +11,10 @@ import EventsGrid from "../components/EventsPage/EventsGrid";
 import Pagination from "../components/EventsPage/Pagination";
 import EmptyState from "../components/EventsPage/EmptyState";
 import SearchInput from "../components/SearchInput/SearchInput";
-import { EVENTS_AND_SPECIALS, Event } from "../data/eventsData";
+import { Event } from "../data/eventsData";
 import { useToast } from "../contexts/ToastContext";
 import { useDebounce } from "../hooks/useDebounce";
+import { useEvents } from "../hooks/useEvents";
 import { ChevronUp, ChevronRight } from "react-feather";
 import { Loader } from "../components/Loader/Loader";
 import StaggeredContainer from "../components/Animations/StaggeredContainer";
@@ -33,23 +34,28 @@ export default function EventsSpecialsPage() {
   // Debounce search query for smoother real-time filtering (300ms delay)
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
+  // Fetch events from database
+  const { events: allEvents, loading: eventsLoading, error: eventsError } = useEvents({
+    limit: 1000, // Fetch a large number for client-side filtering
+    upcoming: true,
+  });
+
   // Enhanced text-based search with debouncing
   const filteredEvents = useMemo(() => {
     const query = debouncedSearchQuery.trim().toLowerCase();
     
-    // If no search query, just filter by type
+    // Filter by type first (all Ticketmaster events are type 'event', but we keep the filter for future specials)
+    let filtered = allEvents.filter((event) => 
+      selectedFilter === "all" || event.type === selectedFilter
+    );
+
+    // If no search query, return filtered events
     if (query.length === 0) {
-      return EVENTS_AND_SPECIALS.filter((event) => 
-        selectedFilter === "all" || event.type === selectedFilter
-      );
+      return filtered;
     }
 
     // Enhanced search: search across multiple fields
-    return EVENTS_AND_SPECIALS.filter((event) => {
-      const matchesFilter = selectedFilter === "all" || event.type === selectedFilter;
-      
-      if (!matchesFilter) return false;
-
+    return filtered.filter((event) => {
       // Search in title, description, location, price, and startDate
       const searchableText = [
         event.title,
@@ -70,7 +76,7 @@ export default function EventsSpecialsPage() {
 
       return matchesQuery;
     });
-  }, [selectedFilter, debouncedSearchQuery]);
+  }, [allEvents, selectedFilter, debouncedSearchQuery]);
 
   const totalPages = Math.max(1, Math.ceil(filteredEvents.length / ITEMS_PER_PAGE));
 
@@ -224,7 +230,16 @@ export default function EventsSpecialsPage() {
 
             <AnimatedElement index={3} direction="bottom">
               <div className="py-4">
-                {currentEvents.length > 0 ? (
+                {eventsLoading ? (
+                  <div className="flex items-center justify-center py-20">
+                    <Loader size="lg" variant="wavy" color="sage" />
+                  </div>
+                ) : eventsError ? (
+                  <div className="text-center py-20">
+                    <p className="text-coral mb-4">Failed to load events</p>
+                    <p className="text-charcoal/60 text-sm">{eventsError}</p>
+                  </div>
+                ) : currentEvents.length > 0 ? (
                   <>
                     {/* Loading Spinner Overlay for Pagination */}
                     {isPaginationLoading && (

@@ -17,10 +17,11 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(req: Request) {
   try {
-    const supabase = await getServerSupabase(req);
+    const supabase = await getServerSupabase();
     const userId = await getCurrentUserId(supabase);
 
     if (!userId) {
+      console.error('[Profile API] Auth error: No user ID');
       return NextResponse.json<ApiResponse<EnhancedProfile>>(
         {
           data: null,
@@ -34,17 +35,24 @@ export async function GET(req: Request) {
     }
 
     // Update last active
-    await updateLastActive(supabase, userId);
+    try {
+      await updateLastActive(supabase, userId);
+    } catch (lastActiveError: any) {
+      console.warn('[Profile API] Failed to update last active:', lastActiveError?.message);
+      // Continue even if this fails
+    }
 
     const profile = await getUserProfile(supabase, userId);
 
     if (!profile) {
-      return NextResponse.json<ApiResponse<EnhancedProfile>>(
+      console.error('[Profile API] Profile not found for user:', userId);
+      return NextResponse.json(
         {
           data: null,
           error: {
             message: 'Profile not found',
             code: 'NOT_FOUND',
+            details: `No profile record found for user ${userId}`,
           },
         },
         { status: 404 }
@@ -56,13 +64,18 @@ export async function GET(req: Request) {
       error: null,
     });
   } catch (error: any) {
-    console.error('[Profile API] Error:', error);
-    return NextResponse.json<ApiResponse<EnhancedProfile>>(
+    console.error('[Profile API] Unexpected error:', {
+      message: error?.message,
+      stack: error?.stack,
+      name: error?.name,
+    });
+    return NextResponse.json(
       {
         data: null,
         error: {
-          message: error.message || 'Internal server error',
+          message: error?.message || 'Internal server error',
           code: 'INTERNAL_ERROR',
+          details: error?.stack || String(error),
         },
       },
       { status: 500 }
@@ -76,7 +89,7 @@ export async function GET(req: Request) {
  */
 export async function PUT(req: Request) {
   try {
-    const supabase = await getServerSupabase(req);
+    const supabase = await getServerSupabase();
     const userId = await getCurrentUserId(supabase);
 
     if (!userId) {
