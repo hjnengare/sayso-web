@@ -1021,7 +1021,6 @@ function ProfileContent() {
                         Manage Businesses
                       </Link>
                     </section>
-                    </AnimatedElement>
 
                     <section
                       className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-6 sm:p-8"
@@ -1044,7 +1043,6 @@ function ProfileContent() {
                         </div>
                       )}
                     </section>
-                    </AnimatedElement>
 
                     <section
                       className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-6 sm:p-8"
@@ -1055,7 +1053,6 @@ function ProfileContent() {
                         title="Your Achievements"
                       />
                     </section>
-                    </AnimatedElement>
 
                     <section
                       className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-6 sm:p-8 space-y-4"
@@ -1096,7 +1093,6 @@ function ProfileContent() {
                         />
                       </div>
                     </section>
-                    </AnimatedElement>
                   </div>
                 </div>
               </div>

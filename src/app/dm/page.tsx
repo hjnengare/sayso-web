@@ -34,13 +34,12 @@ function ChatItem({ chat, index, isSelected, onClick }: { chat: Chat; index: num
   const [imgError, setImgError] = useState(false);
 
   return (
-    <AnimatedElement index={index} direction="bottom">
-      <motion.button
-        onClick={onClick}
-        className="group relative block w-full text-left"
-        whileHover={{ x: 2 }}
-        transition={{ duration: 0.2 }}
-      >
+    <motion.button
+      onClick={onClick}
+      className="group relative block w-full text-left"
+      whileHover={{ x: 2 }}
+      transition={{ duration: 0.2 }}
+    >
         <div
           className={`relative flex items-center gap-3 sm:gap-4 px-3 sm:px-4 py-2.5 sm:py-3 transition-all duration-200 border-b border-charcoal/10 ${
             isSelected 
@@ -114,7 +113,6 @@ function ChatItem({ chat, index, isSelected, onClick }: { chat: Chat; index: num
           </div>
         </div>
       </motion.button>
-    </AnimatedElement>
   );
 }
 

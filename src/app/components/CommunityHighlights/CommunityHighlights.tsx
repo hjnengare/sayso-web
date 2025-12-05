@@ -144,7 +144,7 @@ export default function CommunityHighlights({
               fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
             }}
           >
-            <div className="mx-auto w-full max-w-[2000px] relative z-10 px-2">
+            <div className="mx-auto w-full max-w-[2000px] relative z-10">
               <div className="pb-4 sm:pb-8 md:pb-10 flex flex-wrap items-center justify-between gap-2">
                 <h3
                   className="text-base font-bold text-charcoal transition-all duration-300 px-3 sm:px-4 py-1 rounded-lg cursor-default"

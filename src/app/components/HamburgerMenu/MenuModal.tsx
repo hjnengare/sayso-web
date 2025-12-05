@@ -171,7 +171,7 @@ export default function MenuModal({ isOpen, isVisible, onClose }: MenuModalProps
             <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-200 relative ${
               isSavedActive ? 'bg-sage/20' : 'bg-sage/10 group-hover:bg-sage/20'
             }`}>
-              <Bookmark className={`w-5 h-5 ${isSavedActive ? 'text-sage' : 'text-sage'}`} fill={isSavedActive ? 'currentColor' : 'none'} />
+              <Bookmark className={`w-5 h-5 ${isSavedActive ? 'text-sage' : 'text-charcoal/60'}`} fill={isSavedActive ? 'currentColor' : 'none'} />
               {savedCount > 0 && (
                 <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-5 px-1.5 bg-sage text-white text-[11px] font-semibold rounded-full shadow-md">
                   {savedCount > 99 ? '99+' : savedCount}
@@ -202,7 +202,7 @@ export default function MenuModal({ isOpen, isVisible, onClose }: MenuModalProps
             <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-200 ${
               isHomeActive ? 'bg-sage/20' : 'bg-sage/10 group-hover:bg-sage/20'
             }`}>
-              <Home className={`w-5 h-5 ${isHomeActive ? 'text-sage' : 'text-sage'}`} fill={isHomeActive ? 'currentColor' : 'none'} />
+              <Home className={`w-5 h-5 ${isHomeActive ? 'text-sage' : 'text-charcoal/60'}`} fill={isHomeActive ? 'currentColor' : 'none'} />
             </div>
             <div className="flex-1 text-left">
               <span className={`font-urbanist text-base font-600 transition-colors duration-200 ${
@@ -228,7 +228,7 @@ export default function MenuModal({ isOpen, isVisible, onClose }: MenuModalProps
             <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-200 ${
               isProfileActive ? 'bg-sage/20' : 'bg-sage/10 group-hover:bg-sage/20'
             }`}>
-              <User className={`w-5 h-5 ${isProfileActive ? 'text-sage' : 'text-sage'}`} fill={isProfileActive ? 'currentColor' : 'none'} />
+              <User className={`w-5 h-5 ${isProfileActive ? 'text-sage' : 'text-charcoal/60'}`} fill={isProfileActive ? 'currentColor' : 'none'} />
             </div>
             <div className="flex-1 text-left">
               <span className={`font-urbanist text-base font-600 transition-colors duration-200 ${

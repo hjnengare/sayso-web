@@ -257,9 +257,7 @@ export default function EventsSpecialsPage() {
         </button>
       )}
 
-          <AnimatedElement index={4} direction="bottom">
-            <Footer />
-          </AnimatedElement>
+      <Footer />
     </div>
   );
 }
