@@ -8,7 +8,8 @@ import StaggeredContainer from "../components/Animations/StaggeredContainer";
 import AnimatedElement from "../components/Animations/AnimatedElement";
 import Footer from "../components/Footer/Footer";
 import Header from "../components/Header/Header";
-import { ChevronLeft, ChevronRight, ChevronUp } from "react-feather";
+import { ChevronRight, ChevronUp } from "react-feather";
+import Pagination from "../components/EventsPage/Pagination";
 import { useBusinesses } from "../hooks/useBusinesses";
 import { useUserPreferences } from "../hooks/useUserPreferences";
 import { useDebounce } from "../hooks/useDebounce";
@@ -268,46 +269,12 @@ export default function TrendingPage() {
                     </AnimatePresence>
 
                     {/* Pagination */}
-                    {totalPages > 1 && (
-                      <div className="flex justify-center items-center gap-2 mt-12">
-                        <button
-                          onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
-                          disabled={currentPage === 1 || isPaginationLoading}
-                          className="w-10 h-10 rounded-full bg-navbar-bg border border-charcoal/20 flex items-center justify-center hover:bg-navbar-bg/80 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200"
-                          aria-label="Previous page"
-                          title="Previous"
-                        >
-                          <ChevronLeft className="text-white" size={20} />
-                        </button>
-
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                          <button
-                            key={page}
-                            onClick={() => handlePageChange(page)}
-                            disabled={isPaginationLoading}
-                            style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
-                            className={`w-10 h-10 rounded-full bg-navbar-bg font-semibold text-body-sm transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed ${
-                              currentPage === page
-                                ? "bg-sage text-white shadow-lg"
-                                : "border border-charcoal/20 text-white hover:bg-navbar-bg/80"
-                            }`}
-                            aria-current={currentPage === page ? "page" : undefined}
-                          >
-                            {page}
-                          </button>
-                        ))}
-
-                        <button
-                          onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
-                          disabled={currentPage === totalPages || isPaginationLoading}
-                          className="w-10 h-10 rounded-full bg-navbar-bg border border-charcoal/20 flex items-center justify-center hover:bg-navbar-bg/80 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200"
-                          aria-label="Next page"
-                          title="Next"
-                        >
-                          <ChevronRight className="text-white" size={20} />
-                        </button>
-                      </div>
-                    )}
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      onPageChange={handlePageChange}
+                      disabled={isPaginationLoading}
+                    />
                   </>
                 )}
               </>

@@ -118,6 +118,16 @@ export function useEvents(options: UseEventsOptions = {}): UseEventsResult {
 
       const data = await response.json();
       
+      // Debug logging
+      if (typeof window !== 'undefined') {
+        console.log('[useEvents] API Response:', {
+          eventsCount: data.events?.length || 0,
+          count: data.count,
+          hasEvents: !!(data.events && data.events.length > 0),
+          sampleEvent: data.events?.[0]
+        });
+      }
+      
       // Transform database events to Event type (optimized)
       const transformedEvents: Event[] = (data.events || []).map((dbEvent: any) => ({
         id: dbEvent.ticketmaster_id || dbEvent.id,

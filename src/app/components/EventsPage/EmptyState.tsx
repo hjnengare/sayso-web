@@ -31,16 +31,34 @@ export default function EmptyState({ filterType }: EmptyStateProps) {
   const { title, description } = getEmptyMessage();
 
   return (
-    <div className="text-center py-12 sm:py-16 px-4">
-      <div className="w-16 h-16 bg-white/30 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
-        <Calendar className="w-7 h-7 text-charcoal" />
+    <div
+      className="mx-auto w-full max-w-[2000px] px-2 font-urbanist w-full"
+      style={{
+        fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+      }}
+    >
+      <div className="text-center w-full">
+        <div className="w-20 h-20 mx-auto mb-6 bg-sage/10 rounded-full flex items-center justify-center">
+          <Calendar className="w-8 h-8 text-sage" />
+        </div>
+        <h3 
+          className="text-h2 font-semibold text-charcoal mb-2"
+          style={{
+            fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+          }}
+        >
+          {title}
+        </h3>
+        <p 
+          className="text-body-sm text-charcoal/60 mb-6 max-w-md mx-auto"
+          style={{
+            fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+            fontWeight: 500,
+          }}
+        >
+          {description}
+        </p>
       </div>
-      <h3 className="font-urbanist font-700 text-h3 text-charcoal/60 mb-2">
-        {title}
-      </h3>
-      <p className="font-urbanist text-body-sm sm:text-body text-charcoal/40">
-        {description}
-      </p>
     </div>
   );
 }

@@ -12,11 +12,43 @@ interface EventHeroImageProps {
   onLike: () => void;
 }
 
+// Helper to get optimized image URL with width parameter
+function getOptimizedImageUrl(url: string | null, width: number = 1080): string {
+  if (!url) {
+    return "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=1920&h=1080&fit=crop&crop=center&q=90";
+  }
+
+  // If already has query params or is Supabase storage URL, return as-is
+  if (url.includes('?') || url.includes('supabase.co/storage')) {
+    return url;
+  }
+
+  // Try to add width and auto format parameters
+  try {
+    // Handle relative URLs
+    if (url.startsWith('/')) {
+      return url; // Return relative URLs as-is, Next.js Image will handle optimization
+    }
+
+    // Handle absolute URLs
+    const urlObj = new URL(url);
+    urlObj.searchParams.set('width', width.toString());
+    urlObj.searchParams.set('auto', 'format');
+    return urlObj.toString();
+  } catch {
+    // If URL parsing fails, return as-is
+    return url;
+  }
+}
+
 export default function EventHeroImage({
   event,
   isLiked,
   onLike,
 }: EventHeroImageProps) {
+  // Get optimized image URL with width parameter
+  const imageUrl = getOptimizedImageUrl(event.image, 1080);
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -25,14 +57,14 @@ export default function EventHeroImage({
       className="relative w-full aspect-[4/3] sm:aspect-[16/9] lg:aspect-[21/9] rounded-2xl overflow-hidden border border-white/60 ring-1 ring-white/30"
     >
       <Image
-        src={event.image || "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=1920&h=1080&fit=crop&crop=center&q=90"}
+        src={imageUrl}
         alt={event.alt || event.title}
         fill
-        className="object-cover object-center"
+        className="object-contain"
         priority
-        quality={90}
-        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 900px"
-        style={{ objectFit: 'cover' }}
+        quality={100}
+        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 1080px"
+        style={{ objectFit: 'contain' }}
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
 

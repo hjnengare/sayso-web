@@ -8,8 +8,8 @@ import { Event } from "../../data/eventsData";
 import { useToast } from "../../contexts/ToastContext";
 import nextDynamic from "next/dynamic";
 import { PageLoader, Loader } from "../../components/Loader";
+import Header from "../../components/Header/Header";
 import {
-  EventDetailHeader,
   EventHeroImage,
   EventInfo,
   EventDetailsCard,
@@ -35,7 +35,6 @@ interface EventDetailPageProps {
 export default function EventDetailPage({ params }: EventDetailPageProps) {
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isBookmarked, setIsBookmarked] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const { showToast } = useToast();
 
@@ -137,33 +136,12 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
     fetchEvent();
   }, [resolvedParams.id]);
 
-  const handleBookmark = () => {
-    setIsBookmarked(!isBookmarked);
-    showToast(
-      isBookmarked ? "Removed from bookmarks" : "Added to bookmarks",
-      "success"
-    );
-  };
-
   const handleLike = () => {
     setIsLiked(!isLiked);
     showToast(
       isLiked ? "Removed from favorites" : "Added to favorites",
       "success"
     );
-  };
-
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: event?.title,
-        text: event?.description,
-        url: window.location.href,
-      });
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      showToast("Link copied to clipboard", "success");
-    }
   };
 
   // Loading state - show full page loader with transition
@@ -220,11 +198,7 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
         }}
       >
       {/* Header */}
-      <EventDetailHeader
-        isBookmarked={isBookmarked}
-        onBookmark={handleBookmark}
-        onShare={handleShare}
-      />
+      <Header whiteText={true} />
 
       <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
         <div className="pt-20 sm:pt-24">
@@ -238,10 +212,10 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
         >
           <div className="mx-auto w-full max-w-[2000px] px-2 relative z-10">
             {/* Breadcrumb Navigation */}
-            <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
+            <nav className="pt-4 mb-6 sm:mb-8 px-2" aria-label="Breadcrumb">
               <ol className="flex items-center gap-2 text-sm sm:text-base">
                 <li>
-                  <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                  <Link href="/home" className="text-charcoal/90 hover:text-sage transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                     Home
                   </Link>
                 </li>
@@ -249,7 +223,7 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
                   <ChevronRight className="w-4 h-4 text-charcoal/40" />
                 </li>
                 <li>
-                  <Link href="/events-specials" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                  <Link href="/events-specials" className="text-charcoal/90 hover:text-sage transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                     Events & Specials
                   </Link>
                 </li>

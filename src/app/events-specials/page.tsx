@@ -8,6 +8,7 @@ import Footer from "../components/Footer/Footer";
 import FilterTabs from "../components/EventsPage/FilterTabs";
 import ResultsCount from "../components/EventsPage/ResultsCount";
 import EventsGrid from "../components/EventsPage/EventsGrid";
+import EventsGridSkeleton from "../components/EventsPage/EventsGridSkeleton";
 import Pagination from "../components/EventsPage/Pagination";
 import EmptyState from "../components/EventsPage/EmptyState";
 import SearchInput from "../components/SearchInput/SearchInput";
@@ -37,7 +38,8 @@ export default function EventsSpecialsPage() {
   // Calculate offset for server-side pagination
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
 
-  // Fetch events from database with server-side pagination and search
+  // Fetch events from ticketmaster_events table via /api/events with server-side pagination and search
+  // The useEvents hook calls /api/events which queries the ticketmaster_events table in Supabase
   const { events: allEvents, loading: eventsLoading, error: eventsError, count: totalCount } = useEvents({
     limit: ITEMS_PER_PAGE,
     offset: offset,
@@ -210,9 +212,7 @@ export default function EventsSpecialsPage() {
             <AnimatedElement index={3} direction="bottom">
               <div className="py-4">
                 {eventsLoading ? (
-                  <div className="flex items-center justify-center py-20">
-                    <Loader size="lg" variant="wavy" color="sage" />
-                  </div>
+                  <EventsGridSkeleton count={ITEMS_PER_PAGE} />
                 ) : eventsError ? (
                   <div className="text-center py-20">
                     <p className="text-coral mb-4">Failed to load events</p>
@@ -223,7 +223,7 @@ export default function EventsSpecialsPage() {
                     {/* Loading Spinner Overlay for Pagination */}
                     {isPaginationLoading && (
                       <div className="fixed inset-0 z-[9998] bg-off-white/95 backdrop-blur-sm flex items-center justify-center min-h-screen">
-                        <Loader size="lg" variant="wavy" color="sage"  />
+                        <Loader size="lg" variant="wavy" color="sage" />
                       </div>
                     )}
 

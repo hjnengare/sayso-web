@@ -77,32 +77,35 @@ export default function ReviewsList({
 
   if (!reviews || reviews.length === 0) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-br from-white/80 to-white/60 backdrop-blur-sm rounded-lg p-8 text-center border border-sage/10"
+      <div
+        className="mx-auto w-full max-w-[2000px] px-2 font-urbanist w-full"
+        style={{
+          fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+        }}
       >
-        <motion.div
-          animate={{
-            scale: [1, 1.1, 1],
-            rotate: [0, 5, -5, 0]
-          }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-            repeatDelay: 2
-          }}
-          className="w-16 h-16 bg-gradient-to-br from-sage/20 to-sage/10 rounded-full flex items-center justify-center mx-auto mb-4"
-        >
-          <MessageCircle size={32} className="text-sage" />
-        </motion.div>
-        <h3 className="font-urbanist text-xl font-600 text-charcoal mb-2">
-          No reviews yet
-        </h3>
-        <p className="font-urbanist text-base text-charcoal/70">
-          {emptyMessage}
-        </p>
-      </motion.div>
+        <div className="text-center w-full">
+          <div className="w-20 h-20 mx-auto mb-6 bg-sage/10 rounded-full flex items-center justify-center">
+            <MessageCircle className="w-8 h-8 text-sage" />
+          </div>
+          <h3 
+            className="text-h2 font-semibold text-charcoal mb-2"
+            style={{
+              fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+            }}
+          >
+            No reviews yet
+          </h3>
+          <p 
+            className="text-body-sm text-charcoal/60 mb-6 max-w-md mx-auto"
+            style={{
+              fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+              fontWeight: 500,
+            }}
+          >
+            {emptyMessage}
+          </p>
+        </div>
+      </div>
     );
   }
 

@@ -71,10 +71,10 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get('search')?.trim();
     const upcoming = searchParams.get('upcoming') !== 'false'; // Default to true
 
-    // Optimize query - only select needed fields
+    // Optimize query - select all fields from ticketmaster_events table
     let query = supabase
       .from('ticketmaster_events')
-      .select('id, ticketmaster_id, title, description, image_url, start_date, end_date, city, venue_name, segment, genre, price_range', { count: 'exact' })
+      .select('id, ticketmaster_id, title, description, type, start_date, end_date, location, city, country, venue_name, venue_address, image_url, url, price_range, classification, segment, genre, sub_genre', { count: 'exact' })
       .order('start_date', { ascending: true });
 
     // Filter by city if provided
@@ -98,7 +98,7 @@ export async function GET(req: NextRequest) {
       query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%,venue_name.ilike.%${search}%,city.ilike.%${search}%`);
     }
 
-    // Add timeout promise to ensure response within 2 seconds
+    // Apply pagination directly in the query
     const queryPromise = query.range(offset, offset + limit - 1);
     const timeoutPromise = new Promise((_, reject) => 
       setTimeout(() => reject(new Error('Query timeout')), 1800)

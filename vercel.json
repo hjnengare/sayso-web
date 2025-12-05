@@ -1,9 +1,4 @@
 {
-  "crons": [
-    {
-      "path": "/api/cron/fetch-events",
-      "schedule": "0 */6 * * *"
-    }
-  ]
+  "crons": []
 }
 

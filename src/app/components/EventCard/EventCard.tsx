@@ -2,9 +2,9 @@
 
 import type { MouseEvent, CSSProperties } from "react";
 import { Event } from "../../data/eventsData";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Bookmark } from "react-feather";
+import { ArrowRight } from "react-feather";
 import { getEventIconPng } from "../../utils/eventIconToPngMapping";
 import EventBadge from "./EventBadge";
 
@@ -82,15 +82,14 @@ interface EventCardProps {
 }
 
 export default function EventCard({ event, onBookmark }: EventCardProps) {
+  const router = useRouter();
   const iconPng = getEventIconPng(event.icon);
   const mediaImage = getEventMediaImage(event);
   
-  const handleBookmarkClick = (e: MouseEvent<HTMLButtonElement>) => {
+  const handleLearnMoreClick = (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (onBookmark) {
-      onBookmark(event);
-    }
+    router.push(`/event/${event.id}`);
   };
   
   return (
@@ -101,18 +100,17 @@ export default function EventCard({ event, onBookmark }: EventCardProps) {
         fontWeight: 600,
       }}
     >
-      <Link href={`/event/${event.id}`} className="w-full">
-        <article
-          className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-visible cursor-pointer h-[600px] sm:h-auto flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-premiumElevated transition-all duration-300 hover:border-white/80 hover:-translate-y-1 hover:shadow-premiumElevatedHover"
-          style={
-            {
-              width: "100%",
-              maxWidth: "540px",
-              "--width": "540",
-              "--height": "600",
-            } as CSSProperties
-          }
-        >
+      <article
+        className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-visible h-[600px] sm:h-auto flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-premiumElevated transition-all duration-300 hover:border-white/80 hover:-translate-y-1 hover:shadow-premiumElevatedHover w-full"
+        style={
+          {
+            width: "100%",
+            maxWidth: "540px",
+            "--width": "540",
+            "--height": "600",
+          } as CSSProperties
+        }
+      >
           {/* Glass depth overlay */}
           <div className="absolute inset-0 bg-gradient-to-br from-off-white/8 via-transparent to-transparent pointer-events-none z-0" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/5 via-transparent to-transparent pointer-events-none z-0" />
@@ -163,22 +161,18 @@ export default function EventCard({ event, onBookmark }: EventCardProps) {
               )}
             </div>
 
-            {onBookmark && (
-              <button
-                onClick={handleBookmarkClick}
-                className="w-full min-h-[44px] py-3 px-4 bg-gradient-to-br from-navbar-bg to-navbar-bg/90 rounded-full flex items-center justify-center gap-2 hover:bg-navbar-bg transition-all duration-200 text-off-white border border-sage/50"
-                aria-label="Bookmark event"
-                title="Bookmark"
-              >
-                <Bookmark className="w-5 h-5 sm:w-[18px] sm:h-[18px]" />
-                <span className="text-sm font-semibold" style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}>
-                  Save
-                </span>
-              </button>
-            )}
+            <button
+              onClick={handleLearnMoreClick}
+              className="w-full min-h-[44px] py-3 px-4 bg-gradient-to-br from-navbar-bg to-navbar-bg/90 rounded-full flex items-center justify-center gap-2 hover:bg-navbar-bg transition-all duration-200 text-off-white border border-sage/50 group"
+              aria-label="Learn more about this event"
+            >
+              <span className="text-sm font-semibold" style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}>
+                Learn More
+              </span>
+              <ArrowRight className="w-5 h-5 sm:w-[18px] sm:h-[18px] transition-transform duration-200 group-hover:translate-x-1" />
+            </button>
           </div>
         </article>
-      </Link>
     </li>
   );
 }

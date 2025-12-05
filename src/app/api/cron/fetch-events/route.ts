@@ -9,7 +9,10 @@ export const maxDuration = 60; // 60 seconds max duration
  * GET /api/cron/fetch-events
  * Cron job endpoint to fetch events from Ticketmaster API and store them in the database
  * 
- * This endpoint should be called by a cron service (Vercel Cron, GitHub Actions, etc.)
+ * NOTE: Primary cron job is now handled by Supabase Edge Function via pg_cron
+ * See: supabase/migrations/20250107_setup_edge_function_cron_simple.sql
+ * 
+ * This endpoint is kept as a backup/manual trigger option.
  * 
  * Environment variables required:
  * - TICKETMASTER_API_KEY: Your Ticketmaster API key

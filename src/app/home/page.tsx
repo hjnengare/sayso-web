@@ -284,13 +284,10 @@ export default function Home() {
 
             <section className="pt-4 sm:pt-8 md:pt-10 relative overflow-hidden">
               <div className="relative z-10">
-                {eventsLoading ? (
-                  <div className="h-96 bg-off-white/50 flex items-center justify-center">
-                    <div className="text-charcoal/60">Loading events...</div>
-                  </div>
-                ) : (
-                  <EventsSpecials events={events.length > 0 ? events : []} />
-                )}
+                <EventsSpecials 
+                  events={events.length > 0 ? events : []} 
+                  loading={eventsLoading}
+                />
               </div>
             </section>
 

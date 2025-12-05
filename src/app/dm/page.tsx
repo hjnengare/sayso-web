@@ -370,22 +370,35 @@ export default function DMChatListPage() {
             {/* Chat List - Scrollable */}
             <div className="flex-1 overflow-y-auto min-h-0">
               {filteredChats.length === 0 ? (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="flex flex-col items-center justify-center py-16 text-center"
+                <div
+                  className="mx-auto w-full max-w-[2000px] px-2 font-urbanist w-full"
+                  style={{
+                    fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                  }}
                 >
-                  <div className="relative mb-6">
-                    <div className="absolute inset-0 bg-card-bg/15 rounded-full blur-2xl" />
-                    <MessageCircle className="relative w-16 h-16 text-charcoal/20" strokeWidth={1.5} />
+                  <div className="text-center w-full">
+                    <div className="w-20 h-20 mx-auto mb-6 bg-sage/10 rounded-full flex items-center justify-center">
+                      <MessageCircle className="w-8 h-8 text-sage" strokeWidth={1.5} />
+                    </div>
+                    <h3 
+                      className="text-h2 font-semibold text-charcoal mb-2"
+                      style={{
+                        fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                      }}
+                    >
+                      No conversations found
+                    </h3>
+                    <p 
+                      className="text-body-sm text-charcoal/60 mb-6 max-w-md mx-auto"
+                      style={{
+                        fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                        fontWeight: 500,
+                      }}
+                    >
+                      Try adjusting your search
+                    </p>
                   </div>
-                  <h3 className="text-body font-semibold text-charcoal mb-2" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                    No conversations found
-                  </h3>
-                  <p className="text-body-sm text-charcoal/60 max-w-md" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                    Try adjusting your search
-                  </p>
-                </motion.div>
+                </div>
               ) : (
                 <StaggeredContainer>
                   <div className="space-y-0">
@@ -561,22 +574,35 @@ export default function DMChatListPage() {
 
             {/* Chat List */}
             {filteredChats.length === 0 ? (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="flex flex-col items-center justify-center py-16 sm:py-20 text-center px-4"
+              <div
+                className="mx-auto w-full max-w-[2000px] px-2 font-urbanist w-full"
+                style={{
+                  fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                }}
               >
-                <div className="relative mb-6">
-                  <div className="absolute inset-0 bg-card-bg/15 rounded-full blur-2xl" />
-                  <MessageCircle className="relative w-16 h-16 sm:w-20 sm:h-20 text-charcoal/20" strokeWidth={1.5} />
+                <div className="text-center w-full">
+                  <div className="w-20 h-20 mx-auto mb-6 bg-sage/10 rounded-full flex items-center justify-center">
+                    <MessageCircle className="w-8 h-8 text-sage" strokeWidth={1.5} />
+                  </div>
+                  <h3 
+                    className="text-h2 font-semibold text-charcoal mb-2"
+                    style={{
+                      fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                    }}
+                  >
+                    No conversations found
+                  </h3>
+                  <p 
+                    className="text-body-sm text-charcoal/60 mb-6 max-w-md mx-auto"
+                    style={{
+                      fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                      fontWeight: 500,
+                    }}
+                  >
+                    Try adjusting your search or start a new conversation
+                  </p>
                 </div>
-                <h3 className="text-body font-semibold text-charcoal mb-2" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                  No conversations found
-                </h3>
-                <p className="text-body-sm text-charcoal/60 max-w-md" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                  Try adjusting your search or start a new conversation
-                </p>
-              </motion.div>
+              </div>
             ) : (
               <StaggeredContainer>
                 <div className="space-y-0">
@@ -594,30 +620,44 @@ export default function DMChatListPage() {
 
             {/* Empty State for No Chats */}
             {chats.length === 0 && filteredChats.length === 0 && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="flex flex-col items-center justify-center py-16 sm:py-24 text-center px-4"
+              <div
+                className="mx-auto w-full max-w-[2000px] px-2 font-urbanist w-full"
+                style={{
+                  fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                }}
               >
-                <div className="relative mb-6 sm:mb-8">
-                  <div className="absolute inset-0 bg-gradient-to-br from-card-bg/20 to-navbar-bg/20 rounded-full blur-3xl" />
-                  <MessageCircle className="relative w-16 h-16 sm:w-24 sm:h-24 text-charcoal/20" strokeWidth={1.5} />
+                <div className="text-center w-full">
+                  <div className="w-20 h-20 mx-auto mb-6 bg-sage/10 rounded-full flex items-center justify-center">
+                    <MessageCircle className="w-8 h-8 text-sage" strokeWidth={1.5} />
+                  </div>
+                  <h3 
+                    className="text-h2 font-semibold text-charcoal mb-2"
+                    style={{
+                      fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                    }}
+                  >
+                    No messages yet
+                  </h3>
+                  <p 
+                    className="text-body-sm text-charcoal/60 mb-6 max-w-md mx-auto"
+                    style={{
+                      fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                      fontWeight: 500,
+                    }}
+                  >
+                    Start a conversation with reviewers and community members to get started!
+                  </p>
+                  <button
+                    onClick={() => router.push('/dm/new')}
+                    className="inline-flex items-center gap-2 px-6 py-2.5 bg-sage text-white text-body font-semibold rounded-full hover:bg-sage/90 transition-all duration-300"
+                    style={{
+                      fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                    }}
+                  >
+                    Start New Conversation
+                  </button>
                 </div>
-                <h2 className="text-h3 font-bold text-charcoal mb-2 sm:mb-3" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                  No messages yet
-                </h2>
-                <p className="text-body-sm sm:text-body text-charcoal/60 max-w-md mb-4 sm:mb-6" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                  Start a conversation with reviewers and community members to get started!
-                </p>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-5 sm:px-6 py-2.5 sm:py-3 bg-sage text-white rounded-full text-body-sm sm:text-body font-semibold shadow-sm hover:shadow-md transition-all duration-200"
-                  style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
-                >
-                  Start New Conversation
-                </motion.button>
-              </motion.div>
+              </div>
             )}
 
             {/* Mobile Compose Button - Floating */}

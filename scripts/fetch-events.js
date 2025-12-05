@@ -1,9 +1,15 @@
 /**
- * Script to manually trigger the Ticketmaster events fetch cron job locally
+ * Script to manually trigger the Ticketmaster events fetch
+ * 
+ * NOTE: Primary cron job is handled by Supabase Edge Function via pg_cron
+ * This script can trigger either:
+ * 1. The Supabase Edge Function directly (recommended)
+ * 2. The Next.js API route as a fallback
  * 
  * Usage:
  *   node scripts/fetch-events.js
  *   node scripts/fetch-events.js --city "Cape Town" --size 50
+ *   node scripts/fetch-events.js --use-edge-function  (calls Supabase Edge Function)
  */
 
 const args = process.argv.slice(2);
