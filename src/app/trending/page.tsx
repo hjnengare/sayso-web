@@ -4,8 +4,6 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
 import { AnimatePresence } from "framer-motion";
 import BusinessCard from "../components/BusinessCard/BusinessCard";
-import StaggeredContainer from "../components/Animations/StaggeredContainer";
-import AnimatedElement from "../components/Animations/AnimatedElement";
 import Footer from "../components/Footer/Footer";
 import Header from "../components/Header/Header";
 import { ChevronRight, ChevronUp } from "react-feather";
@@ -257,16 +255,16 @@ export default function TrendingPage() {
 
                     {/* Paginated Content with Smooth Transition */}
                     <AnimatePresence mode="wait" initial={false}>
-                      <StaggeredContainer
+                      <div
                         key={currentPage}
                         className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-3"
                       >
-                        {currentBusinesses.map((business, index) => (
-                          <AnimatedElement key={business.id} index={index} direction="bottom" className="list-none">
+                        {currentBusinesses.map((business) => (
+                          <div key={business.id} className="list-none">
                             <BusinessCard business={business} compact />
-                          </AnimatedElement>
+                          </div>
                         ))}
-                      </StaggeredContainer>
+                      </div>
                     </AnimatePresence>
 
                     {/* Pagination */}

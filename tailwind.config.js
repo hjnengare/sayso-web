@@ -26,7 +26,7 @@ module.exports = {
         // sayso Color Palette
         'page-bg': '#E5E0E5', // Page background
         'card-bg': '#9DAB9B', // Card background
-        'navbar-bg': '#7D0F2A', // Navbar background
+        'navbar-bg': '#722F37', // Navbar background (burgundy/wine red)
 
         // Semantic colors
         success: {
@@ -63,7 +63,7 @@ module.exports = {
         
         // Brand colors
         sage: '#7D9B76', // Primary brand color
-        coral: '#E07A5F', // Secondary brand color
+        coral: '#722F37', // Secondary brand color (burgundy/wine red)
         charcoal: '#2D2D2D', // Dark text color
         'off-white': '#E5E0E5', // Light background color
 

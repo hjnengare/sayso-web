@@ -18,8 +18,6 @@ import { useDebounce } from "../hooks/useDebounce";
 import { useEvents } from "../hooks/useEvents";
 import { ChevronUp, ChevronRight } from "react-feather";
 import { Loader } from "../components/Loader/Loader";
-import StaggeredContainer from "../components/Animations/StaggeredContainer";
-import AnimatedElement from "../components/Animations/AnimatedElement";
 
 const ITEMS_PER_PAGE = 12;
 
@@ -140,124 +138,114 @@ export default function EventsSpecialsPage() {
         whiteText={true}
       />
 
-      <StaggeredContainer>
-        <main
-          className="bg-off-white pt-20 sm:pt-24 pb-28"
-          style={{
-            fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-          }}
-        >
-          <div className="mx-auto w-full max-w-[2000px] px-2">
-            <AnimatedElement index={0} direction="top">
-              <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
-                <ol className="flex items-center gap-2 text-sm sm:text-base">
-                  <li>
-                    <Link
-                      href="/home"
-                      className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium"
-                      style={{
-                        fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                      }}
-                    >
-                      Home
-                    </Link>
-                  </li>
-                  <li className="flex items-center">
-                    <ChevronRight className="w-4 h-4 text-charcoal/40" />
-                  </li>
-                  <li>
-                    <span
-                      className="text-charcoal font-semibold"
-                      style={{
-                        fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                      }}
-                    >
-                      Events & Specials
-                    </span>
-                  </li>
-                </ol>
-              </nav>
-            </AnimatedElement>
+      <main
+        className="bg-off-white pt-20 sm:pt-24 pb-28"
+        style={{
+          fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+        }}
+      >
+        <div className="mx-auto w-full max-w-[2000px] px-2">
+          <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
+            <ol className="flex items-center gap-2 text-sm sm:text-base">
+              <li>
+                <Link
+                  href="/home"
+                  className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium"
+                  style={{
+                    fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                  }}
+                >
+                  Home
+                </Link>
+              </li>
+              <li className="flex items-center">
+                <ChevronRight className="w-4 h-4 text-charcoal/40" />
+              </li>
+              <li>
+                <span
+                  className="text-charcoal font-semibold"
+                  style={{
+                    fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                  }}
+                >
+                  Events & Specials
+                </span>
+              </li>
+            </ol>
+          </nav>
 
-            <AnimatedElement index={1} direction="left">
-              <div className="py-4 px-4">
-                <SearchInput
-                  variant="header"
-                  placeholder="Search events and limited-time offers..."
-                  mobilePlaceholder="Search events & specials..."
-                  onSearch={handleSearch}
-                  onSubmitQuery={handleSubmitQuery}
-                  showFilter={false}
-                  showSearchIcon={false}
-                />
-                {/* Show search status indicator */}
-                {debouncedSearchQuery.trim().length > 0 && (
-                  <div className="mt-2 px-2 text-sm text-charcoal/60" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                    {filteredEvents.length > 0 
-                      ? `Found ${filteredEvents.length} ${filteredEvents.length === 1 ? 'result' : 'results'} for "${debouncedSearchQuery}"`
-                      : `No results found for "${debouncedSearchQuery}"`
-                    }
-                  </div>
-                )}
+          <div className="py-4 px-4">
+            <SearchInput
+              variant="header"
+              placeholder="Search events and limited-time offers..."
+              mobilePlaceholder="Search events & specials..."
+              onSearch={handleSearch}
+              onSubmitQuery={handleSubmitQuery}
+              showFilter={false}
+              showSearchIcon={false}
+            />
+            {/* Show search status indicator */}
+            {debouncedSearchQuery.trim().length > 0 && (
+              <div className="mt-2 px-2 text-sm text-charcoal/60" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                {filteredEvents.length > 0 
+                  ? `Found ${filteredEvents.length} ${filteredEvents.length === 1 ? 'result' : 'results'} for "${debouncedSearchQuery}"`
+                  : `No results found for "${debouncedSearchQuery}"`
+                }
               </div>
-            </AnimatedElement>
-
-            <AnimatedElement index={2} direction="right">
-              <div className="py-4 flex flex-col gap-4">
-                <FilterTabs selectedFilter={selectedFilter} onFilterChange={handleFilterChange} />
-                <ResultsCount count={filteredEvents.length} filterType={selectedFilter} />
-              </div>
-            </AnimatedElement>
-
-            <AnimatedElement index={3} direction="bottom">
-              <div className="py-4">
-                {eventsLoading ? (
-                  <EventsGridSkeleton count={ITEMS_PER_PAGE} />
-                ) : eventsError ? (
-                  <div className="text-center py-20">
-                    <p className="text-coral mb-4">Failed to load events</p>
-                    <p className="text-charcoal/60 text-sm">{eventsError}</p>
-                  </div>
-                ) : currentEvents.length > 0 ? (
-                  <>
-                    {/* Loading Spinner Overlay for Pagination */}
-                    {isPaginationLoading && (
-                      <div className="fixed inset-0 z-[9998] bg-off-white/95 backdrop-blur-sm flex items-center justify-center min-h-screen">
-                        <Loader size="lg" variant="wavy" color="sage" />
-                      </div>
-                    )}
-
-                    {/* Paginated Content with Smooth Transition */}
-                    <AnimatePresence mode="wait" initial={false}>
-                      <motion.div
-                        key={currentPage}
-                        initial={{ opacity: 0, y: 20, scale: 0.98, filter: "blur(8px)" }}
-                        animate={{ opacity: isPaginationLoading ? 0 : 1, y: 0, scale: 1, filter: "blur(0px)" }}
-                        exit={{ opacity: 0, y: -20, scale: 0.98, filter: "blur(8px)" }}
-                        transition={{
-                          duration: 0.4,
-                          ease: [0.16, 1, 0.3, 1],
-                        }}
-                      >
-                        <EventsGrid events={currentEvents} onBookmark={handleBookmark} />
-                      </motion.div>
-                    </AnimatePresence>
-
-                    <Pagination
-                      currentPage={currentPage}
-                      totalPages={totalPages}
-                      onPageChange={handlePageChange}
-                      disabled={isPaginationLoading}
-                    />
-                  </>
-                ) : (
-                  <EmptyState filterType={selectedFilter} />
-                )}
-              </div>
-            </AnimatedElement>
+            )}
           </div>
-        </main>
-      </StaggeredContainer>
+
+          <div className="py-4 flex flex-col gap-4">
+            <FilterTabs selectedFilter={selectedFilter} onFilterChange={handleFilterChange} />
+            <ResultsCount count={filteredEvents.length} filterType={selectedFilter} />
+          </div>
+
+          <div className="py-4">
+            {eventsLoading ? (
+              <EventsGridSkeleton count={ITEMS_PER_PAGE} />
+            ) : eventsError ? (
+              <div className="text-center py-20">
+                <p className="text-coral mb-4">Failed to load events</p>
+                <p className="text-charcoal/60 text-sm">{eventsError}</p>
+              </div>
+            ) : currentEvents.length > 0 ? (
+              <>
+                {/* Loading Spinner Overlay for Pagination */}
+                {isPaginationLoading && (
+                  <div className="fixed inset-0 z-[9998] bg-off-white/95 backdrop-blur-sm flex items-center justify-center min-h-screen">
+                    <Loader size="lg" variant="wavy" color="sage" />
+                  </div>
+                )}
+
+                {/* Paginated Content with Smooth Transition */}
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.div
+                    key={currentPage}
+                    initial={{ opacity: 0, y: 20, scale: 0.98, filter: "blur(8px)" }}
+                    animate={{ opacity: isPaginationLoading ? 0 : 1, y: 0, scale: 1, filter: "blur(0px)" }}
+                    exit={{ opacity: 0, y: -20, scale: 0.98, filter: "blur(8px)" }}
+                    transition={{
+                      duration: 0.4,
+                      ease: [0.16, 1, 0.3, 1],
+                    }}
+                  >
+                    <EventsGrid events={currentEvents} onBookmark={handleBookmark} />
+                  </motion.div>
+                </AnimatePresence>
+
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                  disabled={isPaginationLoading}
+                />
+              </>
+            ) : (
+              <EmptyState filterType={selectedFilter} />
+            )}
+          </div>
+        </div>
+      </main>
 
       {showScrollTop && (
         <button

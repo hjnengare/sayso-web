@@ -12,8 +12,6 @@ import LeaderboardPodium from "../components/Leaderboard/LeaderboardPodium";
 import LeaderboardList from "../components/Leaderboard/LeaderboardList";
 import LeaderboardTitle from "../components/Leaderboard/LeaderboardTitle";
 import { Tabs } from "@/components/atoms/Tabs";
-import StaggeredContainer from "../components/Animations/StaggeredContainer";
-import AnimatedElement from "../components/Animations/AnimatedElement";
 import { Loader } from "../components/Loader/Loader";
 
 // Dynamically import BusinessOfMonthLeaderboard to improve initial load time
@@ -188,11 +186,9 @@ function LeaderboardPage() {
           whiteText={true}
         />
 
-        <StaggeredContainer>
-          <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
+        <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
             <div className="pt-20 sm:pt-24">
               {/* Hero Section */}
-              <AnimatedElement index={0} direction="top">
                 <section className="relative z-10 pb-6 sm:pb-8 md:pb-12">
                   <div className="mx-auto w-full max-w-[2000px] px-2">
                     {/* Breadcrumb */}
@@ -215,10 +211,8 @@ function LeaderboardPage() {
                     </nav>
                   </div>
                 </section>
-              </AnimatedElement>
 
               {/* Main Content Section */}
-              <AnimatedElement index={1} direction="scale">
                 <section
                   className="relative pb-12 sm:pb-16 md:pb-20"
                   style={{
@@ -229,14 +223,11 @@ function LeaderboardPage() {
                     <div className="max-w-[800px] mx-auto pt-4 sm:pt-6 md:pt-8">
 
                       {/* Tabs */}
-                      <AnimatedElement index={2} direction="left">
                         <div className="flex justify-center mb-4 sm:mb-6 md:mb-8 px-2">
                           <Tabs tabs={tabs} activeTab={activeTab} onTabChange={handleTabChange} />
                         </div>
-                      </AnimatedElement>
 
                       {/* Leaderboard Content */}
-                      <AnimatedElement index={3} direction="right">
                         <motion.div
                           key={activeTab}
                           className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-xl ring-1 ring-white/20 p-3 sm:p-4 md:p-6 lg:p-8 mb-6 sm:mb-8 md:mb-12 relative overflow-hidden"
@@ -305,18 +296,13 @@ function LeaderboardPage() {
                             )}
                           </div>
                         </motion.div>
-                      </AnimatedElement>
                     </div>
                   </div>
                 </section>
-              </AnimatedElement>
             </div>
 
-            <AnimatedElement index={4} direction="bottom">
-              <Footer />
-            </AnimatedElement>
+            <Footer />
           </div>
-        </StaggeredContainer>
       </div>
     </EmailVerificationGuard>
   );

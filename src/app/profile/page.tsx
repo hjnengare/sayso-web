@@ -36,8 +36,6 @@ import { useSavedItems } from "@/app/contexts/SavedItemsContext";
 import { EditProfileModal } from "@/app/components/EditProfile/EditProfileModal";
 // Removed mock data import - use API calls instead
 import { useMemo } from "react";
-import StaggeredContainer from "../components/Animations/StaggeredContainer";
-import AnimatedElement from "../components/Animations/AnimatedElement";
 import { useReviewSubmission } from "@/app/hooks/useReviews";
 import { useRouter } from "next/navigation";
 import Header from "../components/Header/Header";
@@ -767,7 +765,6 @@ function ProfileContent() {
           whiteText={true}
         />
 
-        <StaggeredContainer>
         <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
           <div className="pt-20 sm:pt-24">
             <main
@@ -797,7 +794,6 @@ function ProfileContent() {
                 </nav>
                 <div className="pt-2 pb-12 sm:pb-16 md:pb-20">
                   <div className="space-y-6">
-                      <AnimatedElement index={0} direction="top">
                     <article
                       className="w-full sm:mx-0"
                       aria-labelledby="profile-heading"
@@ -933,9 +929,7 @@ function ProfileContent() {
                         </div>
                       </div>
                     </article>
-                      </AnimatedElement>
 
-                      <AnimatedElement index={1} direction="left">
                     <section
                       className="grid grid-cols-2 sm:grid-cols-4 gap-4"
                       aria-label="Profile statistics"
@@ -989,11 +983,9 @@ function ProfileContent() {
                         </div>
                       )}
                     </section>
-                      </AnimatedElement>
 
                     {/* Saved Businesses - Mobile Only */}
                     {savedBusinesses.length > 0 && (
-                        <AnimatedElement index={2} direction="right">
                       <section
                             className="md:hidden bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-6 space-y-4"
                         aria-label="Saved businesses"
@@ -1004,10 +996,8 @@ function ProfileContent() {
                           showCount={true}
                         />
                       </section>
-                      </AnimatedElement>
                     )}
 
-                      <AnimatedElement index={3} direction="bottom">
                     <section
                       className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-6 sm:p-8 space-y-4"
                       aria-label="Business management"
@@ -1033,7 +1023,6 @@ function ProfileContent() {
                     </section>
                     </AnimatedElement>
 
-                    <AnimatedElement index={4} direction="scale">
                     <section
                       className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-6 sm:p-8"
                       aria-label="Your contributions"
@@ -1057,7 +1046,6 @@ function ProfileContent() {
                     </section>
                     </AnimatedElement>
 
-                    <AnimatedElement index={5} direction="scale">
                     <section
                       className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-6 sm:p-8"
                       aria-label="Your achievements"
@@ -1069,7 +1057,6 @@ function ProfileContent() {
                     </section>
                     </AnimatedElement>
 
-                    <AnimatedElement index={6} direction="bottom">
                     <section
                       className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-6 sm:p-8 space-y-4"
                       aria-label="Account actions"
@@ -1117,10 +1104,7 @@ function ProfileContent() {
           </div>
           </div>
 
-        <AnimatedElement index={7} direction="bottom">
-          <Footer />
-        </AnimatedElement>
-      </StaggeredContainer>
+        <Footer />
         </motion.div>
       </AnimatePresence>
 

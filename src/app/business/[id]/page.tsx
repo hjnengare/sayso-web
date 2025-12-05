@@ -29,8 +29,6 @@ import {
     BusinessContactInfo,
 } from "../../components/BusinessDetail";
 import Header from "../../components/Header/Header";
-import StaggeredContainer from "../../components/Animations/StaggeredContainer";
-import AnimatedElement from "../../components/Animations/AnimatedElement";
 
 export default function BusinessProfilePage() {
     const params = useParams();
@@ -297,95 +295,79 @@ export default function BusinessProfilePage() {
                             <div className="mx-auto w-full max-w-[2000px] px-2 relative z-10">
                                 {/* Breadcrumb Navigation */}
                                 <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
-                                    <ol className="flex items-center gap-2 text-sm sm:text-base">
-                                        <li>
-                                            <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                                    <ol className="flex items-center gap-2 text-sm sm:text-base flex-nowrap overflow-x-auto scrollbar-hide">
+                                        <li className="flex-shrink-0">
+                                            <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium whitespace-nowrap" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                                                 Home
                                             </Link>
                                         </li>
-                                        <li className="flex items-center">
+                                        <li className="flex items-center flex-shrink-0">
                                             <ChevronRight className="w-4 h-4 text-charcoal/40" />
                                         </li>
-                                        <li>
-                                            <span className="text-charcoal font-semibold truncate max-w-[200px] sm:max-w-none" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                                        <li className="min-w-0 flex-1">
+                                            <span className="text-charcoal font-semibold truncate block" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                                                 {business?.name || 'Business'}
                                             </span>
                                         </li>
                                     </ol>
                                 </nav>
                                 <div className="pt-2 pb-12 sm:pb-16 md:pb-20">
-                                    <StaggeredContainer>
-                                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8">
-                                            {/* Left Column - Main Content */}
-                                            <div className="lg:col-span-2 space-y-4 sm:space-y-6 lg:space-y-8">
-                                                <AnimatedElement index={0} direction="bottom">
-                                                    <BusinessHeroImage
-                                                        image={businessData.image || businessData.images[0] || ""}
-                                                        alt={businessData.name}
-                                                        rating={businessData.rating}
-                                                        isLiked={isLiked}
-                                                        onLike={handleLike}
-                                                        verified={businessData.verified}
-                                                    />
-                                                </AnimatedElement>
-                                                <AnimatedElement index={1} direction="bottom">
-                                                    <BusinessInfoComponent
-                                                        name={businessData.name}
-                                                        rating={businessData.rating}
-                                                        location={businessData.location}
-                                                        category={businessData.category}
-                                                    />
-                                                </AnimatedElement>
-                                                <AnimatedElement index={2} direction="bottom">
-                                                    <BusinessDescription description={businessData.description} />
-                                                </AnimatedElement>
-                                                <AnimatedElement index={3} direction="bottom">
-                                                    <BusinessDetailsCard
-                                                        priceRange={businessData.price_range}
-                                                        verified={businessData.verified}
-                                                        hours={business.hours || business.opening_hours || business.openingHours || undefined}
-                                                    />
-                                                </AnimatedElement>
+                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8">
+                                        {/* Left Column - Main Content */}
+                                        <div className="lg:col-span-2 space-y-4 sm:space-y-6 lg:space-y-8">
+                                            <BusinessHeroImage
+                                                image={businessData.image || businessData.images[0] || ""}
+                                                alt={businessData.name}
+                                                rating={businessData.rating}
+                                                isLiked={isLiked}
+                                                onLike={handleLike}
+                                                verified={businessData.verified}
+                                            />
+                                            <BusinessInfoComponent
+                                                name={businessData.name}
+                                                rating={businessData.rating}
+                                                location={businessData.location}
+                                                category={businessData.category}
+                                            />
+                                            <BusinessDescription description={businessData.description} />
+                                            <BusinessDetailsCard
+                                                priceRange={businessData.price_range}
+                                                verified={businessData.verified}
+                                                hours={business.hours || business.opening_hours || business.openingHours || undefined}
+                                            />
 
-                                                {/* Contact Information - Mobile Only */}
-                                                <AnimatedElement index={4} direction="bottom">
-                                                    <div className="lg:hidden">
-                                                        <BusinessContactInfo
-                                                            phone={businessData.phone}
-                                                            website={businessData.website}
-                                                            address={businessData.address}
-                                                            email={businessData.email}
-                                                            location={businessData.location}
-                                                        />
-                                                    </div>
-                                                </AnimatedElement>
-                                            </div>
-
-                                            {/* Right Column - Sidebar */}
-                                            <div className="space-y-4 sm:space-y-6">
-                                                <AnimatedElement index={5} direction="bottom">
-                                                    <BusinessActionCard
-                                                        businessSlug={businessSlug}
-                                                        businessId={businessId}
-                                                        isBusinessOwner={isBusinessOwner}
-                                                        hasReviewed={hasReviewed}
-                                                    />
-                                                </AnimatedElement>
-                                                {/* Contact Information - Desktop Only */}
-                                                <AnimatedElement index={6} direction="bottom">
-                                                    <div className="hidden lg:block">
-                                                        <BusinessContactInfo
-                                                            phone={businessData.phone}
-                                                            website={businessData.website}
-                                                            address={businessData.address}
-                                                            email={businessData.email}
-                                                            location={businessData.location}
-                                                        />
-                                                    </div>
-                                                </AnimatedElement>
+                                            {/* Contact Information - Mobile Only */}
+                                            <div className="lg:hidden">
+                                                <BusinessContactInfo
+                                                    phone={businessData.phone}
+                                                    website={businessData.website}
+                                                    address={businessData.address}
+                                                    email={businessData.email}
+                                                    location={businessData.location}
+                                                />
                                             </div>
                                         </div>
-                                    </StaggeredContainer>
+
+                                        {/* Right Column - Sidebar */}
+                                        <div className="space-y-4 sm:space-y-6">
+                                            <BusinessActionCard
+                                                businessSlug={businessSlug}
+                                                businessId={businessId}
+                                                isBusinessOwner={isBusinessOwner}
+                                                hasReviewed={hasReviewed}
+                                            />
+                                            {/* Contact Information - Desktop Only */}
+                                            <div className="hidden lg:block">
+                                                <BusinessContactInfo
+                                                    phone={businessData.phone}
+                                                    website={businessData.website}
+                                                    address={businessData.address}
+                                                    email={businessData.email}
+                                                    location={businessData.location}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </section>

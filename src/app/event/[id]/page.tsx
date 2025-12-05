@@ -213,25 +213,26 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
           <div className="mx-auto w-full max-w-[2000px] px-2 relative z-10">
             {/* Breadcrumb Navigation */}
             <nav className="pt-4 mb-6 sm:mb-8 px-2" aria-label="Breadcrumb">
-              <ol className="flex items-center gap-2 text-sm sm:text-base">
-                <li>
-                  <Link href="/home" className="text-charcoal/90 hover:text-sage transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+              <ol className="flex items-center gap-2 text-sm sm:text-base flex-nowrap overflow-x-auto scrollbar-hide">
+                {/* Hide Home on mobile - show max 2 items on small devices */}
+                <li className="hidden sm:flex flex-shrink-0">
+                  <Link href="/home" className="text-charcoal/90 hover:text-sage transition-colors duration-200 font-medium whitespace-nowrap" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                     Home
                   </Link>
                 </li>
-                <li className="flex items-center">
+                <li className="hidden sm:flex items-center flex-shrink-0">
                   <ChevronRight className="w-4 h-4 text-charcoal/40" />
                 </li>
-                <li>
-                  <Link href="/events-specials" className="text-charcoal/90 hover:text-sage transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                <li className="flex-shrink-0">
+                  <Link href="/events-specials" className="text-charcoal/90 hover:text-sage transition-colors duration-200 font-medium whitespace-nowrap" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                     Events & Specials
                   </Link>
                 </li>
-                <li className="flex items-center">
+                <li className="flex items-center flex-shrink-0">
                   <ChevronRight className="w-4 h-4 text-charcoal/40" />
                 </li>
-                <li>
-                  <span className="text-charcoal font-semibold truncate max-w-[200px] sm:max-w-none" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                <li className="min-w-0 flex-1">
+                  <span className="text-charcoal font-semibold truncate block" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                     {event.title}
                   </span>
                 </li>

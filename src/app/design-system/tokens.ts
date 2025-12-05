@@ -26,19 +26,19 @@ export const colors = {
       900: '#20231F',   // Deepest sage
       DEFAULT: '#9DAB9B', // Main brand color
     },
-    // Burgundy/wine from navbar (#7D0F2A)
+    // Burgundy/wine red from navbar (#722F37)
     coral: {
-      50: '#FAE6EB',    // Very light burgundy
-      100: '#F5CDD7',   // Light burgundy
-      200: '#EB9BAF',   // Medium light burgundy
-      300: '#E16987',   // Medium burgundy
-      400: '#D7375F',   // Default burgundy
-      500: '#B21E40',   // Main burgundy
-      600: '#8E1833',   // Dark burgundy
-      700: '#7D0F2A',   // Navbar burgundy
-      800: '#5A0B1E',   // Very dark burgundy
-      900: '#370712',   // Deepest burgundy
-      DEFAULT: '#7D0F2A', // Secondary brand color (navbar)
+      50: '#F5E8EA',    // Very light burgundy
+      100: '#EBD1D5',   // Light burgundy
+      200: '#D7A3AB',   // Medium light burgundy
+      300: '#C37581',   // Medium burgundy
+      400: '#AF4757',   // Default burgundy
+      500: '#722F37',   // Main burgundy (wine red)
+      600: '#5C252B',   // Dark burgundy
+      700: '#461B1F',   // Very dark burgundy
+      800: '#301113',   // Deeper burgundy
+      900: '#1A0807',   // Deepest burgundy
+      DEFAULT: '#722F37', // Secondary brand color (burgundy/wine red)
     }
   },
 

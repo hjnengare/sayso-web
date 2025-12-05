@@ -5,9 +5,9 @@ export const colors = {
   sageDark: '#6B8A64',
   sageLight: '#8FAA88',
 
-  coral: '#FF6B6B',
-  coralDark: '#E85555',
-  coralLight: '#FF8787',
+  coral: '#722F37',
+  coralDark: '#5C252B',
+  coralLight: '#8B3F47',
 
   // Neutrals
   charcoal: '#2D3748',

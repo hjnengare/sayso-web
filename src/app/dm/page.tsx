@@ -11,8 +11,6 @@ import SearchInput from "../components/SearchInput/SearchInput";
 import { TOP_REVIEWERS, type Reviewer } from "../data/communityHighlightsData";
 import Footer from "../components/Footer/Footer";
 import Header from "../components/Header/Header";
-import StaggeredContainer from "../components/Animations/StaggeredContainer";
-import AnimatedElement from "../components/Animations/AnimatedElement";
 
 interface Chat {
   id: string;
@@ -400,19 +398,17 @@ export default function DMChatListPage() {
                   </div>
                 </div>
               ) : (
-                <StaggeredContainer>
-                  <div className="space-y-0">
-                    {filteredChats.map((chat, index) => (
-                      <ChatItem
-                        key={chat.id}
-                        chat={chat}
-                        index={index}
-                        isSelected={selectedChatId === chat.id}
-                        onClick={() => setSelectedChatId(chat.id)}
-                      />
-                    ))}
-                  </div>
-                </StaggeredContainer>
+                <div className="space-y-0">
+                  {filteredChats.map((chat) => (
+                    <ChatItem
+                      key={chat.id}
+                      chat={chat}
+                      index={0}
+                      isSelected={selectedChatId === chat.id}
+                      onClick={() => setSelectedChatId(chat.id)}
+                    />
+                  ))}
+                </div>
               )}
             </div>
 
@@ -604,18 +600,16 @@ export default function DMChatListPage() {
                 </div>
               </div>
             ) : (
-              <StaggeredContainer>
-                <div className="space-y-0">
-                  {filteredChats.map((chat, index) => (
-                    <ChatItem
-                      key={chat.id}
-                      chat={chat}
-                      index={index}
-                      onClick={() => router.push(`/dm/${chat.id}`)}
-                    />
-                  ))}
-                </div>
-              </StaggeredContainer>
+              <div className="space-y-0">
+                {filteredChats.map((chat) => (
+                  <ChatItem
+                    key={chat.id}
+                    chat={chat}
+                    index={0}
+                    onClick={() => router.push(`/dm/${chat.id}`)}
+                  />
+                ))}
+              </div>
             )}
 
             {/* Empty State for No Chats */}

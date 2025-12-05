@@ -4,8 +4,6 @@ import { useEffect, useState, useMemo } from "react";
 import { useBusinesses } from "../../hooks/useBusinesses";
 import SimilarBusinessCard from "./SimilarBusinessCard";
 import { Briefcase } from "react-feather";
-import StaggeredContainer from "../Animations/StaggeredContainer";
-import AnimatedElement from "../Animations/AnimatedElement";
 
 interface SimilarBusinessesProps {
   currentBusinessId: string;
@@ -121,31 +119,27 @@ export default function SimilarBusinesses({
         </div>
       </div>
 
-      <StaggeredContainer>
-        <ul className="list-none flex flex-col sm:flex-row sm:justify-between gap-4 md:gap-6 relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6">
-          {similarBusinesses.map((business, index) => (
-            <AnimatedElement key={business.id} index={index} direction="bottom">
-              <li className="flex-1 min-w-0">
-                <SimilarBusinessCard
-                  id={business.id}
-                  name={business.name}
-                  image={business.image}
-                  image_url={business.image_url}
-                  uploaded_image={business.uploaded_image}
-                  category={business.category}
-                  location={business.location}
-                  address={business.address}
-                  rating={business.rating}
-                  totalRating={business.totalRating}
-                  reviews={business.reviews}
-                  verified={business.verified}
-                  priceRange={business.priceRange}
-                />
-              </li>
-            </AnimatedElement>
-          ))}
-        </ul>
-      </StaggeredContainer>
+      <ul className="list-none flex flex-col sm:flex-row sm:justify-between gap-4 md:gap-6 relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6">
+        {similarBusinesses.map((business) => (
+          <li key={business.id} className="flex-1 min-w-0">
+            <SimilarBusinessCard
+              id={business.id}
+              name={business.name}
+              image={business.image}
+              image_url={business.image_url}
+              uploaded_image={business.uploaded_image}
+              category={business.category}
+              location={business.location}
+              address={business.address}
+              rating={business.rating}
+              totalRating={business.totalRating}
+              reviews={business.reviews}
+              verified={business.verified}
+              priceRange={business.priceRange}
+            />
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }
