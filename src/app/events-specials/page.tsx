@@ -34,62 +34,41 @@ export default function EventsSpecialsPage() {
   // Debounce search query for smoother real-time filtering (300ms delay)
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
-  // Fetch events from database
-  const { events: allEvents, loading: eventsLoading, error: eventsError } = useEvents({
-    limit: 1000, // Fetch a large number for client-side filtering
+  // Calculate offset for server-side pagination
+  const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+
+  // Fetch events from database with server-side pagination and search
+  const { events: allEvents, loading: eventsLoading, error: eventsError, count: totalCount } = useEvents({
+    limit: ITEMS_PER_PAGE,
+    offset: offset,
+    search: debouncedSearchQuery.trim() || undefined,
     upcoming: true,
   });
 
-  // Enhanced text-based search with debouncing
+  // Client-side filtering for type (event/special) only
+  // Search is handled server-side for better performance
   const filteredEvents = useMemo(() => {
-    const query = debouncedSearchQuery.trim().toLowerCase();
-    
-    // Filter by type first (all Ticketmaster events are type 'event', but we keep the filter for future specials)
-    let filtered = allEvents.filter((event) => 
+    // Filter by type (all Ticketmaster events are type 'event', but we keep the filter for future specials)
+    return allEvents.filter((event) => 
       selectedFilter === "all" || event.type === selectedFilter
     );
+  }, [allEvents, selectedFilter]);
 
-    // If no search query, return filtered events
-    if (query.length === 0) {
-      return filtered;
-    }
+  // Use server-side count for pagination
+  const totalPages = Math.max(1, Math.ceil(totalCount / ITEMS_PER_PAGE));
 
-    // Enhanced search: search across multiple fields
-    return filtered.filter((event) => {
-      // Search in title, description, location, price, and startDate
-      const searchableText = [
-        event.title,
-        event.description,
-        event.location,
-        event.price,
-        event.startDate,
-        event.endDate,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-
-      // Check if query matches any part of the searchable text
-      const matchesQuery = searchableText.includes(query) ||
-        // Also check individual words for better matching
-        query.split(/\s+/).every((word) => searchableText.includes(word));
-
-      return matchesQuery;
-    });
-  }, [allEvents, selectedFilter, debouncedSearchQuery]);
-
-  const totalPages = Math.max(1, Math.ceil(filteredEvents.length / ITEMS_PER_PAGE));
-
-  const currentEvents = useMemo(() => {
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredEvents.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [filteredEvents, currentPage]);
+  const currentEvents = filteredEvents;
 
   useEffect(() => {
-    if (currentPage > totalPages) {
+    if (currentPage > totalPages && totalPages > 0) {
       setCurrentPage(totalPages);
     }
   }, [currentPage, totalPages]);
+
+  // Reset to page 1 when search or filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchQuery, selectedFilter]);
 
   useEffect(() => {
     const handleScroll = () => {
