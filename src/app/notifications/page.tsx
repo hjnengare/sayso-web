@@ -70,7 +70,7 @@ export default function NotificationsPage() {
       />
 
       <div className="relative">
-        <div className="pt-20 sm:pt-24 pb-12 sm:pb-16 md:pb-20">
+        <div className="pt-20 sm:pt-24">
           <div className="mx-auto w-full max-w-[2000px] px-3 relative mb-4">
             {/* Breadcrumb Navigation */}
             <nav
