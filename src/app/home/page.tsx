@@ -233,7 +233,7 @@ export default function Home() {
       <main className="bg-off-white relative pt-20 sm:pt-24 pb-16">
         <div className="mx-auto w-full max-w-[2000px]">
           {/* Search Input at top of home content */}
-          <div ref={searchWrapRef} className="py-4 px-4">
+          <div ref={searchWrapRef} className="py-3 sm:py-4 px-4">
             <SearchInput
               variant="header"
               placeholder="Discover exceptional local hidden gems..."
@@ -246,9 +246,9 @@ export default function Home() {
             />
           </div>
 
-          <div className="py-4">
+          <div className="py-3 sm:py-4">
             {/* For You Section */}
-            <section className="pt-4 sm:pt-8 md:pt-10 relative overflow-hidden">
+            <section className="pt-4 sm:pt-6 md:pt-10 relative overflow-hidden">
               <div className="relative z-10">
                 {forYouLoading && <BusinessRowSkeleton title="For You Now" />}
                 {!forYouLoading && hasForYouBusinesses && (
@@ -265,7 +265,7 @@ export default function Home() {
               </div>
             </section>
 
-            <section className="pt-4 sm:pt-8 md:pt-10 relative overflow-hidden">
+            <section className="pt-4 sm:pt-6 md:pt-10 relative overflow-hidden">
               <div className="relative z-10">
                 {trendingLoading && <BusinessRowSkeleton title="Trending Now" />}
                 {!trendingLoading && hasTrendingBusinesses && (
@@ -282,7 +282,7 @@ export default function Home() {
               </div>
             </section>
 
-            <section className="pt-4 sm:pt-8 md:pt-10 relative overflow-hidden">
+            <section className="pt-4 sm:pt-6 md:pt-10 relative overflow-hidden">
               <div className="relative z-10">
                 <EventsSpecials 
                   events={events.length > 0 ? events : []} 
@@ -291,7 +291,7 @@ export default function Home() {
               </div>
             </section>
 
-            <section className="pt-4 sm:pt-8 md:pt-10 relative overflow-hidden">
+            <section className="pt-4 sm:pt-6 md:pt-10 relative overflow-hidden">
               <div className="relative z-10">
                 <CommunityHighlights
                   reviews={FEATURED_REVIEWS}

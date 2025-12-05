@@ -191,7 +191,7 @@ export default function ForYouPage() {
           </nav>
 
           {/* Search Input at top of main content */}
-          <div ref={searchWrapRef} className="py-4 px-4">
+          <div ref={searchWrapRef} className="py-3 sm:py-4 px-4">
             <SearchInput
               variant="header"
               placeholder="Discover exceptional local hidden gems..."
@@ -202,9 +202,10 @@ export default function ForYouPage() {
               onFocusOpenFilters={openFilters}
               showFilter
             />
-            </div>
+          </div>
 
-          <div className="py-4">
+          <div className="py-3 sm:py-4">
+            <div className="pt-4 sm:pt-6 md:pt-10">
           {loading && (
             <div className="min-h-dvh bg-off-white flex items-center justify-center">
               <Loader size="lg" variant="wavy" color="sage"  />
@@ -273,6 +274,7 @@ export default function ForYouPage() {
               )}
             </>
           )}
+            </div>
           </div>
         </div>
       </main>

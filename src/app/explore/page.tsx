@@ -267,7 +267,7 @@ function ExplorePageContent() {
           </nav>
 
           {/* Search Input at top of main content */}
-          <div ref={searchWrapRef} className="py-4 px-4">
+          <div ref={searchWrapRef} className="py-3 sm:py-4 px-4">
             <SearchInput
               variant="header"
               placeholder="Discover exceptional local hidden gems..."
@@ -286,8 +286,9 @@ function ExplorePageContent() {
             )}
           </div>
 
-          <div className="py-4">
-          {loading && (
+          <div className="py-3 sm:py-4">
+            <div className="pt-4 sm:pt-6 md:pt-10">
+              {loading && (
             <div className="min-h-dvh bg-off-white flex items-center justify-center">
               <Loader size="lg" variant="wavy" color="sage"  />
             </div>
@@ -355,6 +356,7 @@ function ExplorePageContent() {
               )}
             </>
           )}
+            </div>
           </div>
         </div>
       </main>

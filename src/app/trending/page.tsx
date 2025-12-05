@@ -197,7 +197,7 @@ export default function TrendingPage() {
           </nav>
 
           {/* Search Input */}
-          <div ref={searchWrapRef} className="py-4">
+          <div ref={searchWrapRef} className="py-3 sm:py-4 px-4">
             <SearchInput
               variant="header"
               placeholder="Search trending businesses..."
@@ -210,7 +210,8 @@ export default function TrendingPage() {
             />
           </div>
 
-            <div className="py-4">
+          <div className="py-3 sm:py-4">
+            <div className="pt-4 sm:pt-6 md:pt-10">
             {loading && (
               <div className="min-h-dvh bg-off-white flex items-center justify-center">
                 <Loader size="lg" variant="wavy" color="sage"  />
@@ -279,6 +280,7 @@ export default function TrendingPage() {
                 )}
               </>
             )}
+            </div>
           </div>
         </div>
       </main>
