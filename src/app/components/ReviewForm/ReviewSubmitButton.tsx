@@ -76,7 +76,7 @@ export default function ReviewSubmitButton({ isFormValid, onSubmit }: ReviewSubm
           WebkitTapHighlightColor: 'transparent',
           userSelect: 'none',
           zIndex: 20,
-          backgroundColor: isFormValid ? '#7D0F2A' : undefined, // Explicit navbar-bg color
+          backgroundColor: isFormValid ? '#722F37' : undefined, // Explicit navbar-bg color
           color: isFormValid ? '#FFFFFF' : undefined,
         }}
         aria-disabled={!isFormValid}

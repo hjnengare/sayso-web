@@ -27,7 +27,7 @@ export default function Stars({ value = 5, color = "amber", size = 15, spacing =
       </svg>
       {Array.from({ length: 5 }).map((_, i) => {
         const active = i < full;
-        const starColor = color === "navbar-bg" ? "#7D0F2A" : color === "coral/90" ? "#f87171" : "#f59e0b";
+        const starColor = color === "navbar-bg" ? "#722F37" : color === "coral/90" ? "#f87171" : "#f59e0b";
         return (
           <span
             key={i}
