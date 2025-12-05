@@ -108,6 +108,10 @@
     scroll-behavior: smooth;
     color-scheme: light;
     /* Ensures browser UI (scrollbars, form controls) adapts to light theme */
+    /* Prevent scrolling past the edge on mobile devices */
+    overscroll-behavior: none;
+    overscroll-behavior-x: none;
+    overscroll-behavior-y: none;
   }
 
   body {
@@ -121,9 +125,33 @@
     width: 100%;
     max-width: 100vw;
     overflow-x: hidden;
+    /* Prevent scrolling past the edge on mobile devices */
+    overscroll-behavior: none;
+    overscroll-behavior-x: none;
+    overscroll-behavior-y: none;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     line-height: 1.6;
+  }
+
+  /* Mobile-specific: Prevent scrolling past the edge and pull-to-refresh */
+  @media only screen and (max-width: 768px) {
+    html,
+    body {
+      overscroll-behavior: none !important;
+      overscroll-behavior-x: none !important;
+      overscroll-behavior-y: none !important;
+      /* Prevent pull-to-refresh on mobile */
+      touch-action: pan-y;
+      /* Prevent iOS bounce/rubber-band effect */
+      -webkit-overflow-scrolling: touch;
+      position: relative;
+    }
+
+    /* Prevent overscroll on all scrollable containers */
+    * {
+      overscroll-behavior: none;
+    }
   }
   
   /* Body text and card text use Urbanist - headers (h1-h6) keep their own font-family styles */
