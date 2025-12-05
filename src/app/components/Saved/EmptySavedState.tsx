@@ -14,8 +14,8 @@ export default function EmptySavedState() {
       }}
     >
       <div className="text-center w-full">
-        <div className="w-20 h-20 mx-auto mb-6 bg-sage/10 rounded-full flex items-center justify-center">
-          <Bookmark className="w-8 h-8 text-sage" />
+        <div className="w-20 h-20 mx-auto mb-6 bg-charcoal/10 rounded-full flex items-center justify-center">
+          <Bookmark className="w-10 h-10 text-charcoal/60" strokeWidth={1.5} />
         </div>
 
         <h3 
