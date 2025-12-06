@@ -154,6 +154,9 @@ function ProfileContent() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isDeleteAccountDialogOpen, setIsDeleteAccountDialogOpen] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [deleteAccountError, setDeleteAccountError] = useState<string | null>(null);
   const [isDeactivateDialogOpen, setIsDeactivateDialogOpen] = useState(false);
   const [isDeactivating, setIsDeactivating] = useState(false);
   const [deactivateError, setDeactivateError] = useState<string | null>(null);
@@ -669,12 +672,12 @@ function ProfileContent() {
   };
 
   const handleDeleteAccount = () => {
-    setIsDeleteDialogOpen(true);
+    setIsDeleteAccountDialogOpen(true);
   };
 
   const confirmDeleteAccount = async () => {
-    setIsDeleting(true);
-    setDeleteError(null);
+    setIsDeletingAccount(true);
+    setDeleteAccountError(null);
     
     try {
       const response = await fetch('/api/user/delete-account', {
@@ -687,12 +690,12 @@ function ProfileContent() {
       }
 
       // Account successfully deleted, logout will be handled by the API
-      setIsDeleteDialogOpen(false);
+      setIsDeleteAccountDialogOpen(false);
       window.location.href = '/onboarding';
     } catch (error: any) {
       console.error('Error deleting account:', error);
-      setIsDeleting(false);
-      setDeleteError(`Failed to delete account: ${error.message}`);
+      setIsDeletingAccount(false);
+      setDeleteAccountError(`Failed to delete account: ${error.message}`);
     }
   };
 
@@ -1238,6 +1241,24 @@ function ProfileContent() {
         variant="warning"
         isLoading={isDeactivating}
         error={deactivateError}
+      />
+
+      {/* Delete Account Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={isDeleteAccountDialogOpen}
+        onClose={() => {
+          setIsDeleteAccountDialogOpen(false);
+          setDeleteAccountError(null);
+        }}
+        onConfirm={confirmDeleteAccount}
+        title="Delete Account"
+        message="Are you sure you want to permanently delete your account? This action cannot be undone and all your data will be permanently removed."
+        confirmText={isDeletingAccount ? "Deleting..." : "Delete Account"}
+        cancelText="Cancel"
+        variant="danger"
+        isLoading={isDeletingAccount}
+        error={deleteAccountError}
+        requireConfirmText="DELETE"
       />
     </>
   );
