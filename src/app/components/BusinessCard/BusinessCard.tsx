@@ -442,7 +442,7 @@ function BusinessCard({
             {showInfoPopup && (
               <div
                 ref={infoPopupRef}
-                className="absolute bottom-full left-0 mb-2 bg-off-white/95 backdrop-blur-xl rounded-2xl border border-white/40 p-2 z-[60] min-w-[140px] max-w-[calc(100vw-8rem)] whitespace-nowrap shadow-premiumElevated"
+                className="absolute bottom-full left-0 mb-2 bg-off-white/95 backdrop-blur-xl rounded-[12px] border border-white/40 p-2 z-[60] min-w-[140px] max-w-[calc(100vw-8rem)] whitespace-nowrap shadow-premiumElevated"
                 style={{
                   animation: 'fadeInUp 0.2s ease-out forwards',
                   transformOrigin: 'bottom left',
@@ -456,7 +456,7 @@ function BusinessCard({
                       e.stopPropagation();
                       handleShare();
                     }}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-sage/10 active:bg-sage/20 transition-colors duration-200 min-h-[44px] touch-manipulation w-full"
+                    className="flex items-center gap-3 px-4 py-3 rounded-[12px] hover:bg-sage/10 active:bg-sage/20 transition-colors duration-200 min-h-[44px] touch-manipulation w-full"
                     aria-label={`Share ${business.name}`}
                   >
                     <div className="w-10 h-10 bg-sage/10 rounded-full flex items-center justify-center flex-shrink-0">
@@ -474,7 +474,7 @@ function BusinessCard({
                       e.stopPropagation();
                       handleBookmark();
                     }}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-coral/10 active:bg-coral/20 transition-colors duration-200 min-h-[44px] touch-manipulation w-full"
+                    className="flex items-center gap-3 px-4 py-3 rounded-[12px] hover:bg-coral/10 active:bg-coral/20 transition-colors duration-200 min-h-[44px] touch-manipulation w-full"
                     aria-label={isItemSaved(business.id) ? `Remove ${business.name} from saved` : `Save ${business.name}`}
                   >
                     <div className="w-10 h-10 bg-coral/10 rounded-full flex items-center justify-center flex-shrink-0">

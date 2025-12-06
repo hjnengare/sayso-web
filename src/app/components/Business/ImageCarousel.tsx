@@ -69,17 +69,17 @@ export function ImageCarousel({
     }, [isModalOpen, handleKeyDown]);
 
     return (
-        <div className="relative w-full mx-auto overflow-visible sm:overflow-hidden border-0 sm:border border-sage/10 bg-card-bg rounded-2xl sm:rounded-xl">
+        <div className="relative w-full mx-auto overflow-visible sm:overflow-hidden border-0 sm:border border-sage/10 bg-card-bg rounded-[12px] sm:rounded-[12px]">
             {/* Slides */}
             <div
-                className="relative h-[60vh] overflow-visible sm:overflow-hidden cursor-pointer group bg-card-bg flex items-center justify-center rounded-2xl sm:rounded-xl"
+                className="relative h-[60vh] overflow-visible sm:overflow-hidden cursor-pointer group bg-card-bg flex items-center justify-center rounded-[12px] sm:rounded-[12px]"
                 onClick={hasImages ? openModal : undefined}
             >
                 {hasImages ? (
                     displayImages.map((src, i) => (
                         <div
                             key={src || i}
-                            className={`absolute inset-0 transition-opacity duration-300 bg-card-bg rounded-2xl sm:rounded-xl ${
+                            className={`absolute inset-0 transition-opacity duration-300 bg-card-bg rounded-[12px] sm:rounded-[12px] ${
                                 i === index ? 'opacity-100' : 'opacity-0'
                             }`}
                         >
@@ -105,7 +105,7 @@ export function ImageCarousel({
                     ))
                 ) : (
                     // Placeholder icon when no images
-                    <div className="absolute inset-0 flex items-center justify-center bg-card-bg rounded-xl">
+                    <div className="absolute inset-0 flex items-center justify-center bg-card-bg rounded-[12px]">
                         {placeholderImage ? (
                             <Image
                                 src={placeholderImage}

@@ -158,7 +158,7 @@ export function EditProfileModal({
                 stiffness: 300,
                 damping: 25,
               }}
-              className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-2xl shadow-lg max-w-lg w-full max-h-[90vh] overflow-y-auto relative"
+              className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-lg max-w-lg w-full max-h-[90vh] overflow-y-auto relative"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Close button */}

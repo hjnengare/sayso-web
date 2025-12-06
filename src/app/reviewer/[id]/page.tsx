@@ -480,7 +480,7 @@ export default function ReviewerProfilePage() {
                                                 </h3>
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                                     {reviewer.badges.map((badge) => (
-                                                        <div key={badge.id} className="bg-off-white/50 rounded-xl p-4 border border-white/40">
+                                                        <div key={badge.id} className="bg-off-white/50 rounded-[12px] p-4 border border-white/40">
                                                             <div className="flex items-center gap-3 mb-2">
                                                                 <span className="text-2xl">{badge.icon}</span>
                                                                 <div>

@@ -273,19 +273,19 @@ export default function RegisterPage() {
           <div className="w-full sm:max-w-md lg:max-w-lg xl:max-w-xl sm:mx-auto relative z-10">
           {/* Form Card */}
           <section data-section>
-          <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-2xl overflow-hidden backdrop-blur-md shadow-md px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12">
+          <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden backdrop-blur-md shadow-md px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12">
 
             <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
               {/* Error Message */}
               {error && (
-                <div className="bg-error-50 border border-error-100 rounded-xl p-4 text-center">
+                <div className="bg-error-50 border border-error-100 rounded-[12px] p-4 text-center">
                   <p className="text-caption font-semibold text-error-600" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>{error}</p>
                 </div>
               )}
 
               {/* Offline Message */}
               {!isOnline && !error && (
-                <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 text-center">
+                <div className="bg-orange-50 border border-orange-200 rounded-[12px] p-4 text-center">
                   <p className="text-caption font-semibold text-orange-600" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>You&apos;re offline. We&apos;ll try again when you&apos;re back online.</p>
                 </div>
               )}

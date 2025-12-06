@@ -134,7 +134,7 @@ export function ToastProvider({ children }: ToastProviderProps) {
             <div
               key={toast.id}
               className={`
-                pointer-events-auto max-w-sm w-full backdrop-blur-xl rounded-xl p-4 shadow-lg border border-sage/20
+                pointer-events-auto max-w-sm w-full backdrop-blur-xl rounded-[12px] p-4 shadow-lg border border-sage/20
                 transition-all duration-300 ease-out animate-in slide-in-from-left
                 ${getToastStyles(toast.type)}
               `}

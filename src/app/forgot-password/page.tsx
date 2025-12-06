@@ -116,7 +116,7 @@ export default function ForgotPasswordPage() {
 
           <div className="w-full sm:max-w-md lg:max-w-lg sm:mx-auto relative z-10 flex-1 flex flex-col justify-center py-8 sm:py-12 px-0 sm:px-2">
             <section data-section>
-              <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-2xl overflow-hidden backdrop-blur-md shadow-md px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12">
+              <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden backdrop-blur-md shadow-md px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12">
                 <div className="text-center space-y-4 relative z-10">
                   <div className="w-16 h-16 mx-auto bg-white/10 rounded-full flex items-center justify-center">
                     <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -136,7 +136,7 @@ export default function ForgotPasswordPage() {
                     </p>
                   </div>
 
-                  <div className="bg-white/10 rounded-xl p-4 text-left space-y-2">
+                  <div className="bg-white/10 rounded-[12px] p-4 text-left space-y-2">
                     <p className="font-urbanist text-body-sm text-white/90" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                       <strong className="text-white">Next steps:</strong>
                     </p>
@@ -202,12 +202,12 @@ export default function ForgotPasswordPage() {
         <div className="w-full sm:max-w-md lg:max-w-lg sm:mx-auto relative z-10 flex-1 flex flex-col justify-center py-8 sm:py-12 px-0 sm:px-2">
           {/* Form Card */}
           <section data-section>
-            <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-2xl overflow-hidden backdrop-blur-md px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12">
+            <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden backdrop-blur-md px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12">
 
               <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
                 {/* Error Message */}
                 {error && (
-                  <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 text-center">
+                  <div className="bg-orange-50 border border-orange-200 rounded-[12px] p-4 text-center">
                     <p className="text-caption font-semibold text-orange-600" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>{error}</p>
                   </div>
                 )}

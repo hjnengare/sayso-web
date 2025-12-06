@@ -64,7 +64,7 @@ export default function ReviewTextForm({
           placeholder="Share your thoughts and help other locals... (10-5000 characters)"
           maxLength={5000}
           rows={4}
-          className="w-full bg-off-white backdrop-blur-sm border border-sage/20 rounded-2xl px-4 md:px-6 py-3 md:py-4 text-body md:text-xl text-charcoal placeholder:text-sm sm:text-xs placeholder-charcoal/50 focus:outline-none focus:ring-2 focus:ring-sage/50 focus:border-sage transition-all duration-300 resize-none flex-1 min-h-[120px] md:min-h-0 input-mobile"
+          className="w-full bg-off-white backdrop-blur-sm border border-sage/20 rounded-[12px] px-4 md:px-6 py-3 md:py-4 text-body md:text-xl text-charcoal placeholder:text-sm sm:text-xs placeholder-charcoal/50 focus:outline-none focus:ring-2 focus:ring-sage/50 focus:border-sage transition-all duration-300 resize-none flex-1 min-h-[120px] md:min-h-0 input-mobile"
         />
         {/* Character counter */}
         <div className="text-right px-4 mt-1">

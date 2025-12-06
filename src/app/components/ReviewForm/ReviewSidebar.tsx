@@ -59,7 +59,7 @@ export default function ReviewSidebar({ otherReviews, businessInfo, businessRati
             )}
             <div className="px-3 py-4 space-y-2 xl:space-y-3 max-h-[600px] overflow-y-auto custom-scroll">
               {otherReviews.length === 0 ? (
-                <div className="rounded-2xl border border-sage/10 bg-gradient-to-br from-white/85 to-white/60 backdrop-blur-md px-4 py-8 relative overflow-hidden border border-white/30">
+                <div className="rounded-[12px] border border-sage/10 bg-gradient-to-br from-white/85 to-white/60 backdrop-blur-md px-4 py-8 relative overflow-hidden border border-white/30">
                   {/* subtle glows */}
                   <span className="pointer-events-none absolute -top-8 -right-8 h-20 w-20 rounded-full bg-sage/10 blur-lg" />
                   <span className="pointer-events-none absolute -bottom-8 -left-8 h-20 w-20 rounded-full bg-coral/10 blur-lg" />
@@ -80,7 +80,7 @@ export default function ReviewSidebar({ otherReviews, businessInfo, businessRati
                 </div>
               ) : (
                 otherReviews.map((r) => (
-                <div key={r.id} className="rounded-2xl border border-sage/10 bg-gradient-to-br from-white/85 to-white/60 backdrop-blur-md px-3 py-6 relative overflow-hidden border border-white/30">
+                <div key={r.id} className="rounded-[12px] border border-sage/10 bg-gradient-to-br from-white/85 to-white/60 backdrop-blur-md px-3 py-6 relative overflow-hidden border border-white/30">
                   {/* subtle glows */}
                   <span className="pointer-events-none absolute -top-8 -right-8 h-20 w-20 rounded-full bg-sage/10 blur-lg" />
                   <span className="pointer-events-none absolute -bottom-8 -left-8 h-20 w-20 rounded-full bg-coral/10 blur-lg" />
@@ -152,7 +152,7 @@ export default function ReviewSidebar({ otherReviews, businessInfo, businessRati
         <h3 className="text-sm font-bold text-charcoal font-urbanist px-4 pt-4 pb-3" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif' }}>What others are saying</h3>
         <div className="mt-2 sm:mt-3 overflow-x-auto hide-scrollbar">
           {otherReviews.length === 0 ? (
-            <div className="mx-4 rounded-2xl border border-sage/10 bg-gradient-to-br from-white/85 to-white/60 backdrop-blur-md px-4 py-8 relative overflow-hidden">
+            <div className="mx-4 rounded-[12px] border border-sage/10 bg-gradient-to-br from-white/85 to-white/60 backdrop-blur-md px-4 py-8 relative overflow-hidden">
               {/* subtle glows */}
               <span className="pointer-events-none absolute -top-8 -right-8 h-20 w-20 rounded-full bg-sage/10 blur-lg" />
               <span className="pointer-events-none absolute -bottom-8 -left-8 h-20 w-20 rounded-full bg-coral/10 blur-lg" />

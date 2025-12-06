@@ -126,7 +126,7 @@ export default function OnboardingCarousel({
         }
       `}</style>
       
-      <div className="relative overflow-hidden rounded-2xl">
+      <div className="relative overflow-hidden rounded-[12px]">
         {/* Stationary circular hero background */}
         <div
           aria-hidden="true"

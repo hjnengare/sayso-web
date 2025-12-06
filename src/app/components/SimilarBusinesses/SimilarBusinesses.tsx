@@ -82,7 +82,7 @@ export default function SimilarBusinesses({
         <ul className="list-none flex flex-col sm:flex-row sm:justify-between gap-4 md:gap-6 relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6">
           {[...Array(limit)].map((_, i) => (
             <li key={i} className="flex-1 min-w-0">
-              <div className="h-[240px] bg-gradient-to-br from-off-white/90 via-off-white/85 to-off-white/90 rounded-xl border border-white/60 backdrop-blur-xl shadow-lg animate-pulse" />
+              <div className="h-[240px] bg-gradient-to-br from-off-white/90 via-off-white/85 to-off-white/90 rounded-[12px] border border-white/60 backdrop-blur-xl shadow-lg animate-pulse" />
             </li>
           ))}
         </ul>

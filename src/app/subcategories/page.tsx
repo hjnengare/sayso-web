@@ -152,7 +152,7 @@ function SubcategoriesContent() {
 
         <div className="enter-fade">
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center mb-4">
+            <div className="bg-red-50 border border-red-200 rounded-[12px] p-4 text-center mb-4">
               <p className="text-sm font-semibold text-red-600">
                 {error}
               </p>

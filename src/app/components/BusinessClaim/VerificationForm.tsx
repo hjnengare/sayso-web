@@ -67,7 +67,7 @@ export function VerificationForm({ business, onClose, onSuccess }: VerificationF
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-off-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-off-white rounded-[12px] shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-off-white border-b border-charcoal/10 px-6 py-4 flex items-center justify-between">
           <h2 className="text-xl font-bold text-charcoal" style={{
@@ -87,7 +87,7 @@ export function VerificationForm({ business, onClose, onSuccess }: VerificationF
         {/* Content */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Business Info */}
-          <div className="bg-white/50 rounded-xl p-4 border border-charcoal/10">
+          <div className="bg-white/50 rounded-[12px] p-4 border border-charcoal/10">
             <h3 className="text-sm font-semibold text-charcoal mb-2" style={{
               fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif"
             }}>
@@ -105,7 +105,7 @@ export function VerificationForm({ business, onClose, onSuccess }: VerificationF
             </label>
 
             {/* Email Verification */}
-            <label className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+            <label className={`flex items-start gap-3 p-4 rounded-[12px] border-2 cursor-pointer transition-all ${
               selectedMethod === 'email' 
                 ? 'border-coral bg-coral/5' 
                 : 'border-charcoal/10 bg-white/50 hover:border-charcoal/20'
@@ -142,7 +142,7 @@ export function VerificationForm({ business, onClose, onSuccess }: VerificationF
             </label>
 
             {/* Phone Verification */}
-            <label className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+            <label className={`flex items-start gap-3 p-4 rounded-[12px] border-2 cursor-pointer transition-all ${
               selectedMethod === 'phone' 
                 ? 'border-coral bg-coral/5' 
                 : 'border-charcoal/10 bg-white/50 hover:border-charcoal/20'
@@ -179,7 +179,7 @@ export function VerificationForm({ business, onClose, onSuccess }: VerificationF
             </label>
 
             {/* Document Verification */}
-            <label className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+            <label className={`flex items-start gap-3 p-4 rounded-[12px] border-2 cursor-pointer transition-all ${
               selectedMethod === 'document' 
                 ? 'border-coral bg-coral/5' 
                 : 'border-charcoal/10 bg-white/50 hover:border-charcoal/20'
@@ -205,7 +205,7 @@ export function VerificationForm({ business, onClose, onSuccess }: VerificationF
             </label>
 
             {/* Manual Review */}
-            <label className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+            <label className={`flex items-start gap-3 p-4 rounded-[12px] border-2 cursor-pointer transition-all ${
               selectedMethod === 'manual' 
                 ? 'border-coral bg-coral/5' 
                 : 'border-charcoal/10 bg-white/50 hover:border-charcoal/20'

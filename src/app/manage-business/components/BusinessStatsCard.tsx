@@ -33,7 +33,7 @@ export function BusinessStatsCard({
 
   return (
     <div
-      className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-xl ring-1 ring-white/20 p-6 relative overflow-hidden animate-fade-in-up"
+      className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-[12px] ring-1 ring-white/20 p-6 relative overflow-hidden animate-fade-in-up"
       style={{ animationDelay: `${delay}ms` }}
     >
       <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${classes.gradient} rounded-full blur-lg`} />

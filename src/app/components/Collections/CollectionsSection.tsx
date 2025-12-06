@@ -210,7 +210,7 @@ export default function CollectionsSection() {
                 {/* CTA Button */}
                 <Link
                   href={business.ctaLink}
-                  className="inline-flex items-center justify-center w-full px-6 py-3 bg-gradient-to-r from-sage to-sage/90 hover:from-sage/90 hover:to-sage text-white rounded-xl font-urbanist text-sm font-600 transition-all duration-300 hover:scale-105 hover:shadow-lg group/btn"
+                  className="inline-flex items-center justify-center w-full px-6 py-3 bg-gradient-to-r from-sage to-sage/90 hover:from-sage/90 hover:to-sage text-white rounded-[12px] font-urbanist text-sm font-600 transition-all duration-300 hover:scale-105 hover:shadow-lg group/btn"
                 >
                   {business.ctaText}
                   <ChevronRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform duration-300" />
@@ -224,7 +224,7 @@ export default function CollectionsSection() {
         <div className="text-center mt-10">
           <Link
             href="/collections"
-            className="inline-flex items-center px-8 py-4 border border-sage text-sage hover:bg-sage hover:text-white rounded-xl font-urbanist text-base font-600 transition-all duration-300 hover:scale-105 group"
+            className="inline-flex items-center px-8 py-4 border border-sage text-sage hover:bg-sage hover:text-white rounded-[12px] font-urbanist text-base font-600 transition-all duration-300 hover:scale-105 group"
           >
             View All Collections
             <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" />

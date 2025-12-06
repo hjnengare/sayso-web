@@ -441,7 +441,7 @@ export default function DMChatListPage() {
                           className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
                         >
                           <div
-                            className={`max-w-[65%] lg:max-w-[60%] rounded-xl sm:rounded-2xl px-3 py-2.5 sm:px-4 sm:py-3 ${
+                            className={`max-w-[65%] lg:max-w-[60%] rounded-[12px] sm:rounded-[12px] px-3 py-2.5 sm:px-4 sm:py-3 ${
                               isCurrentUser
                                 ? 'bg-gradient-to-br from-coral to-coral/90 text-white border border-white/30'
                                 : 'bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl text-charcoal border border-white/60 ring-1 ring-white/30'
@@ -484,7 +484,7 @@ export default function DMChatListPage() {
                         onKeyDown={handleKeyDown}
                         placeholder="Type a message..."
                         rows={1}
-                        className="w-full bg-white border border-charcoal/10 rounded-2xl sm:rounded-[20px] px-4 py-3 pr-12 text-sm sm:text-body-sm md:text-body text-charcoal placeholder:text-sm sm:placeholder:text-body-sm md:placeholder:text-body placeholder-charcoal/40 resize-none focus:outline-none focus:ring-2 focus:ring-sage/30 focus:border-sage/50 transition-all duration-300 max-h-[120px] overflow-y-auto"
+                        className="w-full bg-white border border-charcoal/10 rounded-[12px] sm:rounded-[20px] px-4 py-3 pr-12 text-sm sm:text-body-sm md:text-body text-charcoal placeholder:text-sm sm:placeholder:text-body-sm md:placeholder:text-body placeholder-charcoal/40 resize-none focus:outline-none focus:ring-2 focus:ring-sage/30 focus:border-sage/50 transition-all duration-300 max-h-[120px] overflow-y-auto"
                         style={{
                           fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
                           lineHeight: '1.5',

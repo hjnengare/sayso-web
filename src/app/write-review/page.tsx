@@ -130,7 +130,7 @@ export default function WriteReviewPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search businesses..."
-              className="w-full pl-12 pr-2 sm:pr-4 py-3.5 bg-white/80 backdrop-blur-sm border-2 border-charcoal/20 rounded-xl
+              className="w-full pl-12 pr-2 sm:pr-4 py-3.5 bg-white/80 backdrop-blur-sm border-2 border-charcoal/20 rounded-[12px]
                          text-sm placeholder:text-charcoal/50 text-charcoal
                          focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20
                          hover:border-charcoal/30 transition-all duration-200"
@@ -154,7 +154,7 @@ export default function WriteReviewPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   {/* Business Image or Placeholder */}
-                  <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-sage/10 group-hover:bg-sage/20 transition-colors duration-200">
+                  <div className="w-12 h-12 rounded-[12px] overflow-hidden flex-shrink-0 bg-sage/10 group-hover:bg-sage/20 transition-colors duration-200">
                     {business.image && !imageErrors[business.id] ? (
                       <Image
                         src={business.image}

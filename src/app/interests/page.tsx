@@ -203,7 +203,7 @@ function InterestsContent() {
 
         <div className="enter-fade">
           {onboardingError && (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center mb-4 enter-fade" style={{ animationDelay: "0.1s" }}>
+            <div className="bg-red-50 border border-red-200 rounded-[12px] p-4 text-center mb-4 enter-fade" style={{ animationDelay: "0.1s" }}>
               <p className="text-sm font-semibold text-red-600">
                 {onboardingError}
               </p>

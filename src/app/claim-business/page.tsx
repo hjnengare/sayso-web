@@ -196,7 +196,7 @@ export default function ClaimBusinessPage() {
                   {!isSearching && businesses.map((business) => (
                     <div
                       key={business.id}
-                      className="p-4 bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-xl ring-1 ring-white/20
+                      className="p-4 bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-[12px] ring-1 ring-white/20
                                  hover:border-white/70 hover:shadow-lg transition-all duration-300 group"
                     >
                       <div className="flex items-center justify-between gap-3">
@@ -258,7 +258,7 @@ export default function ClaimBusinessPage() {
                 )}
 
                 {/* Help Section */}
-                <div className="mt-12 mb-12 p-6 bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/30 rounded-2xl ring-1 ring-white/20">
+                <div className="mt-12 mb-12 p-6 bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/30 rounded-[12px] ring-1 ring-white/20">
                   <h3 className="font-urbanist text-base font-600 text-charcoal mb-2">
                     Need help claiming your business?
                   </h3>

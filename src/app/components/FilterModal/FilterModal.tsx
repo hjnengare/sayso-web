@@ -198,7 +198,7 @@ export default function FilterModal({
         aria-label="Search filters"
         aria-modal="true"
         tabIndex={-1}
-        className={`pointer-events-auto rounded-2xl overflow-hidden
+        className={`pointer-events-auto rounded-[12px] overflow-hidden
                     bg-off-white
                     border border-white/30 shadow-2xl
                     transition-all duration-200
@@ -256,7 +256,7 @@ export default function FilterModal({
           }}
         >
           {/* Category */}
-          <section className="rounded-xl bg-off-white/70 border border-charcoal/10 p-3 sm:p-4 animate-fade-in-up [animation-delay:0.05s]">
+          <section className="rounded-[12px] bg-off-white/70 border border-charcoal/10 p-3 sm:p-4 animate-fade-in-up [animation-delay:0.05s]">
             <h3
               className="text-base sm:text-sm font-semibold text-charcoal mb-3 sm:mb-3 flex items-center gap-2"
               style={{ fontFamily: '"Urbanist", system-ui, sans-serif', letterSpacing: '-0.01em' }}
@@ -294,7 +294,7 @@ export default function FilterModal({
           </section>
 
           {/* Rating */}
-          <section className="rounded-xl bg-off-white/70 border border-charcoal/10 p-3 sm:p-4 animate-fade-in-up [animation-delay:0.1s]">
+          <section className="rounded-[12px] bg-off-white/70 border border-charcoal/10 p-3 sm:p-4 animate-fade-in-up [animation-delay:0.1s]">
             <h3
               className="text-base sm:text-sm font-semibold text-charcoal mb-3 sm:mb-3 flex items-center gap-2"
               style={{ fontFamily: '"Urbanist", system-ui, sans-serif', letterSpacing: '-0.01em' }}
@@ -333,7 +333,7 @@ export default function FilterModal({
           </section>
 
           {/* Distance */}
-          <section className="rounded-xl bg-off-white/70 border border-charcoal/10 p-3 sm:p-4 animate-fade-in-up [animation-delay:0.15s]">
+          <section className="rounded-[12px] bg-off-white/70 border border-charcoal/10 p-3 sm:p-4 animate-fade-in-up [animation-delay:0.15s]">
             <h3
               className="text-base sm:text-sm font-semibold text-charcoal mb-3 sm:mb-3 flex items-center gap-2"
               style={{ fontFamily: '"Urbanist", system-ui, sans-serif', letterSpacing: '-0.01em' }}
