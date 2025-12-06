@@ -73,6 +73,15 @@ export async function GET(request: Request) {
           return NextResponse.redirect(resetUrl);
         }
 
+        // Handle email change confirmation
+        if (type === 'email_change' || type === 'emailchange') {
+          console.log('Email change callback - email change confirmed');
+          // Redirect to profile page with success message
+          const dest = new URL('/profile', request.url);
+          dest.searchParams.set('email_changed', 'true');
+          return NextResponse.redirect(dest);
+        }
+
         // Check if this is an email verification callback
         if (type === 'signup') {
           console.log('Email verification callback - checking verification status');

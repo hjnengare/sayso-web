@@ -18,6 +18,7 @@ interface GroupedSubcategories {
 interface SubcategoryGridProps {
   groupedSubcategories: GroupedSubcategories;
   selectedSubcategories: Array<{ id: string; interest_id: string }>;
+  maxSelections: number;
   onToggle: (id: string, interestId: string) => void;
   subcategories: SubcategoryItem[];
   loading: boolean;
@@ -26,6 +27,7 @@ interface SubcategoryGridProps {
 export default function SubcategoryGrid({ 
   groupedSubcategories, 
   selectedSubcategories, 
+  maxSelections,
   onToggle, 
   subcategories, 
   loading 
@@ -43,6 +45,7 @@ export default function SubcategoryGrid({
           title={group.title}
           items={group.items}
           selectedSubcategories={selectedSubcategories}
+          maxSelections={maxSelections}
           onToggle={onToggle}
           groupIndex={groupIndex}
         />

@@ -3,33 +3,33 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sayso - Confirm your signup</title>
+    <title>sayso - Confirm Change of Email</title>
   </head>
   <body style="margin:0;padding:0;background:#E5E0E5;font-family:Urbanist,-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text',system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#2D2D2D;">
     <div style="max-width:560px;margin:40px auto;background:linear-gradient(to bottom right, #9DAB9B, #9DAB9B, rgba(157,171,155,0.95));border:1px solid rgba(255,255,255,0.6);border-radius:12px;padding:24px 16px;box-shadow:0 4px 6px rgba(0,0,0,0.1);">
       
       <!-- Heading -->
       <h2 style="font-size:22px;font-weight:700;margin-top:0;margin-bottom:12px;color:#ffffff;font-family:Urbanist,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;">
-        Confirm your signup
+        Confirm Change of Email
       </h2>
 
       <!-- Message -->
       <p style="font-size:15px;line-height:1.6;margin-bottom:32px;color:rgba(255,255,255,0.9);font-family:Urbanist,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;">
-        Hi, tap the button below to verify your email and activate your sayso account.
+        Follow this link to confirm the update of your email from {{ .Email }} to {{ .NewEmail }}:
       </p>
 
       <!-- Button -->
       <div style="text-align:center;margin-bottom:28px;">
         <a href="{{ .ConfirmationURL }}"
            style="background:linear-gradient(to right, #722F37, rgba(114,47,55,0.8));color:#ffffff;text-decoration:none;font-weight:600;padding:16px 32px;border-radius:999px;display:inline-block;font-size:15px;font-family:Urbanist,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;transition:all 0.3s ease;">
-          Confirm your email
+          Change Email
         </a>
       </div>
 
   
       <!-- Footer -->
       <p style="font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:0;font-family:Urbanist,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;">
-        Didn't try to sign up? You can safely ignore this message.
+        Didn't request this change? You can safely ignore this message.
       </p>
     </div>
 
@@ -38,3 +38,4 @@
     </p>
   </body>
 </html>
+

@@ -205,7 +205,7 @@ function InterestsContent() {
           {onboardingError && (
             <div className="bg-red-50 border border-red-200 rounded-[12px] p-4 text-center mb-4 enter-fade" style={{ animationDelay: "0.1s" }}>
               <p className="text-sm font-semibold text-red-600">
-                {onboardingError}
+                {typeof onboardingError === 'string' ? onboardingError : String(onboardingError || 'An error occurred')}
               </p>
             </div>
           )}

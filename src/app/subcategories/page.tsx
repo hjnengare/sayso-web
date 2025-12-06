@@ -48,6 +48,8 @@ function SubcategoriesContent() {
   const [loading, setLoading] = useState(true);
   const [isNavigating, setIsNavigating] = useState(false);
 
+  const MAX_SELECTIONS = 10;
+
   const selectedInterests = useMemo(() => {
     const interestsParam = searchParams.get('interests');
     return interestsParam ? interestsParam.split(',').map(s => s.trim()) : [];
@@ -104,9 +106,13 @@ function SubcategoriesContent() {
     if (isSelected) {
       setSelectedSubcategories(selectedSubcategories.filter(s => s !== subcategoryId));
     } else {
+      if (selectedSubcategories.length >= MAX_SELECTIONS) {
+        showToast(`Maximum ${MAX_SELECTIONS} subcategories allowed`, "warning", 2000);
+        return;
+      }
       setSelectedSubcategories([...selectedSubcategories, subcategoryId]);
     }
-  }, [selectedSubcategories, setSelectedSubcategories]);
+  }, [selectedSubcategories, setSelectedSubcategories, showToast]);
 
   const handleNext = useCallback(async () => {
     if (!selectedSubcategories || selectedSubcategories.length === 0) return;
@@ -154,18 +160,19 @@ function SubcategoriesContent() {
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-[12px] p-4 text-center mb-4">
               <p className="text-sm font-semibold text-red-600">
-                {error}
+                {typeof error === 'string' ? error : String(error || 'An error occurred')}
               </p>
             </div>
           )}
 
-          <SubcategorySelection selectedCount={selectedSubcategories?.length || 0}>
+          <SubcategorySelection selectedCount={selectedSubcategories?.length || 0} maxSelections={MAX_SELECTIONS}>
             <SubcategoryGrid
               groupedSubcategories={groupedSubcategories}
               selectedSubcategories={selectedSubcategories.map(id => {
                 const subcategory = subcategories.find(s => s.id === id);
                 return { id, interest_id: subcategory?.interest_id || '' };
               })}
+              maxSelections={MAX_SELECTIONS}
               onToggle={handleSubcategoryToggle}
               subcategories={subcategories}
               loading={loading}

@@ -35,6 +35,8 @@ function DealBreakersContent() {
   const [selectedDealbreakers, setSelectedDealbreakers] = useState<string[]>([]);
   const [isNavigating, setIsNavigating] = useState(false);
 
+  const MAX_SELECTIONS = 3;
+
   // Get all data from URL parameters
   const interests = useMemo(() => {
     const interestsParam = searchParams.get('interests');
@@ -88,10 +90,14 @@ function DealBreakersContent() {
       if (prev.includes(dealbreakerId)) {
         return prev.filter(id => id !== dealbreakerId);
       } else {
+        if (prev.length >= MAX_SELECTIONS) {
+          showToast(`Maximum ${MAX_SELECTIONS} deal-breakers allowed`, "warning", 2000);
+          return prev;
+        }
         return [...prev, dealbreakerId];
       }
     });
-  }, []);
+  }, [showToast]);
 
   const handleNext = useCallback(async () => {
     setIsNavigating(true);
@@ -151,10 +157,11 @@ function DealBreakersContent() {
         <DealBreakerHeader />
 
         <div className="enter-fade">
-          <DealBreakerSelection selectedCount={selectedDealbreakers.length}>
+          <DealBreakerSelection selectedCount={selectedDealbreakers.length} maxSelections={MAX_SELECTIONS}>
             <DealBreakerGrid 
               dealbreakers={DEMO_DEAL_BREAKERS}
               selectedDealbreakers={selectedDealbreakers}
+              maxSelections={MAX_SELECTIONS}
               onToggle={handleDealbreakerToggle}
             />
           </DealBreakerSelection>

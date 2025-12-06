@@ -12,6 +12,7 @@ interface DealBreaker {
 interface DealBreakerCardProps {
   dealbreaker: DealBreaker;
   isSelected: boolean;
+  isDisabled?: boolean;
   onToggle: (id: string) => void;
   index: number;
   IconComponent: React.ComponentType<{ className?: string }>;
@@ -20,6 +21,7 @@ interface DealBreakerCardProps {
 export default function DealBreakerCard({ 
   dealbreaker, 
   isSelected, 
+  isDisabled = false,
   onToggle, 
   index, 
   IconComponent 
@@ -41,10 +43,11 @@ export default function DealBreakerCard({
     >
       <div
         className={`
-          relative w-full h-32 cursor-pointer
+          relative w-full h-32
+          ${isDisabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}
           ${isSelected ? 'flip' : ''}
         `}
-        onClick={() => onToggle(dealbreaker.id)}
+        onClick={() => !isDisabled && onToggle(dealbreaker.id)}
         style={{
           transformStyle: 'preserve-3d',
           transition: 'transform 0.6s',
@@ -55,8 +58,11 @@ export default function DealBreakerCard({
         <div
           className={`
             absolute inset-0 w-full h-full rounded-lg border-2 p-4 flex flex-col justify-center items-center text-center
-            bg-gradient-to-br from-sage/10 to-sage/5 border-sage/30 hover:border-sage/50
-            ring-1 ring-sage/20 hover:ring-sage/30 backdrop-blur-sm
+            ${isDisabled 
+              ? 'bg-charcoal/5 border-charcoal/10 ring-1 ring-charcoal/10' 
+              : 'bg-gradient-to-br from-sage/10 to-sage/5 border-sage/30 hover:border-sage/50 ring-1 ring-sage/20 hover:ring-sage/30'
+            }
+            backdrop-blur-sm
             transition-all duration-200
           `}
           style={{ backfaceVisibility: 'hidden' }}

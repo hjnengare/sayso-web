@@ -13,6 +13,7 @@ interface SubcategoryGroupProps {
   title: string;
   items: SubcategoryItem[];
   selectedSubcategories: Array<{ id: string; interest_id: string }>;
+  maxSelections: number;
   onToggle: (id: string, interestId: string) => void;
   groupIndex: number;
 }
@@ -22,6 +23,7 @@ export default function SubcategoryGroup({
   title, 
   items, 
   selectedSubcategories, 
+  maxSelections,
   onToggle, 
   groupIndex 
 }: SubcategoryGroupProps) {
@@ -43,12 +45,14 @@ export default function SubcategoryGroup({
       <div className="pills-container">
         {items.map((subcategory) => {
           const isSelected = selectedSubcategories.some(s => s.id === subcategory.id);
+          const isDisabled = !isSelected && selectedSubcategories.length >= maxSelections;
           
           return (
             <SubcategoryPill
               key={subcategory.id}
               subcategory={subcategory}
               isSelected={isSelected}
+              isDisabled={isDisabled}
               onToggle={onToggle}
             />
           );

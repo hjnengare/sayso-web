@@ -552,4 +552,45 @@ export class AuthService {
     }
   }
 
+  static async changeEmail(newEmail: string): Promise<{ error: AuthError | null }> {
+    const supabase = this.getClient();
+
+    try {
+      if (!newEmail?.trim()) {
+        return {
+          error: { message: 'Email is required' }
+        };
+      }
+
+      if (!this.isValidEmail(newEmail)) {
+        return {
+          error: { message: 'Please enter a valid email address' }
+        };
+      }
+
+      const baseUrl = this.getBaseUrl();
+      const { error } = await supabase.auth.updateUser({
+        email: newEmail.trim().toLowerCase(),
+      }, {
+        emailRedirectTo: `${baseUrl}/auth/callback?type=email_change`,
+      });
+
+      if (error) {
+        console.error('Change email error:', error);
+        return {
+          error: this.handleSupabaseError(error)
+        };
+      }
+
+      return { error: null };
+    } catch (error: unknown) {
+      console.error('Error in changeEmail:', error);
+      return {
+        error: {
+          message: error instanceof Error ? error.message : 'Failed to change email'
+        }
+      };
+    }
+  }
+
 }
