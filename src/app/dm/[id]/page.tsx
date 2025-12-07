@@ -117,11 +117,23 @@ export default function DMPage() {
                 });
 
                 if (!convResponse.ok) {
-                    throw new Error('Failed to get/create conversation');
+                    const errorData = await convResponse.json().catch(() => ({ error: 'Unknown error' }));
+                    console.error('API Error creating conversation:', errorData);
+                    throw new Error(errorData.error || `Failed to get/create conversation: ${convResponse.status}`);
                 }
 
                 const convResult = await convResponse.json();
+                
+                if (convResult.error) {
+                    console.error('API returned error:', convResult);
+                    throw new Error(convResult.error);
+                }
+                
                 const conversation = convResult.data;
+                
+                if (!conversation) {
+                    throw new Error('No conversation data returned');
+                }
                 setConversationId(conversation.id);
 
                 // Get business info from conversation

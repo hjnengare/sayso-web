@@ -46,7 +46,8 @@ export async function GET(req: NextRequest) {
     }
 
     // Get conversations where user is either the user or owner
-    const { data: conversations, error: conversationsError } = await supabase
+    // First try with relationships, if that fails, fetch businesses separately
+    let { data: conversations, error: conversationsError } = await supabase
       .from('conversations')
       .select(`
         id,
@@ -54,26 +55,51 @@ export async function GET(req: NextRequest) {
         business_id,
         last_message_at,
         created_at,
-        business:businesses!conversations_business_id_fkey (
+        businesses (
           id,
           name,
           image_url,
           category,
           verified
-        ),
-        owner_profile:profiles!conversations_owner_id_fkey (
-          user_id,
-          display_name,
-          avatar_url
         )
       `)
       .or(`user_id.eq.${user.id},owner_id.eq.${user.id}`)
       .order('last_message_at', { ascending: false });
 
+    // If the relationship query fails, try without it
+    if (conversationsError && conversationsError.code === 'PGRST116') {
+      // Table might not exist, return empty array
+      conversations = [];
+      conversationsError = null;
+    } else if (conversationsError) {
+      // Try a simpler query without relationships
+      const simpleQuery = await supabase
+        .from('conversations')
+        .select('id, owner_id, business_id, last_message_at, created_at')
+        .or(`user_id.eq.${user.id},owner_id.eq.${user.id}`)
+        .order('last_message_at', { ascending: false });
+      
+      if (!simpleQuery.error && simpleQuery.data) {
+        // Add businesses property as null/empty for type compatibility
+        conversations = simpleQuery.data.map((conv: any) => ({
+          ...conv,
+          businesses: null,
+        }));
+        conversationsError = null;
+      }
+    }
+
     if (conversationsError) {
       console.error('Error fetching conversations:', conversationsError);
+      console.error('Error code:', conversationsError.code);
+      console.error('Error details:', conversationsError.details);
       return NextResponse.json(
-        { error: 'Failed to fetch conversations', details: conversationsError.message },
+        { 
+          error: 'Failed to fetch conversations', 
+          details: conversationsError.message,
+          code: conversationsError.code,
+          hint: conversationsError.hint
+        },
         { status: 500 }
       );
     }
@@ -99,14 +125,41 @@ export async function GET(req: NextRequest) {
           .neq('sender_id', user.id);
 
         // Handle business relation (may be array or object)
-        const businessData = Array.isArray(conv.business) 
-          ? conv.business[0] 
-          : conv.business;
+        // Supabase returns it as 'businesses' when using the table name directly
+        let businessData: any = null;
+        if ('businesses' in conv) {
+          businessData = Array.isArray(conv.businesses) 
+            ? conv.businesses[0] 
+            : conv.businesses;
+        }
+        
+        // If business data not in relation, fetch it separately
+        if (!businessData && conv.business_id) {
+          const { data: business } = await supabase
+            .from('businesses')
+            .select('id, name, image_url, category, verified')
+            .eq('id', conv.business_id)
+            .single();
+          businessData = business;
+        }
         
         // Handle owner_profile relation (may be array or object)
-        const ownerProfileData = Array.isArray(conv.owner_profile)
-          ? conv.owner_profile[0]
-          : conv.owner_profile;
+        // Fetch profile separately if not in relation
+        let ownerProfileData: any = null;
+        if ('profiles' in conv) {
+          ownerProfileData = Array.isArray(conv.profiles)
+            ? conv.profiles[0]
+            : conv.profiles;
+        }
+        
+        if (!ownerProfileData && conv.owner_id) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('user_id, display_name, avatar_url')
+            .eq('user_id', conv.owner_id)
+            .single();
+          ownerProfileData = profile;
+        }
 
         return {
           id: conv.id,
@@ -122,7 +175,7 @@ export async function GET(req: NextRequest) {
             verified: businessData.verified,
           } : null,
           owner_profile: ownerProfileData ? {
-            user_id: ownerProfileData.user_id,
+            user_id: ownerProfileData.user_id || ownerProfileData.id,
             display_name: ownerProfileData.display_name,
             avatar_url: ownerProfileData.avatar_url,
           } : null,
@@ -177,11 +230,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if conversation already exists
-    const { data: existingConversation } = await supabase
+    const { data: existingConversation, error: existingError } = await supabase
       .from('conversations')
       .select(`
         *,
-        business:businesses!conversations_business_id_fkey (
+        businesses (
           id,
           name,
           image_url,
@@ -192,10 +245,24 @@ export async function POST(req: NextRequest) {
       .eq('user_id', user.id)
       .eq('owner_id', owner_id)
       .single();
+    
+    // If error is "not found" (PGRST116), that's fine - we'll create a new one
+    // Otherwise, log the error
+    if (existingError && existingError.code !== 'PGRST116') {
+      console.error('Error checking for existing conversation:', existingError);
+    }
 
-    if (existingConversation) {
+    if (existingConversation && !existingError) {
+      // Handle business relation (may be array or object)
+      const businessData = Array.isArray(existingConversation.businesses) 
+        ? existingConversation.businesses[0] 
+        : existingConversation.businesses;
+      
       return NextResponse.json({
-        data: existingConversation,
+        data: {
+          ...existingConversation,
+          business: businessData || null,
+        },
         error: null,
       });
     }
@@ -222,28 +289,41 @@ export async function POST(req: NextRequest) {
         owner_id,
         business_id: finalBusinessId || null,
       })
-      .select(`
-        *,
-        business:businesses!conversations_business_id_fkey (
-          id,
-          name,
-          image_url,
-          category,
-          verified
-        )
-      `)
+      .select('*')
       .single();
 
     if (createError) {
       console.error('Error creating conversation:', createError);
+      console.error('Error code:', createError.code);
+      console.error('Error details:', createError.details);
+      console.error('Error hint:', createError.hint);
       return NextResponse.json(
-        { error: 'Failed to create conversation', details: createError.message },
+        { 
+          error: 'Failed to create conversation', 
+          details: createError.message,
+          code: createError.code,
+          hint: createError.hint
+        },
         { status: 500 }
       );
     }
 
+    // Fetch business data separately if business_id exists
+    let businessData = null;
+    if (newConversation.business_id) {
+      const { data: business } = await supabase
+        .from('businesses')
+        .select('id, name, image_url, category, verified')
+        .eq('id', newConversation.business_id)
+        .single();
+      businessData = business;
+    }
+
     return NextResponse.json({
-      data: newConversation,
+      data: {
+        ...newConversation,
+        business: businessData,
+      },
       error: null,
     }, { status: 201 });
   } catch (error: any) {
