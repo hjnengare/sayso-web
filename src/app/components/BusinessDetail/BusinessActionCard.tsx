@@ -2,7 +2,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Facebook, Instagram, Twitter } from "react-feather";
+import { Facebook, Instagram, Twitter, MessageSquare } from "react-feather";
 import Link from "next/link";
 
 interface BusinessActionCardProps {
@@ -10,9 +10,10 @@ interface BusinessActionCardProps {
   businessId: string;
   isBusinessOwner?: boolean;
   hasReviewed?: boolean;
+  ownerId?: string | null;
 }
 
-export default function BusinessActionCard({ businessSlug, businessId, isBusinessOwner = false, hasReviewed = false }: BusinessActionCardProps) {
+export default function BusinessActionCard({ businessSlug, businessId, isBusinessOwner = false, hasReviewed = false, ownerId }: BusinessActionCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -52,6 +53,17 @@ export default function BusinessActionCard({ businessSlug, businessId, isBusines
           >
             {hasReviewed ? 'Already Reviewed' : 'Leave a Review'}
           </Link>
+
+          {ownerId && !isBusinessOwner && (
+            <Link
+              href={`/dm/${ownerId}?business_id=${businessId}`}
+              className="block w-full bg-gradient-to-br from-coral to-coral/90 text-white font-semibold py-3 px-5 rounded-full transition-all duration-300 hover:bg-coral/80 border border-white/30 text-body-sm text-center flex items-center justify-center gap-2"
+              style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+            >
+              <MessageSquare size={18} strokeWidth={2.5} />
+              Message Owner
+            </Link>
+          )}
 
           {isBusinessOwner && (
             <Link

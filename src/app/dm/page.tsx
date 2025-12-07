@@ -8,17 +8,20 @@ import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, Search, User, Check, Edit3, MessageSquare, Send, MoreVertical, Trash2, AlertTriangle, UserX, ArrowLeft, ChevronRight } from "react-feather";
 import { createPortal } from "react-dom";
 import SearchInput from "../components/SearchInput/SearchInput";
-import { TOP_REVIEWERS, type Reviewer } from "../data/communityHighlightsData";
 import Footer from "../components/Footer/Footer";
 import Header from "../components/Header/Header";
 
-interface Chat {
-  id: string;
-  user: Reviewer;
+interface BusinessChat {
+  id: string; // owner ID (for routing)
+  conversationId: string; // conversation ID (for API calls)
+  businessId: string;
+  businessName: string;
+  businessImage: string;
+  category: string;
   lastMessage: string;
   timestamp: string;
   unreadCount: number;
-  online: boolean;
+  verified?: boolean;
 }
 
 interface Message {
@@ -30,7 +33,7 @@ interface Message {
 }
 
 // Instagram-like Chat Item Component
-function ChatItem({ chat, index, isSelected, onClick }: { chat: Chat; index: number; isSelected?: boolean; onClick?: () => void }) {
+function ChatItem({ chat, index, isSelected, onClick }: { chat: BusinessChat; index: number; isSelected?: boolean; onClick?: () => void }) {
   const [imgError, setImgError] = useState(false);
 
   return (
@@ -40,20 +43,20 @@ function ChatItem({ chat, index, isSelected, onClick }: { chat: Chat; index: num
       whileHover={{ x: 2 }}
       transition={{ duration: 0.2 }}
     >
-        <div
-          className={`relative flex items-center gap-3 sm:gap-4 px-3 sm:px-4 py-2.5 sm:py-3 transition-all duration-200 border-b border-charcoal/10 ${
-            isSelected 
-              ? 'bg-sage/5 border-l-2 border-sage' 
-              : 'hover:bg-charcoal/5 border-l-2 border-transparent'
-          }`}
-        >
-          {/* Profile Picture - Larger Instagram style */}
+      <div
+        className={`relative flex items-center gap-3 sm:gap-4 px-3 sm:px-4 py-2.5 sm:py-3 transition-all duration-200 border-b border-charcoal/10 ${
+          isSelected 
+            ? 'bg-sage/5 border-l-2 border-sage' 
+            : 'hover:bg-charcoal/5 border-l-2 border-transparent'
+        }`}
+      >
+          {/* Business Image - Larger Instagram style */}
           <div className="relative flex-shrink-0">
-            {!imgError && chat.user.profilePicture && chat.user.profilePicture.trim() !== "" ? (
-              <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden">
+            {!imgError && chat.businessImage && chat.businessImage.trim() !== "" ? (
+              <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-lg overflow-hidden">
                 <Image
-                  src={chat.user.profilePicture}
-                  alt={chat.user.name}
+                  src={chat.businessImage}
+                  alt={chat.businessName}
                   width={56}
                   height={56}
                   className="w-full h-full object-cover"
@@ -61,22 +64,13 @@ function ChatItem({ chat, index, isSelected, onClick }: { chat: Chat; index: num
                 />
               </div>
             ) : (
-              <div className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center bg-gradient-to-br from-sage/30 to-sage/20 text-sage rounded-full">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center bg-gradient-to-br from-sage/30 to-sage/20 text-sage rounded-lg">
                 <User className="text-sage w-6 h-6 sm:w-7 sm:h-7" strokeWidth={2} />
               </div>
             )}
 
-            {/* Online Status */}
-            {chat.online && (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-green-500 rounded-full border-2 border-white"
-              />
-            )}
-
             {/* Verified Badge */}
-            {chat.user.badge === "verified" && (
+            {chat.verified && (
               <div className="absolute -top-1 -right-1 w-4.5 h-4.5 sm:w-5 sm:h-5 bg-blue-500 rounded-full flex items-center justify-center ring-2 ring-white">
                 <Check className="text-white w-2.5 h-2.5 sm:w-3 sm:h-3" strokeWidth={3} />
               </div>
@@ -87,7 +81,7 @@ function ChatItem({ chat, index, isSelected, onClick }: { chat: Chat; index: num
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-0.5 gap-2">
               <h3 className={`text-body font-semibold truncate transition-colors duration-200 ${isSelected ? 'text-sage' : 'text-charcoal'}`} style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                {chat.user.name}
+                {chat.businessName}
               </h3>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <span className="text-caption text-charcoal/40 font-normal whitespace-nowrap" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
@@ -116,73 +110,15 @@ function ChatItem({ chat, index, isSelected, onClick }: { chat: Chat; index: num
   );
 }
 
-// Generate dummy chat data from reviewers
-const generateDummyChats = (): Chat[] => {
-  const lastMessages = [
-    "Hey! Thanks for reaching out. I'd love to chat!",
-    "Hi! I really enjoyed reading your reviews.",
-    "Thank you so much! That means a lot.",
-    "Great to hear from you! How can I help?",
-    "I saw your review about that restaurant. I totally agree!",
-    "Thanks for the recommendation! I'll check it out.",
-    "That's a great point. I had a similar experience.",
-    "Looking forward to chatting more about this!",
-  ];
-
-  const timestamps = [
-    "Just now",
-    "2 min ago",
-    "15 min ago",
-    "1 hr ago",
-    "2 hrs ago",
-    "Yesterday",
-    "2 days ago",
-    "Last week",
-  ];
-
-  return TOP_REVIEWERS.slice(0, 8).map((reviewer, index) => ({
-    id: reviewer.id,
-    user: reviewer,
-    lastMessage: lastMessages[index % lastMessages.length],
-    timestamp: timestamps[index % timestamps.length],
-    unreadCount: index < 3 ? (index % 3) + 1 : 0,
-    online: index < 4,
-  }));
-};
-
-// Generate mock messages for a chat
-const generateMockMessages = (chatId: string): Message[] => {
-  return [
-    {
-      id: "1",
-      senderId: chatId,
-      text: "Hey! Thanks for reaching out. I'd love to chat about your recent review!",
-      timestamp: "2 hours ago",
-      read: true,
-    },
-    {
-      id: "2",
-      senderId: "current-user",
-      text: "Hi! I really enjoyed reading your reviews. You have great insights!",
-      timestamp: "1 hour ago",
-      read: true,
-    },
-    {
-      id: "3",
-      senderId: chatId,
-      text: "Thank you so much! That means a lot. I try to be thorough and honest in my reviews.",
-      timestamp: "45 minutes ago",
-      read: true,
-    },
-  ];
-};
 
 export default function DMChatListPage() {
   const router = useRouter();
-  const [chats] = useState<Chat[]>(generateDummyChats());
+  const [chats, setChats] = useState<BusinessChat[]>([]);
+  const [chatsLoading, setChatsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [messagesLoading, setMessagesLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState<{ top: number; right: number } | null>(null);
@@ -191,29 +127,118 @@ export default function DMChatListPage() {
   const menuButtonRef = useRef<HTMLDivElement>(null);
   const previousMessagesLength = useRef(0);
 
+  // Fetch conversations from API
+  useEffect(() => {
+    const fetchConversations = async () => {
+      try {
+        setChatsLoading(true);
+        const response = await fetch('/api/messages/conversations');
+        if (!response.ok) {
+          throw new Error('Failed to fetch conversations');
+        }
+        const result = await response.json();
+        
+        // Transform API data to BusinessChat format
+        const transformedChats: BusinessChat[] = (result.data || []).map((conv: any) => {
+          const business = conv.business;
+          const lastMessage = conv.last_message;
+          
+          return {
+            id: conv.owner_id, // Use owner_id for routing
+            conversationId: conv.id, // Store conversation ID
+            businessId: business?.id || '',
+            businessName: business?.name || 'Business',
+            businessImage: business?.image_url || '',
+            category: business?.category || '',
+            lastMessage: lastMessage?.content || 'No messages yet',
+            timestamp: formatTimestamp(lastMessage?.created_at || conv.last_message_at),
+            unreadCount: conv.unread_count || 0,
+            verified: business?.verified || false,
+          };
+        });
+        
+        setChats(transformedChats);
+      } catch (error) {
+        console.error('Error fetching conversations:', error);
+        setChats([]);
+      } finally {
+        setChatsLoading(false);
+      }
+    };
+
+    fetchConversations();
+  }, []);
+
   const filteredChats = chats.filter((chat) =>
-    chat.user.name.toLowerCase().includes(searchQuery.toLowerCase())
+    chat.businessName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const selectedChat = selectedChatId ? chats.find(c => c.id === selectedChatId) : null;
 
+  // Helper function to format timestamp
+  const formatTimestamp = (timestamp: string): string => {
+    if (!timestamp) return 'Just now';
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} min ago`;
+    if (diffHours < 24) return `${diffHours} hr ago`;
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return date.toLocaleDateString();
+  };
+
   // Load messages when chat is selected
   useEffect(() => {
-    if (selectedChatId) {
-      const mockMessages = generateMockMessages(selectedChatId);
-      setMessages(mockMessages);
-      // Reset previous messages length when chat changes
-      previousMessagesLength.current = mockMessages.length;
-      // Scroll to top when chat is selected
-      const messagesContainer = document.querySelector('.overflow-y-auto');
-      if (messagesContainer) {
-        messagesContainer.scrollTop = 0;
+    const fetchMessages = async () => {
+      if (!selectedChatId) {
+        setMessages([]);
+        previousMessagesLength.current = 0;
+        return;
       }
-    } else {
-      setMessages([]);
-      previousMessagesLength.current = 0;
-    }
-  }, [selectedChatId]);
+
+      try {
+        setMessagesLoading(true);
+        const chat = chats.find(c => c.id === selectedChatId);
+        if (!chat) {
+          setMessages([]);
+          return;
+        }
+
+        // Fetch messages using conversation ID
+        const messagesResponse = await fetch(`/api/messages/conversations/${chat.conversationId}`);
+        if (messagesResponse.ok) {
+          const messagesResult = await messagesResponse.json();
+          const transformedMessages: Message[] = (messagesResult.data.messages || []).map((msg: any) => ({
+            id: msg.id,
+            senderId: msg.sender_id,
+            text: msg.content,
+            timestamp: formatTimestamp(msg.created_at),
+            read: msg.read,
+          }));
+          setMessages(transformedMessages);
+          previousMessagesLength.current = transformedMessages.length;
+        }
+      } catch (error) {
+        console.error('Error fetching messages:', error);
+        setMessages([]);
+      } finally {
+        setMessagesLoading(false);
+        // Scroll to top when chat is selected
+        const messagesContainer = document.querySelector('.overflow-y-auto');
+        if (messagesContainer) {
+          messagesContainer.scrollTop = 0;
+        }
+      }
+    };
+
+    fetchMessages();
+  }, [selectedChatId, chats]);
 
   // Auto-scroll to bottom when new messages arrive (only for new messages, not initial load)
   useEffect(() => {
@@ -225,24 +250,43 @@ export default function DMChatListPage() {
   }, [messages]);
 
   // Handle send message
-  const handleSend = (e: React.FormEvent) => {
+  const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim() || !selectedChatId) return;
 
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      senderId: "current-user",
-      text: message.trim(),
-      timestamp: "Just now",
-      read: false,
-    };
+    const chat = chats.find(c => c.id === selectedChatId);
+    if (!chat) return;
 
-    setMessages([...messages, newMessage]);
-    setMessage("");
+    try {
+      // Send message using conversation ID
+      const sendResponse = await fetch(`/api/messages/conversations/${chat.conversationId}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: message.trim() }),
+      });
 
-    // Auto-resize textarea
-    if (inputRef.current) {
-      inputRef.current.style.height = "auto";
+      if (!sendResponse.ok) throw new Error('Failed to send message');
+      const sendResult = await sendResponse.json();
+
+      // Add message to local state
+      const newMessage: Message = {
+        id: sendResult.data.id,
+        senderId: sendResult.data.sender_id,
+        text: sendResult.data.content,
+        timestamp: 'Just now',
+        read: false,
+      };
+
+      setMessages([...messages, newMessage]);
+      setMessage("");
+
+      // Auto-resize textarea
+      if (inputRef.current) {
+        inputRef.current.style.height = "auto";
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      // Optionally show error toast
     }
   };
 
@@ -301,9 +345,9 @@ export default function DMChatListPage() {
     }
   };
 
-  // Handle block user
+  // Handle block business owner
   const handleBlockUser = () => {
-    if (selectedChat && confirm(`Are you sure you want to block ${selectedChat.user.name}? You will no longer receive messages from them.`)) {
+    if (selectedChat && confirm(`Are you sure you want to block ${selectedChat.businessName}? You will no longer receive messages from them.`)) {
       setIsMenuOpen(false);
       setSelectedChatId(null);
     }
@@ -350,7 +394,7 @@ export default function DMChatListPage() {
           {/* Left Sidebar - Chat List */}
           <div className="w-full lg:w-[400px] xl:w-[450px] flex flex-col bg-off-white border-r border-charcoal/10 lg:border-r h-full overflow-hidden relative">
             {/* Search Bar */}
-            <div className="px-4 sm:px-6 py-4 border-b border-charcoal/10 flex-shrink-0 bg-off-white">
+            <div className="px-4 py-6 flex-shrink-0 bg-off-white">
               <SearchInput
                 variant="header"
                 placeholder="Search conversations..."
@@ -637,7 +681,7 @@ export default function DMChatListPage() {
                       fontWeight: 500,
                     }}
                   >
-                    Start a conversation with reviewers and community members to get started!
+                    Start a conversation with business owners to get started!
                   </p>
                   <button
                     onClick={() => router.push('/dm/new')}

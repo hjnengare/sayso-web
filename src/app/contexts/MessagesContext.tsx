@@ -29,12 +29,19 @@ export function MessagesProvider({ children }: MessagesProviderProps) {
 
     try {
       setIsLoading(true);
-      // For now, calculate from mock data matching DM page logic
-      // In production, this would fetch from an API: /api/user/messages/unread
-      // Mock data: first 3 chats have unread counts (1, 2, 3) = total 6
-      // This matches the pattern in src/app/dm/page.tsx where index < 3 has unreadCount
-      const mockUnreadCount = 6; // Sum of unreadCount from first 3 chats (1+2+3)
-      setUnreadCount(mockUnreadCount);
+      const response = await fetch('/api/messages/conversations');
+      if (!response.ok) {
+        throw new Error('Failed to fetch conversations');
+      }
+      const result = await response.json();
+      
+      // Sum up unread counts from all conversations
+      const totalUnread = (result.data || []).reduce(
+        (sum: number, conv: any) => sum + (conv.unread_count || 0),
+        0
+      );
+      
+      setUnreadCount(totalUnread);
       setIsLoading(false);
     } catch (error) {
       console.error('Error fetching unread message count:', error);

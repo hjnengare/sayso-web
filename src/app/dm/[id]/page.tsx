@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import React, { useMemo, useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -18,7 +18,7 @@ import {
 } from "react-feather";
 import { createPortal } from "react-dom";
 import Footer from "../../components/Footer/Footer";
-import { TOP_REVIEWERS, type Reviewer } from "../../data/communityHighlightsData";
+import { useAuth } from "../../contexts/AuthContext";
 
 // CSS animations
 const animations = `
@@ -71,21 +71,28 @@ interface Message {
     read: boolean;
 }
 
-interface DMUser {
-    id: string;
-    name: string;
-    profilePicture: string;
-    badge?: "top" | "verified" | "local";
+interface BusinessRecipient {
+    id: string; // owner ID
+    businessId: string;
+    businessName: string;
+    businessImage: string;
+    category: string;
     location: string;
-    online?: boolean;
+    verified?: boolean;
 }
 
 export default function DMPage() {
     const params = useParams();
     const router = useRouter();
-    const recipientId = params?.id as string;
+    const searchParams = useSearchParams();
+    const { user } = useAuth();
+    const ownerId = params?.id as string;
+    const businessId = searchParams.get('business_id');
     const [message, setMessage] = useState("");
     const [messages, setMessages] = useState<Message[]>([]);
+    const [messagesLoading, setMessagesLoading] = useState(true);
+    const [recipient, setRecipient] = useState<BusinessRecipient | null>(null);
+    const [conversationId, setConversationId] = useState<string | null>(null);
     const [imgError, setImgError] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [menuPosition, setMenuPosition] = useState<{ top: number; right: number } | null>(null);
@@ -94,54 +101,102 @@ export default function DMPage() {
     const menuButtonRef = useRef<HTMLDivElement>(null);
     const previousMessagesLength = useRef(0);
 
-    // Mock recipient data (replace with API in production)
-    const recipient: DMUser = useMemo(() => {
-        const reviewer = TOP_REVIEWERS.find(r => r.id === recipientId) || TOP_REVIEWERS[0];
-        return {
-            id: reviewer.id,
-            name: reviewer.name,
-            profilePicture: reviewer.profilePicture,
-            badge: reviewer.badge,
-            location: reviewer.location,
-            online: true,
-        };
-    }, [recipientId]);
-
-    // Mock messages (replace with API in production)
+    // Fetch conversation and business data
     useEffect(() => {
-        const mockMessages: Message[] = [
-            {
-                id: "1",
-                senderId: recipientId,
-                text: "Hey! Thanks for reaching out. I'd love to chat about your recent review!",
-                timestamp: "2 hours ago",
-                read: true,
-            },
-            {
-                id: "2",
-                senderId: "current-user",
-                text: "Hi! I really enjoyed reading your reviews. You have great insights!",
-                timestamp: "1 hour ago",
-                read: true,
-            },
-            {
-                id: "3",
-                senderId: recipientId,
-                text: "Thank you so much! That means a lot. I try to be thorough and honest in my reviews.",
-                timestamp: "45 minutes ago",
-                read: true,
-            },
-        ];
-        setMessages(mockMessages);
-        // Reset previous messages length when chat changes
-        previousMessagesLength.current = mockMessages.length;
-        // Scroll to top when chat is opened
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        const messagesContainer = document.querySelector('.overflow-y-auto');
-        if (messagesContainer) {
-            messagesContainer.scrollTop = 0;
+        const fetchConversation = async () => {
+            try {
+                setMessagesLoading(true);
+                // First, try to get or create conversation
+                const convResponse = await fetch('/api/messages/conversations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        owner_id: ownerId,
+                        business_id: businessId || undefined,
+                    }),
+                });
+
+                if (!convResponse.ok) {
+                    throw new Error('Failed to get/create conversation');
+                }
+
+                const convResult = await convResponse.json();
+                const conversation = convResult.data;
+                setConversationId(conversation.id);
+
+                // Get business info from conversation
+                if (conversation.business_id) {
+                    const businessResponse = await fetch(`/api/businesses/${conversation.business_id}`);
+                    if (businessResponse.ok) {
+                        const businessResult = await businessResponse.json();
+                        const business = businessResult.data;
+                        setRecipient({
+                            id: ownerId,
+                            businessId: business.id,
+                            businessName: business.name,
+                            businessImage: business.image_url || business.uploaded_image || '',
+                            category: business.category,
+                            location: business.address || business.location || 'Cape Town',
+                            verified: business.verified || false,
+                        });
+                    }
+                } else {
+                    // Fallback if no business_id
+                    setRecipient({
+                        id: ownerId,
+                        businessId: '',
+                        businessName: 'Business Owner',
+                        businessImage: '',
+                        category: '',
+                        location: '',
+                        verified: false,
+                    });
+                }
+
+                // Fetch messages
+                const messagesResponse = await fetch(`/api/messages/conversations/${conversation.id}`);
+                if (messagesResponse.ok) {
+                    const messagesResult = await messagesResponse.json();
+                    const transformedMessages: Message[] = (messagesResult.data.messages || []).map((msg: any) => ({
+                        id: msg.id,
+                        senderId: msg.sender_id,
+                        text: msg.content,
+                        timestamp: formatTimestamp(msg.created_at),
+                        read: msg.read,
+                    }));
+                    setMessages(transformedMessages);
+                    previousMessagesLength.current = transformedMessages.length;
+                }
+            } catch (error) {
+                console.error('Error fetching conversation:', error);
+            } finally {
+                setMessagesLoading(false);
+            }
+        };
+
+        if (ownerId) {
+            fetchConversation();
         }
-    }, [recipientId]);
+    }, [ownerId]);
+
+    // Helper function to format timestamp
+    const formatTimestamp = (timestamp: string): string => {
+        if (!timestamp) return 'Just now';
+        const date = new Date(timestamp);
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+
+        if (diffMins < 1) return 'Just now';
+        if (diffMins < 60) return `${diffMins} min ago`;
+        if (diffHours < 24) return `${diffHours} hr ago`;
+        if (diffDays === 1) return 'Yesterday';
+        if (diffDays < 7) return `${diffDays} days ago`;
+        return date.toLocaleDateString();
+    };
+
 
     // Auto-scroll to bottom when new messages arrive (only for new messages, not initial load)
     useEffect(() => {
@@ -153,24 +208,38 @@ export default function DMPage() {
     }, [messages]);
 
     // Handle send message
-    const handleSend = (e: React.FormEvent) => {
+    const handleSend = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!message.trim()) return;
+        if (!message.trim() || !conversationId) return;
 
-        const newMessage: Message = {
-            id: Date.now().toString(),
-            senderId: "current-user",
-            text: message.trim(),
-            timestamp: "Just now",
-            read: false,
-        };
+        try {
+            const sendResponse = await fetch(`/api/messages/conversations/${conversationId}/messages`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: message.trim() }),
+            });
 
-        setMessages([...messages, newMessage]);
-        setMessage("");
+            if (!sendResponse.ok) throw new Error('Failed to send message');
+            const sendResult = await sendResponse.json();
 
-        // Auto-resize textarea
-        if (inputRef.current) {
-            inputRef.current.style.height = "auto";
+            // Add message to local state
+            const newMessage: Message = {
+                id: sendResult.data.id,
+                senderId: sendResult.data.sender_id,
+                text: sendResult.data.content,
+                timestamp: 'Just now',
+                read: false,
+            };
+
+            setMessages([...messages, newMessage]);
+            setMessage("");
+
+            // Auto-resize textarea
+            if (inputRef.current) {
+                inputRef.current.style.height = "auto";
+            }
+        } catch (error) {
+            console.error('Error sending message:', error);
         }
     };
 
@@ -229,9 +298,9 @@ export default function DMPage() {
         }
     };
 
-    // Handle block user
+    // Handle block business owner
     const handleBlockUser = () => {
-        if (confirm(`Are you sure you want to block ${recipient.name}? You will no longer receive messages from them.`)) {
+        if (confirm(`Are you sure you want to block ${recipient.businessName}? You will no longer receive messages from them.`)) {
             // In production, this would call an API
             setIsMenuOpen(false);
             router.push('/dm');
@@ -259,7 +328,7 @@ export default function DMPage() {
             `}</style>
             <AnimatePresence mode="wait">
                 <motion.div
-                    key={recipientId}
+                    key={ownerId}
                     initial={{ opacity: 0, y: 20, scale: 0.98, filter: "blur(8px)" }}
                     animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
                     exit={{ opacity: 0, y: -20, scale: 0.98, filter: "blur(8px)" }}
@@ -294,46 +363,43 @@ export default function DMPage() {
                                 </div>
                             </button>
 
-                            {/* Recipient Info */}
-                            <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 mx-2 sm:mx-4">
-                                {!imgError && recipient.profilePicture && recipient.profilePicture.trim() !== '' ? (
-                                    <div className="relative flex-shrink-0">
-                                        <Image
-                                            src={recipient.profilePicture}
-                                            alt={recipient.name}
-                                            width={40}
-                                            height={40}
-                                            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-white/50 ring-2 ring-white/30"
-                                            priority
-                                            onError={() => setImgError(true)}
-                                        />
-                                        {recipient.online && (
-                                            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 sm:w-3.5 sm:h-3.5 bg-green-500 rounded-full border-2 border-white ring-1 ring-white/50"></div>
-                                        )}
-                                        {recipient.badge === "verified" && (
-                                            <div className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-blue-500 rounded-full flex items-center justify-center ring-2 ring-white">
-                                                <Check className="text-white" size={7} strokeWidth={3} />
-                                            </div>
-                                        )}
-                                    </div>
-                                ) : (
-                                    <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center bg-sage/20 text-sage rounded-full border-2 border-white/50 ring-2 ring-white/30 flex-shrink-0">
-                                        <User className="text-sage/70 w-4 h-4 sm:w-5 sm:h-5" strokeWidth={2} />
-                                    </div>
-                                )}
-                                <div className="min-w-0 flex-1">
-                                    <h1 className="font-urbanist text-base sm:text-lg md:text-h3 lg:text-h2 font-semibold text-white animate-delay-100 animate-fade-in truncate" style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}>
-                                        {recipient.name}
-                                    </h1>
-                                    {recipient.online && (
+                            {/* Business Info */}
+                            {recipient && (
+                                <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 mx-2 sm:mx-4">
+                                    {!imgError && recipient.businessImage && recipient.businessImage.trim() !== '' ? (
+                                        <div className="relative flex-shrink-0">
+                                            <Image
+                                                src={recipient.businessImage}
+                                                alt={recipient.businessName}
+                                                width={40}
+                                                height={40}
+                                                className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg object-cover border-2 border-white/50 ring-2 ring-white/30"
+                                                priority
+                                                onError={() => setImgError(true)}
+                                            />
+                                            {recipient.verified && (
+                                                <div className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-blue-500 rounded-full flex items-center justify-center ring-2 ring-white">
+                                                    <Check className="text-white" size={7} strokeWidth={3} />
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center bg-sage/20 text-sage rounded-lg border-2 border-white/50 ring-2 ring-white/30 flex-shrink-0">
+                                            <User className="text-sage/70 w-4 h-4 sm:w-5 sm:h-5" strokeWidth={2} />
+                                        </div>
+                                    )}
+                                    <div className="min-w-0 flex-1">
+                                        <h1 className="font-urbanist text-base sm:text-lg md:text-h3 lg:text-h2 font-semibold text-white animate-delay-100 animate-fade-in truncate" style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}>
+                                            {recipient.businessName}
+                                        </h1>
                                         <p className="text-xs sm:text-caption text-white/70 truncate" style={{
                                             fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
                                         }}>
-                                            Online
+                                            {recipient.category} • {recipient.location}
                                         </p>
-                                    )}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
                             <div className="relative flex-shrink-0" ref={menuButtonRef}>
                                 <button
@@ -418,15 +484,24 @@ export default function DMPage() {
                                 </li>
                                 <li>
                                     <span className="text-charcoal font-semibold truncate max-w-[150px] sm:max-w-none" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                                        {recipient.name}
+                                        {recipient?.businessName || 'Business'}
                                     </span>
                                 </li>
                             </ol>
                         </nav>
                         <div className="max-w-3xl mx-auto py-4 sm:py-6 space-y-3 sm:space-y-4">
-                            {messages.map((msg) => {
-                                const isCurrentUser = msg.senderId === "current-user";
-                                return (
+                            {messagesLoading ? (
+                                <div className="text-center py-8">
+                                    <p className="text-charcoal/60">Loading messages...</p>
+                                </div>
+                            ) : messages.length === 0 ? (
+                                <div className="text-center py-8">
+                                    <p className="text-charcoal/60">No messages yet. Start the conversation!</p>
+                                </div>
+                            ) : (
+                                messages.map((msg) => {
+                                    const isCurrentUser = msg.senderId === user?.id;
+                                    return (
                                     <div
                                         key={msg.id}
                                         className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'} animate-fade-in-up`}
@@ -458,8 +533,9 @@ export default function DMPage() {
                                             </div>
                                         </div>
                                     </div>
-                                );
-                            })}
+                                    );
+                                })
+                            )}
                             <div ref={messagesEndRef} />
                         </div>
                     </div>

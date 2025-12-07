@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useMemo, useState, useEffect } from "react";
 import { Review, Reviewer } from "../../data/communityHighlightsData";
 import ProfilePicture from "./ProfilePicture";
@@ -16,7 +15,6 @@ import {
   Star,
   Check,
   Users,
-  MessageSquare,
   Share2,
   MapPin,
   Award,
@@ -36,7 +34,6 @@ export default function ReviewerCard({
   latestReview,
   variant = "review",
 }: ReviewerCardProps) {
-  const router = useRouter();
   const reviewerData = reviewer || review?.reviewer;
   const idForSnap = useMemo(
     () => `reviewer-${reviewerData?.id}`,
@@ -231,18 +228,6 @@ export default function ReviewerCard({
                 >
                   <Users className="text-white w-5 h-5 sm:w-4 sm:h-4" />
                 </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    router.push(`/dm/${reviewerData?.id || ''}`);
-                  }}
-                  className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 w-11 h-11 sm:w-8 sm:h-8 bg-navbar-bg rounded-full flex items-center justify-center hover:bg-navbar-bg/90 hover:scale-110 active:scale-95 transition-all duration-300 touch-manipulation"
-                  aria-label="Message"
-                  title="Message"
-                >
-                  <MessageSquare className="text-white w-5 h-5 sm:w-4 sm:h-4" />
-                </button>
               </div>
             </div>
           </div>
@@ -309,18 +294,6 @@ export default function ReviewerCard({
               title="Follow"
             >
               <Users className="text-white w-5 h-5 sm:w-4 sm:h-4" />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                router.push(`/dm/${review?.reviewer?.id || ''}`);
-              }}
-              className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 w-11 h-11 sm:w-8 sm:h-8 bg-navbar-bg rounded-full flex items-center justify-center hover:bg-navbar-bg/90 hover:scale-110 active:scale-95 transition-all duration-300 touch-manipulation"
-              aria-label="Message"
-              title="Message"
-            >
-              <MessageSquare className="text-white w-5 h-5 sm:w-4 sm:h-4" />
             </button>
             <button
               className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 w-11 h-11 sm:w-8 sm:h-8 bg-navbar-bg rounded-full flex items-center justify-center hover:bg-navbar-bg/90 hover:scale-110 active:scale-95 transition-all duration-300 touch-manipulation"

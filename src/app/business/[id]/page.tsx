@@ -355,6 +355,7 @@ export default function BusinessProfilePage() {
                                                 businessId={businessId}
                                                 isBusinessOwner={isBusinessOwner}
                                                 hasReviewed={hasReviewed}
+                                                ownerId={business.owner_id}
                                             />
                                             {/* Contact Information - Desktop Only */}
                                             <div className="hidden lg:block">

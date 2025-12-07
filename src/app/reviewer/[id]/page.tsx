@@ -7,7 +7,6 @@ import React, { useMemo, useState, useEffect, useRef } from "react";
 import {
     ArrowLeft,
     Star,
-    MessageSquare,
     Heart,
     Award,
     MapPin,
@@ -379,18 +378,6 @@ export default function ReviewerProfilePage() {
 
                                                             {/* Action Buttons */}
                                                             <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                                                                <Link
-                                                                    href={`/dm/${reviewer.id}`}
-                                                                    className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-coral/90 hover:bg-charcoal/90 hover:border-white/30 text-white rounded-full text-xs sm:text-sm font-semibold transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg shadow-sage/20 border border-sage/20 whitespace-nowrap"
-                                                                    style={{
-                                                                        fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                                                                        fontWeight: 600,
-                                                                    }}
-                                                                    aria-label="Send message"
-                                                                >
-                                                                    <MessageSquare size={14} strokeWidth={2.5} className="sm:w-4 sm:h-4" />
-                                                                    <span>Message</span>
-                                                                </Link>
                                                                 <button
                                                                     className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-white/90 hover:bg-off-white text-charcoal rounded-full text-xs sm:text-sm font-semibold transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg shadow-charcoal/10 border border-charcoal/10 whitespace-nowrap"
                                                                     style={{
