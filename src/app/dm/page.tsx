@@ -45,69 +45,68 @@ function ChatItem({ chat, index, isSelected, onClick }: { chat: BusinessChat; in
       transition={{ duration: 0.2 }}
     >
       <div
-        className={`relative flex items-center gap-3 sm:gap-4 px-3 sm:px-4 py-2.5 sm:py-3 transition-all duration-200 border-b border-charcoal/10 ${
-          isSelected 
-            ? 'bg-sage/5 border-l-2 border-sage' 
+        className={`relative flex items-center gap-3 sm:gap-4 px-3 sm:px-4 py-2.5 sm:py-3 transition-all duration-200 border-b border-charcoal/10 ${isSelected
+            ? 'bg-sage/5 border-l-2 border-sage'
             : 'hover:bg-charcoal/5 border-l-2 border-transparent'
-        }`}
+          }`}
       >
-          {/* Business Image - Larger Instagram style */}
-          <div className="relative flex-shrink-0">
-            {!imgError && chat.businessImage && chat.businessImage.trim() !== "" ? (
-              <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-lg overflow-hidden">
-                <Image
-                  src={chat.businessImage}
-                  alt={chat.businessName}
-                  width={56}
-                  height={56}
-                  className="w-full h-full object-cover"
-                  onError={() => setImgError(true)}
-                />
-              </div>
-            ) : (
-              <div className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center bg-gradient-to-br from-sage/30 to-sage/20 text-sage rounded-lg">
-                <User className="text-sage w-6 h-6 sm:w-7 sm:h-7" strokeWidth={2} />
-              </div>
-            )}
+        {/* Business Image - Larger Instagram style */}
+        <div className="relative flex-shrink-0">
+          {!imgError && chat.businessImage && chat.businessImage.trim() !== "" ? (
+            <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-lg overflow-hidden">
+              <Image
+                src={chat.businessImage}
+                alt={chat.businessName}
+                width={56}
+                height={56}
+                className="w-full h-full object-cover"
+                onError={() => setImgError(true)}
+              />
+            </div>
+          ) : (
+            <div className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center bg-gradient-to-br from-sage/30 to-sage/20 text-sage rounded-lg">
+              <User className="text-sage w-6 h-6 sm:w-7 sm:h-7" strokeWidth={2} />
+            </div>
+          )}
 
-            {/* Verified Badge */}
-            {chat.verified && (
-              <div className="absolute -top-1 -right-1 w-4.5 h-4.5 sm:w-5 sm:h-5 bg-blue-500 rounded-full flex items-center justify-center ring-2 ring-white">
-                <Check className="text-white w-2.5 h-2.5 sm:w-3 sm:h-3" strokeWidth={3} />
-              </div>
-            )}
+          {/* Verified Badge */}
+          {chat.verified && (
+            <div className="absolute -top-1 -right-1 w-4.5 h-4.5 sm:w-5 sm:h-5 bg-blue-500 rounded-full flex items-center justify-center ring-2 ring-white">
+              <Check className="text-white w-2.5 h-2.5 sm:w-3 sm:h-3" strokeWidth={3} />
+            </div>
+          )}
+        </div>
+
+        {/* Chat Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between mb-0.5 gap-2">
+            <h3 className={`text-body font-semibold truncate transition-colors duration-200 ${isSelected ? 'text-sage' : 'text-charcoal'}`} style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+              {chat.businessName}
+            </h3>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <span className="text-caption text-charcoal/40 font-normal whitespace-nowrap" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                {chat.timestamp}
+              </span>
+            </div>
           </div>
-
-          {/* Chat Info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between mb-0.5 gap-2">
-              <h3 className={`text-body font-semibold truncate transition-colors duration-200 ${isSelected ? 'text-sage' : 'text-charcoal'}`} style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                {chat.businessName}
-              </h3>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <span className="text-caption text-charcoal/40 font-normal whitespace-nowrap" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                  {chat.timestamp}
-                </span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-body-sm text-charcoal/60 truncate leading-snug flex-1" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                {chat.lastMessage}
-              </p>
-              {chat.unreadCount > 0 && (
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="min-w-[20px] h-5 px-1.5 bg-sage text-white text-caption font-bold rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
-                >
-                  {chat.unreadCount > 99 ? "99+" : chat.unreadCount}
-                </motion.span>
-              )}
-            </div>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-body-sm text-charcoal/60 truncate leading-snug flex-1" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+              {chat.lastMessage}
+            </p>
+            {chat.unreadCount > 0 && (
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="min-w-[20px] h-5 px-1.5 bg-sage text-white text-caption font-bold rounded-full flex items-center justify-center flex-shrink-0"
+                style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
+              >
+                {chat.unreadCount > 99 ? "99+" : chat.unreadCount}
+              </motion.span>
+            )}
           </div>
         </div>
-      </motion.button>
+      </div>
+    </motion.button>
   );
 }
 
@@ -127,7 +126,6 @@ export default function DMChatListPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const menuButtonRef = useRef<HTMLDivElement>(null);
-  const previousMessagesLength = useRef(0);
 
   // Fetch conversations from API
   useEffect(() => {
@@ -141,12 +139,12 @@ export default function DMChatListPage() {
           throw new Error(errorData.error || `Failed to fetch conversations: ${response.status}`);
         }
         const result = await response.json();
-        
+
         // Transform API data to BusinessChat format
         const transformedChats: BusinessChat[] = (result.data || []).map((conv: any) => {
           const business = conv.business;
           const lastMessage = conv.last_message;
-          
+
           return {
             id: conv.owner_id, // Use owner_id for routing
             conversationId: conv.id, // Store conversation ID
@@ -160,7 +158,7 @@ export default function DMChatListPage() {
             verified: business?.verified || false,
           };
         });
-        
+
         setChats(transformedChats);
       } catch (error) {
         console.error('Error fetching conversations:', error);
@@ -202,7 +200,6 @@ export default function DMChatListPage() {
     const fetchMessages = async () => {
       if (!selectedChatId) {
         setMessages([]);
-        previousMessagesLength.current = 0;
         return;
       }
 
@@ -226,18 +223,16 @@ export default function DMChatListPage() {
             read: msg.read,
           }));
           setMessages(transformedMessages);
-          previousMessagesLength.current = transformedMessages.length;
         }
       } catch (error) {
         console.error('Error fetching messages:', error);
         setMessages([]);
       } finally {
         setMessagesLoading(false);
-        // Scroll to top when chat is selected
-        const messagesContainer = document.querySelector('.overflow-y-auto');
-        if (messagesContainer) {
-          messagesContainer.scrollTop = 0;
-        }
+        // Auto-scroll to bottom when messages load (Instagram behavior)
+        setTimeout(() => {
+          messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        }, 100);
       }
     };
 
@@ -246,11 +241,12 @@ export default function DMChatListPage() {
 
   // Auto-scroll to bottom when new messages arrive (only for new messages, not initial load)
   useEffect(() => {
-    // Only scroll to bottom if a new message was added (not on initial load)
-    if (messages.length > previousMessagesLength.current && messages.length > 0) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Always scroll to bottom when messages change (Instagram behavior)
+    if (messages.length > 0) {
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 50);
     }
-    previousMessagesLength.current = messages.length;
   }, [messages]);
 
   // Handle send message
@@ -381,17 +377,19 @@ export default function DMChatListPage() {
           <div className="absolute top-0 left-0 w-96 h-96 bg-card-bg/8 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-navbar-bg/8 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
         </div>
-        
-        {/* Main Header */}
-        <Header
-          showSearch={false}
-          variant="white"
-          backgroundClassName="bg-navbar-bg"
-          topPosition="top-0"
-          reducedPadding={true}
-          whiteText={true}
-        />
-         
+
+        {/* Main Header - Hidden on mobile when viewing conversation */}
+        <div className={selectedChatId ? 'hidden lg:block' : 'block'}>
+          <Header
+            showSearch={false}
+            variant="white"
+            backgroundClassName="bg-navbar-bg"
+            topPosition="top-0"
+            reducedPadding={true}
+            whiteText={true}
+          />
+        </div>
+
         {/* Split Layout for Larger Screens */}
         <div className="hidden lg:flex pt-20 overflow-hidden h-[calc(100vh-80px)]">
 
@@ -410,7 +408,7 @@ export default function DMChatListPage() {
                 showSearchIcon={false}
               />
             </div>
-            
+
             {/* Chat List - Scrollable */}
             <div className="flex-1 overflow-y-auto min-h-0">
               {filteredChats.length === 0 ? (
@@ -424,7 +422,7 @@ export default function DMChatListPage() {
                     <div className="w-20 h-20 mx-auto mb-6 bg-sage/10 rounded-full flex items-center justify-center">
                       <MessageCircle className="w-8 h-8 text-sage" strokeWidth={1.5} />
                     </div>
-                    <h3 
+                    <h3
                       className="text-h2 font-semibold text-charcoal mb-2"
                       style={{
                         fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
@@ -432,7 +430,7 @@ export default function DMChatListPage() {
                     >
                       No conversations found
                     </h3>
-                    <p 
+                    <p
                       className="text-body-sm text-charcoal/60 mb-6 max-w-md mx-auto"
                       style={{
                         fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
@@ -489,11 +487,10 @@ export default function DMChatListPage() {
                           className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
                         >
                           <div
-                            className={`max-w-[65%] lg:max-w-[60%] rounded-[12px] sm:rounded-[12px] px-3 py-2.5 sm:px-4 sm:py-3 ${
-                              isCurrentUser
+                            className={`max-w-[65%] lg:max-w-[60%] rounded-[12px] sm:rounded-[12px] px-3 py-2.5 sm:px-4 sm:py-3 ${isCurrentUser
                                 ? 'bg-gradient-to-br from-coral to-coral/90 text-white border border-white/30'
                                 : 'bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl text-charcoal border border-white/60 ring-1 ring-white/30'
-                            }`}
+                              }`}
                             style={{
                               fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
                             }}
@@ -503,11 +500,10 @@ export default function DMChatListPage() {
                             }}>
                               {msg.text}
                             </p>
-                            <div className={`flex items-center gap-1 mt-1.5 sm:mt-2 text-xs sm:text-caption ${
-                              isCurrentUser ? 'text-white/70' : 'text-charcoal/50'
-                            }`} style={{
-                              fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                            }}>
+                            <div className={`flex items-center gap-1 mt-1.5 sm:mt-2 text-xs sm:text-caption ${isCurrentUser ? 'text-white/70' : 'text-charcoal/50'
+                              }`} style={{
+                                fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                              }}>
                               <span>{msg.timestamp}</span>
                               {isCurrentUser && msg.read && (
                                 <Check className="w-3 h-3" strokeWidth={2.5} />
@@ -582,279 +578,264 @@ export default function DMChatListPage() {
 
         {/* Mobile Layout - Full Width */}
         <div className="lg:hidden">
-          {/* Show Chat Panel when a chat is selected on mobile */}
-          {selectedChatId && selectedChat ? (
-            <div className="flex flex-col h-[calc(100vh-80px)] pt-20 overflow-hidden">
-              {/* Mobile Chat Header */}
-              <div className="flex-shrink-0 bg-navbar-bg border-b border-charcoal/10 px-4 py-3 flex items-center gap-3">
-                <button
-                  onClick={() => setSelectedChatId(null)}
-                  className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors min-h-[44px] min-w-[44px]"
-                  aria-label="Back to conversations"
-                >
-                  <ArrowLeft className="w-5 h-5 text-white" strokeWidth={2.5} />
-                </button>
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                  {selectedChat.businessImage ? (
-                    <div className="relative flex-shrink-0">
-                      <Image
-                        src={selectedChat.businessImage}
-                        alt={selectedChat.businessName}
-                        width={40}
-                        height={40}
-                        className="w-10 h-10 rounded-lg object-cover border-2 border-white/50"
-                      />
-                      {selectedChat.verified && (
-                        <div className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-blue-500 rounded-full flex items-center justify-center ring-2 ring-white">
-                          <Check className="text-white" size={7} strokeWidth={3} />
-                        </div>
-                      )}
+          <AnimatePresence mode="wait">
+            {/* Show Chat Panel when a chat is selected on mobile */}
+            {selectedChatId && selectedChat ? (
+              <motion.div
+                key="conversation"
+                initial={{ x: '100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '100%' }}
+                transition={{ type: 'tween', duration: 0.3, ease: 'easeInOut' }}
+                className="fixed inset-0 z-50 flex flex-col bg-off-white"
+              >
+                {/* Mobile Chat Header - Fixed at top */}
+                <div className="flex-shrink-0 bg-navbar-bg border-b border-charcoal/10 px-4 py-3 flex items-center gap-3 safe-area-inset-top pt-safe">
+                  <button
+                    onClick={() => setSelectedChatId(null)}
+                    className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 transition-colors min-h-[44px] min-w-[44px] touch-manipulation"
+                    aria-label="Back to conversations"
+                  >
+                    <ArrowLeft className="w-5 h-5 text-white" strokeWidth={2.5} />
+                  </button>
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    {selectedChat.businessImage ? (
+                      <div className="relative flex-shrink-0">
+                        <Image
+                          src={selectedChat.businessImage}
+                          alt={selectedChat.businessName}
+                          width={40}
+                          height={40}
+                          className="w-10 h-10 rounded-lg object-cover border-2 border-white/50"
+                        />
+                        {selectedChat.verified && (
+                          <div className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-blue-500 rounded-full flex items-center justify-center ring-2 ring-white">
+                            <Check className="text-white" size={7} strokeWidth={3} />
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="w-10 h-10 flex items-center justify-center bg-sage/20 text-sage rounded-lg border-2 border-white/50">
+                        <User className="text-sage/70 w-5 h-5" strokeWidth={2} />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <h2 className="text-base font-semibold text-white truncate" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                        {selectedChat.businessName}
+                      </h2>
+                      <p className="text-xs text-white/70 truncate" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                        {selectedChat.category}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Messages Container */}
+                <div className="flex-1 overflow-y-auto px-4 py-4 min-h-0 bg-off-white">
+                  {messagesLoading ? (
+                    <div className="text-center py-8">
+                      <p className="text-charcoal/60">Loading messages...</p>
+                    </div>
+                  ) : messages.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-charcoal/60">No messages yet. Start the conversation!</p>
                     </div>
                   ) : (
-                    <div className="w-10 h-10 flex items-center justify-center bg-sage/20 text-sage rounded-lg border-2 border-white/50">
-                      <User className="text-sage/70 w-5 h-5" strokeWidth={2} />
-                    </div>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <h2 className="text-base font-semibold text-white truncate" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                      {selectedChat.businessName}
-                    </h2>
-                    <p className="text-xs text-white/70 truncate" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                      {selectedChat.category}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Messages Container */}
-              <div className="flex-1 overflow-y-auto px-4 py-4 min-h-0 bg-off-white">
-                {messagesLoading ? (
-                  <div className="text-center py-8">
-                    <p className="text-charcoal/60">Loading messages...</p>
-                  </div>
-                ) : messages.length === 0 ? (
-                  <div className="text-center py-8">
-                    <p className="text-charcoal/60">No messages yet. Start the conversation!</p>
-                  </div>
-                ) : (
-                  <div className="max-w-3xl mx-auto space-y-3">
-                    {messages.map((msg) => {
-                      const isCurrentUser = msg.senderId === user?.id;
-                      return (
-                        <div
-                          key={msg.id}
-                          className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
-                        >
+                    <div className="max-w-3xl mx-auto space-y-3">
+                      {messages.map((msg) => {
+                        const isCurrentUser = msg.senderId === user?.id;
+                        return (
                           <div
-                            className={`max-w-[85%] rounded-[12px] px-3 py-2.5 ${
-                              isCurrentUser
-                                ? 'bg-gradient-to-br from-coral to-coral/90 text-white border border-white/30'
-                                : 'bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl text-charcoal border border-white/60 ring-1 ring-white/30'
-                            }`}
-                            style={{
-                              fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                            }}
+                            key={msg.id}
+                            className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
                           >
-                            <p className="text-sm leading-relaxed whitespace-pre-wrap break-words" style={{
-                              fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                            }}>
-                              {msg.text}
-                            </p>
-                            <div className={`flex items-center gap-1 mt-1.5 text-xs ${
-                              isCurrentUser ? 'text-white/70' : 'text-charcoal/50'
-                            }`} style={{
-                              fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                            }}>
-                              <span>{msg.timestamp}</span>
-                              {isCurrentUser && msg.read && (
-                                <Check className="w-3 h-3" strokeWidth={2.5} />
-                              )}
+                            <div
+                              className={`max-w-[85%] rounded-[12px] px-3 py-2.5 ${isCurrentUser
+                                  ? 'bg-gradient-to-br from-coral to-coral/90 text-white border border-white/30'
+                                  : 'bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl text-charcoal border border-white/60 ring-1 ring-white/30'
+                                }`}
+                              style={{
+                                fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                              }}
+                            >
+                              <p className="text-sm leading-relaxed whitespace-pre-wrap break-words" style={{
+                                fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                              }}>
+                                {msg.text}
+                              </p>
+                              <div className={`flex items-center gap-1 mt-1.5 text-xs ${isCurrentUser ? 'text-white/70' : 'text-charcoal/50'
+                                }`} style={{
+                                  fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                                }}>
+                                <span>{msg.timestamp}</span>
+                                {isCurrentUser && msg.read && (
+                                  <Check className="w-3 h-3" strokeWidth={2.5} />
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
-                    <div ref={messagesEndRef} />
+                        );
+                      })}
+                      <div ref={messagesEndRef} />
+                    </div>
+                  )}
+                </div>
+
+                {/* Message Input */}
+                <div className="flex-shrink-0 bg-off-white border-t border-charcoal/10 px-4 py-3 safe-area-inset-bottom">
+                  <form onSubmit={handleSend} className="flex items-end gap-2">
+                    <div className="flex-1 relative">
+                      <textarea
+                        ref={inputRef}
+                        value={message}
+                        onChange={handleInputChange}
+                        onKeyDown={handleKeyDown}
+                        placeholder="Type a message..."
+                        rows={1}
+                        className="w-full bg-white border border-charcoal/10 rounded-[12px] px-3 py-2.5 pr-10 text-sm text-charcoal placeholder:text-sm placeholder-charcoal/40 resize-none focus:outline-none focus:ring-2 focus:ring-sage/30 focus:border-sage/50 transition-all duration-300 max-h-[100px] overflow-y-auto touch-manipulation"
+                        style={{
+                          fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                          lineHeight: '1.5',
+                        }}
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={!message.trim()}
+                      className="w-11 h-11 bg-gradient-to-br from-coral to-coral/90 active:bg-coral/90 disabled:bg-charcoal/20 disabled:cursor-not-allowed text-white rounded-full flex items-center justify-center border border-white/30 transition-all duration-300 active:scale-95 min-h-[44px] min-w-[44px] touch-manipulation"
+                      aria-label="Send message"
+                    >
+                      <Send className="w-4 h-4" strokeWidth={2.5} />
+                    </button>
+                  </form>
+                </div>
+              </motion.div>
+            ) : (
+              /* Show Conversation List when no chat is selected on mobile */
+              <motion.main
+                key="list"
+                initial={{ x: '-100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '-100%' }}
+                transition={{ type: 'tween', duration: 0.3, ease: 'easeInOut' }}
+                className="relative z-10 mx-auto w-full max-w-[2000px] px-4 sm:px-6 pt-20 sm:pt-24 flex flex-col min-h-[calc(100vh-80px)]"
+              >
+                {/* Breadcrumb Navigation */}
+                <nav className="mb-4 sm:mb-6 px-2 flex-shrink-0" aria-label="Breadcrumb">
+                  <ol className="flex items-center gap-2 text-sm sm:text-base">
+                    <li>
+                      <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                        Home
+                      </Link>
+                    </li>
+                    <li className="flex items-center">
+                      <ChevronRight className="w-4 h-4 text-charcoal/40" />
+                    </li>
+                    <li>
+                      <span className="text-charcoal font-semibold" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                        Messages
+                      </span>
+                    </li>
+                  </ol>
+                </nav>
+                {/* Search Bar */}
+                <div className="mb-4 pb-3 flex-shrink-0">
+                  <SearchInput
+                    variant="header"
+                    placeholder="Search conversations..."
+                    mobilePlaceholder="Search conversations..."
+                    onSearch={(q) => setSearchQuery(q)}
+                    showFilter={false}
+                    showSearchIcon={false}
+                  />
+                </div>
+
+                {/* Chat List */}
+                {chatsLoading ? (
+                  <div className="flex-1 flex items-center justify-center">
+                    <p className="text-charcoal/60">Loading conversations...</p>
+                  </div>
+                ) : filteredChats.length === 0 ? (
+                  <div
+                    className="flex-1 flex items-center justify-center w-full px-2 font-urbanist"
+                    style={{
+                      fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                    }}
+                  >
+                    <div className="text-center w-full max-w-md mx-auto">
+                      <div className="w-20 h-20 mx-auto mb-6 bg-sage/10 rounded-full flex items-center justify-center">
+                        <MessageCircle className="w-8 h-8 text-sage" strokeWidth={1.5} />
+                      </div>
+                      <h3
+                        className="text-h2 font-semibold text-charcoal mb-2"
+                        style={{
+                          fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                        }}
+                      >
+                        {searchQuery ? 'No conversations found' : 'No messages yet'}
+                      </h3>
+                      <p
+                        className="text-body-sm text-charcoal/60 mb-6 max-w-md mx-auto"
+                        style={{
+                          fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                          fontWeight: 500,
+                        }}
+                      >
+                        {searchQuery
+                          ? 'Try adjusting your search or start a new conversation'
+                          : 'Start a conversation with business owners to get started!'
+                        }
+                      </p>
+                      {!searchQuery && (
+                        <button
+                          onClick={() => router.push('/dm/new')}
+                          className="inline-flex items-center gap-2 px-6 py-2.5 bg-sage text-white text-body font-semibold rounded-full hover:bg-sage/90 active:bg-sage/80 transition-all duration-300 touch-manipulation"
+                          style={{
+                            fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                          }}
+                        >
+                          Start New Conversation
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-0">
+                    {filteredChats.map((chat) => (
+                      <ChatItem
+                        key={chat.id}
+                        chat={chat}
+                        index={0}
+                        onClick={() => setSelectedChatId(chat.id)}
+                      />
+                    ))}
                   </div>
                 )}
-              </div>
 
-              {/* Message Input */}
-              <div className="flex-shrink-0 bg-off-white border-t border-charcoal/10 px-4 py-3 safe-area-inset-bottom">
-                <form onSubmit={handleSend} className="flex items-end gap-2">
-                  <div className="flex-1 relative">
-                    <textarea
-                      ref={inputRef}
-                      value={message}
-                      onChange={handleInputChange}
-                      onKeyDown={handleKeyDown}
-                      placeholder="Type a message..."
-                      rows={1}
-                      className="w-full bg-white border border-charcoal/10 rounded-[12px] px-3 py-2.5 pr-10 text-sm text-charcoal placeholder:text-sm placeholder-charcoal/40 resize-none focus:outline-none focus:ring-2 focus:ring-sage/30 focus:border-sage/50 transition-all duration-300 max-h-[100px] overflow-y-auto touch-manipulation"
-                      style={{
-                        fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                        lineHeight: '1.5',
+                {/* Mobile Compose Button - Floating */}
+                {!selectedChatId && (
+                  <div className="fixed bottom-4 right-4 sm:right-6 z-50 lg:hidden">
+                    <motion.button
+                      whileHover={{ scale: 1.1, rotate: 90 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => {
+                        router.push('/dm/new');
                       }}
-                    />
+                      className="w-12 h-12 sm:w-14 sm:h-14 bg-sage text-white rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300"
+                      aria-label="New conversation"
+                    >
+                      <Edit3 className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2.5} />
+                    </motion.button>
                   </div>
-                  <button
-                    type="submit"
-                    disabled={!message.trim()}
-                    className="w-11 h-11 bg-gradient-to-br from-coral to-coral/90 active:bg-coral/90 disabled:bg-charcoal/20 disabled:cursor-not-allowed text-white rounded-full flex items-center justify-center border border-white/30 transition-all duration-300 active:scale-95 min-h-[44px] min-w-[44px] touch-manipulation"
-                    aria-label="Send message"
-                  >
-                    <Send className="w-4 h-4" strokeWidth={2.5} />
-                  </button>
-                </form>
-              </div>
-            </div>
-          ) : (
-            /* Show Conversation List when no chat is selected on mobile */
-            <main className="relative z-10 mx-auto w-full max-w-[2000px] px-4 sm:px-6 pt-20 sm:pt-24 pb-20 sm:pb-8">
-              {/* Breadcrumb Navigation */}
-              <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
-                <ol className="flex items-center gap-2 text-sm sm:text-base">
-                  <li>
-                    <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                      Home
-                    </Link>
-                  </li>
-                  <li className="flex items-center">
-                    <ChevronRight className="w-4 h-4 text-charcoal/40" />
-                  </li>
-                  <li>
-                    <span className="text-charcoal font-semibold" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                      Messages
-                    </span>
-                  </li>
-                </ol>
-              </nav>
-              {/* Search Bar */}
-              <div className="mb-4 pb-3">
-                <SearchInput
-                  variant="header"
-                  placeholder="Search conversations..."
-                  mobilePlaceholder="Search conversations..."
-                  onSearch={(q) => setSearchQuery(q)}
-                  showFilter={false}
-                  showSearchIcon={false}
-                />
-              </div>
-
-              {/* Chat List */}
-              {chatsLoading ? (
-                <div className="text-center py-8">
-                  <p className="text-charcoal/60">Loading conversations...</p>
-                </div>
-              ) : filteredChats.length === 0 ? (
-              <div
-                className="mx-auto w-full max-w-[2000px] px-2 font-urbanist w-full"
-                style={{
-                  fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                }}
-              >
-                <div className="text-center w-full">
-                  <div className="w-20 h-20 mx-auto mb-6 bg-sage/10 rounded-full flex items-center justify-center">
-                    <MessageCircle className="w-8 h-8 text-sage" strokeWidth={1.5} />
-                  </div>
-                  <h3 
-                    className="text-h2 font-semibold text-charcoal mb-2"
-                    style={{
-                      fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                    }}
-                  >
-                    No conversations found
-                  </h3>
-                  <p 
-                    className="text-body-sm text-charcoal/60 mb-6 max-w-md mx-auto"
-                    style={{
-                      fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                      fontWeight: 500,
-                    }}
-                  >
-                    Try adjusting your search or start a new conversation
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-0">
-                {filteredChats.map((chat) => (
-                  <ChatItem
-                    key={chat.id}
-                    chat={chat}
-                    index={0}
-                    onClick={() => setSelectedChatId(chat.id)}
-                  />
-                ))}
-              </div>
+                )}
+              </motion.main>
             )}
-
-            {/* Empty State for No Chats */}
-            {!chatsLoading && chats.length === 0 && filteredChats.length === 0 && (
-              <div
-                className="mx-auto w-full max-w-[2000px] px-2 font-urbanist w-full"
-                style={{
-                  fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                }}
-              >
-                <div className="text-center w-full">
-                  <div className="w-20 h-20 mx-auto mb-6 bg-sage/10 rounded-full flex items-center justify-center">
-                    <MessageCircle className="w-8 h-8 text-sage" strokeWidth={1.5} />
-                  </div>
-                  <h3 
-                    className="text-h2 font-semibold text-charcoal mb-2"
-                    style={{
-                      fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                    }}
-                  >
-                    No messages yet
-                  </h3>
-                  <p 
-                    className="text-body-sm text-charcoal/60 mb-6 max-w-md mx-auto"
-                    style={{
-                      fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                      fontWeight: 500,
-                    }}
-                  >
-                    Start a conversation with business owners to get started!
-                  </p>
-                  <button
-                    onClick={() => router.push('/dm/new')}
-                    className="inline-flex items-center gap-2 px-6 py-2.5 bg-sage text-white text-body font-semibold rounded-full hover:bg-sage/90 transition-all duration-300"
-                    style={{
-                      fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                    }}
-                  >
-                    Start New Conversation
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Mobile Compose Button - Floating */}
-            {!selectedChatId && (
-              <div className="fixed bottom-20 right-4 sm:right-6 z-50 lg:hidden">
-                <motion.button
-                  whileHover={{ scale: 1.1, rotate: 90 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => {
-                    router.push('/dm/new');
-                  }}
-                  className="w-12 h-12 sm:w-14 sm:h-14 bg-sage text-white rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300"
-                  aria-label="New conversation"
-                >
-                  <Edit3 className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2.5} />
-                </motion.button>
-              </div>
-            )}
-          </main>
-          )}
-        </div>
-
-        <div className="hidden lg:block">
-          <Footer />
+          </AnimatePresence>
         </div>
       </motion.div>
+      <div className="hidden lg:block [&_footer]:pb-safe-area-bottom">
+        <Footer />
+      </div>
     </AnimatePresence>
   );
 }

@@ -646,3 +646,26 @@ CREATE INDEX idx_user_activity_user_id ON user_activity(user_id, created_at DESC
 **Risk Areas:** Security (RLS), Rate limiting, Data validation
 
 **Note:** Business-related features (business claims, business owner management, admin approval workflows) are excluded from this plan and will be addressed separately.
+
+---
+
+## 🚨 **CRITICAL NOTE: Business Owner POV Not Implemented**
+
+**Status:** The backend has been built primarily from the **user's perspective**. Business owner features are **NOT YET IMPLEMENTED**.
+
+### **Missing Business Owner Features:**
+- ❌ Business owner messaging (can only receive, cannot view/manage conversations)
+- ❌ Business owner dashboard APIs
+- ❌ Business owner notification system
+- ❌ Business owner review management APIs
+- ❌ Business owner analytics/statistics APIs
+- ❌ Business owner profile/settings management
+
+**What Exists:**
+- ✅ `business_owners` and `business_ownership_requests` tables
+- ✅ Basic ownership service (`businessOwnershipService.ts`)
+- ✅ Frontend `/manage-business` page (but backend APIs incomplete)
+
+**Priority:** Business owner features should be implemented as a separate phase after user-facing features are complete.
+
+See `BACKEND_STATUS_SUMMARY.md` for complete details on what's implemented vs. what's missing.
