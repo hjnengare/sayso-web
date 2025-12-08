@@ -79,7 +79,6 @@ export default function Footer() {
               >
                 <h3 className="font-urbanist text-base sm:text-lg font-semibold text-off-white mb-5 relative inline-block">
                   Company
-                  <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-sage rounded-full" />
                 </h3>
                 <ul className="space-y-3.5">
                   {footerLinks.company.map((link) => (
@@ -107,7 +106,6 @@ export default function Footer() {
               >
                 <h3 className="font-urbanist text-base sm:text-lg font-semibold text-off-white mb-5 relative inline-block">
                   Support
-                  <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-sage rounded-full" />
                 </h3>
                 <ul className="space-y-3.5">
                   {footerLinks.support.map((link) => (
@@ -135,7 +133,6 @@ export default function Footer() {
               >
                 <h3 className="font-urbanist text-base sm:text-lg font-semibold text-off-white mb-5 relative inline-block">
                   Legal
-                  <span className="absolute -bottom-2 left-0 w-8 h-0.5 bg-sage rounded-full" />
                 </h3>
                 <ul className="space-y-3.5">
                   {footerLinks.legal.map((link) => (
