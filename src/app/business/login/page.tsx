@@ -132,6 +132,15 @@ function BusinessLoginPageContent() {
           backLink="/home"
           title="Welcome back"
           subtitle="Sign in to manage your business profile and analytics"
+          subtitleStyle={{
+            wordBreak: 'keep-all',
+            overflowWrap: 'normal',
+            whiteSpace: 'normal',
+            hyphens: 'none',
+            WebkitHyphens: 'none',
+            MozHyphens: 'none',
+            msHyphens: 'none',
+          }}
         />
 
         <div className="w-full max-w-sm sm:max-w-md lg:max-w-lg mx-auto relative z-10 flex-1 flex flex-col justify-center py-8 sm:py-12 px-1 sm:px-4">
@@ -211,7 +220,20 @@ function BusinessLoginPageContent() {
 
             {/* Footer */}
             <div className="text-center mt-6 pt-6 border-t border-white/20">
-              <div className="text-sm sm:text-base text-white" style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif", fontWeight: 600 }}>
+              <div 
+                className="text-sm sm:text-base text-white" 
+                style={{ 
+                  fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif", 
+                  fontWeight: 600,
+                  wordBreak: 'keep-all',
+                  overflowWrap: 'normal',
+                  whiteSpace: 'normal',
+                  hyphens: 'none',
+                  WebkitHyphens: 'none',
+                  MozHyphens: 'none',
+                  msHyphens: 'none',
+                }}
+              >
                 Don&apos;t have a business account?{" "}
                 <Link
                   href="/claim-business"
@@ -221,7 +243,19 @@ function BusinessLoginPageContent() {
                   Claim your business
                 </Link>
               </div>
-              <div className="text-sm text-white/70 mt-3" style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}>
+              <div 
+                className="text-sm text-white/70 mt-3" 
+                style={{ 
+                  fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                  wordBreak: 'keep-all',
+                  overflowWrap: 'normal',
+                  whiteSpace: 'normal',
+                  hyphens: 'none',
+                  WebkitHyphens: 'none',
+                  MozHyphens: 'none',
+                  msHyphens: 'none',
+                }}
+              >
                 Looking for personal account?{" "}
                 <Link
                   href="/login"
