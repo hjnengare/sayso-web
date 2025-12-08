@@ -98,14 +98,14 @@ export default function SimilarBusinesses({
   }
 
   return (
-    <section className="space-y-8 py-8 relative" aria-labelledby="similar-businesses-heading">
+    <section className="space-y-6 sm:space-y-8 py-6 sm:py-8 relative w-full" aria-labelledby="similar-businesses-heading">
       {/* Premium background decoration */}
       <div className="absolute inset-0 -z-10 opacity-30">
         <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-br from-sage/20 to-transparent rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-gradient-to-br from-coral/15 to-transparent rounded-full blur-3xl" />
       </div>
 
-      <div className="flex justify-center relative z-10">
+      <div className="flex justify-center relative z-10 px-2">
         <div className="flex flex-col gap-4 items-center">
           <div className="inline-flex flex-col items-center gap-2">
             <div className="flex items-center gap-2">
@@ -122,7 +122,7 @@ export default function SimilarBusinesses({
         </div>
       </div>
 
-      <ul className="list-none flex flex-col sm:flex-row sm:justify-between gap-4 md:gap-6 relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6">
+      <ul className="list-none flex flex-col sm:flex-row sm:justify-between gap-4 md:gap-6 relative z-10 w-full max-w-6xl mx-auto px-2 sm:px-4 md:px-6">
         {similarBusinesses.map((business) => (
           <li key={business.id} className="flex-1 min-w-0">
             <SimilarBusinessCard
