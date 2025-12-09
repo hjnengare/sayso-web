@@ -9,7 +9,7 @@ const CRITICAL_ROUTES = [
   "/saved", 
   "/leaderboard",
   "/profile",
-  "/claim-business"
+  "/for-businesses"
 ];
 
 export default function LinkPrefetch() {

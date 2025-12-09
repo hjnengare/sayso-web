@@ -130,7 +130,7 @@ function BusinessLoginPageContent() {
 
         <AuthHeader
           backLink="/home"
-          title="Welcome back"
+          title="Business Account Login"
           subtitle="Sign in to manage your business profile and analytics"
           subtitleStyle={{
             wordBreak: 'keep-all',
@@ -236,7 +236,7 @@ function BusinessLoginPageContent() {
               >
                 Don&apos;t have a business account?{" "}
                 <Link
-                  href="/claim-business"
+                  href="/for-businesses"
                   className="text-white font-semibold hover:text-coral transition-colors duration-300 relative group"
                   style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif", fontWeight: 600 }}
                 >

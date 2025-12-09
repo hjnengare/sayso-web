@@ -298,3 +298,101 @@ export async function GET(
   }
 }
 
+/**
+ * PUT /api/businesses/[id]
+ * Updates a business (requires business owner authentication)
+ */
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id: businessId } = await params;
+    const supabase = await getServerSupabase(req);
+
+    // Get authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    // Verify user owns this business
+    const { data: ownerCheck, error: ownerError } = await supabase
+      .from('business_owners')
+      .select('id')
+      .eq('business_id', businessId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (ownerError || !ownerCheck) {
+      return NextResponse.json(
+        { error: 'You do not have permission to edit this business' },
+        { status: 403 }
+      );
+    }
+
+    // Parse request body
+    const body = await req.json();
+    const {
+      name,
+      description,
+      category,
+      address,
+      phone,
+      email,
+      website,
+      priceRange,
+      hours,
+    } = body;
+
+    // Build update object (only include fields that are provided)
+    const updateData: any = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (name !== undefined) updateData.name = name;
+    if (description !== undefined) updateData.description = description;
+    if (category !== undefined) updateData.category = category;
+    if (address !== undefined) updateData.address = address;
+    if (phone !== undefined) updateData.phone = phone;
+    if (email !== undefined) updateData.email = email;
+    if (website !== undefined) updateData.website = website;
+    if (priceRange !== undefined) updateData.price_range = priceRange;
+    // Store hours as JSON if provided
+    if (hours !== undefined) {
+      updateData.hours = hours; // Assuming hours is stored as JSONB
+    }
+
+    // Update business
+    const { data: updatedBusiness, error: updateError } = await supabase
+      .from('businesses')
+      .update(updateData)
+      .eq('id', businessId)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error('[API] Error updating business:', updateError);
+      return NextResponse.json(
+        { error: 'Failed to update business', details: updateError.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      business: updatedBusiness,
+    });
+  } catch (error: any) {
+    console.error('[API] Error updating business:', error);
+    return NextResponse.json(
+      { error: 'Failed to update business', details: error.message },
+      { status: 500 }
+    );
+  }
+}
+

@@ -1303,6 +1303,155 @@ async function prioritizeRecentlyReviewedBusinesses(
   }
 }
 
+/**
+ * POST /api/businesses
+ * Create a new business (requires authentication)
+ */
+export async function POST(req: Request) {
+  try {
+    const supabase = await getServerSupabase(req);
+    
+    // Get authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized. Please log in to create a business.' },
+        { status: 401 }
+      );
+    }
+
+    // Parse request body
+    const body = await req.json();
+    const {
+      name,
+      description,
+      category,
+      location,
+      address,
+      phone,
+      email,
+      website,
+      priceRange,
+      hours,
+      lat,
+      lng,
+    } = body;
+
+    // Validate required fields
+    if (!name || !category || !location) {
+      return NextResponse.json(
+        { error: 'Name, category, and location are required' },
+        { status: 400 }
+      );
+    }
+
+    // Generate slug from name
+    const generateSlug = (businessName: string): string => {
+      return businessName
+        .toLowerCase()
+        .trim()
+        .replace(/[^\w\s-]/g, '') // Remove special characters
+        .replace(/[\s_-]+/g, '-') // Replace spaces and underscores with hyphens
+        .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
+    };
+
+    let slug = generateSlug(name);
+    let slugSuffix = 1;
+    let finalSlug = slug;
+
+    // Check if slug exists and make it unique
+    while (true) {
+      const { data: existing } = await supabase
+        .from('businesses')
+        .select('id')
+        .eq('slug', finalSlug)
+        .single();
+
+      if (!existing) {
+        break; // Slug is unique
+      }
+      finalSlug = `${slug}-${slugSuffix}`;
+      slugSuffix++;
+    }
+
+    // Create business
+    const businessData: any = {
+      name: name.trim(),
+      description: description?.trim() || null,
+      category: category.trim(),
+      location: location.trim(),
+      address: address?.trim() || null,
+      phone: phone?.trim() || null,
+      email: email?.trim() || null,
+      website: website?.trim() || null,
+      price_range: priceRange || '$$',
+      hours: hours || null,
+      owner_id: user.id,
+      slug: finalSlug,
+      verified: false, // New businesses start unverified
+      status: 'active',
+      lat: lat || null,
+      lng: lng || null,
+    };
+
+    const { data: newBusiness, error: insertError } = await supabase
+      .from('businesses')
+      .insert(businessData)
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error('[API] Error creating business:', insertError);
+      return NextResponse.json(
+        { error: 'Failed to create business', details: insertError.message },
+        { status: 500 }
+      );
+    }
+
+    // Create business_owners entry
+    const { error: ownerError } = await supabase
+      .from('business_owners')
+      .insert({
+        business_id: newBusiness.id,
+        user_id: user.id,
+        role: 'owner',
+        verified_at: new Date().toISOString(),
+      });
+
+    if (ownerError) {
+      console.error('[API] Error creating business owner:', ownerError);
+      // Business was created but owner entry failed - try to clean up
+      await supabase.from('businesses').delete().eq('id', newBusiness.id);
+      return NextResponse.json(
+        { error: 'Failed to assign ownership', details: ownerError.message },
+        { status: 500 }
+      );
+    }
+
+    // Initialize business stats
+    await supabase.from('business_stats').insert({
+      business_id: newBusiness.id,
+      total_reviews: 0,
+      average_rating: 0.0,
+      rating_distribution: { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0 },
+      percentiles: {},
+    });
+
+    return NextResponse.json({
+      success: true,
+      business: newBusiness,
+      message: 'Business created successfully!',
+    }, { status: 201 });
+  } catch (error: any) {
+    console.error('[API] Error creating business:', error);
+    return NextResponse.json(
+      { error: 'Failed to create business', details: error.message },
+      { status: 500 }
+    );
+  }
+}
+
 function applySharedResponseHeaders(response: NextResponse) {
   // Use optimized cache headers for business data
   response.headers.set('Cache-Control', CachePresets.business());

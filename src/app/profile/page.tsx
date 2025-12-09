@@ -1097,7 +1097,7 @@ function ProfileContent() {
                         Keep your business information up to date, respond to community feedback, and track performance insights from one place.
                       </p>
                       <Link
-                        href="/claim-business"
+                        href="/for-businesses"
                         className="inline-flex items-center gap-2 px-4 py-2.5 bg-coral/90 hover:bg-coral text-white rounded-full text-sm font-semibold transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-lg shadow-coral/20 border border-coral/30 w-fit"
                       >
                         <Briefcase className="w-4 h-4" />

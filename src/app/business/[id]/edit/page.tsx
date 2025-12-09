@@ -3,8 +3,9 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { ChevronRight } from "react-feather";
+import { useToast } from "../../../contexts/ToastContext";
 import {
     Store,
     Save,
@@ -62,9 +63,11 @@ const animations = `
 export default function BusinessEditPage() {
     const params = useParams();
     const router = useRouter();
+    const { showToast } = useToast();
     const paramId = params?.id;
     const businessId = Array.isArray(paramId) ? paramId[0] : paramId;
     const redirectTarget = businessId ? `/business/${businessId}` : "/business/login";
+    
     const { isChecking, hasAccess } = useRequireBusinessOwner({
         businessId,
         redirectTo: redirectTarget,
@@ -72,36 +75,92 @@ export default function BusinessEditPage() {
 
     // Form state
     const [formData, setFormData] = useState({
-        name: "Mama's Kitchen",
-        description: "Authentic Italian cuisine with a modern twist. Family-owned restaurant serving fresh pasta, wood-fired pizzas, and traditional Italian dishes.",
-        category: "Restaurant",
-        address: "123 Main Street, San Francisco, CA 94102",
-        phone: "+1 (555) 123-4567",
-        email: "info@mamaskitchen.com",
-        website: "https://mamaskitchen.com",
-        priceRange: "$$",
+        name: "",
+        description: "",
+        category: "",
+        address: "",
+        phone: "",
+        email: "",
+        website: "",
+        priceRange: "$",
         hours: {
-            monday: "11:00 AM - 10:00 PM",
-            tuesday: "11:00 AM - 10:00 PM",
-            wednesday: "11:00 AM - 10:00 PM",
-            thursday: "11:00 AM - 10:00 PM",
-            friday: "11:00 AM - 11:00 PM",
-            saturday: "10:00 AM - 11:00 PM",
-            sunday: "10:00 AM - 9:00 PM",
+            monday: "",
+            tuesday: "",
+            wednesday: "",
+            thursday: "",
+            friday: "",
+            saturday: "",
+            sunday: "",
         },
-        images: [
-            "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1600&h=900&fit=crop",
-            "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1600&h=900&fit=crop",
-            "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=1600&h=900&fit=crop",
-        ],
-        specials: [
-            { id: 1, name: "2 for 1 Pizza", description: "Every day", icon: "pizza" },
-            { id: 2, name: "Jazz Night", description: "Mondays", icon: "musical-notes" },
-        ],
+        images: [] as string[],
+        specials: [] as Array<{ id: number; name: string; description: string; icon: string }>,
     });
 
     const [isSaving, setIsSaving] = useState(false);
     const [uploadingImages, setUploadingImages] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    // Fetch business data
+    useEffect(() => {
+        const fetchBusiness = async () => {
+            if (!businessId || isChecking) return;
+
+            try {
+                setIsLoading(true);
+                setError(null);
+
+                const response = await fetch(`/api/businesses/${businessId}`, {
+                    cache: 'no-store',
+                });
+
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        setError('Business not found');
+                    } else {
+                        setError('Failed to load business');
+                    }
+                    setIsLoading(false);
+                    return;
+                }
+
+                const data = await response.json();
+                
+                // Populate form with business data
+                setFormData({
+                    name: data.name || "",
+                    description: data.description || "",
+                    category: data.category || "",
+                    address: data.address || "",
+                    phone: data.phone || "",
+                    email: data.email || "",
+                    website: data.website || "",
+                    priceRange: data.price_range || "$",
+                    hours: data.hours || {
+                        monday: "",
+                        tuesday: "",
+                        wednesday: "",
+                        thursday: "",
+                        friday: "",
+                        saturday: "",
+                        sunday: "",
+                    },
+                    images: data.images || [],
+                    specials: [], // Specials would need separate API endpoint
+                });
+            } catch (err: any) {
+                console.error('Error fetching business:', err);
+                setError('Failed to load business');
+                showToast('Failed to load business data', 'sage', 4000);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        if (hasAccess && !isChecking) {
+            fetchBusiness();
+        }
+    }, [businessId, hasAccess, isChecking, showToast]);
 
     const handleInputChange = (field: string, value: any) => {
         setFormData(prev => ({
@@ -173,17 +232,46 @@ export default function BusinessEditPage() {
     };
 
     const handleSave = async () => {
+        if (!businessId) {
+            showToast('Business ID is required', 'sage', 3000);
+            return;
+        }
+
         setIsSaving(true);
         try {
-            if (!businessId) {
-                setIsSaving(false);
-                return;
+            const response = await fetch(`/api/businesses/${businessId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: formData.name,
+                    description: formData.description,
+                    category: formData.category,
+                    address: formData.address,
+                    phone: formData.phone,
+                    email: formData.email,
+                    website: formData.website,
+                    priceRange: formData.priceRange,
+                    hours: formData.hours,
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to save business');
             }
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            router.push(`/business/${businessId}`);
-        } catch (error) {
+
+            const result = await response.json();
+            showToast('Business updated successfully!', 'success', 2000);
+            
+            // Redirect to business page after short delay
+            setTimeout(() => {
+                router.push(`/business/${businessId}`);
+            }, 500);
+        } catch (error: any) {
             console.error('Error saving business:', error);
+            showToast(error.message || 'Failed to save business', 'sage', 4000);
         } finally {
             setIsSaving(false);
         }
@@ -206,7 +294,7 @@ export default function BusinessEditPage() {
         { key: "sunday", label: "Sunday" },
     ];
 
-    if (!businessId || isChecking) {
+    if (!businessId || isChecking || isLoading) {
         return <PageLoader size="lg" variant="wavy" color="sage"  />;
     }
 
@@ -226,12 +314,29 @@ export default function BusinessEditPage() {
                             View Business
                         </Link>
                         <Link
-                            href="/claim-business"
+                          href="/for-businesses"
                             className="px-5 py-2.5 rounded-full border border-sage/40 text-charcoal font-urbanist font-600 hover:bg-sage/10 transition-all duration-200"
                         >
                             Claim Ownership
                         </Link>
                     </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-dvh bg-off-white flex items-center justify-center px-6 text-center">
+                <div className="space-y-4 max-w-sm">
+                    <h2 className="text-xl font-semibold text-charcoal font-urbanist">Error</h2>
+                    <p className="text-sm text-charcoal/70 font-urbanist">{error}</p>
+                    <Link
+                        href={`/business/${businessId}`}
+                        className="px-5 py-2.5 rounded-full bg-sage text-white font-urbanist font-600 hover:bg-sage/90 transition-all duration-200"
+                    >
+                        Back to Business
+                    </Link>
                 </div>
             </div>
         );
@@ -282,15 +387,6 @@ export default function BusinessEditPage() {
                                 {/* Breadcrumb Navigation */}
                                 <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
                                     <ol className="flex items-center gap-2 text-sm sm:text-base flex-nowrap overflow-x-auto scrollbar-hide">
-                                        {/* Hide Home on mobile - show max 2 items on small devices */}
-                                        <li className="hidden sm:flex flex-shrink-0">
-                                            <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium whitespace-nowrap" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                                                Home
-                                            </Link>
-                                        </li>
-                                        <li className="hidden sm:flex items-center flex-shrink-0">
-                                            <ChevronRight className="w-4 h-4 text-charcoal/40" />
-                                        </li>
                                         <li className="flex-shrink-0">
                                             <Link href={`/business/${businessId}`} className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium whitespace-nowrap truncate max-w-[150px] sm:max-w-none" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                                                 Business
@@ -358,8 +454,65 @@ export default function BusinessEditPage() {
                             </div>
                         </div>
 
-                        {/* Contact Information Section */}
+                        {/* Images Section */}
                         <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-[12px] ring-1 ring-white/20 p-6 relative overflow-hidden animate-fade-in-up animate-delay-200">
+                            <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-coral/10 to-transparent rounded-full blur-lg" />
+                            <div className="relative z-10">
+                                <h3 className="font-urbanist text-base font-600 text-charcoal mb-6 flex items-center gap-3">
+                                    <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-coral/20 to-coral/10">
+                                        <ImageIcon className="w-4 h-4 text-coral" />
+                                    </span>
+                                    Business Photos
+                                </h3>
+
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
+                                    {formData.images.map((image, index) => (
+                                        <div key={index} className="relative group">
+                                            <div className="aspect-square rounded-lg overflow-hidden bg-white/20 border border-white/50">
+                                                <Image
+                                                    src={image}
+                                                    alt={`Business photo ${index + 1}`}
+                                                    width={200}
+                                                    height={200}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </div>
+                                            <button
+                                                onClick={() => removeImage(index)}
+                                                className="absolute top-2 right-2 w-7 h-7 bg-gradient-to-br from-charcoal to-charcoal/90 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 border border-white/30 shadow-lg"
+                                                aria-label="Remove image"
+                                            >
+                                                <X className="w-4 h-4" strokeWidth={2.5} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                    
+                                    <label className="aspect-square rounded-lg border-2 border-dashed border-charcoal/30 flex items-center justify-center cursor-pointer hover:border-sage hover:bg-sage/5 transition-all duration-200">
+                                        <div className="text-center">
+                                            <Upload className="w-8 h-8 text-charcoal/60 mx-auto mb-2" />
+                                            <span className="font-urbanist text-sm text-charcoal/60">Add Photo</span>
+                                        </div>
+                                        <input
+                                            type="file"
+                                            multiple
+                                            accept="image/*"
+                                            onChange={handleImageUpload}
+                                            className="hidden"
+                                            disabled={uploadingImages}
+                                        />
+                                    </label>
+                                </div>
+
+                                {uploadingImages && (
+                                    <div className="text-center py-4">
+                                        <PageLoader size="sm" variant="wavy" color="sage"  />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Contact Information Section */}
+                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-[12px] ring-1 ring-white/20 p-6 relative overflow-hidden animate-fade-in-up animate-delay-300">
                             <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-coral/10 to-transparent rounded-full blur-lg" />
                             <div className="relative z-10">
                                 <h3 className="font-urbanist text-base font-600 text-charcoal mb-6 flex items-center gap-3">
@@ -446,7 +599,7 @@ export default function BusinessEditPage() {
                         </div>
 
                         {/* Business Hours Section */}
-                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-[12px] ring-1 ring-white/20 p-6 relative overflow-hidden animate-fade-in-up animate-delay-300">
+                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-[12px] ring-1 ring-white/20 p-6 relative overflow-hidden animate-fade-in-up">
                             <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-sage/10 to-transparent rounded-full blur-lg" />
                             <div className="relative z-10">
                                 <h3 className="font-urbanist text-base font-600 text-charcoal mb-6 flex items-center gap-3">
@@ -470,63 +623,6 @@ export default function BusinessEditPage() {
                                         </div>
                                     ))}
                                 </div>
-                            </div>
-                        </div>
-
-                        {/* Images Section */}
-                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-[12px] ring-1 ring-white/20 p-6 relative overflow-hidden animate-fade-in-up">
-                            <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-coral/10 to-transparent rounded-full blur-lg" />
-                            <div className="relative z-10">
-                                <h3 className="font-urbanist text-base font-600 text-charcoal mb-6 flex items-center gap-3">
-                                    <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-coral/20 to-coral/10">
-                                        <ImageIcon className="w-4 h-4 text-coral" />
-                                    </span>
-                                    Business Photos
-                                </h3>
-
-                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
-                                    {formData.images.map((image, index) => (
-                                        <div key={index} className="relative group">
-                                            <div className="aspect-square rounded-lg overflow-hidden bg-white/20 border border-white/50">
-                                                <Image
-                                                    src={image}
-                                                    alt={`Business photo ${index + 1}`}
-                                                    width={200}
-                                                    height={200}
-                                                    className="w-full h-full object-cover"
-                                                />
-                                            </div>
-                                            <button
-                                                onClick={() => removeImage(index)}
-                                                className="absolute top-2 right-2 w-7 h-7 bg-gradient-to-br from-charcoal to-charcoal/90 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 border border-white/30 shadow-lg"
-                                                aria-label="Remove image"
-                                            >
-                                                <X className="w-4 h-4" strokeWidth={2.5} />
-                                            </button>
-                                        </div>
-                                    ))}
-                                    
-                                    <label className="aspect-square rounded-lg border-2 border-dashed border-charcoal/30 flex items-center justify-center cursor-pointer hover:border-sage hover:bg-sage/5 transition-all duration-200">
-                                        <div className="text-center">
-                                            <Upload className="w-8 h-8 text-charcoal/60 mx-auto mb-2" />
-                                            <span className="font-urbanist text-sm text-charcoal/60">Add Photo</span>
-                                        </div>
-                                        <input
-                                            type="file"
-                                            multiple
-                                            accept="image/*"
-                                            onChange={handleImageUpload}
-                                            className="hidden"
-                                            disabled={uploadingImages}
-                                        />
-                                    </label>
-                                </div>
-
-                                {uploadingImages && (
-                                    <div className="text-center py-4">
-                                        <PageLoader size="sm" variant="wavy" color="sage"  />
-                                    </div>
-                                )}
                             </div>
                         </div>
 

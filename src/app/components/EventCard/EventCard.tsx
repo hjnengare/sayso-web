@@ -135,7 +135,7 @@ export default function EventCard({ event, onBookmark }: EventCardProps) {
           </div>
 
           {/* CONTENT - Minimal, premium spacing */}
-          <div className="px-4 pt-4 pb-6 flex flex-col justify-between bg-gradient-to-br from-sage/12 via-sage/8 to-sage/10 gap-4 rounded-b-[12px] border-t border-white/30">
+          <div className="px-4 pt-4 pb-6 flex flex-col justify-between bg-gradient-to-br from-sage/12 via-sage/8 to-sage/10 gap-4 rounded-t-2xl rounded-b-[12px] border-t border-white/30">
             <div className="flex flex-col items-center text-center gap-3">
               <h3
                 className="text-h2 sm:text-h1 font-bold leading-tight text-charcoal text-center truncate"

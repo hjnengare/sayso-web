@@ -12,7 +12,7 @@ export default function PromoBar() {
       <div className="mx-auto w-full max-w-[2000px] px-2">
         <div className="h-10 sm:h-11 flex items-center justify-center text-center">
           <p className="text-xs sm:text-sm font-medium" style={urbanist}>
-            Reach more customers with sayso. <Link href="/claim-business" className="underline underline-offset-2 hover:text-sage transition-colors font-semibold" style={urbanist}>Claim your listing</Link>
+            Reach more customers with sayso. <Link href="/for-businesses" className="underline underline-offset-2 hover:text-sage transition-colors font-semibold" style={urbanist}>Claim your listing</Link>
           </p>
         </div>
       </div>

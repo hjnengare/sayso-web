@@ -156,3 +156,114 @@ export async function GET(req: NextRequest) {
   }
 }
 
+/**
+ * POST /api/events
+ * Create a custom event (requires authentication)
+ * Note: Custom events are stored in ticketmaster_events table with ticketmaster_id = null
+ */
+export async function POST(req: NextRequest) {
+  try {
+    const supabase = await getServerSupabase(req);
+    
+    // Get authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized. Please log in to create an event.' },
+        { status: 401 }
+      );
+    }
+
+    // Parse request body
+    const body = await req.json();
+    const {
+      title,
+      description,
+      type, // 'event' or 'special'
+      startDate,
+      endDate,
+      location,
+      city,
+      venueName,
+      venueAddress,
+      imageUrl,
+      priceRange,
+      classification,
+      segment,
+      genre,
+      subGenre,
+    } = body;
+
+    // Validate required fields
+    if (!title || !startDate || !location) {
+      return NextResponse.json(
+        { error: 'Title, start date, and location are required' },
+        { status: 400 }
+      );
+    }
+
+    // Validate date
+    const startDateObj = new Date(startDate);
+    if (isNaN(startDateObj.getTime())) {
+      return NextResponse.json(
+        { error: 'Invalid start date format' },
+        { status: 400 }
+      );
+    }
+
+    // Generate unique ID for custom events (ticketmaster_id is required and unique)
+    // Format: "custom-{timestamp}-{random}" to distinguish from Ticketmaster events
+    const customEventId = `custom-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+
+    // Create event data
+    const eventData: any = {
+      ticketmaster_id: customEventId, // Custom events use "custom-{uuid}" format
+      title: title.trim(),
+      description: description?.trim() || null,
+      type: type || 'event',
+      start_date: startDate,
+      end_date: endDate || null,
+      location: location.trim(),
+      city: city?.trim() || null,
+      country: null, // Can be added if needed
+      venue_name: venueName?.trim() || null,
+      venue_address: venueAddress?.trim() || null,
+      image_url: imageUrl?.trim() || null,
+      url: null, // Custom events don't have external URL
+      price_range: priceRange || null,
+      classification: classification || null,
+      segment: segment || null,
+      genre: genre || null,
+      sub_genre: subGenre || null,
+      created_by: user.id, // Track who created the event
+    };
+
+    const { data: newEvent, error: insertError } = await supabase
+      .from('ticketmaster_events')
+      .insert(eventData)
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error('[Events API] Error creating event:', insertError);
+      return NextResponse.json(
+        { error: 'Failed to create event', details: insertError.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      event: newEvent,
+      message: 'Event created successfully!',
+    }, { status: 201 });
+  } catch (error: any) {
+    console.error('[Events API] Error creating event:', error);
+    return NextResponse.json(
+      { error: 'Failed to create event', details: error.message },
+      { status: 500 }
+    );
+  }
+}
+

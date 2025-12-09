@@ -84,7 +84,7 @@ export default function OwnersPage() {
             <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
               <ol className="flex items-center gap-2 text-sm sm:text-base">
                 <li>
-                  <Link href="/claim-business" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                  <Link href="/for-businesses" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                     Claim Business
                   </Link>
                 </li>
@@ -123,7 +123,7 @@ export default function OwnersPage() {
                     Claim a business to get started managing your profile.
                   </p>
                   <Link
-                    href="/claim-business"
+                    href="/for-businesses"
                     className="inline-flex items-center px-6 py-3 bg-gradient-to-br from-coral to-coral/90 text-white rounded-full font-semibold hover:from-coral/90 hover:to-coral/80 transition-all duration-300"
                     style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                   >

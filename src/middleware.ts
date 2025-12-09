@@ -107,6 +107,28 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith(route)
   );
 
+  // Business owner routes - require authentication, email verification, AND business ownership
+  // Note: Ownership verification is done in components using useRequireBusinessOwner
+  const ownersRoutes = ['/owners'];
+  const isOwnersRoute = ownersRoutes.some(route =>
+    request.nextUrl.pathname.startsWith(route)
+  );
+  
+  // Business edit route - requires authentication and ownership (ownership checked in component)
+  const isBusinessEditRoute = request.nextUrl.pathname.match(/^\/business\/[^\/]+\/edit/);
+  
+  // Business login route - allow access but redirect if already logged in
+  const isBusinessLoginRoute = request.nextUrl.pathname.startsWith('/business/login');
+  
+  // Business routes that require authentication (but ownership is checked in component)
+  const businessAuthRoutes = ['/for-businesses'];
+  const isBusinessAuthRoute = businessAuthRoutes.some(route =>
+    request.nextUrl.pathname.startsWith(route)
+  );
+  
+  // Business profile pages are public - no protection needed
+  // Only /business/[id]/edit and /owners/* need protection
+
   // Onboarding routes - users who completed onboarding should be redirected
   const onboardingRoutes = ['/interests', '/subcategories', '/deal-breakers', '/complete', '/onboarding'];
   const isOnboardingRoute = onboardingRoutes.some(route =>
@@ -162,6 +184,69 @@ export async function middleware(request: NextRequest) {
   // Redirect authenticated users without email verification from protected routes
   if (isProtectedRoute && user && !user.email_confirmed_at) {
     console.log('Middleware: Redirecting unverified user to verify-email');
+    const redirectUrl = new URL('/verify-email', request.url);
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  // Protect owners routes - require authentication and email verification
+  // Note: Ownership verification is done in the component using useRequireBusinessOwner
+  if (isOwnersRoute && !user) {
+    console.log('Middleware: Redirecting unauthenticated user from owners route');
+    const redirectUrl = new URL('/business/login', request.url);
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  if (isOwnersRoute && user && !user.email_confirmed_at) {
+    console.log('Middleware: Redirecting unverified user from owners route');
+    const redirectUrl = new URL('/verify-email', request.url);
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  // Protect business edit routes - require authentication and email verification
+  // Note: Ownership verification is done in the component using useRequireBusinessOwner
+  if (isBusinessEditRoute && !user) {
+    console.log('Middleware: Redirecting unauthenticated user from business edit route');
+    const businessId = request.nextUrl.pathname.match(/^\/business\/([^\/]+)\/edit/)?.[1];
+    const redirectUrl = new URL(`/business/login?redirect=${encodeURIComponent(request.nextUrl.pathname)}`, request.url);
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  if (isBusinessEditRoute && user && !user.email_confirmed_at) {
+    console.log('Middleware: Redirecting unverified user from business edit route');
+    const redirectUrl = new URL('/verify-email', request.url);
+    return NextResponse.redirect(redirectUrl);
+  }
+  
+  // Business login route - redirect authenticated users to owners dashboard
+  if (isBusinessLoginRoute && user && user.email_confirmed_at) {
+    // Check if user has businesses, redirect to owners if they do
+    try {
+      const { data: owners } = await supabase
+        .from('business_owners')
+        .select('business_id')
+        .eq('user_id', user.id)
+        .limit(1);
+      
+      if (owners && owners.length > 0) {
+        console.log('Middleware: Authenticated business owner on login page, redirecting to owners');
+        const redirectUrl = new URL('/owners', request.url);
+        return NextResponse.redirect(redirectUrl);
+      }
+    } catch (error) {
+      console.error('Middleware: Error checking business ownership:', error);
+      // Continue - allow access to login page
+    }
+  }
+
+  // Protect business auth routes (for-businesses) - require authentication
+  if (isBusinessAuthRoute && !user) {
+    console.log('Middleware: Redirecting unauthenticated user from for-businesses route');
+    const redirectUrl = new URL('/business/login?redirect=/for-businesses', request.url);
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  if (isBusinessAuthRoute && user && !user.email_confirmed_at) {
+    console.log('Middleware: Redirecting unverified user from for-businesses route');
     const redirectUrl = new URL('/verify-email', request.url);
     return NextResponse.redirect(redirectUrl);
   }
