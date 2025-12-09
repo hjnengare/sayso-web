@@ -44,13 +44,22 @@ export class BusinessOwnershipService {
         .single();
 
       if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
-        console.error('Error checking business ownership:', error);
+        console.error('Error checking business ownership:', {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint,
+          error: error
+        });
         return false;
       }
 
       return !!data;
     } catch (error) {
-      console.error('Error checking business ownership:', error);
+      console.error('Error checking business ownership (catch):', {
+        message: error instanceof Error ? error.message : String(error),
+        error: error
+      });
       return false;
     }
   }

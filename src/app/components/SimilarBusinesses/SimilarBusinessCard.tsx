@@ -68,7 +68,7 @@ export default function SimilarBusinessCard({
 
   return (
     <div
-      className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-visible group cursor-pointer w-full flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-premiumElevated transition-all duration-300 hover:border-white/80 hover:-translate-y-1 hover:shadow-premiumElevatedHover h-auto sm:h-auto md:w-[340px]"
+      className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-visible group cursor-pointer w-full flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-premiumElevated transition-all duration-300 hover:border-white/80 hover:-translate-y-1 hover:shadow-premiumElevatedHover h-[650px] sm:h-auto md:w-[340px]"
       style={{
         maxWidth: "540px",
       } as React.CSSProperties}
@@ -286,4 +286,3 @@ export default function SimilarBusinessCard({
     </div>
   );
 }
-

@@ -115,7 +115,7 @@ export default function EventCard({ event, onBookmark }: EventCardProps) {
           <div className="absolute inset-0 bg-gradient-to-br from-off-white/8 via-transparent to-transparent pointer-events-none z-0" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/5 via-transparent to-transparent pointer-events-none z-0" />
           {/* MEDIA - Full bleed with premium overlay */}
-          <div className="relative overflow-hidden flex-1 sm:flex-initial h-[490px] sm:h-[320px] lg:h-[240px] xl:h-[220px] z-10 rounded-t-[12px] border-b border-white/60">
+          <div className="relative overflow-hidden flex-1 sm:flex-initial h-[300px] sm:h-[320px] lg:h-[240px] xl:h-[220px] z-10 rounded-t-[12px] border-b border-white/60">
             <div className="absolute inset-0 bg-gradient-to-b from-off-white/90 via-off-white/80 to-off-white/70" aria-hidden="true" />
             <div className="relative w-full h-full">
               <div className="relative w-full h-full overflow-hidden flex items-center justify-center">
@@ -148,17 +148,23 @@ export default function EventCard({ event, onBookmark }: EventCardProps) {
                 {event.title}
               </h3>
 
-              {event.description && (
+              {/* Event or Special Description - Truncated with ellipsis for consistent layout */}
+              <div className="w-full">
                 <p
-                  className="text-caption sm:text-xs text-charcoal/60 leading-relaxed text-center line-clamp-2"
+                  className="text-caption sm:text-xs text-charcoal/60 leading-relaxed text-center overflow-hidden text-ellipsis line-clamp-2 h-[2.5rem] sm:h-[2.5rem]"
                   style={{
                     fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                    fontWeight: 400
+                    fontWeight: 400,
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    wordBreak: 'break-word',
                   }}
+                  title={event.description || undefined}
                 >
-                  {event.description}
+                  {event.description || (event.type === "event" ? "Join us for this exciting event!" : "Don't miss out on this special offer!")}
                 </p>
-              )}
+              </div>
             </div>
 
             <button
