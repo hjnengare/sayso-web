@@ -14,6 +14,7 @@ interface UseReviewFormReturn {
   setReviewText: (text: string) => void;
   setReviewTitle: (title: string) => void;
   setSelectedImages: (images: File[]) => void;
+  setSelectedTags: (tags: string[]) => void;
   resetForm: () => void;
 }
 
@@ -57,6 +58,10 @@ export function useReviewForm(): UseReviewFormReturn {
     setSelectedImages(images);
   }, []);
 
+  const setSelectedTagsCallback = useCallback((tags: string[]) => {
+    setSelectedTags(tags);
+  }, []);
+
   const resetForm = () => {
     setOverallRating(0);
     setSelectedTags([]);
@@ -77,6 +82,7 @@ export function useReviewForm(): UseReviewFormReturn {
     setReviewText: setReviewTextCallback,
     setReviewTitle: setReviewTitleCallback,
     setSelectedImages: setSelectedImagesCallback,
+    setSelectedTags: setSelectedTagsCallback,
     resetForm,
   };
 }

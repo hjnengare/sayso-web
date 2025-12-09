@@ -304,10 +304,31 @@ export default function ReviewCard({
   };
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return 'Recently';
+    
     try {
-      return formatDistanceToNow(new Date(dateString), { addSuffix: true });
-    } catch {
-      return dateString;
+      // Ensure we have a valid date string
+      let date: Date;
+      
+      // If it's already an ISO string, parse it directly
+      if (typeof dateString === 'string' && (dateString.includes('T') || dateString.includes('Z'))) {
+        date = new Date(dateString);
+      } else {
+        // Try to parse as date
+        date = new Date(dateString);
+      }
+      
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date string:', dateString);
+        return 'Recently';
+      }
+      
+      // Use formatDistanceToNow for relative time
+      return formatDistanceToNow(date, { addSuffix: true });
+    } catch (error) {
+      console.warn('Error formatting date:', dateString, error);
+      return 'Recently';
     }
   };
 

@@ -102,6 +102,7 @@ function WriteReviewContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const businessId = (params?.id as string) || searchParams.get('business_id') || searchParams.get('businessId');
+  const editReviewId = searchParams.get('edit'); // Get review ID if in edit mode
 
   const {
     overallRating,
@@ -115,10 +116,17 @@ function WriteReviewContent() {
     setReviewText,
     setReviewTitle,
     setSelectedImages,
+    setSelectedTags,
     resetForm,
   } = useReviewForm();
 
   const { submitReview, submitting } = useReviewSubmission();
+  
+  // State for edit mode
+  const [loadingReview, setLoadingReview] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(!!editReviewId);
+  const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
+  const [originalImageIds, setOriginalImageIds] = useState<Array<{ id: string; url: string }>>([]);
 
   // Ensure form validity updates reactively
   const effectiveIsFormValid = useMemo(() => {
@@ -137,6 +145,65 @@ function WriteReviewContent() {
   // Only fetch after business data is loaded to ensure we have the actual database ID (not slug)
   const actualBusinessId = business?.id || businessId;
   const { reviews, loading: reviewsLoading, refetch: refetchReviews } = useReviews(business?.id ? actualBusinessId : undefined);
+
+  // Fetch existing review data if in edit mode
+  useEffect(() => {
+    async function fetchReviewForEdit() {
+      if (!editReviewId || !isEditMode) return;
+
+      try {
+        setLoadingReview(true);
+        const response = await fetch(`/api/reviews/${editReviewId}`);
+        
+        if (!response.ok) {
+          console.error('Failed to fetch review for editing');
+          return;
+        }
+
+        const data = await response.json();
+        const review = data.review || data;
+
+        // Populate form with existing review data
+        if (review.rating) {
+          handleStarClick(review.rating);
+        }
+        if (review.title) {
+          setReviewTitle(review.title);
+        }
+        if (review.content) {
+          setReviewText(review.content);
+        }
+        if (review.tags && Array.isArray(review.tags)) {
+          // Set selected tags directly
+          setSelectedTags(review.tags);
+        }
+        // Populate existing images
+        if (review.review_images && Array.isArray(review.review_images)) {
+          const imageData = review.review_images
+            .map((img: any) => ({
+              id: img.id,
+              url: img.image_url,
+            }))
+            .filter((item: any) => item.url && item.url.trim() !== '');
+          setOriginalImageIds(imageData);
+          setExistingImageUrls(imageData.map((item: any) => item.url));
+        } else if (review.images && Array.isArray(review.images)) {
+          // Fallback to images array if review_images is not available
+          const imageUrls = review.images
+            .filter((url: string) => url && url.trim() !== '');
+          setExistingImageUrls(imageUrls);
+          // Create placeholder IDs for images without IDs
+          setOriginalImageIds(imageUrls.map((url, idx) => ({ id: `temp-${idx}`, url })));
+        }
+      } catch (err) {
+        console.error('Error fetching review for edit:', err);
+      } finally {
+        setLoadingReview(false);
+      }
+    }
+
+    fetchReviewForEdit();
+  }, [editReviewId, isEditMode, handleStarClick, setReviewTitle, setReviewText, setSelectedTags]);
 
   // Fetch business data using optimized API route
   useEffect(() => {
@@ -250,6 +317,77 @@ function WriteReviewContent() {
       return;
     }
 
+    // If in edit mode, update the existing review
+    if (isEditMode && editReviewId) {
+      try {
+        // First, update the review text/rating/tags
+        const response = await fetch(`/api/reviews/${editReviewId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            rating: overallRating,
+            title: reviewTitle,
+            content: reviewText,
+            tags: selectedTags,
+          }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          alert(error.error || 'Failed to update review');
+          return;
+        }
+
+        // Handle image updates if there are changes
+        const currentImageUrls = new Set(existingImageUrls);
+        const originalImageUrls = new Set(originalImageIds.map(img => img.url));
+        
+        // Find images that were removed
+        const removedImageIds = originalImageIds
+          .filter(img => !currentImageUrls.has(img.url))
+          .map(img => img.id)
+          .filter(id => !id.startsWith('temp-')); // Only remove real IDs, not temp placeholders
+
+        // If there are new images to upload or images to remove, update images
+        if (selectedImages.length > 0 || removedImageIds.length > 0) {
+          const formData = new FormData();
+          
+          // Add new images
+          selectedImages.forEach((file) => {
+            formData.append('images', file);
+          });
+          
+          // Add IDs of images to remove
+          removedImageIds.forEach((id) => {
+            formData.append('remove_image_ids', id);
+          });
+          
+          formData.append('action', 'add'); // Add new images, don't replace all
+
+          const imagesResponse = await fetch(`/api/reviews/${editReviewId}/images`, {
+            method: 'PUT',
+            body: formData,
+          });
+
+          if (!imagesResponse.ok) {
+            const error = await imagesResponse.json();
+            console.error('Failed to update review images:', error);
+            // Don't fail the whole update if images fail, but log it
+          }
+        }
+
+        // Success - navigate back to business page
+        const targetId = business?.slug || business?.id || businessId;
+        router.push(`/business/${targetId}`);
+        return;
+      } catch (err) {
+        console.error('Error updating review:', err);
+        alert('Failed to update review');
+        return;
+      }
+    }
+
+    // Create new review
     const success = await submitReview({
       business_id: actualBusinessId,
       rating: overallRating,
@@ -429,6 +567,8 @@ function WriteReviewContent() {
                                   onTextChange={setReviewText}
                                   onImagesChange={setSelectedImages}
                                   onSubmit={handleSubmitReview}
+                                  existingImages={existingImageUrls}
+                                  onExistingImagesChange={setExistingImageUrls}
                                 />
                               </div>
                             </div>

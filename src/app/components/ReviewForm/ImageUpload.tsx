@@ -8,19 +8,36 @@ interface ImageUploadProps {
   onImagesChange: (images: File[]) => void;
   maxImages?: number;
   disabled?: boolean;
+  existingImages?: string[]; // URLs of existing images
+  onExistingImagesChange?: (urls: string[]) => void; // Callback when existing images are removed
+}
+
+interface ImageItem {
+  type: 'file' | 'url';
+  file?: File;
+  url?: string;
+  preview?: string;
 }
 
 export default function ImageUpload({
   onImagesChange,
   maxImages = 5,
   disabled = false,
+  existingImages = [],
+  onExistingImagesChange,
 }: ImageUploadProps) {
   const [previews, setPreviews] = useState<string[]>([]);
   const [files, setFiles] = useState<File[]>([]);
+  const [existingImageUrls, setExistingImageUrls] = useState<string[]>(existingImages);
   const [isDragging, setIsDragging] = useState(false);
   const [previewIndex, setPreviewIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
+
+  // Update existing images when prop changes
+  useEffect(() => {
+    setExistingImageUrls(existingImages);
+  }, [existingImages]);
 
   const handleFileSelect = useCallback(
     (selectedFiles: FileList | null) => {
@@ -30,7 +47,7 @@ export default function ImageUpload({
       const newPreviews: string[] = [];
 
       Array.from(selectedFiles).forEach((file) => {
-        if (files.length + newFiles.length >= maxImages) return;
+        if (existingImageUrls.length + files.length + newFiles.length >= maxImages) return;
 
         // Validate file type
         if (!file.type.startsWith("image/")) {
@@ -61,18 +78,28 @@ export default function ImageUpload({
   );
 
   const handleRemove = useCallback(
-    (index: number) => {
-      const updatedFiles = files.filter((_, i) => i !== index);
-      const updatedPreviews = previews.filter((_, i) => i !== index);
-      
-      // Revoke object URL to free memory
-      URL.revokeObjectURL(previews[index]);
-      
-      setFiles(updatedFiles);
-      setPreviews(updatedPreviews);
-      onImagesChange(updatedFiles);
+    (index: number, isExisting: boolean = false) => {
+      if (isExisting) {
+        // Remove existing image URL
+        const updatedUrls = existingImageUrls.filter((_, i) => i !== index);
+        setExistingImageUrls(updatedUrls);
+        if (onExistingImagesChange) {
+          onExistingImagesChange(updatedUrls);
+        }
+      } else {
+        // Remove new file
+        const updatedFiles = files.filter((_, i) => i !== index);
+        const updatedPreviews = previews.filter((_, i) => i !== index);
+        
+        // Revoke object URL to free memory
+        URL.revokeObjectURL(previews[index]);
+        
+        setFiles(updatedFiles);
+        setPreviews(updatedPreviews);
+        onImagesChange(updatedFiles);
+      }
     },
-    [files, previews, onImagesChange]
+    [files, previews, existingImageUrls, onImagesChange, onExistingImagesChange]
   );
 
   const handleClick = () => {
@@ -84,10 +111,10 @@ export default function ImageUpload({
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!disabled && files.length < maxImages) {
+    if (!disabled && (existingImageUrls.length + files.length) < maxImages) {
       setIsDragging(true);
     }
-  }, [disabled, files.length, maxImages]);
+  }, [disabled, existingImageUrls.length, files.length, maxImages]);
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -100,10 +127,10 @@ export default function ImageUpload({
     e.stopPropagation();
     setIsDragging(false);
     
-    if (disabled || files.length >= maxImages) return;
+    if (disabled || (existingImageUrls.length + files.length) >= maxImages) return;
     
     handleFileSelect(e.dataTransfer.files);
-  }, [disabled, files.length, maxImages, handleFileSelect]);
+  }, [disabled, existingImageUrls.length, files.length, maxImages, handleFileSelect]);
 
   const handlePreviewClick = useCallback((index: number, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -123,10 +150,11 @@ export default function ImageUpload({
 
   const handleNextPreview = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    if (previewIndex !== null && previewIndex < previews.length - 1) {
+    const totalImages = existingImageUrls.length + previews.length;
+    if (previewIndex !== null && previewIndex < totalImages - 1) {
       setPreviewIndex(previewIndex + 1);
     }
-  }, [previewIndex, previews.length]);
+  }, [previewIndex, existingImageUrls.length, previews.length]);
 
   // Handle keyboard navigation in preview
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -136,10 +164,13 @@ export default function ImageUpload({
       handleClosePreview();
     } else if (e.key === 'ArrowLeft' && previewIndex > 0) {
       setPreviewIndex(previewIndex - 1);
-    } else if (e.key === 'ArrowRight' && previewIndex < previews.length - 1) {
-      setPreviewIndex(previewIndex + 1);
+    } else if (e.key === 'ArrowRight') {
+      const totalImages = existingImageUrls.length + previews.length;
+      if (previewIndex < totalImages - 1) {
+        setPreviewIndex(previewIndex + 1);
+      }
     }
-  }, [previewIndex, previews.length, handleClosePreview]);
+  }, [previewIndex, existingImageUrls.length, previews.length, handleClosePreview]);
 
   // Add keyboard event listener
   useEffect(() => {
@@ -165,14 +196,66 @@ export default function ImageUpload({
         disabled={disabled}
       />
 
-      {/* Image Previews Grid */}
+      {/* Image Previews Grid - Existing Images */}
+      {existingImageUrls.length > 0 && (
+        <div className="flex flex-wrap gap-3 mb-4">
+          {existingImageUrls.map((url, index) => (
+            <div
+              key={`existing-${index}`}
+              className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-[12px] overflow-hidden border-2 border-white/60 bg-off-white/50 group shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+              onClick={(e) => {
+                // Calculate total index including existing images
+                const totalIndex = index;
+                handlePreviewClick(totalIndex, e);
+              }}
+            >
+              <Image
+                src={url}
+                alt={`Existing image ${index + 1}`}
+                fill
+                className="object-cover"
+                sizes="112px"
+              />
+              {/* Gradient overlay on hover */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              
+              {/* Preview icon on hover */}
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg">
+                  <Maximize2 className="w-5 h-5 text-charcoal" strokeWidth={2} />
+                </div>
+              </div>
+              
+              {!disabled && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemove(index, true);
+                  }}
+                  className="absolute top-2 right-2 w-7 h-7 bg-coral/95 hover:bg-coral text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 shadow-lg border border-white/30 z-10"
+                  aria-label="Remove image"
+                >
+                  <X className="w-4 h-4" strokeWidth={2.5} />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Image Previews Grid - New Files */}
       {previews.length > 0 && (
         <div className="flex flex-wrap gap-3 mb-4">
           {previews.map((preview, index) => (
             <div
-              key={index}
+              key={`new-${index}`}
               className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-[12px] overflow-hidden border-2 border-white/60 bg-off-white/50 group shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
-              onClick={(e) => handlePreviewClick(index, e)}
+              onClick={(e) => {
+                // Calculate total index including existing images
+                const totalIndex = existingImageUrls.length + index;
+                handlePreviewClick(totalIndex, e);
+              }}
             >
               <Image
                 src={preview}
@@ -196,7 +279,7 @@ export default function ImageUpload({
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleRemove(index);
+                    handleRemove(index, false);
                   }}
                   className="absolute top-2 right-2 w-7 h-7 bg-coral/95 hover:bg-coral text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 shadow-lg border border-white/30 z-10"
                   aria-label="Remove image"
@@ -210,7 +293,7 @@ export default function ImageUpload({
       )}
 
       {/* Full-size Image Preview Modal */}
-      {previewIndex !== null && previews[previewIndex] && (
+      {previewIndex !== null && (
         <div
           className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4"
           onClick={handleClosePreview}
@@ -236,7 +319,7 @@ export default function ImageUpload({
           )}
 
           {/* Next button */}
-          {previewIndex < previews.length - 1 && (
+          {previewIndex < (existingImageUrls.length + previews.length) - 1 && (
             <button
               onClick={handleNextPreview}
               className="absolute right-4 sm:right-6 z-10 w-10 h-10 sm:w-12 sm:h-12 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-all duration-300 hover:scale-110 border border-white/20"
@@ -253,7 +336,11 @@ export default function ImageUpload({
           >
             <div className="relative w-full h-full max-w-5xl max-h-[85vh] rounded-[12px] overflow-hidden shadow-2xl">
               <Image
-                src={previews[previewIndex]}
+                src={
+                  previewIndex < existingImageUrls.length
+                    ? existingImageUrls[previewIndex]
+                    : previews[previewIndex - existingImageUrls.length]
+                }
                 alt={`Preview ${previewIndex + 1}`}
                 fill
                 className="object-contain"
@@ -266,14 +353,14 @@ export default function ImageUpload({
           {/* Image counter */}
           <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-10 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20">
             <p className="text-sm text-white font-medium" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-              {previewIndex + 1} / {previews.length}
+              {previewIndex + 1} / {existingImageUrls.length + previews.length}
             </p>
           </div>
         </div>
       )}
 
       {/* Drop Zone */}
-      {!disabled && files.length < maxImages && (
+      {!disabled && (existingImageUrls.length + files.length) < maxImages && (
         <div
           ref={dropZoneRef}
           onDragOver={handleDragOver}
@@ -317,8 +404,8 @@ export default function ImageUpload({
             </p>
             
             <p className="text-xs text-charcoal/60 text-center mb-3" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-              {files.length > 0 
-                ? `${files.length} of ${maxImages} images selected` 
+              {(existingImageUrls.length + files.length) > 0 
+                ? `${existingImageUrls.length + files.length} of ${maxImages} images selected` 
                 : `Add up to ${maxImages} images (JPEG, PNG, WebP)`
               }
             </p>
@@ -331,7 +418,7 @@ export default function ImageUpload({
       )}
 
       {/* Disabled state message */}
-      {disabled && files.length >= maxImages && (
+      {disabled && (existingImageUrls.length + files.length) >= maxImages && (
         <div className="w-full min-h-[120px] rounded-[12px] border-2 border-dashed border-charcoal/10 bg-off-white/20 flex items-center justify-center">
           <p className="text-sm text-charcoal/50 text-center" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
             Maximum {maxImages} images reached

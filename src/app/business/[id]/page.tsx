@@ -28,6 +28,7 @@ import {
     BusinessDescription,
     BusinessActionCard,
     BusinessContactInfo,
+    PersonalizationInsights,
 } from "../../components/BusinessDetail";
 import Header from "../../components/Header/Header";
 import StaggeredContainer from "../../components/Animations/StaggeredContainer";
@@ -372,6 +373,25 @@ export default function BusinessProfilePage() {
                                                         hasReviewed={hasReviewed}
                                                     />
                                                 </AnimatedElement>
+                                                
+                                                {/* Personalization Insights */}
+                                                <AnimatedElement index={5.5} direction="bottom">
+                                                    <PersonalizationInsights
+                                                        business={{
+                                                            id: businessData.id,
+                                                            interestId: business.interest_id,
+                                                            subInterestId: business.sub_interest_id,
+                                                            category: businessData.category,
+                                                            priceRange: businessData.price_range,
+                                                            averageRating: businessData.rating,
+                                                            totalReviews: business.reviews?.length || 0,
+                                                            distanceKm: null, // Could add geolocation later
+                                                            percentiles: business.stats?.percentiles || null,
+                                                            verified: businessData.verified,
+                                                        }}
+                                                    />
+                                                </AnimatedElement>
+                                                
                                                 {/* Contact Information - Desktop Only */}
                                                 <AnimatedElement index={6} direction="bottom">
                                                     <div className="hidden lg:block">
@@ -408,31 +428,49 @@ export default function BusinessProfilePage() {
                                     aria-label="Business reviews"
                                 >
                                     <ReviewsList
-                                        reviews={businessData.reviews.map((review: any): ReviewWithUser => ({
-                                            id: review.id || '',
-                                            business_id: businessId,
-                                            user_id: review.userId || review.user_id || '',
-                                            rating: review.rating || 0,
-                                            title: review.title,
-                                            content: review.text || review.content || '',
-                                            tags: review.tags || [],
-                                            helpful_count: review.helpful_count || 0,
-                                            created_at: review.date || review.created_at || new Date().toISOString(),
-                                            updated_at: review.updated_at || review.date || new Date().toISOString(),
-                                            user: {
-                                                id: review.userId || review.user_id || '',
-                                                display_name: review.author || review.user?.display_name || 'Anonymous',
-                                                avatar_url: review.profileImage || review.user?.avatar_url,
-                                                username: review.user?.username,
-                                                email: review.user?.email,
-                                            },
-                                            images: review.reviewImages?.map((img: string, idx: number) => ({
-                                                id: `img-${idx}`,
-                                                review_id: review.id || '',
-                                                image_url: img,
-                                                created_at: new Date().toISOString(),
-                                            })) || [],
-                                        }))}
+                                        reviews={businessData.reviews.map((review: any): ReviewWithUser => {
+                                            // Ensure we use ISO date format, not formatted date strings
+                                            const getValidDate = (dateValue: any): string => {
+                                                if (!dateValue) return new Date().toISOString();
+                                                // If it's already an ISO string, use it
+                                                if (typeof dateValue === 'string' && dateValue.includes('T') && dateValue.includes('Z')) {
+                                                    return dateValue;
+                                                }
+                                                // Try to parse as date
+                                                const parsed = new Date(dateValue);
+                                                if (!isNaN(parsed.getTime())) {
+                                                    return parsed.toISOString();
+                                                }
+                                                // Fallback to current date
+                                                return new Date().toISOString();
+                                            };
+                                            
+                                            return {
+                                                id: review.id || '',
+                                                business_id: businessId,
+                                                user_id: review.userId || review.user_id || '',
+                                                rating: review.rating || 0,
+                                                title: review.title,
+                                                content: review.text || review.content || '',
+                                                tags: review.tags || [],
+                                                helpful_count: review.helpful_count || 0,
+                                                created_at: getValidDate(review.created_at || review.date),
+                                                updated_at: getValidDate(review.updated_at || review.created_at || review.date),
+                                                user: {
+                                                    id: review.userId || review.user_id || '',
+                                                    display_name: review.author || review.user?.display_name || 'Anonymous',
+                                                    avatar_url: review.profileImage || review.user?.avatar_url,
+                                                    username: review.user?.username,
+                                                    email: review.user?.email,
+                                                },
+                                                images: review.reviewImages?.map((img: string, idx: number) => ({
+                                                    id: `img-${idx}`,
+                                                    review_id: review.id || '',
+                                                    image_url: img,
+                                                    created_at: new Date().toISOString(),
+                                                })) || [],
+                                            };
+                                        })}
                                         loading={false}
                                         error={null}
                                         showBusinessInfo={false}

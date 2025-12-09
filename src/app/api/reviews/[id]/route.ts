@@ -24,6 +24,80 @@ interface RouteParams {
 }
 
 /**
+ * GET /api/reviews/[id]
+ * Get a single review by ID
+ */
+export async function GET(req: Request, { params }: RouteParams) {
+  try {
+    const { id } = await params;
+    const supabase = await getServerSupabase();
+    
+    // Check if user is authenticated (optional - reviews can be public)
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    // Fetch the review with user profile and images
+    const { data: review, error: reviewError } = await supabase
+      .from('reviews')
+      .select(`
+        *,
+        profile:profiles!reviews_user_id_fkey (
+          user_id,
+          display_name,
+          avatar_url,
+          username
+        ),
+        review_images (
+          id,
+          image_url,
+          alt_text,
+          storage_path
+        )
+      `)
+      .eq('id', id)
+      .single();
+
+    if (reviewError || !review) {
+      return NextResponse.json(
+        { error: 'Review not found' },
+        { status: 404 }
+      );
+    }
+
+    // If user is authenticated and owns the review, return full data
+    // Otherwise, return public data only
+    if (user && review.user_id === user.id) {
+      return NextResponse.json({
+        review,
+      });
+    }
+
+    // Return public review data
+    return NextResponse.json({
+      review: {
+        id: review.id,
+        business_id: review.business_id,
+        rating: review.rating,
+        title: review.title,
+        content: review.content,
+        tags: review.tags,
+        helpful_count: review.helpful_count,
+        created_at: review.created_at,
+        updated_at: review.updated_at,
+        profile: review.profile,
+        review_images: review.review_images,
+      },
+    });
+
+  } catch (error) {
+    console.error('Error fetching review:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
  * PUT /api/reviews/[id]
  * Edit a review
  */

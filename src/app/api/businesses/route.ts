@@ -10,9 +10,72 @@ import {
   isValidLatitude,
   isValidLongitude,
 } from "@/app/lib/utils/searchHelpers";
+import {
+  calculatePersonalizationScore,
+  sortByPersonalization,
+  filterByDealbreakers as filterBusinessesByDealbreakers,
+  boostPersonalMatches,
+  type BusinessForScoring,
+  type UserPreferences,
+} from "@/app/lib/services/personalizationService";
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs'; // Use Node.js runtime to avoid Edge Runtime warnings with Supabase
+
+/**
+ * Fetch user preferences (interests, subcategories, deal breakers)
+ */
+async function fetchUserPreferences(
+  supabase: Awaited<ReturnType<typeof getServerSupabase>>,
+  userId: string | null
+): Promise<UserPreferences> {
+  if (!userId) {
+    return {
+      interestIds: [],
+      subcategoryIds: [],
+      dealbreakerIds: [],
+    };
+  }
+
+  try {
+    // Fetch interests
+    const { data: interestsData } = await supabase
+      .from('user_interests')
+      .select('interest_id')
+      .eq('user_id', userId);
+    
+    const interestIds = (interestsData || []).map(i => i.interest_id);
+
+    // Fetch subcategories
+    const { data: subcategoriesData } = await supabase
+      .from('user_subcategories')
+      .select('subcategory_id')
+      .eq('user_id', userId);
+    
+    const subcategoryIds = (subcategoriesData || []).map(s => s.subcategory_id);
+
+    // Fetch deal breakers
+    const { data: dealbreakersData } = await supabase
+      .from('user_deal_breakers')
+      .select('deal_breaker_id')
+      .eq('user_id', userId);
+    
+    const dealbreakerIds = (dealbreakersData || []).map(d => d.deal_breaker_id);
+
+    return {
+      interestIds,
+      subcategoryIds,
+      dealbreakerIds,
+    };
+  } catch (error) {
+    console.warn('[BUSINESSES API] Error fetching user preferences:', error);
+    return {
+      interestIds: [],
+      subcategoryIds: [],
+      dealbreakerIds: [],
+    };
+  }
+}
 
 /**
  * Log search history (non-blocking, doesn't fail main request)
@@ -505,6 +568,69 @@ export async function GET(req: Request) {
 
     const typedBusinesses = (businesses || []) as BusinessRPCResult[];
 
+    // Fetch user preferences for personalization
+    const userPreferences = await fetchUserPreferences(supabase, userId);
+    if (userPreferences.latitude === undefined && lat !== null && lng !== null) {
+      userPreferences.latitude = lat;
+      userPreferences.longitude = lng;
+    }
+
+    // Apply personalization scoring and filtering
+    let personalizedBusinesses = typedBusinesses.map((business) => {
+      const businessForScoring: BusinessForScoring = {
+        id: business.id,
+        interest_id: business.interest_id,
+        sub_interest_id: business.sub_interest_id,
+        category: business.category,
+        price_range: business.price_range,
+        average_rating: business.average_rating,
+        total_reviews: business.total_reviews,
+        distance_km: business.distance_km,
+        percentiles: business.percentiles,
+        verified: business.verified,
+        created_at: business.created_at,
+        updated_at: business.updated_at,
+      };
+
+      const score = calculatePersonalizationScore(businessForScoring, userPreferences);
+      
+      return {
+        ...business,
+        personalization_score: score.totalScore,
+        personalization_insights: score.insights,
+      };
+    });
+
+    // Filter out businesses that violate deal breakers (if user has deal breakers)
+    if (userPreferences.dealbreakerIds.length > 0) {
+      personalizedBusinesses = personalizedBusinesses.filter((business) => {
+        const businessForScoring: BusinessForScoring = {
+          id: business.id,
+          interest_id: business.interest_id,
+          sub_interest_id: business.sub_interest_id,
+          category: business.category,
+          price_range: business.price_range,
+          average_rating: business.average_rating,
+          total_reviews: business.total_reviews,
+          distance_km: business.distance_km,
+          percentiles: business.percentiles,
+          verified: business.verified,
+        };
+        
+        const filtered = filterBusinessesByDealbreakers([businessForScoring], userPreferences.dealbreakerIds);
+        return filtered.length > 0;
+      });
+    }
+
+    // Sort by personalization score if user has preferences
+    if (userPreferences.interestIds.length > 0 || userPreferences.subcategoryIds.length > 0) {
+      personalizedBusinesses.sort((a, b) => {
+        const scoreA = a.personalization_score || 0;
+        const scoreB = b.personalization_score || 0;
+        return scoreB - scoreA; // Higher score first
+      });
+    }
+
     // Log search history (non-blocking)
     if (userId && q) {
       logSearchHistory(supabase, userId, q, lat, lng, radiusKm, sortParam || null).catch(() => {
@@ -512,15 +638,22 @@ export async function GET(req: Request) {
       });
     }
 
-    console.log(`[BUSINESSES API] Successfully fetched ${typedBusinesses.length} businesses`);
+    console.log(`[BUSINESSES API] Successfully fetched ${personalizedBusinesses.length} businesses`);
     console.log('[BUSINESSES API] Query params:', {
       category, badge, verified, priceRange, location, q, search,
       sortBy, sortOrder, sort: sortParam, limit, cursorId, lat, lng, radiusKm
     });
+    if (userPreferences.interestIds.length > 0 || userPreferences.subcategoryIds.length > 0) {
+      console.log('[BUSINESSES API] Applied personalization:', {
+        interests: userPreferences.interestIds.length,
+        subcategories: userPreferences.subcategoryIds.length,
+        dealbreakers: userPreferences.dealbreakerIds.length,
+      });
+    }
 
     // Transform database format to BusinessCard component format with highlighting
     // Only select fields needed for card display (not full business data)
-    const transformedBusinesses = typedBusinesses.map((business) => {
+    const transformedBusinesses = personalizedBusinesses.map((business) => {
       const transformed = transformBusinessForCard(business);
       
       // Add highlighting if search query is present
@@ -534,6 +667,14 @@ export async function GET(req: Request) {
       // Add combo_score if present
       if ((business as any).combo_score !== undefined) {
         (transformed as any).combo_score = (business as any).combo_score;
+      }
+      
+      // Add personalization data if present
+      if ((business as any).personalization_score !== undefined) {
+        (transformed as any).personalization_score = (business as any).personalization_score;
+      }
+      if ((business as any).personalization_insights !== undefined) {
+        (transformed as any).personalization_insights = (business as any).personalization_insights;
       }
       
       return transformed;

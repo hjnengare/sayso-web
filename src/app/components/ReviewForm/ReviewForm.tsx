@@ -32,6 +32,8 @@ interface ReviewFormProps {
   onTextChange: (text: string) => void;
   onImagesChange: (images: File[]) => void;
   onSubmit: () => void;
+  existingImages?: string[]; // URLs of existing review images
+  onExistingImagesChange?: (urls: string[]) => void; // Callback when existing images are removed
 }
 
 export default function ReviewForm({
@@ -51,6 +53,8 @@ export default function ReviewForm({
   onTextChange,
   onImagesChange,
   onSubmit,
+  existingImages = [],
+  onExistingImagesChange,
 }: ReviewFormProps) {
   return (
     <div className="p-0 md:p-8 mb-0 md:mb-8 relative overflow-hidden flex flex-col py-4 md:py-6">
@@ -73,9 +77,15 @@ export default function ReviewForm({
         {/* Image Upload */}
         <div className="mb-3 px-4">
           <h3 className="text-body-sm font-semibold text-charcoal mb-3 text-center md:text-left" style={{ fontFamily: '"Urbanist", system-ui, sans-serif' }}>
-            Add Photos (Optional)
+            {existingImages.length > 0 ? 'Photos' : 'Add Photos'} (Optional)
           </h3>
-          <ImageUpload onImagesChange={onImagesChange} maxImages={5} disabled={false} />
+          <ImageUpload 
+            onImagesChange={onImagesChange} 
+            maxImages={5} 
+            disabled={false}
+            existingImages={existingImages}
+            onExistingImagesChange={onExistingImagesChange}
+          />
         </div>
 
         <ReviewSubmitButton isFormValid={isFormValid} onSubmit={onSubmit} />

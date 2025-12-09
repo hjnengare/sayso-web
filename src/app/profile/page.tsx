@@ -500,15 +500,15 @@ function ProfileContent() {
       } else if (avatarFileToSave) {
         try {
           console.log('Starting avatar upload...', {
-            fileName: avatarFile.name,
-            fileSize: avatarFile.size,
-            fileType: avatarFile.type,
+            fileName: avatarFileToSave.name,
+            fileSize: avatarFileToSave.size,
+            fileType: avatarFileToSave.type,
             userId: user.id
           });
 
           // Validate file size (max 5MB)
           const maxSize = 5 * 1024 * 1024; // 5MB
-          if (avatarFile.size > maxSize) {
+          if (avatarFileToSave.size > maxSize) {
             throw new Error('Image file is too large. Maximum size is 5MB.');
           }
 
@@ -1101,7 +1101,7 @@ function ProfileContent() {
                         className="inline-flex items-center gap-2 px-4 py-2.5 bg-coral/90 hover:bg-coral text-white rounded-full text-sm font-semibold transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-lg shadow-coral/20 border border-coral/30 w-fit"
                       >
                         <Briefcase className="w-4 h-4" />
-                        Claim Business
+                        Add your business
                       </Link>
                     </section>
 

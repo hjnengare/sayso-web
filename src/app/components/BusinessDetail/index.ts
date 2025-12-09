@@ -6,4 +6,5 @@ export { default as BusinessDetailsCard } from "./BusinessDetailsCard";
 export { default as BusinessDescription } from "./BusinessDescription";
 export { default as BusinessActionCard } from "./BusinessActionCard";
 export { default as BusinessContactInfo } from "./BusinessContactInfo";
+export { default as PersonalizationInsights } from "./PersonalizationInsights";
 

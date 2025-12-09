@@ -2,9 +2,15 @@
 
 import { useMemo, useState, useEffect, useRef } from "react";
 import { useBusinesses } from "../../hooks/useBusinesses";
+import { useUserPreferences } from "../../hooks/useUserPreferences";
 import SimilarBusinessCard from "./SimilarBusinessCard";
 import StaggeredContainer from "../Animations/StaggeredContainer";
 import AnimatedElement from "../Animations/AnimatedElement";
+import {
+  sortByPersonalization,
+  type BusinessForScoring,
+  type UserPreferences as PersonalizationPreferences,
+} from "../../lib/services/personalizationService";
 
 interface SimilarBusinessesProps {
   currentBusinessId: string;
@@ -24,6 +30,14 @@ export default function SimilarBusinesses({
   const [searchStrategy, setSearchStrategy] = useState<SearchStrategy>('both');
   const hasTriedFallbacksRef = useRef(false);
   const lastPropsRef = useRef({ currentBusinessId, category, location });
+  
+  // Get user preferences for personalization
+  const { interests, subcategories, dealbreakers } = useUserPreferences();
+  const userPreferences: PersonalizationPreferences = useMemo(() => ({
+    interestIds: interests.map(i => i.id),
+    subcategoryIds: subcategories.map(s => s.id),
+    dealbreakerIds: dealbreakers.map(d => d.id),
+  }), [interests, subcategories, dealbreakers]);
   
   // Reset strategy when props change
   useEffect(() => {
@@ -93,7 +107,7 @@ export default function SimilarBusinesses({
     return loadingLocation;
   }, [searchStrategy, loadingBoth, loadingCategory, loadingLocation]);
 
-  // Filter out current business, remove duplicates, and limit results
+  // Filter out current business, remove duplicates, apply personalization, and limit results
   const similarBusinesses = useMemo(() => {
     if (!rawBusinesses || rawBusinesses.length === 0) return [];
     
@@ -113,16 +127,48 @@ export default function SimilarBusinesses({
       }
     });
     
-    // Convert Map values to array, limit results, and add href
-    const filtered = Array.from(uniqueBusinessesMap.values())
+    // Convert Map values to array
+    let filtered = Array.from(uniqueBusinessesMap.values());
+    
+    // Apply personalization if user has preferences
+    if (userPreferences.interestIds.length > 0 || userPreferences.subcategoryIds.length > 0) {
+      const businessesForScoring: BusinessForScoring[] = filtered.map(b => ({
+        id: b.id,
+        interest_id: b.interestId || null,
+        sub_interest_id: b.subInterestId || null,
+        category: b.category,
+        price_range: b.priceRange,
+        average_rating: b.totalRating,
+        total_reviews: b.reviews,
+        distance_km: typeof b.distance === 'number' ? b.distance : (typeof b.distance === 'string' ? parseFloat(b.distance) || null : null),
+        percentiles: b.percentiles || null,
+        verified: b.verified,
+        created_at: undefined,
+        updated_at: undefined,
+      }));
+      
+      // Sort by personalization score
+      const sorted = sortByPersonalization(businessesForScoring, userPreferences);
+      
+      // Map back to original business objects
+      const sortedMap = new Map(sorted.map(b => [b.id, b]));
+      filtered = filtered
+        .filter(b => sortedMap.has(b.id))
+        .sort((a, b) => {
+          const indexA = sorted.findIndex(s => s.id === a.id);
+          const indexB = sorted.findIndex(s => s.id === b.id);
+          return indexA - indexB;
+        });
+    }
+    
+    // Limit results and add href
+    return filtered
       .slice(0, limit)
       .map((b) => ({
         ...b,
         href: `/business/${b.slug || b.id}`,
       }));
-
-    return filtered;
-  }, [rawBusinesses, currentBusinessId, limit]);
+  }, [rawBusinesses, currentBusinessId, limit, userPreferences]);
 
   // Handle fallback strategies when current strategy returns no results
   useEffect(() => {
