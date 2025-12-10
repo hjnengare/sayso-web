@@ -220,6 +220,26 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
   const completeOnboarding = useCallback(async () => {
     if (!user) return;
 
+    // Prerequisite rule: no interests = no subcategories = no deal-breakers = no complete
+    // Bail out early if any prerequisite is missing (don't call API)
+    if (!selectedInterests || selectedInterests.length === 0) {
+      console.warn('Cannot complete onboarding: interests are required');
+      setError('Interests are required to complete onboarding');
+      return;
+    }
+
+    if (!selectedSubInterests || selectedSubInterests.length === 0) {
+      console.warn('Cannot complete onboarding: subcategories are required');
+      setError('Subcategories are required to complete onboarding');
+      return;
+    }
+
+    if (!selectedDealbreakers || selectedDealbreakers.length === 0) {
+      console.warn('Cannot complete onboarding: deal-breakers are required');
+      setError('Deal-breakers are required to complete onboarding');
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
