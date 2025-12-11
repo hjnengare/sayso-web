@@ -21,6 +21,7 @@ interface PasswordInputProps {
     };
   };
   touched: boolean;
+  error?: string;
 }
 
 export function PasswordInput({
@@ -31,12 +32,14 @@ export function PasswordInput({
   placeholder = "Create a strong password",
   showStrength = false,
   strength,
-  touched
+  touched,
+  error
 }: PasswordInputProps) {
   const [showPassword, setShowPassword] = useState(false);
 
-  const isStrong = showStrength && strength && strength.score >= 3 && touched;
-  const isWeak = showStrength && strength && strength.score > 0 && strength.score < 3;
+  const hasError = touched && !!error;
+  const isStrong = showStrength && strength && strength.score >= 3 && touched && !hasError;
+  const isWeak = showStrength && strength && strength.score > 0 && strength.score < 3 && !hasError;
 
   return (
     <div>
@@ -45,11 +48,13 @@ export function PasswordInput({
       </label>
       <div className="relative group">
         <div className={`absolute left-4 sm:left-5 top-1/2 transform -translate-y-1/2 transition-colors duration-300 z-10 ${
+          hasError ? 'text-navbar-bg' :
           isStrong ? 'text-sage' :
           isWeak ? 'text-orange-500' :
           'text-charcoal/40 group-focus-within:text-sage'
         }`}>
-          {isStrong ? <CheckCircle className="w-5 h-5" /> :
+          {hasError ? <AlertCircle className="w-5 h-5" /> :
+            isStrong ? <CheckCircle className="w-5 h-5" /> :
             isWeak ? <AlertCircle className="w-5 h-5" /> :
             <Lock className="w-5 h-5" />}
         </div>
@@ -61,6 +66,7 @@ export function PasswordInput({
           onBlur={onBlur}
           style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
           className={`w-full bg-white/95 backdrop-blur-sm border pl-12 sm:pl-14 pr-12 sm:pr-16 py-3 sm:py-4 md:py-5 text-body font-semibold text-charcoal placeholder-charcoal/50 placeholder:font-normal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 input-mobile rounded-full ${
+            hasError ? 'border-navbar-bg focus:border-navbar-bg focus:ring-navbar-bg/20' :
             isStrong ? 'border-sage/40 focus:border-navbar-bg focus:ring-navbar-bg/20' :
             isWeak ? 'border-orange-300 focus:border-navbar-bg focus:ring-navbar-bg/20' :
             'border-white/60 focus:ring-navbar-bg/30 focus:border-navbar-bg'
@@ -81,8 +87,14 @@ export function PasswordInput({
         </button>
       </div>
 
+      {/* Error message */}
+      {hasError && error && (
+        <p className="mt-2 text-sm text-navbar-bg font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+          {error}
+        </p>
+      )}
       {/* Password strength indicator */}
-      {showStrength && value.length > 0 && strength && (
+      {showStrength && value.length > 0 && strength && !hasError && (
         <div className="h-5 mt-1 flex items-center gap-2">
           <div className="flex-1 flex gap-1" role="progressbar" aria-valuenow={strength.score} aria-valuemin={0} aria-valuemax={4}>
             {[1, 2, 3, 4].map((level) => {

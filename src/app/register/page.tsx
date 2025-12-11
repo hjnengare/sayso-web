@@ -141,21 +141,27 @@ export default function RegisterPage() {
       }
 
       if (!validateEmail(email.trim())) {
-        setError("📧 Please enter a valid email address (e.g., user@example.com)");
+        const errorMsg = "📧 Please enter a valid email address (e.g., user@example.com)";
+        setError(errorMsg);
+        // Only show toast, error already shown inline
         showToast("📧 Please enter a valid email address", 'sage', 3000);
         setSubmitting(false);
         return;
       }
 
       if (email.trim().length > 254) {
-        setError("📧 Email address is too long (maximum 254 characters)");
+        const errorMsg = "📧 Email address is too long (maximum 254 characters)";
+        setError(errorMsg);
+        // Only show toast, error already shown inline
         showToast("📧 Email address is too long", 'sage', 3000);
         setSubmitting(false);
         return;
       }
 
       if (email.trim().includes('..') || email.trim().startsWith('.') || email.trim().endsWith('.')) {
-        setError("📧 Email address format is invalid");
+        const errorMsg = "📧 Email address format is invalid";
+        setError(errorMsg);
+        // Only show toast, error already shown inline
         showToast("📧 Email address format is invalid", 'sage', 3000);
         setSubmitting(false);
         return;
@@ -171,14 +177,17 @@ export default function RegisterPage() {
       const passwordError = validatePassword(password);
       if (passwordError) {
         setError(passwordError);
+        // Only show toast, error already shown inline
         showToast(passwordError, 'sage', 4000);
         setSubmitting(false);
         return;
       }
 
       if (passwordStrength.score < 3) {
-        setError("🔐 Please create a stronger password");
-        showToast("🔐 Please create a stronger password", 'sage', 3000);
+        const errorMsg = "🔐 Please create a stronger password";
+        setError(errorMsg);
+        // Only show toast, error already shown inline
+        showToast(errorMsg, 'sage', 3000);
         setSubmitting(false);
         return;
       }

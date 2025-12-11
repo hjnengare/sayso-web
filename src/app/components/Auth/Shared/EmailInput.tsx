@@ -54,6 +54,12 @@ export function EmailInput({
           disabled={disabled}
         />
       </div>
+      {/* Error message */}
+      {hasError && error && (
+        <p className="mt-2 text-sm text-navbar-bg font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+          {error}
+        </p>
+      )}
     </div>
   );
 }

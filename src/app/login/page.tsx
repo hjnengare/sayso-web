@@ -69,8 +69,10 @@ export default function LoginPage() {
     }
 
     if (!validateEmail(email)) {
-      setError("Please enter a valid email address");
-      showToast("Please enter a valid email address", 'sage', 3000);
+      const errorMsg = "Please enter a valid email address";
+      setError(errorMsg);
+      // Only show toast, error already shown inline
+      showToast(errorMsg, 'sage', 3000);
       setIsSubmitting(false);
       return;
     }
@@ -181,6 +183,7 @@ export default function LoginPage() {
                 placeholder="Enter your password"
                 showStrength={false}
                 touched={passwordTouched}
+                error={getPasswordError()}
               />
 
               {/* Forgot password link */}
