@@ -573,7 +573,7 @@ function BusinessCard({
                     </button>
                   </Tooltip>
                 </div>
-                {/* Category and Location - Combined with bullet separator */}
+                {/* Category and Address - Combined with bullet separator */}
                 <div
                   className="flex items-center justify-center gap-1.5 text-caption sm:text-xs text-charcoal/60 h-5 min-h-[20px] max-h-[20px]"
                   style={{
@@ -590,14 +590,20 @@ function BusinessCard({
                     <>
                       <span aria-hidden>·</span>
                       <a
-                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${business.name} ${business.location || business.address || ''}`)}`}
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${business.name} ${business.address || business.location || ''}`)}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-caption sm:text-xs font-normal text-charcoal/60 transition-colors duration-200 hover:text-navbar-bg/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-coral/30 rounded-full px-2 py-1 min-w-0"
+                        className="inline-flex items-center gap-1 text-caption sm:text-xs font-normal text-charcoal/60 transition-colors duration-200 hover:text-navbar-bg/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-coral/30 rounded-full px-2 py-1 min-w-0 max-w-[12rem] sm:max-w-[14rem]"
                         aria-label={`Open ${business.name} in maps`}
                       >
                         <MapPin className="w-3 h-3 text-navbar-bg/90 stroke-[2.5] transition-colors duration-200 group-hover:text-navbar-bg/90 flex-shrink-0" />
-                        <span className="truncate max-w-[8rem] sm:max-w-[10rem]">{business.location || business.address}</span>
+                        <span 
+                          className="truncate block overflow-hidden text-ellipsis whitespace-nowrap"
+                          style={{ maxWidth: '8rem' }}
+                          title={business.address || business.location}
+                        >
+                          {business.address || business.location}
+                        </span>
                       </a>
                     </>
                   )}

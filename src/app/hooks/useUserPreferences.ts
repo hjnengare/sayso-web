@@ -46,10 +46,20 @@ export function useUserPreferences(): UseUserPreferencesResult {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/user/preferences');
+      const response = await fetch('/api/user/preferences', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       
       if (!response.ok) {
-        console.error('[useUserPreferences] API returned error:', response.status, response.statusText);
+        // Handle 404 specifically - route might not exist or user not authenticated
+        if (response.status === 404) {
+          console.warn('[useUserPreferences] API route not found (404). This may be expected if user is not authenticated or route is not available.');
+        } else {
+          console.error('[useUserPreferences] API returned error:', response.status, response.statusText);
+        }
         // Don't throw - return empty preferences instead
         setInterests([]);
         setSubcategories([]);

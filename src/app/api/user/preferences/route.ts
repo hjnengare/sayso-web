@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic';
  * Fetches the current user's interests, subcategories, and deal-breakers
  * Returns empty arrays if tables don't exist or user has no preferences
  */
-export async function GET(req: Request) {
+export async function GET() {
   try {
     const supabase = await getServerSupabase();
 
