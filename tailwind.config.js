@@ -141,10 +141,11 @@ module.exports = {
         'sage-lg': '0 20px 60px rgba(125, 155, 118, 0.4)',
         // Premium all-sided shadows - symmetrical, floating, 3D aesthetic
         // Layered shadows with low opacity, wide spread, subtle blur for Apple/Airbnb/Notion style
-        'premium': '0 0 0 1px rgba(0, 0, 0, 0.02), 0 0 20px 0 rgba(0, 0, 0, 0.03), 0 0 40px 0 rgba(0, 0, 0, 0.02), 0 0 60px 0 rgba(0, 0, 0, 0.015)',
-        'premiumHover': '0 0 0 1px rgba(0, 0, 0, 0.03), 0 0 24px 0 rgba(0, 0, 0, 0.04), 0 0 48px 0 rgba(0, 0, 0, 0.03), 0 0 72px 0 rgba(0, 0, 0, 0.02)',
-        'premiumElevated': '0 0 0 1px rgba(0, 0, 0, 0.02), 0 0 24px 0 rgba(0, 0, 0, 0.04), 0 0 48px 0 rgba(0, 0, 0, 0.03), 0 0 80px 0 rgba(0, 0, 0, 0.02), 0 0 120px 0 rgba(0, 0, 0, 0.015)',
-        'premiumElevatedHover': '0 0 0 1px rgba(0, 0, 0, 0.03), 0 0 32px 0 rgba(0, 0, 0, 0.05), 0 0 64px 0 rgba(0, 0, 0, 0.04), 0 0 96px 0 rgba(0, 0, 0, 0.03), 0 0 140px 0 rgba(0, 0, 0, 0.02)',
+        // Shadows are rounded to match card border-radius (12px) with soft 3D feel
+        'premium': '0 0 0 1px rgba(0, 0, 0, 0.02), 0 2px 8px -2px rgba(0, 0, 0, 0.04), 0 4px 16px -4px rgba(0, 0, 0, 0.03), 0 8px 32px -8px rgba(0, 0, 0, 0.02)',
+        'premiumHover': '0 0 0 1px rgba(0, 0, 0, 0.03), 0 4px 12px -2px rgba(0, 0, 0, 0.05), 0 8px 24px -4px rgba(0, 0, 0, 0.04), 0 12px 40px -8px rgba(0, 0, 0, 0.03)',
+        'premiumElevated': '0 0 0 1px rgba(0, 0, 0, 0.02), 0 2px 12px -2px rgba(0, 0, 0, 0.05), 0 4px 24px -4px rgba(0, 0, 0, 0.04), 0 8px 48px -8px rgba(0, 0, 0, 0.03), 0 16px 64px -12px rgba(0, 0, 0, 0.02)',
+        'premiumElevatedHover': '0 0 0 1px rgba(0, 0, 0, 0.03), 0 4px 16px -2px rgba(0, 0, 0, 0.06), 0 8px 32px -4px rgba(0, 0, 0, 0.05), 0 12px 56px -8px rgba(0, 0, 0, 0.04), 0 20px 80px -12px rgba(0, 0, 0, 0.03)',
       },
       borderRadius: {
         3: '3px',

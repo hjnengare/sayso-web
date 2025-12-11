@@ -1,38 +1,52 @@
 /**
  * Helper to create NextRequest-compatible requests for testing
  * 
- * IMPORTANT: NextRequest internally creates a Request object.
- * If we polyfill Request, it conflicts with NextRequest's getter-only properties.
+ * IMPORTANT: This helper never touches request.url - it only manipulates
+ * the URL instance BEFORE creating the NextRequest. This avoids conflicts
+ * with NextRequest's getter-only properties.
  * 
- * Solution: Use string URLs directly - NextRequest can handle strings natively
- * without needing a Request polyfill.
+ * For API route tests, ensure testEnvironment: 'node' is set in Jest config
+ * (see jest.api.config.js) to use Node's native Request/Response.
  */
 
 import { NextRequest } from 'next/server';
 
+type CreateTestRequestOptions = {
+  method?: string;
+  headers?: Record<string, string>;
+  body?: BodyInit | null;
+  query?: Record<string, string | number | boolean | null | undefined>;
+};
+
 /**
  * Create a NextRequest for testing API routes
  * 
- * Uses string URLs directly - NextRequest's constructor accepts strings
- * and handles URL parsing internally without requiring a Request polyfill.
- * 
- * This avoids the "Cannot set property url" error that occurs when
- * NextRequest tries to extend a polyfilled Request with setters.
+ * Builds the URL with query parameters before creating the NextRequest,
+ * avoiding any mutation of the request.url property after creation.
  */
 export function createTestRequest(
-  url: string,
-  init?: {
-    method?: string;
-    body?: string | FormData;
-    headers?: Record<string, string>;
-  }
+  path: string,
+  options: CreateTestRequestOptions = {}
 ): NextRequest {
-  // Use string directly - NextRequest handles URL parsing internally
-  // This avoids Request polyfill conflicts
-  if (init) {
-    return new NextRequest(url, init);
+  const { method = 'GET', headers, body, query } = options;
+
+  // Build URL with search params BEFORE creating NextRequest
+  const url = new URL(`http://localhost:3000${path}`);
+
+  if (query) {
+    for (const [key, value] of Object.entries(query)) {
+      if (value !== undefined && value !== null) {
+        url.searchParams.set(key, String(value));
+      }
+    }
   }
-  
-  return new NextRequest(url);
+
+  // Let NextRequest wrap Node's native Request
+  // Never mutate request.url after this point
+  return new NextRequest(url, {
+    method,
+    headers,
+    body,
+  } as RequestInit);
 }
 

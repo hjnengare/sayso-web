@@ -60,44 +60,41 @@ afterAll(() => {
   console.error = originalError;
 });
 
-// Polyfill Request/Response/Headers for Next.js API route testing
-// IMPORTANT: In Node.js 18+ environment, Request/Response are available natively
-// Do NOT polyfill Request in Node.js - it conflicts with NextRequest's getter-only properties
-// Only polyfill in jsdom environment where these might be missing
+// IMPORTANT: Do NOT polyfill Request/Response/Headers
+// 
+// In Node.js 20+ (which this project uses), Request/Response/Headers are available natively.
+// Polyfilling with whatwg-fetch causes conflicts with NextRequest's getter-only properties.
+//
+// For API route tests:
+// - Use testEnvironment: 'node' (see jest.api.config.js)
+// - Node's native Request/Response work perfectly with NextRequest
+//
+// For component tests:
+// - Use testEnvironment: 'jest-environment-jsdom' (see jest.config.js)
+// - jsdom may need Response/Headers polyfills, but NOT Request
+// - Next.js handles Request internally
 
 if (typeof window !== 'undefined') {
-  // We're in jsdom environment - may need polyfills for Response/Headers
+  // We're in jsdom environment (component tests)
+  // Only polyfill Response/Headers if missing, but NEVER Request
   if (typeof global.Response === 'undefined') {
     try {
       const { Response, Headers } = require('undici');
       global.Response = Response;
       global.Headers = Headers;
-      // Do NOT polyfill Request in jsdom - let Next.js handle it
+      // Do NOT polyfill Request - Next.js handles it internally
     } catch (e) {
-      try {
-        require('whatwg-fetch');
-        // whatwg-fetch polyfills Request, but we need to be careful
-        // NextRequest should handle this, but if it conflicts, we may need to delete it
-      } catch (fetchError) {
-        // Silently fail
-      }
+      // Silently fail - native should be available in Node 20+
     }
   }
 } else {
-  // We're in Node.js environment (Node 18+)
-  // Request/Response/Headers should be available natively
-  // Do NOT polyfill - Node.js native implementation works with NextRequest
-  // Only polyfill if absolutely necessary and native is missing
-  if (typeof global.Request === 'undefined' && typeof global.Response === 'undefined') {
-    try {
-      const { Request, Response, Headers } = require('undici');
-      // Only set if native is truly missing (shouldn't happen in Node 18+)
-      global.Request = Request;
-      global.Response = Response;
-      global.Headers = Headers;
-    } catch (e) {
-      console.warn('Request/Response not available. Ensure Node.js 18+ is being used.');
-    }
+  // We're in Node.js environment (API route tests)
+  // Node 20+ has native Request/Response/Headers - do NOT polyfill
+  // If they're missing, something is wrong with the environment
+  if (typeof global.Request === 'undefined' || typeof global.Response === 'undefined') {
+    console.warn(
+      'Request/Response not available. Ensure Node.js 20+ is being used and testEnvironment is set to "node" for API tests.'
+    );
   }
 }
 

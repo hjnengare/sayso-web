@@ -101,7 +101,7 @@ export default function EventCard({ event, onBookmark }: EventCardProps) {
       }}
     >
       <article
-        className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-visible h-[600px] sm:h-auto flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-premiumElevated transition-all duration-300 hover:border-white/80 hover:-translate-y-1 hover:shadow-premiumElevatedHover w-full"
+        className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-visible h-[600px] sm:h-auto flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-premiumElevated w-full"
         style={
           {
             width: "100%",
@@ -111,9 +111,7 @@ export default function EventCard({ event, onBookmark }: EventCardProps) {
           } as CSSProperties
         }
       >
-          {/* Glass depth overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-off-white/8 via-transparent to-transparent pointer-events-none z-0" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/5 via-transparent to-transparent pointer-events-none z-0" />
+         
           {/* MEDIA - Full bleed with premium overlay */}
           <div className="relative overflow-hidden flex-1 sm:flex-initial h-[300px] sm:h-[320px] lg:h-[240px] xl:h-[220px] z-10 rounded-t-[12px] border-b border-white/60">
             <div className="absolute inset-0 bg-gradient-to-b from-off-white/90 via-off-white/80 to-off-white/70" aria-hidden="true" />

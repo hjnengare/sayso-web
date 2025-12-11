@@ -335,7 +335,7 @@ export default function SavedPage() {
                     >
                       {currentBusinesses.map((business) => (
                         <div key={business.id} className="list-none">
-                          <BusinessCard business={business} compact />
+                          <BusinessCard business={business} compact inGrid={true} />
                         </div>
                       ))}
                     </div>

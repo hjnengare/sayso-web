@@ -53,13 +53,11 @@ export default function ReviewerCard({
           className="block"
         >
           <div
-            className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl rounded-[20px] overflow-visible group cursor-pointer h-[240px] relative border border-white/60 ring-1 ring-white/30 shadow-premiumElevated transition-all duration-300 hover:border-white/80 hover:-translate-y-1 hover:shadow-premiumElevatedHover"
+            className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl rounded-[20px] overflow-visible group cursor-pointer h-[240px] relative border border-white/60 ring-1 ring-white/30 shadow-premiumElevated"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
           >
-          {/* Glass depth overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-off-white/8 via-transparent to-transparent pointer-events-none z-0" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/5 via-transparent to-transparent pointer-events-none z-0" />
+          
           {/* Content */}
           <div className="relative z-10 p-2 h-full flex flex-col">
             {/* Header with small profile pic and rating */}
@@ -245,7 +243,7 @@ export default function ReviewerCard({
         className="block"
       >
         <div
-          className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl rounded-[20px] group cursor-pointer h-[187px] flex flex-col relative overflow-visible border border-white/60 ring-1 ring-white/30 shadow-premiumElevated transition-all duration-300 hover:border-white/80 hover:-translate-y-1 hover:shadow-premiumElevatedHover"
+          className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl rounded-[20px] group cursor-pointer h-[187px] flex flex-col relative overflow-visible border border-white/60 ring-1 ring-white/30 shadow-premiumElevated"
         >
         {/* Glass depth overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-off-white/8 via-transparent to-transparent pointer-events-none z-0" />

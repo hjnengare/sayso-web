@@ -68,10 +68,12 @@ function BusinessCard({
   business,
   hideStar = false,
   compact = false,
+  inGrid = false,
 }: {
   business: Business;
   hideStar?: boolean;
   compact?: boolean;
+  inGrid?: boolean;
 }) {
   const router = useRouter();
   const { toggleSavedItem, isItemSaved } = useSavedItems();
@@ -307,7 +309,7 @@ function BusinessCard({
       }}
     >
       <div
-        className={`relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-visible group cursor-pointer w-full flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-premiumElevated transition-all duration-300 hover:border-white/80 hover:-translate-y-1 hover:shadow-premiumElevatedHover ${compact ? "md:h-[416px]" : "h-[650px] sm:h-auto md:w-[340px]"
+        className={`relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 ${inGrid ? 'rounded-t-[12px] rounded-b-none' : 'rounded-[12px]'} overflow-visible group cursor-pointer w-full flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-premiumElevated ${compact ? "md:h-[416px]" : "h-[650px] sm:h-auto md:w-[340px]"
           }`}
         style={{
           maxWidth: compact ? "100%" : "540px",
@@ -324,10 +326,7 @@ function BusinessCard({
           }
         }}
       >
-        {/* Glass depth overlay - Enhanced */}
-        <div className="absolute inset-0 bg-gradient-to-br from-off-white/8 via-transparent to-transparent pointer-events-none z-0" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/5 via-transparent to-transparent pointer-events-none z-0" />
-        {/* MEDIA - Full bleed with premium overlay */}
+      
         <div
           className={mediaClass}
           onClick={handleCardClick}
@@ -542,7 +541,7 @@ function BusinessCard({
         {/* CONTENT - Minimal, premium spacing */}
         <div
           className={`px-4 sm:px-5 pt-2 pb-2 ${compact ? "lg:py-3 lg:pb-4 lg:min-h-[200px]" : "flex-1"
-            } relative flex-shrink-0 flex flex-col justify-between bg-sage/10 z-10 rounded-b-[12px]`}
+            } relative flex-shrink-0 flex flex-col justify-between bg-sage/10 z-10 ${inGrid ? 'rounded-b-none' : 'rounded-b-[12px]'}`}
         >
           <div className={`${compact ? "flex flex-col" : "flex-1 flex flex-col"}`}>
             {/* Info Wrapper */}
