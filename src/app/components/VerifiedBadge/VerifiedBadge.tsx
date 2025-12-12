@@ -35,7 +35,7 @@ export default function VerifiedBadge({
         stiffness: 200,
         damping: 10,
       }}
-      className={`${sizeClasses[size]} bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-premium-sm ring-2 ring-off-white`}
+      className={`${sizeClasses[size]} bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-md shadow-premium-sm ring-2 ring-off-white`}
     >
       <Check
         size={iconSizes[size]}

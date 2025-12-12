@@ -22,8 +22,9 @@ import {
     UserPlus,
     ChevronRight,
 } from "react-feather";
-import { PremiumReviewCard } from "../../components/Business/PremiumReviewCard";
 import Footer from "../../components/Footer/Footer";
+import Header from "../../components/Header/Header";
+import { ReviewsList } from "@/components/organisms/ReviewsList";
 import { TOP_REVIEWERS, FEATURED_REVIEWS, type Reviewer } from "../../data/communityHighlightsData";
 
 // CSS animations
@@ -218,44 +219,18 @@ export default function ReviewerProfilePage() {
                     fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
                 }}
             >
-                {/* Fixed Premium Header */}
-                <header
-                    className="fixed top-0 left-0 right-0 z-50 bg-navbar-bg backdrop-blur-sm border-b border-charcoal/10 shadow-md md:shadow-none animate-slide-in-top"
-                    role="banner"
-                    style={{
-                        fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                    }}
-                >
-                    <div className="mx-auto w-full max-w-[2000px] px-4 sm:px-6 lg:px-10 2xl:px-16 py-4">
-                        <nav className="flex items-center justify-between" aria-label="Reviewer profile navigation">
-                            <Link
-                                href="/home"
-                                className="group flex items-center focus:outline-none rounded-lg px-1 -mx-1"
-                                aria-label="Go back to home"
-                            >
-                                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-white/10 to-white/5 hover:from-white/20 hover:to-white/10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 border border-white/20 hover:border-white/40 mr-2 sm:mr-3" aria-hidden="true">
-                                    <ArrowLeft className="w-6 h-6 text-white group-hover:text-white transition-colors duration-300" strokeWidth={2.5} />
-                                </div>
-                                <h3 className="text-h3 sm:text-h2 font-semibold text-white animate-delay-100 animate-fade-in truncate max-w-[150px] sm:max-w-none" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                                    {reviewer.name}
-                                </h3>
-                            </Link>
-
-                            <div className="flex items-center gap-2 sm:gap-3">
-                                <button
-                                    className="w-10 h-10 bg-gradient-to-br from-white/10 to-white/5 hover:from-white/20 hover:to-white/10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 border border-white/20 hover:border-white/40 min-h-[44px] min-w-[44px]"
-                                    aria-label="Share reviewer profile"
-                                >
-                                    <Share2 className="w-5 h-5 text-white" strokeWidth={2.5} />
-                                </button>
-                            </div>
-                        </nav>
-                    </div>
-                </header>
+                <Header
+                    showSearch={false}
+                    variant="white"
+                    backgroundClassName="bg-navbar-bg"
+                    topPosition="top-0"
+                    reducedPadding={true}
+                    whiteText={true}
+                />
 
                 <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
-                    <div className="pt-20 sm:pt-24 md:px-20 sm:px-4">
-                        <main className="relative font-sf-pro" id="main-content" role="main" aria-label="Reviewer profile content">
+                    <div className="pt-20 sm:pt-24">
+                        <main className="relative font-urbanist" id="main-content" role="main" aria-label="Reviewer profile content">
                             <div className="mx-auto w-full max-w-[2000px] px-3 sm:px-6 lg:px-10 2xl:px-16 relative z-10">
                                 {/* Breadcrumb Navigation */}
                                 <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
@@ -496,31 +471,24 @@ export default function ReviewerProfilePage() {
                                         )}
 
                                         {/* Reviews Section */}
-                                        <section aria-label="Reviews written by this reviewer">
-                                            <div className="flex justify-center mb-4">
-                                                <h2 id="reviews-heading" className="text-sm font-bold text-charcoal font-urbanist border-b border-charcoal/10 pb-2" style={{
-                                                    fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                                                    fontWeight: 700,
-                                                }}>
-                                                    Reviews by {reviewer.name}
-                                                </h2>
-                                            </div>
-                                            <div className="space-y-4">
-                                                {reviewer.reviews.map((review) => (
-                                                    <PremiumReviewCard
-                                                        key={review.id}
-                                                        author={reviewer.name}
-                                                        rating={review.rating}
-                                                        text={review.text}
-                                                        date={review.date}
-                                                        tags={review.tags}
-                                                        highlight={reviewer.badge === "top" ? "Top Reviewer" : reviewer.badge === "verified" ? "Verified" : undefined}
-                                                        verified={reviewer.badge === "verified"}
-                                                        profileImage={reviewer.profilePicture}
-                                                        reviewImages={review.images}
-                                                    />
-                                                ))}
-                                            </div>
+                                        <section
+                                            className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-md p-6 sm:p-8"
+                                            aria-label="Reviews written by this reviewer"
+                                        >
+                                            <ReviewsList
+                                                reviews={reviewer.reviews.map((review) => ({
+                                                    businessName: review.businessName,
+                                                    businessImageUrl: null,
+                                                    rating: review.rating,
+                                                    reviewText: review.text,
+                                                    isFeatured: reviewer.badge === "top",
+                                                    createdAt: review.date,
+                                                }))}
+                                                title={`Reviews by ${reviewer.name}`}
+                                                initialDisplayCount={2}
+                                                showToggle={true}
+                                                className="!p-0 !bg-transparent !border-0 !shadow-none !mb-0"
+                                            />
                                         </section>
                                     </div>
                                 </div>

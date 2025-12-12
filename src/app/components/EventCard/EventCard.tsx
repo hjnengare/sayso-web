@@ -113,10 +113,9 @@ export default function EventCard({ event, onBookmark }: EventCardProps) {
       >
          
           {/* MEDIA - Full bleed with premium overlay */}
-          <div className="relative overflow-hidden flex-1 sm:flex-initial h-[300px] sm:h-[320px] lg:h-[240px] xl:h-[220px] z-10 rounded-t-[12px]">
-            <div className="absolute inset-0 bg-gradient-to-b from-off-white/90 via-off-white/80 to-off-white/60" aria-hidden="true" />
+          <div className="relative overflow-hidden flex-1 sm:flex-initial h-[300px] sm:h-[320px] lg:h-[240px] xl:h-[220px] z-10 rounded-t-[12px] bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 border-b border-white/60 backdrop-blur-xl">
             <div className="relative w-full h-full">
-              <div className="relative w-full h-full overflow-hidden flex items-center justify-center">
+              <div className="relative w-full h-full overflow-hidden flex items-center justify-center bg-gradient-to-br from-off-white/95 to-off-white/85">
                 <Image
                   src={mediaImage}
                   alt={event.alt || event.title}
