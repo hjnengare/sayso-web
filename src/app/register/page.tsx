@@ -270,7 +270,7 @@ export default function RegisterPage() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: authStyles }} />
-      <div ref={containerRef} data-reduced={prefersReduced} className="min-h-[100dvh] bg-off-white flex flex-col relative overflow-hidden ios-inertia hide-scrollbar safe-area-full">
+      <div ref={containerRef} data-reduced={prefersReduced} className="min-h-[100dvh] bg-transparent flex flex-col relative overflow-hidden ios-inertia hide-scrollbar safe-area-full">
 
         {/* Premium floating orbs background */}
         <div className="floating-orb floating-orb-1" aria-hidden="true" />
