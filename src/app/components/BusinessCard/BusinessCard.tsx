@@ -560,7 +560,7 @@ function BusinessCard({
                       <h3
                         className="text-h2 sm:text-h1 font-bold text-inherit text-center leading-[1.3] truncate tracking-tight transition-colors duration-300 group-hover:text-navbar-bg/90 w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
                         style={{
-                          fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                          fontFamily: "'Barrio', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
                           fontWeight: 700,
                           WebkitFontSmoothing: 'antialiased',
                           MozOsxFontSmoothing: 'grayscale',

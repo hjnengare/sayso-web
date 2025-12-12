@@ -105,6 +105,9 @@ export default function RootLayout({
         
         {/* Fontdiner Swanky - Font for section titles */}
         <link href="https://fonts.googleapis.com/css2?family=Fontdiner+Swanky&display=swap" rel="stylesheet" />
+        
+        {/* Barrio - Font for business card titles */}
+        <link href="https://fonts.googleapis.com/css2?family=Barrio&display=swap" rel="stylesheet" />
   
         {/* Service Worker Registration */}
         <script

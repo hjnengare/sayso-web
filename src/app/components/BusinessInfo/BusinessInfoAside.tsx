@@ -146,7 +146,14 @@ export default function BusinessInfoAside({ businessInfo, className = "", stacke
           )}
           {businessInfo.description && (
             <p className="text-sm sm:text-base text-charcoal/80 leading-relaxed pt-2">
-              {businessInfo.description}
+              {(() => {
+                const desc = businessInfo.description;
+                if (!desc) return null;
+                if (typeof desc === 'string') return desc;
+                if (typeof desc === 'object' && 'friendly' in desc) return desc.friendly || desc.raw || '';
+                if (typeof desc === 'object' && 'raw' in desc) return desc.raw || '';
+                return '';
+              })()}
             </p>
           )}
         </header>

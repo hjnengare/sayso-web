@@ -23,17 +23,11 @@ export default function BusinessDescription({ description }: BusinessDescription
     }
     
     // Handle object shape { raw, friendly }
-    if (typeof description === "object" && "friendly" in description) {
-      const friendly = description.friendly?.trim();
-      const raw = description.raw?.trim();
+    if (typeof description === "object" && description !== null) {
+      const descObj = description as { raw?: string; friendly?: string };
+      const friendly = descObj.friendly?.trim();
+      const raw = descObj.raw?.trim();
       if (friendly) return friendly;
-      if (raw) return raw;
-      return "Discover this exceptional business offering quality services and experiences. Visit us to see what makes us special!";
-    }
-    
-    // Fallback for any other object shape
-    if (typeof description === "object" && "raw" in description) {
-      const raw = description.raw?.trim();
       if (raw) return raw;
       return "Discover this exceptional business offering quality services and experiences. Visit us to see what makes us special!";
     }
