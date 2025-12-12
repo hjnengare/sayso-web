@@ -518,7 +518,11 @@ export default function Header({
               {/* Mobile menu toggle */}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="md:hidden w-12 h-12 flex items-center justify-center text-charcoal/80 hover:text-sage transition-colors"
+                className={`md:hidden w-12 h-12 flex items-center justify-center rounded-lg transition-all duration-200 shadow-md ${
+                  whiteText 
+                    ? 'text-white' 
+                    : 'text-charcoal/80'
+                }`}
                 aria-label="Toggle menu"
               >
                 {isMobileMenuOpen ? (
