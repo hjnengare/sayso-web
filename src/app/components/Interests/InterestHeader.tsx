@@ -1,5 +1,14 @@
 "use client";
 
+import { Fontdiner_Swanky } from "next/font/google";
+import WavyTypedTitle from "../../../components/Animations/WavyTypedTitle";
+
+const swanky = Fontdiner_Swanky({
+  weight: "400",
+  subsets: ["latin"],
+  display: "swap",
+});
+
 interface InterestHeaderProps {
   isOnline: boolean;
 }
@@ -29,12 +38,18 @@ export default function InterestHeader({ isOnline }: InterestHeaderProps) {
 
       <div className="text-center mb-4 pt-4 sm:pt-6 enter-fade" style={{ animationDelay: "0.05s" }}>
         <div className="inline-block relative mb-2">
-          <h2
-            className="text-2xl md:text-3xl lg:text-4xl font-bold text-charcoal mb-2 text-center leading-snug px-2 tracking-tight"
-            style={titleStyle}
-          >
-            What interests you?
-          </h2>
+          <WavyTypedTitle
+            text="What interests you?"
+            as="h2"
+            className={`${swanky.className} text-2xl md:text-3xl lg:text-4xl font-bold mb-2 text-center leading-snug px-2 tracking-tight text-charcoal`}
+            typingSpeedMs={40}
+            startDelayMs={300}
+            waveVariant="subtle"
+            loopWave={false}
+            style={{ 
+              fontFamily: swanky.style.fontFamily,
+            }}
+          />
         </div>
         <p
           className="text-sm md:text-base font-normal text-charcoal/70 leading-relaxed px-4 max-w-lg md:max-w-lg mx-auto"

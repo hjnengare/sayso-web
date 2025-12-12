@@ -3,11 +3,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { Fontdiner_Swanky } from "next/font/google";
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { usePrefersReducedMotion } from '../utils/hooks/usePrefersReducedMotion';
 import { Mail, CheckCircle, ExternalLink, ArrowLeft } from 'react-feather';
 import { Loader as AppLoader } from '../components/Loader';
+import WavyTypedTitle from '../../components/Animations/WavyTypedTitle';
+
+const swanky = Fontdiner_Swanky({
+  weight: "400",
+  subsets: ["latin"],
+  display: "swap",
+});
 
 const styles = `
   /* Mobile-first typography scale - Body text ≥ 16px */
@@ -409,11 +417,20 @@ export default function VerifyEmailPage() {
         <div className="w-full max-w-sm sm:max-w-md lg:max-w-lg mx-auto relative z-10 flex-1 flex flex-col justify-center py-8 sm:py-12">
           
           {/* Header with premium styling and animations */}
-          <div className="text-center mb-4">
+          <div className="text-center mb-4 pt-16 sm:pt-20">
             <div className="inline-block relative mb-4 animate-fade-in-up animate-delay-400">
-              <h2 className="text-3xl md:text-4xl font-semibold text-charcoal mb-2 text-center leading-[1.2] px-2 tracking-tight" style={{ fontFamily: '"Urbanist", system-ui, sans-serif' }}>
-                Check Your Email
-              </h2>
+              <WavyTypedTitle
+                text="Check Your Email"
+                as="h2"
+                className={`${swanky.className} text-3xl md:text-4xl font-semibold mb-2 text-center leading-[1.2] px-2 tracking-tight text-charcoal`}
+                typingSpeedMs={40}
+                startDelayMs={300}
+                waveVariant="subtle"
+                loopWave={false}
+                style={{ 
+                  fontFamily: swanky.style.fontFamily,
+                }}
+              />
             </div>
             <p className="text-body font-normal text-charcoal/70 mb-4 leading-[1.55] px-2 max-w-[70ch] mx-auto animate-fade-in-up animate-delay-700" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 400 }}>
               We&apos;ve sent a confirmation email to verify your account and unlock full features!

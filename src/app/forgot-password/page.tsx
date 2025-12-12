@@ -3,15 +3,23 @@
 import Link from "next/link";
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { Fontdiner_Swanky } from "next/font/google";
+import { ArrowLeft } from "react-feather";
 import { AuthService } from "../lib/auth";
 import { useToast } from "../contexts/ToastContext";
 import { RateLimiter } from "../lib/rateLimiting";
 import { useScrollReveal } from "../hooks/useScrollReveal";
+import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
 
 // Import shared components
 import { authStyles } from "../components/Auth/Shared/authStyles";
-import { AuthHeader } from "../components/Auth/Shared/AuthHeader";
 import { EmailInput } from "../components/Auth/Shared/EmailInput";
+
+const swanky = Fontdiner_Swanky({
+  weight: "400",
+  subsets: ["latin"],
+  display: "swap",
+});
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -108,11 +116,33 @@ export default function ForgotPasswordPage() {
           <div className="floating-orb floating-orb-5" aria-hidden="true" />
           <div className="floating-orb floating-orb-6" aria-hidden="true" />
 
-          <AuthHeader
-            backLink="/login"
-            title="Check your email"
-            subtitle="Password reset instructions sent"
-          />
+          {/* Back button with entrance animation */}
+          <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-20 animate-slide-in-left animate-delay-200">
+            <Link href="/login" className="text-charcoal hover:text-charcoal/80 transition-colors duration-300 p-2 hover:bg-off-white/50 rounded-lg block backdrop-blur-sm">
+              <ArrowLeft className="w-6 h-6" strokeWidth={2.5} />
+            </Link>
+          </div>
+
+          {/* Header with premium styling and animations */}
+          <div className="text-center mb-4 pt-16 sm:pt-20">
+            <div className="inline-block relative mb-4 animate-fade-in-up animate-delay-400">
+              <WavyTypedTitle
+                text="Check your email"
+                as="h2"
+                className={`${swanky.className} text-3xl md:text-4xl font-semibold mb-2 text-center leading-[1.2] px-2 tracking-tight text-charcoal`}
+                typingSpeedMs={40}
+                startDelayMs={300}
+                waveVariant="subtle"
+                loopWave={false}
+                style={{ 
+                  fontFamily: swanky.style.fontFamily,
+                }}
+              />
+            </div>
+            <p className="text-body font-normal text-charcoal/70 mb-4 leading-[1.55] px-2 max-w-[70ch] mx-auto animate-fade-in-up animate-delay-700" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 400 }}>
+              Password reset instructions sent
+            </p>
+          </div>
 
           <div className="w-full sm:max-w-md lg:max-w-lg sm:mx-auto relative z-10 flex-1 flex flex-col justify-center py-8 sm:py-12 px-0 sm:px-2">
             <section data-section>
@@ -193,11 +223,33 @@ export default function ForgotPasswordPage() {
         <div className="floating-orb floating-orb-5" aria-hidden="true" />
         <div className="floating-orb floating-orb-6" aria-hidden="true" />
 
-        <AuthHeader
-          backLink="/login"
-          title="Forgot password?"
-          subtitle="Enter your email to reset your password"
-        />
+        {/* Back button with entrance animation */}
+        <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-20 animate-slide-in-left animate-delay-200">
+          <Link href="/login" className="text-charcoal hover:text-charcoal/80 transition-colors duration-300 p-2 hover:bg-off-white/50 rounded-lg block backdrop-blur-sm">
+            <ArrowLeft className="w-6 h-6" strokeWidth={2.5} />
+          </Link>
+        </div>
+
+        {/* Header with premium styling and animations */}
+        <div className="text-center mb-4 pt-16 sm:pt-20">
+          <div className="inline-block relative mb-4 animate-fade-in-up animate-delay-400">
+            <WavyTypedTitle
+              text="Forgot password?"
+              as="h2"
+              className={`${swanky.className} text-3xl md:text-4xl font-semibold mb-2 text-center leading-[1.2] px-2 tracking-tight text-charcoal`}
+              typingSpeedMs={40}
+              startDelayMs={300}
+              waveVariant="subtle"
+              loopWave={false}
+              style={{ 
+                fontFamily: swanky.style.fontFamily,
+              }}
+            />
+          </div>
+          <p className="text-body font-normal text-charcoal/70 mb-4 leading-[1.55] px-2 max-w-[70ch] mx-auto animate-fade-in-up animate-delay-700" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 400 }}>
+            Enter your email to reset your password
+          </p>
+        </div>
 
         <div className="w-full sm:max-w-md lg:max-w-lg sm:mx-auto relative z-10 flex-1 flex flex-col justify-center py-8 sm:py-12 px-0 sm:px-2">
           {/* Form Card */}
