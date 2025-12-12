@@ -109,6 +109,22 @@ const styles = `
     overflow-wrap: break-word;
   }
 
+  /* Prevent word breaking in title on mobile */
+  .title-no-break {
+    word-break: keep-all;
+    overflow-wrap: normal;
+    white-space: normal;
+  }
+
+  @media (max-width: 768px) {
+    .title-no-break {
+      word-break: keep-all;
+      overflow-wrap: normal;
+      white-space: normal;
+      max-width: 100%;
+    }
+  }
+
   /* Premium floating orbs */
   @keyframes float1 {
     0%, 100% { transform: translate(0, 0) scale(1); }
@@ -249,7 +265,7 @@ export default function OnboardingPage() {
 
           {/* Main content */}
           <div className="text-center flex-1 flex flex-col justify-center min-h-0 py-4 space-y-6 md:space-y-8">
-            <div data-reveal>
+            <div data-reveal className="title-no-break">
               <WavyTypedTitle
                 text="Discover local gems near you!"
                 as="h2"
@@ -261,7 +277,10 @@ export default function OnboardingPage() {
                 style={{ 
                   // CRITICAL: Fontdiner Swanky MUST be applied - override ALL other styles
                   fontFamily: swanky.style.fontFamily,
-                  // Remove any font-family from global CSS by explicitly setting it
+                  // Prevent word breaking on mobile
+                  wordBreak: 'keep-all',
+                  overflowWrap: 'normal',
+                  whiteSpace: 'normal',
                 }}
               />
             </div>

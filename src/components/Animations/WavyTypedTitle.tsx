@@ -198,7 +198,7 @@ export const WavyTypedTitle: React.FC<WavyTypedTitleProps> = ({
           ...(style || {}),
         }}
       >
-        <span className="inline-block" style={{ fontFamily: "inherit" }}>
+        <span className="inline-block" style={{ fontFamily: "inherit", wordBreak: "keep-all", overflowWrap: "normal" }}>
           {characters.map((char, index) => {
             const isVisible = index < visibleCount;
             const isSpace = char === " ";

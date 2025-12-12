@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { Fontdiner_Swanky } from "next/font/google";
+import { ArrowLeft } from "react-feather";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
 import { usePrefersReducedMotion } from "../utils/hooks/usePrefersReducedMotion";
@@ -10,10 +12,10 @@ import { useScrollReveal } from "../hooks/useScrollReveal";
 import { RateLimiter } from "../lib/rateLimiting";
 import { usePredefinedPageTitle } from "../hooks/usePageTitle";
 import { InlineLoader } from "../components/Loader/Loader";
+import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
 
 // Import shared components
 import { authStyles } from "../components/Auth/Shared/authStyles";
-import { AuthHeader } from "../components/Auth/Shared/AuthHeader";
 import { EmailInput } from "../components/Auth/Shared/EmailInput";
 import { PasswordInput } from "../components/Auth/Shared/PasswordInput";
 import { SocialLoginButtons } from "../components/Auth/Shared/SocialLoginButtons";
@@ -22,6 +24,12 @@ import { SocialLoginButtons } from "../components/Auth/Shared/SocialLoginButtons
 import { UsernameInput } from "../components/Auth/Register/UsernameInput";
 import { RegistrationProgress } from "../components/Auth/Register/RegistrationProgress";
 import { usePasswordStrength, validatePassword } from "../components/Auth/Register/usePasswordStrength";
+
+const swanky = Fontdiner_Swanky({
+  weight: "400",
+  subsets: ["latin"],
+  display: "swap",
+});
 
 export default function RegisterPage() {
   usePredefinedPageTitle('register');
@@ -272,11 +280,33 @@ export default function RegisterPage() {
         <div className="floating-orb floating-orb-5" aria-hidden="true" />
         <div className="floating-orb floating-orb-6" aria-hidden="true" />
 
-        <AuthHeader
-          backLink="/onboarding"
-          title="Create your account"
-          subtitle="Sign up today - share honest reviews, climb leaderboards, and rate any business!"
-        />
+        {/* Back button with entrance animation */}
+        <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-20 animate-slide-in-left animate-delay-200">
+          <Link href="/onboarding" className="text-charcoal hover:text-charcoal/80 transition-colors duration-300 p-2 hover:bg-off-white/50 rounded-lg block backdrop-blur-sm">
+            <ArrowLeft className="w-6 h-6" strokeWidth={2.5} />
+          </Link>
+        </div>
+
+        {/* Header with premium styling and animations */}
+        <div className="text-center mb-4">
+          <div className="inline-block relative mb-4 animate-fade-in-up animate-delay-400">
+            <WavyTypedTitle
+              text="Create your account"
+              as="h2"
+              className={`${swanky.className} text-3xl md:text-4xl font-semibold mb-2 text-center leading-[1.2] px-2 tracking-tight text-charcoal`}
+              typingSpeedMs={40}
+              startDelayMs={300}
+              waveVariant="subtle"
+              loopWave={false}
+              style={{ 
+                fontFamily: swanky.style.fontFamily,
+              }}
+            />
+          </div>
+          <p className="text-body font-normal text-charcoal/70 mb-4 leading-[1.55] px-2 max-w-[70ch] mx-auto animate-fade-in-up animate-delay-700" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 400 }}>
+            Sign up today - share honest reviews, climb leaderboards, and rate any business!
+          </p>
+        </div>
 
         <div className="w-full mx-auto max-w-[2000px] flex-1 flex flex-col justify-center py-8 sm:py-12 px-0 lg:px-10 2xl:px-16">
           <div className="w-full sm:max-w-md lg:max-w-lg xl:max-w-xl sm:mx-auto relative z-10">
