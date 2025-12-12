@@ -1,11 +1,19 @@
 "use client";
 
 import { useMemo, useState, useEffect, useRef } from "react";
+import { Fontdiner_Swanky } from "next/font/google";
 import { useBusinesses } from "../../hooks/useBusinesses";
 import { useUserPreferences } from "../../hooks/useUserPreferences";
 import SimilarBusinessCard from "./SimilarBusinessCard";
 import StaggeredContainer from "../Animations/StaggeredContainer";
 import AnimatedElement from "../Animations/AnimatedElement";
+import WavyTypedTitle from "../../../components/Animations/WavyTypedTitle";
+
+const swanky = Fontdiner_Swanky({
+  weight: "400",
+  subsets: ["latin"],
+  display: "swap",
+});
 import {
   sortByPersonalization,
   type BusinessForScoring,
@@ -273,14 +281,23 @@ export default function SimilarBusinesses({
 
         <div className="flex justify-center relative z-10">
           <div className="flex flex-col gap-4 items-center">
-            <div className="inline-flex items-center gap-3">
-              <h3
-                id="similar-businesses-heading"
-                className="text-charcoal font-semibold"
-                style={{ fontFamily: '"Urbanist", system-ui, sans-serif' }}
-              >
-                Similar Businesses
-              </h3>
+            <div className="inline-flex flex-col items-center gap-2">
+              <div className="flex items-center gap-2">
+                <p className="text-[11px] uppercase tracking-[0.15em] text-charcoal/50 font-bold">Similar Businesses</p>
+              </div>
+              <h2 id="similar-businesses-heading" className="sr-only">You Might Also Like</h2>
+              <WavyTypedTitle
+                text="You Might Also Like"
+                as="h2"
+                className={`${swanky.className} text-2xl sm:text-3xl font-bold text-charcoal`}
+                typingSpeedMs={40}
+                startDelayMs={300}
+                waveVariant="subtle"
+                loopWave={true}
+                style={{ 
+                  fontFamily: swanky.style.fontFamily,
+                }}
+              />
             </div>
           </div>
         </div>
@@ -315,13 +332,19 @@ export default function SimilarBusinesses({
             <div className="flex items-center gap-2">
               <p className="text-[11px] uppercase tracking-[0.15em] text-charcoal/50 font-bold">Similar Businesses</p>
             </div>
-            <h2
-              id="similar-businesses-heading"
-              className="text-2xl sm:text-3xl font-bold text-charcoal"
-              style={{ fontFamily: '"Urbanist", system-ui, sans-serif' }}
-            >
-              You Might Also Like
-            </h2>
+            <h2 id="similar-businesses-heading" className="sr-only">You Might Also Like</h2>
+            <WavyTypedTitle
+              text="You Might Also Like"
+              as="h2"
+              className={`${swanky.className} text-2xl sm:text-3xl font-bold text-charcoal`}
+              typingSpeedMs={40}
+              startDelayMs={300}
+              waveVariant="subtle"
+              loopWave={true}
+              style={{ 
+                fontFamily: swanky.style.fontFamily,
+              }}
+            />
           </div>
         </div>
       </div>
@@ -345,6 +368,7 @@ export default function SimilarBusinesses({
                   reviews={business.reviews}
                   verified={business.verified}
                   priceRange={business.priceRange}
+                  compact={true}
                 />
               </li>
             </AnimatedElement>

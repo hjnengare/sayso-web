@@ -3,9 +3,17 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import React, { useState, useEffect, useMemo } from "react";
+import { Fontdiner_Swanky } from "next/font/google";
 import { usePageTitle } from "../../hooks/usePageTitle";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageLoader, Loader } from "../../components/Loader";
+import WavyTypedTitle from "../../../components/Animations/WavyTypedTitle";
+
+const swanky = Fontdiner_Swanky({
+  weight: "400",
+  subsets: ["latin"],
+  display: "swap",
+});
 import {
     MessageSquare,
     X,
@@ -435,13 +443,21 @@ export default function BusinessProfilePage() {
 
                             {/* Reviews Section */}
                             <section className="space-y-6" aria-labelledby="reviews-heading">
-                                <h2
-                                    id="reviews-heading"
-                                    className="text-h3 font-semibold text-charcoal pb-2 px-3 sm:px-4 py-1 rounded-lg cursor-default text-center justify-center"
-                                    style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
-                                >
-                                    Community Reviews
-                                </h2>
+                                <div className="text-center justify-center pb-2 px-3 sm:px-4 py-1">
+                                    <h1 id="reviews-heading" className="sr-only">Community Reviews</h1>
+                                    <WavyTypedTitle
+                                        text="Community Reviews"
+                                        as="h1"
+                                        className={`${swanky.className} text-h1 text-3xl sm:text-4xl font-bold text-charcoal rounded-lg cursor-default`}
+                                        typingSpeedMs={40}
+                                        startDelayMs={300}
+                                        waveVariant="subtle"
+                                        loopWave={true}
+                                        style={{ 
+                                            fontFamily: swanky.style.fontFamily,
+                                        }}
+                                    />
+                                </div>
 
                                 {/* Reviews List Section */}
                                 <section

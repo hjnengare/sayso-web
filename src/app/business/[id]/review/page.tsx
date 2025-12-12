@@ -3,6 +3,7 @@
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
+import { Fontdiner_Swanky } from "next/font/google";
 import { Edit, Star, ChevronUp, Info, ChevronRight } from "react-feather";
 import Link from "next/link";
 import confetti from "canvas-confetti";
@@ -18,6 +19,13 @@ import Footer from "../../../components/Footer/Footer";
 import Header from "../../../components/Header/Header";
 import { usePageTitle } from "../../../hooks/usePageTitle";
 import AnimatedElement from "../../../components/Animations/AnimatedElement";
+import WavyTypedTitle from "../../../../components/Animations/WavyTypedTitle";
+
+const swanky = Fontdiner_Swanky({
+  weight: "400",
+  subsets: ["latin"],
+  display: "swap",
+});
 
 // CSS animations with elements spawning from different sides
 const animations = `
@@ -596,13 +604,19 @@ function WriteReviewContent() {
                       <section className="space-y-6" aria-labelledby="what-others-saying-heading">
                         <div className="flex justify-center">
                           <div className="flex flex-col gap-3">
-                            <h2
-                              id="what-others-saying-heading"
-                              className="text-h3 font-semibold text-charcoal border-b border-charcoal/10 pt-4 pb-2"
-                              style={{ fontFamily: '"Urbanist", system-ui, sans-serif' }}
-                            >
-                              What Others Are Saying
-                            </h2>
+                            <h2 id="what-others-saying-heading" className="sr-only">What Others Are Saying</h2>
+                            <WavyTypedTitle
+                              text="What Others Are Saying"
+                              as="h2"
+                              className={`${swanky.className} text-h3 font-semibold text-charcoal border-b border-charcoal/10 pt-4 pb-2`}
+                              typingSpeedMs={40}
+                              startDelayMs={300}
+                              waveVariant="subtle"
+                              loopWave={true}
+                              style={{ 
+                                fontFamily: swanky.style.fontFamily,
+                              }}
+                            />
                           </div>
                         </div>
 

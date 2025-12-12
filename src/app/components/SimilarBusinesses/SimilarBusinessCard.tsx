@@ -33,6 +33,7 @@ interface SimilarBusinessCardProps {
   verified?: boolean;
   priceRange?: string;
   price_range?: string;
+  compact?: boolean;
 }
 
 export default function SimilarBusinessCard({
@@ -51,6 +52,7 @@ export default function SimilarBusinessCard({
   verified,
   priceRange,
   price_range,
+  compact = false,
 }: SimilarBusinessCardProps) {
   const router = useRouter();
   
@@ -66,9 +68,17 @@ export default function SimilarBusinessCard({
     router.push(`/business/${id}`);
   };
 
+  const mediaHeightClass = compact
+    ? "h-[300px] lg:h-[260px]"
+    : "h-[490px] sm:h-[320px] md:h-[240px]";
+  
+  const cardHeightClass = compact
+    ? "h-[416px] md:h-auto"
+    : "h-[650px] sm:h-auto md:w-[340px]";
+
   return (
     <div
-      className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-visible group cursor-pointer w-full flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-md shadow-premiumElevated transition-all duration-300 hover:border-white/80 hover:-translate-y-1 hover:shadow-premiumElevatedHover h-[650px] sm:h-auto md:w-[340px]"
+      className={`relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-visible group cursor-pointer w-full flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-md shadow-premiumElevated transition-all duration-300 hover:border-white/80 hover:-translate-y-1 hover:shadow-premiumElevatedHover ${cardHeightClass}`}
       style={{
         maxWidth: "540px",
       } as React.CSSProperties}
@@ -88,7 +98,7 @@ export default function SimilarBusinessCard({
       
       {/* MEDIA - Full bleed with premium overlay */}
       <div
-        className="relative overflow-hidden z-10 cursor-pointer rounded-t-[12px] bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 border-b border-white/60 backdrop-blur-xl h-[490px] sm:h-[320px] md:h-[240px]"
+        className={`relative overflow-hidden z-10 cursor-pointer rounded-t-[12px] bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 border-b border-white/60 backdrop-blur-xl ${mediaHeightClass}`}
         onClick={handleCardClick}
       >
         <div className="relative w-full h-full">
