@@ -4,13 +4,73 @@
 import { motion } from "framer-motion";
 import { Clock, DollarSign, CheckCircle } from "react-feather";
 
+type Hours = string | Record<string, string> | { raw?: string; friendly?: string } | null | undefined;
+
 interface BusinessDetailsCardProps {
-  priceRange?: string;
+  priceRange?: string | { raw?: string; friendly?: string };
   verified?: boolean;
-  hours?: string;
+  hours?: Hours;
 }
 
+// Helper to format hours object to string
+const formatHours = (hours: Hours): string | null => {
+  if (!hours) return null;
+  
+  // Handle string
+  if (typeof hours === 'string') {
+    return hours.trim() || null;
+  }
+  
+  // Handle object with raw/friendly (description-like format)
+  if (typeof hours === 'object' && ('raw' in hours || 'friendly' in hours)) {
+    const friendly = (hours as any).friendly?.trim();
+    const raw = (hours as any).raw?.trim();
+    if (friendly) return friendly;
+    if (raw) return raw;
+    return null;
+  }
+  
+  // Handle hours object like { monday: "9-5", tuesday: "9-5", ... }
+  if (typeof hours === 'object') {
+    const dayNames = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    const formattedDays = dayNames
+      .map(day => {
+        const dayHours = (hours as Record<string, string>)[day];
+        if (!dayHours || dayHours.trim() === '') return null;
+        const dayLabel = day.charAt(0).toUpperCase() + day.slice(1);
+        return `${dayLabel}: ${dayHours}`;
+      })
+      .filter(Boolean);
+    
+    if (formattedDays.length > 0) {
+      return formattedDays.join(', ');
+    }
+  }
+  
+  return null;
+};
+
+// Helper to extract price range text
+const getPriceRangeText = (priceRange: string | { raw?: string; friendly?: string } | undefined): string | null => {
+  if (!priceRange) return null;
+  
+  if (typeof priceRange === 'string') {
+    return priceRange.trim() || null;
+  }
+  
+  if (typeof priceRange === 'object') {
+    const friendly = priceRange.friendly?.trim();
+    const raw = priceRange.raw?.trim();
+    if (friendly) return friendly;
+    if (raw) return raw;
+  }
+  
+  return null;
+};
+
 export default function BusinessDetailsCard({ priceRange, verified, hours }: BusinessDetailsCardProps) {
+  const formattedHours = formatHours(hours);
+  const priceRangeText = getPriceRangeText(priceRange);
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -42,12 +102,12 @@ export default function BusinessDetailsCard({ priceRange, verified, hours }: Bus
             >
               Price Range
             </p>
-            {priceRange ? (
+            {priceRangeText ? (
               <p
                 className="text-body-sm font-semibold text-charcoal"
                 style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
               >
-                {priceRange}
+                {priceRangeText}
               </p>
             ) : (
               <p
@@ -71,12 +131,12 @@ export default function BusinessDetailsCard({ priceRange, verified, hours }: Bus
             >
               Hours
             </p>
-            {hours ? (
+            {formattedHours ? (
               <p
                 className="text-body-sm font-semibold text-charcoal"
                 style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
               >
-                {hours}
+                {formattedHours}
               </p>
             ) : (
               <p
