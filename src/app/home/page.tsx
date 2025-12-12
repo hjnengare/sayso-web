@@ -215,7 +215,7 @@ export default function Home() {
   const hasTrendingBusinesses = trendingBusinesses.length > 0;
 
   return (
-    <div className="min-h-dvh bg-transparent relative overflow-hidden" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+    <div className="min-h-dvh bg-off-white relative overflow-hidden" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
       {/* Premium floating orbs background */}
       <HomeBackgroundOrbs />
 

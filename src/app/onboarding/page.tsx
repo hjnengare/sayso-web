@@ -251,7 +251,7 @@ export default function OnboardingPage() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: styles }} />
-      <div className="min-h-[100svh] md:min-h-[100dvh] bg-transparent flex flex-col items-center justify-center px-4 py-4 md:py-8 relative overflow-hidden safe-area-padding no-overflow">
+      <div className="min-h-[100svh] md:min-h-[100dvh] bg-off-white flex flex-col items-center justify-center px-4 py-4 md:py-8 relative overflow-hidden safe-area-padding no-overflow">
 
         {/* Premium floating orbs background */}
         <div className="floating-orb floating-orb-1" aria-hidden="true" />

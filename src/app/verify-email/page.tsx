@@ -405,7 +405,7 @@ export default function VerifyEmailPage() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: styles }} />
-      <div ref={containerRef} data-reduced={prefersReduced} className="min-h-[100dvh] bg-transparent flex flex-col relative overflow-hidden ios-inertia hide-scrollbar safe-area-full">
+      <div ref={containerRef} data-reduced={prefersReduced} className="min-h-[100dvh] bg-off-white flex flex-col relative overflow-hidden ios-inertia hide-scrollbar safe-area-full">
         
         {/* Back button with entrance animation */}
         <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-20 animate-slide-in-left animate-delay-200">
