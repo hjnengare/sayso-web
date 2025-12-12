@@ -67,7 +67,7 @@ const StarRating: React.FC<{ rating: number }> = ({ rating }) => {
         return (
           <StarIcon
             key={i}
-            className={active ? 'text-coral' : 'text-gray-300'}
+            className={`shadow-md ${active ? 'text-coral' : 'text-gray-300'}`}
             style={{
               width: 16,
               height: 16,

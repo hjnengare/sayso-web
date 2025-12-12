@@ -259,7 +259,7 @@ export default function BusinessOfTheMonthCard({ business }: { business: Busines
 
           {hasReviews && displayTotal > 0 ? (
             <div className="absolute right-4 top-4 z-20 inline-flex items-center gap-1 rounded-full bg-off-white/95 backdrop-blur-xl px-3 py-1.5 text-charcoal border border-white/40">
-              <Star className="w-3.5 h-3.5 text-navbar-bg fill-navbar-bg" strokeWidth={2.5} aria-hidden />
+              <Star className="rounded-full p-1 w-3.5 h-3.5 text-navbar-bg fill-navbar-bg shadow-md" strokeWidth={2.5} aria-hidden />
               <span className="text-sm font-semibold text-charcoal" style={{ 
                 fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', 
                 fontWeight: 600
@@ -376,7 +376,7 @@ export default function BusinessOfTheMonthCard({ business }: { business: Busines
                         className="inline-flex items-center gap-1 text-caption sm:text-xs font-semibold text-charcoal/60 transition-colors duration-200 hover:text-navbar-bg/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-coral/30 rounded-full px-2 py-1 min-w-0"
                         aria-label={`Open ${business.name} in maps`}
                       >
-                        <MapPin className="w-4 h-4 text-navbar-bg/90 stroke-[2.5] transition-colors duration-200 group-hover:text-navbar-bg/90 flex-shrink-0" />
+                        <MapPin className="rounded-full p-1 w-5 h-5 text-navbar-bg/90 stroke-[2.5] transition-colors duration-200 group-hover:text-navbar-bg/90 flex-shrink-0 shadow-md" />
                         <span className="truncate max-w-[8rem] sm:max-w-[10rem]" title={(business as any).address || business.location}>
                           {/* Always prefer address (which includes street number) over location */}
                           {(business as any).address ? (business as any).address : business.location}

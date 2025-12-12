@@ -25,7 +25,7 @@ export default function RatingSelector({ overallRating, onRatingChange }: Rating
             >
               <Star
                 size={32}
-                className="text-coral"
+                className="text-coral shadow-md"
                 style={{ fill: active ? "currentColor" : "none", stroke: "currentColor" }}
               />
             </button>

@@ -36,7 +36,7 @@ export default function Stars({ value = 5, color = "amber", size = 15, spacing =
             aria-hidden
           >
             <Star
-              className="transition-all duration-200"
+              className="transition-all duration-200 shadow-md"
               style={{
                 width: size,
                 height: size,
