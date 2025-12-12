@@ -276,8 +276,8 @@ export default function OnboardingPage() {
             <div data-reveal className="title-no-break w-full block">
               <WavyTypedTitle
                 text="Discover local gems near you!"
-                as="h3"
-                className={`${swanky.className} text-4xl md:text-5xl font-semibold mb-5 md:mb-6 leading-[1.2] tracking-tight px-2 text-charcoal no-hyphens block w-full`}
+                as="h2"
+                className={`${swanky.className} text-4xl md:text-5xl font-semibold mb-5 md:mb-6 leading-[1.2] tracking-tight px-6 sm:px-4 md:px-2 text-charcoal no-hyphens block w-full`}
                 typingSpeedMs={40}
                 startDelayMs={300}
                 waveVariant="subtle"
