@@ -4,6 +4,7 @@
 import { useState, useMemo, memo, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import nextDynamic from "next/dynamic";
 import { ChevronRight, Award } from "react-feather";
 import EmailVerificationGuard from "../components/Auth/EmailVerificationGuard";
@@ -43,13 +44,27 @@ interface LeaderboardUser {
 }
 
 function LeaderboardPage() {
-  const [activeTab, setActiveTab] = useState("contributors");
+  const searchParams = useSearchParams();
+  const tabFromUrl = searchParams.get('tab');
+  const initialTab = tabFromUrl === 'businesses' ? 'businesses' : 'contributors';
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [showFullLeaderboard, setShowFullLeaderboard] = useState(false);
   const [showFullBusinessLeaderboard, setShowFullBusinessLeaderboard] = useState(false);
   const [shouldFetchBusinesses, setShouldFetchBusinesses] = useState(false);
   const [topReviewers, setTopReviewers] = useState<LeaderboardUser[]>([]);
   const [isLoadingLeaderboard, setIsLoadingLeaderboard] = useState(true);
   const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
+
+  // Update active tab when URL param changes
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab');
+    if (tabFromUrl === 'businesses' || tabFromUrl === 'contributors') {
+      setActiveTab(tabFromUrl);
+      if (tabFromUrl === 'businesses' && !shouldFetchBusinesses) {
+        setShouldFetchBusinesses(true);
+      }
+    }
+  }, [searchParams, shouldFetchBusinesses]);
 
   // Fetch leaderboard data
   useEffect(() => {

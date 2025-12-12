@@ -309,7 +309,7 @@ function BusinessCard({
       }}
     >
       <div
-        className={`relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 ${inGrid ? 'rounded-t-[12px] rounded-b-none' : 'rounded-[12px]'} overflow-visible group cursor-pointer w-full flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-premiumElevated ${compact ? "md:h-[416px]" : "h-[650px] sm:h-auto md:w-[340px]"
+        className={`relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 ${inGrid && !compact ? 'rounded-t-[12px] rounded-b-none' : 'rounded-[12px]'} overflow-visible group cursor-pointer w-full flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-md transition-all duration-300 ${compact ? "md:h-[416px]" : "h-[650px] sm:h-auto md:w-[340px]"
           }`}
         style={{
           maxWidth: compact ? "100%" : "540px",
@@ -401,7 +401,7 @@ function BusinessCard({
 
           {!hideStar && hasRating && displayRating !== undefined && (
             <div className="absolute right-4 top-4 z-20 inline-flex items-center gap-1 rounded-full bg-off-white/95 backdrop-blur-xl px-3 py-1.5 text-charcoal border border-white/40">
-              <Star className="w-3.5 h-3.5 text-navbar-bg fill-navbar-bg" aria-hidden />
+              <Star className="w-3.5 h-3.5 text-navbar-bg fill-navbar-bg" strokeWidth={2.5} aria-hidden />
               <span className="text-sm font-semibold text-charcoal" style={{ 
                 fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', 
                 fontWeight: 600
@@ -430,11 +430,11 @@ function BusinessCard({
                 e.stopPropagation();
                 setShowInfoPopup(!showInfoPopup);
               }}
-              className="w-10 h-10 bg-navbar-bg rounded-full flex items-center justify-center hover:bg-navbar-bg/90 active:scale-95 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40 touch-manipulation relative z-[51]"
+              className="w-10 h-10 bg-navbar-bg rounded-full flex items-center justify-center hover:bg-navbar-bg/90 active:scale-95 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40 shadow-md touch-manipulation relative z-[51]"
               aria-label="More options"
               aria-expanded={showInfoPopup}
             >
-              <Info className="w-5 h-5 text-white" />
+              <Info className="w-5 h-5 text-white" strokeWidth={2.5} />
             </button>
 
             {/* Popup with Share and Save options */}
@@ -455,11 +455,11 @@ function BusinessCard({
                       e.stopPropagation();
                       handleShare();
                     }}
-                    className="flex items-center gap-3 px-4 py-3 rounded-[12px] hover:bg-sage/10 active:bg-sage/20 transition-colors duration-200 min-h-[44px] touch-manipulation w-full"
+                    className="flex items-center gap-3 px-4 py-3 rounded-[12px] hover:bg-sage/10 active:bg-sage/20 transition-colors duration-200 min-h-[44px] touch-manipulation w-full shadow-md"
                     aria-label={`Share ${business.name}`}
                   >
                     <div className="w-10 h-10 bg-sage/10 rounded-full flex items-center justify-center flex-shrink-0">
-                      <Share2 className="w-5 h-5 text-sage" />
+                      <Share2 className="w-5 h-5 text-sage" strokeWidth={2.5} />
                     </div>
                     <span className="text-sm font-semibold text-charcoal whitespace-nowrap" style={{
                       fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
@@ -473,12 +473,13 @@ function BusinessCard({
                       e.stopPropagation();
                       handleBookmark();
                     }}
-                    className="flex items-center gap-3 px-4 py-3 rounded-[12px] hover:bg-coral/10 active:bg-coral/20 transition-colors duration-200 min-h-[44px] touch-manipulation w-full"
+                    className="flex items-center gap-3 px-4 py-3 rounded-[12px] hover:bg-coral/10 active:bg-coral/20 transition-colors duration-200 min-h-[44px] touch-manipulation w-full shadow-md"
                     aria-label={isItemSaved(business.id) ? `Remove ${business.name} from saved` : `Save ${business.name}`}
                   >
                     <div className="w-10 h-10 bg-coral/10 rounded-full flex items-center justify-center flex-shrink-0">
                       <Bookmark
                         className={`w-5 h-5 ${isItemSaved(business.id) ? 'text-coral fill-coral' : 'text-coral'}`}
+                        strokeWidth={2.5}
                       />
                     </div>
                     <span className="text-sm font-semibold text-charcoal whitespace-nowrap" style={{
@@ -496,8 +497,7 @@ function BusinessCard({
           {/* Premium floating actions - desktop only */}
           <div className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-20 flex-col items-center gap-2 transition-all duration-300 ease-out translate-x-12 opacity-0 md:group-hover:translate-x-0 md:group-hover:opacity-100">
             <button
-              className={`w-12 h-10 bg-navbar-bg rounded-[20px] flex items-center justify-center transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40 ${
-                hasReviewed
+              className={`w-12 h-10 bg-navbar-bg rounded-[20px] flex items-center justify-center transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40 shadow-md ${hasReviewed
                   ? 'opacity-50 cursor-not-allowed'
                   : 'hover:bg-navbar-bg/90 hover:scale-110'
               }`}
@@ -509,10 +509,10 @@ function BusinessCard({
               aria-label={hasReviewed ? `You have already reviewed ${business.name}` : `Write a review for ${business.name}`}
               title={hasReviewed ? 'Already reviewed' : 'Write a review'}
             >
-              <Edit className={`w-4 h-4 ${hasReviewed ? 'text-white/50' : 'text-white'}`} />
+              <Edit className={`w-4 h-4 ${hasReviewed ? 'text-white/50' : 'text-white'}`} strokeWidth={2.5} />
             </button>
             <button
-              className="w-12 h-10 bg-navbar-bg rounded-[20px] flex items-center justify-center hover:bg-navbar-bg/90 hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40"
+              className="w-12 h-10 bg-navbar-bg rounded-[20px] flex items-center justify-center hover:bg-navbar-bg/90 hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40 shadow-md"
               onClick={(e) => {
                 e.stopPropagation();
                 handleBookmark();
@@ -522,10 +522,11 @@ function BusinessCard({
             >
               <Bookmark
                 className={`w-4 h-4 ${isItemSaved(business.id) ? 'text-white fill-white' : 'text-white'}`}
+                strokeWidth={2.5}
               />
             </button>
             <button
-              className="w-12 h-10 bg-navbar-bg rounded-[20px] flex items-center justify-center hover:bg-navbar-bg/90 hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40"
+              className="w-12 h-10 bg-navbar-bg rounded-[20px] flex items-center justify-center hover:bg-navbar-bg/90 hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40 shadow-md"
               onClick={(e) => {
                 e.stopPropagation();
                 handleShare();
@@ -533,7 +534,7 @@ function BusinessCard({
               aria-label={`Share ${business.name}`}
               title="Share"
             >
-              <Share2 className="w-4 h-4 text-white" />
+              <Share2 className="w-4 h-4 text-white" strokeWidth={2.5} />
             </button>
           </div>
         </div>
@@ -541,7 +542,7 @@ function BusinessCard({
         {/* CONTENT - Minimal, premium spacing */}
         <div
           className={`px-4 sm:px-5 pt-2 pb-2 ${compact ? "lg:py-3 lg:pb-4 lg:min-h-[200px]" : "flex-1"
-            } relative flex-shrink-0 flex flex-col justify-between bg-sage/10 z-10 ${inGrid ? 'rounded-b-none' : 'rounded-b-[12px]'}`}
+            } relative flex-shrink-0 flex flex-col justify-between bg-sage/10 z-10 ${inGrid && !compact ? 'rounded-b-none' : 'rounded-b-[12px]'}`}
         >
           <div className={`${compact ? "flex flex-col" : "flex-1 flex flex-col"}`}>
             {/* Info Wrapper */}
@@ -549,23 +550,27 @@ function BusinessCard({
               {/* Content - Centered */}
               <div className="flex flex-col items-center text-center relative z-10 space-y-1">
                 {/* Business Name - Inside wrapper */}
-                <div className="flex items-center justify-center w-full min-w-0 h-[3.5rem] sm:h-[4rem]">
+                <div className="flex items-center justify-center w-full min-w-0 h-[2.5rem] sm:h-[3rem] relative">
+                 
                   <Tooltip content={business.name} position="top">
                     <button
                       type="button"
                       onClick={handleCardClick}
-                      className="group w-full max-w-full min-w-0 text-charcoal transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-coral/40 rounded-lg px-2 py-1 flex items-center justify-center"
+                      className="group w-full max-w-full min-w-0 text-charcoal transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-coral/40 rounded-lg px-2 py-1 flex items-center justify-center relative"
                       aria-label={`View ${business.name} details`}
                     >
+
                       <h3
-                        className="text-h2 sm:text-h1 font-bold text-inherit text-center leading-[1.3] truncate tracking-tight transition-colors duration-300 group-hover:text-navbar-bg/90 w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
+                        className="text-h2 sm:text-h1 font-bold text-center leading-[1.3] truncate tracking-tight transition-all duration-300 group-hover:text-navbar-bg/90 group-hover:scale-[1.02] group-hover:translate-y-[-1px] w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap relative z-[1]"
                         style={{
-                          fontFamily: "'Barrio', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                          fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
                           fontWeight: 700,
                           WebkitFontSmoothing: 'antialiased',
                           MozOsxFontSmoothing: 'grayscale',
                           textRendering: 'optimizeLegibility',
-                          letterSpacing: '-0.01em'
+                          letterSpacing: '0.03em',
+                          transform: 'translateY(0)',
+                          willChange: 'transform'
                         }}
                       >
                         {business.name}
@@ -578,7 +583,7 @@ function BusinessCard({
                   className="flex items-center justify-center gap-1.5 text-caption sm:text-xs text-charcoal/60 h-5 min-h-[20px] max-h-[20px]"
                   style={{
                     fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                    fontWeight: 400,
+                    fontWeight: 600,
                     WebkitFontSmoothing: 'antialiased',
                     MozOsxFontSmoothing: 'grayscale',
                     textRendering: 'optimizeLegibility',
@@ -593,16 +598,17 @@ function BusinessCard({
                         href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${business.name} ${business.address || business.location || ''}`)}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-caption sm:text-xs font-normal text-charcoal/60 transition-colors duration-200 hover:text-navbar-bg/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-coral/30 rounded-full px-2 py-1 min-w-0 max-w-[12rem] sm:max-w-[14rem]"
+                        className="inline-flex items-center gap-1 text-caption sm:text-xs font-semibold text-charcoal/60 transition-colors duration-200 hover:text-navbar-bg/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-coral/30 rounded-full px-2 py-1 min-w-0 max-w-[12rem] sm:max-w-[14rem]"
                         aria-label={`Open ${business.name} in maps`}
                       >
-                        <MapPin className="w-3 h-3 text-navbar-bg/90 stroke-[2.5] transition-colors duration-200 group-hover:text-navbar-bg/90 flex-shrink-0" />
-                        <span 
+                        <MapPin className="w-4 h-4 text-navbar-bg/90 stroke-[2.5] transition-colors duration-200 group-hover:text-navbar-bg/90 flex-shrink-0" />
+                        <span
                           className="truncate block overflow-hidden text-ellipsis whitespace-nowrap"
                           style={{ maxWidth: '8rem' }}
                           title={business.address || business.location}
                         >
-                          {business.address || business.location}
+                          {/* Always prefer address (which includes street number) over location */}
+                          {business.address ? business.address : business.location}
                         </span>
                       </a>
                     </>
@@ -673,8 +679,7 @@ function BusinessCard({
                             handleWriteReview();
                           }
                         }}
-                        className={`inline-flex items-center justify-center text-sm font-normal underline-offset-2 min-w-[92px] text-center transition-colors duration-200 ${
-                          hasReviewed
+                        className={`inline-flex items-center justify-center text-sm font-normal underline-offset-2 min-w-[92px] text-center transition-colors duration-200 ${hasReviewed
                             ? 'text-charcoal/50 cursor-not-allowed'
                             : 'text-charcoal cursor-pointer hover:text-coral'
                         } ${compact ? 'lg:order-1 lg:mb-1' : ''}`}
@@ -726,8 +731,7 @@ function BusinessCard({
           {/* Mobile actions - Minimal */}
           <div className="flex md:hidden items-center justify-center pt-4 border-t border-off-white/30">
             <button
-              className={`flex-1 flex items-center justify-center gap-1.5 px-4 py-3 rounded-full text-caption sm:text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-sage/40 border transition-all min-h-[48px] ${
-                hasReviewed
+              className={`flex-1 flex items-center justify-center gap-1.5 px-4 py-3 rounded-full text-caption sm:text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-sage/40 border transition-all min-h-[48px] shadow-md ${hasReviewed
                   ? 'bg-charcoal/20 text-charcoal/50 cursor-not-allowed border-charcoal/20'
                   : 'bg-gradient-to-br from-navbar-bg to-navbar-bg/90 text-white border-sage/50 active:scale-95'
               }`}
@@ -744,7 +748,7 @@ function BusinessCard({
                 fontWeight: 600,
               }}
             >
-              <Edit className="w-3.5 h-3.5" />
+              <Edit className="w-3.5 h-3.5" strokeWidth={2.5} />
               <span>{hasReviewed ? 'Already Reviewed' : 'Review'}</span>
             </button>
           </div>

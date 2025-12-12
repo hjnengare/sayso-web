@@ -25,7 +25,7 @@ export default function InterestActions({
   return (
     <div className="pt-4 space-y-4 enter-fade" style={{ animationDelay: "0.15s" }}>
       <button
-        className={`w-full text-sm font-600 py-4 px-4 rounded-full transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 btn-target btn-press ${
+        className={`w-full text-sm font-600 py-4 px-4 rounded-full transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 btn-target btn-press shadow-md ${
           canProceed
             ? 'bg-gradient-to-r from-sage to-sage/80 text-white hover:from-sage/90 hover:to-sage'
             : 'bg-charcoal/10 text-charcoal/40 cursor-not-allowed'

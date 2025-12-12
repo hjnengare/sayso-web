@@ -19,13 +19,8 @@ export default function BusinessActionCard({ businessSlug, businessId, isBusines
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.5, duration: 0.6 }}
-      className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] ring-1 ring-white/30 p-4 sm:p-6 relative overflow-hidden"
+      className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] ring-1 ring-white/30 shadow-md p-4 sm:p-6"
     >
-      {/* Gradient overlays matching user profile */}
-      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-sage/10 to-transparent rounded-full blur-lg"></div>
-      <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-coral/10 to-transparent rounded-full blur-lg"></div>
-      
-      <div className="relative z-10">
         <h3
           className="text-h3 font-semibold text-charcoal mb-3"
           style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
@@ -39,7 +34,7 @@ export default function BusinessActionCard({ businessSlug, businessId, isBusines
             className={`block w-full font-semibold py-3 px-5 rounded-full transition-all duration-300 border text-body-sm text-center ${
               hasReviewed
                 ? 'bg-charcoal/10 text-charcoal/40 cursor-not-allowed border-charcoal/10 opacity-60 pointer-events-none'
-                : 'bg-gradient-to-br from-navbar-bg to-navbar-bg/90 text-white hover:bg-navbar-bg border-white/30'
+                : 'bg-gradient-to-br from-navbar-bg to-navbar-bg/90 text-white hover:bg-navbar-bg border-white/30 shadow-md'
             }`}
             style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
             onClick={(e) => {
@@ -57,7 +52,7 @@ export default function BusinessActionCard({ businessSlug, businessId, isBusines
           {ownerId && !isBusinessOwner && (
             <Link
               href={`/dm/${ownerId}?business_id=${businessId}`}
-              className="block w-full bg-gradient-to-br from-coral to-coral/90 text-white font-semibold py-3 px-5 rounded-full transition-all duration-300 hover:bg-coral/80 border border-white/30 text-body-sm text-center flex items-center justify-center gap-2"
+              className="block w-full bg-gradient-to-br from-coral to-coral/90 text-white font-semibold py-3 px-5 rounded-full transition-all duration-300 hover:bg-coral/80 border border-white/30 shadow-md text-body-sm text-center flex items-center justify-center gap-2"
               style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
             >
               <MessageSquare size={18} strokeWidth={2.5} />
@@ -68,7 +63,7 @@ export default function BusinessActionCard({ businessSlug, businessId, isBusines
           {isBusinessOwner && (
             <Link
               href={`/business/${businessSlug}/edit`}
-              className="block w-full bg-gradient-to-br from-white/50 to-white/30 backdrop-blur-sm text-charcoal font-semibold py-3 px-5 rounded-full transition-all duration-300 hover:bg-charcoal hover:text-white border border-white/40 text-body-sm text-center"
+              className="block w-full bg-gradient-to-br from-white/50 to-white/30 backdrop-blur-sm text-charcoal font-semibold py-3 px-5 rounded-full transition-all duration-300 hover:bg-charcoal hover:text-white border border-white/40 shadow-md text-body-sm text-center"
               style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
             >
               Edit Business
@@ -84,17 +79,16 @@ export default function BusinessActionCard({ businessSlug, businessId, isBusines
             Share Business
           </h4>
         <div className="flex gap-2">
-          <button className="flex-1 bg-white/30 hover:bg-navbar-bg text-navbar-bg hover:text-white py-2 px-3 rounded-full transition-all duration-200">
+          <button className="flex-1 bg-white/30 hover:bg-navbar-bg text-navbar-bg hover:text-white py-2 px-3 rounded-full transition-all duration-200 shadow-md">
             <Facebook size={16} className="mx-auto" />
           </button>
-          <button className="flex-1 bg-white/30 hover:bg-navbar-bg text-navbar-bg hover:text-white py-2 px-3 rounded-full transition-all duration-200">
+          <button className="flex-1 bg-white/30 hover:bg-navbar-bg text-navbar-bg hover:text-white py-2 px-3 rounded-full transition-all duration-200 shadow-md">
             <Instagram size={16} className="mx-auto" />
           </button>
-          <button className="flex-1 bg-white/30 hover:bg-navbar-bg text-navbar-bg hover:text-white py-2 px-3 rounded-full transition-all duration-200">
+          <button className="flex-1 bg-white/30 hover:bg-navbar-bg text-navbar-bg hover:text-white py-2 px-3 rounded-full transition-all duration-200 shadow-md">
             <Twitter size={16} className="mx-auto" />
           </button>
         </div>
-      </div>
       </div>
     </motion.div>
   );

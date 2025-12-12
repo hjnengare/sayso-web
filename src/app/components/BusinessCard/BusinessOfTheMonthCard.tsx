@@ -92,7 +92,7 @@ export default function BusinessOfTheMonthCard({ business }: { business: Busines
   };
 
   const badgeIcon = () => (
-    <Award className="w-4 h-4 text-white" aria-hidden />
+    <Award className="w-4 h-4 text-white" strokeWidth={2.5} aria-hidden />
   );
 
   // Handle save/bookmark
@@ -154,7 +154,7 @@ export default function BusinessOfTheMonthCard({ business }: { business: Busines
       }}
     >
       <div
-        className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-visible group cursor-pointer w-full flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-premiumElevated h-[650px] sm:h-auto md:w-[340px]"
+        className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-visible group cursor-pointer w-full flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-md h-[650px] sm:h-auto md:w-[340px]"
         style={{
           maxWidth: "540px",
         } as React.CSSProperties}
@@ -259,7 +259,7 @@ export default function BusinessOfTheMonthCard({ business }: { business: Busines
 
           {hasReviews && displayTotal > 0 ? (
             <div className="absolute right-4 top-4 z-20 inline-flex items-center gap-1 rounded-full bg-off-white/95 backdrop-blur-xl px-3 py-1.5 text-charcoal border border-white/40">
-              <Star className="w-3.5 h-3.5 text-navbar-bg fill-navbar-bg" aria-hidden />
+              <Star className="w-3.5 h-3.5 text-navbar-bg fill-navbar-bg" strokeWidth={2.5} aria-hidden />
               <span className="text-sm font-semibold text-charcoal" style={{ 
                 fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', 
                 fontWeight: 600
@@ -281,7 +281,7 @@ export default function BusinessOfTheMonthCard({ business }: { business: Busines
           {/* Premium floating actions - desktop only */}
           <div className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-20 flex-col items-center gap-2 transition-all duration-300 ease-out translate-x-12 opacity-0 md:group-hover:translate-x-0 md:group-hover:opacity-100">
             <button
-              className="w-12 h-10 bg-navbar-bg rounded-[20px] flex items-center justify-center hover:bg-navbar-bg/90 hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40"
+              className="w-12 h-10 bg-navbar-bg rounded-[20px] flex items-center justify-center hover:bg-navbar-bg/90 hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40 shadow-md"
               onClick={(e) => {
                 e.stopPropagation();
                 handleWriteReview(e);
@@ -289,10 +289,10 @@ export default function BusinessOfTheMonthCard({ business }: { business: Busines
               aria-label={`Write a review for ${business.name}`}
               title="Write a review"
             >
-              <Edit className="w-4 h-4 text-white" />
+              <Edit className="w-4 h-4 text-white" strokeWidth={2.5} />
             </button>
             <button
-              className="w-12 h-10 bg-navbar-bg rounded-[20px] flex items-center justify-center hover:bg-navbar-bg/90 hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40"
+              className="w-12 h-10 bg-navbar-bg rounded-[20px] flex items-center justify-center hover:bg-navbar-bg/90 hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40 shadow-md"
               onClick={(e) => {
                 e.stopPropagation();
                 handleBookmark(e);
@@ -302,10 +302,11 @@ export default function BusinessOfTheMonthCard({ business }: { business: Busines
             >
               <Bookmark
                 className={`w-4 h-4 ${isSaved ? 'text-white fill-white' : 'text-white'}`}
+                strokeWidth={2.5}
               />
             </button>
             <button
-              className="w-12 h-10 bg-navbar-bg rounded-[20px] flex items-center justify-center hover:bg-navbar-bg/90 hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40"
+              className="w-12 h-10 bg-navbar-bg rounded-[20px] flex items-center justify-center hover:bg-navbar-bg/90 hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40 shadow-md"
               onClick={(e) => {
                 e.stopPropagation();
                 handleShare(e);
@@ -313,7 +314,7 @@ export default function BusinessOfTheMonthCard({ business }: { business: Busines
               aria-label={`Share ${business.name}`}
               title="Share"
             >
-              <Share2 className="w-4 h-4 text-white" />
+              <Share2 className="w-4 h-4 text-white" strokeWidth={2.5} />
             </button>
           </div>
         </div>
@@ -357,7 +358,7 @@ export default function BusinessOfTheMonthCard({ business }: { business: Busines
                   className="flex items-center justify-center gap-1.5 text-caption sm:text-xs text-charcoal/60 h-5 min-h-[20px] max-h-[20px]"
                   style={{
                     fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                    fontWeight: 400,
+                    fontWeight: 600,
                     WebkitFontSmoothing: 'antialiased',
                     MozOsxFontSmoothing: 'grayscale',
                     textRendering: 'optimizeLegibility',
@@ -365,18 +366,21 @@ export default function BusinessOfTheMonthCard({ business }: { business: Busines
                   }}
                 >
                   <span className="truncate">{business.category}</span>
-                  {business.location && (
+                  {((business as any).address || business.location) && (
                     <>
                       <span aria-hidden>·</span>
                       <a
-                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${business.name} ${business.location}`)}`}
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${business.name} ${(business as any).address || business.location || ''}`)}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-caption sm:text-xs font-normal text-charcoal/60 transition-colors duration-200 hover:text-navbar-bg/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-coral/30 rounded-full px-2 py-1 min-w-0"
+                        className="inline-flex items-center gap-1 text-caption sm:text-xs font-semibold text-charcoal/60 transition-colors duration-200 hover:text-navbar-bg/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-coral/30 rounded-full px-2 py-1 min-w-0"
                         aria-label={`Open ${business.name} in maps`}
                       >
-                        <MapPin className="w-3 h-3 text-navbar-bg/90 stroke-[2.5] transition-colors duration-200 group-hover:text-navbar-bg/90 flex-shrink-0" />
-                        <span className="truncate max-w-[8rem] sm:max-w-[10rem]">{business.location}</span>
+                        <MapPin className="w-4 h-4 text-navbar-bg/90 stroke-[2.5] transition-colors duration-200 group-hover:text-navbar-bg/90 flex-shrink-0" />
+                        <span className="truncate max-w-[8rem] sm:max-w-[10rem]" title={(business as any).address || business.location}>
+                          {/* Always prefer address (which includes street number) over location */}
+                          {(business as any).address ? (business as any).address : business.location}
+                        </span>
                       </a>
                     </>
                   )}
@@ -469,7 +473,7 @@ export default function BusinessOfTheMonthCard({ business }: { business: Busines
           {/* Mobile actions - Minimal */}
           <div className="flex md:hidden items-center justify-center pt-4 border-t border-off-white/30">
             <button
-              className="flex-1 flex items-center justify-center gap-1.5 px-4 py-3 rounded-full text-caption sm:text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-sage/40 border transition-all min-h-[48px] bg-gradient-to-br from-navbar-bg to-navbar-bg/90 text-white border-sage/50 active:scale-95"
+              className="flex-1 flex items-center justify-center gap-1.5 px-4 py-3 rounded-full text-caption sm:text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-sage/40 border transition-all min-h-[48px] bg-gradient-to-br from-navbar-bg to-navbar-bg/90 text-white border-sage/50 active:scale-95 shadow-md"
               onClick={(e) => {
                 e.stopPropagation();
                 handleWriteReview(e);
@@ -480,7 +484,7 @@ export default function BusinessOfTheMonthCard({ business }: { business: Busines
                 fontWeight: 600,
               }}
             >
-              <Edit className="w-3.5 h-3.5" />
+              <Edit className="w-3.5 h-3.5" strokeWidth={2.5} />
               <span>Review</span>
             </button>
           </div>

@@ -150,8 +150,10 @@ export default function BusinessInfoAside({ businessInfo, className = "", stacke
                 const desc = businessInfo.description;
                 if (!desc) return null;
                 if (typeof desc === 'string') return desc;
-                if (typeof desc === 'object' && 'friendly' in desc) return desc.friendly || desc.raw || '';
-                if (typeof desc === 'object' && 'raw' in desc) return desc.raw || '';
+                if (typeof desc === 'object' && desc !== null) {
+                  const descObj = desc as { friendly?: string; raw?: string };
+                  return descObj.friendly || descObj.raw || '';
+                }
                 return '';
               })()}
             </p>

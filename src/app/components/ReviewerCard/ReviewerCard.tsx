@@ -53,7 +53,7 @@ export default function ReviewerCard({
           className="block"
         >
           <div
-            className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl rounded-[20px] overflow-visible group cursor-pointer h-[240px] relative border border-white/60 ring-1 ring-white/30 shadow-premiumElevated"
+            className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl rounded-[20px] overflow-visible group cursor-pointer h-[240px] relative border border-white/60 ring-1 ring-white/30 shadow-md"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
           >
@@ -105,7 +105,7 @@ export default function ReviewerCard({
                   </h3>
                   <p className="text-sm sm:text-xs text-charcoal/70" style={{ 
                     fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif", 
-                    fontWeight: 400,
+                    fontWeight: 600,
                   }}>
                     {reviewerData?.location}
                   </p>
@@ -126,7 +126,7 @@ export default function ReviewerCard({
                     </div>
                   <div className="text-sm sm:text-xs text-charcoal/70" style={{ 
                     fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif", 
-                    fontWeight: 400,
+                    fontWeight: 600,
                   }}>Reviews</div>
                 </div>
               </div>
@@ -216,7 +216,7 @@ export default function ReviewerCard({
               {/* Card Actions - always visible on mobile, slide-up on desktop */}
               <div className="flex gap-1.5 transition-all duration-500 ease-out md:translate-y-4 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100">
                 <button
-                  className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 w-11 h-11 sm:w-8 sm:h-8 bg-navbar-bg rounded-full flex items-center justify-center hover:bg-navbar-bg/90 hover:scale-110 active:scale-95 transition-all duration-300 touch-manipulation"
+                  className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 w-11 h-11 sm:w-8 sm:h-8 bg-navbar-bg rounded-full flex items-center justify-center hover:bg-navbar-bg/90 hover:scale-110 active:scale-95 transition-all duration-300 touch-manipulation shadow-md"
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
@@ -243,7 +243,7 @@ export default function ReviewerCard({
         className="block"
       >
         <div
-          className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl rounded-[20px] group cursor-pointer h-[187px] flex flex-col relative overflow-visible border border-white/60 ring-1 ring-white/30 shadow-premiumElevated"
+          className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl rounded-[20px] group cursor-pointer h-[187px] flex flex-col relative overflow-visible border border-white/60 ring-1 ring-white/30 shadow-md"
         >
         {/* Glass depth overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-off-white/8 via-transparent to-transparent pointer-events-none z-0" />
@@ -294,7 +294,7 @@ export default function ReviewerCard({
               <Users className="text-white w-5 h-5 sm:w-4 sm:h-4" />
             </button>
             <button
-              className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 w-11 h-11 sm:w-8 sm:h-8 bg-navbar-bg rounded-full flex items-center justify-center hover:bg-navbar-bg/90 hover:scale-110 active:scale-95 transition-all duration-300 touch-manipulation"
+              className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 w-11 h-11 sm:w-8 sm:h-8 bg-navbar-bg rounded-full flex items-center justify-center hover:bg-navbar-bg/90 hover:scale-110 active:scale-95 transition-all duration-300 touch-manipulation shadow-md"
               onClick={(e) => {
                 e.stopPropagation();
                 e.preventDefault();

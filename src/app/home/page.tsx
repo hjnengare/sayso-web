@@ -233,7 +233,7 @@ export default function Home() {
       <main className="bg-off-white relative pt-20 sm:pt-24 pb-16">
         <div className="mx-auto w-full max-w-[2000px]">
           {/* Search Input at top of home content */}
-          <div ref={searchWrapRef} className="py-3 sm:py-4 px-4">
+          <div ref={searchWrapRef} className="py-8 px-4 sm:px-6">
             <SearchInput
               variant="header"
               placeholder="Discover exceptional local hidden gems..."
@@ -246,61 +246,56 @@ export default function Home() {
             />
           </div>
 
-          <div className="py-3 sm:py-4">
+          <div className="flex flex-col gap-8 sm:gap-10 md:gap-12 pt-8">
             {/* For You Section */}
-            <section className="pt-4 sm:pt-6 md:pt-10 relative overflow-hidden">
-              <div className="relative z-10">
-                {forYouLoading && <BusinessRowSkeleton title="For You Now" />}
-                {!forYouLoading && hasForYouBusinesses && (
-                  <MemoizedBusinessRow title="For You Now" businesses={forYouBusinesses} cta="See More" href="/for-you" />
-                )}
-                {!forYouLoading && !hasForYouBusinesses && !forYouError && (
-                  <MemoizedBusinessRow title="For You Now" businesses={[]} cta="See More" href="/for-you" />
-                )}
-                {forYouError && !forYouLoading && (
-                  <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral">
-                    Couldn't load personalized picks right now. We'll retry in the background.
-                  </div>
-                )}
-              </div>
-            </section>
+            <div className="relative z-10">
+              {forYouLoading && <BusinessRowSkeleton title="For You Now" />}
+              {!forYouLoading && hasForYouBusinesses && (
+                <MemoizedBusinessRow title="For You Now" businesses={forYouBusinesses} cta="See More" href="/for-you" />
+              )}
+              {!forYouLoading && !hasForYouBusinesses && !forYouError && (
+                <MemoizedBusinessRow title="For You Now" businesses={[]} cta="See More" href="/for-you" />
+              )}
+              {forYouError && !forYouLoading && (
+                <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral">
+                  Couldn't load personalized picks right now. We'll retry in the background.
+                </div>
+              )}
+            </div>
 
-            <section className="pt-4 sm:pt-6 md:pt-10 relative overflow-hidden">
-              <div className="relative z-10">
-                {trendingLoading && <BusinessRowSkeleton title="Trending Now" />}
-                {!trendingLoading && hasTrendingBusinesses && (
-                  <MemoizedBusinessRow title="Trending Now" businesses={trendingBusinesses} cta="See More" href="/trending" />
-                )}
-                {!trendingLoading && !hasTrendingBusinesses && !trendingError && (
-                  <MemoizedBusinessRow title="Trending Now" businesses={[]} cta="See More" href="/trending" />
-                )}
-                {trendingError && !trendingLoading && (
-                  <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral">
-                    Trending businesses are still loading. Refresh to try again.
-                  </div>
-                )}
-              </div>
-            </section>
+            {/* Trending Section */}
+            <div className="relative z-10">
+              {trendingLoading && <BusinessRowSkeleton title="Trending Now" />}
+              {!trendingLoading && hasTrendingBusinesses && (
+                <MemoizedBusinessRow title="Trending Now" businesses={trendingBusinesses} cta="See More" href="/trending" />
+              )}
+              {!trendingLoading && !hasTrendingBusinesses && !trendingError && (
+                <MemoizedBusinessRow title="Trending Now" businesses={[]} cta="See More" href="/trending" />
+              )}
+              {trendingError && !trendingLoading && (
+                <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral">
+                  Trending businesses are still loading. Refresh to try again.
+                </div>
+              )}
+            </div>
 
-            <section className="pt-4 sm:pt-6 md:pt-10 relative overflow-hidden">
-              <div className="relative z-10">
-                <EventsSpecials 
-                  events={events.length > 0 ? events : []} 
-                  loading={eventsLoading}
-                />
-              </div>
-            </section>
+            {/* Events & Specials */}
+            <div className="relative z-10">
+              <EventsSpecials 
+                events={events.length > 0 ? events : []} 
+                loading={eventsLoading}
+              />
+            </div>
 
-            <section className="pt-4 sm:pt-6 md:pt-10 relative overflow-hidden">
-              <div className="relative z-10">
-                <CommunityHighlights
-                  reviews={FEATURED_REVIEWS}
-                  topReviewers={TOP_REVIEWERS}
-                  businessesOfTheMonth={featuredByCategory}
-                  variant="reviews"
-                />
-              </div>
-            </section>
+            {/* Community Highlights */}
+            <div className="relative z-10">
+              <CommunityHighlights
+                reviews={FEATURED_REVIEWS}
+                topReviewers={TOP_REVIEWERS}
+                businessesOfTheMonth={featuredByCategory}
+                variant="reviews"
+              />
+            </div>
           </div>
         </div>
       </main>

@@ -3,14 +3,12 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { Heart, Star } from "react-feather";
+import { Star } from "react-feather";
 
 interface BusinessHeroImageProps {
   image: string;
   alt: string;
   rating: number;
-  isLiked: boolean;
-  onLike: () => void;
   verified?: boolean;
 }
 
@@ -18,8 +16,6 @@ export default function BusinessHeroImage({
   image,
   alt,
   rating,
-  isLiked,
-  onLike,
   verified = false,
 }: BusinessHeroImageProps) {
   const hasImage = image && image.trim() !== '';
@@ -78,18 +74,6 @@ export default function BusinessHeroImage({
         </span>
       </div>
 
-      {/* Like Button */}
-      <button
-        onClick={onLike}
-        className={`absolute bottom-6 right-6 w-12 h-12 rounded-full backdrop-blur-xl border transition-all duration-300 hover:scale-110 ${
-          isLiked
-            ? "bg-coral/90 text-white border-coral/50"
-            : "bg-white/20 text-navbar-bg border-white/30 hover:bg-white/30"
-        }`}
-        aria-label="Like business"
-      >
-        <Heart className={`mx-auto ${isLiked ? "fill-current text-white" : "text-navbar-bg"}`} size={20} />
-      </button>
     </motion.div>
   );
 }

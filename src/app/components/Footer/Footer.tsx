@@ -4,7 +4,6 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
-  Mail,
   Heart,
 } from "lucide-react";
 import Logo from "../Logo/Logo";
@@ -172,17 +171,6 @@ export default function Footer() {
               <p className="font-urbanist text-xs sm:text-sm text-off-white/70 flex items-center gap-1.5">
                 Made with <Heart className="w-3.5 h-3.5 text-coral fill-coral" /> by ChitChat
               </p>
-            </div>
-            
-            {/* Newsletter signup or additional CTA */}
-            <div className="flex items-center gap-2">
-              <a
-                href="mailto:hello@sayso.com"
-                className="font-urbanist text-xs sm:text-sm text-off-white/70 hover:text-off-white transition-colors duration-300 flex items-center gap-2 group"
-              >
-                <Mail className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
-                <span>Get in touch</span>
-              </a>
             </div>
           </div>
         </motion.div>

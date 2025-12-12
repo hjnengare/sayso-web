@@ -101,8 +101,10 @@ export default function BusinessInfoModal({
                 const desc = businessInfo.description;
                 if (!desc) return 'No description available';
                 if (typeof desc === 'string') return desc;
-                if (typeof desc === 'object' && 'friendly' in desc) return desc.friendly || desc.raw || 'No description available';
-                if (typeof desc === 'object' && 'raw' in desc) return desc.raw || 'No description available';
+                if (typeof desc === 'object' && desc !== null) {
+                  const descObj = desc as { friendly?: string; raw?: string };
+                  return descObj.friendly || descObj.raw || 'No description available';
+                }
                 return 'No description available';
               })()}
             </p>

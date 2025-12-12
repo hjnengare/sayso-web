@@ -40,7 +40,8 @@ export default function FallbackImage({
     setIsLoading(false);
   };
 
-  if (imageError) {
+  // If src is empty or falsy, show fallback immediately
+  if (!src || src.trim() === "" || imageError) {
     return (
       <div className={`bg-gradient-to-br from-sage/10 to-coral/10 flex items-center justify-center ${className}`}>
         {fallbackType === "profile" ? (

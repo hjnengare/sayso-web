@@ -101,7 +101,7 @@ export default function EventCard({ event, onBookmark }: EventCardProps) {
       }}
     >
       <article
-        className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-visible h-[600px] sm:h-auto flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-premiumElevated w-full"
+        className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-visible h-[600px] sm:h-auto flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-md w-full"
         style={
           {
             width: "100%",
@@ -113,8 +113,8 @@ export default function EventCard({ event, onBookmark }: EventCardProps) {
       >
          
           {/* MEDIA - Full bleed with premium overlay */}
-          <div className="relative overflow-hidden flex-1 sm:flex-initial h-[300px] sm:h-[320px] lg:h-[240px] xl:h-[220px] z-10 rounded-t-[12px] border-b border-white/60">
-            <div className="absolute inset-0 bg-gradient-to-b from-off-white/90 via-off-white/80 to-off-white/70" aria-hidden="true" />
+          <div className="relative overflow-hidden flex-1 sm:flex-initial h-[300px] sm:h-[320px] lg:h-[240px] xl:h-[220px] z-10 rounded-t-[12px]">
+            <div className="absolute inset-0 bg-gradient-to-b from-off-white/90 via-off-white/80 to-off-white/60" aria-hidden="true" />
             <div className="relative w-full h-full">
               <div className="relative w-full h-full overflow-hidden flex items-center justify-center">
                 <Image
@@ -133,7 +133,7 @@ export default function EventCard({ event, onBookmark }: EventCardProps) {
           </div>
 
           {/* CONTENT - Minimal, premium spacing */}
-          <div className="px-4 pt-4 pb-6 flex flex-col justify-between bg-gradient-to-br from-sage/12 via-sage/8 to-sage/10 gap-4 rounded-t-2xl rounded-b-[12px] border-t border-white/30">
+          <div className="px-4 pt-4 pb-6 flex flex-col justify-between bg-gradient-to-br from-sage/12 via-sage/8 to-sage/10 gap-4 rounded-t-2xl rounded-b-[12px]">
             <div className="flex flex-col items-center text-center gap-3">
               <h3
                 className="text-h2 sm:text-h1 font-bold leading-tight text-charcoal text-center truncate"
@@ -152,7 +152,7 @@ export default function EventCard({ event, onBookmark }: EventCardProps) {
                   className="text-caption sm:text-xs text-charcoal/60 leading-relaxed text-center overflow-hidden text-ellipsis line-clamp-2 h-[2.5rem] sm:h-[2.5rem]"
                   style={{
                     fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                    fontWeight: 400,
+                    fontWeight: 600,
                     display: '-webkit-box',
                     WebkitLineClamp: 2,
                     WebkitBoxOrient: 'vertical',
@@ -167,7 +167,7 @@ export default function EventCard({ event, onBookmark }: EventCardProps) {
 
             <button
               onClick={handleLearnMoreClick}
-              className="w-full min-h-[44px] py-3 px-4 bg-gradient-to-br from-navbar-bg to-navbar-bg/90 rounded-full flex items-center justify-center gap-2 hover:bg-navbar-bg transition-all duration-200 text-off-white border border-sage/50 group"
+              className="w-full min-h-[44px] py-3 px-4 bg-gradient-to-br from-navbar-bg to-navbar-bg/90 rounded-full flex items-center justify-center gap-2 hover:bg-navbar-bg transition-all duration-200 text-off-white border border-sage/50 shadow-md group"
               aria-label="Learn more about this event"
             >
               <span className="text-sm font-semibold" style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}>

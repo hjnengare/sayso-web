@@ -38,12 +38,7 @@ export default function BusinessDescription({ description }: BusinessDescription
   const descriptionText = getDescriptionText();
 
   return (
-    <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] ring-1 ring-white/30 p-4 sm:p-6 relative overflow-hidden">
-      {/* Gradient overlays matching user profile */}
-      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-sage/10 to-transparent rounded-full blur-lg"></div>
-      <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-coral/10 to-transparent rounded-full blur-lg"></div>
-      
-      <div className="relative z-10">
+    <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] ring-1 ring-white/30 shadow-md p-4 sm:p-6">
         <h2
           className="text-h3 font-semibold text-charcoal mb-3"
           style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
@@ -56,7 +51,6 @@ export default function BusinessDescription({ description }: BusinessDescription
         >
           {descriptionText}
         </p>
-      </div>
     </div>
   );
 }

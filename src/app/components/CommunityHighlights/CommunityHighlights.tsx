@@ -74,18 +74,6 @@ export default function CommunityHighlights({
           >
             {title}
           </h2>
-
-          <button
-            onClick={() => router.push(href)}
-            className="group inline-flex items-center gap-1 text-body-sm sm:text-caption font-normal text-charcoal transition-all duration-300 hover:text-sage focus:outline-none px-4 py-2 -mx-2 relative"
-            aria-label={`${cta}: ${title}`}
-            style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 400 }}
-          >
-            <span className="relative z-10 transition-transform duration-300 group-hover:-translate-x-0.5 text-charcoal group-hover:text-sage">
-              {cta}
-            </span>
-            <ArrowRight className="relative z-10 w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5 text-charcoal group-hover:text-sage" />
-          </button>
         </div>
 
         {/* Top Reviewers */}
@@ -96,8 +84,20 @@ export default function CommunityHighlights({
                   className="text-base font-bold text-charcoal transition-all duration-300 px-3 sm:px-4 py-1 rounded-lg cursor-none"
                   style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                 >
-                  Top Contributors This Month 
+                  <span className="sm:hidden">Top Contributors</span>
+                  <span className="hidden sm:inline">Top Contributors This Month</span>
                 </h3>
+                <button
+                  onClick={() => router.push('/leaderboard?tab=contributors')}
+                  className="group inline-flex items-center gap-1 text-body-sm sm:text-caption font-normal text-charcoal transition-all duration-300 hover:text-sage focus:outline-none px-4 py-2 -mx-2 relative"
+                  aria-label="See More: Top Contributors"
+                  style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
+                >
+                  <span className="relative z-10 transition-transform duration-300 group-hover:-translate-x-0.5 text-charcoal group-hover:text-sage" style={{ fontWeight: 600 }}>
+                    See More
+                  </span>
+                  <ArrowRight className="relative z-10 w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5 text-charcoal group-hover:text-sage" />
+                </button>
               </div>
 
             <ScrollableSection>
@@ -150,8 +150,20 @@ export default function CommunityHighlights({
                   className="text-base font-bold text-charcoal transition-all duration-300 px-3 sm:px-4 py-1 rounded-lg cursor-default"
                   style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                 >
-                  Featured Businesses of the Month by Category
+                  <span className="sm:hidden">Featured Businesses</span>
+                  <span className="hidden sm:inline">Featured Businesses of the Month by Category</span>
                 </h3>
+                <button
+                  onClick={() => router.push('/leaderboard?tab=businesses')}
+                  className="group inline-flex items-center gap-1 text-body-sm sm:text-caption font-normal text-charcoal transition-all duration-300 hover:text-sage focus:outline-none px-4 py-2 -mx-2 relative"
+                  aria-label="See More: Featured Businesses"
+                  style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
+                >
+                  <span className="relative z-10 transition-transform duration-300 group-hover:-translate-x-0.5 text-charcoal group-hover:text-sage" style={{ fontWeight: 600 }}>
+                    See More
+                  </span>
+                  <ArrowRight className="relative z-10 w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5 text-charcoal group-hover:text-sage" />
+                </button>
               </div>
 
               <ScrollableSection>

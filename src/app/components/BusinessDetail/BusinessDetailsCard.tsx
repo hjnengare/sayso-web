@@ -76,13 +76,8 @@ export default function BusinessDetailsCard({ priceRange, verified, hours }: Bus
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3, duration: 0.6 }}
-      className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] ring-1 ring-white/30 p-4 sm:p-6 relative overflow-hidden"
+      className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] ring-1 ring-white/30 shadow-md p-4 sm:p-6"
     >
-      {/* Gradient overlays matching user profile */}
-      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-sage/10 to-transparent rounded-full blur-lg"></div>
-      <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-coral/10 to-transparent rounded-full blur-lg"></div>
-      
-      <div className="relative z-10">
         <h2
           className="text-h3 font-semibold text-charcoal mb-4"
           style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
@@ -168,7 +163,6 @@ export default function BusinessDetailsCard({ priceRange, verified, hours }: Bus
             </p>
           </div>
         </div>
-      </div>
       </div>
     </motion.div>
   );

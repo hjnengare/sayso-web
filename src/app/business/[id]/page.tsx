@@ -348,8 +348,6 @@ export default function BusinessProfilePage() {
                                                         image={businessData.image || businessData.images[0] || ""}
                                                         alt={businessData.name}
                                                         rating={businessData.rating}
-                                                        isLiked={isLiked}
-                                                        onLike={handleLike}
                                                         verified={businessData.verified}
                                                     />
                                                 </AnimatedElement>
@@ -447,7 +445,7 @@ export default function BusinessProfilePage() {
 
                                 {/* Reviews List Section */}
                                 <section
-                                    className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-lg p-6 sm:p-8"
+                                    className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-md p-6 sm:p-8"
                                     aria-label="Business reviews"
                                 >
                                     <ReviewsList

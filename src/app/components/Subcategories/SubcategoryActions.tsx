@@ -24,7 +24,7 @@ export default function SubcategoryActions({
     <>
       <div className="pt-6">
         <button
-          className={`w-full text-sm font-600 py-4 px-4 rounded-full transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 btn-target btn-press ${
+          className={`w-full text-sm font-600 py-4 px-4 rounded-full transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 btn-target btn-press shadow-md ${
             canProceed
               ? 'bg-gradient-to-r from-coral to-coral/80 text-white hover:from-coral/90 hover:to-coral'
               : 'bg-charcoal/10 text-charcoal/40 cursor-not-allowed'
