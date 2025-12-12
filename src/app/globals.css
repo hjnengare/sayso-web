@@ -320,6 +320,11 @@
   body {
     background: #E5E0E5;
     background-attachment: fixed;
+    background-image: none !important; /* Remove any PNG overlay or background images */
+  }
+
+  html {
+    background-image: none !important; /* Remove any PNG overlay or background images */
   }
 
   /* Normal carousel scrolling */

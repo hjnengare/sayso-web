@@ -244,7 +244,7 @@ export default function OnboardingPage() {
             <h2
               data-reveal
               className="text-4xl md:text-5xl font-semibold mb-5 md:mb-6 leading-[1.2] tracking-tight px-2 text-charcoal no-hyphens"
-              style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+              style={{ fontFamily: "'Fontdiner Swanky', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}
             >
               Discover local gems near you!
             </h2>

@@ -70,7 +70,7 @@ export default function CommunityHighlights({
         <div className="pb-4 sm:pb-8 md:pb-10 flex flex-wrap items-center justify-between gap-2">
           <h2
             className="text-h2 sm:text-h1 font-bold text-charcoal hover:text-sage transition-all duration-300 px-3 sm:px-4 py-1 hover:bg-sage/5 rounded-lg cursor-default"
-            style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+            style={{ fontFamily: "'Fontdiner Swanky', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}
           >
             {title}
           </h2>
