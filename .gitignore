@@ -110,6 +110,7 @@ temp/
 test-results/
 playwright-report/
 coverage/
+playwright/.auth/
 
 # Bundle analyzer
 .next/analyze/

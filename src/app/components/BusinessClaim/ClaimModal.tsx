@@ -165,13 +165,14 @@ export function ClaimModal({ business, onClose, onSuccess }: ClaimModalProps) {
           {/* Contact Information */}
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-semibold text-white flex items-center gap-2 mb-2" style={{
+              <label htmlFor="claim-email" className="text-sm font-semibold text-white flex items-center gap-2 mb-2" style={{
                 fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif"
               }}>
                 <Mail className="w-4 h-4" />
                 Email
               </label>
               <input
+                id="claim-email"
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -184,13 +185,14 @@ export function ClaimModal({ business, onClose, onSuccess }: ClaimModalProps) {
             </div>
 
             <div>
-              <label className="text-sm font-semibold text-white flex items-center gap-2 mb-2" style={{
+              <label htmlFor="claim-phone" className="text-sm font-semibold text-white flex items-center gap-2 mb-2" style={{
                 fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif"
               }}>
                 <Phone className="w-4 h-4" />
                 Phone (Optional)
               </label>
               <input
+                id="claim-phone"
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -203,13 +205,14 @@ export function ClaimModal({ business, onClose, onSuccess }: ClaimModalProps) {
             </div>
 
             <div>
-              <label className="text-sm font-semibold text-white flex items-center gap-2 mb-2" style={{
+              <label htmlFor="claim-notes" className="text-sm font-semibold text-white flex items-center gap-2 mb-2" style={{
                 fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif"
               }}>
                 <FileText className="w-4 h-4" />
                 Additional Notes (Optional)
               </label>
               <textarea
+                id="claim-notes"
                 value={formData.note}
                 onChange={(e) => setFormData({ ...formData, note: e.target.value })}
                 placeholder="Tell us about your relationship with this business..."

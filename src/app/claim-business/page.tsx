@@ -232,7 +232,7 @@ function ClaimBusinessPageContent() {
   };
 
   return (
-    <div className="min-h-dvh bg-off-white">
+    <div className="min-h-dvh bg-off-white" data-testid="claim-business-page">
       {/* Header */}
       <Header
         showSearch={false}
