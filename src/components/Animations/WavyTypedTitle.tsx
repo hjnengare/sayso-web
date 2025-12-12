@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 
 // =============================================================================
 // TYPES
@@ -80,6 +80,10 @@ export const WavyTypedTitle: React.FC<WavyTypedTitleProps> = ({
   const [visibleCount, setVisibleCount] = useState(0);
   const [isTypingComplete, setIsTypingComplete] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const [hasStartedTyping, setHasStartedTyping] = useState(false);
+  const elementRef = useRef<HTMLElement | null>(null);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Check for reduced motion preference
   useEffect(() => {
@@ -96,17 +100,101 @@ export const WavyTypedTitle: React.FC<WavyTypedTitleProps> = ({
     }
   }, []);
 
+  // Scroll detection - trigger typing and wave on scroll
+  useEffect(() => {
+    if (prefersReducedMotion) return;
+
+    const handleScroll = () => {
+      if (elementRef.current) {
+        const rect = elementRef.current.getBoundingClientRect();
+        const isInView = rect.top < window.innerHeight && rect.bottom > 0;
+        
+        // Start typing when element is in view and user scrolls
+        if (isInView && !hasStartedTyping) {
+          setHasStartedTyping(true);
+        }
+
+        // Set scrolling state (for wave animation)
+        if (isInView) {
+          setIsScrolling(true);
+
+          // Clear existing timeout
+          if (scrollTimeoutRef.current) {
+            clearTimeout(scrollTimeoutRef.current);
+          }
+
+          // Stop wave animation after scroll stops (300ms delay)
+          scrollTimeoutRef.current = setTimeout(() => {
+            setIsScrolling(false);
+          }, 300);
+        }
+      }
+    };
+
+    // Use IntersectionObserver to detect when element enters viewport
+    let observer: IntersectionObserver | null = null;
+    if (typeof window !== "undefined") {
+      // Set up observer after a small delay to ensure ref is set
+      const setupObserver = () => {
+        if (elementRef.current) {
+          observer = new IntersectionObserver(
+            (entries) => {
+              entries.forEach((entry) => {
+                if (entry.isIntersecting && !hasStartedTyping) {
+                  // Start typing when element enters viewport
+                  setHasStartedTyping(true);
+                }
+              });
+            },
+            { threshold: 0.1, rootMargin: "0px" }
+          );
+          observer.observe(elementRef.current);
+        }
+      };
+
+      // Try to set up observer immediately, or wait a bit for ref to be ready
+      if (elementRef.current) {
+        setupObserver();
+      } else {
+        setTimeout(setupObserver, 100);
+      }
+    }
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("wheel", handleScroll, { passive: true });
+    window.addEventListener("touchmove", handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("wheel", handleScroll);
+      window.removeEventListener("touchmove", handleScroll);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      if (observer) {
+        observer.disconnect();
+      }
+    };
+  }, [prefersReducedMotion, hasStartedTyping]);
+
   // Split text into characters (preserve spaces)
   const characters = useMemo(() => {
     return text.split("");
   }, [text]);
 
-  // Typing animation
+  // Typing animation - only starts when hasStartedTyping is true
   useEffect(() => {
     if (prefersReducedMotion) {
       // Show all letters immediately if reduced motion is preferred
       setVisibleCount(characters.length);
       setIsTypingComplete(true);
+      return;
+    }
+
+    if (!hasStartedTyping) {
+      // Reset to start if typing hasn't started yet
+      setVisibleCount(0);
+      setIsTypingComplete(false);
       return;
     }
 
@@ -142,7 +230,7 @@ export const WavyTypedTitle: React.FC<WavyTypedTitleProps> = ({
     }, startDelayMs);
 
     return () => clearTimeout(startTimeout);
-  }, [characters, typingSpeedMs, startDelayMs, prefersReducedMotion]);
+  }, [characters, typingSpeedMs, startDelayMs, prefersReducedMotion, hasStartedTyping]);
 
   // Generate unique animation name per instance
   const animationName = useMemo(() => {
@@ -198,11 +286,16 @@ export const WavyTypedTitle: React.FC<WavyTypedTitleProps> = ({
           ...(style || {}),
         }}
       >
-        <span className="inline-block" style={{ fontFamily: "inherit", wordBreak: "keep-all", overflowWrap: "normal" }}>
+        <span 
+          ref={elementRef}
+          className="inline-block" 
+          style={{ fontFamily: "inherit", wordBreak: "keep-all", overflowWrap: "normal" }}
+        >
           {characters.map((char, index) => {
             const isVisible = index < visibleCount;
             const isSpace = char === " ";
-            const shouldAnimate = isTypingComplete && !prefersReducedMotion;
+            // Wave only animates during scrolling and stops after scroll stops
+            const shouldAnimate = isTypingComplete && !prefersReducedMotion && isScrolling;
 
             return (
               <span

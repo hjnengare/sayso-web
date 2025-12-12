@@ -6,7 +6,6 @@ import { Fontdiner_Swanky } from "next/font/google";
 import { useMounted } from "../hooks/useMounted";
 import { useScrollReveal } from "../hooks/useScrollReveal";
 import Logo from "../components/Logo/Logo";
-import OnboardingCarousel from "../components/Onboarding/OnboardingCarousel";
 import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
 
 const swanky = Fontdiner_Swanky({
@@ -274,7 +273,7 @@ export default function OnboardingPage() {
           <div className="text-center flex-1 flex flex-col justify-center min-h-0 py-4 space-y-6 md:space-y-8">
             <div data-reveal className="title-no-break">
               <WavyTypedTitle
-                text="Discover local gems near you!"
+                text="Discover gems near you!"
                 as="h2"
                 className={`${swanky.className} text-4xl md:text-5xl font-semibold mb-5 md:mb-6 leading-[1.2] tracking-tight px-2 text-charcoal no-hyphens`}
                 typingSpeedMs={40}

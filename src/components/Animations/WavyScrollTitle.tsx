@@ -123,3 +123,4 @@ export const WavyScrollTitle: React.FC<WavyScrollTitleProps> = ({
 
 export default WavyScrollTitle;
 
+
