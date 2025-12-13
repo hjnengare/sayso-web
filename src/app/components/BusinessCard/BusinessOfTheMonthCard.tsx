@@ -154,7 +154,7 @@ export default function BusinessOfTheMonthCard({ business }: { business: Busines
       }}
     >
       <div
-        className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-visible group cursor-pointer w-full flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-md h-[650px] sm:h-auto md:w-[340px]"
+        className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[20px] overflow-visible group cursor-pointer w-full flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-md h-[650px] sm:h-auto md:w-[340px]"
         style={{
           maxWidth: "540px",
         } as React.CSSProperties}
@@ -171,7 +171,7 @@ export default function BusinessOfTheMonthCard({ business }: { business: Busines
        
         {/* MEDIA - Full bleed with premium overlay */}
         <div
-          className="relative overflow-hidden z-10 cursor-pointer rounded-t-[12px] bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 border-b border-white/60 backdrop-blur-xl h-[490px] sm:h-[320px] md:h-[240px]"
+          className="relative overflow-hidden z-10 cursor-pointer rounded-t-[20px] bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 border-b border-white/60 backdrop-blur-xl h-[490px] sm:h-[320px] md:h-[240px]"
           onClick={handleCardClick}
         >
           <div className="relative w-full h-full">
@@ -321,7 +321,7 @@ export default function BusinessOfTheMonthCard({ business }: { business: Busines
 
         {/* CONTENT - Minimal, premium spacing */}
         <div
-          className="px-4 sm:px-5 pt-2 pb-2 flex-1 relative flex-shrink-0 flex flex-col justify-between bg-sage/10 z-10 rounded-b-[12px]"
+          className="px-4 sm:px-5 pt-2 pb-2 flex-1 relative flex-shrink-0 flex flex-col justify-between bg-sage/10 z-10 rounded-b-[20px]"
         >
           <div className="flex-1 flex flex-col">
             {/* Info Wrapper */}

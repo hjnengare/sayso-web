@@ -304,7 +304,18 @@ export default function SimilarBusinesses({
         <ul className="list-none flex flex-col sm:flex-row sm:justify-between gap-4 md:gap-6 relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6">
           {[...Array(limit)].map((_, i) => (
             <li key={i} className="flex-1 min-w-0">
-              <div className="h-[240px] bg-gradient-to-br from-off-white/90 via-off-white/85 to-off-white/90 rounded-xl border border-white/60 backdrop-blur-xl shadow-lg animate-pulse" />
+              <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[20px] overflow-hidden w-full flex flex-col border border-white/60 backdrop-blur-xl shadow-md animate-pulse md:w-[340px] md:h-[416px]">
+                {/* Image Section Skeleton */}
+                <div className="relative w-full h-[300px] lg:h-[260px] overflow-hidden rounded-t-[20px] bg-gradient-to-br from-off-white/90 via-off-white/85 to-off-white/90" />
+                {/* Content Section Skeleton */}
+                <div className="px-4 py-4 bg-gradient-to-b from-card-bg/95 to-card-bg flex flex-col gap-2 rounded-b-[20px]">
+                  <div className="h-5 w-3/4 bg-charcoal/10 rounded-lg mx-auto" />
+                  <div className="h-4 w-full bg-charcoal/5 rounded mt-1" />
+                  <div className="h-4 w-2/3 bg-charcoal/5 rounded" />
+                  <div className="h-3 w-1/2 bg-charcoal/5 rounded mt-1" />
+                  <div className="mt-3 h-10 w-full bg-charcoal/10 rounded-full" />
+                </div>
+              </div>
             </li>
           ))}
         </ul>
@@ -356,6 +367,7 @@ export default function SimilarBusinesses({
               <li className="flex-1 min-w-0">
                 <SimilarBusinessCard
                   id={business.id}
+                  slug={business.slug}
                   name={business.name}
                   image={business.image}
                   image_url={business.image_url}
@@ -363,6 +375,7 @@ export default function SimilarBusinesses({
                   category={business.category}
                   location={business.location}
                   address={business.address}
+                  description={business.description}
                   rating={business.rating}
                   totalRating={business.totalRating}
                   reviews={business.reviews}

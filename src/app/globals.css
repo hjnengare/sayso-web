@@ -1061,6 +1061,67 @@
     animation: pulse 10s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
+  /* ============================================
+     SoftPastelGradient Component Animations
+     ============================================ */
+
+  @keyframes soft-float {
+    0%, 100% {
+      transform: translate(0, 0) scale(1);
+      opacity: 1;
+    }
+    33% {
+      transform: translate(15px, -20px) scale(1.02);
+      opacity: 0.95;
+    }
+    66% {
+      transform: translate(-10px, 15px) scale(0.98);
+      opacity: 0.97;
+    }
+  }
+
+  @keyframes soft-float-delayed {
+    0%, 100% {
+      transform: translate(0, 0) scale(1);
+      opacity: 1;
+    }
+    25% {
+      transform: translate(-20px, 10px) scale(1.03);
+      opacity: 0.94;
+    }
+    50% {
+      transform: translate(10px, -15px) scale(0.97);
+      opacity: 0.96;
+    }
+    75% {
+      transform: translate(15px, 20px) scale(1.01);
+      opacity: 0.95;
+    }
+  }
+
+  @keyframes soft-float-slow {
+    0%, 100% {
+      transform: translate(0, 0) scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: translate(20px, -10px) scale(1.01);
+      opacity: 0.96;
+    }
+  }
+
+  .animate-soft-float {
+    animation: soft-float 25s ease-in-out infinite;
+  }
+
+  .animate-soft-float-delayed {
+    animation: soft-float-delayed 30s ease-in-out infinite;
+  }
+
+  .animate-soft-float-slow {
+    animation: soft-float-slow 35s ease-in-out infinite;
+  }
+
   /* ========================================
    * SwiftUI-Inspired Animations
    * Natural spring-based animations with physics
@@ -1211,6 +1272,9 @@
     .animate-float,
     .animate-float-delayed,
     .animate-pulse-slow,
+    .animate-soft-float,
+    .animate-soft-float-delayed,
+    .animate-soft-float-slow,
     .animate-fade-in,
     .animate-slide-up-stagger,
     .animate-spring-bounce,

@@ -13,7 +13,20 @@ const BusinessRowSkeleton = () => (
       </div>
       <div className="flex gap-6">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="flex-shrink-0 w-[280px] h-[240px] bg-sage/5 rounded-lg" />
+          <div key={i} className="flex-shrink-0">
+            <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[20px] overflow-visible w-[280px] h-[650px] sm:h-auto md:w-[340px] md:h-[416px] flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-md animate-pulse">
+              {/* Image Section Skeleton */}
+              <div className="relative overflow-hidden z-10 rounded-t-[20px] bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 border-b border-white/60 backdrop-blur-xl h-[490px] sm:h-[320px] md:h-[240px]" />
+              {/* Content Section Skeleton */}
+              <div className="px-4 sm:px-5 pt-2 pb-2 flex-1 relative flex-shrink-0 flex flex-col justify-between bg-sage/10 z-10 rounded-b-[20px]">
+                <div className="flex-1 flex flex-col items-center text-center space-y-1">
+                  <div className="h-6 w-3/4 bg-charcoal/10 rounded-lg" />
+                  <div className="h-4 w-1/2 bg-charcoal/5 rounded" />
+                  <div className="h-4 w-2/3 bg-charcoal/5 rounded" />
+                </div>
+              </div>
+            </div>
+          </div>
         ))}
       </div>
     </div>

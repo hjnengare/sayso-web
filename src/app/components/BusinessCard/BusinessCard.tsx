@@ -293,7 +293,7 @@ function BusinessCard({
   };
 
   const mediaBaseClass =
-    "relative overflow-hidden z-10 cursor-pointer rounded-t-[12px] bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 border-b border-white/60 backdrop-blur-xl";
+    "relative overflow-hidden z-10 cursor-pointer rounded-t-[20px] bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 border-b border-white/60 backdrop-blur-xl";
   const mediaClass = compact
     ? `${mediaBaseClass} h-[300px] lg:h-[260px]`
     : `${mediaBaseClass} h-[490px] sm:h-[320px] md:h-[240px]`;
@@ -309,7 +309,7 @@ function BusinessCard({
       }}
     >
       <div
-        className={`relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 ${inGrid && !compact ? 'rounded-t-[12px] rounded-b-none' : 'rounded-[12px]'} overflow-visible group cursor-pointer w-full flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-md transition-all duration-300 ${compact ? "md:h-[416px]" : "h-[650px] sm:h-auto md:w-[340px]"
+        className={`relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 ${inGrid && !compact ? 'rounded-t-[20px] rounded-b-none' : 'rounded-[20px]'} overflow-visible group cursor-pointer w-full flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-md transition-all duration-300 ${compact ? "md:h-[416px]" : "h-[650px] sm:h-auto md:w-[340px]"
           }`}
         style={{
           maxWidth: compact ? "100%" : "540px",
@@ -441,7 +441,7 @@ function BusinessCard({
             {showInfoPopup && (
               <div
                 ref={infoPopupRef}
-                className="absolute bottom-full left-0 mb-2 bg-off-white/95 backdrop-blur-xl rounded-[12px] border border-white/40 p-2 z-[60] min-w-[140px] max-w-[calc(100vw-8rem)] whitespace-nowrap shadow-premiumElevated"
+                className="absolute bottom-full left-0 mb-2 bg-off-white/95 backdrop-blur-xl rounded-2xl border border-white/40 p-2 z-[60] min-w-[140px] max-w-[calc(100vw-8rem)] whitespace-nowrap shadow-premiumElevated"
                 style={{
                   animation: 'fadeInUp 0.2s ease-out forwards',
                   transformOrigin: 'bottom left',
@@ -455,7 +455,7 @@ function BusinessCard({
                       e.stopPropagation();
                       handleShare();
                     }}
-                    className="flex items-center gap-3 px-4 py-3 rounded-[12px] hover:bg-sage/10 active:bg-sage/20 transition-colors duration-200 min-h-[44px] touch-manipulation w-full shadow-md"
+                    className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-sage/10 active:bg-sage/20 transition-colors duration-200 min-h-[44px] touch-manipulation w-full shadow-md"
                     aria-label={`Share ${business.name}`}
                   >
                     <div className="w-10 h-10 bg-sage/10 rounded-full flex items-center justify-center flex-shrink-0">
@@ -473,7 +473,7 @@ function BusinessCard({
                       e.stopPropagation();
                       handleBookmark();
                     }}
-                    className="flex items-center gap-3 px-4 py-3 rounded-[12px] hover:bg-coral/10 active:bg-coral/20 transition-colors duration-200 min-h-[44px] touch-manipulation w-full shadow-md"
+                    className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-coral/10 active:bg-coral/20 transition-colors duration-200 min-h-[44px] touch-manipulation w-full shadow-md"
                     aria-label={isItemSaved(business.id) ? `Remove ${business.name} from saved` : `Save ${business.name}`}
                   >
                     <div className="w-10 h-10 bg-coral/10 rounded-full flex items-center justify-center flex-shrink-0">
@@ -542,7 +542,7 @@ function BusinessCard({
         {/* CONTENT - Minimal, premium spacing */}
         <div
           className={`px-4 sm:px-5 pt-2 pb-2 ${compact ? "lg:py-3 lg:pb-4 lg:min-h-[200px]" : "flex-1"
-            } relative flex-shrink-0 flex flex-col justify-between bg-sage/10 z-10 ${inGrid && !compact ? 'rounded-b-none' : 'rounded-b-[12px]'}`}
+            } relative flex-shrink-0 flex flex-col justify-between bg-sage/10 z-10 ${inGrid && !compact ? 'rounded-b-none' : 'rounded-b-[20px]'}`}
         >
           <div className={`${compact ? "flex flex-col" : "flex-1 flex flex-col"}`}>
             {/* Info Wrapper */}

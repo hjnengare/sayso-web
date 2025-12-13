@@ -15,7 +15,10 @@ import FilterModal, { FilterState } from "../components/FilterModal/FilterModal"
 import HeroCarousel from "../components/Hero/HeroCarousel";
 import BusinessRow from "../components/BusinessRow/BusinessRow";
 import BusinessRowSkeleton from "../components/BusinessRow/BusinessRowSkeleton";
+import FeaturedBusinessesSkeleton from "../components/CommunityHighlights/FeaturedBusinessesSkeleton";
 import HomeBackgroundOrbs from "../components/Home/HomeBackgroundOrbs";
+import BusinessCard from "../components/BusinessCard/BusinessCard";
+import { Loader } from "../components/Loader/Loader";
 import {
   FEATURED_REVIEWS,
   TOP_REVIEWERS,
@@ -24,6 +27,8 @@ import { useBusinesses, useForYouBusinesses, useTrendingBusinesses } from "../ho
 import { useEvents } from "../hooks/useEvents";
 import { useRoutePrefetch } from "../hooks/useRoutePrefetch";
 import { useDebounce } from "../hooks/useDebounce";
+import { useUserPreferences } from "../hooks/useUserPreferences";
+import InterestFilterPills from "../components/Home/InterestFilterPills";
 
 // Note: dynamic and revalidate cannot be exported from client components
 // Client components are automatically dynamic
@@ -40,7 +45,7 @@ const EventsSpecials = nextDynamic(
 const CommunityHighlights = nextDynamic(
   () => import("../components/CommunityHighlights/CommunityHighlights"),
   {
-    loading: () => <div className="h-96 bg-off-white/50" />,
+    loading: () => <FeaturedBusinessesSkeleton count={4} />,
   }
 );
 
@@ -170,10 +175,19 @@ export default function Home() {
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [selectedInterestIds, setSelectedInterestIds] = useState<string[]>([]);
   const searchWrapRef = useRef<HTMLDivElement | null>(null);
+  const { interests, subcategories } = useUserPreferences();
 
   // Debounce search query for real-time filtering (300ms delay)
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+  // Initialize selected interests with user's interests on mount
+  useEffect(() => {
+    if (interests.length > 0 && selectedInterestIds.length === 0) {
+      setSelectedInterestIds(interests.map(i => i.id));
+    }
+  }, [interests, selectedInterestIds.length]);
 
   // Determine sort strategy based on search query
   const sortStrategy = useMemo((): 'relevance' | 'distance' | 'rating_desc' | 'price_asc' | 'combo' | undefined => {
@@ -183,17 +197,37 @@ export default function Home() {
     return undefined; // Use default sorting
   }, [debouncedSearchQuery]);
 
+  // Combine selected interests with subcategories for filtering
+  const activeInterestIds = useMemo(() => {
+    // Use selected interest IDs if any are selected
+    if (selectedInterestIds.length > 0) {
+      return selectedInterestIds;
+    }
+    // If no interests are selected, don't filter by interests (show all)
+    return undefined;
+  }, [selectedInterestIds]);
+
   const { businesses: forYouBusinesses, loading: forYouLoading, error: forYouError } = useForYouBusinesses(10);
   const { businesses: trendingBusinesses, loading: trendingLoading, error: trendingError } = useTrendingBusinesses(10);
   const { events, loading: eventsLoading } = useEvents({ limit: 5, upcoming: true });
-  const { businesses: allBusinesses } = useBusinesses({ 
+  const { businesses: allBusinesses, loading: allBusinessesLoading } = useBusinesses({ 
     limit: 500, // Increased to ensure we get businesses from more subcategories
     sortBy: "total_rating", 
     sortOrder: "desc", 
     feedStrategy: debouncedSearchQuery.trim().length > 0 ? "standard" : "mixed",
     searchQuery: debouncedSearchQuery.trim().length > 0 ? debouncedSearchQuery : null,
     sort: sortStrategy,
+    interestIds: activeInterestIds,
   });
+
+  // Check if search is active
+  const isSearchActive = debouncedSearchQuery.trim().length > 0;
+  
+  // Limit search results to 12 items
+  const searchResults = useMemo(() => {
+    if (!isSearchActive) return [];
+    return allBusinesses.slice(0, 12);
+  }, [allBusinesses, isSearchActive]);
 
   // Note: Prioritization of recently reviewed businesses is now handled on the backend
   // The API automatically prioritizes businesses the user has reviewed within the last 24 hours
@@ -253,6 +287,18 @@ export default function Home() {
   const handleSubmitQuery = (query: string) => {
     setSearchQuery(query);
     if (isFilterVisible) closeFilters();
+  };
+
+  const handleToggleInterest = (interestId: string) => {
+    setSelectedInterestIds(prev => {
+      if (prev.includes(interestId)) {
+        // Deselect - remove from array
+        return prev.filter(id => id !== interestId);
+      } else {
+        // Select - add to array
+        return [...prev, interestId];
+      }
+    });
   };
 
   const featuredByCategory = (() => {
@@ -365,57 +411,109 @@ export default function Home() {
             />
           </div>
 
-          <div className="flex flex-col gap-8 sm:gap-10 md:gap-12 pt-8">
-            {/* For You Section */}
-            <div className="relative z-10">
-              {forYouLoading && <BusinessRowSkeleton title="For You Now" />}
-              {!forYouLoading && hasForYouBusinesses && (
-                <MemoizedBusinessRow title="For You Now" businesses={forYouBusinesses} cta="See More" href="/for-you" />
-              )}
-              {!forYouLoading && !hasForYouBusinesses && !forYouError && (
-                <MemoizedBusinessRow title="For You Now" businesses={[]} cta="See More" href="/for-you" />
-              )}
-              {forYouError && !forYouLoading && (
-                <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral">
-                  Couldn't load personalized picks right now. We'll retry in the background.
-                </div>
-              )}
-            </div>
-
-            {/* Trending Section */}
-            <div className="relative z-10">
-              {trendingLoading && <BusinessRowSkeleton title="Trending Now" />}
-              {!trendingLoading && hasTrendingBusinesses && (
-                <MemoizedBusinessRow title="Trending Now" businesses={trendingBusinesses} cta="See More" href="/trending" />
-              )}
-              {!trendingLoading && !hasTrendingBusinesses && !trendingError && (
-                <MemoizedBusinessRow title="Trending Now" businesses={[]} cta="See More" href="/trending" />
-              )}
-              {trendingError && !trendingLoading && (
-                <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral">
-                  Trending businesses are still loading. Refresh to try again.
-                </div>
-              )}
-            </div>
-
-            {/* Events & Specials */}
-            <div className="relative z-10">
-              <EventsSpecials 
-                events={events.length > 0 ? events : []} 
-                loading={eventsLoading}
-              />
-            </div>
-
-            {/* Community Highlights */}
-            <div className="relative z-10">
-              <CommunityHighlights
-                reviews={FEATURED_REVIEWS}
-                topReviewers={TOP_REVIEWERS}
-                businessesOfTheMonth={featuredByCategory}
-                variant="reviews"
-              />
-            </div>
+          {/* Interest Filter Pills - positioned directly underneath search input */}
+          <div className="py-4 px-4 sm:px-6">
+            <InterestFilterPills
+              selectedInterestIds={selectedInterestIds}
+              onToggleInterest={handleToggleInterest}
+            />
           </div>
+
+          {isSearchActive ? (
+            /* Search Results View - Styled like Explore page */
+            <div className="py-3 sm:py-4">
+              <div className="pt-4 sm:pt-6 md:pt-10">
+                {allBusinessesLoading && (
+                  <div className="min-h-[60vh] bg-off-white flex items-center justify-center">
+                    <Loader size="lg" variant="wavy" color="sage" />
+                  </div>
+                )}
+                {!allBusinessesLoading && searchResults.length === 0 && (
+                  <div className="bg-white border border-sage/20 rounded-3xl shadow-sm px-6 py-16 text-center space-y-3">
+                    <h2 className="text-h2 font-semibold text-charcoal" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                      No results found
+                    </h2>
+                    <p className="text-body-sm text-charcoal/60 max-w-[70ch] mx-auto" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 500 }}>
+                      We couldn't find any businesses matching "{debouncedSearchQuery}". Try adjusting your search or check back soon.
+                    </p>
+                  </div>
+                )}
+                {!allBusinessesLoading && searchResults.length > 0 && (
+                  <>
+                    {/* Show search status */}
+                    <div className="mb-4 px-2 text-sm text-charcoal/60" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                      Found {searchResults.length} {searchResults.length === 1 ? 'result' : 'results'} for "{debouncedSearchQuery}"
+                    </div>
+                    {/* Search Results Grid - Styled like Explore page */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-3">
+                      {searchResults.map((business) => (
+                        <div key={business.id} className="list-none">
+                          <BusinessCard business={business} compact inGrid={true} />
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          ) : (
+            /* Default Home Page Content */
+            <div className="flex flex-col gap-8 sm:gap-10 md:gap-12 pt-8">
+              {/* For You Section */}
+              <div className="relative z-10">
+                {forYouLoading && <BusinessRowSkeleton title="For You Now" />}
+                {!forYouLoading && hasForYouBusinesses && (
+                  <MemoizedBusinessRow title="For You Now" businesses={forYouBusinesses} cta="See More" href="/for-you" />
+                )}
+                {!forYouLoading && !hasForYouBusinesses && !forYouError && (
+                  <MemoizedBusinessRow title="For You Now" businesses={[]} cta="See More" href="/for-you" />
+                )}
+                {forYouError && !forYouLoading && (
+                  <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral">
+                    Couldn't load personalized picks right now. We'll retry in the background.
+                  </div>
+                )}
+              </div>
+
+              {/* Trending Section */}
+              <div className="relative z-10">
+                {trendingLoading && <BusinessRowSkeleton title="Trending Now" />}
+                {!trendingLoading && hasTrendingBusinesses && (
+                  <MemoizedBusinessRow title="Trending Now" businesses={trendingBusinesses} cta="See More" href="/trending" />
+                )}
+                {!trendingLoading && !hasTrendingBusinesses && !trendingError && (
+                  <MemoizedBusinessRow title="Trending Now" businesses={[]} cta="See More" href="/trending" />
+                )}
+                {trendingError && !trendingLoading && (
+                  <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral">
+                    Trending businesses are still loading. Refresh to try again.
+                  </div>
+                )}
+              </div>
+
+              {/* Events & Specials */}
+              <div className="relative z-10">
+                <EventsSpecials 
+                  events={events.length > 0 ? events : []} 
+                  loading={eventsLoading}
+                />
+              </div>
+
+              {/* Community Highlights */}
+              <div className="relative z-10">
+                {allBusinessesLoading ? (
+                  <FeaturedBusinessesSkeleton count={4} />
+                ) : (
+                  <CommunityHighlights
+                    reviews={FEATURED_REVIEWS}
+                    topReviewers={TOP_REVIEWERS}
+                    businessesOfTheMonth={featuredByCategory}
+                    variant="reviews"
+                  />
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </main>
       <Footer />

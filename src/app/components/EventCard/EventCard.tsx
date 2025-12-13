@@ -101,7 +101,7 @@ export default function EventCard({ event, onBookmark }: EventCardProps) {
       }}
     >
       <article
-        className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-visible h-[600px] sm:h-auto flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-md w-full"
+        className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[20px] overflow-visible h-[600px] sm:h-auto flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-md w-full"
         style={
           {
             width: "100%",
@@ -113,7 +113,7 @@ export default function EventCard({ event, onBookmark }: EventCardProps) {
       >
          
           {/* MEDIA - Full bleed with premium overlay */}
-          <div className="relative overflow-hidden flex-1 sm:flex-initial h-[300px] sm:h-[320px] lg:h-[240px] xl:h-[220px] z-10 rounded-t-[12px] bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 border-b border-white/60 backdrop-blur-xl">
+          <div className="relative overflow-hidden flex-1 sm:flex-initial h-[300px] sm:h-[320px] lg:h-[240px] xl:h-[220px] z-10 rounded-t-[20px] bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 border-b border-white/60 backdrop-blur-xl">
             <div className="relative w-full h-full">
               <div className="relative w-full h-full overflow-hidden flex items-center justify-center bg-gradient-to-br from-off-white/95 to-off-white/85">
                 <Image
@@ -132,7 +132,7 @@ export default function EventCard({ event, onBookmark }: EventCardProps) {
           </div>
 
           {/* CONTENT - Minimal, premium spacing */}
-          <div className="px-4 pt-4 pb-6 flex flex-col justify-between bg-gradient-to-br from-sage/12 via-sage/8 to-sage/10 gap-4 rounded-t-2xl rounded-b-[12px]">
+          <div className="px-4 pt-4 pb-6 flex flex-col justify-between bg-gradient-to-br from-sage/12 via-sage/8 to-sage/10 gap-4 rounded-b-[20px]">
             <div className="flex flex-col items-center text-center gap-3">
               <h3
                 className="text-h2 sm:text-h1 font-bold leading-tight text-charcoal text-center truncate"

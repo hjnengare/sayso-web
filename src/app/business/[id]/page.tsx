@@ -439,7 +439,7 @@ export default function BusinessProfilePage() {
                                 </div>
                             </div>
                         </section>
-                        <section className="mx-auto w-full max-w-[2000px] px-2 relative z-10">
+                        <section className="mx-auto w-full max-w-[2000px] px-2 relative z-10 border-t border-charcoal/10 pt-12 sm:pt-16 pb-12 sm:pb-16">
 
                             {/* Reviews Section */}
                             <section className="space-y-6" aria-labelledby="reviews-heading">
@@ -533,6 +533,7 @@ export default function BusinessProfilePage() {
                             />
                         </section>
 
+                        <div className="border-t border-charcoal/10"></div>
                         <Footer />
                     </div>
                 </div>
