@@ -45,11 +45,19 @@ export async function GET() {
       .select('interest_id')
       .eq('user_id', user.id);
 
+    console.log('[Preferences API] user_interests query result:', {
+      hasData: !!interestsData,
+      dataLength: interestsData?.length || 0,
+      data: interestsData,
+      error: interestsError?.message,
+    });
+
     if (interestsError) {
       console.warn('[Preferences API] Warning fetching interests:', interestsError.message);
       // Don't throw - table might not exist yet
     } else if (interestsData) {
       interestIds = interestsData.map(i => i.interest_id);
+      console.log('[Preferences API] Extracted interest IDs:', interestIds);
     }
 
     // Fetch user's subcategories
@@ -83,16 +91,26 @@ export async function GET() {
     // Get the actual names/details for interests
     let interestDetails: any[] = [];
     if (interestIds.length > 0) {
+      console.log('[Preferences API] Fetching interest details for IDs:', interestIds);
       const { data, error } = await supabase
         .from('interests')
         .select('id, name')
         .in('id', interestIds);
+
+      console.log('[Preferences API] interests table query result:', {
+        hasData: !!data,
+        dataLength: data?.length || 0,
+        data: data,
+        error: error?.message,
+      });
 
       if (error) {
         console.warn('[Preferences API] Warning fetching interest details:', error.message);
       } else {
         interestDetails = data || [];
       }
+    } else {
+      console.log('[Preferences API] No interest IDs to fetch details for');
     }
 
     // Get the actual names/details for subcategories

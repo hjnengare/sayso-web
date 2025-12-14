@@ -29,6 +29,15 @@ export async function POST(req: Request) {
         interest_id: sub.interest_id
       }));
 
+      console.log('[Onboarding API] Saving onboarding data:', {
+        userId: user.id,
+        interestIds: interests,
+        interestIdsType: Array.isArray(interests) ? 'array' : typeof interests,
+        interestIdsLength: Array.isArray(interests) ? interests.length : 'N/A',
+        subcategoryData: subcategoryData,
+        dealbreakerIds: dealbreakers,
+      });
+
       // Try atomic function first, fallback to individual steps if function doesn't exist
       let useAtomic = true;
       const { error: completeError } = await supabase.rpc('complete_onboarding_atomic', {
@@ -38,20 +47,31 @@ export async function POST(req: Request) {
         p_dealbreaker_ids: dealbreakers
       });
 
+      console.log('[Onboarding API] complete_onboarding_atomic result:', {
+        error: completeError?.message,
+        code: completeError?.code,
+      });
+
       if (completeError) {
-        console.error('Atomic function failed, falling back to individual steps:', completeError);
+        console.error('[Onboarding API] Atomic function failed, falling back to individual steps:', completeError);
         useAtomic = false;
         
         // Fallback to individual step saving
         // Save interests
         if (interests && Array.isArray(interests)) {
+          console.log('[Onboarding API] Fallback: Saving interests via replace_user_interests:', {
+            userId: user.id,
+            interestIds: interests,
+          });
           const { error: interestsError } = await supabase.rpc('replace_user_interests', {
             p_user_id: user.id,
             p_interest_ids: interests
           });
           if (interestsError) {
-            console.error('Error saving interests:', interestsError);
+            console.error('[Onboarding API] Error saving interests:', interestsError);
             throw interestsError;
+          } else {
+            console.log('[Onboarding API] Successfully saved interests');
           }
         }
 

@@ -28,7 +28,7 @@ import { useEvents } from "../hooks/useEvents";
 import { useRoutePrefetch } from "../hooks/useRoutePrefetch";
 import { useDebounce } from "../hooks/useDebounce";
 import { useUserPreferences } from "../hooks/useUserPreferences";
-import InterestFilterPills from "../components/Home/InterestFilterPills";
+import CategoryFilterPills from "../components/Home/CategoryFilterPills";
 
 // Note: dynamic and revalidate cannot be exported from client components
 // Client components are automatically dynamic
@@ -181,6 +181,11 @@ export default function Home() {
 
   // Debounce search query for real-time filtering (300ms delay)
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+  // Debug logging for user preferences
+  useEffect(() => {
+    console.log("[Home] user prefs:", { interestsLen: interests.length, interests, subcategoriesLen: subcategories.length });
+  }, [interests, subcategories]);
 
   // Initialize selected interests with user's interests on mount
   useEffect(() => {
@@ -411,11 +416,11 @@ export default function Home() {
             />
           </div>
 
-          {/* Interest Filter Pills - positioned directly underneath search input */}
+          {/* Category Filter Pills - positioned directly underneath search input, styled like FilterTabs */}
           <div className="py-4 px-4 sm:px-6">
-            <InterestFilterPills
-              selectedInterestIds={selectedInterestIds}
-              onToggleInterest={handleToggleInterest}
+            <CategoryFilterPills
+              selectedCategoryIds={selectedInterestIds}
+              onToggleCategory={handleToggleInterest}
             />
           </div>
 
@@ -429,13 +434,15 @@ export default function Home() {
                   </div>
                 )}
                 {!allBusinessesLoading && searchResults.length === 0 && (
-                  <div className="bg-white border border-sage/20 rounded-3xl shadow-sm px-6 py-16 text-center space-y-3">
-                    <h2 className="text-h2 font-semibold text-charcoal" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                      No results found
-                    </h2>
-                    <p className="text-body-sm text-charcoal/60 max-w-[70ch] mx-auto" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 500 }}>
-                      We couldn't find any businesses matching "{debouncedSearchQuery}". Try adjusting your search or check back soon.
-                    </p>
+                  <div className="w-full sm:max-w-md lg:max-w-lg xl:max-w-xl sm:mx-auto relative z-10">
+                    <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden backdrop-blur-md shadow-md px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12 text-center space-y-4">
+                      <h2 className="text-h2 font-semibold text-white" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                        No results found
+                      </h2>
+                      <p className="text-body-sm text-white/80 max-w-[70ch] mx-auto leading-relaxed" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 400 }}>
+                        We couldn't find any businesses matching "{debouncedSearchQuery}". Try adjusting your search or check back soon.
+                      </p>
+                    </div>
                   </div>
                 )}
                 {!allBusinessesLoading && searchResults.length > 0 && (

@@ -34,7 +34,10 @@ export function useUserPreferences(): UseUserPreferencesResult {
   const [error, setError] = useState<string | null>(null);
 
   const fetchPreferences = async () => {
+    console.log('[useUserPreferences] fetchPreferences called, user:', user);
+    
     if (!user) {
+      console.log('[useUserPreferences] No user, returning empty preferences');
       setInterests([]);
       setSubcategories([]);
       setDealbreakers([]);
@@ -51,7 +54,10 @@ export function useUserPreferences(): UseUserPreferencesResult {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Ensure cookies/session are sent
       });
+      
+      console.log('[useUserPreferences] response status:', response.status);
       
       if (!response.ok) {
         // Handle 404 specifically - route might not exist or user not authenticated

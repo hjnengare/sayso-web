@@ -4,27 +4,14 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import {
   X,
   Sliders,
-  Coffee,
-  ShoppingBag,
-  Monitor,
-  Tool,
   Star,
   Move,
   Truck,
   Navigation,
   MapPin,
-  Home,
-  Scissors,
-  Briefcase,
-  Compass,
-  Film,
-  Image,
-  Heart,
-  Package,
 } from "react-feather";
 
 export interface FilterState {
-  categories: string[];
   minRating: number | null;
   distance: string | null;
 }
@@ -53,14 +40,12 @@ export default function FilterModal({
   anchorRef,
   initialFilters,
 }: FilterModalProps) {
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(initialFilters?.categories || []);
   const [selectedRating, setSelectedRating] = useState<number | null>(initialFilters?.minRating || null);
   const [selectedDistance, setSelectedDistance] = useState<string | null>(initialFilters?.distance || null);
 
   // Update state when initialFilters change
   useEffect(() => {
     if (initialFilters) {
-      setSelectedCategories(initialFilters.categories || []);
       setSelectedRating(initialFilters.minRating || null);
       setSelectedDistance(initialFilters.distance || null);
     }
@@ -153,7 +138,6 @@ export default function FilterModal({
 
   const handleApply = () => {
     onApplyFilters?.({
-      categories: selectedCategories,
       minRating: selectedRating,
       distance: selectedDistance,
     });
@@ -161,23 +145,11 @@ export default function FilterModal({
   };
 
   const handleClearAll = () => {
-    setSelectedCategories([]);
     setSelectedRating(null);
     setSelectedDistance(null);
   };
 
   if (!isVisible) return null;
-
-  const categoryOptions = [
-    { id: 'food-drink', name: "Food & Drink", Icon: Coffee },
-    { id: 'beauty-wellness', name: "Beauty & Wellness", Icon: Scissors },
-    { id: 'professional-services', name: "Professional Services", Icon: Briefcase },
-    { id: 'outdoors-adventure', name: "Outdoors & Adventure", Icon: Compass },
-    { id: 'experiences-entertainment', name: "Entertainment & Experiences", Icon: Film },
-    { id: 'arts-culture', name: "Arts & Culture", Icon: Image },
-    { id: 'family-pets', name: "Family & Pets", Icon: Heart },
-    { id: 'shopping-lifestyle', name: "Shopping & Lifestyle", Icon: Package },
-  ];
 
   const distanceOptions = [
     { distance: "1 km", Icon: Move },
@@ -256,46 +228,8 @@ export default function FilterModal({
             e.stopPropagation();
           }}
         >
-          {/* Category */}
-          <section className="rounded-[12px] bg-off-white/70 border border-charcoal/10 p-3 sm:p-4 animate-fade-in-up [animation-delay:0.05s]">
-            <h3
-              className="text-base sm:text-sm font-semibold text-charcoal mb-3 sm:mb-3 flex items-center gap-2"
-              style={{ fontFamily: '"Urbanist", system-ui, sans-serif', letterSpacing: '-0.01em' }}
-            >
-              <ShoppingBag className="w-4 h-4 sm:w-4 sm:h-4 text-warning-600" />
-              Category
-            </h3>
-            <div className="flex flex-wrap gap-2 sm:gap-2">
-              {categoryOptions.map(({ id, name, Icon }) => {
-                const active = selectedCategories.includes(id);
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() =>
-                      setSelectedCategories((prev) =>
-                        prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-                      )
-                    }
-                    className={`px-3 sm:px-3 py-2.5 sm:py-2 rounded-full text-sm sm:text-xs flex items-center gap-2 border transition-all min-h-[44px] sm:min-h-0 touch-manipulation
-                      ${
-                        active
-                          ? "bg-sage text-white border-sage shadow-sm"
-                          : "bg-off-white text-charcoal border-charcoal/10 hover:border-sage/40 hover:bg-sage/5 active:bg-sage/10"
-                      }
-                    focus:outline-none focus:ring-2 focus:ring-sage/30`}
-                    aria-pressed={active}
-                  >
-                    <Icon className={`w-4 h-4 sm:w-3.5 sm:h-3.5 flex-shrink-0 ${active ? "text-white" : "text-sage"}`} />
-                    <span className="whitespace-nowrap">{name}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </section>
-
           {/* Rating */}
-          <section className="rounded-[12px] bg-off-white/70 border border-charcoal/10 p-3 sm:p-4 animate-fade-in-up [animation-delay:0.1s]">
+          <section className="rounded-[12px] bg-off-white/70 border border-charcoal/10 p-3 sm:p-4 animate-fade-in-up [animation-delay:0.05s]">
             <h3
               className="text-base sm:text-sm font-semibold text-charcoal mb-3 sm:mb-3 flex items-center gap-2"
               style={{ fontFamily: '"Urbanist", system-ui, sans-serif', letterSpacing: '-0.01em' }}
@@ -334,7 +268,7 @@ export default function FilterModal({
           </section>
 
           {/* Distance */}
-          <section className="rounded-[12px] bg-off-white/70 border border-charcoal/10 p-3 sm:p-4 animate-fade-in-up [animation-delay:0.15s]">
+          <section className="rounded-[12px] bg-off-white/70 border border-charcoal/10 p-3 sm:p-4 animate-fade-in-up [animation-delay:0.1s]">
             <h3
               className="text-base sm:text-sm font-semibold text-charcoal mb-3 sm:mb-3 flex items-center gap-2"
               style={{ fontFamily: '"Urbanist", system-ui, sans-serif', letterSpacing: '-0.01em' }}
