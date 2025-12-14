@@ -3,6 +3,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
 import { AnimatePresence } from "framer-motion";
+import { Fontdiner_Swanky } from "next/font/google";
 import BusinessCard from "../components/BusinessCard/BusinessCard";
 import Footer from "../components/Footer/Footer";
 import Header from "../components/Header/Header";
@@ -15,6 +16,14 @@ import SearchInput from "../components/SearchInput/SearchInput";
 import FilterModal, { FilterState } from "../components/FilterModal/FilterModal";
 import { Loader } from "../components/Loader/Loader";
 import { usePredefinedPageTitle } from "../hooks/usePageTitle";
+import CategoryFilterPills from "../components/Home/CategoryFilterPills";
+import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
+
+const swanky = Fontdiner_Swanky({
+  weight: "400",
+  subsets: ["latin"],
+  display: "swap",
+});
 
 // Note: dynamic and revalidate cannot be exported from client components
 // Client components are automatically dynamic
@@ -44,11 +53,19 @@ export default function TrendingPage() {
   const [mounted, setMounted] = useState(false);
   const [isPaginationLoading, setIsPaginationLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [selectedInterestIds, setSelectedInterestIds] = useState<string[]>([]);
   const searchWrapRef = useRef<HTMLDivElement>(null);
   const previousPageRef = useRef(currentPage);
 
   // Debounce search query for real-time filtering (300ms delay)
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+  // Initialize selected interests with user's interests on mount
+  useEffect(() => {
+    if (interests.length > 0 && selectedInterestIds.length === 0) {
+      setSelectedInterestIds(interests.map(i => i.id));
+    }
+  }, [interests, selectedInterestIds.length]);
 
   // Determine sort strategy based on search query
   const sortStrategy = useMemo((): 'relevance' | 'distance' | 'rating_desc' | 'price_asc' | 'combo' | undefined => {
@@ -58,11 +75,20 @@ export default function TrendingPage() {
     return undefined; // Use default sorting
   }, [debouncedSearchQuery]);
 
+  // Use selectedInterestIds if any are selected, otherwise use all user interests
+  const activeInterestIds = useMemo(() => {
+    if (selectedInterestIds.length > 0) {
+      return selectedInterestIds;
+    }
+    return (interests || []).map((interest) => interest.id);
+  }, [selectedInterestIds, interests]);
+
   const { businesses: trendingBusinesses, loading, error, refetch } = useBusinesses({
     limit: 50,
     sortBy: "total_rating",
     sortOrder: "desc",
     feedStrategy: debouncedSearchQuery.trim().length > 0 ? "standard" : "mixed",
+    interestIds: debouncedSearchQuery.trim().length > 0 ? undefined : activeInterestIds.length > 0 ? activeInterestIds : undefined,
     priceRanges: preferredPriceRanges,
     dealbreakerIds: dealbreakerIds.length ? dealbreakerIds : undefined,
     searchQuery: debouncedSearchQuery.trim().length > 0 ? debouncedSearchQuery : null,
@@ -106,6 +132,19 @@ export default function TrendingPage() {
     setSearchQuery(query);
     setCurrentPage(1); // Reset to first page
     if (isFilterVisible) closeFilters();
+  };
+
+  const handleToggleInterest = (interestId: string) => {
+    setSelectedInterestIds(prev => {
+      if (prev.includes(interestId)) {
+        // Deselect - remove from array
+        return prev.filter(id => id !== interestId);
+      } else {
+        // Select - add to array
+        return [...prev, interestId];
+      }
+    });
+    setCurrentPage(1); // Reset to first page when filter changes
   };
 
   const scrollToTop = () => {
@@ -194,6 +233,44 @@ export default function TrendingPage() {
             </ol>
           </nav>
 
+          {/* Title and Description Block */}
+          <div className="mb-6 sm:mb-8 px-4 sm:px-6 text-center pt-4">
+            <div className="my-4">
+              <h1 
+                className={`${swanky.className} text-2xl sm:text-3xl md:text-4xl font-semibold leading-[1.2] tracking-tight text-charcoal mx-auto`}
+                style={{ 
+                  fontFamily: swanky.style.fontFamily,
+                  wordBreak: 'keep-all',
+                  overflowWrap: 'break-word',
+                  whiteSpace: 'normal',
+                  hyphens: 'none',
+                }}
+              >
+                <WavyTypedTitle
+                  text="Trending Now"
+                  as="span"
+                  className="inline-block"
+                  typingSpeedMs={50}
+                  startDelayMs={200}
+                  waveVariant="subtle"
+                  loopWave={true}
+                  enableScrollTrigger={true}
+                  style={{
+                    fontFamily: swanky.style.fontFamily,
+                    wordBreak: 'keep-all',
+                    overflowWrap: 'break-word',
+                    whiteSpace: 'normal',
+                    hyphens: 'none',
+                  }}
+                />
+              </h1>
+            </div>
+            <p className="text-sm sm:text-base text-charcoal/70 max-w-2xl mx-auto leading-relaxed" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+              See what's hot right now! Explore the most popular and highly-rated businesses 
+              that everyone's talking about in your area.
+            </p>
+          </div>
+
           {/* Search Input */}
           <div ref={searchWrapRef} className="py-3 sm:py-4 px-4">
             <SearchInput
@@ -205,6 +282,14 @@ export default function TrendingPage() {
               onFilterClick={openFilters}
               onFocusOpenFilters={openFilters}
               showFilter
+            />
+          </div>
+
+          {/* Category Filter Pills - positioned directly underneath search input */}
+          <div className="py-4 px-4">
+            <CategoryFilterPills
+              selectedCategoryIds={selectedInterestIds}
+              onToggleCategory={handleToggleInterest}
             />
           </div>
 

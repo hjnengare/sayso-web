@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { Fontdiner_Swanky } from "next/font/google";
 import Header from "../components/Header/Header";
 import Footer from "../components/Footer/Footer";
 import FilterTabs from "../components/EventsPage/FilterTabs";
@@ -18,6 +19,13 @@ import { useDebounce } from "../hooks/useDebounce";
 import { useEvents } from "../hooks/useEvents";
 import { ChevronUp, ChevronRight } from "react-feather";
 import { Loader } from "../components/Loader/Loader";
+import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
+
+const swanky = Fontdiner_Swanky({
+  weight: "400",
+  subsets: ["latin"],
+  display: "swap",
+});
 
 const ITEMS_PER_PAGE = 12;
 
@@ -173,6 +181,44 @@ export default function EventsSpecialsPage() {
               </li>
             </ol>
           </nav>
+
+          {/* Title and Description Block */}
+          <div className="mb-6 sm:mb-8 px-4 sm:px-6 text-center pt-4">
+            <div className="my-4">
+              <h1 
+                className={`${swanky.className} text-2xl sm:text-3xl md:text-4xl font-semibold leading-[1.2] tracking-tight text-charcoal mx-auto`}
+                style={{ 
+                  fontFamily: swanky.style.fontFamily,
+                  wordBreak: 'keep-all',
+                  overflowWrap: 'break-word',
+                  whiteSpace: 'normal',
+                  hyphens: 'none',
+                }}
+              >
+                <WavyTypedTitle
+                  text="Events & Specials"
+                  as="span"
+                  className="inline-block"
+                  typingSpeedMs={50}
+                  startDelayMs={200}
+                  waveVariant="subtle"
+                  loopWave={true}
+                  enableScrollTrigger={true}
+                  style={{
+                    fontFamily: swanky.style.fontFamily,
+                    wordBreak: 'keep-all',
+                    overflowWrap: 'break-word',
+                    whiteSpace: 'normal',
+                    hyphens: 'none',
+                  }}
+                />
+              </h1>
+            </div>
+            <p className="text-sm sm:text-base text-charcoal/70 max-w-2xl mx-auto leading-relaxed" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+              Discover exciting local events and exclusive special offers. 
+              Find concerts, festivals, workshops, and limited-time deals happening near you.
+            </p>
+          </div>
 
           <div className="py-4 px-4">
             <SearchInput

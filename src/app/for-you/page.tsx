@@ -3,6 +3,7 @@
 import { useMemo, useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { AnimatePresence } from "framer-motion";
+import { Fontdiner_Swanky } from "next/font/google";
 import Header from "../components/Header/Header";
 import Footer from "../components/Footer/Footer";
 import BusinessCard from "../components/BusinessCard/BusinessCard";
@@ -15,6 +16,14 @@ import { ChevronRight, ChevronUp } from "react-feather";
 import { Loader } from "../components/Loader/Loader";
 import { usePredefinedPageTitle } from "../hooks/usePageTitle";
 import Pagination from "../components/EventsPage/Pagination";
+import CategoryFilterPills from "../components/Home/CategoryFilterPills";
+import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
+
+const swanky = Fontdiner_Swanky({
+  weight: "400",
+  subsets: ["latin"],
+  display: "swap",
+});
 
 // Note: dynamic and revalidate cannot be exported from client components
 // Client components are automatically dynamic
@@ -41,6 +50,7 @@ export default function ForYouPage() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [isPaginationLoading, setIsPaginationLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [selectedInterestIds, setSelectedInterestIds] = useState<string[]>([]);
   const searchWrapRef = useRef<HTMLDivElement>(null);
   const previousPageRef = useRef(currentPage);
 
@@ -55,10 +65,25 @@ export default function ForYouPage() {
     return undefined; // Use default sorting
   }, [debouncedSearchQuery]);
 
+  // Initialize selected interests with user's interests on mount
+  useEffect(() => {
+    if (interests.length > 0 && selectedInterestIds.length === 0) {
+      setSelectedInterestIds(interests.map(i => i.id));
+    }
+  }, [interests, selectedInterestIds.length]);
+
   // Combine user preferences with applied filters
+  // Use selectedInterestIds if any are selected, otherwise use all user interests
+  const activeInterestIds = useMemo(() => {
+    if (selectedInterestIds.length > 0) {
+      return selectedInterestIds;
+    }
+    return (interests || []).map((interest) => interest.id);
+  }, [selectedInterestIds, interests]);
+
   const preferenceIds = useMemo(
-    () => (interests || []).map((interest) => interest.id).concat((subcategories || []).map((sub) => sub.id)),
-    [interests, subcategories]
+    () => activeInterestIds.concat((subcategories || []).map((sub) => sub.id)),
+    [activeInterestIds, subcategories]
   );
 
   const {
@@ -117,6 +142,19 @@ export default function ForYouPage() {
     setSearchQuery(query);
     setCurrentPage(1); // Reset to first page
     if (isFilterVisible) closeFilters();
+  };
+
+  const handleToggleInterest = (interestId: string) => {
+    setSelectedInterestIds(prev => {
+      if (prev.includes(interestId)) {
+        // Deselect - remove from array
+        return prev.filter(id => id !== interestId);
+      } else {
+        // Select - add to array
+        return [...prev, interestId];
+      }
+    });
+    setCurrentPage(1); // Reset to first page when filter changes
   };
 
   const scrollToTop = () => {
@@ -188,6 +226,44 @@ export default function ForYouPage() {
             </ol>
           </nav>
 
+          {/* Title and Description Block */}
+          <div className="mb-6 sm:mb-8 px-4 sm:px-6 text-center pt-4">
+            <div className="my-4">
+              <h1 
+                className={`${swanky.className} text-2xl sm:text-3xl md:text-4xl font-semibold leading-[1.2] tracking-tight text-charcoal mx-auto`}
+                style={{ 
+                  fontFamily: swanky.style.fontFamily,
+                  wordBreak: 'keep-all',
+                  overflowWrap: 'break-word',
+                  whiteSpace: 'normal',
+                  hyphens: 'none',
+                }}
+              >
+                <WavyTypedTitle
+                  text="Curated Just For You"
+                  as="span"
+                  className="inline-block"
+                  typingSpeedMs={50}
+                  startDelayMs={200}
+                  waveVariant="subtle"
+                  loopWave={true}
+                  enableScrollTrigger={true}
+                  style={{
+                    fontFamily: swanky.style.fontFamily,
+                    wordBreak: 'keep-all',
+                    overflowWrap: 'break-word',
+                    whiteSpace: 'normal',
+                    hyphens: 'none',
+                  }}
+                />
+              </h1>
+            </div>
+            <p className="text-sm sm:text-base text-charcoal/70 max-w-2xl mx-auto leading-relaxed" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+              Discover personalized recommendations tailored to your interests and preferences. 
+              We've handpicked the best local businesses just for you.
+            </p>
+          </div>
+
           {/* Search Input at top of main content */}
           <div ref={searchWrapRef} className="py-3 sm:py-4 px-4">
             <SearchInput
@@ -199,6 +275,14 @@ export default function ForYouPage() {
               onFilterClick={openFilters}
               onFocusOpenFilters={openFilters}
               showFilter
+            />
+          </div>
+
+          {/* Category Filter Pills - positioned directly underneath search input */}
+          <div className="py-4 px-4">
+            <CategoryFilterPills
+              selectedCategoryIds={selectedInterestIds}
+              onToggleCategory={handleToggleInterest}
             />
           </div>
 

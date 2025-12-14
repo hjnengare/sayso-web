@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import nextDynamic from "next/dynamic";
+import { Fontdiner_Swanky } from "next/font/google";
 import { ChevronRight, Award } from "react-feather";
 import EmailVerificationGuard from "../components/Auth/EmailVerificationGuard";
 import Header from "../components/Header/Header";
@@ -14,6 +15,13 @@ import LeaderboardList from "../components/Leaderboard/LeaderboardList";
 import LeaderboardTitle from "../components/Leaderboard/LeaderboardTitle";
 import { Tabs } from "@/components/atoms/Tabs";
 import { Loader } from "../components/Loader/Loader";
+import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
+
+const swanky = Fontdiner_Swanky({
+  weight: "400",
+  subsets: ["latin"],
+  display: "swap",
+});
 
 // Dynamically import BusinessOfMonthLeaderboard to improve initial load time
 const BusinessOfMonthLeaderboard = nextDynamic(
@@ -224,6 +232,44 @@ function LeaderboardPage() {
                         </li>
                       </ol>
                     </nav>
+
+                    {/* Title and Description Block */}
+                    <div className="mb-6 sm:mb-8 px-4 sm:px-6 text-center pt-4">
+                      <div className="my-4">
+                        <h1 
+                          className={`${swanky.className} text-2xl sm:text-3xl md:text-4xl font-semibold leading-[1.2] tracking-tight text-charcoal mx-auto`}
+                          style={{ 
+                            fontFamily: swanky.style.fontFamily,
+                            wordBreak: 'keep-all',
+                            overflowWrap: 'break-word',
+                            whiteSpace: 'normal',
+                            hyphens: 'none',
+                          }}
+                        >
+                          <WavyTypedTitle
+                            text="Community Highlights"
+                            as="span"
+                            className="inline-block"
+                            typingSpeedMs={50}
+                            startDelayMs={200}
+                            waveVariant="subtle"
+                            loopWave={true}
+                            enableScrollTrigger={true}
+                            style={{
+                              fontFamily: swanky.style.fontFamily,
+                              wordBreak: 'keep-all',
+                              overflowWrap: 'break-word',
+                              whiteSpace: 'normal',
+                              hyphens: 'none',
+                            }}
+                          />
+                        </h1>
+                      </div>
+                      <p className="text-sm sm:text-base text-charcoal/70 max-w-2xl mx-auto leading-relaxed" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                        Celebrate the top contributors and businesses in our community. 
+                        See who's making a difference and discover the most loved local spots.
+                      </p>
+                    </div>
                   </div>
                 </section>
 

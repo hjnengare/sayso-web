@@ -27,14 +27,22 @@ export default function CategoryFilterPills({
   // Show loading skeleton while loading
   if (loading) {
     return (
-      <div className="flex flex-wrap items-center gap-2">
-        {[1, 2, 3, 4].map((i) => (
-          <div
-            key={i}
-            className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-full bg-off-white/50 animate-pulse"
-            style={{ width: '100px', height: '36px' }}
-          />
-        ))}
+      <div 
+        className="flex sm:flex-wrap items-center gap-2 overflow-x-auto sm:overflow-x-visible scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0"
+        style={{ 
+          WebkitOverflowScrolling: 'touch',
+          scrollBehavior: 'smooth',
+        }}
+      >
+        <div className="flex items-center gap-2 min-w-max">
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-full bg-off-white/50 animate-pulse flex-shrink-0"
+              style={{ width: '100px', height: '36px' }}
+            />
+          ))}
+        </div>
       </div>
     );
   }
@@ -49,24 +57,32 @@ export default function CategoryFilterPills({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      {interests.map((interest) => {
-        const isSelected = selectedCategoryIds.includes(interest.id);
-        return (
-          <button
-            key={interest.id}
-            onClick={() => onToggleCategory(interest.id)}
-            className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-urbanist font-600 text-body-sm sm:text-body transition-all duration-200 active:scale-95 ${
-              isSelected
-                ? "bg-coral text-white shadow-lg"
-                : "bg-sage/10 text-charcoal/70 hover:bg-sage/20 hover:text-sage border border-sage/30"
-            }`}
-            style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-          >
-            {interest.name}
-          </button>
-        );
-      })}
+    <div 
+      className="flex sm:flex-wrap items-center gap-2 overflow-x-auto sm:overflow-x-visible scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0"
+      style={{ 
+        WebkitOverflowScrolling: 'touch',
+        scrollBehavior: 'smooth',
+      }}
+    >
+      <div className="flex items-center gap-2 min-w-max sm:min-w-0 sm:flex-wrap">
+        {interests.map((interest) => {
+          const isSelected = selectedCategoryIds.includes(interest.id);
+          return (
+            <button
+              key={interest.id}
+              onClick={() => onToggleCategory(interest.id)}
+              className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-urbanist font-600 text-body-sm sm:text-body transition-all duration-200 active:scale-95 flex-shrink-0 whitespace-nowrap ${
+                isSelected
+                  ? "bg-coral text-white shadow-lg"
+                  : "bg-sage/10 text-charcoal/70 hover:bg-sage/20 hover:text-sage border border-sage/30"
+              }`}
+              style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+            >
+              {interest.name}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
