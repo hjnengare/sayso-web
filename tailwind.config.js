@@ -26,7 +26,7 @@ module.exports = {
         // sayso Color Palette
         'page-bg': '#E5E0E5', // Page background
         'card-bg': '#9DAB9B', // Card background
-        'navbar-bg': '#800020', // Navbar background (burgundy - base color)
+        'navbar-bg': '#722F37', // Navbar background (burgundy - base color)
 
         // Semantic colors
         success: {
@@ -63,7 +63,7 @@ module.exports = {
         
         // Brand colors
         sage: '#7D9B76', // Primary brand color
-        coral: '#800020', // Secondary brand color (coral)
+        coral: '#722F37', // Secondary brand color (coral)
         burgundy: '#722F37', // Burgundy/wine red
         charcoal: '#2D2D2D', // Dark text color
         'off-white': '#E5E0E5', // Light background color
@@ -162,7 +162,7 @@ module.exports = {
       },
       backgroundImage: {
         gradient: 'linear-gradient(to right, transparent 50%, hsla(0, 0%, 100%, 0.3) 100%)',
-        'navbar-gradient': 'linear-gradient(135deg, #800020 0%, #800020 100%)', // Burgundy to coral gradient
+        'navbar-gradient': 'linear-gradient(135deg, #722F37 0%, #722F37 100%)', // Burgundy to coral gradient
       },
       animation: {
         'fade-in-up': 'fadeInUp 0.6s ease-out forwards',
