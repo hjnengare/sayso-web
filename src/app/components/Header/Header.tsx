@@ -11,6 +11,7 @@ import { useSavedItems } from "../../contexts/SavedItemsContext";
 import { useNotifications } from "../../contexts/NotificationsContext";
 import { useMessages } from "../../contexts/MessagesContext";
 import { useRequireBusinessOwner } from "../../hooks/useBusinessAccess";
+import { useAuth } from "../../contexts/AuthContext";
 import Logo from "../Logo/Logo";
 import OptimizedLink from "../Navigation/OptimizedLink";
 
@@ -69,11 +70,29 @@ export default function Header({
   const { savedCount } = useSavedItems();
   const { unreadCount } = useNotifications();
   const { unreadCount: unreadMessagesCount } = useMessages();
+  const { user, isLoading: authLoading } = useAuth();
   
   // Check if user is a business owner
   const { hasAccess: isBusinessOwner, isChecking: isCheckingBusinessOwner } = useRequireBusinessOwner({
     skipRedirect: true,
   });
+
+  // Check if we're on the Explore page and need to enforce authentication
+  const isOnExplorePage = pathname === '/explore';
+  const requiresAuthForNav = isOnExplorePage && !authLoading && !user;
+
+  // Handler to intercept navigation clicks and redirect to login if needed
+  const handleNavClick = useCallback((href: string, e?: React.MouseEvent) => {
+    if (requiresAuthForNav && href !== '/explore' && href !== '/login' && href !== '/register' && href !== '/onboarding') {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      router.push('/login');
+      return false;
+    }
+    return true;
+  }, [requiresAuthForNav, router]);
 
   // Use refs to track state without causing re-renders
   const isFilterVisibleRef = useRef(isFilterVisible);
@@ -336,6 +355,7 @@ export default function Header({
                 <Fragment key={key}>
                 <OptimizedLink
                     href={href}
+                    onClick={(e) => handleNavClick(href, e)}
                     className={`group capitalize px-2.5 lg:px-3.5 py-1.5 rounded-lg text-sm sm:text-xs sm:text-sm md:text-sm sm:text-xs lg:text-sm sm:text-xs font-semibold transition-all duration-200 relative ${isActive ? 'text-sage' : whiteText ? 'text-white hover:text-white/90 hover:bg-white/10' : 'text-charcoal/90 md:text-charcoal/95 hover:text-sage hover:bg-sage/5'}`}
                   style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                 >
@@ -410,7 +430,8 @@ export default function Header({
                                 <OptimizedLink
                                   key={subKey}
                                   href={subHref}
-                                  onClick={() => {
+                                  onClick={(e) => {
+                                    handleNavClick(subHref, e);
                                     clearDiscoverHoverTimeout();
                                     closeDiscoverDropdown();
                                   }}
@@ -636,7 +657,10 @@ export default function Header({
                 <OptimizedLink
                   key={key}
                   href={href}
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  onClick={(e) => {
+                    handleNavClick(href, e);
+                    setIsMobileMenuOpen(false);
+                  }}
                   className={`px-3 py-2 rounded-[12px] text-base font-normal text-white hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-200 relative min-h-[44px] flex items-center justify-start ${mobileRevealClass}`}
                   style={{
                     fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
@@ -661,7 +685,10 @@ export default function Header({
                   <OptimizedLink
                     key={key}
                     href={href}
-                    onClick={() => setIsMobileMenuOpen(false)}
+                    onClick={(e) => {
+                      handleNavClick(href, e);
+                      setIsMobileMenuOpen(false);
+                    }}
                     className={`py-2 rounded-[12px] text-base font-normal text-white/90 hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-200 min-h-[44px] flex items-center justify-start ${mobileRevealClass}`}
                     style={{
                       fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
