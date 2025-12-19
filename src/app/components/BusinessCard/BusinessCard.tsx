@@ -310,7 +310,7 @@ function BusinessCard({
     >
       <div
         className={`px-4 sm:px-5 pt-2 pb-0 rounded-[20px] ${compact ? "lg:py-3 lg:pb-2 lg:min-h-[200px]" : "flex-1"
-          } relative flex-shrink-0 flex flex-col justify-between bg-sage z-10`}
+          } relative flex-shrink-0 flex flex-col justify-between bg-sage z-10 shadow-md group`}
         style={{
           maxWidth: compact ? "100%" : "540px",
         } as React.CSSProperties}

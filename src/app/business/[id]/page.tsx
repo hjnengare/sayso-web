@@ -448,7 +448,7 @@ export default function BusinessProfilePage() {
                                     <WavyTypedTitle
                                         text="Community Reviews"
                                         as="h1"
-                                        className={`${swanky.className} text-h1 text-3xl sm:text-4xl font-bold text-charcoal rounded-lg cursor-default`}
+                                        className={`${swanky.className} text-lg sm:text-xl font-semibold text-charcoal rounded-lg cursor-default`}
                                         typingSpeedMs={40}
                                         startDelayMs={300}
                                         waveVariant="subtle"

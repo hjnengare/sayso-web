@@ -89,9 +89,7 @@ export default function Header({
         e.stopPropagation();
       }
       router.push('/login');
-      return false;
     }
-    return true;
   }, [requiresAuthForNav, router]);
 
   // Use refs to track state without causing re-renders

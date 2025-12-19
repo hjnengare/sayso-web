@@ -286,10 +286,10 @@ export default function SimilarBusinesses({
                 <p className="text-[11px] uppercase tracking-[0.15em] text-charcoal/50 font-bold">Similar Businesses</p>
               </div>
               <h2 id="similar-businesses-heading" className="sr-only">You Might Also Like</h2>
-              <WavyTypedTitle
-                text="You Might Also Like"
-                as="h2"
-                className={`${swanky.className} text-2xl sm:text-3xl font-bold text-charcoal`}
+            <WavyTypedTitle
+              text="You Might Also Like"
+              as="h3"
+              className={`${swanky.className} text-lg sm:text-xl font-semibold text-charcoal`}
                 typingSpeedMs={40}
                 startDelayMs={300}
                 waveVariant="subtle"
@@ -347,7 +347,7 @@ export default function SimilarBusinesses({
             <WavyTypedTitle
               text="You Might Also Like"
               as="h2"
-              className={`${swanky.className} text-2xl sm:text-3xl font-bold text-charcoal`}
+              className={`${swanky.className} text-lg sm:text-xl font-semibold text-charcoal`}
               typingSpeedMs={40}
               startDelayMs={300}
               waveVariant="subtle"

@@ -9,7 +9,7 @@ interface OptimizedLinkProps {
   children: React.ReactNode;
   className?: string;
   prefetch?: boolean;
-  onClick?: () => void;
+  onClick?: (e?: React.MouseEvent) => void;
   [key: string]: any;
 }
 
@@ -57,7 +57,11 @@ export default function OptimizedLink({
 
   const handleClick = useCallback((e: React.MouseEvent) => {
     if (onClick) {
-      onClick();
+      onClick(e);
+      // If onClick prevents default, don't navigate
+      if (e.defaultPrevented) {
+        return;
+      }
     }
     
     // Add a small delay for better UX
