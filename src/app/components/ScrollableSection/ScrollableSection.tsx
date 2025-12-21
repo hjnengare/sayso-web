@@ -74,10 +74,16 @@ export default function ScrollableSection({
     // On mobile: scroll by 1 full card (100vw minus padding), on larger screens: scroll by 1 card (25% width)
     // Note: Default visible card count is DEFAULT_VISIBLE_CARD_COUNT (4 cards)
     const isMobile = window.innerWidth < 640; // sm breakpoint
-    const cardWidth = isMobile ? container.clientWidth : container.clientWidth * 0.25;
-    const gap = isMobile ? 8 : 12; // gap-2 on mobile, gap-3 on larger screens
-    const scrollAmount = cardWidth + gap;
-    container.scrollLeft += scrollAmount;
+    if (isMobile) {
+      // On mobile, scroll by one full viewport width (one card at a time)
+      const scrollAmount = container.clientWidth;
+      container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    } else {
+      const cardWidth = container.clientWidth * 0.25;
+      const gap = 12; // gap-3 on larger screens
+      const scrollAmount = cardWidth + gap;
+      container.scrollLeft += scrollAmount;
+    }
   };
 
   const scrollLeft = () => {
@@ -86,10 +92,16 @@ export default function ScrollableSection({
     // On mobile: scroll by 1 full card (100vw minus padding), on larger screens: scroll by 1 card (25% width)
     // Note: Default visible card count is DEFAULT_VISIBLE_CARD_COUNT (4 cards)
     const isMobile = window.innerWidth < 640; // sm breakpoint
-    const cardWidth = isMobile ? container.clientWidth : container.clientWidth * 0.25;
-    const gap = isMobile ? 8 : 12; // gap-2 on mobile, gap-3 on larger screens
-    const scrollAmount = cardWidth + gap;
-    container.scrollLeft -= scrollAmount;
+    if (isMobile) {
+      // On mobile, scroll by one full viewport width (one card at a time)
+      const scrollAmount = container.clientWidth;
+      container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+    } else {
+      const cardWidth = container.clientWidth * 0.25;
+      const gap = 12; // gap-3 on larger screens
+      const scrollAmount = cardWidth + gap;
+      container.scrollLeft -= scrollAmount;
+    }
   };
 
   return (

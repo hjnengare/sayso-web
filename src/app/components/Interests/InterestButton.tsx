@@ -60,7 +60,17 @@ export default function InterestButton({
           isAnimating ? "animate-bubbly" : ""
         }`}
       >
-        <span className="text-[15px] md:text-base font-semibold text-center leading-tight break-words hyphens-auto">
+        <span 
+          className="text-[15px] md:text-base font-semibold text-center leading-tight"
+          style={{
+            wordBreak: 'keep-all',
+            overflowWrap: 'break-word',
+            whiteSpace: 'normal',
+            hyphens: 'none',
+            WebkitHyphens: 'none',
+            msHyphens: 'none',
+          }}
+        >
           {interest.name}
         </span>
         {isSelected && (

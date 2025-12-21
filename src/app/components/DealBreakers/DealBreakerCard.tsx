@@ -35,22 +35,24 @@ export default function DealBreakerCard({
     <div
       className={`
         enter-stagger
-        perspective-1000
         ${isSelected ? 'scale-105' : 'scale-100'}
         transition-transform duration-300 ease-out
       `}
-      style={{ animationDelay: `${index * 0.1}s` }}
+      style={{ 
+        animationDelay: `${index * 0.1}s`,
+        perspective: '1000px',
+        WebkitPerspective: '1000px'
+      }}
     >
       <div
         className={`
           relative w-full h-32
           ${isDisabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}
-          ${isSelected ? 'flip' : ''}
         `}
         onClick={() => !isDisabled && onToggle(dealbreaker.id)}
         style={{
           transformStyle: 'preserve-3d',
-          transition: 'transform 0.6s',
+          transition: 'transform 0.6s ease-in-out',
           transform: isSelected ? 'rotateY(180deg)' : 'rotateY(0deg)'
         }}
       >
@@ -65,7 +67,10 @@ export default function DealBreakerCard({
             backdrop-blur-sm
             transition-all duration-200
           `}
-          style={{ backfaceVisibility: 'hidden' }}
+          style={{ 
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden'
+          }}
         >
           <h3 className="text-base font-semibold text-charcoal mb-2" style={sfPro}>
             {dealbreaker.label}
@@ -83,6 +88,7 @@ export default function DealBreakerCard({
           `}
           style={{ 
             backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
             transform: 'rotateY(180deg)'
           }}
         >

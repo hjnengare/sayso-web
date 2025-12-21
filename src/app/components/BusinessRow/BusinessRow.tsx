@@ -113,9 +113,17 @@ export default function BusinessRow({
 
         <ScrollableSection>
           {/* Gap harmonizes with card radius/shadows; list semantics preserved via <li> inside cards */}
+          <style dangerouslySetInnerHTML={{ __html: `
+            @media (max-width: 639px) {
+              .business-card-full-width > li {
+                width: 100% !important;
+                max-width: 100% !important;
+              }
+            }
+          `}} />
           <div className="flex gap-3 items-stretch pt-2">
             {businesses.map((business) => (
-              <div key={business.id} className="list-none flex">
+              <div key={business.id} className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto sm:min-w-[25%] md:min-w-[25%] xl:min-w-[25%] list-none flex business-card-full-width">
                 <BusinessCard business={business} />
               </div>
             ))}
