@@ -236,7 +236,7 @@ export default function BusinessOfTheMonthCard({ business }: { business: Busines
        
         {/* MEDIA - Full bleed with premium overlay */}
         <div
-          className="relative overflow-hidden z-10 cursor-pointer rounded-[20px] bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl h-[490px] sm:h-[320px] md:h-[240px] shadow-sm"
+          className="relative overflow-hidden z-10 cursor-pointer backdrop-blur-xl h-[490px] sm:h-[320px] md:h-[240px]"
           onClick={handleCardClick}
         >
           <div 
@@ -252,7 +252,7 @@ export default function BusinessOfTheMonthCard({ business }: { business: Busines
           >
             {!imgError && displayImage ? (
               isImagePng || displayImage.includes('/png/') || displayImage.endsWith('.png') || usingFallback ? (
-                <div className="relative w-full h-full flex items-center justify-center bg-gradient-to-br from-off-white/95 to-off-white/85">
+                <div className="relative w-full h-full flex items-center justify-center bg-gradient-to-br from-off-white/95 to-off-white/85 rounded-[20px] shadow-sm">
                   <Image
                     src={usingFallback ? getCategoryPng(business.category) : displayImage}
                     alt={displayAlt}
@@ -266,7 +266,7 @@ export default function BusinessOfTheMonthCard({ business }: { business: Busines
                   />
                 </div>
               ) : (
-                <div className="relative w-full h-full overflow-hidden">
+                <div className="relative w-full h-full overflow-hidden rounded-[20px] shadow-sm">
                   <Image
                     src={displayImage}
                     alt={displayAlt}
