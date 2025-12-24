@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { MapPin, ArrowRight } from "react-feather";
+import { ArrowRight } from "react-feather";
 import { getCategoryPng, isPngIcon } from "../../utils/categoryToPngMapping";
 import OptimizedImage from "../Performance/OptimizedImage";
 
@@ -140,7 +140,17 @@ export default function SimilarBusinessCard({
         {/* Location */}
         {(location || address) && (
           <div className="flex items-center gap-1.5 text-xs text-charcoal/60 mt-1">
-            <MapPin className="w-3.5 h-3.5 text-charcoal/60 flex-shrink-0" />
+            <div className="w-3.5 h-3.5 flex-shrink-0 flex items-center justify-center">
+              <OptimizedImage
+                src={getCategoryPng(category)}
+                alt={category}
+                width={14}
+                height={14}
+                className="w-3.5 h-3.5 object-contain opacity-60"
+                priority={false}
+                quality={90}
+              />
+            </div>
             <span className="truncate">{location || address}</span>
           </div>
         )}
