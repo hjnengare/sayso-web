@@ -35,7 +35,6 @@ import { getBrowserSupabase } from "../lib/supabase/client";
 import { authStyles } from "../components/Auth/Shared/authStyles";
 import { Fontdiner_Swanky } from "next/font/google";
 import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
-import dynamic from "next/dynamic";
 
 const LocationPicker = dynamic(() => import("../components/AddBusiness/LocationPicker"), {
     ssr: false,
