@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useState, useEffect } from "react";
-import { ChevronRight } from "react-feather";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { ChevronRight, ChevronDown } from "react-feather";
+import { createPortal } from "react-dom";
 import { useToast } from "../contexts/ToastContext";
 import { useAuth } from "../contexts/AuthContext";
 import {
@@ -19,6 +20,12 @@ import {
     ImageIcon,
     Upload,
     X,
+    Building2,
+    Truck,
+    Monitor,
+    UserCheck,
+    Plus,
+    Link as LinkIcon,
 } from "lucide-react";
 import Image from "next/image";
 import { PageLoader } from "../components/Loader";
@@ -51,6 +58,11 @@ const animations = `
     from { opacity: 0; }
     to { opacity: 1; }
   }
+
+  @keyframes fadeInScale {
+    from { opacity: 0; transform: scale(0.95) translateY(-8px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
   
   .animate-fade-in-up {
     animation: fadeInUp 0.6s ease-out forwards;
@@ -81,6 +93,9 @@ export default function AddBusinessPage() {
         name: "",
         description: "",
         category: "",
+        businessType: "" as "physical" | "service-area" | "online-only" | "",
+        intent: "" as "owner" | "adding-place" | "",
+        isChain: false,
         location: "",
         address: "",
         phone: "",
@@ -109,6 +124,11 @@ export default function AddBusinessPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [touched, setTouched] = useState<Record<string, boolean>>({});
+    const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+    const [isCategoryModalClosing, setIsCategoryModalClosing] = useState(false);
+    const categoryButtonRef = useRef<HTMLButtonElement>(null);
+    const categoryModalRef = useRef<HTMLDivElement>(null);
+    const [categoryModalPos, setCategoryModalPos] = useState<{left: number; top: number} | null>(null);
 
     // Redirect if not authenticated
     useEffect(() => {
@@ -139,7 +159,78 @@ export default function AddBusinessPage() {
         loadSubcategories();
     }, [showToast]);
 
-    const handleInputChange = (field: string, value: string) => {
+    // Category modal handlers
+    const openCategoryModal = useCallback(() => {
+        setIsCategoryModalClosing(false);
+        setIsCategoryModalOpen(true);
+    }, []);
+
+    const closeCategoryModal = useCallback(() => {
+        setIsCategoryModalClosing(true);
+        setTimeout(() => {
+            setIsCategoryModalOpen(false);
+            setIsCategoryModalClosing(false);
+        }, 150);
+    }, []);
+
+    // Position category modal
+    useEffect(() => {
+        if (isCategoryModalOpen && categoryButtonRef.current) {
+            const buttonRect = categoryButtonRef.current.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            const dropdownWidth = 320;
+            const padding = 16;
+            
+            let leftPos = buttonRect.left;
+            const maxLeft = viewportWidth - dropdownWidth - padding;
+            leftPos = Math.max(padding, Math.min(leftPos, maxLeft));
+            
+            const gap = 8;
+            setCategoryModalPos({ left: leftPos, top: buttonRect.bottom + gap });
+        } else {
+            setCategoryModalPos(null);
+        }
+    }, [isCategoryModalOpen]);
+
+    // Close category modal when clicking outside
+    useEffect(() => {
+        if (!isCategoryModalOpen) return;
+
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as Node;
+            const clickedInsideButton = categoryButtonRef.current?.contains(target);
+            const clickedInsideModal = categoryModalRef.current?.contains(target);
+
+            if (!clickedInsideButton && !clickedInsideModal) {
+                closeCategoryModal();
+            }
+        };
+
+        const timer = setTimeout(() => {
+            document.addEventListener('mousedown', handleClickOutside);
+        }, 0);
+
+        return () => {
+            clearTimeout(timer);
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isCategoryModalOpen, closeCategoryModal]);
+
+    // Lock body scroll when category modal is open
+    useEffect(() => {
+        if (!isCategoryModalOpen) return;
+
+        // Lock body scroll
+        const originalStyle = window.getComputedStyle(document.body).overflow;
+        document.body.style.overflow = 'hidden';
+
+        return () => {
+            // Restore body scroll
+            document.body.style.overflow = originalStyle;
+        };
+    }, [isCategoryModalOpen]);
+
+    const handleInputChange = (field: string, value: string | boolean) => {
         setFormData(prev => ({
             ...prev,
             [field]: value
@@ -246,9 +337,10 @@ export default function AddBusinessPage() {
                 }
                 break;
             case "location":
-                if (!value.trim()) {
-                    error = "Location is required";
-                } else if (value.trim().length < 2) {
+                // Location is required only for physical and service-area businesses
+                if (formData.businessType !== 'online-only' && !value.trim()) {
+                    error = formData.businessType === 'service-area' ? "Service area is required" : "Location is required";
+                } else if (value && value.trim().length < 2) {
                     error = "Location must be at least 2 characters";
                 }
                 break;
@@ -296,7 +388,13 @@ export default function AddBusinessPage() {
     };
 
     const validateForm = () => {
-        const fieldsToValidate = ["name", "category", "location"];
+        const fieldsToValidate = ["name", "category"];
+        
+        // Location is required only for physical and service-area businesses
+        if (formData.businessType !== 'online-only') {
+            fieldsToValidate.push("location");
+        }
+        
         let isValid = true;
 
         fieldsToValidate.forEach(field => {
@@ -358,7 +456,10 @@ export default function AddBusinessPage() {
                 name: formData.name.trim(),
                 description: formData.description.trim() || null,
                 category: formData.category,
-                location: formData.location.trim(),
+                businessType: formData.businessType || null,
+                intent: formData.intent || null,
+                isChain: formData.isChain || false,
+                location: formData.location.trim() || null,
                 address: formData.address.trim() || null,
                 phone: formData.phone.trim() || null,
                 email: formData.email.trim() || null,
@@ -462,9 +563,15 @@ export default function AddBusinessPage() {
 
             showToast('Business created successfully!', 'success', 3000);
 
-            // Redirect to business dashboard after short delay
+            // Redirect based on intent
             setTimeout(() => {
-                router.push(`/owners/businesses/${businessId}`);
+                if (formData.intent === 'owner') {
+                    // Owner goes to dashboard
+                    router.push(`/owners/businesses/${businessId}`);
+                } else {
+                    // Non-owner goes to public business page
+                    router.push(`/business/${businessId}`);
+                }
             }, 1000);
         } catch (error: any) {
             console.error('Error creating business:', error);
@@ -607,30 +714,182 @@ export default function AddBusinessPage() {
                                                             </div>
                                                         ) : (
                                                             <>
-                                                                <select
-                                                                    value={formData.category}
-                                                                    onChange={(e) => handleInputChange('category', e.target.value)}
+                                                                <button
+                                                                    type="button"
+                                                                    ref={categoryButtonRef}
+                                                                    onClick={() => {
+                                                                        if (isCategoryModalOpen) {
+                                                                            closeCategoryModal();
+                                                                        } else {
+                                                                            openCategoryModal();
+                                                                        }
+                                                                    }}
                                                                     onBlur={() => handleBlur('category')}
                                                                     style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
-                                                                    className={`w-full bg-white/95 backdrop-blur-sm border pl-4 pr-4 py-3 sm:py-4 md:py-5 text-body font-semibold text-charcoal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 input-mobile rounded-full ${
+                                                                    className={`w-full bg-white/95 backdrop-blur-sm border pl-4 pr-4 py-3 sm:py-4 md:py-5 text-body font-semibold text-charcoal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 input-mobile rounded-full flex items-center justify-between ${
                                                                         errors.category
                                                                             ? 'border-navbar-bg focus:border-navbar-bg focus:ring-navbar-bg/20'
                                                                             : 'border-white/60 focus:ring-navbar-bg/30 focus:border-navbar-bg'
                                                                     }`}
                                                                 >
-                                                                    <option value="">Select a category</option>
-                                                                    {subcategories.map(subcategory => (
-                                                                        <option key={subcategory.id} value={subcategory.label}>
-                                                                            {subcategory.label}
-                                                                        </option>
-                                                                    ))}
-                                                                </select>
+                                                                    <span className={formData.category ? 'text-charcoal' : 'text-charcoal/50'}>
+                                                                        {formData.category || 'Select a category'}
+                                                                    </span>
+                                                                    <ChevronDown className={`w-5 h-5 text-charcoal/60 transition-transform duration-300 ${isCategoryModalOpen ? 'rotate-180' : ''}`} />
+                                                                </button>
                                                                 {touched.category && errors.category && (
                                                                     <p className="mt-2 text-sm text-navbar-bg font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>{errors.category}</p>
+                                                                )}
+                                                                {/* Category Modal */}
+                                                                {isCategoryModalOpen && categoryModalPos && typeof window !== 'undefined' && createPortal(
+                                                                    <div
+                                                                        ref={categoryModalRef}
+                                                                        className={`fixed z-[1000] bg-off-white rounded-[20px] border border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.12),0_4px_16px_rgba(0,0,0,0.08)] overflow-hidden min-w-[320px] max-w-[400px] max-h-[60vh] overflow-y-auto transition-all duration-300 ease-out backdrop-blur-xl ${
+                                                                            isCategoryModalClosing ? 'opacity-0 scale-95 translate-y-[-8px]' : 'opacity-100 scale-100 translate-y-0'
+                                                                        }`}
+                                                                        style={{
+                                                                            left: categoryModalPos.left,
+                                                                            top: categoryModalPos.top,
+                                                                            fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                                                                            animation: isCategoryModalClosing ? 'none' : 'fadeInScale 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                                                                            transformOrigin: 'top center',
+                                                                        }}
+                                                                        onClick={(e) => e.stopPropagation()}
+                                                                    >
+                                                                        <div className="px-5 pt-4 pb-3 border-b border-charcoal/10 bg-off-white flex items-center gap-2 sticky top-0 z-10">
+                                                                            <h3 className="text-sm md:text-base font-semibold text-charcoal" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>Select Category</h3>
+                                                                        </div>
+                                                                        <div className="py-3">
+                                                                            {subcategories.map((subcategory) => {
+                                                                                const isSelected = formData.category === subcategory.label;
+                                                                                return (
+                                                                                    <button
+                                                                                        key={subcategory.id}
+                                                                                        type="button"
+                                                                                        onClick={() => {
+                                                                                            handleInputChange('category', subcategory.label);
+                                                                                            closeCategoryModal();
+                                                                                        }}
+                                                                                        className={`group flex items-start gap-3 px-5 py-3 hover:bg-gradient-to-r hover:from-sage/10 hover:to-coral/5 transition-all duration-200 rounded-lg mx-2 w-[calc(100%-1rem)] text-left ${
+                                                                                            isSelected ? 'bg-gradient-to-r from-sage/10 to-sage/5' : ''
+                                                                                        }`}
+                                                                                        style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                                                                                    >
+                                                                                        <div className="flex-1">
+                                                                                            <div className={`text-sm font-semibold ${isSelected ? 'text-sage' : 'text-charcoal group-hover:text-coral'}`}>
+                                                                                                {subcategory.label}
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </button>
+                                                                                );
+                                                                            })}
+                                                                        </div>
+                                                                    </div>,
+                                                                    document.body
                                                                 )}
                                                             </>
                                                         )}
                                                     </div>
+
+                                                    {/* Business Type & Intent - Shows after category is selected */}
+                                                    {formData.category && (
+                                                        <div className="space-y-4 pt-2 border-t border-white/20">
+                                                            <div>
+                                                                <label className="block text-sm font-semibold text-white mb-3" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
+                                                                    What kind of business is this?
+                                                                </label>
+                                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => handleInputChange('businessType', 'physical')}
+                                                                        className={`flex flex-col items-center gap-2 p-4 rounded-[20px] border-2 transition-all duration-200 ${
+                                                                            formData.businessType === 'physical'
+                                                                                ? 'bg-gradient-to-br from-sage/20 to-sage/10 border-sage text-white'
+                                                                                : 'bg-white/10 border-white/30 text-white/80 hover:border-white/50 hover:bg-white/15'
+                                                                        }`}
+                                                                    >
+                                                                        <Building2 className="w-6 h-6" />
+                                                                        <span className="text-sm font-semibold text-center">Physical Location</span>
+                                                                    </button>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => handleInputChange('businessType', 'service-area')}
+                                                                        className={`flex flex-col items-center gap-2 p-4 rounded-[20px] border-2 transition-all duration-200 ${
+                                                                            formData.businessType === 'service-area'
+                                                                                ? 'bg-gradient-to-br from-sage/20 to-sage/10 border-sage text-white'
+                                                                                : 'bg-white/10 border-white/30 text-white/80 hover:border-white/50 hover:bg-white/15'
+                                                                        }`}
+                                                                    >
+                                                                        <Truck className="w-6 h-6" />
+                                                                        <span className="text-sm font-semibold text-center">Service-Area</span>
+                                                                    </button>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => handleInputChange('businessType', 'online-only')}
+                                                                        className={`flex flex-col items-center gap-2 p-4 rounded-[20px] border-2 transition-all duration-200 ${
+                                                                            formData.businessType === 'online-only'
+                                                                                ? 'bg-gradient-to-br from-sage/20 to-sage/10 border-sage text-white'
+                                                                                : 'bg-white/10 border-white/30 text-white/80 hover:border-white/50 hover:bg-white/15'
+                                                                        }`}
+                                                                    >
+                                                                        <Monitor className="w-6 h-6" />
+                                                                        <span className="text-sm font-semibold text-center">Online-Only</span>
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+
+                                                            {formData.businessType && (
+                                                                <>
+                                                                    <div>
+                                                                        <label className="block text-sm font-semibold text-white mb-3" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
+                                                                            Intent
+                                                                        </label>
+                                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => handleInputChange('intent', 'owner')}
+                                                                                className={`flex items-center gap-3 p-4 rounded-[20px] border-2 transition-all duration-200 ${
+                                                                                    formData.intent === 'owner'
+                                                                                        ? 'bg-gradient-to-br from-coral/20 to-coral/10 border-coral text-white'
+                                                                                        : 'bg-white/10 border-white/30 text-white/80 hover:border-white/50 hover:bg-white/15'
+                                                                                }`}
+                                                                            >
+                                                                                <UserCheck className="w-5 h-5" />
+                                                                                <span className="text-sm font-semibold">I own/manage it</span>
+                                                                            </button>
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => handleInputChange('intent', 'adding-place')}
+                                                                                className={`flex items-center gap-3 p-4 rounded-[20px] border-2 transition-all duration-200 ${
+                                                                                    formData.intent === 'adding-place'
+                                                                                        ? 'bg-gradient-to-br from-coral/20 to-coral/10 border-coral text-white'
+                                                                                        : 'bg-white/10 border-white/30 text-white/80 hover:border-white/50 hover:bg-white/15'
+                                                                                }`}
+                                                                            >
+                                                                                <Plus className="w-5 h-5" />
+                                                                                <span className="text-sm font-semibold">I'm just adding a place</span>
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div>
+                                                                        <label className="flex items-center gap-3 p-3 rounded-[20px] bg-white/10 border border-white/30 cursor-pointer hover:bg-white/15 transition-all duration-200">
+                                                                            <input
+                                                                                type="checkbox"
+                                                                                checked={formData.isChain}
+                                                                                onChange={(e) => handleInputChange('isChain', e.target.checked)}
+                                                                                className="w-5 h-5 rounded border-white/40 bg-white/20 text-coral focus:ring-coral/30 focus:ring-offset-0"
+                                                                            />
+                                                                            <LinkIcon className="w-5 h-5 text-white/80" />
+                                                                            <span className="text-sm font-semibold text-white" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
+                                                                                Part of a chain
+                                                                            </span>
+                                                                        </label>
+                                                                    </div>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    )}
 
                                                     {/* Description */}
                                                     <div>
@@ -662,10 +921,11 @@ export default function AddBusinessPage() {
 
                                                 <div className="space-y-6">
                                                     {/* Location */}
-                                                    <div>
-                                                        <label className="block text-sm font-semibold text-white mb-2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
-                                                            Location (City/Area) <span className="text-coral">*</span>
-                                                        </label>
+                                                    {formData.businessType !== 'online-only' && (
+                                                        <div>
+                                                            <label className="block text-sm font-semibold text-white mb-2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
+                                                                {formData.businessType === 'service-area' ? 'Service Area (City/Area)' : 'Location (City/Area)'} <span className="text-coral">*</span>
+                                                            </label>
                                                         <input
                                                             type="text"
                                                             value={formData.location}
@@ -679,28 +939,32 @@ export default function AddBusinessPage() {
                                                             }`}
                                                             placeholder="e.g., Cape Town, V&A Waterfront"
                                                         />
-                                                        {touched.location && errors.location && (
-                                                            <p className="mt-2 text-sm text-navbar-bg font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>{errors.location}</p>
-                                                        )}
-                                                    </div>
+                                                            {touched.location && errors.location && (
+                                                                <p className="mt-2 text-sm text-navbar-bg font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>{errors.location}</p>
+                                                            )}
+                                                        </div>
+                                                    )}
 
-                                                    {/* Address */}
-                                                    <div>
-                                                        <label className="block text-sm font-semibold text-white mb-2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
-                                                            Full Address
-                                                        </label>
+                                                    {/* Address - Only show for physical location */}
+                                                    {formData.businessType === 'physical' && (
+                                                        <div>
+                                                            <label className="block text-sm font-semibold text-white mb-2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
+                                                                Full Address
+                                                            </label>
                                                         <input
                                                             type="text"
                                                             value={formData.address}
                                                             onChange={(e) => handleInputChange('address', e.target.value)}
                                                             style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
-                                                            className="w-full bg-white/95 backdrop-blur-sm border pl-4 pr-4 py-3 sm:py-4 md:py-5 text-body font-semibold text-charcoal placeholder-charcoal/50 placeholder:font-normal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 input-mobile rounded-full border-white/60 focus:ring-navbar-bg/30 focus:border-navbar-bg"
-                                                            placeholder="Street address, building number, etc."
-                                                        />
-                                                    </div>
+                                                                className="w-full bg-white/95 backdrop-blur-sm border pl-4 pr-4 py-3 sm:py-4 md:py-5 text-body font-semibold text-charcoal placeholder-charcoal/50 placeholder:font-normal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 input-mobile rounded-full border-white/60 focus:ring-navbar-bg/30 focus:border-navbar-bg"
+                                                                placeholder="Street address, building number, etc."
+                                                            />
+                                                        </div>
+                                                    )}
 
-                                                    {/* Coordinates (Optional) */}
-                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                    {/* Coordinates (Optional) - Only show for physical location */}
+                                                    {formData.businessType === 'physical' && (
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                         <div>
                                                             <label className="block text-sm font-semibold text-white mb-2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
                                                                 Latitude (Optional)
@@ -744,6 +1008,7 @@ export default function AddBusinessPage() {
                                                             )}
                                                         </div>
                                                     </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>

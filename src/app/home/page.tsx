@@ -12,6 +12,8 @@ import { usePredefinedPageTitle } from "../hooks/usePageTitle";
 import Header from "../components/Header/Header";
 import SearchInput from "../components/SearchInput/SearchInput";
 import FilterModal, { FilterState } from "../components/FilterModal/FilterModal";
+import ActiveFilterBadges from "../components/FilterActiveBadges/ActiveFilterBadges";
+import { motion, AnimatePresence } from "framer-motion";
 import HeroCarousel from "../components/Hero/HeroCarousel";
 import BusinessRow from "../components/BusinessRow/BusinessRow";
 import BusinessRowSkeleton from "../components/BusinessRow/BusinessRowSkeleton";
@@ -176,6 +178,8 @@ export default function Home() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedInterestIds, setSelectedInterestIds] = useState<string[]>([]);
+  const [filters, setFilters] = useState<FilterState>({ minRating: null, distance: null });
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const searchWrapRef = useRef<HTMLDivElement | null>(null);
   const { interests, subcategories } = useUserPreferences();
 
@@ -193,6 +197,13 @@ export default function Home() {
       setSelectedInterestIds(interests.map(i => i.id));
     }
   }, [interests, selectedInterestIds.length]);
+
+  // Convert distance string to km number
+  const radiusKm = useMemo(() => {
+    if (!filters.distance) return null;
+    const match = filters.distance.match(/(\d+)\s*km/);
+    return match ? parseInt(match[1]) : null;
+  }, [filters.distance]);
 
   // Determine sort strategy based on search query
   const sortStrategy = useMemo((): 'relevance' | 'distance' | 'rating_desc' | 'price_asc' | 'combo' | undefined => {
@@ -212,10 +223,10 @@ export default function Home() {
     return undefined;
   }, [selectedInterestIds]);
 
-  const { businesses: forYouBusinesses, loading: forYouLoading, error: forYouError } = useForYouBusinesses(10, activeInterestIds);
+  const { businesses: forYouBusinesses, loading: forYouLoading, error: forYouError, refetch: refetchForYou } = useForYouBusinesses(10, activeInterestIds);
   const { businesses: trendingBusinesses, loading: trendingLoading, error: trendingError } = useTrendingBusinesses(10, { interestIds: activeInterestIds });
   const { events, loading: eventsLoading } = useEvents({ limit: 5, upcoming: true });
-  const { businesses: allBusinesses, loading: allBusinessesLoading } = useBusinesses({ 
+  const { businesses: allBusinesses, loading: allBusinessesLoading, refetch: refetchAllBusinesses } = useBusinesses({ 
     limit: 500, // Increased to ensure we get businesses from more subcategories
     sortBy: "total_rating", 
     sortOrder: "desc", 
@@ -223,6 +234,10 @@ export default function Home() {
     searchQuery: debouncedSearchQuery.trim().length > 0 ? debouncedSearchQuery : null,
     sort: sortStrategy,
     interestIds: activeInterestIds,
+    minRating: filters.minRating,
+    radiusKm: radiusKm,
+    latitude: userLocation?.lat ?? null,
+    longitude: userLocation?.lng ?? null,
   });
 
   // Check if search is active
@@ -281,8 +296,38 @@ export default function Home() {
   };
 
   const handleApplyFilters = (f: FilterState) => {
-    console.log("home filters:", f);
+    setFilters(f);
     closeFilters();
+    
+    // If distance filter is applied, request user location
+    if (f.distance && !userLocation) {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            setUserLocation({
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+            });
+          },
+          (error) => {
+            console.warn('Error getting user location:', error);
+            // Continue without location - distance filter won't work but other filters will
+          }
+        );
+      }
+    }
+    
+    // Trigger refetch to apply filters immediately
+    refetchAllBusinesses();
+    refetchForYou();
+  };
+
+  const handleClearFilters = () => {
+    setFilters({ minRating: null, distance: null });
+    setUserLocation(null);
+    // Trigger refetch to clear filters immediately
+    refetchAllBusinesses();
+    refetchForYou();
   };
 
   const handleSearchChange = (query: string) => {
@@ -296,13 +341,17 @@ export default function Home() {
 
   const handleToggleInterest = (interestId: string) => {
     setSelectedInterestIds(prev => {
-      if (prev.includes(interestId)) {
-        // Deselect - remove from array
-        return prev.filter(id => id !== interestId);
-      } else {
-        // Select - add to array
-        return [...prev, interestId];
-      }
+      const newIds = prev.includes(interestId)
+        ? prev.filter(id => id !== interestId)
+        : [...prev, interestId];
+      
+      // Immediately trigger refetch when category changes
+      setTimeout(() => {
+        refetchForYou();
+        refetchAllBusinesses();
+      }, 0);
+      
+      return newIds;
     });
   };
 
@@ -424,9 +473,29 @@ export default function Home() {
             />
           </div>
 
+          {/* Active Filter Badges */}
+          <ActiveFilterBadges
+            filters={filters}
+            onRemoveFilter={(filterType) => {
+              const newFilters = { ...filters, [filterType]: null };
+              setFilters(newFilters);
+              refetchAllBusinesses();
+              refetchForYou();
+            }}
+            onClearAll={handleClearFilters}
+          />
+
+          <AnimatePresence mode="wait">
           {isSearchActive ? (
             /* Search Results View - Styled like Explore page */
-            <div className="py-3 sm:py-4">
+            <motion.div
+              key="search-results"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className="py-3 sm:py-4"
+            >
               <div className="pt-4 sm:pt-6 md:pt-10">
                 {allBusinessesLoading && (
                   <div className="min-h-[60vh] bg-off-white flex items-center justify-center">
@@ -462,10 +531,17 @@ export default function Home() {
                   </>
                 )}
               </div>
-            </div>
+            </motion.div>
           ) : (
             /* Default Home Page Content */
-            <div className="flex flex-col gap-8 sm:gap-10 md:gap-12 pt-8">
+            <motion.div
+              key="curated-feed"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className="flex flex-col gap-8 sm:gap-10 md:gap-12 pt-8"
+            >
               {/* For You Section */}
               <div className="relative z-10">
                 {forYouLoading && <BusinessRowSkeleton title="For You Now" />}
@@ -519,8 +595,9 @@ export default function Home() {
                   />
                 )}
               </div>
-            </div>
+            </motion.div>
           )}
+          </AnimatePresence>
         </div>
       </main>
       <Footer />
@@ -530,7 +607,9 @@ export default function Home() {
         isVisible={isFilterVisible}
         onClose={closeFilters}
         onApplyFilters={handleApplyFilters}
+        onClearAll={handleClearFilters}
         anchorRef={searchWrapRef}
+        initialFilters={filters}
       />
 
       {/* Scroll to Top Button - Mobile Only */}

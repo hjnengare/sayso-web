@@ -22,6 +22,7 @@ interface FilterModalProps {
   isVisible: boolean;       // mount/unmount
   onClose: () => void;
   onApplyFilters?: (filters: FilterState) => void;
+  onClearAll?: () => void;
   /** element to anchor under (the search input wrapper) */
   anchorRef?: React.RefObject<HTMLElement>;
   /** Initial filter state to display */
@@ -38,6 +39,7 @@ export default function FilterModal({
   isVisible,
   onClose,
   onApplyFilters,
+  onClearAll,
   anchorRef,
   initialFilters,
 }: FilterModalProps) {
@@ -148,6 +150,11 @@ export default function FilterModal({
   const handleClearAll = () => {
     setSelectedRating(null);
     setSelectedDistance(null);
+    // Call parent's clear handler if provided
+    if (onClearAll) {
+      onClearAll();
+      onClose();
+    }
   };
 
   if (!isVisible) return null;

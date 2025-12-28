@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Fontdiner_Swanky } from "next/font/google";
 import { usePageTitle } from "../../hooks/usePageTitle";
 import { motion, AnimatePresence } from "framer-motion";
@@ -38,6 +38,7 @@ import {
     BusinessContactInfo,
     PersonalizationInsights,
 } from "../../components/BusinessDetail";
+import BusinessLocation from "../../components/BusinessDetail/BusinessLocation";
 import Header from "../../components/Header/Header";
 import StaggeredContainer from "../../components/Animations/StaggeredContainer";
 import AnimatedElement from "../../components/Animations/AnimatedElement";
@@ -51,6 +52,11 @@ export default function BusinessProfilePage() {
     const [isLiked, setIsLiked] = useState(false);
     const { showToast } = useToast();
     const { hasReviewed } = useUserHasReviewed(businessId);
+    const mapSectionRef = useRef<HTMLDivElement>(null);
+
+    const scrollToMap = () => {
+        mapSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
 
 
     const handleBookmark = () => {
@@ -257,6 +263,8 @@ export default function BusinessProfilePage() {
         category: business.category || 'Business',
         location: business.location || 'Cape Town',
         address: business.address,
+        latitude: business.lat || business.latitude || null,
+        longitude: business.lng || business.longitude || null,
         phone: business.phone,
         email: business.email,
         website: business.website,
@@ -378,6 +386,19 @@ export default function BusinessProfilePage() {
                                                     />
                                                 </AnimatedElement>
 
+                                                {/* Location Map */}
+                                                <AnimatedElement index={3.5} direction="bottom">
+                                                    <div ref={mapSectionRef}>
+                                                        <BusinessLocation
+                                                            name={businessData.name}
+                                                            address={businessData.address}
+                                                            location={businessData.location}
+                                                            latitude={businessData.latitude}
+                                                            longitude={businessData.longitude}
+                                                        />
+                                                    </div>
+                                                </AnimatedElement>
+
                                                 {/* Contact Information - Mobile Only */}
                                                 <AnimatedElement index={4} direction="bottom">
                                                     <div className="lg:hidden">
@@ -387,6 +408,8 @@ export default function BusinessProfilePage() {
                                                             address={businessData.address}
                                                             email={businessData.email}
                                                             location={businessData.location}
+                                                            onViewMap={scrollToMap}
+                                                            showMapLink={!!(businessData.address || businessData.location || businessData.latitude)}
                                                         />
                                                     </div>
                                                 </AnimatedElement>
@@ -430,6 +453,8 @@ export default function BusinessProfilePage() {
                                                             address={businessData.address}
                                                             email={businessData.email}
                                                             location={businessData.location}
+                                                            onViewMap={scrollToMap}
+                                                            showMapLink={!!(businessData.address || businessData.location || businessData.latitude)}
                                                         />
                                                     </div>
                                                 </AnimatedElement>

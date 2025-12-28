@@ -45,6 +45,27 @@ const nextConfig: NextConfig = {
   // Compress output
   compress: true,
   
+  // Webpack configuration for Mapbox GL
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // Fix for Mapbox GL - resolve fallbacks for Node.js modules
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      };
+    }
+    
+    // Handle Mapbox GL worker files
+    config.module.rules.push({
+      test: /\.worker\.js$/,
+      use: { loader: 'worker-loader' },
+    });
+    
+    return config;
+  },
+  
   // Headers for static asset caching
   async headers() {
     return [

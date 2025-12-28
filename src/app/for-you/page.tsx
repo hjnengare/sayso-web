@@ -12,6 +12,7 @@ import { useUserPreferences } from "../hooks/useUserPreferences";
 import { useDebounce } from "../hooks/useDebounce";
 import SearchInput from "../components/SearchInput/SearchInput";
 import FilterModal, { FilterState } from "../components/FilterModal/FilterModal";
+import ActiveFilterBadges from "../components/FilterActiveBadges/ActiveFilterBadges";
 import { ChevronRight, ChevronUp } from "react-feather";
 import { Loader } from "../components/Loader/Loader";
 import { usePredefinedPageTitle } from "../hooks/usePageTitle";
@@ -51,6 +52,8 @@ export default function ForYouPage() {
   const [isPaginationLoading, setIsPaginationLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedInterestIds, setSelectedInterestIds] = useState<string[]>([]);
+  const [filters, setFilters] = useState<FilterState>({ minRating: null, distance: null });
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const searchWrapRef = useRef<HTMLDivElement>(null);
   const previousPageRef = useRef(currentPage);
 
@@ -86,6 +89,13 @@ export default function ForYouPage() {
     [activeInterestIds, subcategories]
   );
 
+  // Convert distance string to km number
+  const radiusKm = useMemo(() => {
+    if (!filters.distance) return null;
+    const match = filters.distance.match(/(\d+)\s*km/);
+    return match ? parseInt(match[1]) : null;
+  }, [filters.distance]);
+
   const {
     businesses,
     loading,
@@ -99,6 +109,10 @@ export default function ForYouPage() {
     interestIds: debouncedSearchQuery.trim().length > 0 ? undefined : preferenceIds.length > 0 ? preferenceIds : undefined,
     priceRanges: preferredPriceRanges,
     dealbreakerIds: dealbreakerIds.length ? dealbreakerIds : undefined,
+    minRating: filters.minRating,
+    radiusKm: radiusKm,
+    latitude: userLocation?.lat ?? null,
+    longitude: userLocation?.lng ?? null,
     searchQuery: debouncedSearchQuery.trim().length > 0 ? debouncedSearchQuery : null,
     sort: sortStrategy,
   });
@@ -127,7 +141,38 @@ export default function ForYouPage() {
   };
 
   const handleApplyFilters = (f: FilterState) => {
-    console.log("filters:", f);
+    setFilters(f);
+    setCurrentPage(1); // Reset to first page when filters change
+    closeFilters();
+    
+    // If distance filter is applied, request user location
+    if (f.distance && !userLocation) {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            setUserLocation({
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+            });
+          },
+          (error) => {
+            console.warn('Error getting user location:', error);
+            // Continue without location - distance filter won't work but other filters will
+          }
+        );
+      }
+    }
+    
+    // Trigger refetch to apply filters immediately
+    refetch();
+  };
+
+  const handleClearFilters = () => {
+    setFilters({ minRating: null, distance: null });
+    setUserLocation(null);
+    setCurrentPage(1);
+    // Trigger refetch to clear filters immediately
+    refetch();
   };
 
   const handleSearchChange = (query: string) => {
@@ -146,13 +191,16 @@ export default function ForYouPage() {
 
   const handleToggleInterest = (interestId: string) => {
     setSelectedInterestIds(prev => {
-      if (prev.includes(interestId)) {
-        // Deselect - remove from array
-        return prev.filter(id => id !== interestId);
-      } else {
-        // Select - add to array
-        return [...prev, interestId];
-      }
+      const newIds = prev.includes(interestId)
+        ? prev.filter(id => id !== interestId)
+        : [...prev, interestId];
+      
+      // Immediately trigger refetch when category changes
+      setTimeout(() => {
+        refetch();
+      }, 0);
+      
+      return newIds;
     });
     setCurrentPage(1); // Reset to first page when filter changes
   };
@@ -286,6 +334,17 @@ export default function ForYouPage() {
             />
           </div>
 
+          {/* Active Filter Badges */}
+          <ActiveFilterBadges
+            filters={filters}
+            onRemoveFilter={(filterType) => {
+              const newFilters = { ...filters, [filterType]: null };
+              setFilters(newFilters);
+              refetch();
+            }}
+            onClearAll={handleClearFilters}
+          />
+
           <div className="py-3 sm:py-4">
             <div className="pt-4 sm:pt-6 md:pt-10">
           {loading && (
@@ -367,7 +426,9 @@ export default function ForYouPage() {
         isVisible={isFilterVisible}
         onClose={closeFilters}
         onApplyFilters={handleApplyFilters}
+        onClearAll={handleClearFilters}
         anchorRef={searchWrapRef}
+        initialFilters={filters}
       />
 
       {/* Scroll to Top Button */}
