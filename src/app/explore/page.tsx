@@ -391,9 +391,6 @@ function ExplorePageContent() {
               onSearch={handleSearchChange}
               onSubmitQuery={handleSubmitQuery}
               onFilterClick={openFilters}
-              onMapClick={() => setIsMapMode(!isMapMode)}
-              showMap={true}
-              isMapMode={isMapMode}
               onFocusOpenFilters={openFilters}
               showFilter
             />
