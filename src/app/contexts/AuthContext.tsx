@@ -170,8 +170,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
           console.log('AuthContext: Registration error', authError);
           // Handle specific error cases
           let errorMessage = authError.message;
-          if (authError.message.includes('User already registered') || authError.message.includes('already registered')) {
-            errorMessage = 'An account with this email already exists. Please try logging in instead.';
+          // Check for email already in use - check both code and message
+          if (
+            authError.code === 'user_exists' ||
+            authError.message.toLowerCase().includes('already in use') ||
+            authError.message.toLowerCase().includes('already registered') ||
+            authError.message.toLowerCase().includes('email already') ||
+            authError.message.toLowerCase().includes('already exists')
+          ) {
+            errorMessage = 'This email address is already in use. Please try logging in instead or use a different email.';
           }
           setError(errorMessage);
           setIsLoading(false);

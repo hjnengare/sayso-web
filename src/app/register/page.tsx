@@ -236,9 +236,15 @@ export default function RegisterPage() {
           if (authError.includes('fetch') || authError.includes('network')) {
             setError('🌐 Connection error. Please check your internet connection and try again.');
             showToast('🌐 Connection error. Please check your internet connection and try again.', 'sage', 4000);
-          } else if (authError.includes('already registered') || authError.includes('already exists')) {
-            setError('❌ This email is already registered. Try logging in instead.');
-            showToast('❌ This email is already registered. Try logging in instead.', 'sage', 4000);
+          } else if (
+            authError.toLowerCase().includes('already in use') ||
+            authError.toLowerCase().includes('already registered') ||
+            authError.toLowerCase().includes('already exists') ||
+            authError.toLowerCase().includes('email already') ||
+            authError.toLowerCase().includes('already taken')
+          ) {
+            setError('❌ This email address is already in use. Please try logging in instead or use a different email.');
+            showToast('❌ This email address is already in use. Please try logging in instead or use a different email.', 'sage', 4000);
           } else if (authError.includes('invalid email') || authError.includes('email address') && authError.includes('invalid')) {
             setError('📧 The email address format is invalid. Please check and try again.');
             showToast('📧 The email address format is invalid. Please check and try again.', 'sage', 4000);

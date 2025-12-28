@@ -396,9 +396,24 @@ export class AuthService {
   private static handleSupabaseError(error: { message: string; error_code?: string }): AuthError {
     // Handle specific error messages from Supabase
     const message = error.message.toLowerCase();
+    const errorCode = error.error_code?.toLowerCase() || '';
 
-    if (message.includes('user already registered') || message.includes('email already exists') || message.includes('already been registered')) {
-      return { message: '❌ This email address is already taken. Try logging in instead.', code: 'user_exists' };
+    // Check for email already in use - check both error code and message
+    if (
+      errorCode === 'user_already_registered' ||
+      errorCode === 'email_already_registered' ||
+      message.includes('user already registered') ||
+      message.includes('email already exists') ||
+      message.includes('already been registered') ||
+      message.includes('email address is already registered') ||
+      message.includes('email is already in use') ||
+      message.includes('this email is already registered') ||
+      message.includes('email already registered') ||
+      message.includes('duplicate key value') ||
+      message.includes('unique constraint') ||
+      (message.includes('email') && message.includes('already') && (message.includes('use') || message.includes('taken') || message.includes('registered')))
+    ) {
+      return { message: '❌ This email address is already in use. Please try logging in instead or use a different email.', code: 'user_exists' };
     }
 
     if (message.includes('invalid login credentials') || message.includes('invalid email or password')) {
