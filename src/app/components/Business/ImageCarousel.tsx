@@ -69,17 +69,17 @@ export function ImageCarousel({
     }, [isModalOpen, handleKeyDown]);
 
     return (
-        <div className="relative w-full mx-auto overflow-visible sm:overflow-hidden border-0 sm:border border-sage/10 bg-card-bg rounded-[12px] sm:rounded-[12px]">
+        <div className="relative w-full mx-auto overflow-visible sm:overflow-hidden border-0 sm:border border-sage/10 bg-card-bg rounded-[20px] sm:rounded-[20px]">
             {/* Slides */}
             <div
-                className="relative h-[60vh] overflow-visible sm:overflow-hidden cursor-pointer group bg-card-bg flex items-center justify-center rounded-[12px] sm:rounded-[12px]"
+                className="relative h-[60vh] overflow-visible sm:overflow-hidden cursor-pointer group bg-card-bg flex items-center justify-center rounded-[20px] sm:rounded-[20px]"
                 onClick={hasImages ? openModal : undefined}
             >
                 {hasImages ? (
                     displayImages.map((src, i) => (
                         <div
                             key={src || i}
-                            className={`absolute inset-0 transition-opacity duration-300 bg-card-bg rounded-[12px] sm:rounded-[12px] ${
+                            className={`absolute inset-0 transition-opacity duration-300 bg-card-bg rounded-[20px] sm:rounded-[20px] ${
                                 i === index ? 'opacity-100' : 'opacity-0'
                             }`}
                         >
@@ -105,7 +105,7 @@ export function ImageCarousel({
                     ))
                 ) : (
                     // Placeholder icon when no images
-                    <div className="absolute inset-0 flex items-center justify-center bg-card-bg rounded-[12px]">
+                    <div className="absolute inset-0 flex items-center justify-center bg-card-bg rounded-[20px]">
                         {placeholderImage ? (
                             <Image
                                 src={placeholderImage}
@@ -130,7 +130,7 @@ export function ImageCarousel({
             {/* Caption overlay: rating + metrics */}
             <div className="pointer-events-none absolute left-0 right-0 bottom-0 p-3 sm:p-4">
                 <div className="mx-auto max-w-md">
-                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 rounded-[12px] bg-card-bg/90 px-3 sm:px-4 py-2 shadow-sm mx-auto text-center justify-center">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 rounded-[20px] bg-card-bg/90 px-3 sm:px-4 py-2 shadow-sm mx-auto text-center justify-center">
                         {/* Rating badge */}
                         <span className="inline-flex items-center gap-2 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 px-3 py-1 text-white text-sm font-semibold shadow">
                             <Star className="h-4 w-4" />

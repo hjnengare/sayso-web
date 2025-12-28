@@ -93,7 +93,7 @@ const cardVariants = {
       'rounded-lg p-card-padding', // 24px
     ],
     lg: [
-      'rounded-[12px] p-card-padding-lg', // 32px
+      'rounded-[20px] p-card-padding-lg', // 32px
     ],
   },
 

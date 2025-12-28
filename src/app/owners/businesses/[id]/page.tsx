@@ -219,7 +219,7 @@ export default function OwnerBusinessDashboard() {
                     className="w-full sm:mx-0"
                     aria-labelledby="business-heading"
                   >
-                    <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-lg relative overflow-hidden">
+                    <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-sage/10 to-transparent rounded-full blur-lg"></div>
                     <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-coral/10 to-transparent rounded-full blur-lg"></div>
 
@@ -275,7 +275,7 @@ export default function OwnerBusinessDashboard() {
                     className="grid grid-cols-2 sm:grid-cols-4 gap-4"
                     aria-label="Business statistics"
                   >
-                    <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-lg p-4">
+                    <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-4">
                       <div className="flex items-center gap-2 mb-2">
                         <Star className="w-5 h-5 text-coral" />
                         <span className="text-sm text-charcoal/70">Average Rating</span>
@@ -286,7 +286,7 @@ export default function OwnerBusinessDashboard() {
                       <p className="text-xs text-charcoal/60">From reviews</p>
                     </div>
 
-                    <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-lg p-4">
+                    <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-4">
                       <div className="flex items-center gap-2 mb-2">
                         <MessageSquare className="w-5 h-5 text-coral" />
                         <span className="text-sm text-charcoal/70">Reviews</span>
@@ -299,7 +299,7 @@ export default function OwnerBusinessDashboard() {
 
                     {analytics && (
                       <>
-                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-lg p-4">
+                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-4">
                           <div className="flex items-center gap-2 mb-2">
                             <Eye className="w-5 h-5 text-coral" />
                             <span className="text-sm text-charcoal/70">Profile Views</span>
@@ -310,7 +310,7 @@ export default function OwnerBusinessDashboard() {
                           <p className="text-xs text-charcoal/60">Last 30 days</p>
                         </div>
 
-                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-lg p-4">
+                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-4">
                           <div className="flex items-center gap-2 mb-2">
                             <MessageSquare className="w-5 h-5 text-coral" />
                             <span className="text-sm text-charcoal/70">Conversations</span>
@@ -327,7 +327,7 @@ export default function OwnerBusinessDashboard() {
 
                   {/* Quick Actions */}
                   <section
-                    className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-lg p-6 sm:p-8 space-y-4"
+                    className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-6 sm:p-8 space-y-4"
                     aria-label="Business management"
                   >
                     <div className="flex items-center justify-between">

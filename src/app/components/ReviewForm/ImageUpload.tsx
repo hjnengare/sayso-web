@@ -202,7 +202,7 @@ export default function ImageUpload({
           {existingImageUrls.map((url, index) => (
             <div
               key={`existing-${index}`}
-              className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-[12px] overflow-hidden border-2 border-white/60 bg-off-white/50 group shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+              className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-[20px] overflow-hidden border-2 border-white/60 bg-off-white/50 group shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
               onClick={(e) => {
                 // Calculate total index including existing images
                 const totalIndex = index;
@@ -250,7 +250,7 @@ export default function ImageUpload({
           {previews.map((preview, index) => (
             <div
               key={`new-${index}`}
-              className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-[12px] overflow-hidden border-2 border-white/60 bg-off-white/50 group shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+              className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-[20px] overflow-hidden border-2 border-white/60 bg-off-white/50 group shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
               onClick={(e) => {
                 // Calculate total index including existing images
                 const totalIndex = existingImageUrls.length + index;
@@ -334,7 +334,7 @@ export default function ImageUpload({
             className="relative max-w-[90vw] max-h-[90vh] w-full h-full flex items-center justify-center"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="relative w-full h-full max-w-5xl max-h-[85vh] rounded-[12px] overflow-hidden shadow-2xl">
+            <div className="relative w-full h-full max-w-5xl max-h-[85vh] rounded-[20px] overflow-hidden shadow-2xl">
               <Image
                 src={
                   previewIndex < existingImageUrls.length
@@ -368,7 +368,7 @@ export default function ImageUpload({
           onDrop={handleDrop}
           onClick={handleClick}
           className={`
-            relative w-full min-h-[160px] rounded-[12px] border-2 border-dashed 
+            relative w-full min-h-[160px] rounded-[20px] border-2 border-dashed 
             transition-all duration-300 cursor-pointer
             ${isDragging 
               ? 'border-sage bg-sage/10 scale-[1.02] shadow-lg' 
@@ -378,7 +378,7 @@ export default function ImageUpload({
           `}
         >
           {/* Decorative background elements */}
-          <div className="absolute inset-0 overflow-hidden rounded-[12px]">
+          <div className="absolute inset-0 overflow-hidden rounded-[20px]">
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-sage/10 to-transparent rounded-full blur-2xl opacity-50" />
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-coral/10 to-transparent rounded-full blur-xl opacity-50" />
           </div>
@@ -419,7 +419,7 @@ export default function ImageUpload({
 
       {/* Disabled state message */}
       {disabled && (existingImageUrls.length + files.length) >= maxImages && (
-        <div className="w-full min-h-[120px] rounded-[12px] border-2 border-dashed border-charcoal/10 bg-off-white/20 flex items-center justify-center">
+        <div className="w-full min-h-[120px] rounded-[20px] border-2 border-dashed border-charcoal/10 bg-off-white/20 flex items-center justify-center">
           <p className="text-sm text-charcoal/50 text-center" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
             Maximum {maxImages} images reached
           </p>

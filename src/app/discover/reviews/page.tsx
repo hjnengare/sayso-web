@@ -360,7 +360,7 @@ export default function GeneralReviewsPage() {
                   animate={{ y: 0, opacity: 1 }}
                   exit={{ y: -20, opacity: 0 }}
                   transition={{ delay: 0.1 * index, duration: 0.5 }}
-                  className={`backdrop-blur-lg rounded-[12px] border relative overflow-hidden transition-all duration-premium ease-premium break-inside-avoid mb-4 sm:mb-6 group shadow-[0_15px_40px_rgba(15,23,42,0.08)] hover:shadow-[0_20px_50px_rgba(15,23,42,0.12)] ${cardClasses}`}
+                  className={`backdrop-blur-lg rounded-[20px] border relative overflow-hidden transition-all duration-premium ease-premium break-inside-avoid mb-4 sm:mb-6 group shadow-[0_15px_40px_rgba(15,23,42,0.08)] hover:shadow-[0_20px_50px_rgba(15,23,42,0.12)] ${cardClasses}`}
                 >
                   {/* Hero Image Section - Instagram-like Carousel */}
                   {review.images && review.images.length > 0 && (

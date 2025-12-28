@@ -86,7 +86,7 @@ export default function AIChat() {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 w-[380px] max-w-[calc(100vw-3rem)] h-[600px] max-h-[calc(100vh-8rem)] bg-white rounded-[12px] shadow-2xl border border-charcoal/10 flex flex-col overflow-hidden">
+        <div className="fixed bottom-6 right-6 z-50 w-[380px] max-w-[calc(100vw-3rem)] h-[600px] max-h-[calc(100vh-8rem)] bg-white rounded-[20px] shadow-2xl border border-charcoal/10 flex flex-col overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-sage to-sage/90 px-4 py-3 flex items-center justify-between border-b border-white/20">
             <div className="flex items-center gap-3">
@@ -117,7 +117,7 @@ export default function AIChat() {
                 className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`max-w-[80%] rounded-[12px] px-4 py-2 ${
+                  className={`max-w-[80%] rounded-[20px] px-4 py-2 ${
                     message.role === "user"
                       ? "bg-navbar-bg text-white rounded-tr-sm backdrop-blur-sm"
                       : "bg-sage text-white rounded-tl-sm"
@@ -134,7 +134,7 @@ export default function AIChat() {
             ))}
             {isLoading && (
               <div className="flex justify-start">
-                <div className="bg-sage text-white rounded-[12px] rounded-tl-sm px-4 py-3 flex items-center gap-2">
+                <div className="bg-sage text-white rounded-[20px] rounded-tl-sm px-4 py-3 flex items-center gap-2">
                   <Loader className="w-4 h-4 text-white animate-spin" />
                   <span className="text-sm text-white/90">Thinking...</span>
                 </div>

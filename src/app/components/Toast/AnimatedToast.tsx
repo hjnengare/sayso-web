@@ -32,7 +32,7 @@ export default function AnimatedToast({ toast, onRemove, getToastStyles, getToas
         duration: 0.3
       }}
       className={`
-        pointer-events-auto max-w-sm w-full backdrop-blur-xl border rounded-[12px] p-4 shadow-lg
+        pointer-events-auto max-w-sm w-full backdrop-blur-xl border rounded-[20px] p-4 shadow-lg
         ${getToastStyles(toast.type)}
       `}
       layout

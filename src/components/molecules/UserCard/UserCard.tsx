@@ -36,7 +36,7 @@ export const UserCard: React.FC<UserCardProps> = ({
       onClick={isClickable ? onClick : undefined}
       className={`
         flex items-start gap-3
-        ${isClickable ? 'cursor-pointer hover:bg-light-gray/50 rounded-[12px] p-3 -m-3 transition-colors' : ''}
+        ${isClickable ? 'cursor-pointer hover:bg-light-gray/50 rounded-[20px] p-3 -m-3 transition-colors' : ''}
         ${className}
       `}
     >

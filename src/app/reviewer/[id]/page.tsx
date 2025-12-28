@@ -442,7 +442,7 @@ export default function ReviewerProfilePage() {
                                                 </h3>
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                                     {reviewer.badges.map((badge) => (
-                                                        <div key={badge.id} className="bg-off-white/50 rounded-[12px] p-4 border border-white/40">
+                                                        <div key={badge.id} className="bg-off-white/50 rounded-[20px] p-4 border border-white/40">
                                                             <div className="flex items-center gap-3 mb-2">
                                                                 <span className="text-2xl">{badge.icon}</span>
                                                                 <div>
@@ -472,7 +472,7 @@ export default function ReviewerProfilePage() {
 
                                         {/* Reviews Section */}
                                         <section
-                                            className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-md p-6 sm:p-8"
+                                            className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-md p-6 sm:p-8"
                                             aria-label="Reviews written by this reviewer"
                                         >
                                             <ReviewsList

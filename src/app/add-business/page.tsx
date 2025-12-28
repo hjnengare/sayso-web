@@ -25,6 +25,15 @@ import { PageLoader } from "../components/Loader";
 import Header from "../components/Header/Header";
 import dynamic from "next/dynamic";
 import { getBrowserSupabase } from "../lib/supabase/client";
+import { authStyles } from "../components/Auth/Shared/authStyles";
+import { Fontdiner_Swanky } from "next/font/google";
+import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
+
+const swanky = Fontdiner_Swanky({
+    weight: "400",
+    subsets: ["latin"],
+    display: "swap",
+});
 
 const Footer = dynamic(() => import("../components/Footer/Footer"), {
     loading: () => null,
@@ -484,6 +493,7 @@ export default function AddBusinessPage() {
 
     return (
         <>
+            <style dangerouslySetInnerHTML={{ __html: authStyles }} />
             <style dangerouslySetInnerHTML={{ __html: animations }} />
             <div
                 className="min-h-dvh bg-off-white relative overflow-hidden font-urbanist"
@@ -529,9 +539,22 @@ export default function AddBusinessPage() {
                                         <div className="w-16 h-16 bg-sage/10 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-sage/20">
                                             <Store className="w-8 h-8 text-sage" />
                                         </div>
-                                        <h1 className="text-2xl sm:text-3xl font-semibold text-charcoal mb-2 font-urbanist">
-                                            Add Your Business
-                                        </h1>
+                                        <div className="inline-block relative mb-2">
+                                            <WavyTypedTitle
+                                                text="Add Your Business"
+                                                as="h1"
+                                                className={`${swanky.className} text-2xl sm:text-3xl font-semibold mb-2 text-center leading-[1.2] tracking-tight text-charcoal`}
+                                                typingSpeedMs={40}
+                                                startDelayMs={300}
+                                                waveVariant="subtle"
+                                                loopWave={false}
+                                                triggerOnTypingComplete={true}
+                                                enableScrollTrigger={false}
+                                                style={{ 
+                                                    fontFamily: swanky.style.fontFamily,
+                                                }}
+                                            />
+                                        </div>
                                         <p className="text-sm sm:text-base text-charcoal/70 font-urbanist max-w-md mx-auto">
                                             Create your business profile to connect with customers and manage your listing
                                         </p>
@@ -539,12 +562,11 @@ export default function AddBusinessPage() {
 
                                     <form onSubmit={handleSubmit} className="space-y-6">
                                         {/* Basic Information Section */}
-                                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-[12px] ring-1 ring-white/20 p-6 relative overflow-hidden animate-fade-in-up animate-delay-100">
-                                            <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-sage/10 to-transparent rounded-full blur-lg" />
+                                        <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[20px] overflow-hidden backdrop-blur-md shadow-md px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12 animate-fade-in-up animate-delay-100">
                                             <div className="relative z-10">
-                                                <h3 className="font-urbanist text-base font-600 text-charcoal mb-6 flex items-center gap-3">
-                                                    <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-sage/20 to-sage/10">
-                                                        <Store className="w-4 h-4 text-sage" />
+                                                <h3 className="font-urbanist text-base font-semibold text-white mb-6 flex items-center gap-3" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
+                                                    <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-coral/20 to-coral/10">
+                                                        <Store className="w-4 h-4 text-coral" />
                                                     </span>
                                                     Basic Information
                                                 </h3>
@@ -552,7 +574,7 @@ export default function AddBusinessPage() {
                                                 <div className="space-y-6">
                                                     {/* Business Name */}
                                                     <div>
-                                                        <label className="block font-urbanist text-sm font-600 text-charcoal mb-2">
+                                                        <label className="block text-sm font-semibold text-white mb-2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
                                                             Business Name <span className="text-coral">*</span>
                                                         </label>
                                                         <input
@@ -560,27 +582,28 @@ export default function AddBusinessPage() {
                                                             value={formData.name}
                                                             onChange={(e) => handleInputChange('name', e.target.value)}
                                                             onBlur={() => handleBlur('name')}
-                                                            className={`w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 rounded-[12px] text-sm placeholder:text-charcoal/50 font-urbanist text-charcoal focus:outline-none focus:ring-2 transition-all duration-200 ${
+                                                            style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
+                                                            className={`w-full bg-white/95 backdrop-blur-sm border pl-4 pr-4 py-3 sm:py-4 md:py-5 text-body font-semibold text-charcoal placeholder-charcoal/50 placeholder:font-normal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 input-mobile rounded-full ${
                                                                 errors.name
-                                                                    ? 'border-coral focus:border-coral focus:ring-coral/20'
-                                                                    : 'border-charcoal/20 focus:border-sage focus:ring-sage/20'
+                                                                    ? 'border-navbar-bg focus:border-navbar-bg focus:ring-navbar-bg/20'
+                                                                    : 'border-white/60 focus:ring-navbar-bg/30 focus:border-navbar-bg'
                                                             }`}
                                                             placeholder="Enter business name"
                                                         />
                                                         {touched.name && errors.name && (
-                                                            <p className="mt-1 text-xs text-coral font-urbanist">{errors.name}</p>
+                                                            <p className="mt-2 text-sm text-navbar-bg font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>{errors.name}</p>
                                                         )}
                                                     </div>
 
                                                     {/* Category */}
                                                     <div>
-                                                        <label className="block font-urbanist text-sm font-600 text-charcoal mb-2">
+                                                        <label className="block text-sm font-semibold text-white mb-2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
                                                             Category <span className="text-coral">*</span>
                                                         </label>
                                                         {loadingCategories ? (
-                                                            <div className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-charcoal/20 rounded-[12px] flex items-center gap-2">
+                                                            <div className="w-full bg-white/95 backdrop-blur-sm border border-white/60 pl-4 pr-4 py-3 sm:py-4 md:py-5 rounded-full flex items-center gap-2">
                                                                 <Loader2 className="w-4 h-4 animate-spin text-charcoal/60" />
-                                                                <span className="text-sm text-charcoal/60 font-urbanist">Loading categories...</span>
+                                                                <span className="text-body text-charcoal/60 font-semibold" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>Loading categories...</span>
                                                             </div>
                                                         ) : (
                                                             <>
@@ -588,10 +611,11 @@ export default function AddBusinessPage() {
                                                                     value={formData.category}
                                                                     onChange={(e) => handleInputChange('category', e.target.value)}
                                                                     onBlur={() => handleBlur('category')}
-                                                                    className={`w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 rounded-[12px] text-sm font-urbanist text-charcoal focus:outline-none focus:ring-2 transition-all duration-200 ${
+                                                                    style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
+                                                                    className={`w-full bg-white/95 backdrop-blur-sm border pl-4 pr-4 py-3 sm:py-4 md:py-5 text-body font-semibold text-charcoal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 input-mobile rounded-full ${
                                                                         errors.category
-                                                                            ? 'border-coral focus:border-coral focus:ring-coral/20'
-                                                                            : 'border-charcoal/20 focus:border-sage focus:ring-sage/20'
+                                                                            ? 'border-navbar-bg focus:border-navbar-bg focus:ring-navbar-bg/20'
+                                                                            : 'border-white/60 focus:ring-navbar-bg/30 focus:border-navbar-bg'
                                                                     }`}
                                                                 >
                                                                     <option value="">Select a category</option>
@@ -602,7 +626,7 @@ export default function AddBusinessPage() {
                                                                     ))}
                                                                 </select>
                                                                 {touched.category && errors.category && (
-                                                                    <p className="mt-1 text-xs text-coral font-urbanist">{errors.category}</p>
+                                                                    <p className="mt-2 text-sm text-navbar-bg font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>{errors.category}</p>
                                                                 )}
                                                             </>
                                                         )}
@@ -610,14 +634,15 @@ export default function AddBusinessPage() {
 
                                                     {/* Description */}
                                                     <div>
-                                                        <label className="block font-urbanist text-sm font-600 text-charcoal mb-2">
+                                                        <label className="block text-sm font-semibold text-white mb-2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
                                                             Description
                                                         </label>
                                                         <textarea
                                                             value={formData.description}
                                                             onChange={(e) => handleInputChange('description', e.target.value)}
                                                             rows={4}
-                                                            className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-charcoal/20 rounded-[12px] text-sm placeholder:text-charcoal/50 font-urbanist text-charcoal focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-all duration-200 resize-none"
+                                                            style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
+                                                            className="w-full bg-white/95 backdrop-blur-sm border pl-4 pr-4 py-3 sm:py-4 md:py-5 text-body font-semibold text-charcoal placeholder-charcoal/50 placeholder:font-normal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 input-mobile rounded-[20px] resize-none border-white/60 focus:ring-navbar-bg/30 focus:border-navbar-bg"
                                                             placeholder="Describe your business..."
                                                         />
                                                     </div>
@@ -626,10 +651,9 @@ export default function AddBusinessPage() {
                                         </div>
 
                                         {/* Location Information Section */}
-                                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-[12px] ring-1 ring-white/20 p-6 relative overflow-hidden animate-fade-in-up animate-delay-200">
-                                            <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-coral/10 to-transparent rounded-full blur-lg" />
+                                        <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[20px] overflow-hidden backdrop-blur-md shadow-md px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12 animate-fade-in-up animate-delay-200">
                                             <div className="relative z-10">
-                                                <h3 className="font-urbanist text-base font-600 text-charcoal mb-6 flex items-center gap-3">
+                                                <h3 className="font-urbanist text-base font-semibold text-white mb-6 flex items-center gap-3" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
                                                     <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-coral/20 to-coral/10">
                                                         <MapPin className="w-4 h-4 text-coral" />
                                                     </span>
@@ -639,7 +663,7 @@ export default function AddBusinessPage() {
                                                 <div className="space-y-6">
                                                     {/* Location */}
                                                     <div>
-                                                        <label className="block font-urbanist text-sm font-600 text-charcoal mb-2">
+                                                        <label className="block text-sm font-semibold text-white mb-2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
                                                             Location (City/Area) <span className="text-coral">*</span>
                                                         </label>
                                                         <input
@@ -647,28 +671,30 @@ export default function AddBusinessPage() {
                                                             value={formData.location}
                                                             onChange={(e) => handleInputChange('location', e.target.value)}
                                                             onBlur={() => handleBlur('location')}
-                                                            className={`w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 rounded-[12px] text-sm placeholder:text-charcoal/50 font-urbanist text-charcoal focus:outline-none focus:ring-2 transition-all duration-200 ${
+                                                            style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
+                                                            className={`w-full bg-white/95 backdrop-blur-sm border pl-4 pr-4 py-3 sm:py-4 md:py-5 text-body font-semibold text-charcoal placeholder-charcoal/50 placeholder:font-normal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 input-mobile rounded-full ${
                                                                 errors.location
-                                                                    ? 'border-coral focus:border-coral focus:ring-coral/20'
-                                                                    : 'border-charcoal/20 focus:border-sage focus:ring-sage/20'
+                                                                    ? 'border-navbar-bg focus:border-navbar-bg focus:ring-navbar-bg/20'
+                                                                    : 'border-white/60 focus:ring-navbar-bg/30 focus:border-navbar-bg'
                                                             }`}
                                                             placeholder="e.g., Cape Town, V&A Waterfront"
                                                         />
                                                         {touched.location && errors.location && (
-                                                            <p className="mt-1 text-xs text-coral font-urbanist">{errors.location}</p>
+                                                            <p className="mt-2 text-sm text-navbar-bg font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>{errors.location}</p>
                                                         )}
                                                     </div>
 
                                                     {/* Address */}
                                                     <div>
-                                                        <label className="block font-urbanist text-sm font-600 text-charcoal mb-2">
+                                                        <label className="block text-sm font-semibold text-white mb-2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
                                                             Full Address
                                                         </label>
                                                         <input
                                                             type="text"
                                                             value={formData.address}
                                                             onChange={(e) => handleInputChange('address', e.target.value)}
-                                                            className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-charcoal/20 rounded-[12px] text-sm placeholder:text-charcoal/50 font-urbanist text-charcoal focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-all duration-200"
+                                                            style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
+                                                            className="w-full bg-white/95 backdrop-blur-sm border pl-4 pr-4 py-3 sm:py-4 md:py-5 text-body font-semibold text-charcoal placeholder-charcoal/50 placeholder:font-normal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 input-mobile rounded-full border-white/60 focus:ring-navbar-bg/30 focus:border-navbar-bg"
                                                             placeholder="Street address, building number, etc."
                                                         />
                                                     </div>
@@ -676,7 +702,7 @@ export default function AddBusinessPage() {
                                                     {/* Coordinates (Optional) */}
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                         <div>
-                                                            <label className="block font-urbanist text-sm font-600 text-charcoal mb-2">
+                                                            <label className="block text-sm font-semibold text-white mb-2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
                                                                 Latitude (Optional)
                                                             </label>
                                                             <input
@@ -684,19 +710,20 @@ export default function AddBusinessPage() {
                                                                 value={formData.lat}
                                                                 onChange={(e) => handleInputChange('lat', e.target.value)}
                                                                 onBlur={() => handleBlur('lat')}
-                                                                className={`w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 rounded-[12px] text-sm placeholder:text-charcoal/50 font-urbanist text-charcoal focus:outline-none focus:ring-2 transition-all duration-200 ${
+                                                                style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
+                                                                className={`w-full bg-white/95 backdrop-blur-sm border pl-4 pr-4 py-3 sm:py-4 md:py-5 text-body font-semibold text-charcoal placeholder-charcoal/50 placeholder:font-normal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 input-mobile rounded-full ${
                                                                     errors.lat
-                                                                        ? 'border-coral focus:border-coral focus:ring-coral/20'
-                                                                        : 'border-charcoal/20 focus:border-sage focus:ring-sage/20'
+                                                                        ? 'border-navbar-bg focus:border-navbar-bg focus:ring-navbar-bg/20'
+                                                                        : 'border-white/60 focus:ring-navbar-bg/30 focus:border-navbar-bg'
                                                                 }`}
                                                                 placeholder="e.g., -33.9249"
                                                             />
                                                             {touched.lat && errors.lat && (
-                                                                <p className="mt-1 text-xs text-coral font-urbanist">{errors.lat}</p>
+                                                                <p className="mt-2 text-sm text-navbar-bg font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>{errors.lat}</p>
                                                             )}
                                                         </div>
                                                         <div>
-                                                            <label className="block font-urbanist text-sm font-600 text-charcoal mb-2">
+                                                            <label className="block text-sm font-semibold text-white mb-2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
                                                                 Longitude (Optional)
                                                             </label>
                                                             <input
@@ -704,15 +731,16 @@ export default function AddBusinessPage() {
                                                                 value={formData.lng}
                                                                 onChange={(e) => handleInputChange('lng', e.target.value)}
                                                                 onBlur={() => handleBlur('lng')}
-                                                                className={`w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 rounded-[12px] text-sm placeholder:text-charcoal/50 font-urbanist text-charcoal focus:outline-none focus:ring-2 transition-all duration-200 ${
+                                                                style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
+                                                                className={`w-full bg-white/95 backdrop-blur-sm border pl-4 pr-4 py-3 sm:py-4 md:py-5 text-body font-semibold text-charcoal placeholder-charcoal/50 placeholder:font-normal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 input-mobile rounded-full ${
                                                                     errors.lng
-                                                                        ? 'border-coral focus:border-coral focus:ring-coral/20'
-                                                                        : 'border-charcoal/20 focus:border-sage focus:ring-sage/20'
+                                                                        ? 'border-navbar-bg focus:border-navbar-bg focus:ring-navbar-bg/20'
+                                                                        : 'border-white/60 focus:ring-navbar-bg/30 focus:border-navbar-bg'
                                                                 }`}
                                                                 placeholder="e.g., 18.4241"
                                                             />
                                                             {touched.lng && errors.lng && (
-                                                                <p className="mt-1 text-xs text-coral font-urbanist">{errors.lng}</p>
+                                                                <p className="mt-2 text-sm text-navbar-bg font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>{errors.lng}</p>
                                                             )}
                                                         </div>
                                                     </div>
@@ -721,12 +749,11 @@ export default function AddBusinessPage() {
                                         </div>
 
                                         {/* Contact Information Section */}
-                                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-[12px] ring-1 ring-white/20 p-6 relative overflow-hidden animate-fade-in-up animate-delay-300">
-                                            <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-sage/10 to-transparent rounded-full blur-lg" />
+                                        <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[20px] overflow-hidden backdrop-blur-md shadow-md px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12 animate-fade-in-up animate-delay-300">
                                             <div className="relative z-10">
-                                                <h3 className="font-urbanist text-base font-600 text-charcoal mb-6 flex items-center gap-3">
-                                                    <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-sage/20 to-sage/10">
-                                                        <Phone className="w-4 h-4 text-sage" />
+                                                <h3 className="font-urbanist text-base font-semibold text-white mb-6 flex items-center gap-3" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
+                                                    <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-coral/20 to-coral/10">
+                                                        <Phone className="w-4 h-4 text-coral" />
                                                     </span>
                                                     Contact Information
                                                 </h3>
@@ -735,7 +762,7 @@ export default function AddBusinessPage() {
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                         {/* Phone */}
                                                         <div>
-                                                            <label className="block font-urbanist text-sm font-600 text-charcoal mb-2">
+                                                            <label className="block text-sm font-semibold text-white mb-2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
                                                                 Phone Number
                                                             </label>
                                                             <input
@@ -743,21 +770,22 @@ export default function AddBusinessPage() {
                                                                 value={formData.phone}
                                                                 onChange={(e) => handleInputChange('phone', e.target.value)}
                                                                 onBlur={() => handleBlur('phone')}
-                                                                className={`w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 rounded-[12px] text-sm placeholder:text-charcoal/50 font-urbanist text-charcoal focus:outline-none focus:ring-2 transition-all duration-200 ${
+                                                                style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
+                                                                className={`w-full bg-white/95 backdrop-blur-sm border pl-4 pr-4 py-3 sm:py-4 md:py-5 text-body font-semibold text-charcoal placeholder-charcoal/50 placeholder:font-normal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 input-mobile rounded-full ${
                                                                     errors.phone
-                                                                        ? 'border-coral focus:border-coral focus:ring-coral/20'
-                                                                        : 'border-charcoal/20 focus:border-sage focus:ring-sage/20'
+                                                                        ? 'border-navbar-bg focus:border-navbar-bg focus:ring-navbar-bg/20'
+                                                                        : 'border-white/60 focus:ring-navbar-bg/30 focus:border-navbar-bg'
                                                                 }`}
                                                                 placeholder="+27 21 123 4567"
                                                             />
                                                             {touched.phone && errors.phone && (
-                                                                <p className="mt-1 text-xs text-coral font-urbanist">{errors.phone}</p>
+                                                                <p className="mt-2 text-sm text-navbar-bg font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>{errors.phone}</p>
                                                             )}
                                                         </div>
 
                                                         {/* Email */}
                                                         <div>
-                                                            <label className="block font-urbanist text-sm font-600 text-charcoal mb-2">
+                                                            <label className="block text-sm font-semibold text-white mb-2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
                                                                 Email Address
                                                             </label>
                                                             <input
@@ -765,22 +793,23 @@ export default function AddBusinessPage() {
                                                                 value={formData.email}
                                                                 onChange={(e) => handleInputChange('email', e.target.value)}
                                                                 onBlur={() => handleBlur('email')}
-                                                                className={`w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 rounded-[12px] text-sm placeholder:text-charcoal/50 font-urbanist text-charcoal focus:outline-none focus:ring-2 transition-all duration-200 ${
+                                                                style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
+                                                                className={`w-full bg-white/95 backdrop-blur-sm border pl-4 pr-4 py-3 sm:py-4 md:py-5 text-body font-semibold text-charcoal placeholder-charcoal/50 placeholder:font-normal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 input-mobile rounded-full ${
                                                                     errors.email
-                                                                        ? 'border-coral focus:border-coral focus:ring-coral/20'
-                                                                        : 'border-charcoal/20 focus:border-sage focus:ring-sage/20'
+                                                                        ? 'border-navbar-bg focus:border-navbar-bg focus:ring-navbar-bg/20'
+                                                                        : 'border-white/60 focus:ring-navbar-bg/30 focus:border-navbar-bg'
                                                                 }`}
                                                                 placeholder="business@example.com"
                                                             />
                                                             {touched.email && errors.email && (
-                                                                <p className="mt-1 text-xs text-coral font-urbanist">{errors.email}</p>
+                                                                <p className="mt-2 text-sm text-navbar-bg font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>{errors.email}</p>
                                                             )}
                                                         </div>
                                                     </div>
 
                                                     {/* Website */}
                                                     <div>
-                                                        <label className="block font-urbanist text-sm font-600 text-charcoal mb-2">
+                                                        <label className="block text-sm font-semibold text-white mb-2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
                                                             Website
                                                         </label>
                                                         <input
@@ -788,27 +817,29 @@ export default function AddBusinessPage() {
                                                             value={formData.website}
                                                             onChange={(e) => handleInputChange('website', e.target.value)}
                                                             onBlur={() => handleBlur('website')}
-                                                            className={`w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 rounded-[12px] text-sm placeholder:text-charcoal/50 font-urbanist text-charcoal focus:outline-none focus:ring-2 transition-all duration-200 ${
+                                                            style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
+                                                            className={`w-full bg-white/95 backdrop-blur-sm border pl-4 pr-4 py-3 sm:py-4 md:py-5 text-body font-semibold text-charcoal placeholder-charcoal/50 placeholder:font-normal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 input-mobile rounded-full ${
                                                                 errors.website
-                                                                    ? 'border-coral focus:border-coral focus:ring-coral/20'
-                                                                    : 'border-charcoal/20 focus:border-sage focus:ring-sage/20'
+                                                                    ? 'border-navbar-bg focus:border-navbar-bg focus:ring-navbar-bg/20'
+                                                                    : 'border-white/60 focus:ring-navbar-bg/30 focus:border-navbar-bg'
                                                             }`}
                                                             placeholder="https://www.example.com"
                                                         />
                                                         {touched.website && errors.website && (
-                                                            <p className="mt-1 text-xs text-coral font-urbanist">{errors.website}</p>
+                                                            <p className="mt-2 text-sm text-navbar-bg font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>{errors.website}</p>
                                                         )}
                                                     </div>
 
                                                     {/* Price Range */}
                                                     <div>
-                                                        <label className="block font-urbanist text-sm font-600 text-charcoal mb-2">
+                                                        <label className="block text-sm font-semibold text-white mb-2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
                                                             Price Range
                                                         </label>
                                                         <select
                                                             value={formData.priceRange}
                                                             onChange={(e) => handleInputChange('priceRange', e.target.value)}
-                                                            className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-charcoal/20 rounded-[12px] text-sm font-urbanist text-charcoal focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-all duration-200"
+                                                            style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
+                                                            className="w-full bg-white/95 backdrop-blur-sm border pl-4 pr-4 py-3 sm:py-4 md:py-5 text-body font-semibold text-charcoal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 input-mobile rounded-full border-white/60 focus:ring-navbar-bg/30 focus:border-navbar-bg"
                                                         >
                                                             {priceRanges.map(range => (
                                                                 <option key={range.value} value={range.value}>
@@ -822,10 +853,9 @@ export default function AddBusinessPage() {
                                         </div>
 
                                         {/* Business Images Section */}
-                                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-[12px] ring-1 ring-white/20 p-6 relative overflow-hidden animate-fade-in-up">
-                                            <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-coral/10 to-transparent rounded-full blur-lg" />
+                                        <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[20px] overflow-hidden backdrop-blur-md shadow-md px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12 animate-fade-in-up">
                                             <div className="relative z-10">
-                                                <h3 className="font-urbanist text-base font-600 text-charcoal mb-6 flex items-center gap-3">
+                                                <h3 className="font-urbanist text-base font-semibold text-white mb-6 flex items-center gap-3" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
                                                     <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-coral/20 to-coral/10">
                                                         <ImageIcon className="w-4 h-4 text-coral" />
                                                     </span>
@@ -860,13 +890,13 @@ export default function AddBusinessPage() {
 
                                                     {/* Upload Button */}
                                                     <label className="block">
-                                                        <div className="w-full min-h-[120px] border-2 border-dashed border-charcoal/30 rounded-lg flex flex-col items-center justify-center gap-3 p-6 cursor-pointer hover:border-sage hover:bg-sage/5 transition-all duration-200">
-                                                            <Upload className="w-8 h-8 text-charcoal/60" />
+                                                        <div className="w-full min-h-[120px] border-2 border-dashed border-white/30 rounded-lg flex flex-col items-center justify-center gap-3 p-6 cursor-pointer hover:border-white/50 hover:bg-white/5 transition-all duration-200">
+                                                            <Upload className="w-8 h-8 text-white/60" />
                                                             <div className="text-center">
-                                                                <span className="font-urbanist text-sm font-600 text-charcoal block mb-1">
+                                                                <span className="text-sm font-semibold text-white block mb-1" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
                                                                     {imagePreviews.length === 0 ? 'Add Photos' : 'Add More Photos'}
                                                                 </span>
-                                                                <span className="font-urbanist text-xs text-charcoal/60">
+                                                                <span className="text-xs text-white/60" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                                                                     {imagePreviews.length}/10 images • Max 5MB each
                                                                 </span>
                                                             </div>
@@ -883,8 +913,8 @@ export default function AddBusinessPage() {
 
                                                     {uploadingImages && (
                                                         <div className="flex items-center justify-center gap-2 py-4">
-                                                            <Loader2 className="w-4 h-4 animate-spin text-sage" />
-                                                            <span className="text-sm text-charcoal/70 font-urbanist">Uploading images...</span>
+                                                            <Loader2 className="w-4 h-4 animate-spin text-white/60" />
+                                                            <span className="text-sm text-white/70" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>Uploading images...</span>
                                                         </div>
                                                     )}
                                                 </div>
@@ -892,12 +922,11 @@ export default function AddBusinessPage() {
                                         </div>
 
                                         {/* Business Hours Section */}
-                                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-[12px] ring-1 ring-white/20 p-6 relative overflow-hidden animate-fade-in-up">
-                                            <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-sage/10 to-transparent rounded-full blur-lg" />
+                                        <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[20px] overflow-hidden backdrop-blur-md shadow-md px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12 animate-fade-in-up">
                                             <div className="relative z-10">
-                                                <h3 className="font-urbanist text-base font-600 text-charcoal mb-6 flex items-center gap-3">
-                                                    <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-sage/20 to-sage/10">
-                                                        <Clock className="w-4 h-4 text-sage" />
+                                                <h3 className="font-urbanist text-base font-semibold text-white mb-6 flex items-center gap-3" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
+                                                    <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-coral/20 to-coral/10">
+                                                        <Clock className="w-4 h-4 text-coral" />
                                                     </span>
                                                     Business Hours (Optional)
                                                 </h3>
@@ -913,14 +942,15 @@ export default function AddBusinessPage() {
                                                         { key: "sunday", label: "Sunday" },
                                                     ].map(day => (
                                                         <div key={day.key} className="flex items-center gap-3">
-                                                            <label className="w-24 font-urbanist text-sm font-600 text-charcoal flex-shrink-0">
+                                                            <label className="w-24 text-sm font-semibold text-white flex-shrink-0" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
                                                                 {day.label}
                                                             </label>
                                                             <input
                                                                 type="text"
                                                                 value={formData.hours[day.key as keyof typeof formData.hours]}
                                                                 onChange={(e) => handleHoursChange(day.key, e.target.value)}
-                                                                className="flex-1 px-3 py-2 bg-white/80 backdrop-blur-sm border-2 border-charcoal/20 rounded-lg text-sm font-urbanist text-charcoal focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-all duration-200"
+                                                                style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
+                                                                className="flex-1 bg-white/95 backdrop-blur-sm border pl-4 pr-4 py-3 sm:py-4 md:py-5 text-body font-semibold text-charcoal placeholder-charcoal/50 placeholder:font-normal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 input-mobile rounded-full border-white/60 focus:ring-navbar-bg/30 focus:border-navbar-bg"
                                                                 placeholder="e.g., 9:00 AM - 5:00 PM"
                                                             />
                                                         </div>
@@ -940,7 +970,8 @@ export default function AddBusinessPage() {
                                             <button
                                                 type="submit"
                                                 disabled={isSubmitting}
-                                                className="px-6 py-3 min-h-[48px] bg-gradient-to-br from-sage to-sage/90 text-white rounded-full text-sm font-semibold font-urbanist hover:from-sage/90 hover:to-sage/80 transition-all duration-300 hover:shadow-lg active:scale-[0.98] touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                                style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
+                                                className="w-full bg-gradient-to-r from-coral to-coral/80 text-white text-body font-semibold py-4 px-2 rounded-full hover:from-coral/90 hover:to-coral transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 btn-target btn-press"
                                             >
                                                 {isSubmitting ? (
                                                     <>

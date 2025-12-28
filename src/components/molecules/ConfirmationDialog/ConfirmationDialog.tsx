@@ -109,7 +109,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
                 stiffness: 300,
                 damping: 25
               }}
-              className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-lg max-w-md w-full relative"
+              className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg max-w-md w-full relative"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Content */}

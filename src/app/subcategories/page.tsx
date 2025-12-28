@@ -158,7 +158,7 @@ function SubcategoriesContent() {
 
         <div className="enter-fade">
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-[12px] p-4 text-center mb-4">
+            <div className="bg-red-50 border border-red-200 rounded-[20px] p-4 text-center mb-4">
               <p className="text-sm font-semibold text-red-600">
                 {typeof error === 'string' ? error : String(error || 'An error occurred')}
               </p>

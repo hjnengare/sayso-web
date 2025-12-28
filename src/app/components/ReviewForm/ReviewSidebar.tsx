@@ -29,7 +29,7 @@ interface ReviewSidebarProps {
 }
 
 const frostyPanel = `
-  relative overflow-hidden rounded-[12px]
+  relative overflow-hidden rounded-[20px]
   bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md
   border border-white/50 ring-1 ring-white/20
   shadow-lg shadow-sage/20
@@ -59,7 +59,7 @@ export default function ReviewSidebar({ otherReviews, businessInfo, businessRati
             )}
             <div className="px-3 py-4 space-y-2 xl:space-y-3 max-h-[600px] overflow-y-auto custom-scroll">
               {otherReviews.length === 0 ? (
-                <div className="rounded-[12px] border border-sage/10 bg-gradient-to-br from-white/85 to-white/60 backdrop-blur-md px-4 py-8 relative overflow-hidden border border-white/30">
+                <div className="rounded-[20px] border border-sage/10 bg-gradient-to-br from-white/85 to-white/60 backdrop-blur-md px-4 py-8 relative overflow-hidden border border-white/30">
                   {/* subtle glows */}
                   <span className="pointer-events-none absolute -top-8 -right-8 h-20 w-20 rounded-full bg-sage/10 blur-lg" />
                   <span className="pointer-events-none absolute -bottom-8 -left-8 h-20 w-20 rounded-full bg-coral/10 blur-lg" />
@@ -80,7 +80,7 @@ export default function ReviewSidebar({ otherReviews, businessInfo, businessRati
                 </div>
               ) : (
                 otherReviews.map((r) => (
-                <div key={r.id} className="rounded-[12px] border border-sage/10 bg-gradient-to-br from-white/85 to-white/60 backdrop-blur-md px-3 py-6 relative overflow-hidden border border-white/30">
+                <div key={r.id} className="rounded-[20px] border border-sage/10 bg-gradient-to-br from-white/85 to-white/60 backdrop-blur-md px-3 py-6 relative overflow-hidden border border-white/30">
                   {/* subtle glows */}
                   <span className="pointer-events-none absolute -top-8 -right-8 h-20 w-20 rounded-full bg-sage/10 blur-lg" />
                   <span className="pointer-events-none absolute -bottom-8 -left-8 h-20 w-20 rounded-full bg-coral/10 blur-lg" />
@@ -106,10 +106,10 @@ export default function ReviewSidebar({ otherReviews, businessInfo, businessRati
                         <p className="text-sm font-semibold text-charcoal font-urbanist truncate" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif' }}>{r.user.name}</p>
                         <div className="flex items-center gap-1">
                           <Star size={14} className="text-coral" style={{ fill: "currentColor" }} />
-                          <span className="text-[12px] text-charcoal/60 font-urbanist" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif' }}>{r.rating}</span>
+                          <span className="text-[20px] text-charcoal/60 font-urbanist" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif' }}>{r.rating}</span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 text-[12px] text-charcoal/60 mb-1 font-urbanist" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif' }}>
+                      <div className="flex items-center gap-2 text-[20px] text-charcoal/60 mb-1 font-urbanist" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif' }}>
                         {r.user.location && (
                           <span className="inline-flex items-center gap-1">
                             <MapPin size={12} />
@@ -152,7 +152,7 @@ export default function ReviewSidebar({ otherReviews, businessInfo, businessRati
         <h3 className="text-sm font-bold text-charcoal font-urbanist px-4 pt-4 pb-3" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif' }}>What others are saying</h3>
         <div className="mt-2 sm:mt-3 overflow-x-auto hide-scrollbar">
           {otherReviews.length === 0 ? (
-            <div className="mx-4 rounded-[12px] border border-sage/10 bg-gradient-to-br from-white/85 to-white/60 backdrop-blur-md px-4 py-8 relative overflow-hidden">
+            <div className="mx-4 rounded-[20px] border border-sage/10 bg-gradient-to-br from-white/85 to-white/60 backdrop-blur-md px-4 py-8 relative overflow-hidden">
               {/* subtle glows */}
               <span className="pointer-events-none absolute -top-8 -right-8 h-20 w-20 rounded-full bg-sage/10 blur-lg" />
               <span className="pointer-events-none absolute -bottom-8 -left-8 h-20 w-20 rounded-full bg-coral/10 blur-lg" />
@@ -174,7 +174,7 @@ export default function ReviewSidebar({ otherReviews, businessInfo, businessRati
           ) : (
             <ul className="flex gap-2 sm:gap-3 px-4 pb-4">
               {otherReviews.map((r) => (
-              <li key={r.id} className="min-w-[240px] sm:min-w-[260px] max-w-[260px] sm:max-w-[280px] bg-gradient-to-br from-white/85 to-white/60 backdrop-blur-md border border-sage/10 rounded-[12px] p-3 sm:p-4 relative overflow-hidden">
+              <li key={r.id} className="min-w-[240px] sm:min-w-[260px] max-w-[260px] sm:max-w-[280px] bg-gradient-to-br from-white/85 to-white/60 backdrop-blur-md border border-sage/10 rounded-[20px] p-3 sm:p-4 relative overflow-hidden">
                 {/* subtle glows */}
                 <span className="pointer-events-none absolute -top-8 -right-8 h-20 w-20 rounded-full bg-sage/10 blur-lg" />
                 <span className="pointer-events-none absolute -bottom-8 -left-8 h-20 w-20 rounded-full bg-coral/10 blur-lg" />
@@ -197,7 +197,7 @@ export default function ReviewSidebar({ otherReviews, businessInfo, businessRati
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-charcoal font-urbanist truncate" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif' }}>{r.user.name}</p>
-                    <div className="flex items-center gap-1 text-[12px] text-charcoal/60 font-urbanist" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif' }}>
+                    <div className="flex items-center gap-1 text-[20px] text-charcoal/60 font-urbanist" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif' }}>
                       <Star size={12} className="text-coral" style={{ fill: "currentColor" }} />
                       <span>{r.rating}</span>
                     </div>

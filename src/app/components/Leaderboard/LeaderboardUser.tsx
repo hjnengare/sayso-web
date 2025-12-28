@@ -42,7 +42,7 @@ function LeaderboardUser({ user, index, isMobile = false }: LeaderboardUserProps
         initial={{ opacity: 0, x: -10 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: index * 0.05, duration: 0.3 }}
-        className="group bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)] cursor-pointer border border-white/50 backdrop-blur-md ring-1 ring-white/20 hover:shadow-[0_12px_40px_rgb(0,0,0,0.18)] transition-shadow duration-300"
+        className="group bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[20px] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)] cursor-pointer border border-white/50 backdrop-blur-md ring-1 ring-white/20 hover:shadow-[0_12px_40px_rgb(0,0,0,0.18)] transition-shadow duration-300"
       >
         <div className="flex items-center justify-between p-3 sm:p-4">
           <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">

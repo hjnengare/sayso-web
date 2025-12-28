@@ -92,7 +92,7 @@ export function ClaimModal({ business, onClose, onSuccess }: ClaimModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="bg-sage rounded-[12px] shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-sage rounded-[20px] shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-sage border-b border-white/20 px-6 py-4 flex items-center justify-between">
           <h2 className="text-xl font-bold text-white" style={{
@@ -113,7 +113,7 @@ export function ClaimModal({ business, onClose, onSuccess }: ClaimModalProps) {
         {/* Content */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Business Info */}
-          <div className="bg-white/20 rounded-[12px] p-4 border border-white/30">
+          <div className="bg-white/20 rounded-[20px] p-4 border border-white/30">
             <h3 className="text-sm font-semibold text-white mb-2" style={{
               fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif"
             }}>

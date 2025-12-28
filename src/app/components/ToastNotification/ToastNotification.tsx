@@ -60,7 +60,7 @@ export default function ToastNotification({
       animate={{ opacity: 1, x: 0, scale: 1 }}
       exit={{ opacity: 0, x: 100, scale: 0.8 }}
       transition={{ type: "spring", damping: 25, stiffness: 300 }}
-      className={`notification-toast relative bg-page-bg backdrop-blur-md border rounded-[12px] ring-1 shadow-lg overflow-hidden w-80 max-w-[calc(100vw-2rem)] ${borderClass}`}
+      className={`notification-toast relative bg-page-bg backdrop-blur-md border rounded-[20px] ring-1 shadow-lg overflow-hidden w-80 max-w-[calc(100vw-2rem)] ${borderClass}`}
     >
       {/* Progress bar */}
       <div className={`absolute top-0 left-0 right-0 h-1 ${progressBarBg}`}>

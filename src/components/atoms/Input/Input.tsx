@@ -51,7 +51,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
     const baseStyles = `
       block w-full
-      border rounded-[12px]
+      border rounded-[20px]
       bg-off-white
       transition-all duration-200
       focus:outline-none focus:ring-2

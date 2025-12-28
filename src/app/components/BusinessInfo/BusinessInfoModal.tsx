@@ -54,7 +54,7 @@ export default function BusinessInfoModal({
 
       <div className="fixed inset-0 z-[10000] flex items-start md:items-center justify-center p-4 sm:p-6 pointer-events-none">
         <div
-          className={`relative w-full pointer-events-auto bg-off-white rounded-[12px] border border-white/60 shadow-xl max-h-[90vh] overflow-y-auto transition-all duration-300 ease-out ${
+          className={`relative w-full pointer-events-auto bg-off-white rounded-[20px] border border-white/60 shadow-xl max-h-[90vh] overflow-y-auto transition-all duration-300 ease-out ${
             isClosing ? 'opacity-0 scale-95 translate-y-[-8px]' : 'opacity-100 scale-100 translate-y-0'
           }`}
           style={{

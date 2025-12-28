@@ -339,7 +339,7 @@ export default function Header({
           <div className="flex items-center justify-between gap-6">
             {/* Logo */}
             <OptimizedLink href="/home" className="group flex-shrink-0 relative" aria-label="sayso Home">
-              <div className="absolute inset-0 bg-gradient-to-r from-sage/40 via-coral/30 to-sage/40 rounded-[12px] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10" />
+              <div className="absolute inset-0 bg-gradient-to-r from-sage/40 via-coral/30 to-sage/40 rounded-[20px] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10" />
               <div className="relative scale-90 sm:scale-[0.72] origin-left">
                 <Logo variant="default" className="relative drop-shadow-[0_4px_16px_rgba(0,0,0,0.12)] transition-all duration-300 group-hover:drop-shadow-[0_6px_20px_rgba(0,0,0,0.15)]" color={whiteText ? "sage" : "gradient"} />
               </div>
@@ -400,7 +400,7 @@ export default function Header({
                         createPortal(
                           <div
                             ref={discoverMenuPortalRef}
-                            className={`fixed z-[1000] bg-off-white rounded-[12px] border border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.12),0_4px_16px_rgba(0,0,0,0.08)] overflow-hidden min-w-[320px] transition-all duration-300 ease-out backdrop-blur-xl ${
+                            className={`fixed z-[1000] bg-off-white rounded-[20px] border border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.12),0_4px_16px_rgba(0,0,0,0.08)] overflow-hidden min-w-[320px] transition-all duration-300 ease-out backdrop-blur-xl ${
                               isDiscoverDropdownClosing ? 'opacity-0 scale-95 translate-y-[-8px]' : 'opacity-100 scale-100 translate-y-0'
                             }`}
                             style={{
@@ -659,7 +659,7 @@ export default function Header({
                     handleNavClick(href, e);
                     setIsMobileMenuOpen(false);
                   }}
-                  className={`px-3 py-2 rounded-[12px] text-base font-normal text-white hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-200 relative min-h-[44px] flex items-center justify-start ${mobileRevealClass}`}
+                  className={`px-3 py-2 rounded-[20px] text-base font-normal text-white hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-200 relative min-h-[44px] flex items-center justify-start ${mobileRevealClass}`}
                   style={{
                     fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
                     transitionDelay: `${index * 60}ms`,
@@ -687,7 +687,7 @@ export default function Header({
                       handleNavClick(href, e);
                       setIsMobileMenuOpen(false);
                     }}
-                    className={`py-2 rounded-[12px] text-base font-normal text-white/90 hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-200 min-h-[44px] flex items-center justify-start ${mobileRevealClass}`}
+                    className={`py-2 rounded-[20px] text-base font-normal text-white/90 hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-200 min-h-[44px] flex items-center justify-start ${mobileRevealClass}`}
                     style={{
                       fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
                       transitionDelay: `${(primaryCount + index) * 60}ms`,

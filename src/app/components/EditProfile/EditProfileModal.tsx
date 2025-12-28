@@ -163,7 +163,7 @@ export function EditProfileModal({
                   stiffness: 300,
                   damping: 25,
                 }}
-                className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden backdrop-blur-md shadow-md max-w-lg w-full max-h-[90vh] overflow-y-auto relative px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10"
+                className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[20px] overflow-hidden backdrop-blur-md shadow-md max-w-lg w-full max-h-[90vh] overflow-y-auto relative px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10"
                 onClick={(e) => e.stopPropagation()}
               >
               {/* Close button */}
@@ -188,7 +188,7 @@ export function EditProfileModal({
 
                 {/* Error Message */}
                 {error && (
-                  <div className="mb-4 bg-orange-50 border border-orange-200 rounded-[12px] p-4 text-center">
+                  <div className="mb-4 bg-orange-50 border border-orange-200 rounded-[20px] p-4 text-center">
                     <p className="text-caption font-semibold text-orange-600" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>{error}</p>
                   </div>
                 )}

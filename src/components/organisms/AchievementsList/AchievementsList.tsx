@@ -15,7 +15,7 @@ export const AchievementsList: React.FC<AchievementsListProps> = ({
   className = '',
 }) => {
   return (
-    <div className={`p-6 sm:p-8 bg-card-bg border border-white/50 rounded-[12px] shadow-sm mb-6 ${className}`}>
+    <div className={`p-6 sm:p-8 bg-card-bg border border-white/50 rounded-[20px] shadow-sm mb-6 ${className}`}>
       <h2 className="text-sm font-bold text-charcoal mb-4" style={{ fontFamily: '"SF Pro New", -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif' }}>{title}</h2>
       {achievements.length > 0 ? (
         <div className="space-y-3">

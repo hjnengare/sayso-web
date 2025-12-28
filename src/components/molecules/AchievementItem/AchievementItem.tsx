@@ -18,7 +18,7 @@ export const AchievementItem: React.FC<AchievementItemProps> = ({
 }) => {
   return (
     <div
-      className={`flex items-center space-x-3 p-3 transition-all duration-200 bg-sage/10 border border-sage/20 rounded-[12px] ${className}`}
+      className={`flex items-center space-x-3 p-3 transition-all duration-200 bg-sage/10 border border-sage/20 rounded-[20px] ${className}`}
     >
       <div className="w-10 h-10 rounded-full flex items-center justify-center bg-sage/20">
         <Award className="w-5 h-5 text-sage" />

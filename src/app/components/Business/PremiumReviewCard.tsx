@@ -442,7 +442,7 @@ export function PremiumReviewCard({
     return (
         <>
         <div
-            className={`relative overflow-hidden rounded-[12px] border backdrop-blur-md transition-shadow duration-300 border-white/50 bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 ring-1 ring-white/20 text-charcoal shadow-[0_15px_40px_rgba(15,23,42,0.08)] ${
+            className={`relative overflow-hidden rounded-[20px] border backdrop-blur-md transition-shadow duration-300 border-white/50 bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 ring-1 ring-white/20 text-charcoal shadow-[0_15px_40px_rgba(15,23,42,0.08)] ${
                 compact ? 'p-2 sm:p-3' : 'p-3 sm:p-4'
             }`}
         >
@@ -513,7 +513,7 @@ export function PremiumReviewCard({
                                 )}
                             </div>
                             <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                                <span className={`text-charcoal/60 ${compact ? 'text-[10px] sm:text-[11px]' : 'text-sm sm:text-[12px]'}`}>{date}</span>
+                                <span className={`text-charcoal/60 ${compact ? 'text-[10px] sm:text-[11px]' : 'text-sm sm:text-[20px]'}`}>{date}</span>
                                 {/* Show counts on smaller screens */}
                                 <div className="flex items-center gap-3 sm:hidden">
                                     {helpfulCount > 0 && (

@@ -159,7 +159,7 @@ export default function EmailVerificationGuard({
             {/* Open Gmail Button */}
             <button
               onClick={() => window.open('https://mail.google.com', '_blank')}
-              className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white font-urbanist text-sm font-600 py-3 px-4 rounded-[12px] hover:from-red-600 hover:to-red-700 transition-all duration-300 flex items-center justify-center gap-2"
+              className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white font-urbanist text-sm font-600 py-3 px-4 rounded-[20px] hover:from-red-600 hover:to-red-700 transition-all duration-300 flex items-center justify-center gap-2"
             >
               <Mail className="w-4 h-4" />
               Open Gmail
@@ -170,7 +170,7 @@ export default function EmailVerificationGuard({
             <button
               onClick={handleResendVerification}
               disabled={isResending}
-              className="w-full bg-sage text-white font-urbanist text-sm font-600 py-3 px-4 rounded-[12px] hover:bg-sage/90 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-sage text-white font-urbanist text-sm font-600 py-3 px-4 rounded-[20px] hover:bg-sage/90 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isResending ? (
                 <>
@@ -188,7 +188,7 @@ export default function EmailVerificationGuard({
             {/* Go to Verify Email Page */}
             <Link
               href="/verify-email"
-              className="block w-full bg-off-white border border-charcoal/20 text-charcoal font-urbanist text-sm font-600 py-3 px-4 rounded-[12px] hover:bg-charcoal/5 transition-all duration-300 text-center"
+              className="block w-full bg-off-white border border-charcoal/20 text-charcoal font-urbanist text-sm font-600 py-3 px-4 rounded-[20px] hover:bg-charcoal/5 transition-all duration-300 text-center"
             >
               Go to Email Verification Page
             </Link>

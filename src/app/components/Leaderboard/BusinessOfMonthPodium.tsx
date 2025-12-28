@@ -36,7 +36,7 @@ function BusinessOfMonthPodium({ topBusinesses }: BusinessOfMonthPodiumProps) {
           {businesses[1].href ? (
             <Link href={businesses[1].href} className="block">
               <div className="relative mb-2 sm:mb-3">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 relative rounded-[12px] overflow-hidden border-3 sm:border-4 border-white shadow-[0_8px_30px_rgba(0,0,0,0.2)] mx-auto ring-3 sm:ring-4 ring-coral/30">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 relative rounded-[20px] overflow-hidden border-3 sm:border-4 border-white shadow-[0_8px_30px_rgba(0,0,0,0.2)] mx-auto ring-3 sm:ring-4 ring-coral/30">
                   <FallbackImage
                     src={businesses[1].image}
                     alt={businesses[1].alt || businesses[1].name}
@@ -66,7 +66,7 @@ function BusinessOfMonthPodium({ topBusinesses }: BusinessOfMonthPodiumProps) {
           ) : (
             <div>
               <div className="relative mb-2 sm:mb-3">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 relative rounded-[12px] overflow-hidden border-3 sm:border-4 border-white shadow-[0_8px_30px_rgba(0,0,0,0.2)] mx-auto ring-3 sm:ring-4 ring-coral/30">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 relative rounded-[20px] overflow-hidden border-3 sm:border-4 border-white shadow-[0_8px_30px_rgba(0,0,0,0.2)] mx-auto ring-3 sm:ring-4 ring-coral/30">
                   <FallbackImage
                     src={businesses[1].image}
                     alt={businesses[1].alt || businesses[1].name}
@@ -108,7 +108,7 @@ function BusinessOfMonthPodium({ topBusinesses }: BusinessOfMonthPodiumProps) {
           {businesses[0].href ? (
             <Link href={businesses[0].href} className="block">
               <div className="relative mb-2 sm:mb-3">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 relative rounded-[12px] overflow-hidden border-3 sm:border-4 border-white shadow-[0_12px_40px_rgba(0,0,0,0.25)] mx-auto ring-3 sm:ring-4 ring-sage">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 relative rounded-[20px] overflow-hidden border-3 sm:border-4 border-white shadow-[0_12px_40px_rgba(0,0,0,0.25)] mx-auto ring-3 sm:ring-4 ring-sage">
                   <FallbackImage
                     src={businesses[0].image}
                     alt={businesses[0].alt || businesses[0].name}
@@ -138,7 +138,7 @@ function BusinessOfMonthPodium({ topBusinesses }: BusinessOfMonthPodiumProps) {
           ) : (
             <div>
               <div className="relative mb-2 sm:mb-3">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 relative rounded-[12px] overflow-hidden border-3 sm:border-4 border-white shadow-[0_12px_40px_rgba(0,0,0,0.25)] mx-auto ring-3 sm:ring-4 ring-sage">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 relative rounded-[20px] overflow-hidden border-3 sm:border-4 border-white shadow-[0_12px_40px_rgba(0,0,0,0.25)] mx-auto ring-3 sm:ring-4 ring-sage">
                   <FallbackImage
                     src={businesses[0].image}
                     alt={businesses[0].alt || businesses[0].name}
@@ -180,7 +180,7 @@ function BusinessOfMonthPodium({ topBusinesses }: BusinessOfMonthPodiumProps) {
           {businesses[2].href ? (
             <Link href={businesses[2].href} className="block">
               <div className="relative mb-2 sm:mb-3">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 relative rounded-[12px] overflow-hidden border-3 sm:border-4 border-white shadow-[0_8px_30px_rgba(0,0,0,0.2)] mx-auto ring-3 sm:ring-4 ring-charcoal/20">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 relative rounded-[20px] overflow-hidden border-3 sm:border-4 border-white shadow-[0_8px_30px_rgba(0,0,0,0.2)] mx-auto ring-3 sm:ring-4 ring-charcoal/20">
                   <FallbackImage
                     src={businesses[2].image}
                     alt={businesses[2].alt || businesses[2].name}
@@ -210,7 +210,7 @@ function BusinessOfMonthPodium({ topBusinesses }: BusinessOfMonthPodiumProps) {
           ) : (
             <div>
               <div className="relative mb-2 sm:mb-3">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 relative rounded-[12px] overflow-hidden border-3 sm:border-4 border-white shadow-[0_8px_30px_rgba(0,0,0,0.2)] mx-auto ring-3 sm:ring-4 ring-charcoal/20">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 relative rounded-[20px] overflow-hidden border-3 sm:border-4 border-white shadow-[0_8px_30px_rgba(0,0,0,0.2)] mx-auto ring-3 sm:ring-4 ring-charcoal/20">
                   <FallbackImage
                     src={businesses[2].image}
                     alt={businesses[2].alt || businesses[2].name}

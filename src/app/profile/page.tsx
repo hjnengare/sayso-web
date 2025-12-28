@@ -881,7 +881,7 @@ function ProfileContent() {
                       className="w-full sm:mx-0"
                       aria-labelledby="profile-heading"
                     >
-                          <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-md relative overflow-hidden">
+                          <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-md relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-sage/10 to-transparent rounded-full blur-lg"></div>
                         <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-coral/10 to-transparent rounded-full blur-lg"></div>
 
@@ -1017,7 +1017,7 @@ function ProfileContent() {
                       className="grid grid-cols-2 sm:grid-cols-4 gap-4"
                       aria-label="Profile statistics"
                     >
-                          <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-md p-4">
+                          <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-md p-4">
                         <div className="flex items-center gap-2 mb-2">
                           <ThumbsUp className="w-5 h-5 text-coral" />
                           <span className="text-sm text-charcoal/70">Helpful votes</span>
@@ -1027,7 +1027,7 @@ function ProfileContent() {
                         </p>
                         <p className="text-xs text-charcoal/60">Received</p>
                       </div>
-                          <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-md p-4">
+                          <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-md p-4">
                         <div className="flex items-center gap-2 mb-2">
                           <StarIcon className="w-5 h-5 text-coral" />
                           <span className="text-sm text-charcoal/70">Reviews</span>
@@ -1037,7 +1037,7 @@ function ProfileContent() {
                         </p>
                         <p className="text-xs text-charcoal/60">Total written</p>
                       </div>
-                          <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-md p-4">
+                          <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-md p-4">
                         <div className="flex items-center gap-2 mb-2">
                           <Award className="w-5 h-5 text-coral" />
                           <span className="text-sm text-charcoal/70">Badges</span>
@@ -1045,7 +1045,7 @@ function ProfileContent() {
                         <p className="text-2xl font-bold text-charcoal">{badgesCount}</p>
                         <p className="text-xs text-charcoal/60">Achievements unlocked</p>
                       </div>
-                          <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-md p-4">
+                          <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-md p-4">
                         <div className="flex items-center gap-2 mb-2">
                           <Eye className="w-5 h-5 text-coral" />
                           <span className="text-sm text-charcoal/70">Interests</span>
@@ -1054,7 +1054,7 @@ function ProfileContent() {
                         <p className="text-xs text-charcoal/60">Communities followed</p>
                       </div>
                       {userStats && (
-                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-md p-4 sm:col-span-2">
+                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-md p-4 sm:col-span-2">
                           <div className="flex items-center gap-2 mb-2">
                             <Briefcase className="w-5 h-5 text-coral" />
                             <span className="text-sm text-charcoal/70">Saved Businesses</span>
@@ -1070,7 +1070,7 @@ function ProfileContent() {
                     {/* Saved Businesses - Mobile Only */}
                     {savedBusinesses.length > 0 && (
                       <section
-                            className="md:hidden bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-md p-6 space-y-4"
+                            className="md:hidden bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-md p-6 space-y-4"
                         aria-label="Saved businesses"
                       >
                         <SavedBusinessRow
@@ -1082,7 +1082,7 @@ function ProfileContent() {
                     )}
 
                     <section
-                      className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-md p-6 sm:p-8 space-y-4"
+                      className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-md p-6 sm:p-8 space-y-4"
                       aria-label="Business management"
                     >
                       <div className="flex items-center justify-between">
@@ -1106,7 +1106,7 @@ function ProfileContent() {
                     </section>
 
                     <section
-                      className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-md p-6 sm:p-8"
+                      className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-md p-6 sm:p-8"
                       aria-label="Your contributions"
                     >
                       {reviewsLoading ? (
@@ -1128,7 +1128,7 @@ function ProfileContent() {
                     </section>
 
                     <section
-                      className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-md p-6 sm:p-8"
+                      className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-md p-6 sm:p-8"
                       aria-label="Your achievements"
                     >
                       {achievementsLoading ? (
@@ -1144,7 +1144,7 @@ function ProfileContent() {
                     </section>
 
                     <section
-                      className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-md p-6 sm:p-8 space-y-4"
+                      className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-md p-6 sm:p-8 space-y-4"
                       aria-label="Account actions"
                     >
                       <div className="flex items-center gap-3">

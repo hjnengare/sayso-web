@@ -405,7 +405,7 @@ export default function BusinessEditPage() {
                                 <div className="max-w-6xl mx-auto pt-8 pb-8">
                     <div className="space-y-6">
                         {/* Basic Information Section */}
-                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-[12px] ring-1 ring-white/20 p-6 relative overflow-hidden animate-fade-in-up animate-delay-100">
+                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-[20px] ring-1 ring-white/20 p-6 relative overflow-hidden animate-fade-in-up animate-delay-100">
                             <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-sage/10 to-transparent rounded-full blur-lg" />
                             <div className="relative z-10">
                                 <h3 className="font-urbanist text-base font-600 text-charcoal mb-6 flex items-center gap-3">
@@ -422,7 +422,7 @@ export default function BusinessEditPage() {
                                             type="text"
                                             value={formData.name}
                                             onChange={(e) => handleInputChange('name', e.target.value)}
-                                            className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-charcoal/20 rounded-[12px] text-sm placeholder:text-charcoal/50 font-urbanist text-charcoal focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-all duration-200"
+                                            className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-charcoal/20 rounded-[20px] text-sm placeholder:text-charcoal/50 font-urbanist text-charcoal focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-all duration-200"
                                             placeholder="Enter business name"
                                         />
                                     </div>
@@ -432,7 +432,7 @@ export default function BusinessEditPage() {
                                         <select
                                             value={formData.category}
                                             onChange={(e) => handleInputChange('category', e.target.value)}
-                                            className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-charcoal/20 rounded-[12px] text-sm font-urbanist text-charcoal focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-all duration-200"
+                                            className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-charcoal/20 rounded-[20px] text-sm font-urbanist text-charcoal focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-all duration-200"
                                         >
                                             {categories.map(category => (
                                                 <option key={category} value={category}>{category}</option>
@@ -446,7 +446,7 @@ export default function BusinessEditPage() {
                                             value={formData.description}
                                             onChange={(e) => handleInputChange('description', e.target.value)}
                                             rows={4}
-                                            className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-charcoal/20 rounded-[12px] text-sm placeholder:text-charcoal/50 font-urbanist text-charcoal focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-all duration-200 resize-none"
+                                            className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-charcoal/20 rounded-[20px] text-sm placeholder:text-charcoal/50 font-urbanist text-charcoal focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-all duration-200 resize-none"
                                             placeholder="Describe your business..."
                                         />
                                     </div>
@@ -455,7 +455,7 @@ export default function BusinessEditPage() {
                         </div>
 
                         {/* Images Section */}
-                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-[12px] ring-1 ring-white/20 p-6 relative overflow-hidden animate-fade-in-up animate-delay-200">
+                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-[20px] ring-1 ring-white/20 p-6 relative overflow-hidden animate-fade-in-up animate-delay-200">
                             <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-coral/10 to-transparent rounded-full blur-lg" />
                             <div className="relative z-10">
                                 <h3 className="font-urbanist text-base font-600 text-charcoal mb-6 flex items-center gap-3">
@@ -512,7 +512,7 @@ export default function BusinessEditPage() {
                         </div>
 
                         {/* Contact Information Section */}
-                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-[12px] ring-1 ring-white/20 p-6 relative overflow-hidden animate-fade-in-up animate-delay-300">
+                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-[20px] ring-1 ring-white/20 p-6 relative overflow-hidden animate-fade-in-up animate-delay-300">
                             <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-coral/10 to-transparent rounded-full blur-lg" />
                             <div className="relative z-10">
                                 <h3 className="font-urbanist text-base font-600 text-charcoal mb-6 flex items-center gap-3">
@@ -532,7 +532,7 @@ export default function BusinessEditPage() {
                                             type="text"
                                             value={formData.address}
                                             onChange={(e) => handleInputChange('address', e.target.value)}
-                                            className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-charcoal/20 rounded-[12px] text-sm placeholder:text-charcoal/50 font-urbanist text-charcoal focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-all duration-200"
+                                            className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-charcoal/20 rounded-[20px] text-sm placeholder:text-charcoal/50 font-urbanist text-charcoal focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-all duration-200"
                                             placeholder="Enter business address"
                                         />
                                     </div>
@@ -546,7 +546,7 @@ export default function BusinessEditPage() {
                                             type="tel"
                                             value={formData.phone}
                                             onChange={(e) => handleInputChange('phone', e.target.value)}
-                                            className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-charcoal/20 rounded-[12px] text-sm placeholder:text-charcoal/50 font-urbanist text-charcoal focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-all duration-200"
+                                            className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-charcoal/20 rounded-[20px] text-sm placeholder:text-charcoal/50 font-urbanist text-charcoal focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-all duration-200"
                                             placeholder="Enter phone number"
                                         />
                                     </div>
@@ -560,7 +560,7 @@ export default function BusinessEditPage() {
                                             type="email"
                                             value={formData.email}
                                             onChange={(e) => handleInputChange('email', e.target.value)}
-                                            className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-charcoal/20 rounded-[12px] text-sm placeholder:text-charcoal/50 font-urbanist text-charcoal focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-all duration-200"
+                                            className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-charcoal/20 rounded-[20px] text-sm placeholder:text-charcoal/50 font-urbanist text-charcoal focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-all duration-200"
                                             placeholder="Enter email address"
                                         />
                                     </div>
@@ -574,7 +574,7 @@ export default function BusinessEditPage() {
                                             type="url"
                                             value={formData.website}
                                             onChange={(e) => handleInputChange('website', e.target.value)}
-                                            className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-charcoal/20 rounded-[12px] text-sm placeholder:text-charcoal/50 font-urbanist text-charcoal focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-all duration-200"
+                                            className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-charcoal/20 rounded-[20px] text-sm placeholder:text-charcoal/50 font-urbanist text-charcoal focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-all duration-200"
                                             placeholder="Enter website URL"
                                         />
                                     </div>
@@ -587,7 +587,7 @@ export default function BusinessEditPage() {
                                         <select
                                             value={formData.priceRange}
                                             onChange={(e) => handleInputChange('priceRange', e.target.value)}
-                                            className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-charcoal/20 rounded-[12px] text-sm font-urbanist text-charcoal focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-all duration-200"
+                                            className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-2 border-charcoal/20 rounded-[20px] text-sm font-urbanist text-charcoal focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-all duration-200"
                                         >
                                             {priceRanges.map(range => (
                                                 <option key={range} value={range}>{range}</option>
@@ -599,7 +599,7 @@ export default function BusinessEditPage() {
                         </div>
 
                         {/* Business Hours Section */}
-                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-[12px] ring-1 ring-white/20 p-6 relative overflow-hidden animate-fade-in-up">
+                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-[20px] ring-1 ring-white/20 p-6 relative overflow-hidden animate-fade-in-up">
                             <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-sage/10 to-transparent rounded-full blur-lg" />
                             <div className="relative z-10">
                                 <h3 className="font-urbanist text-base font-600 text-charcoal mb-6 flex items-center gap-3">
@@ -627,7 +627,7 @@ export default function BusinessEditPage() {
                         </div>
 
                         {/* Specials Section */}
-                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-[12px] ring-1 ring-white/20 p-6 relative overflow-hidden animate-fade-in-up">
+                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-[20px] ring-1 ring-white/20 p-6 relative overflow-hidden animate-fade-in-up">
                             <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-sage/10 to-transparent rounded-full blur-lg" />
                             <div className="relative z-10">
                                 <div className="flex items-center justify-between mb-6">

@@ -26,7 +26,7 @@ export const ReviewsList: React.FC<ReviewsListProps> = ({
     : reviews.slice(0, initialDisplayCount);
 
   return (
-    <div className={`p-6 sm:p-8 bg-card-bg border border-white/50 rounded-[12px] shadow-sm mb-6 ${className}`}>
+    <div className={`p-6 sm:p-8 bg-card-bg border border-white/50 rounded-[20px] shadow-sm mb-6 ${className}`}>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-sm font-bold text-charcoal" style={{ fontFamily: '"SF Pro New", -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif' }}>{title}</h2>
         {showToggle && reviews.length > initialDisplayCount && (

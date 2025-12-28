@@ -40,7 +40,7 @@ export const SettingsMenuItem: React.FC<SettingsMenuItemProps> = ({
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center justify-between p-4 ${styles.hover} transition-colors duration-200 group rounded-[12px] ${className}`}
+      className={`w-full flex items-center justify-between p-4 ${styles.hover} transition-colors duration-200 group rounded-[20px] ${className}`}
     >
       <div className="flex items-center space-x-3">
         <Icon className={`${styles.icon} w-5 h-5`} />

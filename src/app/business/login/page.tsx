@@ -150,7 +150,7 @@ function BusinessLoginPageContent() {
             <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
               {/* Error Message */}
               {error && (
-                <div className="bg-orange-50 border border-orange-200 rounded-[12px] p-4 text-center">
+                <div className="bg-orange-50 border border-orange-200 rounded-[20px] p-4 text-center">
                   <p className="text-[14px] font-600 text-orange-600" style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}>{error}</p>
                 </div>
               )}

@@ -112,7 +112,7 @@ export default function OwnersPage() {
             {/* Businesses List */}
             <div className="px-2">
               {businesses.length === 0 ? (
-                <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-lg p-8 sm:p-12 text-center">
+                <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-8 sm:p-12 text-center">
                   <div className="w-16 h-16 bg-sage/10 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Store className="w-8 h-8 text-sage" />
                   </div>
@@ -135,7 +135,7 @@ export default function OwnersPage() {
                   {businesses.map((business) => (
                     <div
                       key={business.id}
-                      className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-lg hover:shadow-xl transition-all duration-300 p-5 sm:p-6"
+                      className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg hover:shadow-xl transition-all duration-300 p-5 sm:p-6"
                     >
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1 min-w-0">
