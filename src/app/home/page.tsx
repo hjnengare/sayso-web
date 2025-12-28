@@ -13,7 +13,9 @@ import Header from "../components/Header/Header";
 import SearchInput from "../components/SearchInput/SearchInput";
 import FilterModal, { FilterState } from "../components/FilterModal/FilterModal";
 import ActiveFilterBadges from "../components/FilterActiveBadges/ActiveFilterBadges";
+import SearchResultsMap from "../components/BusinessMap/SearchResultsMap";
 import { motion, AnimatePresence } from "framer-motion";
+import { List, Map as MapIcon } from "react-feather";
 import HeroCarousel from "../components/Hero/HeroCarousel";
 import BusinessRow from "../components/BusinessRow/BusinessRow";
 import BusinessRowSkeleton from "../components/BusinessRow/BusinessRowSkeleton";
@@ -180,6 +182,7 @@ export default function Home() {
   const [selectedInterestIds, setSelectedInterestIds] = useState<string[]>([]);
   const [filters, setFilters] = useState<FilterState>({ minRating: null, distance: null });
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [isMapMode, setIsMapMode] = useState(false);
   const searchWrapRef = useRef<HTMLDivElement | null>(null);
   const { interests, subcategories } = useUserPreferences();
 
@@ -336,6 +339,7 @@ export default function Home() {
 
   const handleSubmitQuery = (query: string) => {
     setSearchQuery(query);
+    setIsMapMode(false); // Reset to list view when new search
     if (isFilterVisible) closeFilters();
   };
 
@@ -460,6 +464,13 @@ export default function Home() {
               onSearch={handleSearchChange}
               onSubmitQuery={handleSubmitQuery}
               onFilterClick={openFilters}
+              onMapClick={() => {
+                if (isSearchActive) {
+                  setIsMapMode(!isMapMode);
+                }
+              }}
+              showMap={isSearchActive}
+              isMapMode={isMapMode}
               onFocusOpenFilters={openFilters}
               showFilter
             />
@@ -516,18 +527,60 @@ export default function Home() {
                 )}
                 {!allBusinessesLoading && searchResults.length > 0 && (
                   <>
-                    {/* Show search status */}
-                    <div className="mb-4 px-2 text-sm text-charcoal/60" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                      Found {searchResults.length} {searchResults.length === 1 ? 'result' : 'results'} for "{debouncedSearchQuery}"
+                    {/* Show search status and List/Map toggle */}
+                    <div className="mb-4 px-2 flex items-center justify-between">
+                      <div className="text-sm text-charcoal/60" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                        Found {searchResults.length} {searchResults.length === 1 ? 'result' : 'results'} for "{debouncedSearchQuery}"
+                      </div>
+                      {/* List | Map Toggle */}
+                      <div className="flex items-center gap-1 bg-white/80 backdrop-blur-sm rounded-full p-1 border border-white/30 shadow-sm">
+                        <button
+                          onClick={() => setIsMapMode(false)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                            !isMapMode
+                              ? 'bg-sage text-white shadow-sm'
+                              : 'text-charcoal/70 hover:text-charcoal'
+                          }`}
+                          style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                        >
+                          <List className="w-3.5 h-3.5" />
+                          List
+                        </button>
+                        <button
+                          onClick={() => setIsMapMode(true)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                            isMapMode
+                              ? 'bg-coral text-white shadow-sm'
+                              : 'text-charcoal/70 hover:text-charcoal'
+                          }`}
+                          style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                        >
+                          <MapIcon className="w-3.5 h-3.5" />
+                          Map
+                        </button>
+                      </div>
                     </div>
-                    {/* Search Results Grid - Styled like Explore page */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-3">
-                      {searchResults.map((business) => (
-                        <div key={business.id} className="list-none">
-                          <BusinessCard business={business} compact inGrid={true} />
-                        </div>
-                      ))}
-                    </div>
+                    {/* Map View or List View */}
+                    {isMapMode ? (
+                      <div className="w-full h-[calc(100vh-300px)] min-h-[500px] rounded-[20px] overflow-hidden border border-white/30 shadow-lg">
+                        <SearchResultsMap
+                          businesses={searchResults}
+                          userLocation={userLocation}
+                          onBusinessClick={(business) => {
+                            // Navigate to business page
+                            window.location.href = `/business/${business.slug || business.id}`;
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-3">
+                        {searchResults.map((business) => (
+                          <div key={business.id} className="list-none">
+                            <BusinessCard business={business} compact inGrid={true} />
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </>
                 )}
               </div>

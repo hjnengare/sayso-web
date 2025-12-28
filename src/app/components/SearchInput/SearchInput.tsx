@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, forwardRef, useImperativeHandle, useRef } from "react";
-import { Search, Sliders } from "react-feather";
+import { Search, Sliders, Map } from "react-feather";
 
 interface SearchInputProps {
   placeholder?: string;
@@ -10,6 +10,9 @@ interface SearchInputProps {
   onSearch?: (query: string) => void;           // fires on change
   onSubmitQuery?: (query: string) => void;      // fires on Enter / submit
   onFilterClick?: () => void;
+  onMapClick?: () => void;
+  showMap?: boolean;
+  isMapMode?: boolean;
   onFocusOpenFilters?: () => void;
   showFilter?: boolean;
   showSearchIcon?: boolean;
@@ -25,6 +28,9 @@ const SearchInput = forwardRef<HTMLFormElement, SearchInputProps>(
       onSearch,
       onSubmitQuery,
       onFilterClick,
+      onMapClick,
+      showMap = false,
+      isMapMode = false,
       onFocusOpenFilters,
       showFilter = true,
       showSearchIcon = true,
@@ -64,23 +70,37 @@ const SearchInput = forwardRef<HTMLFormElement, SearchInputProps>(
     return (
       <form onSubmit={handleSubmit} className={`${containerClass} ${className}`} ref={ref}>
         <div className="relative">
-          {/* right icon (filters or search) - positioned on the far right */}
-          {showFilter && onFilterClick && (
-            <button
-              type="button"
-              onClick={onFilterClick}
-              className="absolute inset-y-0 right-0 pr-2 flex items-center text-charcoal/60 hover:text-charcoal transition-colors z-10"
-              aria-label="Open filters"
-            >
-              <Sliders className="w-5 h-5" strokeWidth={2} />
-            </button>
-          )}
-          {/* Search icon on the right when showFilter is false and showSearchIcon is true */}
-          {!showFilter && showSearchIcon && (
-            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-              <Search className="w-5 h-5 text-charcoal/40" strokeWidth={2} />
-            </div>
-          )}
+          {/* Action buttons on the right - Map, Filters */}
+          <div className="absolute inset-y-0 right-0 flex items-center gap-1 pr-2 z-10">
+            {showMap && onMapClick && (
+              <button
+                type="button"
+                onClick={onMapClick}
+                className={`flex items-center text-charcoal/60 hover:text-charcoal transition-colors ${
+                  isMapMode ? 'text-coral' : ''
+                }`}
+                aria-label={isMapMode ? "Show list view" : "Show map view"}
+              >
+                <Map className="w-5 h-5" strokeWidth={2} />
+              </button>
+            )}
+            {showFilter && onFilterClick && (
+              <button
+                type="button"
+                onClick={onFilterClick}
+                className="flex items-center text-charcoal/60 hover:text-charcoal transition-colors"
+                aria-label="Open filters"
+              >
+                <Sliders className="w-5 h-5" strokeWidth={2} />
+              </button>
+            )}
+            {/* Search icon on the right when showFilter is false and showSearchIcon is true */}
+            {!showFilter && !showMap && showSearchIcon && (
+              <div className="flex items-center pointer-events-none">
+                <Search className="w-5 h-5 text-charcoal/40" strokeWidth={2} />
+              </div>
+            )}
+          </div>
 
           {/* input - no left icon, simple underline */}
           <input
@@ -95,7 +115,7 @@ const SearchInput = forwardRef<HTMLFormElement, SearchInputProps>(
               text-base placeholder:text-base placeholder:text-charcoal/40 font-normal text-charcoal
               focus:outline-none focus:border-charcoal/60
               hover:border-charcoal/30 transition-all duration-200
-              ${showFilter && onFilterClick ? "pr-12" : showSearchIcon ? "pr-10" : "pr-0"}
+              ${showFilter && onFilterClick && showMap && onMapClick ? "pr-24" : (showFilter && onFilterClick) || (showMap && onMapClick) ? "pr-12" : showSearchIcon ? "pr-10" : "pr-0"}
               py-3 px-0
             `}
             style={{

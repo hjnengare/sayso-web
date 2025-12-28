@@ -66,6 +66,9 @@ const nextConfig: NextConfig = {
     return config;
   },
   
+  // Turbopack configuration (for Next.js 16+) - empty config to silence warning
+  turbopack: {},
+  
   // Headers for static asset caching
   async headers() {
     return [

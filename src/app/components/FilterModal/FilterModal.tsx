@@ -100,17 +100,34 @@ export default function FilterModal({
 
   // Body scroll lock when modal is open
   useEffect(() => {
-    if (!isVisible) return;
+    if (!isVisible || !isOpen) return;
 
-    // Lock body scroll
-    const originalStyle = window.getComputedStyle(document.body).overflow;
+    // Save original styles
+    const originalOverflow = document.body.style.overflow;
+    const originalPosition = document.body.style.position;
+    const originalTop = document.body.style.top;
+    const originalWidth = document.body.style.width;
+    
+    // Get current scroll position
+    const scrollY = window.scrollY;
+
+    // Lock body scroll - prevent both scroll and touch scrolling
     document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
 
     return () => {
-      // Restore body scroll
-      document.body.style.overflow = originalStyle;
+      // Restore original styles
+      document.body.style.overflow = originalOverflow;
+      document.body.style.position = originalPosition;
+      document.body.style.top = originalTop;
+      document.body.style.width = originalWidth;
+      
+      // Restore scroll position
+      window.scrollTo(0, scrollY);
     };
-  }, [isVisible]);
+  }, [isVisible, isOpen]);
 
   // Outside click + ESC (no body scroll lock)
   useEffect(() => {
@@ -191,10 +208,10 @@ export default function FilterModal({
           left: style.left,
           width: style.width || (typeof window !== 'undefined' ? `calc(100vw - 32px)` : 400),
           maxWidth: "calc(100vw - 32px)", // 16px padding on each side
-          // Reserve generous space at the bottom on mobile so footer buttons stay above the address bar
+          // Reserve space at the bottom - more generous height to ensure content is visible
           maxHeight: typeof window !== 'undefined' && window.innerWidth < 768
-            ? `calc(100vh - ${style.top + 80}px - env(safe-area-inset-bottom, 0px))`
-            : `calc(100vh - ${style.top + 40}px)`, // Slight extra gap on larger screens
+            ? `calc(100vh - ${style.top + 20}px - env(safe-area-inset-bottom, 0px))`
+            : `calc(100vh - ${style.top + 20}px)`, // More space on all screens
           display: 'flex',
           flexDirection: 'column',
           outline: "none",
@@ -225,7 +242,10 @@ export default function FilterModal({
           className="px-4 sm:px-5 md:px-6 py-4 space-y-3 sm:space-y-4 overflow-y-auto overscroll-contain flex-1 min-h-0"
           style={{ 
             WebkitOverflowScrolling: 'touch',
-            maxHeight: 'calc(100vh - 180px)', // Reserve space for header and footer on mobile
+            // More generous height calculation - reserve space for header (~60px) and footer (~80px)
+            maxHeight: typeof window !== 'undefined' && window.innerWidth < 768
+              ? 'calc(100vh - 140px - env(safe-area-inset-bottom, 0px))'
+              : 'calc(100vh - 140px)',
           }}
           onWheel={(e) => {
             // Prevent scroll propagation to body

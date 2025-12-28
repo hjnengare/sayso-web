@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Fontdiner_Swanky } from "next/font/google";
 import BusinessCard from "../components/BusinessCard/BusinessCard";
 import Footer from "../components/Footer/Footer";
@@ -14,6 +14,9 @@ import { useUserPreferences } from "../hooks/useUserPreferences";
 import { useDebounce } from "../hooks/useDebounce";
 import SearchInput from "../components/SearchInput/SearchInput";
 import FilterModal, { FilterState } from "../components/FilterModal/FilterModal";
+import ActiveFilterBadges from "../components/FilterActiveBadges/ActiveFilterBadges";
+import SearchResultsMap from "../components/BusinessMap/SearchResultsMap";
+import { List, Map as MapIcon } from "react-feather";
 import { Loader } from "../components/Loader/Loader";
 import { usePredefinedPageTitle } from "../hooks/usePageTitle";
 import CategoryFilterPills from "../components/Home/CategoryFilterPills";
@@ -54,6 +57,9 @@ export default function TrendingPage() {
   const [isPaginationLoading, setIsPaginationLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedInterestIds, setSelectedInterestIds] = useState<string[]>([]);
+  const [filters, setFilters] = useState<FilterState>({ minRating: null, distance: null });
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [isMapMode, setIsMapMode] = useState(false);
   const searchWrapRef = useRef<HTMLDivElement>(null);
   const previousPageRef = useRef(currentPage);
 
@@ -66,6 +72,13 @@ export default function TrendingPage() {
       setSelectedInterestIds(interests.map(i => i.id));
     }
   }, [interests, selectedInterestIds.length]);
+
+  // Convert distance string to km number
+  const radiusKm = useMemo(() => {
+    if (!filters.distance) return null;
+    const match = filters.distance.match(/(\d+)\s*km/);
+    return match ? parseInt(match[1]) : null;
+  }, [filters.distance]);
 
   // Determine sort strategy based on search query
   const sortStrategy = useMemo((): 'relevance' | 'distance' | 'rating_desc' | 'price_asc' | 'combo' | undefined => {
@@ -91,6 +104,10 @@ export default function TrendingPage() {
     interestIds: debouncedSearchQuery.trim().length > 0 ? undefined : activeInterestIds.length > 0 ? activeInterestIds : undefined,
     priceRanges: preferredPriceRanges,
     dealbreakerIds: dealbreakerIds.length ? dealbreakerIds : undefined,
+    minRating: filters.minRating,
+    radiusKm: radiusKm,
+    latitude: userLocation?.lat ?? null,
+    longitude: userLocation?.lng ?? null,
     searchQuery: debouncedSearchQuery.trim().length > 0 ? debouncedSearchQuery : null,
     sort: sortStrategy,
   });
@@ -117,7 +134,38 @@ export default function TrendingPage() {
   };
 
   const handleApplyFilters = (f: FilterState) => {
-    console.log("filters:", f);
+    setFilters(f);
+    setCurrentPage(1); // Reset to first page when filters change
+    closeFilters();
+    
+    // If distance filter is applied, request user location
+    if (f.distance && !userLocation) {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            setUserLocation({
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+            });
+          },
+          (error) => {
+            console.warn('Error getting user location:', error);
+            // Continue without location - distance filter won't work but other filters will
+          }
+        );
+      }
+    }
+    
+    // Trigger refetch to apply filters immediately
+    refetch();
+  };
+
+  const handleClearFilters = () => {
+    setFilters({ minRating: null, distance: null });
+    setUserLocation(null);
+    setCurrentPage(1);
+    // Trigger refetch to clear filters immediately
+    refetch();
   };
 
   const handleSearchChange = (query: string) => {
@@ -130,19 +178,23 @@ export default function TrendingPage() {
 
   const handleSubmitQuery = (query: string) => {
     setSearchQuery(query);
+    setIsMapMode(false); // Reset to list view when new search
     setCurrentPage(1); // Reset to first page
     if (isFilterVisible) closeFilters();
   };
 
   const handleToggleInterest = (interestId: string) => {
     setSelectedInterestIds(prev => {
-      if (prev.includes(interestId)) {
-        // Deselect - remove from array
-        return prev.filter(id => id !== interestId);
-      } else {
-        // Select - add to array
-        return [...prev, interestId];
-      }
+      const newIds = prev.includes(interestId)
+        ? prev.filter(id => id !== interestId)
+        : [...prev, interestId];
+      
+      // Immediately trigger refetch when category changes
+      setTimeout(() => {
+        refetch();
+      }, 0);
+      
+      return newIds;
     });
     setCurrentPage(1); // Reset to first page when filter changes
   };
@@ -293,6 +345,17 @@ export default function TrendingPage() {
             />
           </div>
 
+          {/* Active Filter Badges */}
+          <ActiveFilterBadges
+            filters={filters}
+            onRemoveFilter={(filterType) => {
+              const newFilters = { ...filters, [filterType]: null };
+              setFilters(newFilters);
+              refetch();
+            }}
+            onClearAll={handleClearFilters}
+          />
+
           <div className="py-3 sm:py-4">
             <div className="pt-4 sm:pt-6 md:pt-10">
             {loading && (
@@ -338,18 +401,67 @@ export default function TrendingPage() {
                       </div>
                     )}
 
-                    {/* Paginated Content with Smooth Transition */}
-                    <AnimatePresence mode="wait" initial={false}>
-                      <div
-                        key={currentPage}
-                        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-3"
-                      >
-                        {currentBusinesses.map((business) => (
-                          <div key={business.id} className="list-none">
-                            <BusinessCard business={business} compact />
-                          </div>
-                        ))}
+                    {/* List | Map Toggle */}
+                    <div className="mb-4 px-2 flex items-center justify-end">
+                      <div className="flex items-center gap-1 bg-white/80 backdrop-blur-sm rounded-full p-1 border border-white/30 shadow-sm">
+                        <button
+                          onClick={() => setIsMapMode(false)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                            !isMapMode
+                              ? 'bg-sage text-white shadow-sm'
+                              : 'text-charcoal/70 hover:text-charcoal'
+                          }`}
+                          style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                        >
+                          <List className="w-3.5 h-3.5" />
+                          List
+                        </button>
+                        <button
+                          onClick={() => setIsMapMode(true)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                            isMapMode
+                              ? 'bg-coral text-white shadow-sm'
+                              : 'text-charcoal/70 hover:text-charcoal'
+                          }`}
+                          style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                        >
+                          <MapIcon className="w-3.5 h-3.5" />
+                          Map
+                        </button>
                       </div>
+                    </div>
+
+                    {/* Paginated Content with Smooth Transition - Map or List */}
+                    <AnimatePresence mode="wait" initial={false}>
+                      {isMapMode ? (
+                        <motion.div
+                          key="map-view"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="w-full h-[calc(100vh-300px)] min-h-[500px] rounded-[20px] overflow-hidden border border-white/30 shadow-lg"
+                        >
+                          <SearchResultsMap
+                            businesses={trendingBusinesses}
+                            userLocation={userLocation}
+                            onBusinessClick={(business) => {
+                              window.location.href = `/business/${business.slug || business.id}`;
+                            }}
+                          />
+                        </motion.div>
+                      ) : (
+                        <div
+                          key={`list-view-${currentPage}`}
+                          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-3"
+                        >
+                          {currentBusinesses.map((business) => (
+                            <div key={business.id} className="list-none">
+                              <BusinessCard business={business} compact />
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </AnimatePresence>
 
                     {/* Pagination */}
@@ -374,7 +486,9 @@ export default function TrendingPage() {
         isVisible={isFilterVisible}
         onClose={closeFilters}
         onApplyFilters={handleApplyFilters}
+        onClearAll={handleClearFilters}
         anchorRef={searchWrapRef}
+        initialFilters={filters}
       />
 
       {/* Scroll to Top Button */}

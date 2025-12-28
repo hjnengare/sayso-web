@@ -3,7 +3,7 @@
 import { useMemo, useState, useRef, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Fontdiner_Swanky } from "next/font/google";
 import Header from "../components/Header/Header";
 import Footer from "../components/Footer/Footer";
@@ -13,6 +13,9 @@ import { useUserPreferences } from "../hooks/useUserPreferences";
 import { useDebounce } from "../hooks/useDebounce";
 import SearchInput from "../components/SearchInput/SearchInput";
 import FilterModal, { FilterState } from "../components/FilterModal/FilterModal";
+import ActiveFilterBadges from "../components/FilterActiveBadges/ActiveFilterBadges";
+import SearchResultsMap from "../components/BusinessMap/SearchResultsMap";
+import { List, Map as MapIcon } from "react-feather";
 import { ChevronRight, ChevronUp } from "react-feather";
 import Pagination from "../components/EventsPage/Pagination";
 import { Loader } from "../components/Loader/Loader";
@@ -58,6 +61,7 @@ function ExplorePageContent() {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedInterestIds, setSelectedInterestIds] = useState<string[]>([]);
+  const [isMapMode, setIsMapMode] = useState(false);
   const searchWrapRef = useRef<HTMLDivElement>(null);
   const previousPageRef = useRef(currentPage);
 
@@ -180,9 +184,9 @@ function ExplorePageContent() {
   const handleApplyFilters = (f: FilterState) => {
     setFilters(f);
     // Sync selectedInterestIds with filters.categories when filters are applied from modal
-    if (f.categories.length > 0) {
+    if (f.categories && f.categories.length > 0) {
       setSelectedInterestIds(f.categories);
-    } else if (f.categories.length === 0 && selectedInterestIds.length > 0) {
+    } else if (f.categories && f.categories.length === 0 && selectedInterestIds.length > 0) {
       // If categories are cleared in modal, clear pills too
       setSelectedInterestIds([]);
     }
@@ -206,6 +210,18 @@ function ExplorePageContent() {
         );
       }
     }
+    
+    // Trigger refetch to apply filters immediately
+    refetch();
+  };
+
+  const handleClearFilters = () => {
+    setFilters({ minRating: null, distance: null, categories: [] });
+    setUserLocation(null);
+    setSelectedInterestIds(interests.map(i => i.id));
+    setCurrentPage(1);
+    // Trigger refetch to clear filters immediately
+    refetch();
   };
 
   const handleSearchChange = (query: string) => {
@@ -218,6 +234,7 @@ function ExplorePageContent() {
 
   const handleSubmitQuery = (query: string) => {
     setSearchQuery(query);
+    setIsMapMode(false); // Reset to list view when new search
     setCurrentPage(1); // Reset to first page
     if (isFilterVisible) closeFilters();
   };
@@ -225,13 +242,16 @@ function ExplorePageContent() {
   const handleToggleInterest = (interestId: string) => {
     isPillUpdateRef.current = true; // Mark that this is a pill update
     setSelectedInterestIds(prev => {
-      if (prev.includes(interestId)) {
-        // Deselect - remove from array
-        return prev.filter(id => id !== interestId);
-      } else {
-        // Select - add to array
-        return [...prev, interestId];
-      }
+      const newIds = prev.includes(interestId)
+        ? prev.filter(id => id !== interestId)
+        : [...prev, interestId];
+      
+      // Immediately trigger refetch when category changes
+      setTimeout(() => {
+        refetch();
+      }, 0);
+      
+      return newIds;
     });
     setCurrentPage(1); // Reset to first page when filter changes
   };
@@ -371,6 +391,9 @@ function ExplorePageContent() {
               onSearch={handleSearchChange}
               onSubmitQuery={handleSubmitQuery}
               onFilterClick={openFilters}
+              onMapClick={() => setIsMapMode(!isMapMode)}
+              showMap={true}
+              isMapMode={isMapMode}
               onFocusOpenFilters={openFilters}
               showFilter
             />
@@ -389,6 +412,17 @@ function ExplorePageContent() {
               onToggleCategory={handleToggleInterest}
             />
           </div>
+
+          {/* Active Filter Badges */}
+          <ActiveFilterBadges
+            filters={filters}
+            onRemoveFilter={(filterType) => {
+              const newFilters = { ...filters, [filterType]: null };
+              setFilters(newFilters);
+              refetch();
+            }}
+            onClearAll={handleClearFilters}
+          />
 
           <div className="py-3 sm:py-4">
             <div className="pt-4 sm:pt-6 md:pt-10">
@@ -435,19 +469,78 @@ function ExplorePageContent() {
                     </div>
                   )}
 
-                  {/* Paginated Content with Smooth Transition */}
-                  <AnimatePresence mode="wait" initial={false}>
-                    <div
-                      key={currentPage}
-                      className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-3"
-                    >
-                      {currentBusinesses.map((business) => (
-                        <div key={business.id} className="list-none">
-                          <BusinessCard business={business} compact inGrid={true} />
-                        </div>
-                      ))}
+                  {/* List | Map Toggle */}
+                  <div className="mb-4 px-2 flex items-center justify-end">
+                    <div className="flex items-center gap-1 bg-white/80 backdrop-blur-sm rounded-full p-1 border border-white/30 shadow-sm">
+                      <button
+                        onClick={() => setIsMapMode(false)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                          !isMapMode
+                            ? 'bg-sage text-white shadow-sm'
+                            : 'text-charcoal/70 hover:text-charcoal'
+                        }`}
+                        style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                      >
+                        <List className="w-3.5 h-3.5" />
+                        List
+                      </button>
+                      <button
+                        onClick={() => setIsMapMode(true)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                          isMapMode
+                            ? 'bg-coral text-white shadow-sm'
+                            : 'text-charcoal/70 hover:text-charcoal'
+                        }`}
+                        style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                      >
+                        <MapIcon className="w-3.5 h-3.5" />
+                        Map
+                      </button>
                     </div>
+                  </div>
+
+                  {/* Paginated Content with Smooth Transition - Map or List */}
+                  <AnimatePresence mode="wait" initial={false}>
+                    {isMapMode ? (
+                      <motion.div
+                        key="map-view"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="w-full h-[calc(100vh-300px)] min-h-[500px] rounded-[20px] overflow-hidden border border-white/30 shadow-lg"
+                      >
+                        <SearchResultsMap
+                          businesses={businesses}
+                          userLocation={userLocation}
+                          onBusinessClick={(business) => {
+                            window.location.href = `/business/${business.slug || business.id}`;
+                          }}
+                        />
+                      </motion.div>
+                    ) : (
+                      <div
+                        key={`list-view-${currentPage}`}
+                        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-3"
+                      >
+                        {currentBusinesses.map((business) => (
+                          <div key={business.id} className="list-none">
+                            <BusinessCard business={business} compact inGrid={true} />
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </AnimatePresence>
+
+                  {/* Pagination - Only show in list mode */}
+                  {!isMapMode && (
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      onPageChange={handlePageChange}
+                      disabled={isPaginationLoading}
+                    />
+                  )}
 
                   {/* Pagination */}
                   <Pagination
@@ -471,6 +564,7 @@ function ExplorePageContent() {
         isVisible={isFilterVisible}
         onClose={closeFilters}
         onApplyFilters={handleApplyFilters}
+        onClearAll={handleClearFilters}
         anchorRef={searchWrapRef}
         initialFilters={filters}
       />

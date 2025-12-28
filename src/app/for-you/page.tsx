@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Fontdiner_Swanky } from "next/font/google";
 import Header from "../components/Header/Header";
 import Footer from "../components/Footer/Footer";
@@ -13,6 +13,8 @@ import { useDebounce } from "../hooks/useDebounce";
 import SearchInput from "../components/SearchInput/SearchInput";
 import FilterModal, { FilterState } from "../components/FilterModal/FilterModal";
 import ActiveFilterBadges from "../components/FilterActiveBadges/ActiveFilterBadges";
+import SearchResultsMap from "../components/BusinessMap/SearchResultsMap";
+import { List, Map as MapIcon } from "react-feather";
 import { ChevronRight, ChevronUp } from "react-feather";
 import { Loader } from "../components/Loader/Loader";
 import { usePredefinedPageTitle } from "../hooks/usePageTitle";
@@ -54,6 +56,7 @@ export default function ForYouPage() {
   const [selectedInterestIds, setSelectedInterestIds] = useState<string[]>([]);
   const [filters, setFilters] = useState<FilterState>({ minRating: null, distance: null });
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [isMapMode, setIsMapMode] = useState(false);
   const searchWrapRef = useRef<HTMLDivElement>(null);
   const previousPageRef = useRef(currentPage);
 
@@ -321,6 +324,9 @@ export default function ForYouPage() {
               onSearch={handleSearchChange}
               onSubmitQuery={handleSubmitQuery}
               onFilterClick={openFilters}
+              onMapClick={() => setIsMapMode(!isMapMode)}
+              showMap={true}
+              isMapMode={isMapMode}
               onFocusOpenFilters={openFilters}
               showFilter
             />
@@ -390,27 +396,78 @@ export default function ForYouPage() {
                     </div>
                   )}
 
-                  {/* Paginated Content with Smooth Transition */}
-                  <AnimatePresence mode="wait" initial={false}>
-                    <div
-                      key={currentPage}
-                      className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-3"
-                    >
-                      {currentBusinesses.map((business) => (
-                        <div key={business.id} className="list-none">
-                          <BusinessCard business={business} compact />
-                        </div>
-                      ))}
+                  {/* List | Map Toggle */}
+                  <div className="mb-4 px-2 flex items-center justify-end">
+                    <div className="flex items-center gap-1 bg-white/80 backdrop-blur-sm rounded-full p-1 border border-white/30 shadow-sm">
+                      <button
+                        onClick={() => setIsMapMode(false)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                          !isMapMode
+                            ? 'bg-sage text-white shadow-sm'
+                            : 'text-charcoal/70 hover:text-charcoal'
+                        }`}
+                        style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                      >
+                        <List className="w-3.5 h-3.5" />
+                        List
+                      </button>
+                      <button
+                        onClick={() => setIsMapMode(true)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                          isMapMode
+                            ? 'bg-coral text-white shadow-sm'
+                            : 'text-charcoal/70 hover:text-charcoal'
+                        }`}
+                        style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                      >
+                        <MapIcon className="w-3.5 h-3.5" />
+                        Map
+                      </button>
                     </div>
+                  </div>
+
+                  {/* Paginated Content with Smooth Transition - Map or List */}
+                  <AnimatePresence mode="wait" initial={false}>
+                    {isMapMode ? (
+                      <motion.div
+                        key="map-view"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="w-full h-[calc(100vh-300px)] min-h-[500px] rounded-[20px] overflow-hidden border border-white/30 shadow-lg"
+                      >
+                        <SearchResultsMap
+                          businesses={businesses}
+                          userLocation={userLocation}
+                          onBusinessClick={(business) => {
+                            window.location.href = `/business/${business.slug || business.id}`;
+                          }}
+                        />
+                      </motion.div>
+                    ) : (
+                      <div
+                        key={`list-view-${currentPage}`}
+                        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-3"
+                      >
+                        {currentBusinesses.map((business) => (
+                          <div key={business.id} className="list-none">
+                            <BusinessCard business={business} compact />
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </AnimatePresence>
 
-                  {/* Pagination */}
-                  <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={handlePageChange}
-                    disabled={isPaginationLoading}
-                  />
+                  {/* Pagination - Only show in list mode */}
+                  {!isMapMode && (
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      onPageChange={handlePageChange}
+                      disabled={isPaginationLoading}
+                    />
+                  )}
                 </>
               )}
             </>
