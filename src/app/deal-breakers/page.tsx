@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useCallback, useMemo, Suspense } from "react";
+import { useState, useEffect, useCallback, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import OnboardingLayout from "../components/Onboarding/OnboardingLayout";
 import ProtectedRoute from "../components/ProtectedRoute/ProtectedRoute";
 import { useToast } from "../contexts/ToastContext";
+import { useAuth } from "../contexts/AuthContext";
 import { Loader } from "../components/Loader";
 import DealBreakerStyles from "../components/DealBreakers/DealBreakerStyles";
 import DealBreakerHeader from "../components/DealBreakers/DealBreakerHeader";
@@ -31,6 +32,7 @@ function DealBreakersContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { showToast } = useToast();
+  const { user } = useAuth();
 
   const [selectedDealbreakers, setSelectedDealbreakers] = useState<string[]>([]);
   const [isNavigating, setIsNavigating] = useState(false);
@@ -48,6 +50,26 @@ function DealBreakersContent() {
     return subcategoriesParam ? subcategoriesParam.split(',').map(s => s.trim()) : [];
   }, [searchParams]);
 
+  // Enforce prerequisites: user must have completed interests and subcategories
+  useEffect(() => {
+    if (user) {
+      const interestsCount = user.profile?.interests_count || 0;
+      const subcategoriesCount = user.profile?.subcategories_count || 0;
+      
+      if (interestsCount === 0) {
+        console.log('DealBreakersPage: No interests selected, redirecting to interests');
+        router.replace('/interests');
+        return;
+      }
+      
+      if (subcategoriesCount === 0) {
+        console.log('DealBreakersPage: No subcategories selected, redirecting to subcategories');
+        router.replace('/subcategories');
+        return;
+      }
+    }
+  }, [user, router]);
+
   // Determine back href based on whether user has interests selected
   const backHref = useMemo(() => {
     if (interests.length > 0) {
@@ -55,15 +77,6 @@ function DealBreakersContent() {
     }
     return '/interests';
   }, [interests]);
-
-  // Remove the redirect - allow users to skip directly to deal-breakers
-  // useEffect(() => {
-  //   if (interests.length === 0 && subcategories.length === 0) {
-  //     // No data passed, redirect to start
-  //     router.push('/interests');
-  //     return;
-  //   }
-  // }, [interests, subcategories, router]);
 
   // Helper function to get interest_id for a subcategory
   const getInterestIdForSubcategory = useCallback((subcategoryId: string): string => {
@@ -102,51 +115,38 @@ function DealBreakersContent() {
   const handleNext = useCallback(async () => {
     setIsNavigating(true);
 
-    try {
-      // Prepare the data
-      const requestData = {
-        step: 'complete',
-        interests: interests,
-        subcategories: subcategories.map(subId => ({
-          subcategory_id: subId,
-          interest_id: getInterestIdForSubcategory(subId)
-        })),
-        dealbreakers: selectedDealbreakers
-      };
+    // Prefetch complete page immediately for instant navigation
+    router.prefetch('/complete');
 
-      console.log('Sending onboarding data:', requestData);
+    // Prepare the data
+    const requestData = {
+      step: 'complete',
+      interests: interests,
+      subcategories: subcategories.map(subId => ({
+        subcategory_id: subId,
+        interest_id: getInterestIdForSubcategory(subId)
+      })),
+      dealbreakers: selectedDealbreakers
+    };
 
-      // Save ALL onboarding data at once - interests, subcategories, and dealbreakers
-      const response = await fetch('/api/user/onboarding', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestData)
-      });
+    console.log('Sending onboarding data:', requestData);
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('API Error Response:', {
-          status: response.status,
-          statusText: response.statusText,
-          error: errorData
-        });
-        // Log error but still proceed to complete page
-        // The onboarding UI flow is complete even if save fails
-        console.warn('Onboarding save failed, but proceeding to complete page');
-      }
+    // Redirect immediately - don't wait for API response
+    // This ensures <2s navigation time
+    router.replace('/complete');
 
-      // Redirect to complete page after deal-breakers
-      // Use replace instead of push to prevent back navigation
-      router.replace('/complete');
-    } catch (error) {
-      console.error('Error completing onboarding:', error);
-      showToast('Failed to save onboarding data, but continuing...', 'sage');
-      // Still redirect to complete page even on error
-      // The user has completed the onboarding flow UI-wise
-      router.replace('/complete');
-      setIsNavigating(false);
-    }
-  }, [interests, subcategories, selectedDealbreakers, getInterestIdForSubcategory, router, showToast]);
+    // Save data in background (non-blocking)
+    // Use fetch with keepalive or fire-and-forget pattern
+    fetch('/api/user/onboarding', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(requestData),
+      keepalive: true // Keep request alive even after navigation
+    }).catch((error) => {
+      console.error('Background save error (non-blocking):', error);
+      // Error is logged but doesn't block user flow
+    });
+  }, [interests, subcategories, selectedDealbreakers, getInterestIdForSubcategory, router]);
 
   const canProceed = selectedDealbreakers.length > 0 && !isNavigating;
 

@@ -1339,10 +1339,16 @@ function transformBusinessForCard(business: BusinessRPCResult) {
   const shouldShowBadge = business.verified && business.badge;
   const subInterestLabel = formatSubInterestLabel(business.sub_interest_id);
 
+  // Prioritize uploaded_image over image_url for business cards
+  // This ensures owner-uploaded images are displayed first
+  const displayImage = business.uploaded_image || business.image_url;
+
   return {
     id: business.id,
     name: business.name,
-    image: business.image_url || business.uploaded_image,
+    image: displayImage,
+    uploaded_image: business.uploaded_image || undefined, // Preserve uploaded_image for BusinessCard component
+    image_url: business.image_url || undefined, // Preserve image_url as fallback
     category: business.category,
     subInterestId: business.sub_interest_id || undefined,
     subInterestLabel,

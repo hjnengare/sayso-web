@@ -43,6 +43,7 @@ This guide will help you set up your Supabase database and storage for the KLIO 
 2. Create the following buckets:
    - **avatars** (public bucket)
    - **review-images** (public bucket)
+   - **business-images** (public bucket) - See detailed setup: [Business Images Storage Setup](./BUSINESS_IMAGES_STORAGE_SETUP.md)
 
 ### Configure Storage Policies
 
@@ -55,6 +56,12 @@ This guide will help you set up your Supabase database and storage for the KLIO 
 3. For the **review-images** bucket, create similar policies:
    - Users can upload to `review-images/{review_id}/` paths
    - Public read access for all review images
+
+4. For the **business-images** bucket:
+   - Run the migration: `src/app/lib/migrations/002_business/008_business-images-storage.sql`
+   - This sets up policies for business owners to upload/update/delete their business images
+   - Public read access for all business images
+   - See detailed guide: [Business Images Storage Setup](./BUSINESS_IMAGES_STORAGE_SETUP.md)
 
 ### Alternative: Create Buckets via SQL
 
@@ -69,6 +76,11 @@ ON CONFLICT (id) DO NOTHING;
 -- Create review-images bucket
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('review-images', 'review-images', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Create business-images bucket
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('business-images', 'business-images', true)
 ON CONFLICT (id) DO NOTHING;
 ```
 
@@ -100,7 +112,7 @@ You should see:
 -- Verify storage buckets exist
 SELECT id, name, public 
 FROM storage.buckets 
-WHERE id IN ('avatars', 'review-images');
+WHERE id IN ('avatars', 'review-images', 'business-images');
 ```
 
 ### Check Storage Policies
@@ -156,7 +168,9 @@ Run these SQL files in order:
 2. `src/app/lib/add-profile-fields-migration.sql` - Add profile fields
 3. `src/app/lib/database-functions.sql` - Database functions
 4. `src/app/lib/delete-user-account-function.sql` - Account deletion function
-5. `src/app/lib/setup-storage.sql` - Storage policies
+5. `src/app/lib/setup-storage.sql` - Storage policies (avatars, review-images)
+6. `src/app/lib/migrations/002_business/008_business-images-storage.sql` - Business images storage policies
+7. `src/app/lib/migrations/002_business/009_business-images-table.sql` - Business images table (multiple images per business)
 
 ## Need Help?
 

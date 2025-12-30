@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useOnboarding } from "../contexts/OnboardingContext";
 import { useToast } from "../contexts/ToastContext";
+import { useAuth } from "../contexts/AuthContext";
 import OnboardingLayout from "../components/Onboarding/OnboardingLayout";
 import ProtectedRoute from "../components/ProtectedRoute/ProtectedRoute";
 import SubcategoryStyles from "../components/Subcategories/SubcategoryStyles";
@@ -42,6 +43,7 @@ function SubcategoriesContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { showToast } = useToast();
+  const { user } = useAuth();
   const { selectedSubInterests: selectedSubcategories, setSelectedSubInterests: setSelectedSubcategories, isLoading, error } = useOnboarding();
 
   const [subcategories, setSubcategories] = useState<SubcategoryItem[]>([]);
@@ -55,11 +57,23 @@ function SubcategoriesContent() {
     return interestsParam ? interestsParam.split(',').map(s => s.trim()) : [];
   }, [searchParams]);
 
+  // Enforce prerequisite: user must have selected interests before accessing subcategories
+  useEffect(() => {
+    if (user) {
+      const interestsCount = user.profile?.interests_count || 0;
+      if (interestsCount === 0) {
+        console.log('SubcategoriesPage: No interests selected, redirecting to interests');
+        router.replace('/interests');
+        return;
+      }
+    }
+  }, [user, router]);
+
   useEffect(() => {
     const loadSubcategories = async () => {
       if (selectedInterests.length === 0) {
-        // If no interests selected, redirect to deal-breakers
-        router.push('/deal-breakers');
+        // If no interests in URL params, redirect to interests page
+        router.replace('/interests');
         return;
       }
 
@@ -119,24 +133,24 @@ function SubcategoriesContent() {
 
     setIsNavigating(true);
 
-    try {
-      // Pass both interests and subcategories via URL - NO SAVING
-      const interestParams = selectedInterests.length > 0 
-        ? `interests=${selectedInterests.join(',')}` 
-        : '';
-      const subcategoryParams = selectedSubcategories.join(',');
-      
-      const urlParams = [interestParams, `subcategories=${subcategoryParams}`]
-        .filter(Boolean)
-        .join('&');
-      
-      router.push(`/deal-breakers?${urlParams}`);
-    } catch (error) {
-      console.error('Error navigating to deal-breakers:', error);
-      showToast('Failed to navigate to next step', 'error');
-      setIsNavigating(false);
-    }
-  }, [selectedSubcategories, selectedInterests, router, showToast]);
+    // Prefetch next page for instant navigation
+    const interestParams = selectedInterests.length > 0 
+      ? `interests=${selectedInterests.join(',')}` 
+      : '';
+    const subcategoryParams = selectedSubcategories.join(',');
+    
+    const urlParams = [interestParams, `subcategories=${subcategoryParams}`]
+      .filter(Boolean)
+      .join('&');
+    
+    const nextUrl = `/deal-breakers?${urlParams}`;
+    
+    // Prefetch before navigating
+    router.prefetch(nextUrl);
+    
+    // Use replace for faster navigation (no history entry)
+    router.replace(nextUrl);
+  }, [selectedSubcategories, selectedInterests, router]);
 
   const canProceed = (selectedSubcategories?.length || 0) > 0 && !isNavigating;
 

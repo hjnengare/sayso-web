@@ -198,16 +198,22 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       showToast(completionMessage, 'success', 3000);
 
       // Navigate to the next step - NO SAVING until final step
+      // Use replace for faster navigation and prefetch for instant loading
       if (nextStepName === 'complete') {
-        router.push('/home');
+        router.prefetch('/home');
+        router.replace('/home');
       } else if (nextStepName === 'subcategories' && currentStep === 'interests') {
         // Pass selected interests as URL params to subcategories
         const interestParams = selectedInterests.length > 0
           ? `?interests=${selectedInterests.join(',')}`
           : '';
-        router.push(`/subcategories${interestParams}`);
+        const nextUrl = `/subcategories${interestParams}`;
+        router.prefetch(nextUrl);
+        router.replace(nextUrl);
       } else {
-        router.push(`/${nextStepName}`);
+        const nextUrl = `/${nextStepName}`;
+        router.prefetch(nextUrl);
+        router.replace(nextUrl);
       }
     } catch (error) {
       console.error('Error proceeding to next step:', error);

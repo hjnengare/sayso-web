@@ -49,9 +49,11 @@ function InterestsContent() {
   const searchParams = useSearchParams();
   const { showToast, showToastOnce } = useToast();
 
-  // Prefetch next page immediately on mount for faster navigation
+  // Prefetch all onboarding pages immediately on mount for faster navigation
   useEffect(() => {
     router.prefetch("/subcategories");
+    router.prefetch("/deal-breakers");
+    router.prefetch("/complete");
   }, [router]);
 
   const MIN_SELECTIONS = 3;

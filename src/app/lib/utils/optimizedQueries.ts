@@ -64,7 +64,7 @@ export async function fetchBusinessOptimized(
   }
 
   // Execute all queries in parallel using the actual business ID
-  const [finalBusinessResult, reviewsResult, statsResult] = await executeParallelQueries([
+  const [finalBusinessResult, reviewsResult, statsResult, businessImagesResult] = await executeParallelQueries([
     // Business data
     async () =>
       executeWithRetry(
@@ -99,6 +99,19 @@ export async function fetchBusinessOptimized(
             .select('*')
             .eq('business_id', actualBusinessId)
             .single();
+          return { data, error };
+        }
+      ),
+    // Business images - ordered by primary first, then sort_order
+    async () =>
+      executeWithRetry(
+        async () => {
+          const { data, error } = await client1
+            .from('business_images')
+            .select('id, url, type, sort_order, is_primary')
+            .eq('business_id', actualBusinessId)
+            .order('is_primary', { ascending: false })
+            .order('sort_order', { ascending: true });
           return { data, error };
         }
       ),
@@ -212,10 +225,12 @@ export async function fetchBusinessOptimized(
   }
 
   // Combine results
+  const businessImages = businessImagesResult.data || [];
   const result = {
     ...businessResult.data,
     stats: statsResult.data || null,
     reviews: reviewsWithProfiles,
+    business_images: businessImages,
   };
 
   // Cache result - temporarily disabled

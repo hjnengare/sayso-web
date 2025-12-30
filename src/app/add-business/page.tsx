@@ -552,6 +552,7 @@ export default function AddBusinessPage() {
                         const filePath = `${businessId}/${fileName}`;
 
                         // Upload to Supabase Storage
+                        // Bucket name: 'business-images' (must match Supabase Storage bucket)
                         const { error: uploadError } = await supabase.storage
                             .from('business-images')
                             .upload(filePath, image, {
@@ -561,6 +562,10 @@ export default function AddBusinessPage() {
 
                         if (uploadError) {
                             console.error('Error uploading image:', uploadError);
+                            // Provide helpful error message if bucket doesn't exist
+                            if (uploadError.message?.includes('Bucket not found') || uploadError.message?.includes('not found')) {
+                                showToast('Storage bucket not configured. Please contact support.', 'error', 5000);
+                            }
                             continue;
                         }
 
@@ -572,35 +577,40 @@ export default function AddBusinessPage() {
                         uploadedUrls.push(publicUrl);
                     }
 
-                    // Update business with uploaded images
+                    // Save images to business_images table
                     if (uploadedUrls.length > 0) {
-                        // Set first image as uploaded_image (primary image)
-                        // Note: The API may need to be updated to accept uploaded_image field
-                        const updateResponse = await fetch(`/api/businesses/${businessId}`, {
-                            method: 'PUT',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                uploaded_image: uploadedUrls[0],
-                            }),
-                        });
+                        try {
+                            const supabase = getBrowserSupabase();
+                            
+                            // Prepare image records for business_images table
+                            const imageRecords = uploadedUrls.map((url, index) => ({
+                                business_id: businessId,
+                                url: url,
+                                type: index === 0 ? 'cover' : 'gallery', // First image is cover
+                                sort_order: index,
+                                is_primary: index === 0, // First image is primary
+                            }));
 
-                        if (!updateResponse.ok) {
-                            // Try direct Supabase update as fallback
-                            try {
-                                const supabase = getBrowserSupabase();
-                                const { error: directUpdateError } = await supabase
+                            // Insert all images into business_images table
+                            const { error: imagesError } = await supabase
+                                .from('business_images')
+                                .insert(imageRecords);
+
+                            if (imagesError) {
+                                console.error('Error saving images to business_images table:', imagesError);
+                                // Fallback: Update legacy uploaded_image field for backward compatibility
+                                const { error: fallbackError } = await supabase
                                     .from('businesses')
                                     .update({ uploaded_image: uploadedUrls[0] })
                                     .eq('id', businessId);
-
-                                if (directUpdateError) {
-                                    console.warn('Failed to update business with image URL:', directUpdateError);
+                                
+                                if (fallbackError) {
+                                    console.warn('Failed to save images (both new and legacy methods failed):', fallbackError);
                                 }
-                            } catch (fallbackError) {
-                                console.warn('Failed to update business with image URL, but business was created');
                             }
+                        } catch (imageSaveError: any) {
+                            console.error('Error saving images:', imageSaveError);
+                            // Don't fail the whole operation if image save fails
                         }
                     }
                 } catch (imageError: any) {

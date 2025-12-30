@@ -80,7 +80,16 @@ export async function GET(
           };
         }),
         images: (() => {
+          // Prioritize business_images table, fallback to legacy fields
           const imageList: string[] = [];
+          
+          // Use business_images if available (new structure)
+          if (businessData.business_images && Array.isArray(businessData.business_images) && businessData.business_images.length > 0) {
+            // Return URLs from business_images, ordered by is_primary and sort_order
+            return businessData.business_images.map((img: any) => img.url).filter((url: string) => url && url.trim() !== '');
+          }
+          
+          // Fallback to legacy fields for backward compatibility
           if (businessData.uploaded_image && businessData.uploaded_image.trim() !== '') {
             imageList.push(businessData.uploaded_image);
           }
@@ -89,6 +98,8 @@ export async function GET(
           }
           return imageList.filter(img => img && img.trim() !== '');
         })(),
+        // Include business_images array for frontend use
+        business_images: businessData.business_images || [],
         trust: stats?.percentiles?.trustworthiness || 85,
         punctuality: stats?.percentiles?.punctuality || 85,
         friendliness: stats?.percentiles?.friendliness || 85,
@@ -142,10 +153,19 @@ export async function GET(
       .order('created_at', { ascending: false })
       .limit(10);
 
-    // Execute business and reviews queries in parallel
-    const [businessResult, reviewsResult] = await Promise.all([
+    // Fetch business images in parallel
+    const businessImagesQuery = supabase
+      .from('business_images')
+      .select('id, url, type, sort_order, is_primary')
+      .eq('business_id', actualBusinessId)
+      .order('is_primary', { ascending: false })
+      .order('sort_order', { ascending: true });
+
+    // Execute business, reviews, and images queries in parallel
+    const [businessResult, reviewsResult, businessImagesResult] = await Promise.all([
       businessQuery,
-      reviewsQuery
+      reviewsQuery,
+      businessImagesQuery
     ]);
 
     const { data: business, error: businessError } = businessResult;
@@ -271,8 +291,16 @@ export async function GET(
           helpfulCount: review.helpful_count || 0,
         };
       }),
-      // Format images array for carousel - filter out empty strings and null values
+      // Format images array for carousel - prioritize business_images, fallback to legacy fields
       images: (() => {
+        const { data: businessImages } = businessImagesResult;
+        
+        // Use business_images if available (new structure)
+        if (businessImages && Array.isArray(businessImages) && businessImages.length > 0) {
+          return businessImages.map((img: any) => img.url).filter((url: string) => url && url.trim() !== '');
+        }
+        
+        // Fallback to legacy fields for backward compatibility
         const imageList: string[] = [];
         if (business.uploaded_image && business.uploaded_image.trim() !== '') {
           imageList.push(business.uploaded_image);
@@ -282,6 +310,8 @@ export async function GET(
         }
         return imageList.filter(img => img && img.trim() !== '');
       })(),
+      // Include business_images array for frontend use
+      business_images: businessImagesResult.data || [],
       // Calculate metrics from percentiles if available
       trust: stats?.percentiles?.trustworthiness || 85,
       punctuality: stats?.percentiles?.punctuality || 85,

@@ -50,6 +50,42 @@ export default function ProtectedRoute({
       return;
     }
 
+    // CRITICAL: Block access to /home unless email is verified AND onboarding is complete
+    // Only redirect if we're actually on /home, not if we're already being redirected
+    if (requiresAuth && user && pathname === '/home') {
+      if (!user.email_verified) {
+        console.log('ProtectedRoute: Email not verified, redirecting to verify-email');
+        router.replace('/verify-email');
+        return;
+      }
+      
+      if (!user.profile?.onboarding_complete) {
+        console.log('ProtectedRoute: Onboarding incomplete, redirecting to next step');
+        // Determine next step based on what's been completed
+        const interestsCount = user.profile?.interests_count || 0;
+        const subcategoriesCount = user.profile?.subcategories_count || 0;
+        const dealbreakersCount = user.profile?.dealbreakers_count || 0;
+        
+        let nextStep = 'interests';
+        if (interestsCount === 0) {
+          nextStep = 'interests';
+        } else if (subcategoriesCount === 0) {
+          nextStep = 'subcategories';
+        } else if (dealbreakersCount === 0) {
+          nextStep = 'deal-breakers';
+        } else {
+          nextStep = 'complete';
+        }
+        
+        // Use replace instead of push to prevent back button issues
+        // Only redirect if we're not already on that step
+        if (pathname !== `/${nextStep}`) {
+          router.replace(`/${nextStep}`);
+        }
+        return;
+      }
+    }
+
     // If user is logged in but route doesn't require auth (e.g., login/register pages)
     if (!requiresAuth && user) {
       console.log('ProtectedRoute: User on non-auth route, checking redirects');
@@ -59,20 +95,44 @@ export default function ProtectedRoute({
       const verified = searchParams.get('verified') === '1';
       
       if (user.profile?.onboarding_complete) {
-        console.log('ProtectedRoute: Onboarding complete, redirecting to home');
-        router.push('/home');
+        // Only redirect if not already on home
+        if (pathname !== '/home') {
+          console.log('ProtectedRoute: Onboarding complete, redirecting to home');
+          router.replace('/home');
+        }
       } else if (!user.email_verified && !emailVerified && !verified) {
-        console.log('ProtectedRoute: Email not verified, redirecting to verify-email');
-        router.push('/verify-email');
+        // Only redirect if not already on verify-email
+        if (pathname !== '/verify-email') {
+          console.log('ProtectedRoute: Email not verified, redirecting to verify-email');
+          router.replace('/verify-email');
+        }
       } else {
         console.log('ProtectedRoute: Email verified, redirecting to onboarding step');
         // User is verified, redirect to appropriate onboarding step
+        let targetStep = 'interests';
         if (user.profile?.onboarding_step === 'start') {
-          console.log('ProtectedRoute: Redirecting to interests');
-          router.push('/interests');
+          targetStep = 'interests';
         } else {
-          console.log('ProtectedRoute: Redirecting to', user.profile?.onboarding_step);
-          router.push(`/${user.profile?.onboarding_step}`);
+          // Determine next step based on progress
+          const interestsCount = user.profile?.interests_count || 0;
+          const subcategoriesCount = user.profile?.subcategories_count || 0;
+          const dealbreakersCount = user.profile?.dealbreakers_count || 0;
+          
+          if (interestsCount === 0) {
+            targetStep = 'interests';
+          } else if (subcategoriesCount === 0) {
+            targetStep = 'subcategories';
+          } else if (dealbreakersCount === 0) {
+            targetStep = 'deal-breakers';
+          } else {
+            targetStep = 'complete';
+          }
+        }
+        
+        // Only redirect if not already on target step
+        if (pathname !== `/${targetStep}`) {
+          console.log('ProtectedRoute: Redirecting to', targetStep);
+          router.replace(`/${targetStep}`);
         }
       }
       return;

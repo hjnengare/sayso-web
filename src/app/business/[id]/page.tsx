@@ -231,21 +231,59 @@ export default function BusinessProfilePage() {
     // Check if current user is the business owner
     const isBusinessOwner = user && business.owner_id && user.id === business.owner_id;
 
-    // Prepare image data without using PNG placeholders
-    const cleanedGalleryImages = Array.isArray(business.images)
-        ? business.images.filter((img: string) => img && img.trim() !== '' && !isPngIcon(img))
-        : [];
+    // Prepare image data - prioritize business_images table, fallback to legacy fields
+    let allImages: string[] = [];
+    let primaryImage = '';
+    
+    // Use business_images table if available (new structure)
+    if (business.business_images && Array.isArray(business.business_images) && business.business_images.length > 0) {
+        // Get primary image first, then others ordered by sort_order
+        const primaryImg = business.business_images.find((img: any) => img.is_primary);
+        const otherImages = business.business_images
+            .filter((img: any) => !img.is_primary)
+            .sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0));
+        
+        allImages = [
+            ...(primaryImg ? [primaryImg.url] : []),
+            ...otherImages.map((img: any) => img.url)
+        ].filter((url: string) => url && url.trim() !== '' && !isPngIcon(url));
+        
+        primaryImage = allImages[0] || '';
+    } else {
+        // Fallback to legacy fields for backward compatibility
+        // Add uploaded_image first (highest priority)
+        if (business.uploaded_image && typeof business.uploaded_image === 'string' && business.uploaded_image.trim() !== '' && !isPngIcon(business.uploaded_image)) {
+            allImages.push(business.uploaded_image);
+        }
+        
+        // Add uploadedImage (alternative field name)
+        if (business.uploadedImage && typeof business.uploadedImage === 'string' && business.uploadedImage.trim() !== '' && !isPngIcon(business.uploadedImage) && !allImages.includes(business.uploadedImage)) {
+            allImages.push(business.uploadedImage);
+        }
+        
+        // Add image_url if not already included
+        if (business.image_url && typeof business.image_url === 'string' && business.image_url.trim() !== '' && !isPngIcon(business.image_url) && !allImages.includes(business.image_url)) {
+            allImages.push(business.image_url);
+        }
+        
+        // Add images from images array if provided
+        if (Array.isArray(business.images)) {
+            business.images.forEach((img: string) => {
+                if (img && typeof img === 'string' && img.trim() !== '' && !isPngIcon(img) && !allImages.includes(img)) {
+                    allImages.push(img);
+                }
+            });
+        }
+        
+        // Add business.image as last fallback
+        if (business.image && typeof business.image === 'string' && business.image.trim() !== '' && !isPngIcon(business.image) && !allImages.includes(business.image)) {
+            allImages.push(business.image);
+        }
+        
+        primaryImage = allImages[0] || '';
+    }
 
-    const fallbackImageCandidate = [
-        business.uploaded_image,
-        business.uploadedImage,
-        business.image_url,
-        business.image,
-    ].find((img) => img && img.trim() !== '' && !isPngIcon(img as string));
-
-    const galleryImages = cleanedGalleryImages.length > 0
-        ? cleanedGalleryImages
-        : (fallbackImageCandidate ? [fallbackImageCandidate] : []);
+    const galleryImages = allImages;
 
     // Default values for missing data
     const businessData = {
@@ -271,8 +309,10 @@ export default function BusinessProfilePage() {
         price_range: business.price_range,
         verified: business.verified || false,
         rating: business.stats?.average_rating || 0,
-        image: fallbackImageCandidate || '',
+        image: primaryImage,
         images: galleryImages,
+        business_images: business.business_images || [], // Preserve business_images array
+        uploaded_image: business.uploaded_image || business.uploadedImage || null, // Preserve for backward compatibility
         trust: business.trust || business.stats?.percentiles?.trustworthiness || 85,
         punctuality: business.punctuality || business.stats?.percentiles?.punctuality || 85,
         friendliness: business.friendliness || business.stats?.percentiles?.friendliness || 85,

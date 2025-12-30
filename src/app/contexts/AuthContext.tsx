@@ -136,14 +136,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
 
         // Redirect based on onboarding status and email verification
-        if (authUser.profile?.onboarding_complete) {
-          router.push('/home');
-        } else if (!authUser.email_verified) {
+        if (!authUser.email_verified) {
           // Redirect to email verification if not verified
           router.push('/verify-email');
+        } else if (authUser.profile?.onboarding_complete) {
+          // User has completed onboarding, redirect to home
+          router.push('/home');
         } else {
-          // Redirect to interests page after login (email verified)
-          router.push('/interests');
+          // User is verified but onboarding incomplete - redirect to next step
+          // Determine next step based on what's been completed
+          const interestsCount = authUser.profile?.interests_count || 0;
+          const subcategoriesCount = authUser.profile?.subcategories_count || 0;
+          const dealbreakersCount = authUser.profile?.dealbreakers_count || 0;
+          
+          let nextStep = 'interests';
+          if (interestsCount === 0) {
+            nextStep = 'interests';
+          } else if (subcategoriesCount === 0) {
+            nextStep = 'subcategories';
+          } else if (dealbreakersCount === 0) {
+            nextStep = 'deal-breakers';
+          } else {
+            nextStep = 'complete';
+          }
+          
+          router.push(`/${nextStep}`);
         }
       }
 

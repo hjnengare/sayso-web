@@ -58,7 +58,7 @@ export async function GET(request: Request) {
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('onboarding_step')
+          .select('onboarding_step, onboarding_complete, interests_count, subcategories_count, dealbreakers_count')
           .eq('user_id', user.id)
           .single();
 
@@ -101,19 +101,67 @@ export async function GET(request: Request) {
           }
         }
 
-        // Redirect based on onboarding status and email verification
-        if (profile?.onboarding_step === 'complete') {
-          return NextResponse.redirect(new URL('/home', request.url));
-        } else {
-          // OAuth or other auth flow - check if email is verified
+        // Handle Google OAuth and other auth flows
+        // Check if this is a new user (first-time Google sign-in)
+        const isNewUser = !profile;
+        
+        if (isNewUser) {
+          // New user from Google OAuth - profile should be created by trigger
+          // But ensure it exists and redirect to interests
+          console.log('Google OAuth: New user detected, ensuring profile exists');
+          
+          // Wait a bit for trigger to potentially create profile
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          // Check profile again
+          const { data: newProfile } = await supabase
+            .from('profiles')
+            .select('onboarding_step, onboarding_complete')
+            .eq('user_id', user.id)
+            .single();
+          
           if (user.email_confirmed_at) {
-            // Email is verified, proceed to interests with verification flag
+            // Email is verified (Google emails are auto-verified), start onboarding
             const dest = new URL('/interests', request.url);
-            dest.searchParams.set('verified', '1'); // one-time signal
+            dest.searchParams.set('verified', '1');
             return NextResponse.redirect(dest);
           } else {
-            // Email not verified, redirect to verify-email page
+            // Email not verified, redirect to verify-email
             return NextResponse.redirect(new URL('/verify-email', request.url));
+          }
+        } else {
+          // Existing user - check onboarding status
+          if (profile.onboarding_complete && profile.onboarding_step === 'complete') {
+            // User has completed onboarding, redirect to home
+            return NextResponse.redirect(new URL('/home', request.url));
+          } else {
+            // User exists but onboarding incomplete - redirect to next step
+            if (user.email_confirmed_at) {
+              // Determine next step based on profile
+              const interestsCount = profile.interests_count || 0;
+              const subcategoriesCount = profile.subcategories_count || 0;
+              const dealbreakersCount = profile.dealbreakers_count || 0;
+              
+              let nextStep = 'interests';
+              if (interestsCount === 0) {
+                nextStep = 'interests';
+              } else if (subcategoriesCount === 0) {
+                nextStep = 'subcategories';
+              } else if (dealbreakersCount === 0) {
+                nextStep = 'deal-breakers';
+              } else {
+                nextStep = 'complete';
+              }
+              
+              const dest = new URL(`/${nextStep}`, request.url);
+              if (nextStep === 'interests') {
+                dest.searchParams.set('verified', '1');
+              }
+              return NextResponse.redirect(dest);
+            } else {
+              // Email not verified, redirect to verify-email
+              return NextResponse.redirect(new URL('/verify-email', request.url));
+            }
           }
         }
       }

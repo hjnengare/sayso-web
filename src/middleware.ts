@@ -153,35 +153,109 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // Check if user has completed onboarding and redirect from onboarding routes
-  // BUT allow access to /complete page (the celebration page)
-  // AND allow access to /interests if user hasn't selected interests yet (even if step is 'complete')
-  if (isOnboardingRoute && user && request.nextUrl.pathname !== '/complete') {
+  // Helper function to determine next incomplete onboarding step
+  const getNextOnboardingStep = (profile: any): string => {
+    // If no profile, user needs to start at interests
+    if (!profile) {
+      return 'interests';
+    }
+
+    // Check onboarding completion status
+    if (profile.onboarding_complete && profile.onboarding_step === 'complete') {
+      return 'complete'; // User has completed onboarding
+    }
+
+    // Check step-by-step progress
+    const interestsCount = profile.interests_count || 0;
+    const subcategoriesCount = profile.subcategories_count || 0;
+    const dealbreakersCount = profile.dealbreakers_count || 0;
+
+    // Determine next step based on what's been completed
+    if (interestsCount === 0) {
+      return 'interests';
+    } else if (subcategoriesCount === 0) {
+      return 'subcategories';
+    } else if (dealbreakersCount === 0) {
+      return 'deal-breakers';
+    } else {
+      return 'complete';
+    }
+  };
+
+  // Check onboarding status for authenticated users
+  let profile = null;
+  if (user) {
     try {
-      const { data: profile } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('onboarding_step, interests_count')
+        .select('onboarding_step, onboarding_complete, interests_count, subcategories_count, dealbreakers_count')
         .eq('user_id', user.id)
         .single();
-
-      // Only redirect if user has actually completed onboarding (step is 'complete' AND has interests)
-      // This allows users coming from email verification to access /interests even if there's a data inconsistency
-      if (profile?.onboarding_step === 'complete' && profile?.interests_count && profile.interests_count > 0) {
-        console.log('Middleware: User completed onboarding, redirecting from onboarding route to home');
-        const redirectUrl = new URL('/home', request.url);
-        return NextResponse.redirect(redirectUrl);
-      }
       
-      // If user is on /interests and hasn't selected interests yet, allow access
-      // This handles the case where user is coming from email verification
-      if (request.nextUrl.pathname === '/interests' && (!profile?.interests_count || profile.interests_count === 0)) {
-        console.log('Middleware: User on /interests with no interests selected, allowing access');
-        return response;
+      if (!profileError && profileData) {
+        profile = profileData;
+      } else {
+        console.warn('Middleware: Profile not found or error fetching profile:', profileError?.message);
+        // Profile might not exist yet - allow access to interests page
+        profile = null;
       }
     } catch (error) {
-      console.error('Middleware: Error checking onboarding status:', error);
-      // Continue with normal flow if check fails
+      console.error('Middleware: Error fetching profile:', error);
+      profile = null;
     }
+  }
+
+  // CRITICAL: Block access to /home and other protected routes unless:
+  // 1. Email is verified AND
+  // 2. Onboarding is fully completed
+  // Only check this for /home, not for onboarding routes
+  if (isProtectedRoute && !isOnboardingRoute && user && user.email_confirmed_at) {
+    const nextStep = getNextOnboardingStep(profile);
+    if (nextStep !== 'complete') {
+      console.log('Middleware: User has not completed onboarding, redirecting to next step:', nextStep);
+      const redirectUrl = new URL(`/${nextStep}`, request.url);
+      return NextResponse.redirect(redirectUrl);
+    }
+  }
+
+  // Enforce onboarding step order - prevent skipping steps
+  // Only redirect if user is trying to skip ahead, not if they're on the correct step
+  if (isOnboardingRoute && user && user.email_confirmed_at) {
+    const nextStep = getNextOnboardingStep(profile);
+    const currentPath = request.nextUrl.pathname;
+
+    // Map paths to step names
+    const pathToStep: { [key: string]: string } = {
+      '/interests': 'interests',
+      '/subcategories': 'subcategories',
+      '/deal-breakers': 'deal-breakers',
+      '/complete': 'complete'
+    };
+
+    const currentStep = pathToStep[currentPath] || 'interests';
+
+    // If user has completed onboarding, redirect to home (except from /complete page)
+    if (nextStep === 'complete' && currentPath !== '/complete') {
+      console.log('Middleware: User completed onboarding, redirecting to home');
+      const redirectUrl = new URL('/home', request.url);
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    // Only redirect if user is trying to access a step AHEAD of where they should be
+    // Don't redirect if they're on the correct step or behind
+    const stepOrder = ['interests', 'subcategories', 'deal-breakers', 'complete'];
+    const nextStepIndex = stepOrder.indexOf(nextStep);
+    const currentStepIndex = stepOrder.indexOf(currentStep);
+
+    // Only redirect if trying to skip ahead - allow access to current or previous steps
+    if (currentStepIndex > nextStepIndex) {
+      console.log('Middleware: User trying to skip steps, redirecting to:', nextStep);
+      const redirectUrl = new URL(`/${nextStep}`, request.url);
+      return NextResponse.redirect(redirectUrl);
+    }
+    
+    // If user is on the correct step or behind, allow access (don't redirect)
+    // This prevents redirect loops
   }
 
   // Redirect unauthenticated users from protected routes
