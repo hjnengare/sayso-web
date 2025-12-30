@@ -541,6 +541,18 @@ export default function AddBusinessPage() {
             if (images.length > 0) {
                 setUploadingImages(true);
                 try {
+                    // CRITICAL FIX: Validate image files before upload
+                    const { validateImageFiles, getFirstValidationError } = await import('../../lib/utils/imageValidation');
+                    const validationResults = validateImageFiles(images);
+                    const invalidFiles = validationResults.filter(r => !r.valid);
+                    
+                    if (invalidFiles.length > 0) {
+                        const firstError = getFirstValidationError(images);
+                        showToast(firstError || 'One or more files are invalid. Please upload only image files (JPG, PNG, WebP, GIF) under 5MB.', 'error', 5000);
+                        setUploadingImages(false);
+                        return;
+                    }
+
                     const supabase = getBrowserSupabase();
                     const uploadedUrls: string[] = [];
 
@@ -561,10 +573,15 @@ export default function AddBusinessPage() {
                             });
 
                         if (uploadError) {
-                            console.error('Error uploading image:', uploadError);
-                            // Provide helpful error message if bucket doesn't exist
-                            if (uploadError.message?.includes('Bucket not found') || uploadError.message?.includes('not found')) {
+                            console.error('[Add Business] Error uploading image:', uploadError);
+                            
+                            // CRITICAL FIX: Better error messages for storage quota
+                            if (uploadError.message?.includes('quota') || uploadError.message?.includes('storage limit') || uploadError.message?.includes('exceeded')) {
+                                showToast('Storage limit reached. Please delete old images or contact support.', 'error', 5000);
+                            } else if (uploadError.message?.includes('Bucket not found') || uploadError.message?.includes('not found')) {
                                 showToast('Storage bucket not configured. Please contact support.', 'error', 5000);
+                            } else {
+                                showToast(`Failed to upload image: ${uploadError.message}`, 'error', 5000);
                             }
                             continue;
                         }
@@ -577,11 +594,9 @@ export default function AddBusinessPage() {
                         uploadedUrls.push(publicUrl);
                     }
 
-                    // Save images to business_images table
+                    // Save images to business_images table (REQUIRED - this is the source of truth)
                     if (uploadedUrls.length > 0) {
                         try {
-                            const supabase = getBrowserSupabase();
-                            
                             // Prepare image records for business_images table
                             const imageRecords = uploadedUrls.map((url, index) => ({
                                 business_id: businessId,
@@ -597,20 +612,48 @@ export default function AddBusinessPage() {
                                 .insert(imageRecords);
 
                             if (imagesError) {
-                                console.error('Error saving images to business_images table:', imagesError);
-                                // Fallback: Update legacy uploaded_image field for backward compatibility
-                                const { error: fallbackError } = await supabase
-                                    .from('businesses')
-                                    .update({ uploaded_image: uploadedUrls[0] })
-                                    .eq('id', businessId);
+                                console.error('[Add Business] Error saving images to business_images table:', imagesError);
                                 
-                                if (fallbackError) {
-                                    console.warn('Failed to save images (both new and legacy methods failed):', fallbackError);
+                                // CRITICAL FIX: Clean up orphaned storage files on DB insert failure
+                                console.log('[Add Business] Cleaning up orphaned storage files due to DB insert failure...');
+                                const { extractStoragePaths } = await import('../../lib/utils/storagePathExtraction');
+                                const storagePaths = extractStoragePaths(uploadedUrls);
+                                
+                                if (storagePaths.length > 0) {
+                                    const { error: cleanupError } = await supabase.storage
+                                        .from('business-images')
+                                        .remove(storagePaths);
+                                    
+                                    if (cleanupError) {
+                                        console.error('[Add Business] Failed to cleanup orphaned storage files:', cleanupError);
+                                    } else {
+                                        console.log(`[Add Business] Cleaned up ${storagePaths.length} orphaned storage files`);
+                                    }
                                 }
+                                
+                                showToast('Images uploaded but failed to save to database. Uploaded files have been removed. Please try again.', 'error', 5000);
+                            } else {
+                                console.log(`[Add Business] Successfully saved ${uploadedUrls.length} images to business_images table`);
                             }
                         } catch (imageSaveError: any) {
-                            console.error('Error saving images:', imageSaveError);
-                            // Don't fail the whole operation if image save fails
+                            console.error('[Add Business] Error saving images:', imageSaveError);
+                            
+                            // CRITICAL FIX: Clean up orphaned storage files on exception
+                            try {
+                                const { extractStoragePaths } = await import('../../lib/utils/storagePathExtraction');
+                                const storagePaths = extractStoragePaths(uploadedUrls);
+                                
+                                if (storagePaths.length > 0) {
+                                    await supabase.storage
+                                        .from('business-images')
+                                        .remove(storagePaths);
+                                    console.log(`[Add Business] Cleaned up ${storagePaths.length} orphaned storage files after exception`);
+                                }
+                            } catch (cleanupError) {
+                                console.error('[Add Business] Failed to cleanup orphaned storage files:', cleanupError);
+                            }
+                            
+                            showToast('Images uploaded but failed to save to database. Uploaded files have been removed. Please try again.', 'error', 5000);
                         }
                     }
                 } catch (imageError: any) {

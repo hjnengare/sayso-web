@@ -405,8 +405,7 @@ export default function BusinessEditPage() {
                                 <div className="max-w-6xl mx-auto pt-8 pb-8">
                     <div className="space-y-6">
                         {/* Basic Information Section */}
-                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-[20px] ring-1 ring-white/20 p-6 relative overflow-hidden animate-fade-in-up animate-delay-100">
-                            <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-sage/10 to-transparent rounded-full blur-lg" />
+                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[20px] overflow-hidden backdrop-blur-md shadow-md px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12 relative animate-fade-in-up animate-delay-100">
                             <div className="relative z-10">
                                 <h3 className="font-urbanist text-base font-600 text-charcoal mb-6 flex items-center gap-3">
                                     <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-sage/20 to-sage/10">
@@ -455,8 +454,7 @@ export default function BusinessEditPage() {
                         </div>
 
                         {/* Images Section */}
-                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-[20px] ring-1 ring-white/20 p-6 relative overflow-hidden animate-fade-in-up animate-delay-200">
-                            <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-coral/10 to-transparent rounded-full blur-lg" />
+                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[20px] overflow-hidden backdrop-blur-md shadow-md px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12 relative animate-fade-in-up animate-delay-200">
                             <div className="relative z-10">
                                 <h3 className="font-urbanist text-base font-600 text-charcoal mb-6 flex items-center gap-3">
                                     <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-coral/20 to-coral/10">
@@ -512,8 +510,7 @@ export default function BusinessEditPage() {
                         </div>
 
                         {/* Contact Information Section */}
-                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-[20px] ring-1 ring-white/20 p-6 relative overflow-hidden animate-fade-in-up animate-delay-300">
-                            <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-coral/10 to-transparent rounded-full blur-lg" />
+                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[20px] overflow-hidden backdrop-blur-md shadow-md px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12 relative animate-fade-in-up animate-delay-300">
                             <div className="relative z-10">
                                 <h3 className="font-urbanist text-base font-600 text-charcoal mb-6 flex items-center gap-3">
                                     <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-coral/20 to-coral/10">
@@ -599,8 +596,7 @@ export default function BusinessEditPage() {
                         </div>
 
                         {/* Business Hours Section */}
-                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-[20px] ring-1 ring-white/20 p-6 relative overflow-hidden animate-fade-in-up">
-                            <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-sage/10 to-transparent rounded-full blur-lg" />
+                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[20px] overflow-hidden backdrop-blur-md shadow-md px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12 relative animate-fade-in-up">
                             <div className="relative z-10">
                                 <h3 className="font-urbanist text-base font-600 text-charcoal mb-6 flex items-center gap-3">
                                     <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-sage/20 to-sage/10">
@@ -627,8 +623,7 @@ export default function BusinessEditPage() {
                         </div>
 
                         {/* Specials Section */}
-                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-[20px] ring-1 ring-white/20 p-6 relative overflow-hidden animate-fade-in-up">
-                            <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-sage/10 to-transparent rounded-full blur-lg" />
+                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[20px] overflow-hidden backdrop-blur-md shadow-md px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12 relative animate-fade-in-up">
                             <div className="relative z-10">
                                 <div className="flex items-center justify-between mb-6">
                                     <h3 className="font-urbanist text-base font-600 text-charcoal flex items-center gap-3">

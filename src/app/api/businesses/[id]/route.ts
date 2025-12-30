@@ -1,338 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSupabase } from '../../../lib/supabase/server';
-import { fetchBusinessOptimized } from '../../../lib/utils/optimizedQueries';
-import { getDisplayUsername } from '../../../lib/utils/generateUsernameServer';
-
-export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs'; // Use Node.js runtime to avoid Edge Runtime warnings with Supabase
 
 /**
- * GET /api/businesses/[id]
- * Fetches a single business by ID with stats and reviews
+ * DELETE /api/businesses/[id]
+ * Deletes a business and all associated storage files
+ * (requires business owner authentication)
  */
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id: businessId } = await params;
-
-    if (!businessId) {
-      return NextResponse.json(
-        { error: 'Business ID is required' },
-        { status: 400 }
-      );
-    }
-
-    // Cache disabled for now - always fetch fresh data
-    // Use optimized fetch with parallel queries (no caching)
-    try {
-      const businessData = await fetchBusinessOptimized(businessId, req, false);
-      
-      // Transform to match expected response format
-      const stats = businessData.stats;
-      const response = {
-        ...businessData,
-        stats: stats || undefined,
-        reviews: (businessData.reviews || []).map((review: any) => {
-          // Handle profile - could be object, array, or undefined
-          const profile = Array.isArray(review.profile) ? review.profile[0] : (review.profile || null);
-          
-          // Generate username using same logic as migration
-          const author = getDisplayUsername(
-            profile?.username,
-            profile?.display_name,
-            null, // Email not available in this context
-            review.user_id
-          );
-          
-          // Debug logging if author name is missing
-          if (!author || author === 'User') {
-            console.warn('[API] Review missing author name:', {
-              review_id: review.id,
-              user_id: review.user_id,
-              profile,
-            });
-          }
-          
-          return {
-            id: review.id,
-            userId: review.user_id,
-            author,
-            rating: review.rating,
-            text: review.content || review.title || '',
-            date: new Date(review.created_at).toLocaleDateString('en-US', {
-              month: 'short',
-              year: 'numeric'
-            }),
-            tags: review.tags || [],
-            profileImage: profile?.avatar_url || '',
-            reviewImages: review.images?.map((img: any) => {
-              if (img.image_url) return img.image_url;
-              if (img.storage_path) {
-                // Use review_images bucket (matches upload bucket name)
-                const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-                return `${supabaseUrl}/storage/v1/object/public/review_images/${img.storage_path}`;
-              }
-              return null;
-            }).filter(Boolean) || [],
-            helpfulCount: review.helpful_count || 0,
-          };
-        }),
-        images: (() => {
-          // Prioritize business_images table, fallback to legacy fields
-          const imageList: string[] = [];
-          
-          // Use business_images if available (new structure)
-          if (businessData.business_images && Array.isArray(businessData.business_images) && businessData.business_images.length > 0) {
-            // Return URLs from business_images, ordered by is_primary and sort_order
-            return businessData.business_images.map((img: any) => img.url).filter((url: string) => url && url.trim() !== '');
-          }
-          
-          // Fallback to legacy fields for backward compatibility
-          if (businessData.uploaded_image && businessData.uploaded_image.trim() !== '') {
-            imageList.push(businessData.uploaded_image);
-          }
-          if (businessData.image_url && businessData.image_url.trim() !== '' && !imageList.includes(businessData.image_url)) {
-            imageList.push(businessData.image_url);
-          }
-          return imageList.filter(img => img && img.trim() !== '');
-        })(),
-        // Include business_images array for frontend use
-        business_images: businessData.business_images || [],
-        trust: stats?.percentiles?.trustworthiness || 85,
-        punctuality: stats?.percentiles?.punctuality || 85,
-        friendliness: stats?.percentiles?.friendliness || 85,
-      };
-
-      // Return response without caching
-      return NextResponse.json(response);
-    } catch (optimizedError: any) {
-      // Fallback to original implementation if optimized fetch fails
-      console.warn('[API] Optimized fetch failed, falling back to standard query:', optimizedError);
-    }
-
-    // Fallback to original implementation
-    const supabase = await getServerSupabase(req);
-
-    // Try slug first, then ID fallback
-    let actualBusinessId: string = businessId;
-    let businessBySlug: any = null;
-
-    // Try to find by slug first
-    const { data: slugData, error: slugError } = await supabase
-      .from('businesses')
-      .select('id')
-      .eq('slug', businessId)
-      .single();
-
-    if (slugData && slugData.id) {
-      actualBusinessId = slugData.id;
-    }
-
-    // Fetch business with stats using actual ID
-    const businessQuery = supabase
-      .from('businesses')
-      .select(`
-        *,
-        business_stats (
-          total_reviews,
-          average_rating,
-          rating_distribution,
-          percentiles
-        )
-      `)
-      .eq('id', actualBusinessId)
-      .single();
-
-    // Fetch reviews for the business (limit to 10 initially for faster loading) - start in parallel
-    const reviewsQuery = supabase
-      .from('reviews')
-      .select('id, user_id, business_id, rating, content, title, tags, created_at, helpful_count')
-      .eq('business_id', actualBusinessId)
-      .order('created_at', { ascending: false })
-      .limit(10);
-
-    // Fetch business images in parallel
-    const businessImagesQuery = supabase
-      .from('business_images')
-      .select('id, url, type, sort_order, is_primary')
-      .eq('business_id', actualBusinessId)
-      .order('is_primary', { ascending: false })
-      .order('sort_order', { ascending: true });
-
-    // Execute business, reviews, and images queries in parallel
-    const [businessResult, reviewsResult, businessImagesResult] = await Promise.all([
-      businessQuery,
-      reviewsQuery,
-      businessImagesQuery
-    ]);
-
-    const { data: business, error: businessError } = businessResult;
-    const { data: reviews, error: reviewsError } = reviewsResult;
-
-    if (businessError || !business) {
-      if (businessError?.code === 'PGRST116') {
-        return NextResponse.json(
-          { error: 'Business not found' },
-          { status: 404 }
-        );
-      }
-      throw businessError || new Error('Business not found');
-    }
-
-    if (reviewsError) {
-      console.error('[API] Error fetching reviews:', reviewsError);
-    }
-
-    // Fetch review images and profiles in parallel if we have reviews
-    let reviewImagesMap: Record<string, any[]> = {};
-    let reviewsWithProfiles = [];
-    
-    if (reviews && reviews.length > 0) {
-      const reviewIds = reviews.map((r: any) => r.id);
-      const userIds = [...new Set(reviews.map((r: any) => r.user_id))];
-
-      // Execute images and profiles queries in parallel
-      // Optimize: Only fetch necessary fields and limit images per review
-      const [imagesResult, profilesResult] = await Promise.all([
-        supabase
-          .from('review_images')
-          .select('review_id, image_url')
-          .in('review_id', reviewIds)
-          .order('created_at', { ascending: true })
-          .limit(100), // Limit total images to prevent large payloads
-        supabase
-          .from('profiles')
-          .select('user_id, display_name, username, avatar_url')
-          .in('user_id', userIds)
-      ]);
-
-      const { data: reviewImages, error: imagesError } = imagesResult;
-      const { data: profiles, error: profilesError } = profilesResult;
-
-      if (imagesError) {
-        console.error('[API] Error fetching review images:', imagesError);
-      } else if (reviewImages) {
-        // Group images by review_id
-        reviewImages.forEach((img: any) => {
-          if (!reviewImagesMap[img.review_id]) {
-            reviewImagesMap[img.review_id] = [];
-          }
-          reviewImagesMap[img.review_id].push(img);
-        });
-      }
-
-      if (profilesError) {
-        console.error('[API] Error fetching profiles:', profilesError);
-      }
-
-      // Join reviews with profiles and images
-      reviewsWithProfiles = reviews.map((review: any) => {
-        const profile = profiles?.find((p: any) => p.user_id === review.user_id);
-        const images = reviewImagesMap[review.id] || [];
-        return {
-          ...review,
-          profiles: profile || null,
-          review_images: images,
-        };
-      });
-    }
-
-      // Transform the data for the frontend
-    const stats = business.business_stats?.[0];
-    const response = {
-      ...business,
-      stats: stats || undefined,
-      reviews: (reviewsWithProfiles || []).map((review: any) => {
-        // Handle profiles - it might be an array or object depending on join type
-        const profile = Array.isArray(review.profiles) ? review.profiles[0] : (review.profiles || null);
-        
-        // Generate username using same logic as migration
-        const author = getDisplayUsername(
-          profile?.username,
-          profile?.display_name,
-          null, // Email not available in this context
-          review.user_id
-        );
-        
-        // Debug logging if author name is missing
-        if (!author || author === 'User') {
-          console.warn('[API] Review missing author name (fallback path):', {
-            review_id: review.id,
-            user_id: review.user_id,
-            has_profile: !!profile,
-            profile,
-          });
-        }
-        
-        return {
-          id: review.id,
-          userId: review.user_id,
-          author,
-          rating: review.rating,
-          text: review.content || review.title || '',
-          date: new Date(review.created_at).toLocaleDateString('en-US', {
-            month: 'short',
-            year: 'numeric'
-          }),
-          tags: review.tags || [],
-          profileImage: profile?.avatar_url || '',
-          reviewImages: review.review_images?.map((img: any) => {
-            // Use image_url if available, otherwise construct from storage_path
-            if (img.image_url) return img.image_url;
-            if (img.storage_path) {
-              // Construct public URL from storage path - use review_images bucket (matches upload)
-              const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-              return `${supabaseUrl}/storage/v1/object/public/review_images/${img.storage_path}`;
-            }
-            return null;
-          }).filter(Boolean) || [],
-          helpfulCount: review.helpful_count || 0,
-        };
-      }),
-      // Format images array for carousel - prioritize business_images, fallback to legacy fields
-      images: (() => {
-        const { data: businessImages } = businessImagesResult;
-        
-        // Use business_images if available (new structure)
-        if (businessImages && Array.isArray(businessImages) && businessImages.length > 0) {
-          return businessImages.map((img: any) => img.url).filter((url: string) => url && url.trim() !== '');
-        }
-        
-        // Fallback to legacy fields for backward compatibility
-        const imageList: string[] = [];
-        if (business.uploaded_image && business.uploaded_image.trim() !== '') {
-          imageList.push(business.uploaded_image);
-        }
-        if (business.image_url && business.image_url.trim() !== '' && !imageList.includes(business.image_url)) {
-          imageList.push(business.image_url);
-        }
-        return imageList.filter(img => img && img.trim() !== '');
-      })(),
-      // Include business_images array for frontend use
-      business_images: businessImagesResult.data || [],
-      // Calculate metrics from percentiles if available
-      trust: stats?.percentiles?.trustworthiness || 85,
-      punctuality: stats?.percentiles?.punctuality || 85,
-      friendliness: stats?.percentiles?.friendliness || 85,
-    };
-
-    return NextResponse.json(response);
-  } catch (error: any) {
-    console.error('[API] Error fetching business:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch business', details: error.message },
-      { status: 500 }
-    );
-  }
-}
-
-/**
- * PUT /api/businesses/[id]
- * Updates a business (requires business owner authentication)
- */
-export async function PUT(
+export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -351,80 +25,83 @@ export async function PUT(
     }
 
     // Verify user owns this business
-    const { data: ownerCheck, error: ownerError } = await supabase
+    const { data: business, error: businessError } = await supabase
+      .from('businesses')
+      .select('id, owner_id')
+      .eq('id', businessId)
+      .single();
+
+    if (businessError || !business) {
+      return NextResponse.json(
+        { error: 'Business not found' },
+        { status: 404 }
+      );
+    }
+
+    // Check ownership
+    const { data: ownerCheck } = await supabase
       .from('business_owners')
       .select('id')
       .eq('business_id', businessId)
       .eq('user_id', user.id)
       .single();
 
-    if (ownerError || !ownerCheck) {
+    const isOwner = ownerCheck || business.owner_id === user.id;
+
+    if (!isOwner) {
       return NextResponse.json(
-        { error: 'You do not have permission to edit this business' },
+        { error: 'You do not have permission to delete this business' },
         { status: 403 }
       );
     }
 
-    // Parse request body
-    const body = await req.json();
-    const {
-      name,
-      description,
-      category,
-      address,
-      phone,
-      email,
-      website,
-      priceRange,
-      hours,
-      uploaded_image,
-    } = body;
+    // CRITICAL FIX: Delete storage files before deleting business
+    const { data: images, error: imagesError } = await supabase
+      .from('business_images')
+      .select('url')
+      .eq('business_id', businessId);
 
-    // Build update object (only include fields that are provided)
-    const updateData: any = {
-      updated_at: new Date().toISOString(),
-    };
+    if (images && images.length > 0) {
+      const { extractStoragePaths } = await import('../../../../lib/utils/storagePathExtraction');
+      const storagePaths = extractStoragePaths(images.map(img => img.url));
 
-    if (name !== undefined) updateData.name = name;
-    if (description !== undefined) updateData.description = description;
-    if (category !== undefined) updateData.category = category;
-    if (address !== undefined) updateData.address = address;
-    if (phone !== undefined) updateData.phone = phone;
-    if (email !== undefined) updateData.email = email;
-    if (website !== undefined) updateData.website = website;
-    if (priceRange !== undefined) updateData.price_range = priceRange;
-    if (uploaded_image !== undefined) updateData.uploaded_image = uploaded_image;
-    // Store hours as JSON if provided
-    if (hours !== undefined) {
-      updateData.hours = hours; // Assuming hours is stored as JSONB
+      if (storagePaths.length > 0) {
+        const { error: storageError } = await supabase.storage
+          .from('business-images')
+          .remove(storagePaths);
+
+        if (storageError) {
+          console.warn('[API] Error deleting storage files (continuing with business deletion):', storageError);
+          // Continue with business deletion even if storage deletion fails
+        } else {
+          console.log(`[API] Deleted ${storagePaths.length} storage files for business ${businessId}`);
+        }
+      }
     }
 
-    // Update business
-    const { data: updatedBusiness, error: updateError } = await supabase
+    // Delete business (CASCADE will handle DB records)
+    const { error: deleteError } = await supabase
       .from('businesses')
-      .update(updateData)
-      .eq('id', businessId)
-      .select()
-      .single();
+      .delete()
+      .eq('id', businessId);
 
-    if (updateError) {
-      console.error('[API] Error updating business:', updateError);
+    if (deleteError) {
+      console.error('[API] Error deleting business:', deleteError);
       return NextResponse.json(
-        { error: 'Failed to update business', details: updateError.message },
+        { error: 'Failed to delete business', details: deleteError.message },
         { status: 500 }
       );
     }
 
     return NextResponse.json({
       success: true,
-      business: updatedBusiness,
+      message: 'Business and all associated images deleted successfully.',
     });
   } catch (error: any) {
-    console.error('[API] Error updating business:', error);
+    console.error('[API] Error in DELETE business:', error);
     return NextResponse.json(
-      { error: 'Failed to update business', details: error.message },
+      { error: 'Internal server error', details: error.message },
       { status: 500 }
     );
   }
 }
-

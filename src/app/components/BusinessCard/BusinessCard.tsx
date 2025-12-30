@@ -20,6 +20,14 @@ type Percentiles = {
   trustworthiness?: number;
 };
 
+type BusinessImage = {
+  id: string;
+  url: string;
+  type: 'cover' | 'logo' | 'gallery';
+  sort_order: number;
+  is_primary: boolean;
+};
+
 type Business = {
   id: string;
   slug?: string;
@@ -28,6 +36,7 @@ type Business = {
   image_url?: string;
   uploaded_image?: string;
   uploadedImage?: string;
+  business_images?: BusinessImage[]; // New: array of images from business_images table
   alt: string;
   category: string;
   subInterestId?: string;
@@ -230,6 +239,22 @@ function BusinessCard({
     business.subInterestLabel || formatCategoryLabel(categoryKey);
 
   const getDisplayImage = useMemo(() => {
+    // Priority 1: Check business_images table (new source of truth)
+    // Get primary image first, then first image if no primary
+    if (business.business_images && Array.isArray(business.business_images) && business.business_images.length > 0) {
+      const primaryImage = business.business_images.find(img => img.is_primary);
+      const firstImage = primaryImage || business.business_images[0];
+      
+      if (firstImage && firstImage.url && 
+          typeof firstImage.url === 'string' && 
+          firstImage.url.trim() !== '' &&
+          !isPngIcon(firstImage.url) &&
+          !firstImage.url.includes('/png/')) {
+        return { image: firstImage.url, isPng: false };
+      }
+    }
+
+    // Priority 2: Legacy uploaded_image field (backward compatibility)
     const uploadedImage = business.uploaded_image || business.uploadedImage;
     if (uploadedImage &&
       typeof uploadedImage === 'string' &&
@@ -239,6 +264,7 @@ function BusinessCard({
       return { image: uploadedImage, isPng: false };
     }
 
+    // Priority 3: External image_url
     if (business.image_url &&
       typeof business.image_url === 'string' &&
       business.image_url.trim() !== '' &&
@@ -246,6 +272,7 @@ function BusinessCard({
       return { image: business.image_url, isPng: false };
     }
 
+    // Priority 4: Legacy image field
     if (business.image &&
       typeof business.image === 'string' &&
       business.image.trim() !== '' &&
@@ -253,10 +280,11 @@ function BusinessCard({
       return { image: business.image, isPng: false };
     }
 
-    // Prefer resolving by multiple labels (subInterestId, subInterestLabel, category)
+    // Priority 5: Category PNG fallback
     const categoryPng = getCategoryPngFromLabels([business.subInterestId, business.subInterestLabel, business.category, categoryKey]);
     return { image: categoryPng, isPng: true };
   }, [
+    business.business_images,
     business.uploaded_image,
     business.uploadedImage,
     business.image_url,

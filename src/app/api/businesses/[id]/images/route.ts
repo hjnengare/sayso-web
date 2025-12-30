@@ -136,6 +136,7 @@ export async function POST(
 /**
  * DELETE /api/businesses/[id]/images/[imageId]
  * Delete a business image (requires business owner authentication)
+ * Deletes from both storage bucket and database, and promotes next image if primary was deleted
  */
 export async function DELETE(
   req: NextRequest,
@@ -155,37 +156,77 @@ export async function DELETE(
       );
     }
 
-    // Verify user owns this business
-    const { data: ownerCheck, error: ownerError } = await supabase
+    // Verify user owns this business (check both business_owners and businesses.owner_id)
+    const { data: business, error: businessError } = await supabase
+      .from('businesses')
+      .select('id, owner_id')
+      .eq('id', businessId)
+      .single();
+
+    if (businessError || !business) {
+      return NextResponse.json(
+        { error: 'Business not found' },
+        { status: 404 }
+      );
+    }
+
+    // Check ownership via business_owners table or owner_id
+    const { data: ownerCheck } = await supabase
       .from('business_owners')
       .select('id')
       .eq('business_id', businessId)
       .eq('user_id', user.id)
       .single();
 
-    if (ownerError || !ownerCheck) {
+    const isOwner = ownerCheck || business.owner_id === user.id;
+
+    if (!isOwner) {
       return NextResponse.json(
         { error: 'You do not have permission to delete images from this business' },
         { status: 403 }
       );
     }
 
-    // Verify the image belongs to this business
-    const { data: imageCheck, error: imageCheckError } = await supabase
+    // Get image details before deletion (need URL for storage deletion and is_primary for promotion)
+    const { data: imageData, error: imageCheckError } = await supabase
       .from('business_images')
-      .select('id, business_id')
+      .select('id, business_id, url, is_primary')
       .eq('id', imageId)
       .eq('business_id', businessId)
       .single();
 
-    if (imageCheckError || !imageCheck) {
+    if (imageCheckError || !imageData) {
       return NextResponse.json(
         { error: 'Image not found or does not belong to this business' },
         { status: 404 }
       );
     }
 
-    // Delete the image
+    // Extract storage path from URL
+    // URL format: https://[project].supabase.co/storage/v1/object/public/business-images/{path}
+    const url = imageData.url;
+    let storagePath: string | null = null;
+    
+    if (url.includes('/business-images/')) {
+      const pathMatch = url.match(/\/business-images\/(.+)$/);
+      if (pathMatch && pathMatch[1]) {
+        storagePath = pathMatch[1];
+      }
+    }
+
+    // Delete from storage bucket (if path can be extracted)
+    if (storagePath) {
+      const { error: storageError } = await supabase.storage
+        .from('business-images')
+        .remove([storagePath]);
+
+      if (storageError) {
+        console.warn('[API] Error deleting image from storage (continuing with DB delete):', storageError);
+        // Continue with DB deletion even if storage deletion fails
+      }
+    }
+
+    // Delete from database (trigger will automatically promote next image if this was primary)
     const { error: deleteError } = await supabase
       .from('business_images')
       .delete()
@@ -193,14 +234,20 @@ export async function DELETE(
       .eq('business_id', businessId);
 
     if (deleteError) {
-      console.error('[API] Error deleting business image:', deleteError);
+      console.error('[API] Error deleting business image from database:', deleteError);
       return NextResponse.json(
         { error: 'Failed to delete image', details: deleteError.message },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ 
+      success: true,
+      was_primary: imageData.is_primary,
+      message: imageData.is_primary 
+        ? 'Primary image deleted. Next image has been automatically promoted.' 
+        : 'Image deleted successfully.'
+    });
   } catch (error: any) {
     console.error('[API] Error in DELETE business image:', error);
     return NextResponse.json(

@@ -344,7 +344,7 @@ export default function OwnerBusinessDashboard() {
                     <div className="flex flex-wrap gap-3">
                       <Link
                         href={`/owners/businesses/${businessId}/reviews`}
-                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-coral/90 hover:bg-coral text-white rounded-full text-sm font-semibold transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-lg shadow-coral/20 border border-coral/30 w-fit"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-coral/90 hover:bg-coral text-white rounded-full text-sm font-semibold transition-all duration-300 hover:scale-[1.02] active:scale-95 border border-coral/30 w-fit"
                         style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                       >
                         <MessageSquare size={14} strokeWidth={2.5} />
@@ -352,7 +352,7 @@ export default function OwnerBusinessDashboard() {
                       </Link>
                       <Link
                         href={`/dm?businessId=${businessId}`}
-                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-coral/90 hover:bg-coral text-white rounded-full text-sm font-semibold transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-lg shadow-coral/20 border border-coral/30 w-fit"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-coral/90 hover:bg-coral text-white rounded-full text-sm font-semibold transition-all duration-300 hover:scale-[1.02] active:scale-95 border border-coral/30 w-fit"
                         style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                       >
                         <MessageSquare size={14} strokeWidth={2.5} />
@@ -360,7 +360,7 @@ export default function OwnerBusinessDashboard() {
                       </Link>
                       <Link
                         href={`/business/${businessId}/edit`}
-                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-coral/90 hover:bg-coral text-white rounded-full text-sm font-semibold transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-lg shadow-coral/20 border border-coral/30 w-fit"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-coral/90 hover:bg-coral text-white rounded-full text-sm font-semibold transition-all duration-300 hover:scale-[1.02] active:scale-95 border border-coral/30 w-fit"
                         style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                       >
                         <Edit size={14} strokeWidth={2.5} />
