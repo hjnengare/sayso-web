@@ -7,10 +7,13 @@ import { BusinessOwnershipService } from "../../../lib/services/businessOwnershi
 import { PageLoader, Loader } from "../../../components/Loader";
 import Header from "../../../components/Header/Header";
 import Footer from "../../../components/Footer/Footer";
-import { Store, MapPin, Star, MessageSquare, Edit, BarChart3, ArrowLeft, Eye, TrendingUp, ChevronRight } from "lucide-react";
+import { Store, MapPin, Star, MessageSquare, Edit, BarChart3, ArrowLeft, Eye, TrendingUp, ChevronRight, Camera, Upload, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { getBrowserSupabase } from "../../../lib/supabase/client";
 import type { Business } from "../../../lib/types/database";
+import { useToast } from "../../../contexts/ToastContext";
+import { STORAGE_BUCKETS } from "../../../lib/utils/storageBucketConfig";
+import Image from "next/image";
 
 interface BusinessStats {
   average_rating: number | null;
@@ -32,6 +35,8 @@ export default function OwnerBusinessDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasAccess, setHasAccess] = useState(false);
+  const [uploadingProfilePicture, setUploadingProfilePicture] = useState(false);
+  const { showToast } = useToast();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -236,6 +241,109 @@ export default function OwnerBusinessDashboard() {
     };
   }, [businessId, router]);
 
+  const handleProfilePictureUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !businessId) return;
+
+    // Validate file
+    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
+    if (file.size > MAX_SIZE) {
+      showToast('Image file is too large. Please upload images smaller than 5MB.', 'error', 5000);
+      return;
+    }
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      showToast('Invalid file type. Please upload JPG, PNG, WebP, or GIF images.', 'error', 5000);
+      return;
+    }
+
+    setUploadingProfilePicture(true);
+    try {
+      const supabase = getBrowserSupabase();
+      
+      // Delete old profile picture if it exists and is in our storage
+      if (business?.image_url && business.image_url.includes(STORAGE_BUCKETS.BUSINESS_IMAGES)) {
+        try {
+          // Extract path from URL
+          const urlParts = business.image_url.split('/');
+          const pathIndex = urlParts.findIndex(part => part === STORAGE_BUCKETS.BUSINESS_IMAGES);
+          if (pathIndex !== -1 && pathIndex < urlParts.length - 1) {
+            const oldPath = urlParts.slice(pathIndex + 1).join('/');
+            await supabase.storage
+              .from(STORAGE_BUCKETS.BUSINESS_IMAGES)
+              .remove([oldPath]);
+          }
+        } catch (deleteError) {
+          console.warn('Could not delete old profile picture:', deleteError);
+          // Continue with upload even if deletion fails
+        }
+      }
+
+      // Upload new profile picture
+      const fileExt = file.name.split('.').pop() || 'jpg';
+      const timestamp = Date.now();
+      const fileName = `profile_${timestamp}.${fileExt}`;
+      const filePath = `${businessId}/${fileName}`;
+
+      // Upload with upsert (will use UPDATE policy if file exists, INSERT if new)
+      const { error: uploadError } = await supabase.storage
+        .from(STORAGE_BUCKETS.BUSINESS_IMAGES)
+        .upload(filePath, file, {
+          contentType: file.type,
+          upsert: true, // Replace if exists
+        });
+
+      if (uploadError) {
+        console.error('[Owner Dashboard] Error uploading profile picture:', uploadError);
+        showToast(`Failed to upload profile picture: ${uploadError.message}`, 'error', 5000);
+        return;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from(STORAGE_BUCKETS.BUSINESS_IMAGES)
+        .getPublicUrl(filePath);
+
+      if (!publicUrl) {
+        showToast('Failed to get image URL. Please try again.', 'error', 5000);
+        return;
+      }
+
+      // Update business image_url
+      const { error: updateError } = await supabase
+        .from('businesses')
+        .update({ image_url: publicUrl })
+        .eq('id', businessId);
+
+      if (updateError) {
+        console.error('[Owner Dashboard] Error updating profile picture:', updateError);
+        showToast(`Failed to save profile picture: ${updateError.message}`, 'error', 5000);
+        // Clean up uploaded file
+        await supabase.storage
+          .from(STORAGE_BUCKETS.BUSINESS_IMAGES)
+          .remove([filePath]);
+        return;
+      }
+
+      // Update local state
+      setBusiness(prev => prev ? { ...prev, image_url: publicUrl } : null);
+      showToast('Profile picture updated successfully!', 'success', 3000);
+
+      // Notify other components
+      const { notifyBusinessUpdated } = await import('../../../lib/utils/businessUpdateEvents');
+      notifyBusinessUpdated(businessId);
+    } catch (error: any) {
+      console.error('[Owner Dashboard] Error uploading profile picture:', error);
+      showToast(error.message || 'Failed to upload profile picture. Please try again.', 'error', 5000);
+    } finally {
+      setUploadingProfilePicture(false);
+      // Reset file input
+      event.target.value = '';
+    }
+  };
+
   // TEMPORARY: Bypass auth loading check for UI development
   // if (authLoading || isLoading) {
   if (isLoading) {
@@ -319,10 +427,42 @@ export default function OwnerBusinessDashboard() {
 
                     <div className="relative z-10 p-6 sm:p-8">
                       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-                        <div className="relative flex-shrink-0">
-                          <div className="w-24 h-24 sm:w-32 sm:h-32 flex items-center justify-center bg-sage/20 rounded-full border-4 border-coral shadow-xl">
-                            <Store className="text-navbar-bg" size={44} strokeWidth={2.5} />
+                        <div className="relative flex-shrink-0 group">
+                          <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-coral shadow-xl overflow-hidden bg-sage/20">
+                            {business.image_url ? (
+                              <Image
+                                src={business.image_url}
+                                alt={business.name}
+                                fill
+                                className="object-cover"
+                                sizes="(max-width: 640px) 96px, 128px"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Store className="text-navbar-bg" size={44} strokeWidth={2.5} />
+                              </div>
+                            )}
                           </div>
+                          {/* Upload overlay */}
+                          <label
+                            htmlFor="profile-picture-upload"
+                            className="absolute inset-0 flex items-center justify-center bg-charcoal/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full cursor-pointer"
+                            title="Change profile picture"
+                          >
+                            {uploadingProfilePicture ? (
+                              <Loader2 className="w-6 h-6 text-white animate-spin" />
+                            ) : (
+                              <Camera className="w-6 h-6 text-white" />
+                            )}
+                          </label>
+                          <input
+                            id="profile-picture-upload"
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp,image/gif"
+                            onChange={handleProfilePictureUpload}
+                            className="hidden"
+                            disabled={uploadingProfilePicture}
+                          />
                         </div>
 
                         <div className="flex-1 min-w-0 w-full">

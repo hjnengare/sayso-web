@@ -90,7 +90,7 @@ export default function BusinessLocation({
                         <div className="flex items-center gap-2">
                             <MapPin className="w-5 h-5 text-coral" />
                             <h3
-                                className="text-base font-semibold text-white"
+                                className="text-base font-semibold text-charcoal"
                                 style={{
                                     fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
                                     fontWeight: 600,
@@ -102,7 +102,7 @@ export default function BusinessLocation({
                     </div>
                     {location && (
                         <p
-                            className="text-sm text-white/80 mt-1 ml-7"
+                            className="text-sm text-charcoal/80 mt-1 ml-7"
                             style={{
                                 fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
                             }}
@@ -112,7 +112,7 @@ export default function BusinessLocation({
                     )}
                     {address && (
                         <p
-                            className="text-sm text-white/70 mt-0.5 ml-7"
+                            className="text-sm text-charcoal/70 mt-0.5 ml-7"
                             style={{
                                 fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
                             }}
@@ -137,7 +137,7 @@ export default function BusinessLocation({
                         <div className="px-4 sm:px-6 py-3 border-t border-white/20 flex items-center justify-between gap-3">
                             <button
                                 onClick={() => setIsMapModalOpen(true)}
-                                className="flex items-center gap-2 text-sm font-semibold text-white hover:text-coral transition-colors"
+                                className="flex items-center gap-2 text-sm font-semibold text-charcoal hover:text-coral transition-colors"
                                 style={{
                                     fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
                                     fontWeight: 600,
@@ -150,7 +150,7 @@ export default function BusinessLocation({
                                 href={getDirectionsUrl()}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center gap-2 text-sm font-semibold text-white hover:text-coral transition-colors"
+                                className="flex items-center gap-2 text-sm font-semibold text-charcoal hover:text-coral transition-colors"
                                 style={{
                                     fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
                                     fontWeight: 600,
@@ -164,9 +164,9 @@ export default function BusinessLocation({
                 ) : (
                     <div className="px-4 sm:px-6 py-6">
                         <div className="text-center py-8">
-                            <MapPin className="w-12 h-12 text-white/40 mx-auto mb-3" />
+                            <MapPin className="w-12 h-12 text-charcoal/40 mx-auto mb-3" />
                             <p
-                                className="text-sm text-white/70 mb-4"
+                                className="text-sm text-charcoal/70 mb-4"
                                 style={{
                                     fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
                                 }}

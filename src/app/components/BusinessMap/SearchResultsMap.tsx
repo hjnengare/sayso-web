@@ -76,7 +76,7 @@ export default function SearchResultsMap({
 
         map.current = new mapboxgl.Map({
             container: mapContainer.current,
-            style: "mapbox://styles/mapbox/light-v11",
+            style: "mapbox://styles/mapbox/streets-v12", // Colorful street map style
             center: center,
             zoom: zoom,
             interactive: true,

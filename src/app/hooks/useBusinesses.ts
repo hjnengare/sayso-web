@@ -104,14 +104,44 @@ export function useBusinesses(options: UseBusinessesOptions = {}): UseBusinesses
       const response = await fetch(`/api/businesses?${params.toString()}`);
       
       if (!response.ok) {
-        throw new Error(`Failed to fetch businesses: ${response.statusText}`);
+        const contentType = response.headers.get("content-type") || "";
+        const rawText = await response.text();
+        
+        let errorData: any = null;
+        
+        if (contentType.includes("application/json")) {
+          try {
+            errorData = rawText ? JSON.parse(rawText) : null;
+          } catch (e) {
+            errorData = { parseError: String(e), rawText };
+          }
+        } else {
+          errorData = { rawText };
+        }
+        
+        console.error("[useBusinesses] API error response:", {
+          status: response.status,
+          statusText: response.statusText,
+          contentType,
+          errorData,
+          rawText,
+          url: `/api/businesses?${params.toString()}`,
+        });
+        
+        const message =
+          errorData?.error ||
+          errorData?.details ||
+          errorData?.message ||
+          `Failed to fetch businesses: ${response.statusText} (${response.status})`;
+        
+        throw new Error(message);
       }
 
       const data = await response.json();
       // API returns { businesses: [...], cursorId: ... }
       setBusinesses(data.businesses || data.data || []);
     } catch (err: any) {
-      console.error('Error fetching businesses:', err);
+      console.error('[useBusinesses] Error fetching businesses:', err);
       setError(err.message || 'Failed to fetch businesses');
       setBusinesses([]); // Fallback to empty array
     } finally {

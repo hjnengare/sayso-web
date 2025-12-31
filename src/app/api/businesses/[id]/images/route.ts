@@ -74,8 +74,9 @@ export async function POST(
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
+      console.error('[API] Auth error:', authError);
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'Unauthorized', details: authError?.message || 'User not authenticated', code: 'AUTH_ERROR' },
         { status: 401 }
       );
     }
@@ -88,8 +89,9 @@ export async function POST(
       .single();
 
     if (businessError || !business) {
+      console.error('[API] Business fetch error:', businessError);
       return NextResponse.json(
-        { error: 'Business not found' },
+        { error: 'Business not found', details: businessError?.message || 'Business does not exist', code: 'BUSINESS_NOT_FOUND' },
         { status: 404 }
       );
     }
@@ -105,8 +107,9 @@ export async function POST(
     const isOwner = ownerCheck || business.owner_id === user.id;
 
     if (!isOwner) {
+      console.error('[API] Permission denied:', { userId: user.id, businessId, ownerId: business.owner_id });
       return NextResponse.json(
-        { error: 'You do not have permission to add images to this business' },
+        { error: 'You do not have permission to add images to this business', details: 'User is not the owner of this business', code: 'PERMISSION_DENIED' },
         { status: 403 }
       );
     }
@@ -179,99 +182,119 @@ export async function POST(
         p_image_urls: newUrls
       });
 
-    // Fallback to standard update if RPC function doesn't exist
-    if (updateError && updateError.code === '42883') { // Function does not exist
-      console.warn('[API] append_business_images function not found, using fallback method (may have race conditions)');
+    // Handle RPC errors
+    if (updateError) {
+      console.error('[API] Error calling append_business_images:', updateError);
       
-      // Re-fetch business to get latest state (helps reduce race conditions)
-      const { data: refreshedBusiness } = await supabase
-        .from('businesses')
-        .select('uploaded_images')
-        .eq('id', businessId)
-        .single();
-      
-      if (!refreshedBusiness) {
-        return NextResponse.json(
-          { error: 'Business not found' },
-          { status: 404 }
-        );
-      }
-      
-      const latestImages = (refreshedBusiness.uploaded_images && Array.isArray(refreshedBusiness.uploaded_images))
-        ? refreshedBusiness.uploaded_images
-        : [];
-      
-      // Check limit again with latest count
-      if (latestImages.length + newUrls.length > MAX_IMAGES) {
-        const remainingSlots = MAX_IMAGES - latestImages.length;
-        if (remainingSlots <= 0) {
+      // If function doesn't exist, fallback to standard update
+      if (updateError.code === '42883') { // Function does not exist
+        console.warn('[API] append_business_images function not found, using fallback method (may have race conditions)');
+        
+        // Re-fetch business to get latest state (helps reduce race conditions)
+        const { data: refreshedBusiness } = await supabase
+          .from('businesses')
+          .select('uploaded_images')
+          .eq('id', businessId)
+          .single();
+        
+        if (!refreshedBusiness) {
           return NextResponse.json(
-            { error: `Maximum image limit reached (${MAX_IMAGES} images). Please delete some images before adding new ones.` },
-            { status: 400 }
+            { error: 'Business not found' },
+            { status: 404 }
           );
         }
-        newUrls.splice(remainingSlots);
-      }
-      
-      const updatedImages = [...latestImages, ...newUrls];
-      
-      const { data: fallbackBusiness, error: fallbackError } = await supabase
-        .from('businesses')
-        .update({ uploaded_images: updatedImages })
-        .eq('id', businessId)
-        .select('uploaded_images')
-        .single();
-      
-      if (fallbackError) {
+        
+        const latestImages = (refreshedBusiness.uploaded_images && Array.isArray(refreshedBusiness.uploaded_images))
+          ? refreshedBusiness.uploaded_images
+          : [];
+        
+        // Check limit again with latest count
+        if (latestImages.length + newUrls.length > MAX_IMAGES) {
+          const remainingSlots = MAX_IMAGES - latestImages.length;
+          if (remainingSlots <= 0) {
+            return NextResponse.json(
+              { error: `Maximum image limit reached (${MAX_IMAGES} images). Please delete some images before adding new ones.` },
+              { status: 400 }
+            );
+          }
+          newUrls.splice(remainingSlots);
+        }
+        
+        const updatedImages = [...latestImages, ...newUrls];
+        
+        const { data: fallbackBusiness, error: fallbackError } = await supabase
+          .from('businesses')
+          .update({ uploaded_images: updatedImages })
+          .eq('id', businessId)
+          .select('uploaded_images')
+          .single();
+        
+        if (fallbackError) {
+          console.error('[API] Fallback update error:', fallbackError);
+          return NextResponse.json(
+            { error: 'Failed to add images', details: fallbackError.message },
+            { status: 500 }
+          );
+        }
+        
+        // Use fallback result
+        const finalImages = fallbackBusiness?.uploaded_images || [];
+        
+        // Return the new images (last N images added)
+        const addedImages = finalImages.slice(-newUrls.length).map((url: string, index: number) => ({
+          url,
+          is_primary: finalImages.indexOf(url) === 0,
+          sort_order: finalImages.indexOf(url),
+        }));
+
+        return NextResponse.json({
+          success: true,
+          images: addedImages,
+          warning: 'Used fallback update method - consider creating append_business_images function for better concurrency',
+        }, { status: 201 });
+      } else {
+        // Other RPC errors (not function missing)
+        console.error('[API] RPC error details:', {
+          code: updateError.code,
+          message: updateError.message,
+          details: updateError.details,
+          hint: updateError.hint,
+        });
         return NextResponse.json(
-          { error: 'Failed to add images', details: fallbackError.message },
+          { 
+            error: 'Failed to add images', 
+            details: updateError.message || 'Database error occurred',
+            code: updateError.code 
+          },
           { status: 500 }
         );
       }
-      
-      // Use fallback result
-      const finalImages = fallbackBusiness?.uploaded_images || [];
-      
-      // Return the new images (last N images added)
-      const addedImages = finalImages.slice(-newUrls.length).map((url: string, index: number) => ({
-        url,
-        is_primary: finalImages.indexOf(url) === 0,
-        sort_order: finalImages.indexOf(url),
-      }));
-
-      return NextResponse.json({
-        success: true,
-        images: addedImages,
-        warning: 'Used fallback update method - consider creating append_business_images function for better concurrency',
-      }, { status: 201 });
     }
     
-    if (updateError) {
-      console.error('[API] Error updating business images:', updateError);
-      return NextResponse.json(
-        { error: 'Failed to add images', details: updateError.message },
-        { status: 500 }
-      );
-    }
-    
+    // Success case - RPC function worked
     // Get final images from result
+    // RPC returns table with uploaded_images array: [{ uploaded_images: [...] }]
     let finalImages: string[] = [];
     
-    if (updatedBusiness && updatedBusiness.uploaded_images) {
-      finalImages = Array.isArray(updatedBusiness.uploaded_images) 
-        ? updatedBusiness.uploaded_images 
-        : [];
+    if (updatedBusiness && Array.isArray(updatedBusiness) && updatedBusiness.length > 0) {
+      // RPC returns table with uploaded_images array
+      finalImages = updatedBusiness[0].uploaded_images || [];
     } else {
       // Re-fetch to get final state if RPC didn't return it
-      const { data: finalBusiness } = await supabase
+      const { data: finalBusiness, error: fetchError } = await supabase
         .from('businesses')
         .select('uploaded_images')
         .eq('id', businessId)
         .single();
       
-      if (!finalBusiness) {
+      if (fetchError || !finalBusiness) {
+        console.error('[API] Error fetching final business state:', fetchError);
         return NextResponse.json(
-          { error: 'Failed to retrieve updated business images' },
+          { 
+            error: 'Failed to retrieve updated business images', 
+            details: fetchError?.message || 'Business not found',
+            code: 'FETCH_ERROR'
+          },
           { status: 500 }
         );
       }
@@ -279,14 +302,6 @@ export async function POST(
       finalImages = (finalBusiness.uploaded_images && Array.isArray(finalBusiness.uploaded_images))
         ? finalBusiness.uploaded_images
         : [];
-    }
-
-    if (updateError) {
-      console.error('[API] Error updating business images:', updateError);
-      return NextResponse.json(
-        { error: 'Failed to add images', details: updateError.message },
-        { status: 500 }
-      );
     }
 
     // Return the new images (last N images added)
@@ -301,9 +316,13 @@ export async function POST(
       images: addedImages,
     }, { status: 201 });
   } catch (error: any) {
-    console.error('[API] Error in POST business images:', error);
+    console.error('[API] Unexpected error in POST business images:', error);
     return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
+      { 
+        error: 'Internal server error', 
+        details: error?.message || String(error),
+        code: 'INTERNAL_ERROR'
+      },
       { status: 500 }
     );
   }

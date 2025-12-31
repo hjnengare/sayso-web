@@ -36,7 +36,7 @@ export default function MapboxMap({
 
         map.current = new mapboxgl.Map({
             container: mapContainer.current,
-            style: "mapbox://styles/mapbox/light-v11",
+            style: "mapbox://styles/mapbox/streets-v12", // Colorful street map style
             center: [longitude, latitude],
             zoom: 15,
             interactive,

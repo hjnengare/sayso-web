@@ -272,8 +272,36 @@ export default function BusinessEditPage() {
                 });
 
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Failed to save images');
+                    const contentType = response.headers.get("content-type") || "";
+                    const rawText = await response.text(); // ✅ read once
+                    
+                    let errorData: any = null;
+                    
+                    if (contentType.includes("application/json")) {
+                        try {
+                            errorData = rawText ? JSON.parse(rawText) : null;
+                        } catch (e) {
+                            errorData = { parseError: String(e), rawText };
+                        }
+                    } else {
+                        errorData = { rawText };
+                    }
+                    
+                    console.error("[Edit Business] API error response:", {
+                        status: response.status,
+                        statusText: response.statusText,
+                        contentType,
+                        errorData,
+                        rawText,
+                    });
+                    
+                    const message =
+                        errorData?.error ||
+                        errorData?.details ||
+                        errorData?.message ||
+                        `Server error (${response.status}): ${response.statusText}`;
+                    
+                    throw new Error(message);
                 }
 
                 // Update local state

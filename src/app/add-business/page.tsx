@@ -725,24 +725,77 @@ export default function AddBusinessPage() {
                             console.log(`[Add Business] Saving ${uploadedUrls.length} image URLs to database for business ${businessId}`);
                             console.log('[Add Business] Image URLs to save:', uploadedUrls);
                             
-                            const { data: updatedBusiness, error: imagesError } = await supabase
-                                .from('businesses')
-                                .update({ uploaded_images: uploadedUrls })
-                                .eq('id', businessId)
-                                .select('id, uploaded_images')
-                                .single();
+                            // Try using RPC function first (atomic, prevents race conditions)
+                            let imagesError: any = null;
+                            let updatedBusiness: any = null;
+                            let usedRpcFunction = false;
+                            
+                            const { data: rpcData, error: rpcError } = await supabase
+                                .rpc('append_business_images', {
+                                    p_business_id: businessId,
+                                    p_image_urls: uploadedUrls
+                                });
+                            
+                            // If RPC function doesn't exist (code 42883), fallback to direct update
+                            if (rpcError && rpcError.code === '42883') {
+                                console.warn('[Add Business] append_business_images function not found, using fallback method');
+                                
+                                const { data: fallbackData, error: fallbackError } = await supabase
+                                    .from('businesses')
+                                    .update({ uploaded_images: uploadedUrls })
+                                    .eq('id', businessId)
+                                    .select('id, uploaded_images')
+                                    .single();
+                                
+                                imagesError = fallbackError;
+                                updatedBusiness = fallbackData;
+                                usedRpcFunction = false;
+                            } else {
+                                imagesError = rpcError;
+                                usedRpcFunction = true;
+                                // RPC function returns table with uploaded_images array
+                                if (rpcData && rpcData.length > 0) {
+                                    updatedBusiness = {
+                                        id: businessId,
+                                        uploaded_images: rpcData[0].uploaded_images
+                                    };
+                                }
+                            }
 
                             if (imagesError) {
-                                console.error('[Add Business] Error saving images to uploaded_images:', imagesError);
-                                console.error('[Add Business] Update error details:', {
-                                    message: imagesError.message,
-                                    code: imagesError.code,
-                                    details: imagesError.details,
-                                    hint: imagesError.hint,
+                                // Better error serialization - handle PostgrestError and other error types
+                                const errorDetails: any = {
+                                    message: imagesError.message || String(imagesError),
+                                    code: (imagesError as any).code,
+                                    details: (imagesError as any).details,
+                                    hint: (imagesError as any).hint,
                                     businessId,
                                     uploadedUrlsCount: uploadedUrls.length,
-                                    errorObject: JSON.stringify(imagesError, null, 2),
-                                });
+                                    errorSource: usedRpcFunction ? 'RPC function (append_business_images)' : 'Direct update (fallback)',
+                                };
+                                
+                                // Try to serialize the full error object
+                                try {
+                                    errorDetails.errorString = JSON.stringify(imagesError, Object.getOwnPropertyNames(imagesError));
+                                } catch (e) {
+                                    errorDetails.errorString = String(imagesError);
+                                }
+                                
+                                // Try to get all properties
+                                try {
+                                    const errorProps: any = {};
+                                    for (const key in imagesError) {
+                                        if (imagesError.hasOwnProperty(key)) {
+                                            errorProps[key] = (imagesError as any)[key];
+                                        }
+                                    }
+                                    errorDetails.errorProperties = errorProps;
+                                } catch (e) {
+                                    // Ignore
+                                }
+                                
+                                console.error('[Add Business] Error saving images to uploaded_images:', errorDetails);
+                                console.error('[Add Business] Raw error object:', imagesError);
                                 
                                 // Check if it's a column error
                                 if (imagesError.message?.includes('column') || imagesError.message?.includes('does not exist')) {

@@ -715,10 +715,20 @@ export async function GET(req: Request) {
     });
     return applySharedResponseHeaders(response);
 
-  } catch (error) {
-    console.error('Error in businesses API:', error);
+  } catch (error: any) {
+    console.error('[BUSINESSES API] Unexpected error:', error);
+    console.error('[BUSINESSES API] Error stack:', error?.stack);
+    console.error('[BUSINESSES API] Error details:', {
+      message: error?.message,
+      name: error?.name,
+      code: error?.code,
+    });
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error', 
+        details: error?.message || String(error),
+        code: 'INTERNAL_ERROR'
+      },
       { status: 500 }
     );
   }
