@@ -145,7 +145,7 @@ export async function GET(req: Request) {
         return {
           id: business.id,
           name: business.name,
-          image: business.image_url || (business.uploaded_images && business.uploaded_images.length > 0 ? business.uploaded_images[0] : null),
+          image: (business.uploaded_images && business.uploaded_images.length > 0 ? business.uploaded_images[0] : null) || business.image_url || null,
           alt: `${business.name} - ${business.category} in ${business.location}`,
           category: business.category,
           location: business.location,

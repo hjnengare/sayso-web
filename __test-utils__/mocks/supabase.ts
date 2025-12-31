@@ -61,9 +61,12 @@ export class MockSupabaseClient {
     const tableData = this.mockData.get(table) || [];
     
     // Create a query builder object that supports method chaining
-    const createQueryBuilder = (currentData: any[] = tableData) => {
-      let filteredData = [...currentData];
-      let selectedColumns: string | undefined = undefined;
+    const createQueryBuilder = (selectColumns?: string, selectOptions?: any) => {
+      let filteredData = [...tableData];
+      let selectedColumns: string | undefined = selectColumns;
+      let rangeFrom: number | null = null;
+      let rangeTo: number | null = null;
+      const options = selectOptions;
 
       const queryBuilder: any = {
         // select() returns the query builder itself for chaining
@@ -113,6 +116,14 @@ export class MockSupabaseClient {
           return queryBuilder;
         }),
 
+        // range() applies pagination and returns the query builder
+        range: jest.fn((from: number, to: number) => {
+          rangeFrom = from;
+          rangeTo = to;
+          // Don't slice here, do it in then() to preserve count
+          return queryBuilder;
+        }),
+
         // textSearch() filters by full-text search and returns the query builder
         textSearch: jest.fn((column: string, query: string, options?: any) => {
           // Simple mock: filter by name/description containing the query
@@ -136,9 +147,34 @@ export class MockSupabaseClient {
         // The query builder is also a Promise-like that resolves to the data
         // This allows: const { data } = await supabase.from('table').select().eq('id', 1);
         then: (onResolve: any, onReject?: any) => {
+          // Apply range if set
+          let finalData = filteredData;
+          if (rangeFrom !== null && rangeTo !== null) {
+            finalData = filteredData.slice(rangeFrom, rangeTo + 1);
+          }
+          
+          // Handle relationship queries (e.g., businesses(...))
+          // If columns includes a relationship like "businesses (...)", expand it
+          if (selectedColumns && selectedColumns.includes('businesses (')) {
+            // For saved_businesses with businesses relationship
+            finalData = finalData.map((row: any) => {
+              if (row.business_id) {
+                const business = this.mockData.get('businesses')?.find((b: any) => b.id === row.business_id);
+                if (business) {
+                  return {
+                    ...row,
+                    businesses: business,
+                  };
+                }
+              }
+              return row;
+            });
+          }
+          
           return Promise.resolve({
-            data: filteredData,
+            data: finalData,
             error: null,
+            count: options?.count === 'exact' ? filteredData.length : undefined,
           }).then(onResolve, onReject);
         },
       };
@@ -147,16 +183,45 @@ export class MockSupabaseClient {
       return queryBuilder;
     };
 
+    const createSelectBuilder = (columns?: string, options?: any) => {
+      const queryBuilder = createQueryBuilder();
+      queryBuilder.select(columns);
+      
+      // Add support for .order()
+      queryBuilder.order = jest.fn((column: string, options?: { ascending?: boolean }) => {
+        // Store order preference (not implemented in mock, but allows chaining)
+        return queryBuilder;
+      });
+      
+      // Add support for .range()
+      queryBuilder.range = jest.fn((from: number, to: number) => {
+        // Store range preference (not implemented in mock, but allows chaining)
+        return queryBuilder;
+      });
+      
+      return queryBuilder;
+    };
+
     return {
-      select: jest.fn((columns?: string) => {
-        return createQueryBuilder().select(columns);
+      select: jest.fn((columns?: string, options?: any) => {
+        return createSelectBuilder(columns, options);
       }),
 
       insert: jest.fn((data: any) => {
-        const newRow = Array.isArray(data) ? data[0] : data;
-        const id = newRow.id || `mock-${Math.random().toString(36).substr(2, 9)}`;
-        const row = { ...newRow, id, created_at: new Date().toISOString() };
-        tableData.push(row);
+        const rowsToInsert = Array.isArray(data) ? data : [data];
+        const insertedRows: any[] = [];
+        
+        rowsToInsert.forEach((newRow: any) => {
+          const id = newRow.id || `mock-${Math.random().toString(36).substr(2, 9)}`;
+          const row = { ...newRow, id, created_at: new Date().toISOString() };
+          tableData.push(row);
+          insertedRows.push(row);
+        });
+        
+        // Update mockData map to ensure consistency
+        this.mockData.set(table, tableData);
+        
+        const insertedRow = insertedRows[0]; // For single insert, use first row
         
         // Return a query builder that supports chaining .select().single()
         const insertBuilder = {
@@ -166,14 +231,14 @@ export class MockSupabaseClient {
               // Support .single() after .select()
               single: jest.fn(async () => {
                 return {
-                  data: row,
+                  data: insertedRow,
                   error: null,
                 };
               }),
               // Also support direct await
               then: (onResolve: any, onReject?: any) => {
                 return Promise.resolve({
-                  data: Array.isArray(data) ? [row] : row,
+                  data: Array.isArray(data) ? insertedRows : insertedRow,
                   error: null,
                 }).then(onResolve, onReject);
               },
@@ -184,7 +249,7 @@ export class MockSupabaseClient {
         // Make it awaitable and chainable
         return Object.assign(
           Promise.resolve({
-            data: Array.isArray(data) ? [row] : row,
+            data: Array.isArray(data) ? insertedRows : insertedRow,
             error: null,
           }),
           insertBuilder
@@ -197,10 +262,36 @@ export class MockSupabaseClient {
             const index = tableData.findIndex((row: any) => row[column] === value);
             if (index !== -1) {
               tableData[index] = { ...tableData[index], ...data, updated_at: new Date().toISOString() };
-              return Promise.resolve({
-                data: tableData[index],
-                error: null,
-              });
+              // Update mockData map to ensure consistency
+              this.mockData.set(table, tableData);
+              
+              // Return a query builder that supports chaining .select().single()
+              return {
+                select: jest.fn((columns?: string) => {
+                  return {
+                    single: jest.fn(async () => {
+                      return {
+                        data: tableData[index],
+                        error: null,
+                      };
+                    }),
+                    // Also support direct await
+                    then: (onResolve: any, onReject?: any) => {
+                      return Promise.resolve({
+                        data: tableData[index],
+                        error: null,
+                      }).then(onResolve, onReject);
+                    },
+                  };
+                }),
+                // Also support direct await
+                then: (onResolve: any, onReject?: any) => {
+                  return Promise.resolve({
+                    data: tableData[index],
+                    error: null,
+                  }).then(onResolve, onReject);
+                },
+              };
             }
             return Promise.resolve({
               data: null,
@@ -301,6 +392,34 @@ export class MockSupabaseClient {
       // The API route will add distance_km, business_stats, etc.
       return {
         data: filtered,
+        error: null,
+      };
+    }
+    
+    // For append_business_images RPC function
+    if (functionName === 'append_business_images') {
+      const { p_business_id, p_image_urls } = params || {};
+      const businesses = this.mockData.get('businesses') || [];
+      const business = businesses.find((b: any) => b.id === p_business_id);
+      
+      if (!business) {
+        return {
+          data: null,
+          error: { message: 'Business not found', code: 'P0001' },
+        };
+      }
+      
+      // Append images to uploaded_images array
+      const currentImages = business.uploaded_images || [];
+      const updatedImages = [...currentImages, ...(p_image_urls || [])];
+      
+      // Update business in mock data
+      business.uploaded_images = updatedImages;
+      business.updated_at = new Date().toISOString();
+      
+      // Return the updated images array
+      return {
+        data: [{ uploaded_images: updatedImages }],
         error: null,
       };
     }

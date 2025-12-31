@@ -20,6 +20,10 @@ export interface BusinessFactoryOptions {
   updated_at?: string;
   latitude?: number;
   longitude?: number;
+  owner_id?: string;
+  uploaded_images?: string[] | null;
+  status?: string;
+  image_url?: string | null;
 }
 
 export function createBusiness(options: BusinessFactoryOptions = {}) {
@@ -49,10 +53,13 @@ export function createBusiness(options: BusinessFactoryOptions = {}) {
     latitude: options.latitude || -33.9249,
     longitude: options.longitude || 18.4241,
     slug: options.name?.toLowerCase().replace(/\s+/g, '-') || `test-business-${id}`,
-    image_url: `https://example.com/images/${id}.jpg`,
+    image_url: options.image_url !== undefined ? options.image_url : `https://example.com/images/${id}.jpg`,
     phone: '+27123456789',
     email: `contact@${id}.com`,
     website: `https://${id}.com`,
+    owner_id: options.owner_id || null,
+    uploaded_images: options.uploaded_images !== undefined ? options.uploaded_images : null,
+    status: options.status || 'active',
     hours: {
       monday: '9:00 AM - 5:00 PM',
       tuesday: '9:00 AM - 5:00 PM',
