@@ -9,12 +9,11 @@ import { ToastProvider } from '@/app/contexts/ToastContext';
 
 interface AllTheProvidersProps {
   children: React.ReactNode;
-  authValue?: any;
 }
 
-function AllTheProviders({ children, authValue }: AllTheProvidersProps) {
+function AllTheProviders({ children }: AllTheProvidersProps) {
   return (
-    <AuthProvider value={authValue}>
+    <AuthProvider>
       <ToastProvider>
         {children}
       </ToastProvider>
@@ -23,16 +22,17 @@ function AllTheProviders({ children, authValue }: AllTheProvidersProps) {
 }
 
 interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
-  authValue?: any;
+  // authValue is not supported as AuthProvider doesn't accept a value prop
+  // Auth state is managed internally by AuthProvider
 }
 
 export function renderWithProviders(
   ui: ReactElement,
-  { authValue, ...renderOptions }: CustomRenderOptions = {}
+  { ...renderOptions }: CustomRenderOptions = {}
 ) {
   function Wrapper({ children }: { children: React.ReactNode }) {
     return (
-      <AllTheProviders authValue={authValue}>
+      <AllTheProviders>
         {children}
       </AllTheProviders>
     );
