@@ -133,7 +133,7 @@ BEGIN
     FROM businesses b
     LEFT JOIN business_stats bs ON b.id = bs.business_id
     WHERE b.status = 'active'
-      AND (p_category IS NULL OR b.category = p_category)
+      AND (p_category IS NULL OR b.category ILIKE p_category)
       AND (p_location IS NULL OR b.location ILIKE '%' || p_location || '%')
       AND (p_verified IS NULL OR b.verified = p_verified)
       AND (p_price_range IS NULL OR b.price_range = p_price_range)
@@ -163,8 +163,8 @@ BEGIN
       CASE WHEN p_sort_by = 'created_at' AND p_sort_order = 'asc' THEN created_at END ASC,
       CASE WHEN p_sort_by = 'total_reviews' AND p_sort_order = 'desc' THEN total_reviews END DESC,
       CASE WHEN p_sort_by = 'total_reviews' AND p_sort_order = 'asc' THEN total_reviews END ASC,
-      CASE WHEN p_sort_by = 'average_rating' AND p_sort_order = 'desc' THEN average_rating END DESC,
-      CASE WHEN p_sort_by = 'average_rating' AND p_sort_order = 'asc' THEN average_rating END ASC,
+      CASE WHEN (p_sort_by = 'average_rating' OR p_sort_by = 'total_rating' OR p_sort_by = 'rating') AND p_sort_order = 'desc' THEN average_rating END DESC,
+      CASE WHEN (p_sort_by = 'average_rating' OR p_sort_by = 'total_rating' OR p_sort_by = 'rating') AND p_sort_order = 'asc' THEN average_rating END ASC,
       CASE WHEN p_sort_by = 'distance' AND p_sort_order = 'asc' THEN distance_km END ASC,
       id DESC -- Always include id for consistent ordering
     LIMIT p_limit

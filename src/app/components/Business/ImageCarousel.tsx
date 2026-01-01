@@ -79,23 +79,45 @@ export function ImageCarousel({
                     displayImages.map((src, i) => (
                         <div
                             key={src || i}
-                            className={`absolute inset-0 transition-opacity duration-300 bg-card-bg rounded-[20px] sm:rounded-[20px] ${
+                            className={`absolute inset-0 transition-opacity duration-300 bg-card-bg rounded-[20px] sm:rounded-[20px] overflow-hidden ${
                                 i === index ? 'opacity-100' : 'opacity-0'
                             }`}
                         >
-                            <Image
-                                src={src}
-                                alt={`${altBase} image ${i + 1}`}
-                                fill
-                                className="object-cover sm:object-contain sm:scale-110 transition-transform duration-300 group-hover:scale-105 sm:group-hover:scale-115"
-                                sizes="(max-width: 768px) 100vw, 768px"
-                                priority={i === 0}
-                                loading={i === 0 ? "eager" : "lazy"}
-                            />
+                            {/* Blurred background - Instagram style */}
+                            <div className="absolute inset-0">
+                                <Image
+                                    src={src}
+                                    alt=""
+                                    fill
+                                    className="object-cover"
+                                    sizes="(max-width: 768px) 100vw, 768px"
+                                    priority={i === 0}
+                                    loading={i === 0 ? "eager" : "lazy"}
+                                    style={{
+                                        filter: 'blur(40px)',
+                                        opacity: 0.6,
+                                        transform: 'scale(1.2)',
+                                    }}
+                                    aria-hidden="true"
+                                />
+                            </div>
+
+                            {/* Foreground image - sharp, centered, aspect-ratio preserved */}
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <Image
+                                    src={src}
+                                    alt={`${altBase} image ${i + 1}`}
+                                    fill
+                                    className="object-contain transition-transform duration-300 group-hover:scale-105"
+                                    sizes="(max-width: 768px) 100vw, 768px"
+                                    priority={i === 0}
+                                    loading={i === 0 ? "eager" : "lazy"}
+                                />
+                            </div>
 
                             {/* Zoom overlay on hover */}
-                            <div className="absolute inset-0 bg-black/5 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center">
-                                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-off-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg">
+                            <div className="absolute inset-0 bg-black/5 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center pointer-events-none">
+                                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-off-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg pointer-events-auto">
                                     <svg className="w-6 h-6 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                                     </svg>
@@ -197,15 +219,36 @@ export function ImageCarousel({
                         </button>
 
                         {/* Modal Image */}
-                        <div className="relative aspect-[16/9] overflow-hidden rounded-lg">
-                            <Image
-                                src={displayImages[index]}
-                                alt={`${altBase} image ${index + 1}`}
-                                fill
-                                className="object-contain"
-                                sizes="(max-width: 768px) 100vw, 80vw"
-                                priority
-                            />
+                        <div className="relative aspect-[16/9] overflow-hidden rounded-lg bg-card-bg">
+                            {/* Blurred background - Instagram style */}
+                            <div className="absolute inset-0">
+                                <Image
+                                    src={displayImages[index]}
+                                    alt=""
+                                    fill
+                                    className="object-cover"
+                                    sizes="(max-width: 768px) 100vw, 80vw"
+                                    priority
+                                    style={{
+                                        filter: 'blur(40px)',
+                                        opacity: 0.6,
+                                        transform: 'scale(1.2)',
+                                    }}
+                                    aria-hidden="true"
+                                />
+                            </div>
+
+                            {/* Foreground image - sharp, centered, aspect-ratio preserved */}
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <Image
+                                    src={displayImages[index]}
+                                    alt={`${altBase} image ${index + 1}`}
+                                    fill
+                                    className="object-contain"
+                                    sizes="(max-width: 768px) 100vw, 80vw"
+                                    priority
+                                />
+                            </div>
                         </div>
 
                         {/* Modal Navigation */}

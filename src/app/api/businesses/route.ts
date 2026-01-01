@@ -417,30 +417,42 @@ export async function GET(req: Request) {
       }
 
       // RPC succeeded - process results
-      if (data && Array.isArray(data) && data.length > 0) {
-        console.log('[BUSINESSES API] RPC returned', data.length, 'businesses');
-        
-        // Calculate distance for RPC results if lat/lng provided
-        if (lat !== null && lng !== null && isValidLatitude(lat) && isValidLongitude(lng)) {
-          businesses = (data as BusinessRPCResult[]).map((b) => {
-            if (b.latitude !== null && b.longitude !== null) {
-              b.distance_km = calculateDistanceKm(lat, lng, b.latitude, b.longitude);
-            }
-            return b;
-          });
+      if (data && Array.isArray(data)) {
+        if (data.length > 0) {
+          console.log('[BUSINESSES API] RPC returned', data.length, 'businesses');
           
-          // Apply radius filter if provided
-          if (radiusKm !== null && radiusKm > 0) {
-            businesses = businesses.filter(
-              (b) => b.distance_km !== null && b.distance_km <= radiusKm
-            );
+          // Calculate distance for RPC results if lat/lng provided
+          if (lat !== null && lng !== null && isValidLatitude(lat) && isValidLongitude(lng)) {
+            businesses = (data as BusinessRPCResult[]).map((b) => {
+              if (b.latitude !== null && b.longitude !== null) {
+                b.distance_km = calculateDistanceKm(lat, lng, b.latitude, b.longitude);
+              }
+              return b;
+            });
+            
+            // Apply radius filter if provided
+            if (radiusKm !== null && radiusKm > 0) {
+              businesses = businesses.filter(
+                (b) => b.distance_km !== null && b.distance_km <= radiusKm
+              );
+            }
+          } else {
+            businesses = data as BusinessRPCResult[];
           }
         } else {
-          businesses = data as BusinessRPCResult[];
+          // RPC returned empty array - this is valid, not an error
+          console.log('[BUSINESSES API] RPC returned 0 businesses (empty result)', {
+            category,
+            location,
+            sortBy,
+            sortOrder,
+            limit,
+          });
+          businesses = [];
         }
       } else {
-        console.log('[BUSINESSES API] RPC returned empty data, trying fallback');
-        throw new Error('RPC returned empty');
+        console.log('[BUSINESSES API] RPC returned null/undefined data, trying fallback');
+        throw new Error('RPC returned null');
       }
       error = null;
     } catch (rpcError: any) {
@@ -465,7 +477,14 @@ export async function GET(req: Request) {
 
       // Apply filters (only if methods exist)
       if (typeof (query as any).eq === 'function') {
-        if (category) query = (query as any).eq('category', category);
+        // Use case-insensitive matching for category to handle variations
+        if (category) {
+          if (typeof (query as any).ilike === 'function') {
+            query = (query as any).ilike('category', category);
+          } else {
+            query = (query as any).eq('category', category);
+          }
+        }
         if (badge) query = (query as any).eq('badge', badge);
         if (verified !== null) query = (query as any).eq('verified', verified);
         if (priceRange) query = (query as any).eq('price_range', priceRange);
@@ -1752,6 +1771,108 @@ async function prioritizeRecentlyReviewedBusinesses(
 }
 
 /**
+ * Find similar businesses in the same category
+ * Searches for businesses with matching category, and optionally similar name or location
+ */
+async function findSimilarBusinesses(
+  supabase: Awaited<ReturnType<typeof getServerSupabase>>,
+  category: string,
+  name: string,
+  location?: string | null,
+  excludeBusinessId?: string,
+  limit: number = 5
+): Promise<any[]> {
+  try {
+    // Validate excludeBusinessId is a valid UUID before using it
+    const isValidUUID = excludeBusinessId 
+      ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(excludeBusinessId)
+      : false;
+
+    // Build query for businesses in the same category
+    let query = supabase
+      .from('businesses')
+      .select(`
+        id,
+        name,
+        category,
+        location,
+        address,
+        slug,
+        image_url,
+        verified,
+        business_stats (
+          total_reviews,
+          average_rating
+        )
+      `)
+      .eq('category', category)
+      .eq('status', 'active')
+      .limit(limit + 1); // Get one extra to account for exclusion
+
+    // Exclude the current business if provided and is a valid UUID
+    if (excludeBusinessId && isValidUUID) {
+      query = query.neq('id', excludeBusinessId);
+    }
+
+    const { data: businesses, error } = await query;
+
+    if (error) {
+      console.error('[API] Error finding similar businesses:', error);
+      return [];
+    }
+
+    if (!businesses || businesses.length === 0) {
+      return [];
+    }
+
+    // Sort by relevance: prioritize businesses with similar names or locations
+    const scoredBusinesses = businesses.map(business => {
+      let score = 0;
+
+      // Name similarity (case-insensitive partial match)
+      const businessNameLower = business.name?.toLowerCase() || '';
+      const searchNameLower = name.toLowerCase();
+      
+      if (businessNameLower.includes(searchNameLower) || searchNameLower.includes(businessNameLower)) {
+        score += 10; // Higher score for name similarity
+      }
+
+      // Location similarity
+      if (location && business.location) {
+        const businessLocationLower = business.location.toLowerCase();
+        const searchLocationLower = location.toLowerCase();
+        if (businessLocationLower.includes(searchLocationLower) || searchLocationLower.includes(businessLocationLower)) {
+          score += 5; // Bonus for location match
+        }
+      }
+
+      // Boost verified businesses
+      if (business.verified) {
+        score += 2;
+      }
+
+      // Boost by rating (if available)
+      const avgRating = business.business_stats?.[0]?.average_rating || 0;
+      score += avgRating;
+
+      return {
+        ...business,
+        relevanceScore: score,
+      };
+    });
+
+    // Sort by relevance score (descending) and return top results
+    return scoredBusinesses
+      .sort((a, b) => b.relevanceScore - a.relevanceScore)
+      .slice(0, limit)
+      .map(({ relevanceScore, ...business }) => business); // Remove score from final result
+  } catch (error) {
+    console.error('[API] Error in findSimilarBusinesses:', error);
+    return [];
+  }
+}
+
+/**
  * POST /api/businesses
  * Create a new business (requires authentication)
  */
@@ -1769,22 +1890,28 @@ export async function POST(req: Request) {
       );
     }
 
-    // Parse request body
-    const body = await req.json();
-    const {
-      name,
-      description,
-      category,
-      location,
-      address,
-      phone,
-      email,
-      website,
-      priceRange,
-      hours,
-      lat,
-      lng,
-    } = body;
+    // Parse request as FormData (to support file uploads, matching review pattern)
+    const formData = await req.formData();
+    const name = formData.get('name')?.toString();
+    const description = formData.get('description')?.toString() || null;
+    const category = formData.get('category')?.toString();
+    const location = formData.get('location')?.toString();
+    const address = formData.get('address')?.toString() || null;
+    const phone = formData.get('phone')?.toString() || null;
+    const email = formData.get('email')?.toString() || null;
+    const website = formData.get('website')?.toString() || null;
+    const priceRange = formData.get('priceRange')?.toString() || '$$';
+    const hoursRaw = formData.get('hours')?.toString();
+    const hours = hoursRaw ? JSON.parse(hoursRaw) : null;
+    const latRaw = formData.get('lat')?.toString();
+    const lat = latRaw ? parseFloat(latRaw) : null;
+    const lngRaw = formData.get('lng')?.toString();
+    const lng = lngRaw ? parseFloat(lngRaw) : null;
+    
+    // Extract image files (following review image pattern)
+    const imageFiles = formData
+      .getAll('images')
+      .filter((file): file is File => file instanceof File && file.size > 0);
 
     // Validate required fields
     if (!name || !category || !location) {
@@ -1886,10 +2013,97 @@ export async function POST(req: Request) {
       percentiles: {},
     });
 
+    // Handle image uploads server-side (following review image pattern)
+    const uploadErrors: string[] = [];
+    const uploadedImages: any[] = [];
+
+    if (imageFiles.length > 0) {
+      // Limit to 10 images max (same as review limit logic)
+      const maxImages = Math.min(imageFiles.length, 10);
+      
+      // Check if business already has a primary image
+      const { data: existingPrimary } = await supabase
+        .from('business_images')
+        .select('id')
+        .eq('business_id', newBusiness.id)
+        .eq('is_primary', true)
+        .limit(1)
+        .single();
+
+      for (let i = 0; i < maxImages; i++) {
+        const imageFile = imageFiles[i];
+
+        try {
+          const fileExt = imageFile.name.split('.').pop() || 'jpg';
+          // Path pattern: {business_id}/{timestamp}_{index}.{ext} (matching review pattern)
+          const filePath = `${newBusiness.id}/${Date.now()}_${i}.${fileExt}`;
+
+          // Upload to Supabase Storage (server-side)
+          const { error: uploadError } = await supabase.storage
+            .from('business_images')
+            .upload(filePath, imageFile, {
+              contentType: imageFile.type,
+            });
+
+          if (uploadError) {
+            console.error('[API] Error uploading business image:', uploadError);
+            uploadErrors.push(`Failed to upload image ${i + 1}: ${uploadError.message}`);
+            continue;
+          }
+
+          // Get public URL
+          const { data: { publicUrl } } = supabase.storage
+            .from('business_images')
+            .getPublicUrl(filePath);
+
+          // Determine if this should be primary (first image only if no primary exists)
+          const shouldBePrimary = i === 0 && !existingPrimary;
+
+          // Insert image record into business_images table
+          const { data: imageRecord, error: imageError } = await supabase
+            .from('business_images')
+            .insert({
+              business_id: newBusiness.id,
+              url: publicUrl,
+              type: shouldBePrimary ? 'cover' : 'gallery',
+              sort_order: i,
+              is_primary: shouldBePrimary,
+            })
+            .select('id, url, type, sort_order, is_primary, created_at')
+            .single();
+
+          if (!imageError && imageRecord) {
+            uploadedImages.push(imageRecord);
+          } else if (imageError) {
+            console.error('[API] Error saving business image record:', imageError);
+            uploadErrors.push(`Failed to save image ${i + 1} metadata`);
+            // Clean up uploaded file if DB insert failed
+            await supabase.storage.from('business_images').remove([filePath]);
+          }
+        } catch (error) {
+          console.error('[API] Error processing business image:', error);
+          uploadErrors.push(`Failed to process image ${i + 1}`);
+        }
+      }
+    }
+
+    // Search for similar businesses in the same category
+    const similarBusinesses = await findSimilarBusinesses(
+      supabase,
+      category,
+      name,
+      location,
+      newBusiness.id,
+      5 // Limit to 5 similar businesses
+    );
+
     return NextResponse.json({
       success: true,
       business: newBusiness,
+      images: uploadedImages,
       message: 'Business created successfully!',
+      ...(uploadErrors.length > 0 && { uploadWarnings: uploadErrors }),
+      ...(similarBusinesses.length > 0 && { similarBusinesses }),
     }, { status: 201 });
   } catch (error: any) {
     console.error('[API] Error creating business:', error);

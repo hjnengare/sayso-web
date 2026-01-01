@@ -29,17 +29,39 @@ export default function BusinessHeroImage({
     >
       {hasImage ? (
         <>
-          <Image
-            src={image}
-            alt={alt}
-            fill
-            className="object-cover object-center"
-            priority
-            quality={90}
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 900px"
-            style={{ objectFit: 'cover' }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+          {/* Blurred background - Instagram style */}
+          <div className="absolute inset-0">
+            <Image
+              src={image}
+              alt=""
+              fill
+              className="object-cover"
+              priority
+              quality={50}
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 900px"
+              style={{
+                filter: 'blur(40px)',
+                opacity: 0.6,
+                transform: 'scale(1.2)',
+              }}
+              aria-hidden="true"
+            />
+          </div>
+
+          {/* Foreground image - sharp, centered, aspect-ratio preserved */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Image
+              src={image}
+              alt={alt}
+              fill
+              className="object-contain"
+              priority
+              quality={90}
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 900px"
+            />
+          </div>
+
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
         </>
       ) : (
         <div className="absolute inset-0 bg-card-bg flex items-center justify-center">

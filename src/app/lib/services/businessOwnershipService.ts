@@ -32,33 +32,68 @@ export class BusinessOwnershipService {
 
   /**
    * Check if a user owns a business
+   * Checks both the business_owners table and direct owner_id on businesses table
    */
   static async isBusinessOwner(userId: string, businessId: string): Promise<boolean> {
+    // Early return guards to prevent unnecessary queries
+    if (!userId || !businessId) {
+      return false;
+    }
+
     try {
       const supabase = this.getSupabase();
-      const { data, error } = await supabase
+      
+      // First check: business_owners table (using maybeSingle to avoid PGRST116)
+      const { data: ownerData, error: ownerError } = await supabase
         .from('business_owners')
         .select('id')
         .eq('business_id', businessId)
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
-        console.error('Error checking business ownership:', {
-          message: error.message,
-          code: error.code,
-          details: error.details,
-          hint: error.hint,
-          error: error
+      if (ownerError) {
+        console.error('Error checking business ownership (business_owners table):', {
+          name: (ownerError as any)?.name,
+          message: (ownerError as any)?.message,
+          code: (ownerError as any)?.code,
+          details: (ownerError as any)?.details,
+          hint: (ownerError as any)?.hint,
+          status: (ownerError as any)?.status,
+          raw: ownerError,
+        });
+        // Continue to check direct owner_id even if this fails
+      } else if (ownerData) {
+        // Found in business_owners table
+        return true;
+      }
+
+      // Second check: direct owner_id on businesses table
+      const { data: businessData, error: businessError } = await supabase
+        .from('businesses')
+        .select('owner_id')
+        .eq('id', businessId)
+        .maybeSingle();
+
+      if (businessError) {
+        console.error('Error checking business ownership (businesses table):', {
+          name: (businessError as any)?.name,
+          message: (businessError as any)?.message,
+          code: (businessError as any)?.code,
+          details: (businessError as any)?.details,
+          hint: (businessError as any)?.hint,
+          status: (businessError as any)?.status,
+          raw: businessError,
         });
         return false;
       }
 
-      return !!data;
+      // Check if user is the direct owner
+      return businessData?.owner_id === userId;
     } catch (error) {
       console.error('Error checking business ownership (catch):', {
+        name: (error as any)?.name,
         message: error instanceof Error ? error.message : String(error),
-        error: error
+        raw: error,
       });
       return false;
     }
@@ -128,15 +163,26 @@ export class BusinessOwnershipService {
     try {
       const supabase = this.getSupabase();
       // Check if there's already a pending request
-      const { data: existingRequest } = await supabase
+      const { data: existingRequest, error: existingRequestError } = await supabase
         .from('business_ownership_requests')
         .select('*')
         .eq('business_id', businessId)
         .eq('user_id', userId)
         .eq('status', 'pending')
-        .single();
+        .maybeSingle();
 
-      if (existingRequest) {
+      if (existingRequestError) {
+        console.error('Error checking for existing ownership request:', {
+          name: (existingRequestError as any)?.name,
+          message: (existingRequestError as any)?.message,
+          code: (existingRequestError as any)?.code,
+          details: (existingRequestError as any)?.details,
+          hint: (existingRequestError as any)?.hint,
+          status: (existingRequestError as any)?.status,
+          raw: existingRequestError,
+        });
+        // Continue with request creation if check fails
+      } else if (existingRequest) {
         return {
           success: false,
           error: 'You already have a pending ownership request for this business.'
@@ -222,22 +268,38 @@ export class BusinessOwnershipService {
    * Get ownership request by ID
    */
   static async getOwnershipRequest(requestId: string): Promise<BusinessOwnershipRequest | null> {
+    if (!requestId) {
+      return null;
+    }
+
     try {
       const supabase = this.getSupabase();
       const { data, error } = await supabase
         .from('business_ownership_requests')
         .select('*')
         .eq('id', requestId)
-        .single();
+        .maybeSingle();
 
       if (error) {
-        console.error('Error fetching ownership request:', error);
+        console.error('Error fetching ownership request:', {
+          name: (error as any)?.name,
+          message: (error as any)?.message,
+          code: (error as any)?.code,
+          details: (error as any)?.details,
+          hint: (error as any)?.hint,
+          status: (error as any)?.status,
+          raw: error,
+        });
         return null;
       }
 
-      return data as BusinessOwnershipRequest;
+      return data as BusinessOwnershipRequest | null;
     } catch (error) {
-      console.error('Error getting ownership request:', error);
+      console.error('Error getting ownership request:', {
+        name: (error as any)?.name,
+        message: error instanceof Error ? error.message : String(error),
+        raw: error,
+      });
       return null;
     }
   }
@@ -277,6 +339,10 @@ export class BusinessOwnershipService {
    * Get business owner information
    */
   static async getBusinessOwner(businessId: string): Promise<BusinessOwner | null> {
+    if (!businessId) {
+      return null;
+    }
+
     try {
       const supabase = this.getSupabase();
       const { data, error } = await supabase
@@ -284,19 +350,28 @@ export class BusinessOwnershipService {
         .select('*')
         .eq('business_id', businessId)
         .eq('role', 'owner')
-        .single();
+        .maybeSingle();
 
       if (error) {
-        if (error.code === 'PGRST116') {
-          return null; // No owner found
-        }
-        console.error('Error fetching business owner:', error);
+        console.error('Error fetching business owner:', {
+          name: (error as any)?.name,
+          message: (error as any)?.message,
+          code: (error as any)?.code,
+          details: (error as any)?.details,
+          hint: (error as any)?.hint,
+          status: (error as any)?.status,
+          raw: error,
+        });
         return null;
       }
 
-      return data as BusinessOwner;
+      return data as BusinessOwner | null;
     } catch (error) {
-      console.error('Error getting business owner:', error);
+      console.error('Error getting business owner:', {
+        name: (error as any)?.name,
+        message: error instanceof Error ? error.message : String(error),
+        raw: error,
+      });
       return null;
     }
   }
@@ -305,22 +380,38 @@ export class BusinessOwnershipService {
    * Check if business ownership is verified
    */
   static async isOwnershipVerified(businessId: string): Promise<boolean> {
+    if (!businessId) {
+      return false;
+    }
+
     try {
       const supabase = this.getSupabase();
       const { data, error } = await supabase
         .from('businesses')
         .select('owner_verified')
         .eq('id', businessId)
-        .single();
+        .maybeSingle();
 
       if (error) {
-        console.error('Error checking ownership verification:', error);
+        console.error('Error checking ownership verification:', {
+          name: (error as any)?.name,
+          message: (error as any)?.message,
+          code: (error as any)?.code,
+          details: (error as any)?.details,
+          hint: (error as any)?.hint,
+          status: (error as any)?.status,
+          raw: error,
+        });
         return false;
       }
 
       return data?.owner_verified || false;
     } catch (error) {
-      console.error('Error checking ownership verification:', error);
+      console.error('Error checking ownership verification:', {
+        name: (error as any)?.name,
+        message: error instanceof Error ? error.message : String(error),
+        raw: error,
+      });
       return false;
     }
   }

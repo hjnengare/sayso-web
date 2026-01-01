@@ -3,6 +3,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight } from "react-feather";
+import Image from "next/image";
 import { getCategoryPng, isPngIcon } from "../../utils/categoryToPngMapping";
 import OptimizedImage from "../Performance/OptimizedImage";
 
@@ -51,7 +52,7 @@ export default function SimilarBusinessCard({
   
   // Determine display image - use first image from uploaded_images array if available
   const displayImage = (uploaded_images && uploaded_images.length > 0 ? uploaded_images[0] : null) || image_url || image || getCategoryPng(category);
-  const isImagePng = isPngIcon(displayImage) || displayImage.includes('/png/');
+  const isImagePng = displayImage ? (isPngIcon(displayImage) || displayImage.includes('/png/') || displayImage.endsWith('.png')) : false;
 
   // Use slug for SEO-friendly URLs, fallback to ID
   const businessIdentifier = slug || id;
@@ -78,7 +79,7 @@ export default function SimilarBusinessCard({
     >
       {/* Image Section */}
       <div className="relative w-full h-[300px] lg:h-[260px] overflow-hidden rounded-t-[20px]">
-        {isImagePng || displayImage.includes('/png/') || displayImage.endsWith('.png') ? (
+        {isImagePng ? (
           <div className="relative w-full h-full flex items-center justify-center bg-gradient-to-br from-off-white/95 to-off-white/85">
             <OptimizedImage
               src={displayImage}
@@ -92,17 +93,40 @@ export default function SimilarBusinessCard({
             />
           </div>
         ) : (
-          <div className="relative w-full h-full overflow-hidden">
-            <OptimizedImage
-              src={displayImage}
-              alt={name}
-              width={340}
-              height={400}
-              sizes="(max-width: 768px) 540px, 340px"
-              className="w-full h-full object-cover"
-              priority={false}
-              quality={90}
-            />
+          <div className="relative w-full h-full overflow-hidden bg-card-bg">
+            {/* Blurred background - Instagram style */}
+            <div className="absolute inset-0">
+              <Image
+                src={displayImage}
+                alt=""
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 540px, 340px"
+                priority={false}
+                quality={50}
+                loading="lazy"
+                style={{
+                  filter: 'blur(40px)',
+                  opacity: 0.6,
+                  transform: 'scale(1.2)',
+                }}
+                aria-hidden="true"
+              />
+            </div>
+
+            {/* Foreground image - sharp, centered, aspect-ratio preserved */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Image
+                src={displayImage}
+                alt={name}
+                fill
+                className="object-contain"
+                sizes="(max-width: 768px) 540px, 340px"
+                priority={false}
+                quality={90}
+                loading="lazy"
+              />
+            </div>
           </div>
         )}
       </div>

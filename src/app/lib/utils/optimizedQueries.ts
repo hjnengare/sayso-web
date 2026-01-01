@@ -37,7 +37,7 @@ export async function fetchBusinessOptimized(
   // }
 
   // Create parallel clients for independent queries
-  const [client1, client2, client3] = await createParallelClients(3);
+  const [client1, client2, client3, client4] = await createParallelClients(4);
 
   // Try slug first, then ID fallback
   let businessResult: any;
@@ -64,8 +64,8 @@ export async function fetchBusinessOptimized(
   }
 
   // Execute all queries in parallel using the actual business ID
-  const [finalBusinessResult, reviewsResult, statsResult] = await executeParallelQueries([
-    // Business data (includes uploaded_images array)
+  const [finalBusinessResult, reviewsResult, statsResult, businessImagesResult] = await executeParallelQueries([
+    // Business data
     async () =>
       executeWithRetry(
         async () => {
@@ -99,6 +99,19 @@ export async function fetchBusinessOptimized(
             .select('*')
             .eq('business_id', actualBusinessId)
             .single();
+          return { data, error };
+        }
+      ),
+    // Business images from business_images table
+    async () =>
+      executeWithRetry(
+        async () => {
+          const { data, error } = await client4
+            .from('business_images')
+            .select('url, is_primary, sort_order')
+            .eq('business_id', actualBusinessId)
+            .order('is_primary', { ascending: false })
+            .order('sort_order', { ascending: true });
           return { data, error };
         }
       ),
@@ -211,10 +224,19 @@ export async function fetchBusinessOptimized(
     });
   }
 
+  // Extract image URLs from business_images table and create uploaded_images array for backward compatibility
+  let uploadedImages: string[] = [];
+  if (businessImagesResult.data && Array.isArray(businessImagesResult.data) && businessImagesResult.data.length > 0) {
+    uploadedImages = businessImagesResult.data
+      .map((img: any) => img.url)
+      .filter((url: string) => url && typeof url === 'string' && url.trim() !== '');
+  }
+
   // Combine results
-  // uploaded_images is already in businessResult.data
+  // Add uploaded_images array from business_images table (for backward compatibility with existing UI code)
   const result = {
     ...businessResult.data,
+    uploaded_images: uploadedImages.length > 0 ? uploadedImages : (businessResult.data?.uploaded_images || []),
     stats: statsResult.data || null,
     reviews: reviewsWithProfiles,
   };

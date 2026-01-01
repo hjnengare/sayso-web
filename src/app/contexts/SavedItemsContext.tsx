@@ -37,7 +37,7 @@ export function SavedItemsProvider({ children }: SavedItemsProviderProps) {
 
     try {
       setIsLoading(true);
-      const response = await fetch('/api/saved/businesses?limit=1000');
+      const response = await fetch('/api/saved/businesses?limit=100');
       
       if (!response.ok) {
         if (response.status === 401) {

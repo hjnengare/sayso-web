@@ -11,7 +11,7 @@ type RouteContext = {
  */
 export async function GET(req: NextRequest) {
   try {
-    const supabase = await getServerSupabase();
+    const supabase = await getServerSupabase(req);
     
     // Check if user is authenticated
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -231,7 +231,7 @@ export async function GET(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   try {
-    const supabase = await getServerSupabase();
+    const supabase = await getServerSupabase(req);
     
     // Check if user is authenticated
     const { data: { user }, error: authError } = await supabase.auth.getUser();

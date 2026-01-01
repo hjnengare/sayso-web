@@ -541,8 +541,8 @@ export default function BusinessProfilePage() {
                                 </div>
                             </div>
                         </section>
+                        
                         <section className="mx-auto w-full max-w-[2000px] px-2 relative z-10">
-
                             {/* Reviews Section */}
                             <section className="space-y-6" aria-labelledby="reviews-heading">
                                 <div className="text-center justify-center pb-2 px-3 sm:px-4 py-1">

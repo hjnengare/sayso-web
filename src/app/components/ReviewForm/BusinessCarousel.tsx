@@ -100,18 +100,42 @@ export default function BusinessCarousel({ businessName, businessImages }: Busin
               key={idx}
               className="w-full flex-shrink-0 h-full relative overflow-hidden"
             >
-              <Image
-                src={img}
-                alt={`${businessName} photo ${idx + 1}`}
-                fill
-                className="object-cover object-center"
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 900px"
-                quality={90}
-                priority={idx === 0}
-                onError={() => setImageError((prev) => ({ ...prev, [idx]: true }))}
-                style={{ objectFit: 'cover' }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+              {/* Blurred background - Instagram style */}
+              <div className="absolute inset-0">
+                <Image
+                  src={img}
+                  alt=""
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 900px"
+                  quality={50}
+                  priority={idx === 0}
+                  onError={() => setImageError((prev) => ({ ...prev, [idx]: true }))}
+                  style={{
+                    filter: 'blur(40px)',
+                    opacity: 0.6,
+                    transform: 'scale(1.2)',
+                  }}
+                  aria-hidden="true"
+                />
+              </div>
+
+              {/* Foreground image - sharp, centered, aspect-ratio preserved */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Image
+                  src={img}
+                  alt={`${businessName} photo ${idx + 1}`}
+                  fill
+                  className="object-contain"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 900px"
+                  quality={90}
+                  priority={idx === 0}
+                  onError={() => setImageError((prev) => ({ ...prev, [idx]: true }))}
+                />
+              </div>
+
+              {/* Gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
               {imageError[idx] && (
                 <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-card-bg">
                   <div className="flex flex-col items-center gap-3">
