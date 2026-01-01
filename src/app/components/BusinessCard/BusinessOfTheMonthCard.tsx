@@ -5,7 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Image as ImageIcon, Star, Edit, Bookmark, Share2, MapPin, Award } from "react-feather";
+import { Image as ImageIcon, Star, Edit, Bookmark, Share2, Award } from "react-feather";
+import { Scissors, Coffee, UtensilsCrossed, Wine, Dumbbell, Activity, Heart, Book, ShoppingBag, Home, Briefcase, MapPin, Music, Film, Camera, Car, GraduationCap, CreditCard, Tag } from "lucide-react";
 import Stars from "../Stars/Stars";
 import VerifiedBadge from "../VerifiedBadge/VerifiedBadge";
 import Tooltip from "../Tooltip/Tooltip";
@@ -13,6 +14,84 @@ import { BusinessOfTheMonth } from "../../data/communityHighlightsData";
 import { getCategoryPng, getCategoryPngFromLabels, isPngIcon } from "../../utils/categoryToPngMapping";
 import { useSavedItems } from "../../contexts/SavedItemsContext";
 import { useToast } from "../../contexts/ToastContext";
+
+// Map categories to lucide-react icons
+const getCategoryIcon = (category: string): React.ComponentType<React.SVGProps<SVGSVGElement>> => {
+  // Normalize category for matching
+  const normalizedCategory = (category || '').toLowerCase();
+  const searchTerm = normalizedCategory;
+  
+  // Food & Drink
+  if (searchTerm.includes('salon') || searchTerm.includes('hairdresser') || searchTerm.includes('nail')) {
+    return Scissors;
+  }
+  if (searchTerm.includes('cafe') || searchTerm.includes('coffee')) {
+    return Coffee;
+  }
+  if (searchTerm.includes('restaurant') || searchTerm.includes('dining') || searchTerm.includes('food') || searchTerm.includes('drink')) {
+    return UtensilsCrossed;
+  }
+  if (searchTerm.includes('bar') || searchTerm.includes('pub')) {
+    return Wine;
+  }
+  
+  // Beauty & Wellness
+  if (searchTerm.includes('gym') || searchTerm.includes('fitness') || searchTerm.includes('workout')) {
+    return Dumbbell;
+  }
+  if (searchTerm.includes('spa') || searchTerm.includes('wellness') || searchTerm.includes('massage')) {
+    return Activity;
+  }
+  if (searchTerm.includes('health') || searchTerm.includes('medical')) {
+    return Heart;
+  }
+  
+  // Shopping
+  if (searchTerm.includes('shop') || searchTerm.includes('store') || searchTerm.includes('retail') || searchTerm.includes('fashion') || searchTerm.includes('clothing')) {
+    return ShoppingBag;
+  }
+  if (searchTerm.includes('book') || searchTerm.includes('library')) {
+    return Book;
+  }
+  
+  // Professional Services
+  if (searchTerm.includes('education') || searchTerm.includes('school') || searchTerm.includes('learn')) {
+    return GraduationCap;
+  }
+  if (searchTerm.includes('finance') || searchTerm.includes('bank') || searchTerm.includes('insurance')) {
+    return CreditCard;
+  }
+  if (searchTerm.includes('business') || searchTerm.includes('office') || searchTerm.includes('professional')) {
+    return Briefcase;
+  }
+  
+  // Entertainment
+  if (searchTerm.includes('music') || searchTerm.includes('concert') || searchTerm.includes('venue')) {
+    return Music;
+  }
+  if (searchTerm.includes('movie') || searchTerm.includes('cinema') || searchTerm.includes('theater') || searchTerm.includes('theatre')) {
+    return Film;
+  }
+  if (searchTerm.includes('art') || searchTerm.includes('gallery') || searchTerm.includes('museum')) {
+    return Camera;
+  }
+  
+  // Travel & Transport
+  if (searchTerm.includes('travel') || searchTerm.includes('transport') || searchTerm.includes('hotel')) {
+    return MapPin;
+  }
+  if (searchTerm.includes('car') || searchTerm.includes('auto') || searchTerm.includes('vehicle')) {
+    return Car;
+  }
+  
+  // Home & Living
+  if (searchTerm.includes('home') || searchTerm.includes('decor') || searchTerm.includes('furniture')) {
+    return Home;
+  }
+  
+  // Default fallback
+  return Tag;
+};
 
 export default function BusinessOfTheMonthCard({ business }: { business: BusinessOfTheMonth }) {
   const router = useRouter();
@@ -338,7 +417,7 @@ export default function BusinessOfTheMonthCard({ business }: { business: Busines
               {/* Content - Centered */}
               <div className="flex flex-col items-center text-center relative z-10 space-y-1">
                 {/* Business Name - Inside wrapper */}
-                <div className="flex items-center justify-center w-full min-w-0 h-[3.5rem] sm:h-[4rem]">
+                <div className="flex items-center justify-center w-full min-w-0">
                   <Tooltip content={business.name} position="top">
                     <button
                       type="button"
@@ -362,37 +441,30 @@ export default function BusinessOfTheMonthCard({ business }: { business: Busines
                     </button>
                   </Tooltip>
                 </div>
-                {/* Category and Location - Combined with bullet separator */}
-                <div
-                  className="flex items-center justify-center gap-1.5 text-caption sm:text-xs text-charcoal/60 h-5 min-h-[20px] max-h-[20px]"
-                  style={{
-                    fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                    fontWeight: 600,
-                    WebkitFontSmoothing: 'antialiased',
-                    MozOsxFontSmoothing: 'grayscale',
-                    textRendering: 'optimizeLegibility',
-                    letterSpacing: '0.01em'
-                  }}
-                >
-                  <span className="truncate">{business.category}</span>
-                  {((business as any).address || business.location) && (
-                    <>
-                      <span aria-hidden>·</span>
-                      <a
-                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${business.name} ${(business as any).address || business.location || ''}`)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-caption sm:text-xs font-semibold text-charcoal/60 transition-colors duration-200 hover:text-navbar-bg/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-coral/30 rounded-full px-2 py-1 min-w-0"
-                        aria-label={`Open ${business.name} in maps`}
-                      >
-                        <MapPin className="rounded-full p-1 w-5 h-5 text-navbar-bg/90 stroke-[2.5] transition-colors duration-200 group-hover:text-navbar-bg/90 flex-shrink-0 shadow-md" />
-                        <span className="truncate max-w-[8rem] sm:max-w-[10rem]" title={(business as any).address || business.location}>
-                          {/* Always prefer address (which includes street number) over location */}
-                          {(business as any).address ? (business as any).address : business.location}
-                        </span>
-                      </a>
-                    </>
-                  )}
+                {/* Category with icon */}
+                <div className="flex flex-col items-center gap-1.5 w-full">
+                  {/* Category row with icon */}
+                  <div
+                    className="flex items-center justify-center gap-1.5 text-caption sm:text-xs text-charcoal/60"
+                    style={{
+                      fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                      fontWeight: 600,
+                      WebkitFontSmoothing: 'antialiased',
+                      MozOsxFontSmoothing: 'grayscale',
+                      textRendering: 'optimizeLegibility',
+                      letterSpacing: '0.01em'
+                    }}
+                  >
+                    {(() => {
+                      const CategoryIcon = getCategoryIcon(business.category);
+                      return (
+                        <>
+                          <CategoryIcon className="w-3.5 h-3.5 flex-shrink-0 text-charcoal/50" strokeWidth={2.5} />
+                          <span className="truncate">{business.category}</span>
+                        </>
+                      );
+                    })()}
+                  </div>
                 </div>
 
                 {/* Reviews - Refined */}

@@ -2,7 +2,8 @@
 
 import React, { useMemo, useState, useEffect, useRef, memo } from "react";
 import { useRouter } from "next/navigation";
-import { Image as ImageIcon, Star, Edit, Share2, Bookmark, Globe, Tag, Info } from "react-feather";
+import { Image as ImageIcon, Star, Edit, Share2, Bookmark, Info } from "react-feather";
+import { Scissors, Coffee, UtensilsCrossed, Wine, Dumbbell, Activity, Heart, Book, ShoppingBag, Home, Briefcase, MapPin, Music, Film, Camera, Car, GraduationCap, CreditCard, Tag } from "lucide-react";
 import Image from "next/image";
 import PercentileChip from "../PercentileChip/PercentileChip";
 import VerifiedBadge from "../VerifiedBadge/VerifiedBadge";
@@ -61,6 +62,85 @@ const formatCategoryLabel = (value?: string) => {
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
+};
+
+// Map categories to lucide-react icons
+const getCategoryIcon = (category: string, subInterestId?: string, subInterestLabel?: string): React.ComponentType<React.SVGProps<SVGSVGElement>> => {
+  // Normalize category/label for matching
+  const normalizedCategory = (category || '').toLowerCase();
+  const normalizedSubInterest = (subInterestId || subInterestLabel || '').toLowerCase();
+  const searchTerm = normalizedSubInterest || normalizedCategory;
+  
+  // Food & Drink
+  if (searchTerm.includes('salon') || searchTerm.includes('hairdresser') || searchTerm.includes('nail')) {
+    return Scissors;
+  }
+  if (searchTerm.includes('cafe') || searchTerm.includes('coffee')) {
+    return Coffee;
+  }
+  if (searchTerm.includes('restaurant') || searchTerm.includes('dining') || searchTerm.includes('food')) {
+    return UtensilsCrossed;
+  }
+  if (searchTerm.includes('bar') || searchTerm.includes('pub')) {
+    return Wine;
+  }
+  
+  // Beauty & Wellness
+  if (searchTerm.includes('gym') || searchTerm.includes('fitness') || searchTerm.includes('workout')) {
+    return Dumbbell;
+  }
+  if (searchTerm.includes('spa') || searchTerm.includes('wellness') || searchTerm.includes('massage')) {
+    return Activity;
+  }
+  if (searchTerm.includes('health') || searchTerm.includes('medical')) {
+    return Heart;
+  }
+  
+  // Shopping
+  if (searchTerm.includes('shop') || searchTerm.includes('store') || searchTerm.includes('retail') || searchTerm.includes('fashion') || searchTerm.includes('clothing')) {
+    return ShoppingBag;
+  }
+  if (searchTerm.includes('book') || searchTerm.includes('library')) {
+    return Book;
+  }
+  
+  // Professional Services
+  if (searchTerm.includes('education') || searchTerm.includes('school') || searchTerm.includes('learn')) {
+    return GraduationCap;
+  }
+  if (searchTerm.includes('finance') || searchTerm.includes('bank') || searchTerm.includes('insurance')) {
+    return CreditCard;
+  }
+  if (searchTerm.includes('business') || searchTerm.includes('office') || searchTerm.includes('professional')) {
+    return Briefcase;
+  }
+  
+  // Entertainment
+  if (searchTerm.includes('music') || searchTerm.includes('concert') || searchTerm.includes('venue')) {
+    return Music;
+  }
+  if (searchTerm.includes('movie') || searchTerm.includes('cinema') || searchTerm.includes('theater') || searchTerm.includes('theatre')) {
+    return Film;
+  }
+  if (searchTerm.includes('art') || searchTerm.includes('gallery') || searchTerm.includes('museum')) {
+    return Camera;
+  }
+  
+  // Travel & Transport
+  if (searchTerm.includes('travel') || searchTerm.includes('transport') || searchTerm.includes('hotel')) {
+    return MapPin;
+  }
+  if (searchTerm.includes('car') || searchTerm.includes('auto') || searchTerm.includes('vehicle')) {
+    return Car;
+  }
+  
+  // Home & Living
+  if (searchTerm.includes('home') || searchTerm.includes('decor') || searchTerm.includes('furniture')) {
+    return Home;
+  }
+  
+  // Default fallback
+  return Tag;
 };
 
 function BusinessCard({
@@ -589,46 +669,45 @@ function BusinessCard({
                     </button>
                   </Tooltip>
                 </div>
-                {/* Category and Address - Combined with bullet separator */}
-                <div
-                  className="flex items-center justify-center gap-1.5 text-caption sm:text-xs text-charcoal/60 h-5 min-h-[20px] max-h-[20px]"
-                  style={{
-                    fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                    fontWeight: 600,
-                    WebkitFontSmoothing: 'antialiased',
-                    MozOsxFontSmoothing: 'grayscale',
-                    textRendering: 'optimizeLegibility',
-                    letterSpacing: '0.01em'
-                  }}
-                >
-                  <span className="truncate">{displayCategoryLabel}</span>
-                  {(business.address || business.location) && (
-                    <>
-                      <span aria-hidden>·</span>
-                      <a
-                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${business.name} ${business.address || business.location || ''}`)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-caption sm:text-xs font-semibold text-charcoal/60 transition-colors duration-200 hover:text-navbar-bg/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-coral/30 rounded-full px-2 py-1 min-w-0 max-w-[12rem] sm:max-w-[14rem]"
-                        aria-label={`Open ${business.name} in maps`}
-                      >
-                        <Image
-                          src="/businessCard/pin.png"
-                          alt="Location"
-                          width={20}
-                          height={20}
-                          className="w-5 h-5 flex-shrink-0"
-                        />
-                        <span
-                          className="truncate block overflow-hidden text-ellipsis whitespace-nowrap"
-                          style={{ maxWidth: '8rem' }}
-                          title={business.address || business.location}
-                        >
-                          {/* Always prefer address (which includes street number) over location */}
-                          {business.address ? business.address : business.location}
-                        </span>
-                      </a>
-                    </>
+                {/* Category with icon - Stacked layout */}
+                <div className="flex flex-col items-center gap-1.5 w-full">
+                  {/* Category row with icon */}
+                  <div
+                    className="flex items-center justify-center gap-1.5 text-caption sm:text-xs text-charcoal/60"
+                    style={{
+                      fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                      fontWeight: 600,
+                      WebkitFontSmoothing: 'antialiased',
+                      MozOsxFontSmoothing: 'grayscale',
+                      textRendering: 'optimizeLegibility',
+                      letterSpacing: '0.01em'
+                    }}
+                  >
+                    {(() => {
+                      const CategoryIcon = getCategoryIcon(business.category, business.subInterestId, business.subInterestLabel);
+                      return (
+                        <>
+                          <CategoryIcon className="w-3.5 h-3.5 flex-shrink-0 text-charcoal/50" strokeWidth={2.5} />
+                          <span className="truncate">{displayCategoryLabel}</span>
+                        </>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Description - Stacked below category */}
+                  {business.description && (
+                    <p
+                      className="text-caption sm:text-xs text-charcoal/50 line-clamp-2 max-w-full text-center px-1"
+                      style={{
+                        fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                        fontWeight: 400,
+                        WebkitFontSmoothing: 'antialiased',
+                        MozOsxFontSmoothing: 'grayscale',
+                        textRendering: 'optimizeLegibility',
+                      }}
+                    >
+                      {business.description}
+                    </p>
                   )}
                 </div>
 

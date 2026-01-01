@@ -53,24 +53,16 @@ BEGIN
   END;
 
   -- Policy: Allow business owners to upload images in their own business folder
+  -- Single source of truth: businesses.owner_id (removed business_owners dependency)
   BEGIN
     CREATE POLICY "Business owners can upload their images"
     ON storage.objects FOR INSERT
     TO authenticated
     WITH CHECK (
       bucket_id = 'business_images' AND
-      (
-        -- Extract first folder (business_id) from path and check ownership
-        (string_to_array(name, '/'))[1] IN (
-          SELECT id::text FROM businesses WHERE owner_id = auth.uid()
-        )
-        OR
-        -- Also check business_owners table for additional owners
-        (string_to_array(name, '/'))[1] IN (
-          SELECT business_id::text 
-          FROM business_owners 
-          WHERE user_id = auth.uid()
-        )
+      -- Extract first folder (business_id) from path and check ownership
+      (string_to_array(name, '/'))[1] IN (
+        SELECT id::text FROM businesses WHERE owner_id = auth.uid()
       )
     );
   EXCEPTION
@@ -85,36 +77,21 @@ BEGIN
   END;
 
   -- Policy: Allow business owners to update images in their own business folder
+  -- Single source of truth: businesses.owner_id (removed business_owners dependency)
   BEGIN
     CREATE POLICY "Business owners can update their images"
     ON storage.objects FOR UPDATE
     TO authenticated
     USING (
       bucket_id = 'business_images' AND
-      (
-        (string_to_array(name, '/'))[1] IN (
-          SELECT id::text FROM businesses WHERE owner_id = auth.uid()
-        )
-        OR
-        (string_to_array(name, '/'))[1] IN (
-          SELECT business_id::text 
-          FROM business_owners 
-          WHERE user_id = auth.uid()
-        )
+      (string_to_array(name, '/'))[1] IN (
+        SELECT id::text FROM businesses WHERE owner_id = auth.uid()
       )
     )
     WITH CHECK (
       bucket_id = 'business_images' AND
-      (
-        (string_to_array(name, '/'))[1] IN (
-          SELECT id::text FROM businesses WHERE owner_id = auth.uid()
-        )
-        OR
-        (string_to_array(name, '/'))[1] IN (
-          SELECT business_id::text 
-          FROM business_owners 
-          WHERE user_id = auth.uid()
-        )
+      (string_to_array(name, '/'))[1] IN (
+        SELECT id::text FROM businesses WHERE owner_id = auth.uid()
       )
     );
   EXCEPTION
@@ -129,24 +106,16 @@ BEGIN
   END;
 
   -- Policy: Allow business owners to delete images in their own business folder
+  -- Single source of truth: businesses.owner_id (removed business_owners dependency)
   BEGIN
     CREATE POLICY "Business owners can delete their images"
     ON storage.objects FOR DELETE
     TO authenticated
     USING (
       bucket_id = 'business_images' AND
-      (
-        -- Extract first folder (business_id) from path and check ownership
-        (string_to_array(name, '/'))[1] IN (
-          SELECT id::text FROM businesses WHERE owner_id = auth.uid()
-        )
-        OR
-        -- Also check business_owners table for additional owners
-        (string_to_array(name, '/'))[1] IN (
-          SELECT business_id::text 
-          FROM business_owners 
-          WHERE user_id = auth.uid()
-        )
+      -- Extract first folder (business_id) from path and check ownership
+      (string_to_array(name, '/'))[1] IN (
+        SELECT id::text FROM businesses WHERE owner_id = auth.uid()
       )
     );
   EXCEPTION
@@ -174,10 +143,10 @@ END $$;
 
 -- Add comments (these don't require special permissions)
 COMMENT ON POLICY "Business owners can upload their images" ON storage.objects IS 
-  'Allows business owners to upload images only to their own business folder ({business_id}/...). Validates ownership via businesses.owner_id or business_owners table.';
+  'Allows business owners to upload images only to their own business folder ({business_id}/...). Validates ownership via businesses.owner_id (single source of truth).';
 
 COMMENT ON POLICY "Business owners can update their images" ON storage.objects IS 
-  'Allows business owners to update images only in their own business folder. Validates ownership via businesses.owner_id or business_owners table.';
+  'Allows business owners to update images only in their own business folder. Validates ownership via businesses.owner_id (single source of truth).';
 
 COMMENT ON POLICY "Business owners can delete their images" ON storage.objects IS 
-  'Allows business owners to delete images only from their own business folder. Validates ownership via businesses.owner_id or business_owners table.';
+  'Allows business owners to delete images only from their own business folder. Validates ownership via businesses.owner_id (single source of truth).';

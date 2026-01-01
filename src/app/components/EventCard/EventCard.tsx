@@ -154,7 +154,7 @@ export default function EventCard({ event, onBookmark }: EventCardProps) {
               {/* Event or Special Description - Truncated with ellipsis for consistent layout */}
               <div className="w-full">
                 <p
-                  className="text-caption sm:text-xs text-charcoal/60 leading-relaxed text-center overflow-hidden text-ellipsis line-clamp-2 h-[2.5rem] sm:h-[2.5rem]"
+                  className="text-caption sm:text-xs text-charcoal/60 leading-relaxed text-center overflow-hidden text-ellipsis line-clamp-2"
                   style={{
                     fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
                     fontWeight: 600,

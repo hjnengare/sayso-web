@@ -131,56 +131,52 @@ CREATE POLICY "Public read access to business images"
   USING (true);
 
 -- Allow business owners to insert images
--- Check both businesses.owner_id and business_owners table for ownership
+-- Single source of truth: businesses.owner_id (removed business_owners dependency)
 CREATE POLICY "Business owners can insert images"
   ON public.business_images FOR INSERT
   TO authenticated
   WITH CHECK (
-    business_id IN (
-      SELECT id FROM public.businesses WHERE owner_id = auth.uid()
-    )
-    OR
-    business_id IN (
-      SELECT business_id FROM public.business_owners WHERE user_id = auth.uid()
+    EXISTS (
+      SELECT 1
+      FROM public.businesses b
+      WHERE b.id = business_images.business_id
+        AND b.owner_id = auth.uid()
     )
   );
 
 -- Allow business owners to update their images
--- Check both businesses.owner_id and business_owners table for ownership
+-- Single source of truth: businesses.owner_id (removed business_owners dependency)
 CREATE POLICY "Business owners can update their images"
   ON public.business_images FOR UPDATE
   TO authenticated
   USING (
-    business_id IN (
-      SELECT id FROM public.businesses WHERE owner_id = auth.uid()
-    )
-    OR
-    business_id IN (
-      SELECT business_id FROM public.business_owners WHERE user_id = auth.uid()
+    EXISTS (
+      SELECT 1
+      FROM public.businesses b
+      WHERE b.id = business_images.business_id
+        AND b.owner_id = auth.uid()
     )
   )
   WITH CHECK (
-    business_id IN (
-      SELECT id FROM public.businesses WHERE owner_id = auth.uid()
-    )
-    OR
-    business_id IN (
-      SELECT business_id FROM public.business_owners WHERE user_id = auth.uid()
+    EXISTS (
+      SELECT 1
+      FROM public.businesses b
+      WHERE b.id = business_images.business_id
+        AND b.owner_id = auth.uid()
     )
   );
 
 -- Allow business owners to delete their images
--- Check both businesses.owner_id and business_owners table for ownership
+-- Single source of truth: businesses.owner_id (removed business_owners dependency)
 CREATE POLICY "Business owners can delete their images"
   ON public.business_images FOR DELETE
   TO authenticated
   USING (
-    business_id IN (
-      SELECT id FROM public.businesses WHERE owner_id = auth.uid()
-    )
-    OR
-    business_id IN (
-      SELECT business_id FROM public.business_owners WHERE user_id = auth.uid()
+    EXISTS (
+      SELECT 1
+      FROM public.businesses b
+      WHERE b.id = business_images.business_id
+        AND b.owner_id = auth.uid()
     )
   );
 
