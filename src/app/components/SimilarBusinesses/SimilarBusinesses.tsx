@@ -1,9 +1,7 @@
 "use client";
 
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Fontdiner_Swanky } from "next/font/google";
-import { useBusinesses } from "../../hooks/useBusinesses";
-import { useUserPreferences } from "../../hooks/useUserPreferences";
 import SimilarBusinessCard from "./SimilarBusinessCard";
 import StaggeredContainer from "../Animations/StaggeredContainer";
 import AnimatedElement from "../Animations/AnimatedElement";
@@ -14,11 +12,6 @@ const swanky = Fontdiner_Swanky({
   subsets: ["latin"],
   display: "swap",
 });
-import {
-  sortByPersonalization,
-  type BusinessForScoring,
-  type UserPreferences as PersonalizationPreferences,
-} from "../../lib/services/personalizationService";
 
 interface SimilarBusinessesProps {
   currentBusinessId: string;
@@ -29,7 +22,25 @@ interface SimilarBusinessesProps {
   limit?: number;
 }
 
-type SearchStrategy = 'both' | 'category' | 'location' | 'interest';
+interface SimilarBusiness {
+  id: string;
+  slug?: string;
+  name: string;
+  image?: string;
+  image_url?: string;
+  uploaded_images?: string[];
+  category: string;
+  location: string;
+  address?: string;
+  description?: string;
+  rating?: number;
+  totalRating?: number;
+  reviews?: number;
+  verified?: boolean;
+  priceRange?: string;
+  href?: string;
+  similarity_score?: number;
+}
 
 export default function SimilarBusinesses({
   currentBusinessId,
@@ -39,282 +50,72 @@ export default function SimilarBusinesses({
   subInterestId,
   limit = 3,
 }: SimilarBusinessesProps) {
-  const [searchStrategy, setSearchStrategy] = useState<SearchStrategy>('both');
-  const hasTriedFallbacksRef = useRef(false);
-  const lastPropsRef = useRef({ currentBusinessId, category, location, interestId, subInterestId });
-  
-  // Get user preferences for personalization
-  const { interests, subcategories, dealbreakers } = useUserPreferences();
-  const userPreferences: PersonalizationPreferences = useMemo(() => ({
-    interestIds: interests.map(i => i.id),
-    subcategoryIds: subcategories.map(s => s.id),
-    dealbreakerIds: dealbreakers.map(d => d.id),
-  }), [interests, subcategories, dealbreakers]);
-  
-  // Reset strategy when props change
+  const [similarBusinesses, setSimilarBusinesses] = useState<SimilarBusiness[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
-    const propsChanged = 
-      lastPropsRef.current.currentBusinessId !== currentBusinessId ||
-      lastPropsRef.current.category !== category ||
-      lastPropsRef.current.location !== location ||
-      lastPropsRef.current.interestId !== interestId ||
-      lastPropsRef.current.subInterestId !== subInterestId;
-    
-    if (propsChanged) {
-      console.log('[SimilarBusinesses] Props changed, resetting strategy', {
-        old: lastPropsRef.current,
-        new: { currentBusinessId, category, location, interestId, subInterestId },
-      });
-      setSearchStrategy('both');
-      hasTriedFallbacksRef.current = false;
-      lastPropsRef.current = { currentBusinessId, category, location, interestId, subInterestId };
-    }
-  }, [currentBusinessId, category, location, interestId, subInterestId]);
+    let isMounted = true;
 
-  // Strategy 1: Try with both category and location (most relevant)
-  const { 
-    businesses: businessesBoth, 
-    loading: loadingBoth
-  } = useBusinesses({
-    category,
-    location,
-    limit: limit + 1,
-    sortBy: "total_rating",
-    sortOrder: "desc",
-    skip: searchStrategy !== 'both',
-  });
+    async function fetchSimilarBusinesses() {
+      try {
+        setLoading(true);
+        setError(null);
 
-  // Strategy 2: Fallback to category only
-  const { 
-    businesses: businessesCategory, 
-    loading: loadingCategory 
-  } = useBusinesses({
-    category,
-    limit: limit + 1,
-    sortBy: "total_rating",
-    sortOrder: "desc",
-    skip: searchStrategy !== 'category',
-  });
+        // Call the new similar businesses API endpoint
+        const response = await fetch(
+          `/api/businesses/${currentBusinessId}/similar?limit=${limit}&radius_km=50`,
+          {
+            cache: 'no-store', // Always fetch fresh data
+          }
+        );
 
-  // Strategy 3: Fallback to location only (if location exists)
-  const { 
-    businesses: businessesLocation, 
-    loading: loadingLocation 
-  } = useBusinesses({
-    location,
-    limit: limit + 1,
-    sortBy: "total_rating",
-    sortOrder: "desc",
-    skip: searchStrategy !== 'location' || !location,
-  });
+        if (!response.ok) {
+          if (response.status === 404) {
+            // Business not found or no similar businesses
+            if (isMounted) {
+              setSimilarBusinesses([]);
+              setLoading(false);
+            }
+            return;
+          }
+          // Get error details from response body
+          const errorText = await response.text();
+          let errorMessage = `Failed to fetch similar businesses: ${response.statusText}`;
+          try {
+            const errorJson = JSON.parse(errorText);
+            errorMessage = errorJson.details || errorJson.message || errorMessage;
+            console.error('[SimilarBusinesses] API error details:', errorJson);
+          } catch {
+            // If response isn't JSON, use the text as-is
+            errorMessage = errorText || errorMessage;
+          }
+          throw new Error(errorMessage);
+        }
 
-  // Strategy 4: Fallback to same interest_id (sibling categories/subcategories within same interest)
-  const { 
-    businesses: businessesInterest, 
-    loading: loadingInterest 
-  } = useBusinesses({
-    interestIds: interestId ? [interestId] : undefined,
-    limit: limit + 1,
-    sortBy: "total_rating",
-    sortOrder: "desc",
-    skip: searchStrategy !== 'interest' || !interestId,
-  });
-
-  // Determine which businesses to use based on current strategy
-  const rawBusinesses = useMemo(() => {
-    if (searchStrategy === 'both') return businessesBoth || [];
-    if (searchStrategy === 'category') return businessesCategory || [];
-    if (searchStrategy === 'location') return businessesLocation || [];
-    if (searchStrategy === 'interest') return businessesInterest || [];
-    return [];
-  }, [searchStrategy, businessesBoth, businessesCategory, businessesLocation, businessesInterest]);
-
-  const loading = useMemo(() => {
-    if (searchStrategy === 'both') return loadingBoth;
-    if (searchStrategy === 'category') return loadingCategory;
-    if (searchStrategy === 'location') return loadingLocation;
-    if (searchStrategy === 'interest') return loadingInterest;
-    return false;
-  }, [searchStrategy, loadingBoth, loadingCategory, loadingLocation, loadingInterest]);
-
-  // Filter out current business, remove duplicates, apply personalization, and limit results
-  const similarBusinesses = useMemo(() => {
-    if (!rawBusinesses || rawBusinesses.length === 0) {
-      console.log('[SimilarBusinesses] No raw businesses to filter', {
-        rawBusinessesLength: rawBusinesses?.length || 0,
-        currentBusinessId,
-        category,
-        location,
-        searchStrategy,
-      });
-      return [];
-    }
-    
-    console.log('[SimilarBusinesses] Filtering businesses', {
-      rawCount: rawBusinesses.length,
-      currentBusinessId,
-      rawBusinesses: rawBusinesses.map(b => ({ id: b.id, slug: b.slug, name: b.name })),
-    });
-    
-    // Create a Map to track unique businesses by ID
-    const uniqueBusinessesMap = new Map<string, typeof rawBusinesses[0]>();
-    let filteredOutCount = 0;
-    
-    // Filter out current business and collect unique businesses
-    rawBusinesses.forEach((b) => {
-      // Check if this business is the current one by comparing both ID and slug
-      const isCurrentBusiness = 
-        b.id === currentBusinessId || 
-        (b.slug && b.slug === currentBusinessId);
-      
-      if (isCurrentBusiness) {
-        filteredOutCount++;
-        console.log('[SimilarBusinesses] Filtered out current business', {
-          businessId: b.id,
-          businessSlug: b.slug,
-          currentBusinessId,
-          matchType: b.id === currentBusinessId ? 'id' : 'slug',
-        });
-      }
-      
-      // Only add if it's not the current business and not already in the map
-      if (!isCurrentBusiness && !uniqueBusinessesMap.has(b.id)) {
-        uniqueBusinessesMap.set(b.id, b);
-      }
-    });
-    
-    // Convert Map values to array
-    let filtered = Array.from(uniqueBusinessesMap.values());
-    
-    console.log('[SimilarBusinesses] After filtering', {
-      filteredCount: filtered.length,
-      filteredOutCount,
-      remaining: filtered.map(b => ({ id: b.id, slug: b.slug, name: b.name })),
-    });
-    
-    // Apply personalization if user has preferences
-    if (userPreferences.interestIds.length > 0 || userPreferences.subcategoryIds.length > 0) {
-      const businessesForScoring: BusinessForScoring[] = filtered.map(b => ({
-        id: b.id,
-        interest_id: b.interestId || null,
-        sub_interest_id: b.subInterestId || null,
-        category: b.category,
-        price_range: b.priceRange,
-        average_rating: b.totalRating,
-        total_reviews: b.reviews,
-        distance_km: typeof b.distance === 'number' ? b.distance : (typeof b.distance === 'string' ? parseFloat(b.distance) || null : null),
-        percentiles: b.percentiles || null,
-        verified: b.verified,
-        created_at: undefined,
-        updated_at: undefined,
-      }));
-      
-      // Sort by personalization score
-      const sorted = sortByPersonalization(businessesForScoring, userPreferences);
-      
-      // Map back to original business objects
-      const sortedMap = new Map(sorted.map(b => [b.id, b]));
-      filtered = filtered
-        .filter(b => sortedMap.has(b.id))
-        .sort((a, b) => {
-          const indexA = sorted.findIndex(s => s.id === a.id);
-          const indexB = sorted.findIndex(s => s.id === b.id);
-          return indexA - indexB;
-        });
-    }
-    
-    // Limit results and add href
-    const limited = filtered
-      .slice(0, limit)
-      .map((b) => ({
-        ...b,
-        href: `/business/${b.slug || b.id}`,
-      }));
-    
-    console.log('[SimilarBusinesses] Final similar businesses', {
-      count: limited.length,
-      businesses: limited.map(b => ({ 
-        id: b.id, 
-        slug: b.slug, 
-        name: b.name,
-        uploaded_images: b.uploaded_images?.length || 0,
-        image_url: !!b.image_url,
-        image: !!b.image,
-      })),
-    });
-    
-    return limited;
-  }, [rawBusinesses, currentBusinessId, limit, userPreferences]);
-
-  // Handle fallback strategies when current strategy returns no results
-  useEffect(() => {
-    // Only try fallbacks after initial load completes
-    if (loading) return;
-
-    const hasResults = similarBusinesses && similarBusinesses.length > 0;
-    const hasRawResults = rawBusinesses && rawBusinesses.length > 0;
-
-    // Log current state
-    console.log('[SimilarBusinesses] Strategy check:', {
-      strategy: searchStrategy,
-      rawBusinessesCount: rawBusinesses?.length || 0,
-      filteredBusinessesCount: similarBusinesses?.length || 0,
-      hasResults,
-      hasRawResults,
-      category,
-      location,
-      currentBusinessId,
-      triedFallbacks: hasTriedFallbacksRef.current,
-    });
-
-    // If we have results, log success and stop
-    if (hasResults) {
-      console.log('[SimilarBusinesses] ✓ Success! Found similar businesses:', {
-        strategy: searchStrategy,
-        count: similarBusinesses.length,
-        usedFallback: hasTriedFallbacksRef.current,
-        businesses: similarBusinesses.map(b => ({ 
-          id: b.id, 
-          name: b.name, 
-          category: b.category, 
-          location: b.location 
-        })),
-      });
-      return;
-    }
-
-    // No results - try fallback strategies
-    if (!hasResults) {
-      if (searchStrategy === 'both') {
-        console.log('[SimilarBusinesses] ⚠ No results with category+location, falling back to category only');
-        setSearchStrategy('category');
-        hasTriedFallbacksRef.current = true;
-      } else if (searchStrategy === 'category' && location) {
-        console.log('[SimilarBusinesses] ⚠ No results with category only, falling back to location only');
-        setSearchStrategy('location');
-        hasTriedFallbacksRef.current = true;
-      } else if (searchStrategy === 'location' && interestId) {
-        console.log('[SimilarBusinesses] ⚠ No results with location only, falling back to same interest (sibling categories/subcategories)');
-        setSearchStrategy('interest');
-        hasTriedFallbacksRef.current = true;
-      } else {
-        // All strategies exhausted
-        console.log('[SimilarBusinesses] ✗ All strategies exhausted. No similar businesses found.', {
-          category,
-          location,
-          interestId,
-          subInterestId,
-          currentBusinessId,
-          triedStrategies: [
-            'both', 
-            'category', 
-            location ? 'location' : null,
-            interestId ? 'interest' : null
-          ].filter(Boolean),
-        });
+        const data = await response.json();
+        
+        if (isMounted) {
+          setSimilarBusinesses(data.businesses || []);
+          setLoading(false);
+        }
+      } catch (err: any) {
+        console.error('[SimilarBusinesses] Error fetching similar businesses:', err);
+        if (isMounted) {
+          setError(err.message || 'Failed to load similar businesses');
+          setSimilarBusinesses([]);
+          setLoading(false);
+        }
       }
     }
-  }, [loading, rawBusinesses, similarBusinesses, searchStrategy, category, location, interestId, subInterestId, currentBusinessId]);
+
+    fetchSimilarBusinesses();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentBusinessId, limit]);
+
 
   if (loading) {
     return (
@@ -370,7 +171,7 @@ export default function SimilarBusinesses({
   }
 
 
-  // Don't render if no results after all strategies
+  // Don't render if no results
   if (!loading && (!similarBusinesses || similarBusinesses.length === 0)) {
     return null;
   }
