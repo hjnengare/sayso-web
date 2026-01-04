@@ -205,8 +205,11 @@ function InterestsContent() {
 
     try {
       const requestStart = performance.now();
-      
-      // Save interests to database
+
+      // Prefetch subcategories page immediately for instant navigation
+      router.prefetch('/subcategories');
+
+      // Save data first - API should complete in <2 seconds
       const response = await fetch('/api/onboarding/interests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -215,7 +218,7 @@ function InterestsContent() {
 
       const requestEnd = performance.now();
       const requestTime = requestEnd - requestStart;
-      
+
       console.log('[Interests] Save completed', {
         requestTime: `${requestTime.toFixed(2)}ms`,
         timestamp: requestEnd
@@ -226,22 +229,14 @@ function InterestsContent() {
         throw new Error(errorData.error || 'Failed to save interests');
       }
 
-      // Verify the response indicates success
-      const result = await response.json().catch(() => ({}));
-      if (!result.ok && result.ok !== undefined) {
-        throw new Error(result.error || 'Failed to save interests');
-      }
-
-      // Refresh user profile to get updated interests_count before navigation
-      // This ensures guards don't redirect back to interests page
+      // Refresh user data after successful save to update profile counts
       await refreshUser();
 
       const navStart = performance.now();
-      
-      // Navigate to subcategories after successful save
-      // Use replace to prevent back navigation to interests page
+
+      // Navigate after successful save
       router.replace('/subcategories');
-      
+
       const navEnd = performance.now();
       console.log('[Interests] Navigation started', {
         navTime: `${(navEnd - navStart).toFixed(2)}ms`,
@@ -249,14 +244,10 @@ function InterestsContent() {
         timestamp: navEnd
       });
 
-      // Note: We don't reset isNavigating here because we're navigating away
-      // If navigation fails, the error handler will reset it
-
     } catch (error) {
       console.error('[Interests] Error saving interests:', error);
       showToast(error instanceof Error ? error.message : 'Failed to save interests. Please try again.', 'error');
       setIsNavigating(false);
-      // Don't navigate on error - user stays on interests page
     }
   }, [canProceed, selectedInterests, router, showToast, isNavigating, refreshUser]);
 

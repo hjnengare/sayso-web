@@ -123,11 +123,15 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
     if (pathname === "/complete") {
       const interestsCount = user.profile?.interests_count || 0;
       const subcategoriesCount = user.profile?.subcategories_count || 0;
-      const dealbreakersCount = user.profile?.dealbreakers_count || 0;
-      if (interestsCount === 0 || subcategoriesCount === 0 || dealbreakersCount === 0) {
+      // Allow access to complete page if user has completed interests and subcategories
+      // Dealbreakers may still be saving in the background, so we allow access
+      // The refreshUser call in dealbreakers page will update the counts
+      if (interestsCount === 0 || subcategoriesCount === 0) {
         router.replace(`/${nextStep}`);
         return;
       }
+      // If user has interests and subcategories, allow them to see complete page
+      // even if dealbreakers count is 0 (data is being saved in background)
     }
   }, [user, isLoading, pathname, router, isOnboardingRoute, getNextOnboardingStep]);
 

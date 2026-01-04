@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import OnboardingLayout from "../components/Onboarding/OnboardingLayout";
 import ProtectedRoute from "../components/ProtectedRoute/ProtectedRoute";
 import { useToast } from "../contexts/ToastContext";
@@ -29,26 +29,44 @@ const DEMO_DEAL_BREAKERS: DealBreaker[] = [
 
 
 function DealBreakersContent() {
-  const searchParams = useSearchParams();
   const router = useRouter();
   const { showToast } = useToast();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
 
   const [selectedDealbreakers, setSelectedDealbreakers] = useState<string[]>([]);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [interests, setInterests] = useState<string[]>([]);
+  const [subcategories, setSubcategories] = useState<string[]>([]);
+  const [subcategoryData, setSubcategoryData] = useState<Array<{ subcategory_id: string; interest_id: string }>>([]);
 
   const MAX_SELECTIONS = 3;
 
-  // Get all data from URL parameters
-  const interests = useMemo(() => {
-    const interestsParam = searchParams.get('interests');
-    return interestsParam ? interestsParam.split(',').map(s => s.trim()) : [];
-  }, [searchParams]);
+  // Fetch interests and subcategories from DB on mount
+  useEffect(() => {
+    const fetchOnboardingData = async () => {
+      try {
+        const response = await fetch('/api/user/onboarding');
+        if (response.ok) {
+          const data = await response.json();
+          setInterests(data.interests || []);
+          // Store full subcategory data for proper mapping
+          const subcats = (data.subcategories || []).map((sub: any) => ({
+            subcategory_id: sub.subcategory_id || sub.id,
+            interest_id: sub.interest_id
+          }));
+          setSubcategoryData(subcats);
+          // Also store just IDs for the request
+          setSubcategories(subcats.map(sub => sub.subcategory_id));
+        }
+      } catch (error) {
+        console.error('[DealBreakers] Error fetching onboarding data:', error);
+      }
+    };
 
-  const subcategories = useMemo(() => {
-    const subcategoriesParam = searchParams.get('subcategories');
-    return subcategoriesParam ? subcategoriesParam.split(',').map(s => s.trim()) : [];
-  }, [searchParams]);
+    if (user) {
+      fetchOnboardingData();
+    }
+  }, [user]);
 
   // Enforce prerequisites: user must have completed interests and subcategories
   useEffect(() => {
@@ -70,33 +88,17 @@ function DealBreakersContent() {
     }
   }, [user, router]);
 
-  // Determine back href based on whether user has interests selected
+  // Determine back href - no URL params needed
   const backHref = useMemo(() => {
-    if (interests.length > 0) {
-      return `/subcategories?interests=${interests.join(',')}`;
-    }
-    return '/interests';
-  }, [interests]);
+    return '/subcategories';
+  }, []);
 
   // Helper function to get interest_id for a subcategory
   const getInterestIdForSubcategory = useCallback((subcategoryId: string): string => {
-    // This is a simplified mapping - you might want to load subcategories from API to get the actual mapping
-    // For now, we'll return a default or try to infer from the subcategory ID
-    const interestMapping: { [key: string]: string } = {
-      'restaurants': 'food-drink',
-      'cafes': 'food-drink',
-      'bars': 'food-drink',
-      'fast-food': 'food-drink',
-      'fine-dining': 'food-drink',
-      'gyms': 'beauty-wellness',
-      'spas': 'beauty-wellness',
-      'salons': 'beauty-wellness',
-      'wellness': 'beauty-wellness',
-      'nail-salons': 'beauty-wellness',
-      // Add more mappings as needed
-    };
-    return interestMapping[subcategoryId] || 'food-drink'; // Default fallback
-  }, []);
+    // Use the actual subcategory data from DB
+    const subcat = subcategoryData.find(sub => sub.subcategory_id === subcategoryId);
+    return subcat?.interest_id || 'food-drink'; // Default fallback
+  }, [subcategoryData]);
 
   const handleDealbreakerToggle = useCallback((dealbreakerId: string) => {
     setSelectedDealbreakers(prev => {
@@ -115,38 +117,69 @@ function DealBreakersContent() {
   const handleNext = useCallback(async () => {
     setIsNavigating(true);
 
-    // Prefetch complete page immediately for instant navigation
-    router.prefetch('/complete');
+    try {
+      const clickTime = performance.now();
+      const requestStart = performance.now();
 
-    // Prepare the data
-    const requestData = {
-      step: 'complete',
-      interests: interests,
-      subcategories: subcategories.map(subId => ({
-        subcategory_id: subId,
-        interest_id: getInterestIdForSubcategory(subId)
-      })),
-      dealbreakers: selectedDealbreakers
-    };
+      // Prefetch complete page immediately for instant navigation
+      router.prefetch('/complete');
 
-    console.log('Sending onboarding data:', requestData);
+      // Prepare the data - use subcategoryData directly for proper mapping
+      const requestData = {
+        step: 'complete',
+        interests: interests,
+        subcategories: subcategoryData.length > 0 
+          ? subcategoryData 
+          : subcategories.map(subId => ({
+              subcategory_id: subId,
+              interest_id: getInterestIdForSubcategory(subId)
+            })),
+        dealbreakers: selectedDealbreakers
+      };
 
-    // Redirect immediately - don't wait for API response
-    // This ensures <2s navigation time
-    router.replace('/complete');
+      console.log('[DealBreakers] Sending onboarding data:', requestData);
 
-    // Save data in background (non-blocking)
-    // Use fetch with keepalive or fire-and-forget pattern
-    fetch('/api/user/onboarding', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestData),
-      keepalive: true // Keep request alive even after navigation
-    }).catch((error) => {
-      console.error('Background save error (non-blocking):', error);
-      // Error is logged but doesn't block user flow
-    });
-  }, [interests, subcategories, selectedDealbreakers, getInterestIdForSubcategory, router]);
+      // Save data first - API should complete in <2 seconds
+      const response = await fetch('/api/user/onboarding', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestData)
+      });
+
+      const requestEnd = performance.now();
+      const requestTime = requestEnd - requestStart;
+
+      console.log('[DealBreakers] Save completed', {
+        requestTime: `${requestTime.toFixed(2)}ms`,
+        timestamp: requestEnd
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to save onboarding data');
+      }
+
+      // Refresh user data after successful save to update profile counts
+      await refreshUser();
+
+      const navStart = performance.now();
+
+      // Navigate after successful save
+      router.replace('/complete');
+
+      const navEnd = performance.now();
+      console.log('[DealBreakers] Navigation started', {
+        navTime: `${(navEnd - navStart).toFixed(2)}ms`,
+        totalTime: `${(navEnd - clickTime).toFixed(2)}ms`,
+        timestamp: navEnd
+      });
+
+    } catch (error) {
+      console.error('[DealBreakers] Error saving onboarding data:', error);
+      showToast(error instanceof Error ? error.message : 'Failed to save. Please try again.', 'error');
+      setIsNavigating(false);
+    }
+  }, [interests, subcategories, selectedDealbreakers, getInterestIdForSubcategory, router, refreshUser, showToast]);
 
   const canProceed = selectedDealbreakers.length > 0 && !isNavigating;
 

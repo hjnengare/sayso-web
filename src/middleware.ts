@@ -213,12 +213,17 @@ export async function middleware(request: NextRequest) {
   // 2. Onboarding is fully completed
   // Only check this for /home, not for onboarding routes
   if (isProtectedRoute && !isOnboardingRoute && user && user.email_confirmed_at) {
-    const nextStep = getNextOnboardingStep(profile);
-    if (nextStep !== 'complete') {
-      console.log('Middleware: User has not completed onboarding, redirecting to next step:', nextStep);
-      const redirectUrl = new URL(`/${nextStep}`, request.url);
-      return NextResponse.redirect(redirectUrl);
+    // Check if onboarding is complete - if so, allow access to home
+    if (profile?.onboarding_complete) {
+      // User has completed onboarding, allow access
+      return response;
     }
+    
+    // Otherwise, determine next step and redirect
+    const nextStep = getNextOnboardingStep(profile);
+    console.log('Middleware: User has not completed onboarding, redirecting to next step:', nextStep);
+    const redirectUrl = new URL(`/${nextStep}`, request.url);
+    return NextResponse.redirect(redirectUrl);
   }
 
   // Enforce onboarding step order - prevent skipping steps

@@ -13,8 +13,8 @@ export async function GET() {
 
   try {
     const { data, error } = await supabase
-      .from("user_deal_breakers")
-      .select("deal_breaker_id")
+      .from("user_dealbreakers")
+      .select("dealbreaker_id")
       .eq("user_id", user.id);
 
     if (error) {
@@ -22,7 +22,7 @@ export async function GET() {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    const dealBreakers = data?.map(row => row.deal_breaker_id) || [];
+    const dealBreakers = data?.map(row => row.dealbreaker_id) || [];
 
     return NextResponse.json({
       dealBreakers,
@@ -82,11 +82,11 @@ export async function POST(req: Request) {
 
     // Short-circuit if no changes needed
     const { data: existing } = await supabase
-      .from('user_deal_breakers')
-      .select('deal_breaker_id')
+      .from('user_dealbreakers')
+      .select('dealbreaker_id')
       .eq('user_id', user.id);
 
-    const current = new Set((existing ?? []).map(r => r.deal_breaker_id));
+    const current = new Set((existing ?? []).map(r => r.dealbreaker_id));
     const next = new Set(validSelections);
     const same = current.size === next.size && [...current].every(x => next.has(x));
 
@@ -101,7 +101,7 @@ export async function POST(req: Request) {
     // Use upsert to handle concurrent requests gracefully
     // First, delete all existing entries for this user
     const { error: deleteError } = await supabase
-      .from('user_deal_breakers')
+      .from('user_dealbreakers')
       .delete()
       .eq('user_id', user.id);
 
@@ -112,16 +112,16 @@ export async function POST(req: Request) {
 
     // Then insert new selections using upsert to handle race conditions
     if (validSelections.length > 0) {
-      const rows = validSelections.map(deal_breaker_id => ({
+      const rows = validSelections.map(dealbreaker_id => ({
         user_id: user.id,
-        deal_breaker_id,
+        dealbreaker_id,
         created_at: new Date().toISOString()
       }));
 
       const { error: upsertError } = await supabase
-        .from('user_deal_breakers')
+        .from('user_dealbreakers')
         .upsert(rows, {
-          onConflict: 'user_id,deal_breaker_id',
+          onConflict: 'user_id,dealbreaker_id',
           ignoreDuplicates: false
         });
 
@@ -135,13 +135,8 @@ export async function POST(req: Request) {
       }
     }
 
-    // Optional: mirror to profiles
-    await supabase.from("profiles").upsert({
-      user_id: user.id,
-      dealbreakers: validSelections,
-      onboarding_step: "complete",
-      updated_at: new Date().toISOString()
-    }, { onConflict: "user_id" });
+    // Note: Profile counts are updated by the RPC function replace_user_dealbreakers
+    // This endpoint should not be used for onboarding - use /api/user/onboarding instead
 
     return NextResponse.json({
       ok: true,

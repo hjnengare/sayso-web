@@ -56,11 +56,11 @@ async function fetchUserPreferences(
 
     // Fetch deal breakers
     const { data: dealbreakersData } = await supabase
-      .from('user_deal_breakers')
-      .select('deal_breaker_id')
+      .from('user_dealbreakers')
+      .select('dealbreaker_id')
       .eq('user_id', userId);
     
-    const dealbreakerIds = (dealbreakersData || []).map(d => d.deal_breaker_id);
+    const dealbreakerIds = (dealbreakersData || []).map(d => d.dealbreaker_id);
 
     return {
       interestIds,

@@ -43,7 +43,7 @@ function SubcategoriesContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { showToast } = useToast();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { selectedSubInterests: selectedSubcategories, setSelectedSubInterests: setSelectedSubcategories, isLoading, error } = useOnboarding();
 
   const [subcategories, setSubcategories] = useState<SubcategoryItem[]>([]);
@@ -52,28 +52,23 @@ function SubcategoriesContent() {
 
   const MAX_SELECTIONS = 10;
 
-  // Fetch user's saved interests from profile (lightweight check)
+  // Fetch user's saved interests from DB (no URL params)
   const userInterests = useMemo(() => {
-    // Get from user profile if available, otherwise from URL params (fallback)
-    if (user?.profile?.interests_count && user.profile.interests_count > 0) {
-      // We'll fetch the actual interest IDs from the API
-      return null; // Signal to fetch from API
-    }
-    const interestsParam = searchParams.get('interests');
-    return interestsParam ? interestsParam.split(',').map(s => s.trim()) : [];
-  }, [user, searchParams]);
+    // Always fetch from API - no URL params
+    return null; // Signal to fetch from API
+  }, []);
 
   // Enforce prerequisite: user must have selected interests before accessing subcategories
   useEffect(() => {
     if (user) {
       const interestsCount = user.profile?.interests_count || 0;
-      if (interestsCount === 0 && userInterests.length === 0) {
+      if (interestsCount === 0) {
         console.log('[Subcategories] No interests selected, redirecting to interests');
         router.replace('/interests');
         return;
       }
     }
-  }, [user, router, userInterests]);
+  }, [user, router]);
 
   // Fetch subcategories on page load - show skeleton immediately
   useEffect(() => {
@@ -128,7 +123,7 @@ function SubcategoriesContent() {
     };
 
     loadSubcategories();
-  }, [userInterests, router, showToast]);
+  }, [router, showToast]);
 
   const groupedSubcategories = useMemo(() => {
     const grouped: GroupedSubcategories = {};
@@ -204,14 +199,15 @@ function SubcategoriesContent() {
         throw new Error(errorData.error || 'Failed to save subcategories');
       }
 
+      // Refresh user data after successful save to update profile counts
+      // This ensures OnboardingGuard allows access to deal-breakers page
+      await refreshUser();
+
       const navStart = performance.now();
       
-      // Navigate immediately - pass data via URL for deal-breakers
-      const subcategoryParams = selectedSubcategories.join(',');
-      const nextUrl = `/deal-breakers?subcategories=${subcategoryParams}`;
-      
-      router.prefetch(nextUrl);
-      router.replace(nextUrl);
+      // Navigate after successful save - no URL params needed, data is in DB
+      router.prefetch('/deal-breakers');
+      router.replace('/deal-breakers');
       
       const navEnd = performance.now();
       console.log('[Subcategories] Navigation started', {
@@ -225,7 +221,7 @@ function SubcategoriesContent() {
       showToast(error instanceof Error ? error.message : 'Failed to save subcategories. Please try again.', 'error');
       setIsNavigating(false);
     }
-  }, [selectedSubcategories, subcategories, router, showToast]);
+  }, [selectedSubcategories, subcategories, router, showToast, refreshUser]);
 
   const canProceed = (selectedSubcategories?.length || 0) > 0 && !isNavigating;
 

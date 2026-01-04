@@ -672,7 +672,7 @@ function BusinessCard({
                 {/* Category with icon - Stacked layout */}
                 <div className="flex flex-col items-center gap-1.5 w-full">
                   {/* Category row with icon - Pill badge style */}
-                  <div className="inline-flex items-center justify-center gap-1.5 rounded-full bg-gradient-to-br from-sage/10 to-sage/5 border border-sage/30 px-3 py-1.5 backdrop-blur-sm shadow-sm">
+                  <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5">
                     {(() => {
                       const CategoryIcon = getCategoryIcon(business.category, business.subInterestId, business.subInterestLabel);
                       return (

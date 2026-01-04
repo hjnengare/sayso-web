@@ -27,19 +27,22 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     path: "/interests",
     name: "Interests",
-    isComplete: (user) => !!user?.interests && user.interests.length > 0,
+    isComplete: (user) => (user?.profile?.interests_count ?? 0) > 0,
     requiredPrevious: ["/register", "/login"]
   },
   {
     path: "/subcategories",
     name: "Subcategories",
-    isComplete: (user) => !!user?.profile?.sub_interests && user.profile.sub_interests.length > 0,
+    isComplete: (user) => (user?.profile?.subcategories_count ?? 0) > 0,
     requiredPrevious: ["/interests"]
   },
   {
     path: "/deal-breakers",
     name: "Deal Breakers",
-    isComplete: (user) => !!user?.profile?.deal_breakers && user.profile.deal_breakers.length >= 2 && user.profile.deal_breakers.length <= 3,
+    isComplete: (user) => {
+      const n = user?.profile?.dealbreakers_count ?? 0;
+      return n >= 2 && n <= 3;
+    },
     requiredPrevious: ["/subcategories"]
   },
   {

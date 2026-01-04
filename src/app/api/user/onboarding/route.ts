@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { getServerSupabase } from "../../../lib/supabase/server";
+import { performance as nodePerformance } from 'perf_hooks';
 
 export async function POST(req: Request) {
+  const startTime = nodePerformance.now();
   const supabase = await getServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -13,6 +15,7 @@ export async function POST(req: Request) {
     const { step, interests, subcategories, dealbreakers } = await req.json();
 
     if (step === 'complete') {
+      const writeStart = nodePerformance.now();
       // Complete entire onboarding atomically
       if (!interests || !Array.isArray(interests) || 
           !subcategories || !Array.isArray(subcategories) || 
@@ -115,6 +118,18 @@ export async function POST(req: Request) {
         }
       }
 
+      const writeTime = nodePerformance.now() - writeStart;
+      const totalTime = nodePerformance.now() - startTime;
+
+      console.log('[Onboarding API] Complete step saved', {
+        userId: user.id,
+        interestsCount: interests?.length || 0,
+        subcategoriesCount: subcategories?.length || 0,
+        dealbreakersCount: dealbreakers?.length || 0,
+        writeTime: `${writeTime.toFixed(2)}ms`,
+        totalTime: `${totalTime.toFixed(2)}ms`
+      });
+
     } else {
       // Handle individual steps (keeping for backward compatibility)
       
@@ -175,15 +190,30 @@ export async function POST(req: Request) {
       }
     }
 
+    const totalTime = nodePerformance.now() - startTime;
+    
+    console.log('[Onboarding API] Save completed', {
+      userId: user.id,
+      step: step || 'complete',
+      totalTime: `${totalTime.toFixed(2)}ms`
+    });
+
     return NextResponse.json({ 
       success: true,
-      message: 'Onboarding progress saved successfully'
+      message: 'Onboarding progress saved successfully',
+      performance: {
+        totalTime: totalTime
+      }
     });
 
   } catch (error) {
-    console.error('Error saving onboarding data:', error);
+    const totalTime = nodePerformance.now() - startTime;
+    console.error('[Onboarding API] Error saving onboarding data:', error);
     return NextResponse.json(
-      { error: "Failed to save onboarding progress" },
+      { 
+        error: "Failed to save onboarding progress",
+        performance: { totalTime }
+      },
       { status: 500 }
     );
   }
