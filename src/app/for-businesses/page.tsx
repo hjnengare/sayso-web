@@ -333,7 +333,7 @@ function ClaimBusinessPageContent() {
                     {!isSearching && businesses.map((business) => (
                       <div
                         key={business.id}
-                        className="p-4 sm:p-5 bg-sage border border-sage/20 rounded-lg shadow-sm
+                        className="p-4 sm:p-5 bg-sage border border-sage/20 rounded-[20px] shadow-sm
                                    hover:border-sage/40 hover:shadow-md transition-all duration-300 group"
                       >
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
