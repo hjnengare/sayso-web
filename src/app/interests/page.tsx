@@ -155,13 +155,16 @@ function InterestsContent() {
 
       if (!isCurrentlySelected && selectedInterests.length >= MAX_SELECTIONS) {
         showToast(`Maximum ${MAX_SELECTIONS} interests allowed`, "warning", 2000);
-        const button = document.querySelector(
-          `[data-interest-id="${interestId}"]`
-        );
-        if (button) {
-          button.classList.add("animate-shake");
-          setTimeout(() => button.classList.remove("animate-shake"), 600);
-        }
+        // Use requestAnimationFrame for smoother animation
+        requestAnimationFrame(() => {
+          const button = document.querySelector(
+            `[data-interest-id="${interestId}"]`
+          );
+          if (button) {
+            button.classList.add("animate-shake");
+            setTimeout(() => button.classList.remove("animate-shake"), 600);
+          }
+        });
         return;
       }
 
@@ -179,7 +182,7 @@ function InterestsContent() {
         }
       }
     },
-    [selectedInterests, setSelectedInterests, showToast, triggerBounce]
+    [selectedInterests, setSelectedInterests, showToast, triggerBounce, MAX_SELECTIONS, MIN_SELECTIONS]
   );
 
   const canProceed = useMemo(() => {

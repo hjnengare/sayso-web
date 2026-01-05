@@ -27,7 +27,7 @@ export default function InterestHeader({ isOnline }: InterestHeaderProps) {
       {!isOnline && (
         <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20 enter-fade" style={{ animationDelay: "0.1s" }}>
           <div
-            className="bg-gradient-to-br from-orange-50/95 to-orange-50/90 border border-orange-200/60 rounded-full px-3 py-1 flex items-center gap-2 ring-1 ring-orange-200/30 backdrop-blur-sm"
+            className="bg-gradient-to-br from-orange-50/95 to-orange-50/90 border border-orange-200/60 rounded-full px-3 py-1 flex items-center gap-2 ring-1 ring-orange-200/30 md:backdrop-blur-sm"
             style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif", fontWeight: 600 }}
           >
             <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />

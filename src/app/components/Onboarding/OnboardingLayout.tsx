@@ -157,6 +157,9 @@ const globalAnimations = `
     pointer-events: none;
     z-index: 0;
     opacity: 0.4;
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
 
   .floating-orb-1 {
@@ -214,16 +217,20 @@ const globalAnimations = `
   }
 
   @media (max-width: 768px) {
+    /* Reduce blur significantly on mobile for better performance */
     .floating-orb {
-      filter: blur(40px);
-      opacity: 0.3;
+      filter: blur(20px);
+      opacity: 0.25;
     }
-    .floating-orb-1 { width: 200px; height: 200px; }
-    .floating-orb-2 { width: 180px; height: 180px; }
-    .floating-orb-3 { width: 150px; height: 150px; }
-    .floating-orb-4 { width: 140px; height: 140px; }
-    .floating-orb-5 { width: 160px; height: 160px; }
-    .floating-orb-6 { width: 120px; height: 120px; }
+    /* Hide some orbs on mobile to reduce rendering cost */
+    .floating-orb-4,
+    .floating-orb-5,
+    .floating-orb-6 {
+      display: none;
+    }
+    .floating-orb-1 { width: 150px; height: 150px; }
+    .floating-orb-2 { width: 120px; height: 120px; }
+    .floating-orb-3 { width: 100px; height: 100px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -252,7 +259,7 @@ export default function OnboardingLayout({
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: globalAnimations }} />
-      <div className="min-h-dvh bg-off-white flex flex-col px-4 py-4 pb-safe-area-bottom relative overflow-y-auto onboarding-enter safe-area-container">
+      <div className="min-h-dvh bg-off-white flex flex-col px-4 py-4 pb-safe-area-bottom relative overflow-y-auto onboarding-enter safe-area-container" style={{ contain: 'layout style paint' }}>
         {/* Premium floating orbs background */}
         <div className="floating-orb floating-orb-1" aria-hidden="true" />
         <div className="floating-orb floating-orb-2" aria-hidden="true" />
@@ -282,7 +289,7 @@ export default function OnboardingLayout({
             <Link
               href={backHref}
               aria-label="Go back"
-              className="text-charcoal hover:text-charcoal/80 transition-all duration-300 p-2 hover:bg-off-white/50 rounded-lg block backdrop-blur-xl border border-white/30 hover:border-white/50"
+              className="text-charcoal hover:text-charcoal/80 transition-all duration-300 p-2 hover:bg-off-white/50 rounded-lg block md:backdrop-blur-xl border border-white/30 hover:border-white/50"
             >
               {/* ✅ Lucide back arrow */}
               <ArrowLeft className="w-6 h-6" strokeWidth={2.5} />

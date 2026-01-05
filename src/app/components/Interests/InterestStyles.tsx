@@ -9,14 +9,23 @@ const entranceStyles = `
     opacity: 0;
     animation: fadeSlideIn 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
   }
-  .enter-stagger { opacity: 0; animation: fadeSlideIn 0.25s ease-out forwards; }
+  .enter-stagger { 
+    opacity: 0; 
+    animation: fadeSlideIn 0.25s ease-out forwards;
+    will-change: opacity, transform;
+    transform: translateZ(0);
+  }
 
   @keyframes bubbly {
     0% { transform: translateZ(0) scale(1); }
     40% { transform: translateZ(0) scale(1.05); }
     100% { transform: translateZ(0) scale(1); }
   }
-  .animate-bubbly { animation: bubbly 0.35s ease-out; }
+  .animate-bubbly { 
+    animation: bubbly 0.35s ease-out;
+    will-change: transform;
+    transform: translateZ(0);
+  }
 
   @keyframes shake {
     0%, 100% { transform: translateX(0); }
@@ -68,6 +77,9 @@ const entranceStyles = `
     pointer-events: none;
     z-index: 0;
     opacity: 0.4;
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
 
   .floating-orb-1 {
@@ -132,16 +144,20 @@ const entranceStyles = `
   }
 
   @media (max-width: 768px) {
+    /* Reduce blur significantly on mobile for better performance */
     .floating-orb {
-      filter: blur(40px);
-      opacity: 0.3;
+      filter: blur(20px);
+      opacity: 0.25;
     }
-    .floating-orb-1 { width: 200px; height: 200px; }
-    .floating-orb-2 { width: 180px; height: 180px; }
-    .floating-orb-3 { width: 150px; height: 150px; }
-    .floating-orb-4 { width: 140px; height: 140px; }
-    .floating-orb-5 { width: 160px; height: 160px; }
-    .floating-orb-6 { width: 120px; height: 120px; }
+    /* Hide some orbs on mobile to reduce rendering cost */
+    .floating-orb-4,
+    .floating-orb-5,
+    .floating-orb-6 {
+      display: none;
+    }
+    .floating-orb-1 { width: 150px; height: 150px; }
+    .floating-orb-2 { width: 120px; height: 120px; }
+    .floating-orb-3 { width: 100px; height: 100px; }
     
     .title-no-break {
       word-break: keep-all;

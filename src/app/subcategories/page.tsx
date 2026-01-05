@@ -73,6 +73,8 @@ function SubcategoriesContent() {
 
   // Fetch subcategories on page load - show skeleton immediately
   useEffect(() => {
+    let cancelled = false;
+    
     const loadSubcategories = async () => {
       const fetchStart = performance.now();
       console.log('[Subcategories] Fetch started', { timestamp: fetchStart });
@@ -86,11 +88,15 @@ function SubcategoriesContent() {
         if (!interestsToUse || interestsToUse.length === 0) {
           // Fetch from API
           const interestsResponse = await fetch('/api/user/onboarding');
+          if (cancelled) return;
+          
           if (interestsResponse.ok) {
             const interestsData = await interestsResponse.json();
             interestsToUse = interestsData.interests || [];
           }
         }
+
+        if (cancelled) return;
 
         if (!interestsToUse || interestsToUse.length === 0) {
           router.replace('/interests');
@@ -99,6 +105,8 @@ function SubcategoriesContent() {
 
         const apiStart = performance.now();
         const response = await fetch(`/api/subcategories?interests=${interestsToUse.join(',')}`);
+        if (cancelled) return;
+        
         const apiEnd = performance.now();
 
         if (!response.ok) {
@@ -106,6 +114,8 @@ function SubcategoriesContent() {
         }
 
         const data = await response.json();
+        if (cancelled) return;
+        
         setSubcategories(data.subcategories || []);
 
         const fetchEnd = performance.now();
@@ -116,15 +126,22 @@ function SubcategoriesContent() {
           timestamp: fetchEnd
         });
       } catch (error) {
+        if (cancelled) return;
         console.error('[Subcategories] Error loading subcategories:', error);
         showToast('Failed to load subcategories', 'error');
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
     loadSubcategories();
-  }, [router, showToast]);
+    
+    return () => {
+      cancelled = true;
+    };
+  }, [router, showToast, userInterests]);
 
   const groupedSubcategories = useMemo(() => {
     const grouped: GroupedSubcategories = {};

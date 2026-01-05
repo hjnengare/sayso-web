@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { CheckCircle } from "lucide-react";
 
 interface Interest {
@@ -16,7 +17,7 @@ interface InterestButtonProps {
   index: number;
 }
 
-export default function InterestButton({ 
+function InterestButton({ 
   interest, 
   isSelected, 
   isDisabled, 
@@ -44,12 +45,14 @@ export default function InterestButton({
         enter-stagger
         relative z-30 w-[85%] aspect-square rounded-full transition-all duration-300 ease-out mx-auto min-h-[44px] min-w-[44px] touch-target-large
         focus:outline-none focus:ring-2 focus:ring-sage focus:ring-offset-2
+        will-change-transform
+        ${isAnimating ? 'will-change-transform' : ''}
         ${
           isSelected
-            ? "bg-gradient-to-br from-coral to-coral/90 text-white border-2 border-white/30 ring-1 ring-coral/30 scale-105 backdrop-blur-sm"
+            ? "bg-gradient-to-br from-coral to-coral/90 text-white border-2 border-white/30 ring-1 ring-coral/30 scale-105 md:backdrop-blur-sm"
             : isDisabled
             ? "bg-charcoal/5 text-charcoal/40 cursor-not-allowed opacity-60 border border-charcoal/10"
-            : "bg-gradient-to-br from-sage to-sage/90 text-white border border-white/20 ring-1 ring-sage/20 hover:bg-sage/90 hover:scale-105 hover:border-white/30 hover:ring-sage/30 active:scale-95 backdrop-blur-sm"
+            : "bg-gradient-to-br from-sage to-sage/90 text-white border border-white/20 ring-1 ring-sage/20 hover:bg-sage/90 hover:scale-105 hover:border-white/30 hover:ring-sage/30 active:scale-95 md:backdrop-blur-sm"
         }
       `}
       style={{ ...sfPro, animationDelay: `${delay}s` }}
@@ -59,6 +62,7 @@ export default function InterestButton({
         className={`absolute inset-0 flex flex-col items-center justify-center p-4 ${
           isAnimating ? "animate-bubbly" : ""
         }`}
+        style={isAnimating ? { willChange: 'transform', transform: 'translateZ(0)' } : undefined}
       >
         <span 
           className="text-[15px] md:text-base font-semibold text-center leading-tight"
@@ -82,3 +86,5 @@ export default function InterestButton({
     </button>
   );
 }
+
+export default memo(InterestButton);

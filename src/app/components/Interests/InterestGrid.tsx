@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import InterestButton from "./InterestButton";
 
 interface Interest {
@@ -15,7 +16,7 @@ interface InterestGridProps {
   onToggle: (id: string) => void;
 }
 
-export default function InterestGrid({ 
+function InterestGrid({ 
   interests, 
   selectedInterests, 
   maxSelections, 
@@ -44,3 +45,5 @@ export default function InterestGrid({
     </div>
   );
 }
+
+export default memo(InterestGrid);
