@@ -4,9 +4,6 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import {
-  Heart,
-} from "lucide-react";
 import Logo from "../Logo/Logo";
 
 export default function Footer() {
@@ -36,15 +33,15 @@ export default function Footer() {
 
 
   return (
-    <footer className="relative overflow-hidden pb-safe-area-bottom bg-gradient-to-b from-charcoal via-charcoal to-charcoal/95 text-off-white">
+    <footer className="relative overflow-hidden pb-safe-area-bottom bg-gradient-to-b from-charcoal via-charcoal to-charcoal/95 text-off-white rounded-[20px] p-4 m-4 shadow-md">
       {/* Decorative background elements */}
-      <div className="absolute inset-0 opacity-5">
+      <div className="absolute inset-0 opacity-5 rounded-[20px]">
         <div className="absolute top-0 left-0 w-96 h-96 bg-sage rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-coral rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
       </div>
       
       {/* Subtle grid pattern */}
-      <div className="absolute inset-0 opacity-[0.02]" style={{
+      <div className="absolute inset-0 opacity-[0.02] rounded-[20px]" style={{
         backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
                           linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
         backgroundSize: '50px 50px'
@@ -172,10 +169,6 @@ export default function Footer() {
             <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4 text-center md:text-left">
               <p className="font-urbanist text-xs sm:text-sm text-off-white/70">
                 © {currentYear} sayso. All rights reserved.
-              </p>
-              <span className="hidden md:inline text-off-white/30 text-lg">•</span>
-              <p className="font-urbanist text-xs sm:text-sm text-off-white/70 flex items-center gap-1.5">
-                Made with <Heart className="w-3.5 h-3.5 text-coral fill-coral" /> by ChitChat
               </p>
             </div>
           </div>

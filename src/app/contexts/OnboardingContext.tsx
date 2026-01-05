@@ -146,7 +146,8 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       const { subcategories } = await res.json();
 
       // Set subcategories directly - they should be {id,label,interest_id}
-      setSubInterests(subcategories);
+      // Guard: ensure subcategories is always an array
+      setSubInterests(Array.isArray(subcategories) ? subcategories : []);
       console.log("loaded subInterests", subcategories);
     } catch (error) {
       console.error('Error loading sub-interests:', error);
