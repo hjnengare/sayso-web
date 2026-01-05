@@ -30,18 +30,20 @@ function CategoryDetailContent() {
   // ✅ Track if subcategory filtering is active (for better empty state messaging)
   const hasSubcategoryFilter = selectedSubcategories.length > 0;
 
-  // Load interests and subcategories
+  // ✅ Load interests and subcategories (GLOBAL taxonomy, not user preferences)
   useEffect(() => {
-    if (interests.length === 0) {
+    if (interests.length === 0 && !isLoading) {
       loadInterests();
     }
-  }, [interests.length, loadInterests]);
+  }, [interests.length, isLoading, loadInterests]);
 
   useEffect(() => {
-    if (categoryId && interests.length > 0) {
+    // ✅ Load subcategories for this category (global taxonomy)
+    if (categoryId && interests.length > 0 && !isLoading) {
+      console.log('[CategoryDetail] Loading subcategories for category:', categoryId);
       loadSubInterests([categoryId]);
     }
-  }, [categoryId, interests, loadSubInterests]);
+  }, [categoryId, interests.length, isLoading, loadSubInterests]);
 
   // Find the category
   const category = useMemo(() => {
@@ -99,6 +101,10 @@ function CategoryDetailContent() {
     return undefined;
   }, [selectedSubcategories]);
 
+  // ✅ Determine if we should skip fetching (only skip if categoryId is missing)
+  // Don't skip based on isLoading - that causes double fetches
+  const shouldSkip = !categoryId;
+
   // Fetch businesses filtered by this category
   // EXACT same approach as home page: pass interestIds to API, let API handle filtering
   // Also pass subInterestIds for server-side filtering by sub_interest_id
@@ -114,7 +120,7 @@ function CategoryDetailContent() {
     feedStrategy: "standard", // No personalization
     interestIds: activeInterestIds, // API will filter by interest_id (same as home page)
     subInterestIds: activeSubInterestIds, // API will filter by sub_interest_id
-    skip: isLoading, // ✅ Wait for interests to be loaded
+    skip: shouldSkip, // ✅ Only skip if categoryId is missing
   });
 
   // Client-side filter by subcategory (defensive fallback if API filtering doesn't match)
@@ -163,6 +169,16 @@ function CategoryDetailContent() {
       error,
       loading,
     });
+    
+    // ✅ Critical: Log if businesses table might not have interest_id populated
+    if (activeInterestIds && activeInterestIds.length > 0 && businesses.length === 0 && !loading && !error) {
+      console.warn("⚠️ [CategoryDetail] WARNING: No businesses returned for interest_ids:", activeInterestIds);
+      console.warn("⚠️ This could mean:");
+      console.warn("   1. Businesses table doesn't have interest_id =", activeInterestIds[0]);
+      console.warn("   2. All businesses with this interest_id have status != 'active'");
+      console.warn("   3. RLS policies are blocking the results");
+      console.warn("   → Run this SQL to check: SELECT COUNT(*) FROM businesses WHERE interest_id =", activeInterestIds[0]);
+    }
     
     if (businesses.length > 0) {
       console.log("📊 [SAMPLE BUSINESSES] First 3 businesses from API:", 

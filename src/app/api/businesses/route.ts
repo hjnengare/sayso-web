@@ -273,7 +273,13 @@ export async function GET(req: Request) {
       ? interestIdsParam.split(',').map(id => id.trim()).filter(Boolean)
       : [];
     
-    // Map interests to subcategories
+    // Sub-interest (subcategory) filtering
+    const subInterestIdsParam = searchParams.get('sub_interest_ids');
+    const subInterestIds = subInterestIdsParam
+      ? subInterestIdsParam.split(',').map(id => id.trim()).filter(Boolean)
+      : [];
+    
+    // Map interests to subcategories (legacy mapping, kept for backward compatibility)
     let subcategoriesToFilter: string[] = [];
     if (interestIds.length > 0) {
       for (const interestId of interestIds) {
@@ -283,9 +289,10 @@ export async function GET(req: Request) {
         }
       }
     }
-    console.log('[BUSINESSES API] Mapped interests to subcategories:', {
+    console.log('[BUSINESSES API] Interest/subcategory filtering:', {
       interests: interestIds,
-      subcategories: subcategoriesToFilter,
+      subInterestIds: subInterestIds,
+      mappedSubcategories: subcategoriesToFilter,
     });
 
     // Enhanced search parameters
@@ -556,10 +563,24 @@ export async function GET(req: Request) {
         }
       }
       
-      // Interest-based filtering: filter by subcategories mapped from interests
-      if (typeof (query as any).in === 'function' && subcategoriesToFilter && subcategoriesToFilter.length > 0) {
-        console.log('[BUSINESSES API] Filtering by mapped subcategories:', subcategoriesToFilter);
-        query = (query as any).in('category', subcategoriesToFilter);
+      // Interest-based filtering: filter by interest_id directly OR by mapped subcategories
+      if (typeof (query as any).in === 'function') {
+        if (interestIds.length > 0) {
+          console.log('[BUSINESSES API] Filtering by interest_id:', interestIds);
+          console.log('[BUSINESSES API] ⚠️ If this returns 0 results, check:');
+          console.log('[BUSINESSES API]   1. Do businesses have interest_id populated?');
+          console.log('[BUSINESSES API]   2. Do interest_id values match? (e.g., "food-drink" vs "Food & Drink")');
+          console.log('[BUSINESSES API]   → Run: SELECT interest_id, COUNT(*) FROM businesses GROUP BY interest_id;');
+          query = (query as any).in('interest_id', interestIds);
+        }
+        // Apply sub_interest_id filtering if provided (takes precedence over mapped subcategories)
+        if (subInterestIds.length > 0) {
+          console.log('[BUSINESSES API] Fallback: Filtering by sub_interest_id:', subInterestIds);
+          query = (query as any).in('sub_interest_id', subInterestIds);
+        } else if (subcategoriesToFilter && subcategoriesToFilter.length > 0) {
+          console.log('[BUSINESSES API] Fallback: Filtering by mapped subcategories:', subcategoriesToFilter);
+          query = (query as any).in('category', subcategoriesToFilter);
+        }
       }
       
       if (typeof (query as any).ilike === 'function' && location) {
