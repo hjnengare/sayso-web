@@ -36,7 +36,8 @@ const ITEMS_PER_PAGE = 12;
 export default function TrendingPage() {
   usePredefinedPageTitle('trending');
   const [currentPage, setCurrentPage] = useState(1);
-  const { interests, subcategories, dealbreakers } = useUserPreferences();
+  // ✅ USER PREFERENCES: From onboarding, persistent, used for visual highlighting only
+  const { interests, subcategories, dealbreakers, loading: prefsLoading } = useUserPreferences();
 
   const dealbreakerIds = useMemo(
     () => (dealbreakers || []).map((dealbreaker) => dealbreaker.id),
@@ -56,7 +57,12 @@ export default function TrendingPage() {
   const [mounted, setMounted] = useState(false);
   const [isPaginationLoading, setIsPaginationLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  // ✅ ACTIVE FILTERS: User-initiated, ephemeral UI state (starts empty)
   const [selectedInterestIds, setSelectedInterestIds] = useState<string[]>([]);
+  // ✅ Track if filters were user-initiated (prevents treating preferences as filters)
+  const [hasUserInitiatedFilters, setHasUserInitiatedFilters] = useState(false);
+  // ✅ Fallback: if strict trending returns 0, broaden automatically
+  const [useBroadTrending, setUseBroadTrending] = useState(false);
   const [filters, setFilters] = useState<FilterState>({ minRating: null, distance: null });
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isMapMode, setIsMapMode] = useState(false);
@@ -65,13 +71,6 @@ export default function TrendingPage() {
 
   // Debounce search query for real-time filtering (300ms delay)
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
-
-  // Initialize selected interests with user's interests on mount
-  useEffect(() => {
-    if (interests.length > 0 && selectedInterestIds.length === 0) {
-      setSelectedInterestIds(interests.map(i => i.id));
-    }
-  }, [interests, selectedInterestIds.length]);
 
   // Convert distance string to km number
   const radiusKm = useMemo(() => {
@@ -88,28 +87,52 @@ export default function TrendingPage() {
     return undefined; // Use default sorting
   }, [debouncedSearchQuery]);
 
-  // Use selectedInterestIds if any are selected, otherwise use all user interests
+  // ✅ PREFERENCES: Used for visual highlighting only (separate from filters)
+  const preferredCategoryIds = useMemo(
+    () => (interests || []).map((i) => i.id).concat((subcategories || []).map((s) => s.id)),
+    [interests, subcategories]
+  );
+
+  // ✅ ACTIVE FILTERS: Only used when user explicitly filters
   const activeInterestIds = useMemo(() => {
-    if (selectedInterestIds.length > 0) {
-      return selectedInterestIds;
-    }
-    return (interests || []).map((interest) => interest.id);
-  }, [selectedInterestIds, interests]);
+    // Only filter trending by interests if user explicitly chose filters
+    if (hasUserInitiatedFilters && selectedInterestIds.length > 0) return selectedInterestIds;
+    return undefined; // ✅ global trending default
+  }, [hasUserInitiatedFilters, selectedInterestIds]);
+
+  // ✅ Only apply dealbreakers/priceRanges when user initiated AND not in broad fallback mode
+  const activeDealbreakerIds = useMemo(() => {
+    if (!hasUserInitiatedFilters || useBroadTrending) return undefined;
+    return dealbreakerIds.length ? dealbreakerIds : undefined;
+  }, [hasUserInitiatedFilters, useBroadTrending, dealbreakerIds]);
+
+  const activePriceRanges = useMemo(() => {
+    if (!hasUserInitiatedFilters || useBroadTrending) return undefined;
+    return preferredPriceRanges;
+  }, [hasUserInitiatedFilters, useBroadTrending, preferredPriceRanges]);
 
   const { businesses: trendingBusinesses, loading, error, refetch } = useBusinesses({
     limit: 50,
     sortBy: "total_rating",
     sortOrder: "desc",
     feedStrategy: debouncedSearchQuery.trim().length > 0 ? "standard" : "mixed",
-    interestIds: debouncedSearchQuery.trim().length > 0 ? undefined : activeInterestIds.length > 0 ? activeInterestIds : undefined,
-    priceRanges: preferredPriceRanges,
-    dealbreakerIds: dealbreakerIds.length ? dealbreakerIds : undefined,
+    // ✅ Trending: only filter by interestIds if user initiated filters
+    interestIds:
+      debouncedSearchQuery.trim().length > 0
+        ? undefined
+        : useBroadTrending
+          ? undefined
+          : activeInterestIds,
+    // ✅ Only apply these when user initiated AND not in broad fallback mode
+    priceRanges: activePriceRanges,
+    dealbreakerIds: activeDealbreakerIds,
     minRating: filters.minRating,
     radiusKm: radiusKm,
     latitude: userLocation?.lat ?? null,
     longitude: userLocation?.lng ?? null,
     searchQuery: debouncedSearchQuery.trim().length > 0 ? debouncedSearchQuery : null,
     sort: sortStrategy,
+    skip: prefsLoading, // ✅ Wait for prefs to be ready
   });
 
   // Trending section should be consistent for all users based on actual trending metrics
@@ -134,6 +157,9 @@ export default function TrendingPage() {
   };
 
   const handleApplyFilters = (f: FilterState) => {
+    // ✅ Mark that user has explicitly initiated filtering
+    setHasUserInitiatedFilters(true);
+    setUseBroadTrending(false); // Reset fallback when user changes filters
     setFilters(f);
     setCurrentPage(1); // Reset to first page when filters change
     closeFilters();
@@ -161,6 +187,10 @@ export default function TrendingPage() {
   };
 
   const handleClearFilters = () => {
+    // ✅ Reset filter state - return to default mode
+    setHasUserInitiatedFilters(false);
+    setUseBroadTrending(false);
+    setSelectedInterestIds([]);
     setFilters({ minRating: null, distance: null });
     setUserLocation(null);
     setCurrentPage(1);
@@ -184,6 +214,10 @@ export default function TrendingPage() {
   };
 
   const handleToggleInterest = (interestId: string) => {
+    // ✅ Mark that user has explicitly initiated filtering
+    setHasUserInitiatedFilters(true);
+    setUseBroadTrending(false); // Reset fallback when user changes filters
+    
     setSelectedInterestIds(prev => {
       const newIds = prev.includes(interestId)
         ? prev.filter(id => id !== interestId)
@@ -251,6 +285,37 @@ export default function TrendingPage() {
     window.addEventListener("scroll", handleScroll, options);
     return () => window.removeEventListener("scroll", handleScroll, options);
   }, [mounted]);
+
+  // ✅ Auto-fallback if strict trending returns 0 (no infinite loop)
+  useEffect(() => {
+    if (loading || error || prefsLoading) return;
+    if (debouncedSearchQuery.trim().length > 0) return;
+
+    const hadStrictConstraints =
+      (hasUserInitiatedFilters && (selectedInterestIds.length > 0 || dealbreakerIds.length > 0)) ||
+      !!preferredPriceRanges ||
+      filters.minRating !== null ||
+      filters.distance !== null;
+
+    // If strict returns empty, broaden once
+    if (!useBroadTrending && hadStrictConstraints && trendingBusinesses.length === 0) {
+      console.log('[TrendingPage] Strict filtering returned 0 results, falling back to broad trending');
+      setUseBroadTrending(true);
+    }
+  }, [
+    loading,
+    error,
+    prefsLoading,
+    trendingBusinesses.length,
+    debouncedSearchQuery,
+    hasUserInitiatedFilters,
+    selectedInterestIds.length,
+    dealbreakerIds.length,
+    preferredPriceRanges,
+    filters.minRating,
+    filters.distance,
+    useBroadTrending,
+  ]);
 
   return (
     <div className="min-h-dvh bg-off-white">
@@ -341,6 +406,7 @@ export default function TrendingPage() {
           <div className="py-4 px-4">
             <CategoryFilterPills
               selectedCategoryIds={selectedInterestIds}
+              preferredCategoryIds={preferredCategoryIds}
               onToggleCategory={handleToggleInterest}
             />
           </div>
@@ -358,12 +424,13 @@ export default function TrendingPage() {
 
           <div className="py-3 sm:py-4">
             <div className="pt-4 sm:pt-6 md:pt-10">
-            {loading && (
+            {/* ✅ Show loading while prefs are loading OR businesses are loading */}
+            {(loading || prefsLoading) && (
               <div className="min-h-dvh bg-off-white flex items-center justify-center">
                 <Loader size="lg" variant="wavy" color="sage"  />
               </div>
             )}
-            {!loading && error && (
+            {!loading && !prefsLoading && error && (
               <div className="bg-white border border-sage/20 rounded-3xl shadow-sm px-6 py-10 text-center space-y-4">
                 <p className="text-charcoal font-semibold text-h2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                   We couldn't load businesses right now.
@@ -381,15 +448,17 @@ export default function TrendingPage() {
               </div>
             )}
 
-            {!loading && !error && (
+            {!loading && !prefsLoading && !error && (
               <>
                 {trendingBusinesses.length === 0 ? (
                   <div className="bg-white border border-sage/20 rounded-3xl shadow-sm px-6 py-16 text-center space-y-3">
                     <h2 className="text-h2 font-semibold text-charcoal" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                      No trending businesses yet
+                      {hasUserInitiatedFilters ? 'No trending businesses match your filters' : 'No trending businesses yet'}
                     </h2>
                     <p className="text-body-sm text-charcoal/60 max-w-[70ch] mx-auto" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 500 }}>
-                      Check back soon for trending businesses in your area.
+                      {hasUserInitiatedFilters 
+                        ? 'Try adjusting your filters or check back soon as new businesses join the community.'
+                        : 'Check back soon for trending businesses in your area.'}
                     </p>
                   </div>
                 ) : (

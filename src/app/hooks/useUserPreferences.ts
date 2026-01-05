@@ -26,7 +26,7 @@ export interface UseUserPreferencesResult extends UserPreferences {
  * Hook to fetch user's preferences (interests, subcategories, dealbreakers)
  */
 export function useUserPreferences(): UseUserPreferencesResult {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [interests, setInterests] = useState<UserPreference[]>([]);
   const [subcategories, setSubcategories] = useState<UserPreference[]>([]);
   const [dealbreakers, setDealbreakers] = useState<UserPreference[]>([]);
@@ -34,10 +34,21 @@ export function useUserPreferences(): UseUserPreferencesResult {
   const [error, setError] = useState<string | null>(null);
 
   const fetchPreferences = async () => {
-    console.log('[useUserPreferences] fetchPreferences called, user:', user);
+    console.log('[useUserPreferences] fetchPreferences called', {
+      user: user ? 'exists' : 'null',
+      authLoading,
+    });
     
+    // ✅ CRITICAL: If auth is still loading, do nothing yet (avoid flicker/reset)
+    if (authLoading) {
+      console.log('[useUserPreferences] Auth still loading, keeping loading state');
+      setLoading(true);
+      return;
+    }
+    
+    // ✅ If auth is done and user is null => logged out (now safe to return empty)
     if (!user) {
-      console.log('[useUserPreferences] No user, returning empty preferences');
+      console.log('[useUserPreferences] Auth finished, no user - returning empty preferences');
       setInterests([]);
       setSubcategories([]);
       setDealbreakers([]);
@@ -99,7 +110,7 @@ export function useUserPreferences(): UseUserPreferencesResult {
 
   useEffect(() => {
     fetchPreferences();
-  }, [user?.id]);
+  }, [user?.id, authLoading]); // ✅ Also depend on authLoading to prevent premature fetches
 
   return {
     interests,

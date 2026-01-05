@@ -7,7 +7,7 @@ import { Fontdiner_Swanky } from "next/font/google";
 import Header from "../components/Header/Header";
 import Footer from "../components/Footer/Footer";
 import BusinessCard from "../components/BusinessCard/BusinessCard";
-import { useBusinesses } from "../hooks/useBusinesses";
+import { useForYouBusinesses } from "../hooks/useBusinesses";
 import { useUserPreferences } from "../hooks/useUserPreferences";
 import { useDebounce } from "../hooks/useDebounce";
 import SearchInput from "../components/SearchInput/SearchInput";
@@ -35,25 +35,19 @@ const ITEMS_PER_PAGE = 12;
 
 export default function ForYouPage() {
   usePredefinedPageTitle('forYou');
-  const { interests, subcategories, dealbreakers } = useUserPreferences();
-  const dealbreakerIds = useMemo(
-    () => (dealbreakers || []).map((dealbreaker) => dealbreaker.id),
-    [dealbreakers]
-  );
-  const preferredPriceRanges = useMemo(() => {
-    if (dealbreakerIds.includes("value-for-money")) {
-      return ["$", "$$"];
-    }
-    return undefined;
-  }, [dealbreakerIds]);
-
+  // ✅ USER PREFERENCES: From onboarding, persistent, used for personalization
+  const { interests, subcategories, dealbreakers, loading: prefsLoading } = useUserPreferences();
+  
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [isPaginationLoading, setIsPaginationLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  // ✅ ACTIVE FILTERS: User-initiated, ephemeral UI state (starts empty)
   const [selectedInterestIds, setSelectedInterestIds] = useState<string[]>([]);
+  // ✅ Track if filters were user-initiated (prevents treating preferences as filters)
+  const [hasUserInitiatedFilters, setHasUserInitiatedFilters] = useState(false);
   const [filters, setFilters] = useState<FilterState>({ minRating: null, distance: null });
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isMapMode, setIsMapMode] = useState(false);
@@ -71,26 +65,32 @@ export default function ForYouPage() {
     return undefined; // Use default sorting
   }, [debouncedSearchQuery]);
 
-  // Initialize selected interests with user's interests on mount
-  useEffect(() => {
-    if (interests.length > 0 && selectedInterestIds.length === 0) {
-      setSelectedInterestIds(interests.map(i => i.id));
-    }
-  }, [interests, selectedInterestIds.length]);
+  // ✅ Determine if we're in "filtered mode" (user explicitly applied filters)
+  const isFiltered = useMemo(() => {
+    return hasUserInitiatedFilters && (
+      selectedInterestIds.length > 0 ||
+      filters.minRating !== null ||
+      filters.distance !== null
+    );
+  }, [hasUserInitiatedFilters, selectedInterestIds.length, filters.minRating, filters.distance]);
 
-  // Combine user preferences with applied filters
-  // Use selectedInterestIds if any are selected, otherwise use all user interests
+  // ✅ PREFERENCES: Used for For You personalization (separate from filters)
+  const preferenceInterestIds = useMemo(() => {
+    const userInterestIds = interests.map((i) => i.id).concat(
+      subcategories.map((s) => s.id)
+    );
+    return userInterestIds.length > 0 ? userInterestIds : undefined;
+  }, [interests, subcategories]);
+
+  // ✅ ACTIVE FILTERS: Only used when user explicitly filters
   const activeInterestIds = useMemo(() => {
-    if (selectedInterestIds.length > 0) {
+    // Only use selectedInterestIds if user has explicitly initiated filtering
+    if (hasUserInitiatedFilters && selectedInterestIds.length > 0) {
       return selectedInterestIds;
     }
-    return (interests || []).map((interest) => interest.id);
-  }, [selectedInterestIds, interests]);
-
-  const preferenceIds = useMemo(
-    () => activeInterestIds.concat((subcategories || []).map((sub) => sub.id)),
-    [activeInterestIds, subcategories]
-  );
+    // Otherwise, use preferences for personalization
+    return preferenceInterestIds;
+  }, [hasUserInitiatedFilters, selectedInterestIds, preferenceInterestIds]);
 
   // Convert distance string to km number
   const radiusKm = useMemo(() => {
@@ -99,26 +99,29 @@ export default function ForYouPage() {
     return match ? parseInt(match[1]) : null;
   }, [filters.distance]);
 
+  // ✅ Use useForYouBusinesses for progressive fallback strategy
+  // When searching, use activeInterestIds; otherwise use preferences
   const {
     businesses,
     loading,
     error,
     refetch,
-  } = useBusinesses({
-    limit: 120,
-    sortBy: "created_at",
-    sortOrder: "desc",
-    feedStrategy: debouncedSearchQuery.trim().length > 0 ? "standard" : "mixed",
-    interestIds: debouncedSearchQuery.trim().length > 0 ? undefined : preferenceIds.length > 0 ? preferenceIds : undefined,
-    priceRanges: preferredPriceRanges,
-    dealbreakerIds: dealbreakerIds.length ? dealbreakerIds : undefined,
-    minRating: filters.minRating,
-    radiusKm: radiusKm,
-    latitude: userLocation?.lat ?? null,
-    longitude: userLocation?.lng ?? null,
-    searchQuery: debouncedSearchQuery.trim().length > 0 ? debouncedSearchQuery : null,
-    sort: sortStrategy,
-  });
+  } = useForYouBusinesses(
+    120,
+    debouncedSearchQuery.trim().length > 0 ? activeInterestIds : preferenceInterestIds,
+    {
+      sortBy: "created_at",
+      sortOrder: "desc",
+      feedStrategy: debouncedSearchQuery.trim().length > 0 ? "standard" : "mixed",
+      minRating: filters.minRating,
+      radiusKm: radiusKm,
+      latitude: userLocation?.lat ?? null,
+      longitude: userLocation?.lng ?? null,
+      searchQuery: debouncedSearchQuery.trim().length > 0 ? debouncedSearchQuery : null,
+      sort: sortStrategy,
+      skip: prefsLoading, // ✅ Wait for prefs to be ready
+    }
+  );
 
   // Note: Prioritization of recently reviewed businesses is now handled on the backend
   // The API automatically prioritizes businesses the user has reviewed within the last 24 hours
@@ -144,6 +147,8 @@ export default function ForYouPage() {
   };
 
   const handleApplyFilters = (f: FilterState) => {
+    // ✅ Mark that user has explicitly initiated filtering
+    setHasUserInitiatedFilters(true);
     setFilters(f);
     setCurrentPage(1); // Reset to first page when filters change
     closeFilters();
@@ -171,6 +176,9 @@ export default function ForYouPage() {
   };
 
   const handleClearFilters = () => {
+    // ✅ Reset filter state - return to default mode
+    setHasUserInitiatedFilters(false);
+    setSelectedInterestIds([]);
     setFilters({ minRating: null, distance: null });
     setUserLocation(null);
     setCurrentPage(1);
@@ -193,6 +201,9 @@ export default function ForYouPage() {
   };
 
   const handleToggleInterest = (interestId: string) => {
+    // ✅ Mark that user has explicitly initiated filtering
+    setHasUserInitiatedFilters(true);
+    
     setSelectedInterestIds(prev => {
       const newIds = prev.includes(interestId)
         ? prev.filter(id => id !== interestId)
@@ -333,6 +344,7 @@ export default function ForYouPage() {
           <div className="py-4 px-4">
             <CategoryFilterPills
               selectedCategoryIds={selectedInterestIds}
+              preferredCategoryIds={preferenceInterestIds || []}
               onToggleCategory={handleToggleInterest}
             />
           </div>
@@ -350,12 +362,13 @@ export default function ForYouPage() {
 
           <div className="py-3 sm:py-4">
             <div className="pt-4 sm:pt-6 md:pt-10">
-          {loading && (
+          {/* ✅ Show loading while prefs are loading OR businesses are loading */}
+          {(loading || prefsLoading) && (
             <div className="min-h-dvh bg-off-white flex items-center justify-center">
               <Loader size="lg" variant="wavy" color="sage"  />
             </div>
           )}
-          {!loading && error && (
+          {!loading && !prefsLoading && error && (
             <div className="bg-white border border-sage/20 rounded-3xl shadow-sm px-6 py-10 text-center space-y-4">
               <p className="text-charcoal font-semibold text-h2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                 We couldn't load businesses right now.
@@ -373,15 +386,17 @@ export default function ForYouPage() {
             </div>
           )}
 
-          {!loading && !error && (
+          {!loading && !prefsLoading && !error && (
             <>
               {businesses.length === 0 ? (
                 <div className="bg-white border border-sage/20 rounded-3xl shadow-sm px-6 py-16 text-center space-y-3">
                   <h2 className="text-h2 font-semibold text-charcoal" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                    No businesses yet
+                    {isFiltered ? 'No businesses match your filters' : "We're still learning your taste"}
                   </h2>
                   <p className="text-body-sm text-charcoal/60 max-w-[70ch] mx-auto" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 500 }}>
-                    Try adjusting your filters or check back soon as new businesses join the community.
+                    {isFiltered 
+                      ? 'Try adjusting your filters or check back soon as new businesses join the community.'
+                      : 'Explore a bit and we\'ll personalize more recommendations for you.'}
                   </p>
                 </div>
               ) : (

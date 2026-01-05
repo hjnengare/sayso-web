@@ -180,12 +180,16 @@ export default function Home() {
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  // ✅ ACTIVE FILTERS: User-initiated, ephemeral UI state (starts empty)
   const [selectedInterestIds, setSelectedInterestIds] = useState<string[]>([]);
+  // ✅ Track if filters were user-initiated (prevents treating preferences as filters)
+  const [hasUserInitiatedFilters, setHasUserInitiatedFilters] = useState(false);
   const [filters, setFilters] = useState<FilterState>({ minRating: null, distance: null });
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isMapMode, setIsMapMode] = useState(false);
   const searchWrapRef = useRef<HTMLDivElement | null>(null);
-  const { interests, subcategories } = useUserPreferences();
+  // ✅ USER PREFERENCES: From onboarding, persistent, used for personalization
+  const { interests, subcategories, loading: prefsLoading } = useUserPreferences();
   const { isLoading: authLoading } = useAuth(); // Get auth loading state
 
   // Debounce search query for real-time filtering (300ms delay)
@@ -195,13 +199,6 @@ export default function Home() {
   useEffect(() => {
     console.log("[Home] user prefs:", { interestsLen: interests.length, interests, subcategoriesLen: subcategories.length });
   }, [interests, subcategories]);
-
-  // Initialize selected interests with user's interests on mount
-  useEffect(() => {
-    if (interests.length > 0 && selectedInterestIds.length === 0) {
-      setSelectedInterestIds(interests.map(i => i.id));
-    }
-  }, [interests, selectedInterestIds.length]);
 
   // Convert distance string to km number
   const radiusKm = useMemo(() => {
@@ -218,19 +215,57 @@ export default function Home() {
     return undefined; // Use default sorting
   }, [debouncedSearchQuery]);
 
-  // Combine selected interests with subcategories for filtering
+  // ✅ Determine if we're in "filtered mode" (user explicitly applied filters)
+  // CRITICAL: Only true when user has EXPLICITLY initiated filtering
+  // This is the single source of truth for whether we're in filtered mode
+  const isFiltered = useMemo(() => {
+    // MUST have user-initiated flag AND at least one filter active
+    const hasActiveFilters = (
+      selectedInterestIds.length > 0 ||
+      filters.minRating !== null ||
+      filters.distance !== null
+    );
+    
+    const result = hasUserInitiatedFilters && hasActiveFilters;
+    
+    // Debug logging to track state changes
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Home] isFiltered check:', {
+        hasUserInitiatedFilters,
+        selectedInterestIdsLength: selectedInterestIds.length,
+        selectedInterestIds,
+        minRating: filters.minRating,
+        distance: filters.distance,
+        hasActiveFilters,
+        isFiltered: result,
+      });
+    }
+    
+    return result;
+  }, [hasUserInitiatedFilters, selectedInterestIds, filters.minRating, filters.distance]);
+
+  // ✅ ACTIVE FILTERS: Only used when user explicitly filters
   const activeInterestIds = useMemo(() => {
-    // Use selected interest IDs if any are selected
-    if (selectedInterestIds.length > 0) {
+    // Only use selectedInterestIds if user has explicitly initiated filtering
+    if (hasUserInitiatedFilters && selectedInterestIds.length > 0) {
       return selectedInterestIds;
     }
-    // If no interests are selected, don't filter by interests (show all)
+    // Otherwise, don't filter by interests (show all or use preferences for personalization)
     return undefined;
-  }, [selectedInterestIds]);
+  }, [hasUserInitiatedFilters, selectedInterestIds]);
+
+  // ✅ PREFERENCES: Used for For You personalization (separate from filters)
+  const preferenceInterestIds = useMemo(() => {
+    const userInterestIds = interests.map((i) => i.id).concat(
+      subcategories.map((s) => s.id)
+    );
+    return userInterestIds.length > 0 ? userInterestIds : undefined;
+  }, [interests, subcategories]);
 
   // ✅ CRITICAL: Skip fetching until auth is ready
   // This prevents fetching as anon user before session is established
-  const { businesses: forYouBusinesses, loading: forYouLoading, error: forYouError, refetch: refetchForYou } = useForYouBusinesses(10, activeInterestIds, {
+  // ✅ For You uses PREFERENCES, not active filters
+  const { businesses: forYouBusinesses, loading: forYouLoading, error: forYouError, refetch: refetchForYou } = useForYouBusinesses(10, preferenceInterestIds, {
     skip: authLoading, // ✅ Wait for auth to be ready
   });
   const { businesses: trendingBusinesses, loading: trendingLoading, error: trendingError } = useTrendingBusinesses(10, { 
@@ -274,6 +309,19 @@ export default function Home() {
     }
   }, []);
 
+  // ✅ Guard: Debug logging to track filter state changes
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Home] Filter state changed:', {
+        hasUserInitiatedFilters,
+        selectedInterestIdsLength: selectedInterestIds.length,
+        selectedInterestIds,
+        filters,
+        isFiltered,
+      });
+    }
+  }, [hasUserInitiatedFilters, selectedInterestIds, filters, isFiltered]);
+
   // Handle scroll to top button visibility
   useEffect(() => {
     if (!mounted) return;
@@ -309,6 +357,8 @@ export default function Home() {
   };
 
   const handleApplyFilters = (f: FilterState) => {
+    // ✅ Mark that user has explicitly initiated filtering
+    setHasUserInitiatedFilters(true);
     setFilters(f);
     closeFilters();
     
@@ -332,15 +382,18 @@ export default function Home() {
     
     // Trigger refetch to apply filters immediately
     refetchAllBusinesses();
-    refetchForYou();
+    // Note: For You doesn't refetch here because it uses preferences, not filters
   };
 
   const handleClearFilters = () => {
+    // ✅ Reset filter state - return to default mode
+    setHasUserInitiatedFilters(false);
+    setSelectedInterestIds([]);
     setFilters({ minRating: null, distance: null });
     setUserLocation(null);
     // Trigger refetch to clear filters immediately
     refetchAllBusinesses();
-    refetchForYou();
+    // Note: For You will automatically show again when not filtered
   };
 
   const handleSearchChange = (query: string) => {
@@ -354,15 +407,22 @@ export default function Home() {
   };
 
   const handleToggleInterest = (interestId: string) => {
+    // ✅ Mark that user has explicitly initiated filtering
+    // This is the ONLY way hasUserInitiatedFilters should become true
+    console.log('[Home] User toggled interest filter:', interestId);
+    setHasUserInitiatedFilters(true);
+    
     setSelectedInterestIds(prev => {
       const newIds = prev.includes(interestId)
         ? prev.filter(id => id !== interestId)
         : [...prev, interestId];
       
+      console.log('[Home] Updated selectedInterestIds:', newIds);
+      
       // Immediately trigger refetch when category changes
       setTimeout(() => {
-        refetchForYou();
         refetchAllBusinesses();
+        // Note: For You doesn't refetch here because it uses preferences, not filters
       }, 0);
       
       return newIds;
@@ -522,6 +582,7 @@ export default function Home() {
           <div className="py-4 px-4 sm:px-6">
             <CategoryFilterPills
               selectedCategoryIds={selectedInterestIds}
+              preferredCategoryIds={preferenceInterestIds || []}
               onToggleCategory={handleToggleInterest}
             />
           </div>
@@ -637,37 +698,81 @@ export default function Home() {
               transition={{ duration: 0.3 }}
               className="flex flex-col gap-8 sm:gap-10 md:gap-12 pt-8"
             >
-              {/* For You Section */}
-              <div className="relative z-10">
-                {forYouLoading && <BusinessRowSkeleton title="For You Now" />}
-                {!forYouLoading && hasForYouBusinesses && (
-                  <MemoizedBusinessRow title="For You Now" businesses={forYouBusinesses} cta="See More" href="/for-you" />
-                )}
-                {!forYouLoading && !hasForYouBusinesses && !forYouError && (
-                  <MemoizedBusinessRow title="For You Now" businesses={[]} cta="See More" href="/for-you" />
-                )}
-                {forYouError && !forYouLoading && (
-                  <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral">
-                    Couldn't load personalized picks right now. We'll retry in the background.
-                  </div>
-                )}
-              </div>
+              {/* ✅ For You Section - Only show when NOT filtered, NOT searching, AND prefs are ready */}
+              {!isFiltered && !isSearchActive && !prefsLoading && (
+                <div className="relative z-10">
+                  {forYouLoading ? (
+                    <BusinessRowSkeleton title="For You Now" />
+                  ) : forYouError ? (
+                    <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral">
+                      Couldn't load personalized picks right now. We'll retry in the background.
+                    </div>
+                  ) : forYouBusinesses.length > 0 ? (
+                    <MemoizedBusinessRow 
+                      title="For You Now" 
+                      businesses={forYouBusinesses} 
+                      cta="See More" 
+                      href="/for-you" 
+                    />
+                  ) : (
+                    // ✅ Show helpful message when personalized query returns 0 (instead of hiding)
+                    <div className="mx-auto w-full max-w-[2000px] px-2 py-4">
+                      <div className="bg-sage/10 border border-sage/30 rounded-lg p-6 text-center">
+                        <p className="text-body text-charcoal/70 mb-2">
+                          We're still learning your taste
+                        </p>
+                        <p className="text-body-sm text-charcoal/50">
+                          Explore a bit and we'll personalize more recommendations for you.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+              {/* Show skeleton while prefs are loading */}
+              {!isFiltered && !isSearchActive && prefsLoading && (
+                <div className="relative z-10">
+                  <BusinessRowSkeleton title="For You Now" />
+                </div>
+              )}
 
-              {/* Trending Section */}
-              <div className="relative z-10">
-                {trendingLoading && <BusinessRowSkeleton title="Trending Now" />}
-                {!trendingLoading && hasTrendingBusinesses && (
-                  <MemoizedBusinessRow title="Trending Now" businesses={trendingBusinesses} cta="See More" href="/trending" />
-                )}
-                {!trendingLoading && !hasTrendingBusinesses && !trendingError && (
-                  <MemoizedBusinessRow title="Trending Now" businesses={[]} cta="See More" href="/trending" />
-                )}
-                {trendingError && !trendingLoading && (
-                  <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral">
-                    Trending businesses are still loading. Refresh to try again.
-                  </div>
-                )}
-              </div>
+              {/* ✅ Filtered Results Section - Show when filters are active */}
+              {isFiltered && (
+                <div className="relative z-10">
+                  {allBusinessesLoading ? (
+                    <BusinessRowSkeleton title="Filtered Results" />
+                  ) : allBusinesses.length > 0 ? (
+                    <MemoizedBusinessRow 
+                      title="Filtered Results" 
+                      businesses={allBusinesses.slice(0, 10)} 
+                      cta="See All" 
+                      href="/explore" 
+                    />
+                  ) : (
+                    <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-charcoal/70">
+                      No businesses match your filters. Try adjusting your selections.
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Trending Section - Only show when not filtered */}
+              {!isFiltered && (
+                <div className="relative z-10">
+                  {trendingLoading && <BusinessRowSkeleton title="Trending Now" />}
+                  {!trendingLoading && hasTrendingBusinesses && (
+                    <MemoizedBusinessRow title="Trending Now" businesses={trendingBusinesses} cta="See More" href="/trending" />
+                  )}
+                  {!trendingLoading && !hasTrendingBusinesses && !trendingError && (
+                    <MemoizedBusinessRow title="Trending Now" businesses={[]} cta="See More" href="/trending" />
+                  )}
+                  {trendingError && !trendingLoading && (
+                    <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral">
+                      Trending businesses are still loading. Refresh to try again.
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Events & Specials */}
               <div className="relative z-10">

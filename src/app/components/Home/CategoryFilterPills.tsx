@@ -4,12 +4,14 @@ import { useOnboarding } from "../../contexts/OnboardingContext";
 import { useEffect } from "react";
 
 interface CategoryFilterPillsProps {
-  selectedCategoryIds: string[];
+  selectedCategoryIds: string[]; // Active filters (user-initiated)
+  preferredCategoryIds?: string[]; // User preferences (from onboarding, visual only)
   onToggleCategory: (categoryId: string) => void;
 }
 
 export default function CategoryFilterPills({
   selectedCategoryIds,
+  preferredCategoryIds = [],
   onToggleCategory,
 }: CategoryFilterPillsProps) {
   // Get all available interests catalog from OnboardingContext
@@ -66,19 +68,32 @@ export default function CategoryFilterPills({
     >
       <div className="flex items-center gap-2 min-w-max sm:min-w-0 sm:flex-wrap">
         {interests.map((interest) => {
-          const isSelected = selectedCategoryIds.includes(interest.id);
+          const isActive = selectedCategoryIds.includes(interest.id); // Active filter (user-initiated)
+          const isPreferred = preferredCategoryIds.includes(interest.id); // User preference (visual only)
+          
+          // ✅ Visual states (never used for logic):
+          // - isActive: filled/bold (explicit filter)
+          // - isPreferred: subtle highlight (preference indicator)
+          // - Both: filled + indicator
+          
           return (
             <button
               key={interest.id}
               onClick={() => onToggleCategory(interest.id)}
-              className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-urbanist font-600 text-body-sm sm:text-body transition-all duration-200 active:scale-95 flex-shrink-0 whitespace-nowrap ${
-                isSelected
-                  ? "bg-coral text-white shadow-lg"
-                  : "bg-sage/10 text-charcoal/70 hover:bg-sage/20 hover:text-sage border border-sage/30"
+              className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-urbanist font-600 text-body-sm sm:text-body transition-all duration-200 active:scale-95 flex-shrink-0 whitespace-nowrap relative ${
+                isActive
+                  ? "bg-coral text-white shadow-lg" // Active filter: filled
+                  : isPreferred
+                  ? "bg-sage/15 text-sage border-2 border-sage/40 hover:bg-sage/25" // Preferred: subtle highlight
+                  : "bg-sage/10 text-charcoal/70 hover:bg-sage/20 hover:text-sage border border-sage/30" // Default: neutral
               }`}
               style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
             >
               {interest.name}
+              {/* ✅ Visual indicator for preferred (when not active) */}
+              {isPreferred && !isActive && (
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-sage rounded-full border border-white" />
+              )}
             </button>
           );
         })}

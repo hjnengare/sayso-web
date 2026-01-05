@@ -17,6 +17,7 @@ export interface UseBusinessesOptions {
   location?: string;
   priceRange?: string;
   interestIds?: string[]; // IDs of interests/subcategories to filter by
+  subInterestIds?: string[]; // IDs of subcategories to filter by (sub_interest_id column)
   priceRanges?: string[];
   dealbreakerIds?: string[];
   feedStrategy?: 'mixed' | 'standard';
@@ -46,11 +47,18 @@ export function useBusinesses(options: UseBusinessesOptions = {}): UseBusinesses
   const [error, setError] = useState<string | null>(null);
 
   const fetchBusinesses = useCallback(async () => {
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('📤 [useBusinesses] API Request Details');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('[useBusinesses] fetchBusinesses called', {
       skip: options.skip,
       limit: options.limit,
       interestIds: options.interestIds,
+      subInterestIds: options.subInterestIds,
       category: options.category,
+      sortBy: options.sortBy,
+      sortOrder: options.sortOrder,
+      feedStrategy: options.feedStrategy,
     });
     
     if (options.skip) {
@@ -76,6 +84,11 @@ export function useBusinesses(options: UseBusinessesOptions = {}): UseBusinesses
       if (options.priceRange) params.set('price_range', options.priceRange);
       if (options.interestIds && options.interestIds.length > 0) {
         params.set('interest_ids', options.interestIds.join(','));
+        console.log('[useBusinesses] Added interest_ids param:', options.interestIds.join(','));
+      }
+      if (options.subInterestIds && options.subInterestIds.length > 0) {
+        params.set('sub_interest_ids', options.subInterestIds.join(','));
+        console.log('[useBusinesses] Added sub_interest_ids param:', options.subInterestIds.join(','));
       }
       if (options.priceRanges && options.priceRanges.length > 0) {
         params.set('preferred_price_ranges', options.priceRanges.join(','));
@@ -289,42 +302,32 @@ export function useTrendingBusinesses(
 
 /**
  * Hook to fetch businesses for "For You" section personalized based on user interests
+ * Implements progressive fallback: strict → relaxed → interest-only → all
  */
 export function useForYouBusinesses(
   limit: number = 20,
   overrideInterestIds?: string[] | undefined,
   extraOptions: Partial<UseBusinessesOptions> = {}
 ): UseBusinessesResult {
-  const { interests, subcategories, dealbreakers } = useUserPreferences();
+  const { interests, subcategories, dealbreakers, loading: prefsLoading } = useUserPreferences();
+  const [businesses, setBusinesses] = useState<Business[]>([]);
+  const [loading, setLoading] = useState(!extraOptions.skip && !prefsLoading);
+  const [error, setError] = useState<string | null>(null);
+  const [fallbackLevel, setFallbackLevel] = useState<0 | 1 | 2 | 3>(0); // 0=strict, 1=no-dealbreakers, 2=no-price, 3=interest-only
 
   // Use overrideInterestIds if provided, otherwise use user preferences
   const interestIds = useMemo(() => {
     if (overrideInterestIds !== undefined) {
-      // If overrideInterestIds is an empty array, don't filter (show all)
-      // If it has values, use those
       const result = overrideInterestIds.length > 0 ? overrideInterestIds : undefined;
-      console.log('[useForYouBusinesses] Using overrideInterestIds', {
-        overrideInterestIds,
-        result,
-      });
       return result;
     }
-    // Default: use user preferences
     const userInterestIds = interests.map((i) => i.id).concat(
       subcategories.map((s) => s.id)
     );
-    const result = userInterestIds.length > 0 ? userInterestIds : undefined;
-    console.log('[useForYouBusinesses] Using user preferences', {
-      interestsCount: interests.length,
-      subcategoriesCount: subcategories.length,
-      userInterestIds,
-      result,
-    });
-    return result;
+    return userInterestIds.length > 0 ? userInterestIds : undefined;
   }, [overrideInterestIds, interests, subcategories]);
 
   const dealbreakerIds = dealbreakers.map((d) => d.id);
-
   const preferredPriceRanges = useMemo(() => {
     if (dealbreakerIds.includes('value-for-money')) {
       return ['$', '$$'];
@@ -332,15 +335,129 @@ export function useForYouBusinesses(
     return undefined;
   }, [dealbreakerIds]);
 
-  return useBusinesses({
-    limit,
-    sortBy: 'total_reviews', // Prioritize businesses with reviews first
-    sortOrder: 'desc',
-    interestIds, // Use computed interestIds (either override or user preferences)
-    priceRanges: preferredPriceRanges,
-    dealbreakerIds: dealbreakerIds.length > 0 ? dealbreakerIds : undefined,
-    feedStrategy: 'mixed',
-    ...extraOptions, // ✅ Allow skip and other options to be passed through
-  });
+  // Build query options based on fallback level
+  const buildQueryOptions = useCallback((level: 0 | 1 | 2 | 3): UseBusinessesOptions => {
+    const baseOptions: UseBusinessesOptions = {
+      limit,
+      sortBy: 'total_reviews',
+      sortOrder: 'desc',
+      feedStrategy: 'mixed',
+      ...extraOptions,
+    };
+
+    switch (level) {
+      case 0: // Strict: all filters
+        return {
+          ...baseOptions,
+          interestIds,
+          priceRanges: preferredPriceRanges,
+          dealbreakerIds: dealbreakerIds.length > 0 ? dealbreakerIds : undefined,
+        };
+      case 1: // Relax: remove dealbreakers
+        return {
+          ...baseOptions,
+          interestIds,
+          priceRanges: preferredPriceRanges,
+          dealbreakerIds: undefined,
+        };
+      case 2: // Relax: remove price ranges too
+        return {
+          ...baseOptions,
+          interestIds,
+          priceRanges: undefined,
+          dealbreakerIds: undefined,
+        };
+      case 3: // Relax: interest only (no personalization filters)
+        return {
+          ...baseOptions,
+          interestIds,
+          priceRanges: undefined,
+          dealbreakerIds: undefined,
+        };
+      default:
+        return baseOptions;
+    }
+  }, [limit, interestIds, preferredPriceRanges, dealbreakerIds, extraOptions]);
+
+  const fetchWithFallback = useCallback(async () => {
+    if (extraOptions.skip || prefsLoading) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Try each fallback level until we get results
+      for (let level = fallbackLevel; level <= 3; level++) {
+        const options = buildQueryOptions(level as 0 | 1 | 2 | 3);
+        console.log(`[useForYouBusinesses] Trying fallback level ${level}:`, {
+          interestIds: options.interestIds?.length || 0,
+          priceRanges: options.priceRanges?.length || 0,
+          dealbreakerIds: options.dealbreakerIds?.length || 0,
+        });
+
+        const params = new URLSearchParams();
+        if (options.limit) params.set('limit', options.limit.toString());
+        if (options.sortBy) params.set('sort_by', options.sortBy);
+        if (options.sortOrder) params.set('sort_order', options.sortOrder);
+        if (options.feedStrategy) params.set('feed_strategy', options.feedStrategy);
+        if (options.interestIds && options.interestIds.length > 0) {
+          params.set('interest_ids', options.interestIds.join(','));
+        }
+        if (options.priceRanges && options.priceRanges.length > 0) {
+          params.set('preferred_price_ranges', options.priceRanges.join(','));
+        }
+        if (options.dealbreakerIds && options.dealbreakerIds.length > 0) {
+          params.set('dealbreakers', options.dealbreakerIds.join(','));
+        }
+
+        const response = await fetch(`/api/businesses?${params.toString()}`);
+        if (!response.ok) {
+          if (level === 3) throw new Error(`Failed to fetch: ${response.statusText}`);
+          continue; // Try next fallback level
+        }
+
+        const data = await response.json();
+        const businessesList = data.businesses || data.data || [];
+
+        if (businessesList.length > 0) {
+          console.log(`[useForYouBusinesses] ✅ Success at fallback level ${level} with ${businessesList.length} businesses`);
+          setBusinesses(businessesList);
+          setFallbackLevel(level); // Remember successful level
+          setLoading(false);
+          return;
+        }
+
+        console.log(`[useForYouBusinesses] ⚠️ Level ${level} returned 0 results, trying next level...`);
+      }
+
+      // All levels returned 0 results
+      console.log('[useForYouBusinesses] ⚠️ All fallback levels returned 0 results');
+      setBusinesses([]);
+      setFallbackLevel(3); // Remember we tried everything
+    } catch (err: any) {
+      console.error('[useForYouBusinesses] Error in fallback fetch:', err);
+      setError(err.message || 'Failed to fetch businesses');
+      setBusinesses([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [extraOptions.skip, prefsLoading, fallbackLevel, buildQueryOptions]);
+
+  useEffect(() => {
+    // Reset fallback level when preferences change
+    setFallbackLevel(0);
+    fetchWithFallback();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [interestIds?.join(','), preferredPriceRanges?.join(','), dealbreakerIds.join(','), extraOptions.skip, prefsLoading]);
+
+  return {
+    businesses,
+    loading,
+    error,
+    refetch: fetchWithFallback,
+  };
 }
 
