@@ -331,28 +331,44 @@ export async function POST(req: Request) {
       }
 
       // Update profile step (only for individual steps) with verification
-      // For deal-breakers step, save data but DON'T mark as complete - that happens on /complete page
+      // For deal-breakers step, advance to 'complete' step (but don't mark onboarding_complete yet)
+      // Completion is only marked when user visits /complete page
       // Also update the appropriate count field based on the step
       if (step === 'deal-breakers') {
+        // CRITICAL: After saving deal-breakers, advance to 'complete' step
+        // This allows user to access /complete page
+        // But onboarding_complete stays false until /complete page marks it
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .update({
-            onboarding_step: step,
+            onboarding_step: 'complete', // Advance to complete step (not 'deal-breakers')
+            onboarding_complete: false, // Don't mark complete yet - that happens on /complete page
             dealbreakers_count: dealbreakers?.length || 0,
             updated_at: new Date().toISOString()
           })
           .eq('user_id', user.id)
-          .select('onboarding_step, dealbreakers_count')
+          .select('onboarding_step, onboarding_complete, dealbreakers_count')
           .single();
 
         if (profileError) {
           throw profileError;
         }
 
-        // Verify the update actually worked
-        if (!profileData || profileData.onboarding_step !== step) {
-          throw new Error(`Profile onboarding_step did not update correctly. Expected: ${step}, Got: ${profileData?.onboarding_step}`);
+        // Verify the update actually worked - CRITICAL for preventing loops
+        if (!profileData || profileData.onboarding_step !== 'complete') {
+          console.error('[Onboarding API] PROFILE UPDATE FAILED for deal-breakers:', {
+            expected: 'complete',
+            actual: profileData?.onboarding_step,
+            profileData
+          });
+          throw new Error(`Profile onboarding_step did not update correctly. Expected: complete, Got: ${profileData?.onboarding_step}. This will cause an infinite loop.`);
         }
+
+        console.log('[Onboarding API] Deal-breakers saved, advanced to complete step:', {
+          onboarding_step: profileData.onboarding_step,
+          onboarding_complete: profileData.onboarding_complete,
+          dealbreakers_count: profileData.dealbreakers_count
+        });
       } else {
         await updateProfileOnboarding(supabase, user.id, step, false);
       }
