@@ -202,15 +202,25 @@ function SubcategoriesContent() {
     try {
       const requestStart = performance.now();
       
-      // Map to format expected by API
-      const subcategoryData = selectedSubcategories.map(subId => {
-        // Find the subcategory to get its interest_id
-        const sub = subcategories.find(s => s.id === subId);
-        return {
-          subcategory_id: subId,
-          interest_id: sub?.interest_id || 'food-drink' // fallback
-        };
-      });
+      // Filter out invalid subcategory IDs and map to format expected by API
+      // CRITICAL: Filter before mapping to prevent null subcategory_id inserts
+      const subcategoryData = selectedSubcategories
+        .filter((subId): subId is string => typeof subId === "string" && subId.trim().length > 0)
+        .map((subId) => {
+          const sub = subcategories.find((s) => s.id === subId);
+          if (!sub?.interest_id) {
+            throw new Error(`Subcategory missing interest_id: ${subId}`);
+          }
+          return { 
+            subcategory_id: subId.trim(), 
+            interest_id: sub.interest_id 
+          };
+        });
+
+      // Validate we have at least one valid subcategory
+      if (subcategoryData.length === 0) {
+        throw new Error('No valid subcategories selected');
+      }
 
       // Save subcategories - API MUST always respond (no hanging requests)
       const response = await fetch('/api/onboarding/subcategories', {

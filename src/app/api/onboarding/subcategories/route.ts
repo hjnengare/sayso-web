@@ -52,22 +52,65 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { subcategories } = await req.json();
+    const body = await req.json().catch(() => ({}));
+    const raw = Array.isArray(body?.subcategories) ? body.subcategories : [];
 
-    if (!subcategories || !Array.isArray(subcategories) || subcategories.length === 0) {
+    // Log incoming payload for debugging
+    console.log('[Subcategories API] Incoming payload:', {
+      rawLength: raw.length,
+      raw: raw
+    });
+
+    // Clean and validate input - filter out null/invalid subcategory_ids
+    const cleaned = raw
+      .filter((x: any) => {
+        const isValid = x && 
+          typeof x.subcategory_id === "string" && 
+          x.subcategory_id.trim().length > 0;
+        return isValid;
+      })
+      .map((x: any) => ({
+        subcategory_id: x.subcategory_id.trim(),
+        interest_id: String(x.interest_id || "").trim(),
+      }));
+
+    // Log rejected items for debugging
+    const rejected = raw.filter((x: any) => {
+      return !x || 
+        typeof x.subcategory_id !== "string" || 
+        x.subcategory_id.trim().length === 0;
+    });
+    if (rejected.length > 0) {
+      console.warn('[Subcategories API] Rejected invalid items:', rejected);
+    }
+
+    // Validate we have at least one valid subcategory
+    if (cleaned.length === 0) {
       return NextResponse.json(
-        { error: 'Subcategories array is required' },
+        { ok: false, error: 'No valid subcategories provided' },
         { status: 400 }
       );
     }
 
+    // Guard against missing interest_id
+    const missingInterest = cleaned.find((x) => !x.interest_id || x.interest_id.trim().length === 0);
+    if (missingInterest) {
+      console.error('[Subcategories API] Missing interest_id:', missingInterest);
+      return NextResponse.json(
+        { ok: false, error: 'One or more subcategories missing interest_id' },
+        { status: 400 }
+      );
+    }
+
+    console.log('[Subcategories API] Cleaned subcategories:', {
+      count: cleaned.length,
+      items: cleaned
+    });
+
     const writeStart = nodePerformance.now();
 
-    // Map subcategories to expected format
-    const subcategoryData = subcategories.map((sub: any) => ({
-      subcategory_id: sub.subcategory_id || sub.id,
-      interest_id: sub.interest_id
-    }));
+    // Use cleaned data for insert
+    const subcategoryData = cleaned;
 
     // Single atomic operation: save subcategories and update profile
     const { error: subcategoriesError } = await supabase.rpc('replace_user_subcategories', {
@@ -166,14 +209,14 @@ export async function POST(req: Request) {
 
     console.log('[Subcategories API] Save completed', {
       userId: user.id,
-      subcategoriesCount: subcategories.length,
+      subcategoriesCount: subcategoryData.length,
       writeTime: `${writeTime.toFixed(2)}ms`,
       totalTime: `${totalTime.toFixed(2)}ms`
     });
 
     return NextResponse.json({
       ok: true,
-      subcategoriesCount: subcategories.length,
+      subcategoriesCount: subcategoryData.length,
       performance: {
         writeTime: writeTime,
         totalTime: totalTime
