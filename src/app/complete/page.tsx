@@ -95,9 +95,17 @@ function CompletePageContent() {
         // Fetch existing onboarding data first
         const onboardingResponse = await fetch('/api/user/onboarding');
         if (!onboardingResponse.ok) {
-          throw new Error('Failed to fetch onboarding data');
+          const errorText = await onboardingResponse.text();
+          console.error('[Complete Page] Failed to fetch onboarding data:', errorText);
+          throw new Error(`Failed to fetch onboarding data: ${onboardingResponse.status} ${errorText}`);
         }
         const onboardingData = await onboardingResponse.json();
+        
+        console.log('[Complete Page] Fetched onboarding data:', {
+          interestsCount: onboardingData.interests?.length || 0,
+          subcategoriesCount: onboardingData.subcategories?.length || 0,
+          dealbreakersCount: onboardingData.dealbreakers?.length || 0
+        });
         
         // Call API to mark onboarding as complete with existing data
         const response = await fetch('/api/user/onboarding', {
@@ -115,16 +123,28 @@ function CompletePageContent() {
         });
 
         if (!response.ok) {
-          throw new Error('Failed to mark onboarding as complete');
+          const errorText = await response.text();
+          console.error('[Complete Page] Failed to mark onboarding as complete:', {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorText
+          });
+          throw new Error(`Failed to mark onboarding as complete: ${response.status} ${errorText}`);
         }
+
+        const result = await response.json();
+        console.log('[Complete Page] API response:', result);
 
         // Refresh user data to get updated profile
         await refreshUser();
         hasMarkedCompleteRef.current = true;
-        console.log('[Complete Page] Onboarding marked as complete');
+        console.log('[Complete Page] Onboarding marked as complete successfully');
       } catch (error) {
         console.error('[Complete Page] Error marking onboarding as complete:', error);
-        // Don't block the UI if this fails - user can still see the celebration
+        // Even if API call fails, set the cookie so user can proceed
+        // This prevents infinite redirect loops
+        document.cookie = `onboarding_complete_visited=true; path=/; max-age=${60 * 60 * 24}; SameSite=Lax`;
+        console.log('[Complete Page] Set cookie as fallback to prevent redirect loop');
       }
     };
 
