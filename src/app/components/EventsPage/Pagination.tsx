@@ -84,10 +84,10 @@ export default function Pagination({
       <button
         onClick={handlePrevious}
         disabled={currentPage === 1 || disabled}
-        className={`flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-300 ${
+        className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 shadow-md ${
           currentPage === 1 || disabled
             ? "bg-off-white/50 text-charcoal/30 cursor-not-allowed"
-            : "bg-off-white hover:bg-sage/10 text-charcoal hover:text-sage border border-sage/20 hover:border-sage/40"
+            : "bg-gradient-to-br from-sage to-sage/80 hover:from-sage/90 hover:to-sage text-white hover:shadow-lg active:scale-95"
         }`}
         aria-label="Previous page"
       >
@@ -95,7 +95,7 @@ export default function Pagination({
       </button>
 
       {/* Page Numbers */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1.5">
         {pageNumbers.map((page, index) => {
           if (page === "...") {
             return (
@@ -117,10 +117,10 @@ export default function Pagination({
               key={pageNum}
               onClick={() => handlePageClick(pageNum)}
               disabled={disabled}
-              className={`min-w-[40px] h-10 px-3 rounded-lg font-semibold transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed ${
+              className={`min-w-[40px] h-10 px-4 rounded-full font-semibold transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed shadow-md ${
                 isActive
-                  ? "bg-sage text-white shadow-md"
-                  : "bg-off-white hover:bg-sage/10 text-charcoal hover:text-sage border border-sage/20 hover:border-sage/40"
+                  ? "bg-gradient-to-br from-sage to-sage/80 text-white shadow-lg scale-105"
+                  : "bg-gradient-to-br from-sage/20 to-sage/10 hover:from-sage/40 hover:to-sage/20 text-charcoal hover:text-sage hover:shadow-lg active:scale-95"
               }`}
               style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
               aria-label={`Go to page ${pageNum}`}
@@ -136,10 +136,10 @@ export default function Pagination({
       <button
         onClick={handleNext}
         disabled={currentPage === totalPages || disabled}
-        className={`flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-300 ${
+        className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 shadow-md ${
           currentPage === totalPages || disabled
             ? "bg-off-white/50 text-charcoal/30 cursor-not-allowed"
-            : "bg-off-white hover:bg-sage/10 text-charcoal hover:text-sage border border-sage/20 hover:border-sage/40"
+            : "bg-gradient-to-br from-sage to-sage/80 hover:from-sage/90 hover:to-sage text-white hover:shadow-lg active:scale-95"
         }`}
         aria-label="Next page"
       >

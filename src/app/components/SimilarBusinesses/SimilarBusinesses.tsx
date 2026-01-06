@@ -40,6 +40,8 @@ interface SimilarBusiness {
   priceRange?: string;
   href?: string;
   similarity_score?: number;
+  subInterestId?: string;
+  subInterestLabel?: string;
 }
 
 export default function SimilarBusinesses({
@@ -231,6 +233,8 @@ export default function SimilarBusinesses({
                   verified={business.verified}
                   priceRange={business.priceRange}
                   compact={true}
+                  subInterestId={business.subInterestId}
+                  subInterestLabel={business.subInterestLabel}
                 />
               </li>
             </AnimatedElement>

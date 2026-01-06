@@ -38,7 +38,7 @@ export default function ForYouPage() {
   usePredefinedPageTitle('forYou');
   // ✅ USER PREFERENCES: From onboarding, persistent, used for personalization
   const { interests, subcategories, dealbreakers, loading: prefsLoading } = useUserPreferences();
-  
+
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -111,15 +111,15 @@ export default function ForYouPage() {
     120,
     debouncedSearchQuery.trim().length > 0 ? activeInterestIds : preferenceInterestIds,
     {
-      sortBy: "created_at",
-      sortOrder: "desc",
-      feedStrategy: debouncedSearchQuery.trim().length > 0 ? "standard" : "mixed",
-      minRating: filters.minRating,
-      radiusKm: radiusKm,
-      latitude: userLocation?.lat ?? null,
-      longitude: userLocation?.lng ?? null,
-      searchQuery: debouncedSearchQuery.trim().length > 0 ? debouncedSearchQuery : null,
-      sort: sortStrategy,
+    sortBy: "created_at",
+    sortOrder: "desc",
+    feedStrategy: debouncedSearchQuery.trim().length > 0 ? "standard" : "mixed",
+    minRating: filters.minRating,
+    radiusKm: radiusKm,
+    latitude: userLocation?.lat ?? null,
+    longitude: userLocation?.lng ?? null,
+    searchQuery: debouncedSearchQuery.trim().length > 0 ? debouncedSearchQuery : null,
+    sort: sortStrategy,
       skip: prefsLoading, // ✅ Wait for prefs to be ready
     }
   );

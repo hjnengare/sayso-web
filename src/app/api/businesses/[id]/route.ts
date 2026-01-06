@@ -197,27 +197,36 @@ export async function DELETE(
       );
     }
 
-    // Verify user owns this business
+    // ✅ Read the business first (so we can return proper errors)
+    // Use maybeSingle() to distinguish between "not found" and "error"
     const { data: business, error: businessError } = await supabase
       .from('businesses')
       .select('id, owner_id, slug')
       .eq('id', businessId)
-      .single();
+      .maybeSingle();
 
-    if (businessError || !business) {
+    if (businessError) {
+      console.error('[API] Error fetching business for deletion:', businessError);
+      return NextResponse.json(
+        { error: 'Failed to fetch business', details: businessError.message },
+        { status: 500 }
+      );
+    }
+
+    if (!business) {
       return NextResponse.json(
         { error: 'Business not found' },
         { status: 404 }
       );
     }
 
-    // Check ownership
+    // ✅ Ownership check (check both owner_id and business_owners table)
     const { data: ownerCheck } = await supabase
       .from('business_owners')
       .select('id')
       .eq('business_id', businessId)
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
     const isOwner = ownerCheck || business.owner_id === user.id;
 

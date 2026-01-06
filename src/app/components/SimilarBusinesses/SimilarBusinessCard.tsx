@@ -4,6 +4,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight } from "react-feather";
 import Image from "next/image";
+import { Scissors, Coffee, UtensilsCrossed, Wine, Dumbbell, Activity, Heart, Book, ShoppingBag, Home, Briefcase, MapPin, Music, Film, Camera, Car, GraduationCap, CreditCard, Tag } from "lucide-react";
 import { getCategoryPng, isPngIcon } from "../../utils/categoryToPngMapping";
 import OptimizedImage from "../Performance/OptimizedImage";
 
@@ -26,7 +27,121 @@ interface SimilarBusinessCardProps {
   priceRange?: string;
   price_range?: string;
   compact?: boolean;
+  subInterestId?: string;
+  subInterestLabel?: string;
 }
+
+// Generate a unique color for each business based on its ID
+// This ensures every business card icon has a different color
+const getUniqueBusinessColor = (businessId: string): string => {
+  // Create a simple hash from the business ID
+  let hash = 0;
+  for (let i = 0; i < businessId.length; i++) {
+    const char = businessId.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  
+  // Use absolute value and modulo to get a consistent index
+  const index = Math.abs(hash) % 12;
+  
+  // Palette of distinct colors for variety
+  const colorPalette = [
+    'from-coral/20 to-coral/10',           // 0 - Coral
+    'from-sage/20 to-sage/10',             // 1 - Sage
+    'from-purple-400/20 to-purple-400/10', // 2 - Purple
+    'from-blue-400/20 to-blue-400/10',     // 3 - Blue
+    'from-pink-400/20 to-pink-400/10',     // 4 - Pink
+    'from-yellow-400/20 to-yellow-400/10',  // 5 - Yellow
+    'from-indigo-400/20 to-indigo-400/10', // 6 - Indigo
+    'from-teal-400/20 to-teal-400/10',     // 7 - Teal
+    'from-orange-400/20 to-orange-400/10', // 8 - Orange
+    'from-rose-400/20 to-rose-400/10',     // 9 - Rose
+    'from-cyan-400/20 to-cyan-400/10',     // 10 - Cyan
+    'from-emerald-400/20 to-emerald-400/10', // 11 - Emerald
+  ];
+  
+  return colorPalette[index];
+};
+
+// Map categories to lucide-react icons
+const getCategoryIcon = (category: string, subInterestId?: string, subInterestLabel?: string): React.ComponentType<React.SVGProps<SVGSVGElement>> => {
+  // Normalize category/label for matching
+  const normalizedCategory = (category || '').toLowerCase();
+  const normalizedSubInterest = (subInterestId || subInterestLabel || '').toLowerCase();
+  const searchTerm = normalizedSubInterest || normalizedCategory;
+  
+  // Food & Drink
+  if (searchTerm.includes('salon') || searchTerm.includes('hairdresser') || searchTerm.includes('nail')) {
+    return Scissors;
+  }
+  if (searchTerm.includes('cafe') || searchTerm.includes('coffee')) {
+    return Coffee;
+  }
+  if (searchTerm.includes('restaurant') || searchTerm.includes('dining') || searchTerm.includes('food')) {
+    return UtensilsCrossed;
+  }
+  if (searchTerm.includes('bar') || searchTerm.includes('pub')) {
+    return Wine;
+  }
+  
+  // Beauty & Wellness
+  if (searchTerm.includes('gym') || searchTerm.includes('fitness') || searchTerm.includes('workout')) {
+    return Dumbbell;
+  }
+  if (searchTerm.includes('spa') || searchTerm.includes('wellness') || searchTerm.includes('massage')) {
+    return Activity;
+  }
+  if (searchTerm.includes('health') || searchTerm.includes('medical')) {
+    return Heart;
+  }
+  
+  // Shopping
+  if (searchTerm.includes('shop') || searchTerm.includes('store') || searchTerm.includes('retail') || searchTerm.includes('fashion') || searchTerm.includes('clothing')) {
+    return ShoppingBag;
+  }
+  if (searchTerm.includes('book') || searchTerm.includes('library')) {
+    return Book;
+  }
+  
+  // Professional Services
+  if (searchTerm.includes('education') || searchTerm.includes('school') || searchTerm.includes('learn')) {
+    return GraduationCap;
+  }
+  if (searchTerm.includes('finance') || searchTerm.includes('bank') || searchTerm.includes('insurance')) {
+    return CreditCard;
+  }
+  if (searchTerm.includes('business') || searchTerm.includes('office') || searchTerm.includes('professional')) {
+    return Briefcase;
+  }
+  
+  // Entertainment
+  if (searchTerm.includes('music') || searchTerm.includes('concert') || searchTerm.includes('venue')) {
+    return Music;
+  }
+  if (searchTerm.includes('movie') || searchTerm.includes('cinema') || searchTerm.includes('theater') || searchTerm.includes('theatre')) {
+    return Film;
+  }
+  if (searchTerm.includes('photo') || searchTerm.includes('photography') || searchTerm.includes('camera')) {
+    return Camera;
+  }
+  
+  // Travel & Transport
+  if (searchTerm.includes('car') || searchTerm.includes('auto') || searchTerm.includes('vehicle') || searchTerm.includes('transport')) {
+    return Car;
+  }
+  if (searchTerm.includes('travel') || searchTerm.includes('hotel') || searchTerm.includes('accommodation')) {
+    return MapPin;
+  }
+  
+  // Home & Lifestyle
+  if (searchTerm.includes('home') || searchTerm.includes('house') || searchTerm.includes('property') || searchTerm.includes('real estate')) {
+    return Home;
+  }
+  
+  // Default
+  return Tag;
+};
 
 export default function SimilarBusinessCard({
   id,
@@ -47,6 +162,8 @@ export default function SimilarBusinessCard({
   priceRange,
   price_range,
   compact = false,
+  subInterestId,
+  subInterestLabel,
 }: SimilarBusinessCardProps) {
   const router = useRouter();
   
@@ -164,17 +281,15 @@ export default function SimilarBusinessCard({
         {/* Location */}
         {(location || address) && (
           <div className="flex items-center gap-1.5 text-xs text-charcoal/60 mt-1">
-            <div className="w-3.5 h-3.5 flex-shrink-0 flex items-center justify-center">
-              <OptimizedImage
-                src={getCategoryPng(category)}
-                alt={category}
-                width={14}
-                height={14}
-                className="w-3.5 h-3.5 object-contain opacity-60"
-                priority={false}
-                quality={90}
-              />
-            </div>
+            {(() => {
+              const CategoryIcon = getCategoryIcon(category, subInterestId, subInterestLabel);
+              const uniqueColor = getUniqueBusinessColor(id);
+              return (
+                <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${uniqueColor} flex items-center justify-center flex-shrink-0`}>
+                  <CategoryIcon className="w-4 h-4 text-charcoal/70" strokeWidth={2.5} />
+                </div>
+              );
+            })()}
             <span className="truncate">{location || address}</span>
           </div>
         )}

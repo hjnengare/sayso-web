@@ -95,19 +95,23 @@ export default function CityPageClient({
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex justify-center gap-2 mt-8">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={`px-4 py-2 rounded-lg transition-colors ${
-                    currentPage === page
-                      ? 'bg-sage text-white'
-                      : 'bg-off-white text-charcoal hover:bg-sage/10'
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                const isActive = currentPage === page;
+                return (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`min-w-[40px] h-10 px-4 rounded-full font-semibold transition-all duration-300 shadow-md ${
+                      isActive
+                        ? "bg-gradient-to-br from-sage to-sage/80 text-white shadow-lg scale-105"
+                        : "bg-gradient-to-br from-sage/20 to-sage/10 hover:from-sage/40 hover:to-sage/20 text-charcoal hover:text-sage hover:shadow-lg active:scale-95"
+                    }`}
+                    style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
+                  >
+                    {page}
+                  </button>
+                );
+              })}
             </div>
           )}
         </motion.div>

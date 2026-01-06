@@ -134,7 +134,7 @@ export default function EventCard({ event, onBookmark }: EventCardProps) {
             </div>
 
             {/* Premium glass badges */}
-            <EventBadge startDate={event.startDate} endDate={event.endDate} />
+            <EventBadge startDate={event.startDate} endDate={event.endDate} eventId={event.id} />
           </div>
 
           {/* CONTENT - Minimal, premium spacing */}

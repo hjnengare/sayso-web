@@ -536,6 +536,12 @@ export default function AddBusinessPage() {
         }
 
         setIsSubmitting(true);
+        
+        // Announce submission start to screen readers
+        const announcement = document.getElementById('form-announcements');
+        if (announcement) {
+            announcement.textContent = 'Submitting your business details. Please wait...';
+        }
 
         try {
             // Build hours object - only include days with values
@@ -581,17 +587,25 @@ export default function AddBusinessPage() {
 
             if (!response.ok) {
                 // Provide user-friendly error messages based on response
-                let errorMessage = 'Failed to create business';
+                let errorMessage = 'We couldn\'t create your business listing. Please try again.';
                 
                 if (data.error) {
-                    if (data.error.includes('required')) {
-                        errorMessage = 'Please fill in all required fields';
-                    } else if (data.error.includes('Unauthorized') || data.error.includes('log in')) {
-                        errorMessage = 'Please log in to create a business';
-                    } else if (data.error.includes('duplicate') || data.error.includes('already exists')) {
-                        errorMessage = 'A business with this name may already exist. Please try a different name';
-                    } else {
-                        errorMessage = data.error;
+                    // Use the error message from API if available (it's already user-friendly)
+                    errorMessage = data.error;
+                    
+                    // Handle specific error codes for additional context
+                    if (data.code === 'MISSING_REQUIRED_FIELDS' && data.missingFields) {
+                        // API already provides a good message, but we can enhance it
+                        const fields = data.missingFields.join(', ');
+                        errorMessage = `Please provide ${fields.toLowerCase()}. These fields are required to create a business listing.`;
+                    } else if (data.code === 'UNAUTHORIZED') {
+                        errorMessage = 'You need to be logged in to create a business listing. Please sign in and try again.';
+                    } else if (data.code === 'DUPLICATE_BUSINESS') {
+                        errorMessage = 'A business with this name already exists in our system. Please try a different name or check if this business is already listed.';
+                    } else if (data.code === 'INVALID_CATEGORY') {
+                        errorMessage = 'There was an issue with the business category. Please select a valid category and try again.';
+                    } else if (data.code === 'INVALID_HOURS_FORMAT') {
+                        errorMessage = 'There was an issue processing your business hours. Please check the format and try again.';
                     }
                 }
                 
@@ -601,7 +615,7 @@ export default function AddBusinessPage() {
             // Validate business ID from API response
             if (!data.business || !data.business.id) {
                 console.error('[Add Business] Business ID missing from API response:', data);
-                throw new Error('Business was created but ID is missing. Please try again.');
+                throw new Error('Your business was created, but we couldn\'t retrieve its ID. Please check your business listings or contact support if this persists.');
             }
 
             const businessId = data.business.id;
@@ -615,9 +629,14 @@ export default function AddBusinessPage() {
                 console.log(`[Add Business] Successfully uploaded ${data.images.length} images server-side`);
             }
 
-            showToast('Business created successfully!', 'success', 3000);
+            // Announce success to screen readers
+            if (announcement) {
+                announcement.textContent = 'Business created successfully! Redirecting...';
+            }
+            
+            showToast('Your business has been created successfully! Redirecting to your business page...', 'success', 4000);
 
-            // Redirect based on intent
+            // Redirect based on intent - ensure feedback is visible before redirect
             setTimeout(() => {
                 if (formData.intent === 'owner') {
                     // Owner goes to dashboard
@@ -630,18 +649,23 @@ export default function AddBusinessPage() {
         } catch (error: any) {
             console.error('Error creating business:', error);
             
-            // Provide user-friendly error messages
-            let errorMessage = 'Failed to create business. Please try again.';
+            // Provide user-friendly error messages with helpful context
+            let errorMessage = 'We couldn\'t create your business listing. Please check your information and try again.';
             
             if (error.message) {
+                // Use the error message from API (already user-friendly)
                 errorMessage = error.message;
             } else if (error instanceof TypeError && error.message.includes('fetch')) {
-                errorMessage = 'Network error. Please check your internet connection and try again.';
-            } else if (error.message?.includes('timeout')) {
-                errorMessage = 'Request timed out. Please try again.';
+                errorMessage = 'Unable to connect to our servers. Please check your internet connection and try again. If the problem persists, you may be experiencing network issues.';
+            } else if (error.message?.includes('timeout') || error.name === 'TimeoutError') {
+                errorMessage = 'The request took too long to complete. This might be due to large image files. Please try again with smaller images or fewer images.';
+            } else if (error.name === 'AbortError') {
+                errorMessage = 'The request was cancelled. Please try submitting again.';
+            } else if (error instanceof DOMException && error.name === 'NetworkError') {
+                errorMessage = 'Network error detected. Please check your internet connection and try again.';
             }
             
-            showToast(errorMessage, 'error', 5000);
+            showToast(errorMessage, 'error', 6000);
         } finally {
             setIsSubmitting(false);
         }
@@ -733,7 +757,16 @@ export default function AddBusinessPage() {
                                         </p>
                                     </div>
 
-                                    <form onSubmit={handleSubmit} className="space-y-6">
+                                    {/* Screen reader announcements */}
+                                    <div 
+                                        id="form-announcements" 
+                                        className="sr-only" 
+                                        role="status" 
+                                        aria-live="polite" 
+                                        aria-atomic="true"
+                                    />
+                                    
+                                    <form onSubmit={handleSubmit} className="space-y-6" noValidate>
                                         {/* Basic Information Section */}
                                         <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[20px] overflow-hidden backdrop-blur-md shadow-md px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12 animate-fade-in-up animate-delay-100">
                                             <div className="relative z-10">
@@ -752,9 +785,14 @@ export default function AddBusinessPage() {
                                                         </label>
                                                         <input
                                                             type="text"
+                                                            name="name"
+                                                            id="name"
                                                             value={formData.name}
                                                             onChange={(e) => handleInputChange('name', e.target.value)}
                                                             onBlur={() => handleBlur('name')}
+                                                            aria-invalid={touched.name && errors.name ? "true" : "false"}
+                                                            aria-describedby={touched.name && errors.name ? "name-error" : undefined}
+                                                            aria-required="true"
                                                             style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
                                                             className={`w-full bg-white/95 backdrop-blur-sm border pl-4 pr-4 py-3 sm:py-4 md:py-5 text-body font-semibold text-charcoal placeholder-charcoal/50 placeholder:font-normal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 input-mobile rounded-full ${
                                                                 errors.name
@@ -764,7 +802,15 @@ export default function AddBusinessPage() {
                                                             placeholder="Enter business name"
                                                         />
                                                         {touched.name && errors.name && (
-                                                            <p className="mt-2 text-sm text-navbar-bg font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>{errors.name}</p>
+                                                            <p 
+                                                                id="name-error"
+                                                                className="mt-2 text-sm text-navbar-bg font-medium flex items-center gap-1.5" 
+                                                                role="alert"
+                                                                aria-live="polite"
+                                                                style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                                                            >
+                                                                {errors.name}
+                                                            </p>
                                                         )}
                                                     </div>
 
@@ -870,7 +916,7 @@ export default function AddBusinessPage() {
                                                                         onClick={() => handleInputChange('businessType', 'physical')}
                                                                         className={`flex flex-col items-center gap-2 p-4 rounded-[20px] border-2 transition-all duration-200 ${
                                                                             formData.businessType === 'physical'
-                                                                                ? 'bg-gradient-to-br from-sage/20 to-sage/10 border-sage text-white'
+                                                                                ? 'bg-gradient-to-br from-coral/20 to-coral/10 border-coral text-white'
                                                                                 : 'bg-white/10 border-white/30 text-white/80 hover:border-white/50 hover:bg-white/15'
                                                                         }`}
                                                                     >
@@ -882,7 +928,7 @@ export default function AddBusinessPage() {
                                                                         onClick={() => handleInputChange('businessType', 'service-area')}
                                                                         className={`flex flex-col items-center gap-2 p-4 rounded-[20px] border-2 transition-all duration-200 ${
                                                                             formData.businessType === 'service-area'
-                                                                                ? 'bg-gradient-to-br from-sage/20 to-sage/10 border-sage text-white'
+                                                                                ? 'bg-gradient-to-br from-coral/20 to-coral/10 border-coral text-white'
                                                                                 : 'bg-white/10 border-white/30 text-white/80 hover:border-white/50 hover:bg-white/15'
                                                                         }`}
                                                                     >
@@ -894,7 +940,7 @@ export default function AddBusinessPage() {
                                                                         onClick={() => handleInputChange('businessType', 'online-only')}
                                                                         className={`flex flex-col items-center gap-2 p-4 rounded-[20px] border-2 transition-all duration-200 ${
                                                                             formData.businessType === 'online-only'
-                                                                                ? 'bg-gradient-to-br from-sage/20 to-sage/10 border-sage text-white'
+                                                                                ? 'bg-gradient-to-br from-coral/20 to-coral/10 border-coral text-white'
                                                                                 : 'bg-white/10 border-white/30 text-white/80 hover:border-white/50 hover:bg-white/15'
                                                                         }`}
                                                                     >
@@ -987,38 +1033,65 @@ export default function AddBusinessPage() {
 
                                                 <div className="space-y-6">
                                                     {/* Location */}
-                                                    {formData.businessType !== 'online-only' && (
-                                                        <div>
-                                                            <label className="block text-sm font-semibold text-white mb-2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
-                                                                {formData.businessType === 'service-area' ? 'Service Area (City/Area)' : 'Location (City/Area)'} <span className="text-coral">*</span>
-                                                            </label>
+                                                    <div>
+                                                        <label className="block text-sm font-semibold text-white mb-2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
+                                                            {formData.businessType === 'service-area' 
+                                                                ? 'Service Area (City/Area)' 
+                                                                : formData.businessType === 'online-only'
+                                                                ? 'Location (Optional)'
+                                                                : 'Location (City/Area)'} 
+                                                            {formData.businessType !== 'online-only' && <span className="text-coral">*</span>}
+                                                        </label>
                                                         <input
                                                             type="text"
+                                                            name="location"
+                                                            id="location"
                                                             value={formData.location}
                                                             onChange={(e) => handleInputChange('location', e.target.value)}
                                                             onBlur={() => handleBlur('location')}
+                                                            aria-invalid={touched.location && errors.location ? "true" : "false"}
+                                                            aria-describedby={touched.location && errors.location ? "location-error" : formData.businessType === 'online-only' ? "location-helper" : undefined}
+                                                            aria-required={formData.businessType !== 'online-only'}
                                                             style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
                                                             className={`w-full bg-white/95 backdrop-blur-sm border pl-4 pr-4 py-3 sm:py-4 md:py-5 text-body font-semibold text-charcoal placeholder-charcoal/50 placeholder:font-normal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 input-mobile rounded-full ${
                                                                 errors.location
                                                                     ? 'border-navbar-bg focus:border-navbar-bg focus:ring-navbar-bg/20'
                                                                     : 'border-white/60 focus:ring-navbar-bg/30 focus:border-navbar-bg'
                                                             }`}
-                                                            placeholder="e.g., Cape Town, V&A Waterfront"
+                                                            placeholder={formData.businessType === 'online-only' ? "e.g., Cape Town, South Africa (optional)" : "e.g., Cape Town, V&A Waterfront"}
                                                         />
-                                                            {touched.location && errors.location && (
-                                                                <p className="mt-2 text-sm text-navbar-bg font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>{errors.location}</p>
-                                                            )}
-                                                        </div>
-                                                    )}
+                                                        {touched.location && errors.location && (
+                                                            <p 
+                                                                id="location-error"
+                                                                className="mt-2 text-sm text-navbar-bg font-medium flex items-center gap-1.5" 
+                                                                role="alert"
+                                                                aria-live="polite"
+                                                                style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                                                            >
+                                                                {errors.location}
+                                                            </p>
+                                                        )}
+                                                        {formData.businessType === 'online-only' && !errors.location && (
+                                                            <p 
+                                                                id="location-helper"
+                                                                className="mt-1.5 text-xs text-white/60" 
+                                                                style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                                                            >
+                                                                Optional: Add your location to help customers find you
+                                                            </p>
+                                                        )}
+                                                    </div>
 
-                                                    {/* Address - Only show for physical location */}
-                                                    {formData.businessType === 'physical' && (
+                                                    {/* Address - Show for all business types */}
+                                                    {formData.businessType && (
                                                         <div>
                                                             <label className="block text-sm font-semibold text-white mb-2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
-                                                                Full Address
+                                                                Full Address {formData.businessType === 'online-only' && <span className="text-white/60 text-xs">(Optional)</span>}
                                                             </label>
                                                         <input
                                                             type="text"
+                                                            name="address"
+                                                            id="address"
                                                             value={formData.address}
                                                             onChange={(e) => handleInputChange('address', e.target.value)}
                                                             style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
@@ -1028,8 +1101,8 @@ export default function AddBusinessPage() {
                                                         </div>
                                                     )}
 
-                                                    {/* Location Selection - Only show for physical location */}
-                                                    {formData.businessType === 'physical' && (
+                                                    {/* Location Selection - Show for all business types */}
+                                                    {formData.businessType && (
                                                         <div className="space-y-4">
                                                             <label className="block text-sm font-semibold text-white mb-2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
                                                                 Location Coordinates (Optional)

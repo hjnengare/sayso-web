@@ -21,11 +21,13 @@ import {
     Tag,
     ImageIcon,
     Edit3,
+    Trash2,
 } from "lucide-react";
 import { PageLoader } from "../../../components/Loader";
 import Header from "../../../components/Header/Header";
 import { useRequireBusinessOwner } from "../../../hooks/useBusinessAccess";
 import { getBrowserSupabase } from "../../../lib/supabase/client";
+import { ConfirmationDialog } from "@/components/molecules/ConfirmationDialog";
 
 // CSS animations to match business profile page
 const animations = `
@@ -103,6 +105,9 @@ export default function BusinessEditPage() {
     const [reorderingImage, setReorderingImage] = useState<number | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
 
     // Fetch business data
     useEffect(() => {
@@ -511,6 +516,74 @@ export default function BusinessEditPage() {
             showToast(error.message || 'Failed to save business', 'sage', 4000);
         } finally {
             setIsSaving(false);
+        }
+    };
+
+    const handleDeleteClick = () => {
+        setIsDeleteDialogOpen(true);
+        setDeleteError(null);
+    };
+
+    const handleConfirmDelete = async () => {
+        try {
+            // ✅ Always prefer the route param id (source of truth)
+            const businessIdToDelete =
+                (typeof paramId === "string" ? paramId : undefined) ||
+                businessId;
+
+            if (!businessIdToDelete) {
+                throw new Error("Missing business id");
+            }
+
+            setIsDeleting(true);
+            setDeleteError(null);
+
+            const response = await fetch(`/api/businesses/${businessIdToDelete}`, {
+                method: 'DELETE',
+                headers: { "Content-Type": "application/json" },
+            });
+
+            // ✅ Attempt to read JSON, even on errors
+            let payload: any = null;
+            try {
+                payload = await response.json();
+            } catch {
+                payload = null;
+            }
+
+            if (!response.ok) {
+                // ✅ If it's already gone / not visible, treat it as a soft-success for UX
+                if (response.status === 404) {
+                    showToast('This business no longer exists or you don\'t have access.', 'sage', 4000);
+                    // Redirect to profile since business is gone
+                    setIsDeleteDialogOpen(false);
+                    setTimeout(() => {
+                        router.replace('/profile');
+                    }, 1500);
+                    return;
+                }
+
+                throw new Error(payload?.error || 'Failed to delete business');
+            }
+
+            // ✅ Success
+            showToast('Business deleted successfully', 'success', 3000);
+            
+            // Notify other components about the deletion
+            const { notifyBusinessDeleted } = await import('../../../lib/utils/businessUpdateEvents');
+            notifyBusinessDeleted(businessIdToDelete);
+            
+            // Close dialog and redirect to profile after deletion
+            setIsDeleteDialogOpen(false);
+            setTimeout(() => {
+                router.replace('/profile');
+            }, 1000);
+        } catch (error: any) {
+            console.error('Error deleting business:', error);
+            setDeleteError(error.message || 'Failed to delete business');
+            showToast(error.message || 'Failed to delete business', 'error', 5000);
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -965,8 +1038,31 @@ export default function BusinessEditPage() {
                             </div>
                         </div>
 
+                        {/* Danger Zone - Delete Business */}
+                        <div className="relative bg-gradient-to-br from-red-50/50 via-red-50/30 to-red-50/20 rounded-[20px] overflow-hidden border-2 border-red-200/50 backdrop-blur-md shadow-md ring-1 ring-red-200/30 px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12">
+                            <div className="relative z-10">
+                                <h3 className="font-urbanist text-base font-600 text-red-700 mb-2 flex items-center gap-3">
+                                    <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-red-200/50 to-red-100/30">
+                                        <Trash2 className="w-4 h-4 text-red-600" />
+                                    </span>
+                                    Danger Zone
+                                </h3>
+                                <p className="text-sm text-red-600/70 mb-4 font-urbanist">
+                                    Once you delete a business, there is no going back. This will permanently delete the business and all associated data including images, reviews, and statistics.
+                                </p>
+                                <button
+                                    onClick={handleDeleteClick}
+                                    disabled={isDeleting}
+                                    className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-full text-sm font-600 font-urbanist transition-all duration-300 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                    {isDeleting ? "Deleting..." : "Delete Business"}
+                                </button>
+                            </div>
+                        </div>
+
                         {/* Save Button */}
-                        <div className="flex justify-end gap-3">
+                        <div className="flex justify-between items-center gap-3">
                             <Link
                                 href={`/business/${businessId}`}
                                 className="px-6 py-3 bg-white/40 text-charcoal rounded-full text-sm font-600 font-urbanist transition-all duration-300 hover:bg-white/60 border border-white/50"
@@ -989,6 +1085,24 @@ export default function BusinessEditPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Delete Business Confirmation Dialog */}
+            <ConfirmationDialog
+                isOpen={isDeleteDialogOpen}
+                onClose={() => {
+                    setIsDeleteDialogOpen(false);
+                    setDeleteError(null);
+                }}
+                onConfirm={handleConfirmDelete}
+                title="Delete Business"
+                message={`Are you sure you want to delete "${formData.name}"? This action cannot be undone. All business data, images, reviews, and statistics will be permanently deleted.`}
+                confirmText={isDeleting ? "Deleting..." : "Delete Business"}
+                cancelText="Cancel"
+                variant="danger"
+                isLoading={isDeleting}
+                error={deleteError}
+                requireConfirmText="DELETE"
+            />
         </>
     );
 }

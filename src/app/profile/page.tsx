@@ -22,6 +22,7 @@ import {
   X,
   ChevronRight
 } from "react-feather";
+import { Store } from "lucide-react";
 import { getBrowserSupabase } from "@/app/lib/supabase/client";
 
 // Import components directly for faster loading
@@ -278,6 +279,56 @@ function ProfileContent() {
   // Get saved businesses for mobile display - only fetch if user has saved items
   const [savedBusinesses, setSavedBusinesses] = useState<any[]>([]);
   const [savedBusinessesLoading, setSavedBusinessesLoading] = useState(false);
+  const [ownedBusinesses, setOwnedBusinesses] = useState<any[]>([]);
+  const [ownedBusinessesLoading, setOwnedBusinessesLoading] = useState(false);
+
+  // Fetch businesses owned by the user
+  useEffect(() => {
+    const fetchOwnedBusinesses = async () => {
+      if (!user?.id) {
+        setOwnedBusinesses([]);
+        setOwnedBusinessesLoading(false);
+        return;
+      }
+
+      try {
+        setOwnedBusinessesLoading(true);
+        const { data, error } = await supabase
+          .from('businesses')
+          .select('id, name, slug, category, location, image_url, verified, status, created_at, business_images(url, is_primary, sort_order)')
+          .eq('owner_id', user.id)
+          .eq('status', 'active')
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.warn('Error fetching owned businesses:', error);
+          setOwnedBusinesses([]);
+          return;
+        }
+
+        // Transform business_images to uploaded_images format for compatibility
+        const transformedBusinesses = (data || []).map((business: any) => {
+          const uploaded_images = business.business_images
+            ?.filter((img: any) => img.is_primary || img.sort_order === 0)
+            .map((img: any) => img.url) || [];
+          
+          return {
+            ...business,
+            uploaded_images: uploaded_images.length > 0 ? uploaded_images : (business.image_url ? [business.image_url] : []),
+          };
+        });
+
+        setOwnedBusinesses(transformedBusinesses);
+      } catch (error) {
+        console.warn('Error fetching owned businesses:', error);
+        setOwnedBusinesses([]);
+      } finally {
+        setOwnedBusinessesLoading(false);
+      }
+    };
+
+    fetchOwnedBusinesses();
+  }, [user?.id, supabase]);
 
   useEffect(() => {
     const fetchSavedBusinesses = async () => {
@@ -1081,6 +1132,91 @@ function ProfileContent() {
                       </section>
                     )}
 
+                    {/* My Businesses Section */}
+                    <section
+                      className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-md p-6 sm:p-8 space-y-4"
+                      aria-label="My businesses"
+                    >
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-base font-semibold text-charcoal flex items-center gap-3">
+                          <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-coral/20 to-coral/10">
+                            <Store className="w-5 h-5 text-coral" />
+                          </span>
+                          My Businesses
+                        </h3>
+                      </div>
+                      {ownedBusinessesLoading ? (
+                        <div className="flex items-center justify-center py-8">
+                          <Loader size="md" variant="wavy" color="sage" />
+                        </div>
+                      ) : ownedBusinesses.length > 0 ? (
+                        <div className="space-y-3">
+                          {ownedBusinesses.map((business) => {
+                            const businessSlug = business.slug || business.id;
+                            const displayImage = business.uploaded_images?.[0] || business.image_url || null;
+                            return (
+                              <Link
+                                key={business.id}
+                                href={`/business/${businessSlug}/edit`}
+                                className="flex items-center gap-4 p-4 bg-white/50 hover:bg-white/70 rounded-[16px] border border-white/60 transition-all duration-200 hover:shadow-md group"
+                              >
+                                {displayImage ? (
+                                  <div className="relative w-16 h-16 rounded-[12px] overflow-hidden flex-shrink-0">
+                                    <Image
+                                      src={displayImage}
+                                      alt={business.name}
+                                      fill
+                                      className="object-cover"
+                                      sizes="64px"
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className="w-16 h-16 rounded-[12px] bg-gradient-to-br from-sage/20 to-sage/10 flex items-center justify-center flex-shrink-0">
+                                    <Store className="w-6 h-6 text-sage/60" />
+                                  </div>
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <h4 className="text-sm font-semibold text-charcoal truncate group-hover:text-navbar-bg transition-colors">
+                                      {business.name}
+                                    </h4>
+                                    {business.verified && (
+                                      <Check className="w-4 h-4 text-sage flex-shrink-0" />
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-2 text-xs text-charcoal/60">
+                                    <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                                    <span className="truncate">{business.location || 'Location not set'}</span>
+                                  </div>
+                                </div>
+                                <ChevronRight className="w-5 h-5 text-charcoal/40 group-hover:text-charcoal transition-colors flex-shrink-0" />
+                              </Link>
+                            );
+                          })}
+                          <Link
+                            href="/for-businesses"
+                            className="inline-flex items-center gap-2 px-4 py-2.5 bg-coral/90 hover:bg-coral text-white rounded-full text-sm font-semibold transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-md shadow-coral/20 border border-coral/30 w-fit mt-2"
+                          >
+                            <Briefcase className="w-4 h-4" />
+                            Add another business
+                          </Link>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          <p className="text-sm text-charcoal/70 font-medium max-w-[520px]">
+                            You haven't added any businesses yet. Start by adding your first business listing!
+                          </p>
+                          <Link
+                            href="/for-businesses"
+                            className="inline-flex items-center gap-2 px-4 py-2.5 bg-coral/90 hover:bg-coral text-white rounded-full text-sm font-semibold transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-md shadow-coral/20 border border-coral/30 w-fit"
+                          >
+                            <Briefcase className="w-4 h-4" />
+                            Add your business
+                          </Link>
+                        </div>
+                      )}
+                    </section>
+
                     <section
                       className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-md p-6 sm:p-8 space-y-4"
                       aria-label="Business management"
@@ -1101,7 +1237,7 @@ function ProfileContent() {
                         className="inline-flex items-center gap-2 px-4 py-2.5 bg-coral/90 hover:bg-coral text-white rounded-full text-sm font-semibold transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-md shadow-coral/20 border border-coral/30 w-fit"
                       >
                         <Briefcase className="w-4 h-4" />
-                        Add your business
+                        {ownedBusinesses.length > 0 ? 'Manage businesses' : 'Add your business'}
                       </Link>
                     </section>
 

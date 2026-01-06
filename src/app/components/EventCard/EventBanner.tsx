@@ -11,6 +11,7 @@ interface EventBannerProps {
   rating: number;
   startDate: string;
   endDate?: string;
+  eventId?: string;
 }
 
 export default function EventBanner({
@@ -20,7 +21,8 @@ export default function EventBanner({
   title,
   rating,
   startDate,
-  endDate
+  endDate,
+  eventId
 }: EventBannerProps) {
   return (
     <div className="relative overflow-hidden rounded-t-lg h-[320px] flex-shrink-0 z-10">
@@ -46,7 +48,7 @@ export default function EventBanner({
       </div>
 
       {/* Badges */}
-      <EventBadge startDate={startDate} endDate={endDate} />
+      <EventBadge startDate={startDate} endDate={endDate} eventId={eventId} />
     </div>
   );
 }

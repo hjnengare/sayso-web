@@ -1988,7 +1988,10 @@ export async function POST(req: Request) {
     
     if (authError || !user) {
       return NextResponse.json(
-        { error: 'Unauthorized. Please log in to create a business.' },
+        { 
+          error: 'You need to be logged in to create a business listing. Please sign in and try again.',
+          code: 'UNAUTHORIZED'
+        },
         { status: 401 }
       );
     }
@@ -1998,6 +2001,7 @@ export async function POST(req: Request) {
     const name = formData.get('name')?.toString();
     const description = formData.get('description')?.toString() || null;
     const category = formData.get('category')?.toString();
+    const businessType = formData.get('businessType')?.toString() || null;
     const location = formData.get('location')?.toString();
     const address = formData.get('address')?.toString() || null;
     const phone = formData.get('phone')?.toString() || null;
@@ -2016,10 +2020,33 @@ export async function POST(req: Request) {
       .getAll('images')
       .filter((file): file is File => file instanceof File && file.size > 0);
 
-    // Validate required fields
-    if (!name || !category || !location) {
+    // Validate required fields with specific error messages
+    // Location is only required for physical and service-area businesses, not for online-only
+    const missingFields: string[] = [];
+    if (!name || name.trim().length === 0) {
+      missingFields.push('Business name');
+    }
+    if (!category || category.trim().length === 0) {
+      missingFields.push('Category');
+    }
+    // Location is required only for physical and service-area businesses
+    if (businessType !== 'online-only' && (!location || location.trim().length === 0)) {
+      missingFields.push('Location');
+    }
+
+    if (missingFields.length > 0) {
+      const fieldList = missingFields.length === 1 
+        ? missingFields[0] 
+        : missingFields.length === 2
+        ? `${missingFields[0]} and ${missingFields[1]}`
+        : `${missingFields.slice(0, -1).join(', ')}, and ${missingFields[missingFields.length - 1]}`;
+      
       return NextResponse.json(
-        { error: 'Name, category, and location are required' },
+        { 
+          error: `Please provide ${fieldList.toLowerCase()}. These fields are required to create a business listing.`,
+          missingFields,
+          code: 'MISSING_REQUIRED_FIELDS'
+        },
         { status: 400 }
       );
     }
@@ -2058,7 +2085,7 @@ export async function POST(req: Request) {
       name: name.trim(),
       description: description?.trim() || null,
       category: category.trim(),
-      location: location.trim(),
+      location: location?.trim() || null, // Can be null for online-only businesses
       address: address?.trim() || null,
       phone: phone?.trim() || null,
       email: email?.trim() || null,
@@ -2071,6 +2098,8 @@ export async function POST(req: Request) {
       status: 'active',
       lat: lat || null,
       lng: lng || null,
+      // Note: businessType is used for validation but not stored in DB
+      // If needed in the future, add a business_type column to the businesses table
     };
 
     const { data: newBusiness, error: insertError } = await supabase
@@ -2081,8 +2110,27 @@ export async function POST(req: Request) {
 
     if (insertError) {
       console.error('[API] Error creating business:', insertError);
+      
+      // Check for specific database errors
+      let errorMessage = 'We couldn\'t create your business listing. Please check your information and try again.';
+      let errorCode = 'DATABASE_ERROR';
+      
+      if (insertError.code === '23505' || insertError.message?.includes('duplicate') || insertError.message?.includes('unique')) {
+        errorMessage = 'A business with this name already exists in our system. Please try a different name or check if this business is already listed.';
+        errorCode = 'DUPLICATE_BUSINESS';
+      } else if (insertError.code === '23503' || insertError.message?.includes('foreign key')) {
+        errorMessage = 'There was an issue with the business category. Please select a valid category and try again.';
+        errorCode = 'INVALID_CATEGORY';
+      } else if (insertError.message) {
+        errorMessage = `Unable to save business: ${insertError.message}`;
+      }
+      
       return NextResponse.json(
-        { error: 'Failed to create business', details: insertError.message },
+        { 
+          error: errorMessage,
+          details: insertError.message,
+          code: errorCode
+        },
         { status: 500 }
       );
     }
@@ -2210,8 +2258,23 @@ export async function POST(req: Request) {
     }, { status: 201 });
   } catch (error: any) {
     console.error('[API] Error creating business:', error);
+    
+    let errorMessage = 'We encountered an unexpected error while creating your business listing. Please try again in a moment.';
+    let errorCode = 'INTERNAL_ERROR';
+    
+    if (error.message?.includes('JSON')) {
+      errorMessage = 'There was an issue processing your business hours. Please check the format and try again.';
+      errorCode = 'INVALID_HOURS_FORMAT';
+    } else if (error.message) {
+      errorMessage = `Unable to create business: ${error.message}`;
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to create business', details: error.message },
+      { 
+        error: errorMessage,
+        details: error.message,
+        code: errorCode
+      },
       { status: 500 }
     );
   }
