@@ -139,7 +139,7 @@ export async function POST(req: Request) {
         .single();
 
       const interestsCount = currentProfile?.interests_count || 0;
-      const newSubcategoriesCount = subcategories.length;
+      const newSubcategoriesCount = subcategoryData.length;
       const dealbreakersCount = currentProfile?.dealbreakers_count || 0;
 
       // CRITICAL: After saving subcategories, ALWAYS advance to deal-breakers step
