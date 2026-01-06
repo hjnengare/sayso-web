@@ -271,7 +271,30 @@ export async function POST(req: Request) {
 
       // Update profile step (only for individual steps) with verification
       // For deal-breakers step, save data but DON'T mark as complete - that happens on /complete page
-      await updateProfileOnboarding(supabase, user.id, step, false);
+      // Also update the appropriate count field based on the step
+      if (step === 'deal-breakers') {
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            onboarding_step: step,
+            dealbreakers_count: dealbreakers?.length || 0,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id)
+          .select('onboarding_step, dealbreakers_count')
+          .single();
+
+        if (profileError) {
+          throw profileError;
+        }
+
+        // Verify the update actually worked
+        if (!profileData || profileData.onboarding_step !== step) {
+          throw new Error(`Profile onboarding_step did not update correctly. Expected: ${step}, Got: ${profileData?.onboarding_step}`);
+        }
+      } else {
+        await updateProfileOnboarding(supabase, user.id, step, false);
+      }
     }
 
     const totalTime = nodePerformance.now() - startTime;

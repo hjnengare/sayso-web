@@ -83,9 +83,27 @@ export async function POST(req: Request) {
       );
     }
 
-    // Update profile to mark subcategories step as done (with verification)
+    // Update profile to mark subcategories step as done and update subcategories_count (with verification)
     try {
-      await updateProfileStep(supabase, user.id, 'deal-breakers');
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          onboarding_step: 'deal-breakers',
+          subcategories_count: subcategories.length,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id)
+        .select('onboarding_step, subcategories_count')
+        .single();
+
+      if (profileError) {
+        throw profileError;
+      }
+
+      // Verify the update actually worked
+      if (!profileData || profileData.onboarding_step !== 'deal-breakers') {
+        throw new Error(`Profile onboarding_step did not update correctly. Expected: deal-breakers, Got: ${profileData?.onboarding_step}`);
+      }
     } catch (profileError: any) {
       console.error('[Subcategories API] Error updating profile:', profileError);
       // Subcategories are saved, but profile update failed - throw to ensure user knows

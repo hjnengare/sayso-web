@@ -351,18 +351,7 @@ export default function OnboardingPage() {
             </div>
           </div>
 
-          {/* Subtle footer */}
-          <div className="mt-auto pt-6 pb-4 flex-shrink-0">
-            <p
-              data-reveal
-              className="text-xs text-charcoal/40 text-center"
-              style={{
-                fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-              }}
-            >
-              A product of ChitChat
-            </p>
-          </div>
+         
         </div>
       </div>
     </>

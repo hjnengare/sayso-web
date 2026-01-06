@@ -1,153 +1,153 @@
 "use client";
 
-import { useEffect, useMemo, useCallback } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "../contexts/AuthContext";
-import { ONBOARDING_STEPS, OnboardingStep } from "../contexts/onboarding-steps";
+import { ONBOARDING_STEPS } from "../contexts/onboarding-steps";
 import { PageLoader } from "./Loader";
+import { getBrowserSupabase } from "@/app/lib/supabase/client";
 
-// Simple loading component
 const PageLoading = () => <PageLoader size="lg" variant="wavy" color="sage" />;
 
 interface OnboardingGuardProps {
   children: React.ReactNode;
 }
 
+type ProfileLite = {
+  onboarding_step: string | null;
+  onboarding_complete: boolean | null;
+  interests_count: number | null;
+  subcategories_count: number | null;
+  dealbreakers_count: number | null;
+};
+
 export default function OnboardingGuard({ children }: OnboardingGuardProps) {
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
-  // Memoize expensive calculations
-  const isOnboardingRoute = useMemo(() =>
-    ONBOARDING_STEPS.some(step => pathname === step.path || pathname.startsWith(step.path)),
+  const supabase = useMemo(() => getBrowserSupabase(), []);
+
+  const [profile, setProfile] = useState<ProfileLite | null>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
+
+  const isOnboardingRoute = useMemo(
+    () => ONBOARDING_STEPS.some(step => pathname === step.path || pathname.startsWith(step.path)),
     [pathname]
   );
 
-  const currentStep = useMemo(() =>
-    ONBOARDING_STEPS.find(step => pathname === step.path),
-    [pathname]
-  );
+  // ✅ Same logic as middleware: onboarding_step is primary, counts are fallback
+  const getNextOnboardingStep = useCallback((p: ProfileLite | null): string => {
+    if (!p) return "interests";
 
-  // Helper function to determine next incomplete onboarding step
-  const getNextOnboardingStep = useCallback((profile: any): string => {
-    if (profile?.onboarding_complete && profile?.onboarding_step === 'complete') {
-      return 'complete';
+    const currentStep = p.onboarding_step || null;
+
+    if (p.onboarding_complete && currentStep === "complete") return "complete";
+
+    if (currentStep) {
+      const stepMap: Record<string, string> = {
+        interests: "subcategories",
+        subcategories: "deal-breakers",
+        "deal-breakers": "complete",
+        complete: "complete",
+      };
+      if (stepMap[currentStep]) return stepMap[currentStep];
     }
 
-    const interestsCount = profile?.interests_count || 0;
-    const subcategoriesCount = profile?.subcategories_count || 0;
-    const dealbreakersCount = profile?.dealbreakers_count || 0;
+    // fallback
+    const interestsCount = p.interests_count || 0;
+    const subcategoriesCount = p.subcategories_count || 0;
+    const dealbreakersCount = p.dealbreakers_count || 0;
 
-    if (interestsCount === 0) {
-      return 'interests';
-    } else if (subcategoriesCount === 0) {
-      return 'subcategories';
-    } else if (dealbreakersCount === 0) {
-      return 'deal-breakers';
-    } else {
-      return 'complete';
-    }
+    if (interestsCount === 0) return "interests";
+    if (subcategoriesCount === 0) return "subcategories";
+    if (dealbreakersCount === 0) return "deal-breakers";
+    return "complete";
   }, []);
 
-  // Enforce mandatory onboarding flow with step order
+  // ✅ Fetch a fresh lightweight profile whenever user/path changes inside onboarding
+  useEffect(() => {
+    if (!user || !isOnboardingRoute) return;
+
+    let cancelled = false;
+
+    (async () => {
+      setProfileLoading(true);
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("onboarding_step,onboarding_complete,interests_count,subcategories_count,dealbreakers_count")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!cancelled) {
+        setProfile(error ? null : (data as ProfileLite | null));
+        setProfileLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, pathname, isOnboardingRoute, supabase]);
+
   const handleNavigation = useCallback(() => {
     if (isLoading) return;
-
-    // Skip guard for non-onboarding routes
     if (!isOnboardingRoute) return;
 
-    // If no user and trying to access protected steps, redirect to start
+    // unauth user
     if (!user && pathname !== "/onboarding" && pathname !== "/register" && pathname !== "/login") {
       router.replace("/onboarding");
       return;
     }
-
     if (!user) return;
 
-    // Check email verification first - all onboarding steps require verified email
+    // email check
     if (!user.email_verified) {
       router.replace("/verify-email");
       return;
     }
 
-    // CRITICAL: Always allow access to /complete page if prerequisites are met
-    // This must be checked BEFORE the "redirect if completed" check
-    // IMPORTANT: Even if onboarding_complete is true, allow access to /complete
-    // This prevents redirect loops where middleware sends user to /complete but OnboardingGuard redirects away
+    // IMPORTANT: wait for fresh profile so we don't bounce based on stale counts
+    if (profileLoading) return;
+
+    // Allow /complete page access (same as your intent)
     if (pathname === "/complete") {
-      const interestsCount = user.profile?.interests_count || 0;
-      const subcategoriesCount = user.profile?.subcategories_count || 0;
-      // Allow access to complete page if user has completed interests and subcategories
-      // Even if onboarding_complete is true, we want to show the celebration page
-      if (interestsCount === 0 || subcategoriesCount === 0) {
-        const nextStep = getNextOnboardingStep(user.profile);
-        router.replace(`/${nextStep}`);
-        return;
-      }
-      // User has completed prerequisites, allow them to see complete page
-      // This allows the page to show even if onboarding_complete is already true
-      // DO NOT redirect away from /complete - this prevents infinite loops
+      const next = getNextOnboardingStep(profile);
+      if (next !== "complete") router.replace(`/${next}`);
       return;
     }
 
-    // If user has completed onboarding, redirect to home (but not if they're on /complete, which is handled above)
-    // CRITICAL: This check must come AFTER the /complete check to prevent redirect loops
-    if (user.profile?.onboarding_complete && pathname !== "/complete") {
+    // If completed, send to home
+    if (profile?.onboarding_complete) {
       router.replace("/home");
       return;
     }
 
-    // Determine the next step user should be on
-    const nextStep = getNextOnboardingStep(user.profile);
-    const stepOrder = ['interests', 'subcategories', 'deal-breakers', 'complete'];
-    const pathToStep: { [key: string]: string } = {
-      '/interests': 'interests',
-      '/subcategories': 'subcategories',
-      '/deal-breakers': 'deal-breakers',
-      '/complete': 'complete'
+    // Enforce "don't skip ahead" using fresh profile (not user.profile)
+    const nextStep = getNextOnboardingStep(profile);
+
+    const stepOrder = ["interests", "subcategories", "deal-breakers", "complete"];
+    const pathToStep: Record<string, string> = {
+      "/interests": "interests",
+      "/subcategories": "subcategories",
+      "/deal-breakers": "deal-breakers",
+      "/complete": "complete",
     };
 
-    const currentStep = pathToStep[pathname] || 'interests';
-    const nextStepIndex = stepOrder.indexOf(nextStep);
-    const currentStepIndex = stepOrder.indexOf(currentStep);
+    const current = pathToStep[pathname] || "interests";
 
-    // If user is trying to access a step ahead of where they should be, redirect to correct step
-    if (currentStepIndex > nextStepIndex) {
-      console.log('OnboardingGuard: User trying to skip steps, redirecting to:', nextStep);
+    // Only block skipping AHEAD (your original behavior)
+    if (stepOrder.indexOf(current) > stepOrder.indexOf(nextStep)) {
       router.replace(`/${nextStep}`);
       return;
     }
-
-    // Enforce prerequisites for each step
-    if (pathname === "/subcategories") {
-      const interestsCount = user.profile?.interests_count || 0;
-      if (interestsCount === 0) {
-        router.replace("/interests");
-        return;
-      }
-    }
-
-    if (pathname === "/deal-breakers") {
-      const interestsCount = user.profile?.interests_count || 0;
-      const subcategoriesCount = user.profile?.subcategories_count || 0;
-      if (interestsCount === 0) {
-        router.replace("/interests");
-        return;
-      }
-      if (subcategoriesCount === 0) {
-        router.replace("/subcategories");
-        return;
-      }
-    }
-  }, [user, isLoading, pathname, router, isOnboardingRoute, getNextOnboardingStep]);
+  }, [isLoading, isOnboardingRoute, user, pathname, router, profile, profileLoading, getNextOnboardingStep]);
 
   useEffect(() => {
     handleNavigation();
   }, [handleNavigation]);
 
-  // Show loading while checking auth
-  if (isLoading) {
+  if (isLoading || (isOnboardingRoute && user && profileLoading)) {
     return <PageLoading />;
   }
 

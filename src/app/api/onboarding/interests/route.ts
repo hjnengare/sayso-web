@@ -78,9 +78,27 @@ export async function POST(req: Request) {
       );
     }
 
-    // Update profile to mark interests step as done (with verification)
+    // Update profile to mark interests step as done and update interests_count (with verification)
     try {
-      await updateProfileStep(supabase, user.id, 'subcategories');
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          onboarding_step: 'subcategories',
+          interests_count: interests.length,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id)
+        .select('onboarding_step, interests_count')
+        .single();
+
+      if (profileError) {
+        throw profileError;
+      }
+
+      // Verify the update actually worked
+      if (!profileData || profileData.onboarding_step !== 'subcategories') {
+        throw new Error(`Profile onboarding_step did not update correctly. Expected: subcategories, Got: ${profileData?.onboarding_step}`);
+      }
     } catch (profileError: any) {
       console.error('[Interests API] Error updating profile:', profileError);
       // Interests are saved, but profile update failed - throw to ensure user knows

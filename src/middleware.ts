@@ -285,21 +285,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
-  // Enforce onboarding step order - prevent skipping steps
-  // Only redirect if user is trying to skip ahead, not if they're on the correct step
+  // Allow access to onboarding routes - no step skipping prevention
+  // Users can navigate freely between onboarding steps
   if (isOnboardingRoute && user && user.email_confirmed_at) {
-    const nextStep = getNextOnboardingStep(profile);
     const currentPath = request.nextUrl.pathname;
-
-    // Map paths to step names
-    const pathToStep: { [key: string]: string } = {
-      '/interests': 'interests',
-      '/subcategories': 'subcategories',
-      '/deal-breakers': 'deal-breakers',
-      '/complete': 'complete'
-    };
-
-    const currentStep = pathToStep[currentPath] || 'interests';
 
     // CRITICAL: Always allow access to /complete page - users should see the celebration page
     // This must be checked BEFORE the "redirect if completed" check
@@ -318,21 +307,8 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(redirectUrl);
     }
 
-    // Only redirect if user is trying to access a step AHEAD of where they should be
-    // Don't redirect if they're on the correct step or behind
-    const stepOrder = ['interests', 'subcategories', 'deal-breakers', 'complete'];
-    const nextStepIndex = stepOrder.indexOf(nextStep);
-    const currentStepIndex = stepOrder.indexOf(currentStep);
-
-    // Only redirect if trying to skip ahead - allow access to current or previous steps
-    if (currentStepIndex > nextStepIndex) {
-      console.log('Middleware: User trying to skip steps, redirecting to:', nextStep);
-      const redirectUrl = new URL(`/${nextStep}`, request.url);
-      return NextResponse.redirect(redirectUrl);
-    }
-    
-    // If user is on the correct step or behind, allow access (don't redirect)
-    // This prevents redirect loops
+    // Allow access to any onboarding step - no skipping prevention
+    return response;
   }
 
   // Redirect unauthenticated users from protected routes
