@@ -73,6 +73,8 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
 
     // CRITICAL: Always allow access to /complete page if prerequisites are met
     // This must be checked BEFORE the "redirect if completed" check
+    // IMPORTANT: Even if onboarding_complete is true, allow access to /complete
+    // This prevents redirect loops where middleware sends user to /complete but OnboardingGuard redirects away
     if (pathname === "/complete") {
       const interestsCount = user.profile?.interests_count || 0;
       const subcategoriesCount = user.profile?.subcategories_count || 0;
@@ -85,11 +87,13 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
       }
       // User has completed prerequisites, allow them to see complete page
       // This allows the page to show even if onboarding_complete is already true
+      // DO NOT redirect away from /complete - this prevents infinite loops
       return;
     }
 
     // If user has completed onboarding, redirect to home (but not if they're on /complete, which is handled above)
-    if (user.profile?.onboarding_complete) {
+    // CRITICAL: This check must come AFTER the /complete check to prevent redirect loops
+    if (user.profile?.onboarding_complete && pathname !== "/complete") {
       router.replace("/home");
       return;
     }

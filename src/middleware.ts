@@ -212,17 +212,31 @@ export async function middleware(request: NextRequest) {
     try {
       // Only fetch minimal fields needed for routing decisions
       // Lightweight check - no joins, no aggregations
-      // CRITICAL: Use cache: 'no-store' to avoid stale data after profile updates
+      // CRITICAL: Add timestamp to bust cache in production (Vercel Edge caching)
+      // Use .maybeSingle() to handle missing profiles gracefully
+      const cacheBuster = Date.now();
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('onboarding_step, onboarding_complete, interests_count, subcategories_count, dealbreakers_count')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
       
       if (!profileError && profileData) {
         profile = profileData;
+        console.log('Middleware: Profile fetched', {
+          onboarding_step: profile.onboarding_step,
+          onboarding_complete: profile.onboarding_complete,
+          interests_count: profile.interests_count,
+          subcategories_count: profile.subcategories_count,
+          dealbreakers_count: profile.dealbreakers_count,
+          cacheBuster
+        });
       } else {
-        console.warn('Middleware: Profile not found or error fetching profile:', profileError?.message);
+        console.warn('Middleware: Profile not found or error fetching profile:', {
+          error: profileError?.message,
+          code: profileError?.code,
+          cacheBuster
+        });
         // Profile might not exist yet - allow access to interests page
         profile = null;
       }
