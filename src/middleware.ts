@@ -1,6 +1,5 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
-import { getOnboardingState } from '@/lib/onboarding/getOnboardingState';
 
 export async function middleware(request: NextRequest) {
   // CRITICAL: Disable caching for middleware to prevent stale profile data
@@ -167,23 +166,86 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // Derive onboarding state from join tables (source of truth)
-  // This prevents state desync issues that occur when relying on onboarding_step field
+  // Derive onboarding state from profile counts (source of truth)
+  // This uses the count fields in profiles table which are maintained by triggers/RPC functions
   let onboardingState = null;
   let onboardingComplete = false;
   if (user && user.email_confirmed_at) {
     try {
-      onboardingState = await getOnboardingState(supabase, user.id);
-      onboardingComplete = onboardingState.isComplete;
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('onboarding_step, onboarding_complete, interests_count, subcategories_count, dealbreakers_count')
+        .eq('user_id', user.id)
+        .maybeSingle();
       
-      console.log('Middleware: Onboarding state derived from join tables', {
-        interestsCount: onboardingState.interestsCount,
-        subcategoriesCount: onboardingState.subcategoriesCount,
-        dealbreakersCount: onboardingState.dealbreakersCount,
-        nextRoute: onboardingState.nextRoute,
-        isComplete: onboardingState.isComplete,
-        pathname: request.nextUrl.pathname
-      });
+      if (profileData) {
+        const interestsCount = profileData.interests_count || 0;
+        const subcategoriesCount = profileData.subcategories_count || 0;
+        const dealbreakersCount = profileData.dealbreakers_count || 0;
+        
+        // Determine next route based on counts (same logic as OnboardingGuard)
+        let nextRoute: string = '/interests';
+        if (interestsCount === 0) {
+          nextRoute = '/interests';
+        } else if (subcategoriesCount === 0) {
+          nextRoute = '/subcategories';
+        } else if (dealbreakersCount === 0) {
+          nextRoute = '/deal-breakers';
+        } else {
+          nextRoute = '/complete';
+        }
+        
+        // Also check onboarding_step for more accurate routing
+        const currentStep = profileData.onboarding_step;
+        if (currentStep) {
+          const stepMap: Record<string, string> = {
+            interests: '/subcategories',
+            subcategories: '/deal-breakers',
+            'deal-breakers': '/complete',
+            complete: '/complete',
+          };
+          if (stepMap[currentStep]) {
+            nextRoute = stepMap[currentStep];
+          }
+        }
+        
+        // Completion requires all three: interests > 0, subcategories > 0, dealbreakers > 0
+        // AND onboarding_complete flag must be true
+        const isComplete = profileData.onboarding_complete === true && 
+                          interestsCount > 0 && 
+                          subcategoriesCount > 0 && 
+                          dealbreakersCount > 0;
+        
+        onboardingState = {
+          interestsCount,
+          subcategoriesCount,
+          dealbreakersCount,
+          nextRoute: nextRoute as '/interests' | '/subcategories' | '/deal-breakers' | '/complete',
+          isComplete
+        };
+        
+        onboardingComplete = isComplete;
+        
+        console.log('Middleware: Onboarding state derived from profile', {
+          interestsCount,
+          subcategoriesCount,
+          dealbreakersCount,
+          nextRoute,
+          isComplete,
+          onboarding_step: currentStep,
+          onboarding_complete: profileData.onboarding_complete,
+          pathname: request.nextUrl.pathname
+        });
+      } else {
+        // No profile found, default to requiring interests step
+        onboardingState = {
+          interestsCount: 0,
+          subcategoriesCount: 0,
+          dealbreakersCount: 0,
+          nextRoute: '/interests' as const,
+          isComplete: false
+        };
+      }
     } catch (error) {
       console.error('Middleware: Error deriving onboarding state:', error);
       // On error, default to requiring interests step
@@ -194,25 +256,6 @@ export async function middleware(request: NextRequest) {
         nextRoute: '/interests' as const,
         isComplete: false
       };
-    }
-    
-    // Also check onboarding_complete flag from profiles (for backwards compatibility)
-    // This is only used to determine if user has visited /complete page
-    try {
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('onboarding_complete')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      
-      // If profile says complete but join tables don't, trust join tables (they're source of truth)
-      // But if profile says complete AND join tables say complete, user is done
-      if (profileData?.onboarding_complete === true && onboardingState?.isComplete) {
-        onboardingComplete = true;
-      }
-    } catch (error) {
-      console.warn('Middleware: Error checking onboarding_complete flag:', error);
-      // Continue with state derived from join tables
     }
   }
 

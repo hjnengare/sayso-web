@@ -287,7 +287,7 @@ export default function SimilarBusinessCard({
               return (
                 <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${uniqueColor} flex items-center justify-center flex-shrink-0`}>
                   <CategoryIcon className="w-4 h-4 text-charcoal/70" strokeWidth={2.5} />
-                </div>
+            </div>
               );
             })()}
             <span className="truncate">{location || address}</span>

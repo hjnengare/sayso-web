@@ -121,16 +121,15 @@
     scroll-behavior: smooth;
     color-scheme: light;
     /* Ensures browser UI (scrollbars, form controls) adapts to light theme */
-    background-color: #E5E0E5;
+    @apply bg-off-white;
     overflow-x: hidden;
   }
 
   body {
-    @apply text-base;
+    @apply text-base bg-off-white;
     /* Use token system: 16px with 1.6 line-height */
     font-family: 'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
     color: hsl(0, 0%, 0%);
-    background-color: #E5E0E5;
     background-image: url('/bg.svg');
     background-size: cover;
     background-position: center;
@@ -365,9 +364,9 @@
     transform: translateZ(0);
   }
 
-  /* Background styling */
+  /* Background styling - using Tailwind bg-off-white class */
   body {
-    background-color: #E5E0E5;
+    @apply bg-off-white;
     background-image: url('/bg.svg');
     background-size: cover;
     background-position: center;
@@ -376,7 +375,7 @@
   }
 
   html {
-    background-color: #E5E0E5;
+    @apply bg-off-white;
     background-image: url('/bg.svg');
     background-size: cover;
     background-position: center;
