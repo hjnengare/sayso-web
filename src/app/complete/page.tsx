@@ -374,37 +374,83 @@ function CompletePageContent() {
     saveOnboardingData();
   }, [searchParams, hasSaved, isSaving, router, refreshUser]);
 
-  // Auto-redirect to home after 3.5 seconds (fallback if user doesn't click)
+  // Auto-redirect to home after 3.5 seconds (fallback if user doesn't click) - brute force
   useEffect(() => {
     redirectTimerRef.current = setTimeout(() => {
       if (!hasRedirectedRef.current) {
         hasRedirectedRef.current = true;
         console.log('[Complete] Auto-redirecting to home after 3.5 seconds');
-        router.replace('/home');
+        
+        // Brute force navigation - try multiple methods
+        try {
+          router.replace('/home');
+        } catch (error) {
+          console.warn('[Complete] Auto-redirect router.replace failed, using window.location:', error);
+          if (typeof window !== 'undefined') {
+            window.location.href = '/home';
+          }
+        }
+        
+        // Backup: check if navigation worked after a delay
+        setTimeout(() => {
+          if (typeof window !== 'undefined' && window.location.pathname !== '/home') {
+            console.log('[Complete] Auto-redirect backup: forcing navigation');
+            window.location.href = '/home';
+          }
+        }, 200);
       }
     }, 3500);
 
     return () => {
       if (redirectTimerRef.current) {
         clearTimeout(redirectTimerRef.current);
+        redirectTimerRef.current = null;
       }
     };
   }, [router]);
 
-  // Handle manual redirect when button is clicked - navigate immediately
+  // Handle manual redirect when button is clicked - navigate immediately (brute force)
   const handleContinueClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
     // Clear auto-redirect timer
     if (redirectTimerRef.current) {
       clearTimeout(redirectTimerRef.current);
+      redirectTimerRef.current = null;
     }
-    // Navigate immediately to home
-    if (!hasRedirectedRef.current) {
-      hasRedirectedRef.current = true;
-      console.log('[Complete] User clicked button, navigating to home immediately');
+    
+    // Mark as redirected to prevent multiple navigations
+    hasRedirectedRef.current = true;
+    
+    console.log('[Complete] User clicked button, navigating to home immediately');
+    
+    // Brute force navigation - try multiple methods to ensure it works
+    try {
+      // Method 1: Use router.push (preferred)
       router.push('/home');
+    } catch (error) {
+      console.warn('[Complete] router.push failed, trying window.location:', error);
+      // Method 2: Fallback to window.location (more reliable)
+      if (typeof window !== 'undefined') {
+        window.location.href = '/home';
+      }
     }
+    
+    // Method 3: Also try router.replace as backup (in case push doesn't work)
+    setTimeout(() => {
+      if (typeof window !== 'undefined' && window.location.pathname !== '/home') {
+        console.log('[Complete] Fallback: Using router.replace');
+        try {
+          router.replace('/home');
+        } catch (error) {
+          console.warn('[Complete] router.replace also failed, using window.location:', error);
+          if (typeof window !== 'undefined') {
+            window.location.href = '/home';
+          }
+        }
+      }
+    }, 100);
   };
 
   useEffect(() => {
