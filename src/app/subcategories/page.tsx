@@ -1,17 +1,15 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useOnboarding } from "../contexts/OnboardingContext";
 import { useToast } from "../contexts/ToastContext";
-import { useAuth } from "../contexts/AuthContext";
 import OnboardingLayout from "../components/Onboarding/OnboardingLayout";
 import ProtectedRoute from "../components/ProtectedRoute/ProtectedRoute";
 import SubcategoryStyles from "../components/Subcategories/SubcategoryStyles";
 import SubcategoryHeader from "../components/Subcategories/SubcategoryHeader";
 import SubcategorySelection from "../components/Subcategories/SubcategorySelection";
 import SubcategoryGrid from "../components/Subcategories/SubcategoryGrid";
-import SubcategoryGridSkeleton from "../components/Subcategories/SubcategoryGridSkeleton";
 import SubcategoryActions from "../components/Subcategories/SubcategoryActions";
 import { Loader } from "../components/Loader";
 
@@ -41,10 +39,9 @@ const INTEREST_TITLES: { [key: string]: string } = {
 };
 
 function SubcategoriesContent() {
-  const searchParams = useSearchParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { showToast } = useToast();
-  const { user, refreshUser } = useAuth();
   const { selectedSubInterests: selectedSubcategories, setSelectedSubInterests: setSelectedSubcategories, isLoading, error } = useOnboarding();
 
   const [subcategories, setSubcategories] = useState<SubcategoryItem[]>([]);
@@ -53,86 +50,117 @@ function SubcategoriesContent() {
 
   const MAX_SELECTIONS = 10;
 
-  // Fetch user's saved interests from DB (no URL params)
-  const userInterests = useMemo(() => {
-    // Always fetch from API - no URL params
-    return null; // Signal to fetch from API
-  }, []);
+  // Get interests from URL params for instant filtering
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
 
-  // Trust middleware for routing - no defensive checks needed
-  // Middleware is the single source of truth for onboarding access
-
-  // Fetch subcategories on page load - show skeleton immediately
+  // Prefetch next page immediately on mount
   useEffect(() => {
-    let cancelled = false;
-    
-    const loadSubcategories = async () => {
-      const fetchStart = performance.now();
-      console.log('[Subcategories] Fetch started', { timestamp: fetchStart });
+    router.prefetch('/deal-breakers');
+  }, [router]);
 
+  // Load interests and subcategories from database on mount
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
+        // First, get interests from URL if available
+        const interestsParam = searchParams.get('interests');
+        let interests: string[] = [];
         
-        // Fetch user's interests first if we don't have them
-        let interestsToUse = userInterests;
-        
-        if (!interestsToUse || interestsToUse.length === 0) {
-          // Fetch from API
-          const interestsResponse = await fetch('/api/user/onboarding');
-          if (cancelled) return;
-          
-          if (interestsResponse.ok) {
-            const interestsData = await interestsResponse.json();
-            interestsToUse = interestsData.interests || [];
+        if (interestsParam) {
+          // Use interests from URL (instant)
+          interests = interestsParam.split(',').map(s => s.trim()).filter(Boolean);
+          setSelectedInterests(interests);
+        } else {
+          // Load interests from database (for back navigation)
+          const response = await fetch('/api/user/onboarding');
+          if (response.ok) {
+            const data = await response.json();
+            interests = data.interests || [];
+            setSelectedInterests(interests);
+            
+            // Also load saved subcategories
+            const savedSubcategories = data.subcategories || [];
+            const subcategoryIds = savedSubcategories.map((item: { subcategory_id: string }) => item.subcategory_id);
+            if (subcategoryIds.length > 0) {
+              console.log('[Subcategories] Loaded saved subcategories from DB:', subcategoryIds);
+              setSelectedSubcategories(subcategoryIds);
+            }
           }
         }
-
-        if (cancelled) return;
-
-        if (!interestsToUse || interestsToUse.length === 0) {
-          router.replace('/interests');
-          return;
-        }
-
-        const apiStart = performance.now();
-        const response = await fetch(`/api/subcategories?interests=${interestsToUse.join(',')}`);
-        if (cancelled) return;
-        
-        const apiEnd = performance.now();
-
-        if (!response.ok) {
-          throw new Error('Failed to load subcategories');
-        }
-
-        const data = await response.json();
-        if (cancelled) return;
-        
-        setSubcategories(data.subcategories || []);
-
-        const fetchEnd = performance.now();
-        console.log('[Subcategories] Fetch completed', {
-          apiTime: `${(apiEnd - apiStart).toFixed(2)}ms`,
-          totalTime: `${(fetchEnd - fetchStart).toFixed(2)}ms`,
-          subcategoriesCount: data.subcategories?.length || 0,
-          timestamp: fetchEnd
-        });
       } catch (error) {
-        if (cancelled) return;
-        console.error('[Subcategories] Error loading subcategories:', error);
-        showToast('Failed to load subcategories', 'error');
+        console.error('[Subcategories] Error loading data:', error);
       } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     };
 
-    loadSubcategories();
+    loadData();
+  }, [searchParams, setSelectedSubcategories]);
+
+  useEffect(() => {
+    // Load subcategories directly (static data) - no API call needed
+    // Use interests for filtering
+    if (selectedInterests.length === 0) {
+      setSubcategories([]);
+      return;
+    }
     
-    return () => {
-      cancelled = true;
-    };
-  }, [router, showToast, userInterests]);
+    // Static subcategories data - matches the API
+    const ALL_SUBCATEGORIES = [
+      // Food & Drink
+      { id: "restaurants", label: "Restaurants", interest_id: "food-drink" },
+      { id: "cafes", label: "Cafés & Coffee", interest_id: "food-drink" },
+      { id: "bars", label: "Bars & Pubs", interest_id: "food-drink" },
+      { id: "fast-food", label: "Fast Food", interest_id: "food-drink" },
+      { id: "fine-dining", label: "Fine Dining", interest_id: "food-drink" },
+      // Beauty & Wellness
+      { id: "gyms", label: "Gyms & Fitness", interest_id: "beauty-wellness" },
+      { id: "spas", label: "Spas", interest_id: "beauty-wellness" },
+      { id: "salons", label: "Hair Salons", interest_id: "beauty-wellness" },
+      { id: "wellness", label: "Wellness Centers", interest_id: "beauty-wellness" },
+      { id: "nail-salons", label: "Nail Salons", interest_id: "beauty-wellness" },
+      // Professional Services
+      { id: "education-learning", label: "Education & Learning", interest_id: "professional-services" },
+      { id: "transport-travel", label: "Transport & Travel", interest_id: "professional-services" },
+      { id: "finance-insurance", label: "Finance & Insurance", interest_id: "professional-services" },
+      { id: "plumbers", label: "Plumbers", interest_id: "professional-services" },
+      { id: "electricians", label: "Electricians", interest_id: "professional-services" },
+      { id: "legal-services", label: "Legal Services", interest_id: "professional-services" },
+      // Outdoors & Adventure
+      { id: "hiking", label: "Hiking", interest_id: "outdoors-adventure" },
+      { id: "cycling", label: "Cycling", interest_id: "outdoors-adventure" },
+      { id: "water-sports", label: "Water Sports", interest_id: "outdoors-adventure" },
+      { id: "camping", label: "Camping", interest_id: "outdoors-adventure" },
+      // Entertainment & Experiences
+      { id: "events-festivals", label: "Events & Festivals", interest_id: "experiences-entertainment" },
+      { id: "sports-recreation", label: "Sports & Recreation", interest_id: "experiences-entertainment" },
+      { id: "nightlife", label: "Nightlife", interest_id: "experiences-entertainment" },
+      { id: "comedy-clubs", label: "Comedy Clubs", interest_id: "experiences-entertainment" },
+      { id: "cinemas", label: "Cinemas", interest_id: "experiences-entertainment" },
+      // Arts & Culture
+      { id: "museums", label: "Museums", interest_id: "arts-culture" },
+      { id: "galleries", label: "Art Galleries", interest_id: "arts-culture" },
+      { id: "theaters", label: "Theaters", interest_id: "arts-culture" },
+      { id: "concerts", label: "Concerts", interest_id: "arts-culture" },
+      // Family & Pets
+      { id: "family-activities", label: "Family Activities", interest_id: "family-pets" },
+      { id: "pet-services", label: "Pet Services", interest_id: "family-pets" },
+      { id: "childcare", label: "Childcare", interest_id: "family-pets" },
+      { id: "veterinarians", label: "Veterinarians", interest_id: "family-pets" },
+      // Shopping & Lifestyle
+      { id: "fashion", label: "Fashion & Clothing", interest_id: "shopping-lifestyle" },
+      { id: "electronics", label: "Electronics", interest_id: "shopping-lifestyle" },
+      { id: "home-decor", label: "Home Decor", interest_id: "shopping-lifestyle" },
+      { id: "books", label: "Books & Media", interest_id: "shopping-lifestyle" }
+    ];
+
+    // Filter by selected interests
+    const filtered = ALL_SUBCATEGORIES.filter(sub => selectedInterests.includes(sub.interest_id));
+
+    // Set subcategories immediately
+    setSubcategories(filtered);
+  }, [selectedInterests]);
 
   const groupedSubcategories = useMemo(() => {
     const grouped: GroupedSubcategories = {};
@@ -165,114 +193,78 @@ function SubcategoriesContent() {
   }, [selectedSubcategories, setSelectedSubcategories, showToast]);
 
   const handleNext = useCallback(async () => {
-    // Prevent double-clicks and ensure we have selections
-    if (isNavigating || !selectedSubcategories || selectedSubcategories.length === 0) {
-      return;
-    }
-
-    const clickTime = performance.now();
-    console.log('[Subcategories] Submit clicked', { 
-      timestamp: clickTime,
-      selections: selectedSubcategories.length 
-    });
+    if (!selectedSubcategories || selectedSubcategories.length === 0) return;
 
     setIsNavigating(true);
 
-    try {
-      const requestStart = performance.now();
-      
-      // Filter out invalid subcategory IDs and map to format expected by API
-      // CRITICAL: Filter before mapping to prevent null subcategory_id inserts
-      const subcategoryData = selectedSubcategories
-        .filter((subId): subId is string => typeof subId === "string" && subId.trim().length > 0)
-        .map((subId) => {
-          const sub = subcategories.find((s) => s.id === subId);
-          if (!sub?.interest_id) {
-            throw new Error(`Subcategory missing interest_id: ${subId}`);
-          }
-          return { 
-            subcategory_id: subId.trim(), 
-            interest_id: sub.interest_id 
-          };
-        });
+    // Valid interest IDs (to ensure we don't accidentally send interests as subcategories)
+    const VALID_INTEREST_IDS = [
+      'food-drink',
+      'beauty-wellness',
+      'professional-services',
+      'outdoors-adventure',
+      'experiences-entertainment',
+      'arts-culture',
+      'family-pets',
+      'shopping-lifestyle'
+    ];
 
-      // Validate we have at least one valid subcategory
-      if (subcategoryData.length === 0) {
-        throw new Error('No valid subcategories selected');
-      }
-
-      // Save subcategories - API MUST always respond (no hanging requests)
-      const response = await fetch('/api/onboarding/subcategories', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subcategories: subcategoryData })
+    // Prepare subcategories data with interest_id for each subcategory
+    // CRITICAL: Filter out any subcategoryId that matches an interest ID
+    const subcategoriesData = selectedSubcategories
+      .filter(subcategoryId => {
+        // Ensure subcategoryId is NOT an interest ID
+        if (VALID_INTEREST_IDS.includes(subcategoryId)) {
+          console.warn('[Subcategories] Filtered out interest ID passed as subcategory:', subcategoryId);
+          return false;
+        }
+        return true;
+      })
+      .map(subcategoryId => {
+        const subcategory = subcategories.find(s => s.id === subcategoryId);
+        return {
+          subcategory_id: subcategoryId,
+          interest_id: subcategory?.interest_id || ''
+        };
+      })
+      .filter(item => {
+        // Filter out any without interest_id AND ensure subcategory_id is not an interest
+        return item.interest_id && !VALID_INTEREST_IDS.includes(item.subcategory_id);
       });
 
-      const requestEnd = performance.now();
-      const requestTime = requestEnd - requestStart;
-      
-      // Parse response - handle both success and error cases
-      const data = await response.json().catch(() => ({}));
+    console.log('[Subcategories] Submit clicked', {
+      selections: subcategoriesData.length,
+      subcategoriesData: subcategoriesData
+    });
 
+    // Navigate immediately to dealbreakers
+    router.replace('/deal-breakers');
+
+    // Save to database in the background AFTER navigation (don't wait)
+    fetch('/api/onboarding/subcategories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subcategories: subcategoriesData })
+    }).then(response => {
       if (!response.ok) {
-        throw new Error(data?.error || data?.message || 'Failed to save subcategories');
+        console.error('[Subcategories] Failed to save subcategories');
+      } else {
+        console.log('[Subcategories] Subcategories saved successfully');
       }
-
-      console.log('[Subcategories] Save completed', {
-        requestTime: `${requestTime.toFixed(2)}ms`,
-        timestamp: requestEnd,
-        subcategoriesCount: data.subcategoriesCount
-      });
-
-      // CRITICAL: Refresh user profile to ensure middleware sees updated onboarding_step
-      // The API route updates onboarding_step to 'deal-breakers', but we need to refresh
-      // the client-side user object so middleware can read the correct step
-      await refreshUser();
-      
-      // Small delay to ensure database update has propagated
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Navigate after profile refresh - middleware will read fresh onboarding_step
-      router.replace('/deal-breakers');
-
-    } catch (error) {
+    }).catch(error => {
       console.error('[Subcategories] Error saving subcategories:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to save subcategories. Please try again.';
-      showToast(errorMessage, 'error');
-    } finally {
-      // CRITICAL: This is what stops the infinite spinner
-      // Always clear loading state, even if navigation or API call fails
-      setIsNavigating(false);
-    }
-  }, [selectedSubcategories, subcategories, router, showToast, isNavigating]);
+    });
+  }, [selectedSubcategories, subcategories, router]);
 
   const canProceed = (selectedSubcategories?.length || 0) > 0 && !isNavigating;
-  
-  // Use local loading state only - don't use global isLoading from context
-  // This prevents infinite spinner when context state gets stuck
-  const actionsLoading = loading || isNavigating;
 
-  // Show skeleton immediately while loading
   if (loading) {
     return (
-      <>
-        <SubcategoryStyles />
-        <OnboardingLayout step={2} backHref="/interests">
-          <SubcategoryHeader />
-          <div className="enter-fade">
-            <SubcategorySelection selectedCount={0} maxSelections={MAX_SELECTIONS}>
-              <SubcategoryGridSkeleton />
-            </SubcategorySelection>
-            <SubcategoryActions
-              canProceed={false}
-              isNavigating={false}
-              isLoading={false}
-              selectedCount={0}
-              onContinue={() => {}}
-            />
-          </div>
-        </OnboardingLayout>
-      </>
+      <OnboardingLayout step={2} backHref="/interests">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Loader size="md" variant="wavy" color="sage" />
+        </div>
+      </OnboardingLayout>
     );
   }
 
@@ -308,7 +300,7 @@ function SubcategoriesContent() {
           <SubcategoryActions
             canProceed={canProceed}
             isNavigating={isNavigating}
-            isLoading={actionsLoading}
+            isLoading={isLoading}
             selectedCount={selectedSubcategories?.length || 0}
             onContinue={handleNext}
           />
@@ -322,24 +314,11 @@ export default function SubcategoriesPage() {
   return (
     <ProtectedRoute requiresAuth={true}>
       <Suspense fallback={
-        <>
-          <SubcategoryStyles />
-          <OnboardingLayout step={2} backHref="/interests">
-            <SubcategoryHeader />
-            <div className="enter-fade">
-              <SubcategorySelection selectedCount={0} maxSelections={10}>
-                <SubcategoryGridSkeleton />
-              </SubcategorySelection>
-              <SubcategoryActions
-                canProceed={false}
-                isNavigating={false}
-                isLoading={false}
-                selectedCount={0}
-                onContinue={() => {}}
-              />
-            </div>
-          </OnboardingLayout>
-        </>
+        <OnboardingLayout step={2} backHref="/interests">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <Loader size="md" variant="wavy" color="sage" />
+          </div>
+        </OnboardingLayout>
       }>
         <SubcategoriesContent />
       </Suspense>

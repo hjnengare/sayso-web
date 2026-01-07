@@ -146,8 +146,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       const { subcategories } = await res.json();
 
       // Set subcategories directly - they should be {id,label,interest_id}
-      // Guard: ensure subcategories is always an array
-      setSubInterests(Array.isArray(subcategories) ? subcategories : []);
+      setSubInterests(subcategories);
       console.log("loaded subInterests", subcategories);
     } catch (error) {
       console.error('Error loading sub-interests:', error);
@@ -199,22 +198,16 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       showToast(completionMessage, 'success', 3000);
 
       // Navigate to the next step - NO SAVING until final step
-      // Use replace for faster navigation and prefetch for instant loading
       if (nextStepName === 'complete') {
-        router.prefetch('/home');
-        router.replace('/home');
+        router.push('/home');
       } else if (nextStepName === 'subcategories' && currentStep === 'interests') {
         // Pass selected interests as URL params to subcategories
         const interestParams = selectedInterests.length > 0
           ? `?interests=${selectedInterests.join(',')}`
           : '';
-        const nextUrl = `/subcategories${interestParams}`;
-        router.prefetch(nextUrl);
-        router.replace(nextUrl);
+        router.push(`/subcategories${interestParams}`);
       } else {
-        const nextUrl = `/${nextStepName}`;
-        router.prefetch(nextUrl);
-        router.replace(nextUrl);
+        router.push(`/${nextStepName}`);
       }
     } catch (error) {
       console.error('Error proceeding to next step:', error);

@@ -30,7 +30,7 @@ export default function OnboardingButton({
 
   const getButtonText = () => {
     if (isProcessing) {
-      return variant === "complete" ? "Completing..." : "Saving...";
+      return variant === "complete" ? "Completing..." : "Loading...";
     }
     
     if (text) {

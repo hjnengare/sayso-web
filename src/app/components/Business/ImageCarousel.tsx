@@ -72,7 +72,7 @@ export function ImageCarousel({
         <div className="relative w-full mx-auto overflow-visible sm:overflow-hidden border-0 sm:border border-sage/10 bg-card-bg rounded-[20px] sm:rounded-[20px]">
             {/* Slides */}
             <div
-                className="relative h-[60vh] overflow-visible sm:overflow-hidden cursor-pointer group bg-card-bg flex items-center justify-center rounded-[20px] sm:rounded-[20px]"
+                className="relative h-[80vh] sm:h-[60vh] overflow-visible sm:overflow-hidden cursor-pointer group bg-card-bg flex items-center justify-center rounded-[20px] sm:rounded-[20px]"
                 onClick={hasImages ? openModal : undefined}
             >
                 {hasImages ? (
@@ -138,9 +138,11 @@ export function ImageCarousel({
                                 priority
                             />
                         ) : (
-                            <div className="flex flex-col items-center justify-center text-coral/30 gap-3">
-                                <StarIcon className="w-32 h-32" strokeWidth={1.2} />
-                                <span className="text-sm font-semibold tracking-wide uppercase text-charcoal/50">
+                            <div className="flex flex-col items-center justify-center gap-3">
+                                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-coral/20 to-coral/10 flex items-center justify-center">
+                                    <StarIcon className="w-10 h-10 sm:w-12 sm:h-12 text-charcoal" strokeWidth={1.5} />
+                                </div>
+                                <span className="text-sm font-semibold tracking-wide uppercase text-charcoal/70">
                                     No Photos Yet
                                 </span>
                             </div>

@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useMemo, useRef, Suspense } from "rea
 import { useRouter, useSearchParams } from "next/navigation";
 import { useOnboarding } from "../contexts/OnboardingContext";
 import { useToast } from "../contexts/ToastContext";
-import { useAuth } from "../contexts/AuthContext";
 import OnboardingLayout from "../components/Onboarding/OnboardingLayout";
 import ProtectedRoute from "../components/ProtectedRoute/ProtectedRoute";
 import { Loader } from "../components/Loader";
@@ -14,7 +13,6 @@ import InterestStyles from "../components/Interests/InterestStyles";
 import InterestHeader from "../components/Interests/InterestHeader";
 import InterestSelection from "../components/Interests/InterestSelection";
 import InterestGrid from "../components/Interests/InterestGrid";
-import InterestGridSkeleton from "../components/Interests/InterestGridSkeleton";
 import InterestActions from "../components/Interests/InterestActions";
 
 
@@ -50,17 +48,11 @@ function InterestsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { showToast, showToastOnce } = useToast();
-  const { user, isLoading: authLoading, refreshUser } = useAuth();
 
-  // Prefetch all onboarding pages immediately on mount for faster navigation
+  // Prefetch next page immediately on mount for faster navigation
   useEffect(() => {
     router.prefetch("/subcategories");
-    router.prefetch("/deal-breakers");
-    router.prefetch("/complete");
   }, [router]);
-
-  // Trust middleware for routing - no defensive checks needed
-  // Middleware is the single source of truth for onboarding access
 
   const MIN_SELECTIONS = 3;
   const MAX_SELECTIONS = 6;
@@ -68,9 +60,31 @@ function InterestsContent() {
   const {
     selectedInterests,
     setSelectedInterests,
+    nextStep,
     isLoading: onboardingLoading,
     error: onboardingError,
   } = useOnboarding();
+
+  // Load saved interests from database on mount (for back navigation)
+  useEffect(() => {
+    const loadSavedInterests = async () => {
+      try {
+        const response = await fetch('/api/user/onboarding');
+        if (response.ok) {
+          const data = await response.json();
+          const savedInterests = data.interests || [];
+          if (savedInterests.length > 0) {
+            console.log('[Interests] Loaded saved interests from DB:', savedInterests);
+            setSelectedInterests(savedInterests);
+          }
+        }
+      } catch (error) {
+        console.error('[Interests] Error loading saved interests:', error);
+      }
+    };
+
+    loadSavedInterests();
+  }, [setSelectedInterests]);
 
   const analyticsTracked = useRef({
     impression: false,
@@ -146,16 +160,13 @@ function InterestsContent() {
 
       if (!isCurrentlySelected && selectedInterests.length >= MAX_SELECTIONS) {
         showToast(`Maximum ${MAX_SELECTIONS} interests allowed`, "warning", 2000);
-        // Use requestAnimationFrame for smoother animation
-        requestAnimationFrame(() => {
-          const button = document.querySelector(
-            `[data-interest-id="${interestId}"]`
-          );
-          if (button) {
-            button.classList.add("animate-shake");
-            setTimeout(() => button.classList.remove("animate-shake"), 600);
-          }
-        });
+        const button = document.querySelector(
+          `[data-interest-id="${interestId}"]`
+        );
+        if (button) {
+          button.classList.add("animate-shake");
+          setTimeout(() => button.classList.remove("animate-shake"), 600);
+        }
         return;
       }
 
@@ -173,7 +184,7 @@ function InterestsContent() {
         }
       }
     },
-    [selectedInterests, setSelectedInterests, showToast, triggerBounce, MAX_SELECTIONS, MIN_SELECTIONS]
+    [selectedInterests, setSelectedInterests, showToast, triggerBounce]
   );
 
   const canProceed = useMemo(() => {
@@ -181,73 +192,34 @@ function InterestsContent() {
     return hasMinimumSelection && !isNavigating;
   }, [selectedInterests.length, isNavigating]);
 
-  const handleNext = useCallback(async (e?: React.MouseEvent) => {
-    // Prevent any default form submission behavior
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-
-    if (!canProceed || isNavigating) return;
-    
-    const clickTime = performance.now();
-    console.log('[Interests] Submit clicked', { 
-      timestamp: clickTime,
-      selections: selectedInterests.length 
-    });
-
+  const handleNext = useCallback(async () => {
+    if (!canProceed) return;
     setIsNavigating(true);
 
-    try {
-      const requestStart = performance.now();
+    console.log('[Interests] Submit clicked', {
+      selections: selectedInterests.length,
+      selectedInterests: selectedInterests
+    });
 
-      // Prefetch subcategories page immediately for instant navigation
-      router.prefetch('/subcategories');
-
-      // Save data first - API should complete in <2 seconds
-      const response = await fetch('/api/onboarding/interests', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ interests: selectedInterests })
-      });
-
-      const requestEnd = performance.now();
-      const requestTime = requestEnd - requestStart;
-
-      console.log('[Interests] Save completed', {
-        requestTime: `${requestTime.toFixed(2)}ms`,
-        timestamp: requestEnd
-      });
-
+    // Save interests to database asynchronously (don't wait)
+    fetch('/api/onboarding/interests', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ interests: selectedInterests })
+    }).then(response => {
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to save interests');
+        console.error('[Interests] Failed to save interests');
+      } else {
+        console.log('[Interests] Interests saved successfully');
       }
-
-      // Refresh user data after successful save to update profile counts
-      await refreshUser();
-
-      const navStart = performance.now();
-
-      // Navigate after successful save
-      router.replace('/subcategories');
-      
-      // Force refresh to clear Next.js cache and ensure middleware sees updated profile
-      router.refresh();
-
-      const navEnd = performance.now();
-      console.log('[Interests] Navigation started', {
-        navTime: `${(navEnd - navStart).toFixed(2)}ms`,
-        totalTime: `${(navEnd - clickTime).toFixed(2)}ms`,
-        timestamp: navEnd
-      });
-
-    } catch (error) {
+    }).catch(error => {
       console.error('[Interests] Error saving interests:', error);
-      showToast(error instanceof Error ? error.message : 'Failed to save interests. Please try again.', 'error');
-      setIsNavigating(false);
-    }
-  }, [canProceed, selectedInterests, router, showToast, isNavigating, refreshUser]);
+    });
+
+    // Navigate immediately to subcategories page with interests in URL for instant filtering
+    const interestsParam = selectedInterests.join(',');
+    router.replace(`/subcategories?interests=${interestsParam}`);
+  }, [canProceed, selectedInterests, router]);
 
   const hydratedSelected = mounted ? selectedInterests : [];
   const list = INTERESTS;
@@ -303,27 +275,11 @@ export default function InterestsPage() {
   return (
     <ProtectedRoute requiresAuth={true}>
       <Suspense fallback={
-        <>
-          <InterestStyles />
-          <OnboardingLayout backHref="/register" step={1}>
-            <InterestHeader isOnline={true} />
-            <div className="enter-fade">
-              <InterestSelection 
-                selectedCount={0}
-                minSelections={3}
-                maxSelections={6}
-              />
-              <InterestGridSkeleton />
-              <InterestActions
-                canProceed={false}
-                isNavigating={false}
-                selectedCount={0}
-                minSelections={3}
-                onContinue={() => {}}
-              />
-            </div>
-          </OnboardingLayout>
-        </>
+        <OnboardingLayout backHref="/register" step={1}>
+          <div className="flex items-center justify-center min-h-[400px]">
+            <Loader size="md" variant="wavy" color="sage" />
+          </div>
+        </OnboardingLayout>
       }>
         <InterestsContent />
       </Suspense>

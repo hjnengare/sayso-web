@@ -16,6 +16,12 @@ export async function middleware(request: NextRequest) {
   response.headers.set('Pragma', 'no-cache');
   response.headers.set('Expires', '0');
 
+  // Single-line bypass for celebration and home routes
+  const pathname = request.nextUrl.pathname;
+  if (pathname === '/home' || pathname === '/complete') {
+    return NextResponse.next();
+  }
+
   // CRITICAL: Using ANON KEY in middleware can break profile reads under RLS on Vercel Edge
   // This relies on cookies/JWT being attached correctly at the edge
   // If profile reads fail (profile comes back null), consider:

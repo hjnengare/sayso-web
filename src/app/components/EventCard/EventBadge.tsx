@@ -38,15 +38,11 @@ interface EventBadgeProps {
 }
 
 export default function EventBadge({ startDate, endDate, eventId }: EventBadgeProps) {
-  // Use unique color if eventId is provided, otherwise fallback to coral
-  const badgeColor = eventId ? getUniqueEventColor(eventId) : '#FF6B6B';
-  
   return (
     <div className="absolute left-0 top-0 z-20 overflow-hidden" style={{ width: '150px', height: '120px' }}>
       <div 
-        className="absolute text-white px-5 py-2.5 shadow-md"
+        className="absolute text-white px-5 py-2.5 shadow-md bg-navbar-bg/90"
         style={{
-          backgroundColor: badgeColor,
           transform: 'rotate(-50deg)',
           transformOrigin: 'center',
           left: '-40px',

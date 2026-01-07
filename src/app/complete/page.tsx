@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Fontdiner_Swanky } from "next/font/google";
-import { Smile, Star, Check, ArrowRight, CheckCircle } from "react-feather";
+import { ArrowRight, CheckCircle } from "react-feather";
+import { ShieldCheck, Clock, Smile, BadgeDollarSign } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useReducedMotion } from "../utils/useReducedMotion";
 import OnboardingLayout from "../components/Onboarding/OnboardingLayout";
@@ -17,20 +18,16 @@ const swanky = Fontdiner_Swanky({
   display: "swap",
 });
 
+// Dealbreaker icon mapping
+const DEALBREAKER_ICONS: { [key: string]: React.ComponentType<{ className?: string }> } = {
+  "trustworthiness": ShieldCheck,
+  "punctuality": Clock,
+  "friendliness": Smile,
+  "value-for-money": BadgeDollarSign,
+};
+
 // 🎨 Additional animations + highlight removal
 const completeStyles = `
-  @keyframes float {
-    0% { transform: translateY(0) scale(.95); opacity: 0; }
-    10% { opacity: 1; }
-    50% { transform: translateY(-40%) scale(1); }
-    90% { opacity: 1; }
-    100% { transform: translateY(-90%) scale(.95); opacity: 0; }
-  }
-
-  .float-anim { animation: float 4s ease-in-out infinite; }
-  .float-anim.delay-400 { animation-delay: .4s; }
-  .float-anim.delay-800 { animation-delay: .8s; }
-
   /* Prevent word breaking in titles on mobile */
   .title-no-break {
     word-break: keep-all;
@@ -53,13 +50,68 @@ const completeStyles = `
     }
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .float-anim { animation: none !important; }
-  }
-
   /* 🔒 Remove browser tap highlight overlay */
   * {
     -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Floating dealbreaker icons - horizontal above button */
+  @keyframes floatIcon {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-8px) scale(1.05); }
+  }
+
+  .dealbreakers-icons-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .floating-dealbreaker-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.8;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+    animation: floatIcon 3s ease-in-out infinite;
+  }
+
+  .floating-dealbreaker-icon:nth-child(1) {
+    animation-delay: 0s;
+  }
+
+  .floating-dealbreaker-icon:nth-child(2) {
+    animation-delay: 0.3s;
+  }
+
+  .floating-dealbreaker-icon:nth-child(3) {
+    animation-delay: 0.6s;
+  }
+
+  .floating-dealbreaker-icon:nth-child(4) {
+    animation-delay: 0.9s;
+  }
+
+  @media (max-width: 768px) {
+    .dealbreakers-icons-container {
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .floating-dealbreaker-icon {
+      opacity: 0.7;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .floating-dealbreaker-icon {
+      animation: none !important;
+      opacity: 0.6 !important;
+    }
   }
 `;
 
@@ -70,91 +122,61 @@ const sf = {
 } as const;
 
 function CompletePageContent() {
-  const { updateUser, user, refreshUser } = useAuth();
+  const { updateUser, user } = useAuth();
   const reducedMotion = useReducedMotion();
   const router = useRouter();
+  const redirectTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hasRedirectedRef = useRef(false);
-  const hasMarkedCompleteRef = useRef(false);
+  const [selectedDealbreakers, setSelectedDealbreakers] = useState<string[]>([]);
 
-  // Trust middleware for routing - no defensive checks needed
-  // Middleware is the single source of truth for onboarding access
-
-  // Mark onboarding as complete when this page shows (server-side check)
-  // CRITICAL: This is the SINGLE AUTHORITATIVE PLACE that marks onboarding as complete
+  // Load selected dealbreakers from database
   useEffect(() => {
-    if (!user || hasMarkedCompleteRef.current) return;
-
-    const markComplete = async () => {
+    const loadDealbreakers = async () => {
       try {
-        // Check if already complete to avoid unnecessary API call
-        if (user.profile?.onboarding_complete === true && user.profile?.onboarding_step === 'complete') {
-          console.log('[Complete Page] Onboarding already marked complete');
-          hasMarkedCompleteRef.current = true;
-          return;
+        const response = await fetch('/api/user/onboarding');
+        if (response.ok) {
+          const data = await response.json();
+          const dealbreakers = data.dealbreakers || [];
+          if (dealbreakers.length > 0) {
+            setSelectedDealbreakers(dealbreakers);
+          }
         }
-
-        console.log('[Complete Page] Marking onboarding as complete...');
-        
-        // CRITICAL: Use server action to mark completion
-        // This ensures completion is marked atomically and verified
-        const response = await fetch('/api/user/onboarding', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            step: 'complete',
-            markComplete: true
-          })
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('[Complete Page] Failed to mark onboarding as complete:', {
-            status: response.status,
-            statusText: response.statusText,
-            error: errorText
-          });
-          throw new Error(`Failed to mark onboarding as complete: ${response.status} ${errorText}`);
-        }
-
-        const result = await response.json();
-        console.log('[Complete Page] API response:', result);
-
-        // Refresh user data to get updated profile
-        await refreshUser();
-        hasMarkedCompleteRef.current = true;
-        console.log('[Complete Page] Onboarding marked as complete successfully');
       } catch (error) {
-        console.error('[Complete Page] Error marking onboarding as complete:', error);
-        // Don't set cookie on error - let middleware handle redirect
-        // This ensures we don't bypass the completion check
+        console.error('[Complete] Error loading dealbreakers:', error);
       }
     };
 
-    markComplete();
-  }, [user, refreshUser]);
+    loadDealbreakers();
+  }, []);
 
-  // Set a cookie to indicate user has visited the complete page
-  // This cookie is required by middleware before allowing access to /home
+  // Auto-redirect to home after 3.5 seconds (fallback if user doesn't click)
   useEffect(() => {
-    // Set cookie immediately when page loads - indicates user has seen the celebration page
-    // Cookie expires in 1 day
-    document.cookie = `onboarding_complete_visited=true; path=/; max-age=${60 * 60 * 24}; SameSite=Lax`;
-  }, []); // Set once on mount
+    redirectTimerRef.current = setTimeout(() => {
+      if (!hasRedirectedRef.current) {
+        hasRedirectedRef.current = true;
+        console.log('[Complete] Auto-redirecting to home after 3.5 seconds');
+        router.replace('/home');
+      }
+    }, 3500);
 
-  // Removed auto-redirect - user must click "Continue to Home" button
-  // This gives users time to see the completion screen and celebrate
+    return () => {
+      if (redirectTimerRef.current) {
+        clearTimeout(redirectTimerRef.current);
+      }
+    };
+  }, [router]);
 
-  // Handle manual redirect when button is clicked
+  // Handle manual redirect when button is clicked - navigate immediately
   const handleContinueClick = (e: React.MouseEvent) => {
     e.preventDefault();
+    // Clear auto-redirect timer
+    if (redirectTimerRef.current) {
+      clearTimeout(redirectTimerRef.current);
+    }
+    // Navigate immediately (no wait)
     if (!hasRedirectedRef.current) {
       hasRedirectedRef.current = true;
-      
-      // Ensure cookie is set before navigation (in case useEffect hasn't run yet)
-      // This cookie is required by middleware to allow access to /home
-      document.cookie = `onboarding_complete_visited=true; path=/; max-age=${60 * 60 * 24}; SameSite=Lax`;
-      
-      // Navigate to home page
+      console.log('[Complete] User clicked button, navigating to home immediately');
       router.replace('/home');
     }
   };
@@ -214,7 +236,7 @@ function CompletePageContent() {
         showProgress={false}
       >
         <div
-          className="text-center animate-fade-in-up flex-1 flex flex-col justify-center px-4"
+          className="text-center animate-fade-in-up flex-1 flex flex-col justify-center px-4 relative"
           style={
             {
               "--coral": "hsl(16, 100%, 66%)",
@@ -246,20 +268,27 @@ function CompletePageContent() {
             Time to discover what&apos;s out there.
           </p>
 
-          {/* Floating graphics (non-interactive now) */}
-          <div className="relative mx-auto mb-4 h-28 w-full max-w-[420px]" aria-hidden="true">
-            <div className="absolute inset-0 overflow-hidden">
-              <div className="absolute bottom-0 left-[15%] w-14 h-14 rounded-full bg-gradient-to-br from-off-white/95 to-off-white/90 border-2 border-coral/60 ring-1 ring-coral/20 backdrop-blur-xl flex items-center justify-center float-anim pointer-events-none select-none">
-                <Smile className="w-5 h-5 text-charcoal" aria-hidden="true" />
-              </div>
-              <div className="absolute bottom-0 left-[45%] w-14 h-14 rounded-full bg-gradient-to-br from-off-white/95 to-off-white/90 border-2 border-sage/60 ring-1 ring-sage/20 backdrop-blur-xl flex items-center justify-center float-anim delay-400 pointer-events-none select-none">
-                <Star className="w-5 h-5 text-charcoal" aria-hidden="true" />
-              </div>
-              <div className="absolute bottom-0 left-[75%] w-14 h-14 rounded-full bg-gradient-to-br from-off-white/95 to-off-white/90 border-2 border-coral/60 ring-1 ring-coral/20 backdrop-blur-xl flex items-center justify-center float-anim delay-800 pointer-events-none select-none">
-                <Check className="w-5 h-5 text-charcoal" aria-hidden="true" />
-              </div>
+          {/* Floating dealbreaker icons - horizontal above button */}
+          {selectedDealbreakers.length > 0 && (
+            <div className="dealbreakers-icons-container">
+              {selectedDealbreakers.map((dealbreakerId) => {
+                const IconComponent = DEALBREAKER_ICONS[dealbreakerId];
+                if (!IconComponent) return null;
+                
+                return (
+                  <div
+                    key={dealbreakerId}
+                    className="floating-dealbreaker-icon"
+                    aria-hidden="true"
+                  >
+                    <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-sage/20 to-coral/20 border-2 border-sage/30 flex items-center justify-center backdrop-blur-sm">
+                      <IconComponent className="w-6 h-6 md:w-7 md:h-7 text-sage" />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          </div>
+          )}
 
           {/* Continue CTA */}
           <div>

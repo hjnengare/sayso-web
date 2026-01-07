@@ -130,14 +130,6 @@ export default function LoginPage() {
       <style dangerouslySetInnerHTML={{ __html: authStyles }} />
       <div ref={containerRef} className="min-h-[100dvh] bg-off-white flex flex-col relative overflow-hidden ios-inertia hide-scrollbar safe-area-full">
 
-        {/* Premium floating orbs background */}
-        <div className="floating-orb floating-orb-1" aria-hidden="true" />
-        <div className="floating-orb floating-orb-2" aria-hidden="true" />
-        <div className="floating-orb floating-orb-3" aria-hidden="true" />
-        <div className="floating-orb floating-orb-4" aria-hidden="true" />
-        <div className="floating-orb floating-orb-5" aria-hidden="true" />
-        <div className="floating-orb floating-orb-6" aria-hidden="true" />
-
         {/* Back button with entrance animation */}
         <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-20 animate-slide-in-left animate-delay-200">
           <Link href="/onboarding" className="text-charcoal hover:text-charcoal/80 transition-colors duration-300 p-2 hover:bg-off-white/50 rounded-lg block backdrop-blur-sm">
