@@ -199,28 +199,50 @@ export async function GET() {
   }
 
   try {
-    // Get user's interests
-    const { data: interests } = await supabase
-      .from('user_interests')
-      .select('interest_id')
-      .eq('user_id', user.id);
+    // Get user's profile to check counts (CRITICAL: Only hydrate if user has actually saved data)
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('interests_count, subcategories_count, dealbreakers_count')
+      .eq('user_id', user.id)
+      .single();
 
-    // Get user's subcategories
-    const { data: subcategories } = await supabase
-      .from('user_subcategories')
-      .select('subcategory_id, interest_id')
-      .eq('user_id', user.id);
+    // Get user's interests - ONLY if interests_count > 0
+    let interests: string[] = [];
+    if (profile && profile.interests_count && profile.interests_count > 0) {
+      const { data: interestsData } = await supabase
+        .from('user_interests')
+        .select('interest_id')
+        .eq('user_id', user.id);
+      interests = interestsData?.map(i => i.interest_id) || [];
+    }
 
-    // Get user's dealbreakers
-    const { data: dealbreakers } = await supabase
-      .from('user_dealbreakers')
-      .select('dealbreaker_id')
-      .eq('user_id', user.id);
+    // Get user's subcategories - ONLY if subcategories_count > 0
+    let subcategories: any[] = [];
+    if (profile && profile.subcategories_count && profile.subcategories_count > 0) {
+      const { data: subcategoriesData } = await supabase
+        .from('user_subcategories')
+        .select('subcategory_id, interest_id')
+        .eq('user_id', user.id);
+      subcategories = subcategoriesData || [];
+    }
+
+    // Get user's dealbreakers - ONLY if dealbreakers_count > 0
+    let dealbreakers: string[] = [];
+    if (profile && profile.dealbreakers_count && profile.dealbreakers_count > 0) {
+      const { data: dealbreakersData } = await supabase
+        .from('user_dealbreakers')
+        .select('dealbreaker_id')
+        .eq('user_id', user.id);
+      dealbreakers = dealbreakersData?.map(d => d.dealbreaker_id) || [];
+    }
 
     return NextResponse.json({
-      interests: interests?.map(i => i.interest_id) || [],
-      subcategories: subcategories || [],
-      dealbreakers: dealbreakers?.map(d => d.dealbreaker_id) || []
+      interests,
+      subcategories,
+      dealbreakers,
+      interests_count: profile?.interests_count || 0,
+      subcategories_count: profile?.subcategories_count || 0,
+      dealbreakers_count: profile?.dealbreakers_count || 0
     });
 
   } catch (error) {

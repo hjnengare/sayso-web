@@ -73,18 +73,33 @@ function SubcategoriesContent() {
           setSelectedInterests(interests);
         } else {
           // Load interests from database (for back navigation)
+          // CRITICAL: Only hydrate if user has actually saved data
           const response = await fetch('/api/user/onboarding');
           if (response.ok) {
             const data = await response.json();
-            interests = data.interests || [];
-            setSelectedInterests(interests);
+            const interestsCount = data.interests_count || 0;
+            const subcategoriesCount = data.subcategories_count || 0;
             
-            // Also load saved subcategories
-            const savedSubcategories = data.subcategories || [];
-            const subcategoryIds = savedSubcategories.map((item: { subcategory_id: string }) => item.subcategory_id);
-            if (subcategoryIds.length > 0) {
-              console.log('[Subcategories] Loaded saved subcategories from DB:', subcategoryIds);
-              setSelectedSubcategories(subcategoryIds);
+            // ONLY hydrate interests if user has explicitly saved them
+            if (interestsCount > 0) {
+              interests = data.interests || [];
+              setSelectedInterests(interests);
+            } else {
+              interests = [];
+              setSelectedInterests([]);
+            }
+            
+            // ONLY hydrate subcategories if user has explicitly saved them
+            if (subcategoriesCount > 0) {
+              const savedSubcategories = data.subcategories || [];
+              const subcategoryIds = savedSubcategories.map((item: { subcategory_id: string }) => item.subcategory_id);
+              if (subcategoryIds.length > 0) {
+                console.log('[Subcategories] Loaded saved subcategories from DB:', subcategoryIds);
+                setSelectedSubcategories(subcategoryIds);
+              }
+            } else {
+              // Brand-new user - ensure empty state
+              setSelectedSubcategories([]);
             }
           }
         }

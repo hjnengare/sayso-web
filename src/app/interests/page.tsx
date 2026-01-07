@@ -66,20 +66,32 @@ function InterestsContent() {
   } = useOnboarding();
 
   // Load saved interests from database on mount (for back navigation)
+  // CRITICAL: Only hydrate if user has actually saved interests (interests_count > 0)
+  // Brand-new users must see ZERO interests selected
   useEffect(() => {
     const loadSavedInterests = async () => {
       try {
         const response = await fetch('/api/user/onboarding');
         if (response.ok) {
           const data = await response.json();
+          const interestsCount = data.interests_count || 0;
           const savedInterests = data.interests || [];
-          if (savedInterests.length > 0) {
+          
+          // ONLY hydrate if user has explicitly saved interests before
+          // This prevents preselection for brand-new users
+          if (interestsCount > 0 && savedInterests.length > 0) {
             console.log('[Interests] Loaded saved interests from DB:', savedInterests);
             setSelectedInterests(savedInterests);
+          } else {
+            // Brand-new user - ensure empty state
+            console.log('[Interests] New user detected, starting with empty selection');
+            setSelectedInterests([]);
           }
         }
       } catch (error) {
         console.error('[Interests] Error loading saved interests:', error);
+        // On error, ensure empty state for new users
+        setSelectedInterests([]);
       }
     };
 

@@ -74,22 +74,35 @@ function DealBreakersContent() {
   }, [router]);
 
   // Load saved dealbreakers from database on mount (for back navigation)
+  // CRITICAL: Only hydrate if user has actually saved dealbreakers (dealbreakers_count > 0)
+  // Brand-new users must see ZERO dealbreakers selected
   useEffect(() => {
     const loadSavedDealbreakers = async () => {
       try {
         const response = await fetch('/api/user/onboarding');
         if (response && response.ok) {
           const data = await response.json();
+          const dealbreakersCount = data.dealbreakers_count || 0;
           const savedDealbreakers = data.dealbreakers || [];
-          if (savedDealbreakers.length > 0) {
+          
+          // ONLY hydrate if user has explicitly saved dealbreakers before
+          // This prevents preselection for brand-new users
+          if (dealbreakersCount > 0 && savedDealbreakers.length > 0) {
             console.log('[Deal-breakers] Loaded saved dealbreakers from DB:', savedDealbreakers);
             setSelectedDealbreakers(savedDealbreakers);
             setContextDealbreakers(savedDealbreakers);
+          } else {
+            // Brand-new user - ensure empty state
+            console.log('[Deal-breakers] New user detected, starting with empty selection');
+            setSelectedDealbreakers([]);
+            setContextDealbreakers([]);
           }
         }
       } catch (error) {
         console.error('[Deal-breakers] Error loading saved dealbreakers:', error);
-        // Don't show error toast - this is just for restoring state
+        // On error, ensure empty state for new users
+        setSelectedDealbreakers([]);
+        setContextDealbreakers([]);
       }
     };
 
