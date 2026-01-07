@@ -59,29 +59,32 @@ function SubcategoriesContent() {
     return null; // Signal to fetch from API
   }, []);
 
-  // Enforce prerequisite: user must have selected interests before accessing subcategories
+  // STRICT STATE MACHINE: Use onboarding_step (not counts) for routing
+  // Middleware already enforces access, but we do a defensive check here
   useEffect(() => {
     if (user) {
-      const interestsCount = user.profile?.interests_count || 0;
-      if (interestsCount === 0) {
-        console.log('[Subcategories] No interests selected, redirecting to interests');
+      const currentStep = user.profile?.onboarding_step;
+      
+      // If onboarding is complete, redirect to home
+      if (user.profile?.onboarding_complete === true) {
+        console.log('[Subcategories] Onboarding complete, redirecting to home');
+        router.replace('/home');
+        return;
+      }
+      
+      // If user is on 'interests' step, redirect to interests (prerequisite not met)
+      if (currentStep === 'interests') {
+        console.log('[Subcategories] User must complete interests first, redirecting');
         router.replace('/interests');
         return;
       }
+      
+      // If user is on 'deal-breakers' or 'complete' step, they can access subcategories (back navigation)
+      // But if they're on 'deal-breakers', they should be on that page instead
+      // Only allow if they're going back (currentStep is 'deal-breakers' or 'complete')
+      // Actually, middleware handles this - we just need to not redirect them away
     }
   }, [user, router]);
-
-  // Defensive redirect: if subcategories are already saved, redirect to deal-breakers
-  // This prevents stale state, double clicks, and "stuck but completed" cases
-  // CRITICAL: Don't redirect while navigating (would fight with handleNext)
-  useEffect(() => {
-    if (isNavigating) return; // Don't fight navigation
-    
-    if (user && (user.profile?.subcategories_count || 0) > 0) {
-      console.log('[Subcategories] Subcategories already saved, redirecting to deal-breakers');
-      router.replace('/deal-breakers');
-    }
-  }, [user, router, isNavigating]);
 
   // Fetch subcategories on page load - show skeleton immediately
   useEffect(() => {

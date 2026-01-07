@@ -75,23 +75,42 @@ function DealBreakersContent() {
     }
   }, [user]);
 
-  // Enforce prerequisites: user must have completed interests and subcategories
+  // STRICT STATE MACHINE: Use onboarding_step (not counts) for routing
+  // Middleware already enforces access, but we do a defensive check here
   useEffect(() => {
     if (user) {
-      const interestsCount = user.profile?.interests_count || 0;
-      const subcategoriesCount = user.profile?.subcategories_count || 0;
+      const currentStep = user.profile?.onboarding_step;
       
-      if (interestsCount === 0) {
-        console.log('DealBreakersPage: No interests selected, redirecting to interests');
-        router.replace('/interests');
+      // If onboarding is complete, redirect to home
+      if (user.profile?.onboarding_complete === true) {
+        console.log('[DealBreakersPage] Onboarding complete, redirecting to home');
+        router.replace('/home');
         return;
       }
       
-      if (subcategoriesCount === 0) {
-        console.log('DealBreakersPage: No subcategories selected, redirecting to subcategories');
-        router.replace('/subcategories');
+      // If user is on 'interests' or 'subcategories' step, they shouldn't be here yet
+      // Redirect to their required step (middleware should have caught this, but defensive check)
+      if (currentStep === 'interests' || currentStep === 'subcategories') {
+        console.log('[DealBreakersPage] User must complete previous steps first, redirecting:', {
+          currentStep
+        });
+        
+        const stepToRoute: Record<string, string> = {
+          'interests': '/interests',
+          'subcategories': '/subcategories',
+          'deal-breakers': '/deal-breakers',
+          'complete': '/complete',
+        };
+        
+        const requiredRoute = stepToRoute[currentStep] || '/interests';
+        router.replace(requiredRoute);
         return;
       }
+      
+      // Allow access if:
+      // - currentStep is 'deal-breakers' (correct step)
+      // - currentStep is 'complete' (can go back to deal-breakers)
+      // - currentStep is null/undefined (defaults to interests, but middleware handles this)
     }
   }, [user, router]);
 

@@ -59,15 +59,37 @@ function InterestsContent() {
     router.prefetch("/complete");
   }, [router]);
 
-  // Check if user already has interests and redirect to subcategories if they do
+  // STRICT STATE MACHINE: Use onboarding_step (not counts) for routing
+  // If user is on a later step, redirect to their required step
   useEffect(() => {
     if (authLoading || !user) return;
     
-    const interestsCount = user.profile?.interests_count || 0;
-    if (interestsCount > 0) {
-      // User already has interests, redirect to subcategories
-      console.log('[Interests] User already has interests, redirecting to subcategories');
-      router.replace('/subcategories');
+    const currentStep = user.profile?.onboarding_step;
+    
+    // If onboarding is complete, redirect to home
+    if (user.profile?.onboarding_complete === true) {
+      console.log('[Interests] Onboarding complete, redirecting to home');
+      router.replace('/home');
+      return;
+    }
+    
+    // If user is on a later step than 'interests', redirect to their required step
+    if (currentStep && currentStep !== 'interests') {
+      console.log('[Interests] User on later step, redirecting:', {
+        currentStep,
+        requiredStep: 'interests'
+      });
+      
+      // Map step to route
+      const stepToRoute: Record<string, string> = {
+        'interests': '/interests',
+        'subcategories': '/subcategories',
+        'deal-breakers': '/deal-breakers',
+        'complete': '/complete',
+      };
+      
+      const requiredRoute = stepToRoute[currentStep] || '/interests';
+      router.replace(requiredRoute);
     }
   }, [user, authLoading, router]);
 
