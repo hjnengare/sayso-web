@@ -224,8 +224,15 @@ function SubcategoriesContent() {
         subcategoriesCount: data.subcategoriesCount
       });
 
-      // Navigate immediately after successful save
-      // Don't wait for refreshUser - middleware will handle routing based on join tables
+      // CRITICAL: Refresh user profile to ensure middleware sees updated onboarding_step
+      // The API route updates onboarding_step to 'deal-breakers', but we need to refresh
+      // the client-side user object so middleware can read the correct step
+      await refreshUser();
+      
+      // Small delay to ensure database update has propagated
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Navigate after profile refresh - middleware will read fresh onboarding_step
       router.replace('/deal-breakers');
 
     } catch (error) {

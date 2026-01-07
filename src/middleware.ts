@@ -184,12 +184,17 @@ export async function middleware(request: NextRequest) {
           onboarding_complete: profileData.onboarding_complete,
         });
         
+        const requestedPath = request.nextUrl.pathname;
+        const redirectRoute = onboardingAccess.redirectFor(requestedPath);
+        
         console.log('[Middleware] Onboarding access determined:', {
           onboarding_step: profileData.onboarding_step,
           onboarding_complete: profileData.onboarding_complete,
           requiredStep: onboardingAccess.step,
           requiredRoute: onboardingAccess.currentRoute,
-          pathname: request.nextUrl.pathname
+          requestedPath,
+          willRedirect: redirectRoute !== null,
+          redirectTo: redirectRoute
         });
       } else {
         // No profile found, default to requiring interests step
