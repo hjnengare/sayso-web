@@ -152,6 +152,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       ok: true,
       subcategoriesCount: cleaned.length,
+      onboarding_step: 'deal-breakers', // Return updated step for immediate UI update
       performance: {
         writeTime: writeTime,
         totalTime: totalTime

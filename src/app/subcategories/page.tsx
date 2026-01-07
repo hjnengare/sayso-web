@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useOnboarding } from "../contexts/OnboardingContext";
 import { useToast } from "../contexts/ToastContext";
+import { useAuth } from "../contexts/AuthContext";
 import OnboardingLayout from "../components/Onboarding/OnboardingLayout";
 import ProtectedRoute from "../components/ProtectedRoute/ProtectedRoute";
 import SubcategoryStyles from "../components/Subcategories/SubcategoryStyles";
@@ -42,6 +43,7 @@ function SubcategoriesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { showToast } = useToast();
+  const { refreshUser } = useAuth();
   const { selectedSubInterests: selectedSubcategories, setSelectedSubInterests: setSelectedSubcategories, isLoading, error } = useOnboarding();
 
   const [subcategories, setSubcategories] = useState<SubcategoryItem[]>([]);
@@ -252,23 +254,36 @@ function SubcategoriesContent() {
       subcategoriesData: subcategoriesData
     });
 
-    // Navigate immediately to dealbreakers
-    router.replace('/deal-breakers');
+    try {
+      // Wait for API response to ensure data is saved before navigation
+      const response = await fetch('/api/onboarding/subcategories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subcategories: subcategoriesData })
+      });
 
-    // Save to database in the background AFTER navigation (don't wait)
-    fetch('/api/onboarding/subcategories', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ subcategories: subcategoriesData })
-    }).then(response => {
       if (!response.ok) {
-        console.error('[Subcategories] Failed to save subcategories');
-      } else {
-        console.log('[Subcategories] Subcategories saved successfully');
+        const errorText = await response.text().catch(() => 'Unknown error');
+        console.error('[Subcategories] Failed to save subcategories:', errorText);
+        setIsNavigating(false);
+        return;
       }
-    }).catch(error => {
+
+      const result = await response.json();
+      console.log('[Subcategories] Subcategories saved successfully', result);
+
+      // 🔥 FORCE APP ROUTER TO RELOAD DATA - invalidates cached server components
+      router.refresh();
+
+      // 🔥 UPDATE AUTH CONTEXT IMMEDIATELY - refresh user profile to get latest onboarding_step
+      await refreshUser();
+
+      // Navigate to dealbreakers
+      router.replace('/deal-breakers');
+    } catch (error) {
       console.error('[Subcategories] Error saving subcategories:', error);
-    });
+      setIsNavigating(false);
+    }
   }, [selectedSubcategories, subcategories, router]);
 
   const canProceed = (selectedSubcategories?.length || 0) > 0 && !isNavigating;
@@ -324,6 +339,9 @@ function SubcategoriesContent() {
     </>
   );
 }
+
+// Force dynamic rendering to prevent stale data
+export const dynamic = 'force-dynamic';
 
 export default function SubcategoriesPage() {
   return (

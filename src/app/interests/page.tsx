@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo, useRef, Suspense } from "rea
 import { useRouter, useSearchParams } from "next/navigation";
 import { useOnboarding } from "../contexts/OnboardingContext";
 import { useToast } from "../contexts/ToastContext";
+import { useAuth } from "../contexts/AuthContext";
 import OnboardingLayout from "../components/Onboarding/OnboardingLayout";
 import ProtectedRoute from "../components/ProtectedRoute/ProtectedRoute";
 import { Loader } from "../components/Loader";
@@ -48,6 +49,7 @@ function InterestsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { showToast, showToastOnce } = useToast();
+  const { refreshUser } = useAuth();
 
   // Prefetch next page immediately on mount for faster navigation
   useEffect(() => {
@@ -213,24 +215,37 @@ function InterestsContent() {
       selectedInterests: selectedInterests
     });
 
-    // Save interests to database asynchronously (don't wait)
-    fetch('/api/onboarding/interests', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ interests: selectedInterests })
-    }).then(response => {
-      if (!response.ok) {
-        console.error('[Interests] Failed to save interests');
-      } else {
-        console.log('[Interests] Interests saved successfully');
-      }
-    }).catch(error => {
-      console.error('[Interests] Error saving interests:', error);
-    });
+    try {
+      // Wait for API response to ensure data is saved before navigation
+      const response = await fetch('/api/onboarding/interests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ interests: selectedInterests })
+      });
 
-    // Navigate immediately to subcategories page with interests in URL for instant filtering
-    const interestsParam = selectedInterests.join(',');
-    router.replace(`/subcategories?interests=${interestsParam}`);
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => 'Unknown error');
+        console.error('[Interests] Failed to save interests:', errorText);
+        setIsNavigating(false);
+        return;
+      }
+
+      const result = await response.json();
+      console.log('[Interests] Interests saved successfully', result);
+
+      // 🔥 FORCE APP ROUTER TO RELOAD DATA - invalidates cached server components
+      router.refresh();
+
+      // 🔥 UPDATE AUTH CONTEXT IMMEDIATELY - refresh user profile to get latest onboarding_step
+      await refreshUser();
+
+      // Navigate to subcategories page with interests in URL for instant filtering
+      const interestsParam = selectedInterests.join(',');
+      router.replace(`/subcategories?interests=${interestsParam}`);
+    } catch (error) {
+      console.error('[Interests] Error saving interests:', error);
+      setIsNavigating(false);
+    }
   }, [canProceed, selectedInterests, router]);
 
   const hydratedSelected = mounted ? selectedInterests : [];
@@ -282,6 +297,9 @@ function InterestsContent() {
     </EmailVerificationGuard>
   );
 }
+
+// Force dynamic rendering to prevent stale data
+export const dynamic = 'force-dynamic';
 
 export default function InterestsPage() {
   return (
