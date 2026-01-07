@@ -137,6 +137,10 @@ jest.mock('@/app/components/Subcategories/SubcategoryActions', () => ({
     </button>
   ),
 }));
+jest.mock('@/app/components/Subcategories/SubcategoryGridSkeleton', () => ({
+  __esModule: true,
+  default: () => <div data-testid="subcategory-grid-skeleton">Loading subcategories...</div>,
+}));
 jest.mock('@/app/components/Loader', () => ({
   Loader: ({ size, variant, color }: any) => (
     <div data-testid="loader">Loading...</div>
@@ -147,13 +151,20 @@ jest.mock('@/app/components/Loader', () => ({
 global.fetch = jest.fn();
 
 describe('SubcategoriesPage', () => {
-  const mockUser = createUser({
+  // Create user and manually add profile since createUser doesn't handle profile
+  const baseUser = createUser({
     email_verified: true,
+  });
+  const mockUser = {
+    ...baseUser,
+    email_confirmed_at: baseUser.verified ? new Date().toISOString() : null,
     profile: {
       onboarding_step: 'subcategories',
       onboarding_complete: false,
+      interests_count: 2, // User has interests
+      subcategories_count: 0, // No subcategories yet
     },
-  });
+  };
 
   const mockSearchParams = new URLSearchParams();
   const mockShowToast = jest.fn();
@@ -188,9 +199,18 @@ describe('SubcategoriesPage', () => {
     mockGet.mockImplementation((key: string) => mockSearchParams.get(key));
 
     // Mocks are already set up via jest.mock above
+    // Ensure mockUser has profile with interests_count > 0 to prevent redirect
     (useAuth as jest.Mock).mockReturnValue({
-      user: mockUser,
+      user: {
+        ...mockUser,
+        profile: {
+          ...mockUser.profile,
+          interests_count: mockUser.profile?.interests_count || 2,
+          subcategories_count: mockUser.profile?.subcategories_count || 0,
+        },
+      },
       isLoading: false,
+      refreshUser: jest.fn(),
     });
     (useToast as jest.Mock).mockReturnValue({
       showToast: mockShowToast,
@@ -205,27 +225,36 @@ describe('SubcategoriesPage', () => {
 
   describe('Rendering', () => {
     it('should render the subcategories page with all components', async () => {
-      mockSearchParams.set('interests', 'food-drink,beauty-wellness');
-
       const mockSubcategories = [
         { id: 'sushi', label: 'Sushi', interest_id: 'food-drink' },
         { id: 'italian', label: 'Italian', interest_id: 'food-drink' },
         { id: 'spa', label: 'Spa', interest_id: 'beauty-wellness' },
       ];
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ subcategories: mockSubcategories }),
-      });
+      // Mock fetch: first call to get interests, second call to get subcategories
+      (global.fetch as jest.Mock)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ interests: ['food-drink', 'beauty-wellness'] }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ subcategories: mockSubcategories }),
+        });
 
       render(<SubcategoriesPage />);
 
-      // Should show loader initially
-      expect(screen.getByTestId('loader')).toBeInTheDocument();
+      // Should show skeleton initially
+      expect(screen.getByTestId('subcategory-grid-skeleton')).toBeInTheDocument();
 
       // Wait for data to load and header to appear
       const header = await screen.findByTestId('subcategory-header');
       expect(header).toBeInTheDocument();
+
+      // Wait for subcategories to load (skeleton should be replaced by grid)
+      await waitFor(() => {
+        expect(screen.queryByTestId('subcategory-grid-skeleton')).not.toBeInTheDocument();
+      });
 
       // Now assert other components are present
       expect(screen.getByTestId('subcategory-selection')).toBeInTheDocument();
@@ -234,16 +263,19 @@ describe('SubcategoriesPage', () => {
     });
 
     it('should display selection count correctly', async () => {
-      mockSearchParams.set('interests', 'food-drink');
-
       const mockSubcategories = [
         { id: 'sushi', label: 'Sushi', interest_id: 'food-drink' },
       ];
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ subcategories: mockSubcategories }),
-      });
+      (global.fetch as jest.Mock)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ interests: ['food-drink'] }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ subcategories: mockSubcategories }),
+        });
 
       (useOnboarding as jest.Mock).mockReturnValue({
         ...defaultOnboardingContext,
@@ -260,84 +292,81 @@ describe('SubcategoriesPage', () => {
 
   describe('Loading States', () => {
     it('should show loading state when fetching subcategories', () => {
-      mockSearchParams.set('interests', 'food-drink');
-
       (global.fetch as jest.Mock).mockImplementationOnce(
         () => new Promise(() => {}) // Never resolves
       );
 
       render(<SubcategoriesPage />);
 
-      expect(screen.getByTestId('loader')).toBeInTheDocument();
+      expect(screen.getByTestId('subcategory-grid-skeleton')).toBeInTheDocument();
     });
 
     it('should hide loading state after subcategories are loaded', async () => {
-      mockSearchParams.set('interests', 'food-drink');
-
       const mockSubcategories = [
         { id: 'sushi', label: 'Sushi', interest_id: 'food-drink' },
       ];
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ subcategories: mockSubcategories }),
-      });
+      (global.fetch as jest.Mock)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ interests: ['food-drink'] }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ subcategories: mockSubcategories }),
+        });
 
       render(<SubcategoriesPage />);
 
-      // Should show loader initially
-      expect(screen.getByTestId('loader')).toBeInTheDocument();
+      // Should show skeleton initially
+      expect(screen.getByTestId('subcategory-grid-skeleton')).toBeInTheDocument();
 
       // Wait for loading to complete
       await waitFor(() => {
-        expect(screen.queryByTestId('loader')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('subcategory-grid-skeleton')).not.toBeInTheDocument();
       });
     });
   });
 
-  describe('URL Parameter Handling', () => {
-    it('should load subcategories based on interests URL parameter', async () => {
-      // Note: Prerequisites (interests exist) are enforced by OnboardingGuard
-      // This test assumes interests are already selected
-      mockSearchParams.set('interests', 'food-drink,beauty-wellness');
-
+  describe('API Calls', () => {
+    it('should fetch interests from API then load subcategories', async () => {
       const mockSubcategories = [
         { id: 'sushi', label: 'Sushi', interest_id: 'food-drink' },
         { id: 'spa', label: 'Spa', interest_id: 'beauty-wellness' },
       ];
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ subcategories: mockSubcategories }),
-      });
+      (global.fetch as jest.Mock)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ interests: ['food-drink', 'beauty-wellness'] }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ subcategories: mockSubcategories }),
+        });
 
       render(<SubcategoriesPage />);
 
       await waitFor(() => {
+        expect(global.fetch).toHaveBeenCalledWith('/api/user/onboarding');
         expect(global.fetch).toHaveBeenCalledWith(
           '/api/subcategories?interests=food-drink,beauty-wellness'
         );
       });
     });
 
-    // Note: Missing interests param handling is a fallback in the page component
-    // Primary enforcement is in OnboardingGuard, but page has defensive redirect
-    it('should redirect to deal-breakers if no interests parameter provided (defensive fallback)', async () => {
-      // No interests in URL - this is a fallback, guard should catch this first
-      mockSearchParams.delete('interests');
-      mockGet.mockImplementation(() => null);
-
-      // Mock fetch to prevent "cannot read .ok of undefined" errors
-      // The page won't actually call fetch if interests are missing, but we mock it defensively
+    // Note: Missing interests handling is enforced by OnboardingGuard
+    // Page has defensive redirect if no interests found
+    it('should redirect to interests if no interests found', async () => {
       (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ subcategories: [] }),
+        json: async () => ({ interests: [] }), // No interests
       });
 
       render(<SubcategoriesPage />);
 
       await waitFor(() => {
-        expect(mockPush).toHaveBeenCalledWith('/deal-breakers');
+        expect(mockReplace).toHaveBeenCalledWith('/interests');
       }, { timeout: 3000 });
     });
   });
@@ -345,19 +374,21 @@ describe('SubcategoriesPage', () => {
   describe('Subcategory Selection', () => {
     // Prerequisite rule: requires interests
     it('should allow selecting subcategories up to maximum (10)', async () => {
-      // Prerequisite: interests must be present
-      mockSearchParams.set('interests', 'food-drink');
-
       const mockSubcategories = Array.from({ length: 12 }, (_, i) => ({
         id: `sub-${i}`,
         label: `Subcategory ${i}`,
         interest_id: 'food-drink',
       }));
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ subcategories: mockSubcategories }),
-      });
+      (global.fetch as jest.Mock)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ interests: ['food-drink'] }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ subcategories: mockSubcategories }),
+        });
 
       render(<SubcategoriesPage />);
 
@@ -382,19 +413,21 @@ describe('SubcategoriesPage', () => {
     });
 
     it('should prevent selecting more than 10 subcategories', async () => {
-      // Prerequisite: interests must be present
-      mockSearchParams.set('interests', 'food-drink');
-
       const mockSubcategories = Array.from({ length: 12 }, (_, i) => ({
         id: `sub-${i}`,
         label: `Subcategory ${i}`,
         interest_id: 'food-drink',
       }));
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ subcategories: mockSubcategories }),
-      });
+      (global.fetch as jest.Mock)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ interests: ['food-drink'] }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ subcategories: mockSubcategories }),
+        });
 
       (useOnboarding as jest.Mock).mockReturnValue({
         ...defaultOnboardingContext,
@@ -422,18 +455,20 @@ describe('SubcategoriesPage', () => {
     });
 
     it('should allow deselecting subcategories', async () => {
-      // Prerequisite: interests must be present
-      mockSearchParams.set('interests', 'food-drink');
-
       const mockSubcategories = [
         { id: 'sushi', label: 'Sushi', interest_id: 'food-drink' },
         { id: 'italian', label: 'Italian', interest_id: 'food-drink' },
       ];
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ subcategories: mockSubcategories }),
-      });
+      (global.fetch as jest.Mock)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ interests: ['food-drink'] }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ subcategories: mockSubcategories }),
+        });
 
       (useOnboarding as jest.Mock).mockReturnValue({
         ...defaultOnboardingContext,
@@ -455,16 +490,19 @@ describe('SubcategoriesPage', () => {
 
   describe('Continue Button', () => {
     it('should be disabled when no subcategories selected', async () => {
-      mockSearchParams.set('interests', 'food-drink');
-
       const mockSubcategories = [
         { id: 'sushi', label: 'Sushi', interest_id: 'food-drink' },
       ];
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ subcategories: mockSubcategories }),
-      });
+      (global.fetch as jest.Mock)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ interests: ['food-drink'] }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ subcategories: mockSubcategories }),
+        });
 
       render(<SubcategoriesPage />);
 
@@ -475,16 +513,19 @@ describe('SubcategoriesPage', () => {
     });
 
     it('should be enabled when at least 1 subcategory selected', async () => {
-      mockSearchParams.set('interests', 'food-drink');
-
       const mockSubcategories = [
         { id: 'sushi', label: 'Sushi', interest_id: 'food-drink' },
       ];
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ subcategories: mockSubcategories }),
-      });
+      (global.fetch as jest.Mock)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ interests: ['food-drink'] }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ subcategories: mockSubcategories }),
+        });
 
       (useOnboarding as jest.Mock).mockReturnValue({
         ...defaultOnboardingContext,
@@ -499,17 +540,47 @@ describe('SubcategoriesPage', () => {
       });
     });
 
-    it('should navigate to deal-breakers with URL params when continue is clicked', async () => {
-      mockSearchParams.set('interests', 'food-drink,beauty-wellness');
-
+    it('should navigate to deal-breakers when continue is clicked', async () => {
       const mockSubcategories = [
         { id: 'sushi', label: 'Sushi', interest_id: 'food-drink' },
       ];
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ subcategories: mockSubcategories }),
+      // Create user with interests_count > 0 BEFORE setting up mocks
+      const baseUser = createUser({ email_verified: true });
+      const userWithInterests = {
+        ...baseUser,
+        email_confirmed_at: baseUser.verified ? new Date().toISOString() : null,
+        profile: {
+          onboarding_step: 'subcategories',
+          onboarding_complete: false,
+          interests_count: 2, // Has interests - prevents redirect to /interests
+          subcategories_count: 0, // No subcategories yet - allows access to page
+        },
+      };
+
+      // Set up mocks BEFORE render to prevent redirect
+      (useAuth as jest.Mock).mockReturnValue({
+        user: userWithInterests,
+        isLoading: false,
+        refreshUser: jest.fn(),
       });
+
+      (global.fetch as jest.Mock)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ interests: ['food-drink', 'beauty-wellness'] }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ subcategories: mockSubcategories }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ 
+            ok: true,
+            subcategoriesCount: 1,
+          }),
+        });
 
       (useOnboarding as jest.Mock).mockReturnValue({
         ...defaultOnboardingContext,
@@ -517,6 +588,11 @@ describe('SubcategoriesPage', () => {
       });
 
       render(<SubcategoriesPage />);
+
+      // Wait for subcategories to load (skip skeleton)
+      await waitFor(() => {
+        expect(screen.getByTestId('subcategory-grid')).toBeInTheDocument();
+      }, { timeout: 3000 });
 
       await waitFor(() => {
         const continueButton = screen.getByTestId('continue-button');
@@ -526,24 +602,34 @@ describe('SubcategoriesPage', () => {
       const continueButton = screen.getByTestId('continue-button');
       fireEvent.click(continueButton);
 
+      // Wait for the API call to complete and navigation
       await waitFor(() => {
-        expect(mockPush).toHaveBeenCalledWith(
-          expect.stringContaining('/deal-breakers')
+        // Verify API was called
+        expect(global.fetch).toHaveBeenCalledWith(
+          '/api/onboarding/subcategories',
+          expect.objectContaining({
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+          })
         );
-        expect(mockPush).toHaveBeenCalledWith(
-          expect.stringContaining('interests=food-drink,beauty-wellness')
-        );
-        expect(mockPush).toHaveBeenCalledWith(
-          expect.stringContaining('subcategories=sushi')
-        );
-      });
+        
+        // Check all replace calls to see if deal-breakers was called
+        // Note: The page may call replace multiple times, so we check if any call is to deal-breakers
+        const replaceCalls = mockReplace.mock.calls.map((call: any[]) => call[0]);
+        const hasDealBreakersCall = replaceCalls.includes('/deal-breakers');
+        
+        if (!hasDealBreakersCall) {
+          // If not found, check what calls were made for debugging
+          console.log('Replace calls made:', replaceCalls);
+        }
+        
+        expect(hasDealBreakersCall).toBe(true);
+      }, { timeout: 5000 });
     });
   });
 
   describe('Error Handling', () => {
     it('should display error message when API fails', async () => {
-      mockSearchParams.set('interests', 'food-drink');
-
       (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
 
       render(<SubcategoriesPage />);
@@ -557,16 +643,19 @@ describe('SubcategoriesPage', () => {
     });
 
     it('should display error from onboarding context', async () => {
-      mockSearchParams.set('interests', 'food-drink');
-
       const mockSubcategories = [
         { id: 'sushi', label: 'Sushi', interest_id: 'food-drink' },
       ];
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ subcategories: mockSubcategories }),
-      });
+      (global.fetch as jest.Mock)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ interests: ['food-drink'] }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ subcategories: mockSubcategories }),
+        });
 
       (useOnboarding as jest.Mock).mockReturnValue({
         ...defaultOnboardingContext,
@@ -583,18 +672,21 @@ describe('SubcategoriesPage', () => {
 
   describe('Grouped Display', () => {
     it('should group subcategories by interest', async () => {
-      mockSearchParams.set('interests', 'food-drink,beauty-wellness');
-
       const mockSubcategories = [
         { id: 'sushi', label: 'Sushi', interest_id: 'food-drink' },
         { id: 'italian', label: 'Italian', interest_id: 'food-drink' },
         { id: 'spa', label: 'Spa', interest_id: 'beauty-wellness' },
       ];
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ subcategories: mockSubcategories }),
-      });
+      (global.fetch as jest.Mock)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ interests: ['food-drink', 'beauty-wellness'] }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ subcategories: mockSubcategories }),
+        });
 
       render(<SubcategoriesPage />);
 
