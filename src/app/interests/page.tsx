@@ -68,37 +68,26 @@ function InterestsContent() {
     error: onboardingError,
   } = useOnboarding();
 
-  // Load saved interests from database on mount (for back navigation)
-  // CRITICAL: Only hydrate if user has actually saved interests (interests_count > 0)
-  // Brand-new users must see ZERO interests selected
+  // CRITICAL: Do NOT hydrate from DB - only use URL params or sessionStorage
+  // Brand-new users must start with empty selections
+  // URL params are handled by the pages themselves (subcategories, deal-breakers, complete)
+  // For the interests page, we start fresh unless URL params exist (for back navigation)
   useEffect(() => {
-    const loadSavedInterests = async () => {
-      try {
-        const response = await fetch('/api/user/onboarding');
-        if (response.ok) {
-          const data = await response.json();
-          const interestsCount = data.interests_count || 0;
-          const savedInterests = data.interests || [];
-          
-          // ONLY hydrate if user has explicitly saved interests before
-          // This prevents preselection for brand-new users
-          if (interestsCount > 0 && savedInterests.length > 0) {
-            console.log('[Interests] Loaded saved interests from DB:', savedInterests);
-            setSelectedInterests(savedInterests);
-          } else {
-            // Brand-new user - ensure empty state
-            console.log('[Interests] New user detected, starting with empty selection');
-            setSelectedInterests([]);
-          }
-        }
-      } catch (error) {
-        console.error('[Interests] Error loading saved interests:', error);
-        // On error, ensure empty state for new users
-        setSelectedInterests([]);
+    // Check for URL params (for back navigation scenarios)
+    const params = new URLSearchParams(window.location.search);
+    const interestsParam = params.get('interests');
+    if (interestsParam) {
+      const interestsFromUrl = interestsParam.split(',').filter(id => id.trim().length > 0);
+      if (interestsFromUrl.length > 0) {
+        console.log('[Interests] Hydrating from URL params:', interestsFromUrl);
+        setSelectedInterests(interestsFromUrl);
+        return;
       }
-    };
-
-    loadSavedInterests();
+    }
+    
+    // Otherwise, start with empty state
+    console.log('[Interests] Starting with empty selection (no URL params)');
+    setSelectedInterests([]);
   }, [setSelectedInterests]);
 
   const analyticsTracked = useRef({

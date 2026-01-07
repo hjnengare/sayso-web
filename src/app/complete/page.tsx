@@ -13,7 +13,6 @@ import ProtectedRoute from "../components/ProtectedRoute/ProtectedRoute";
 import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
 import { parseOnboardingParams, validateOnboardingParams } from "../lib/onboarding/urlParams";
 import { Loader } from "../components/Loader";
-import { Suspense } from "react";
 
 const swanky = Fontdiner_Swanky({
   weight: "400",
@@ -221,13 +220,14 @@ function CompletePageContent() {
           dealbreakers: params.dealbreakers.length
         });
 
-        // Save all data to database via API
-        const response = await fetch('/api/onboarding/complete', {
+        // Save all data to database via API (using unified endpoint)
+        const response = await fetch('/api/user/onboarding', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            step: 'complete',
             interests: params.interests,
-            subcategories: params.subcategories,
+            subcategories: params.subcategories, // String array from URL params
             dealbreakers: params.dealbreakers
           })
         });

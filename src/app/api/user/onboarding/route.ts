@@ -12,6 +12,14 @@ export async function POST(req: Request) {
   try {
     const { step, interests, subcategories, dealbreakers } = await req.json();
 
+    // ONLY allow step='complete' - URL param flow doesn't save intermediate steps
+    if (step !== 'complete') {
+      return NextResponse.json(
+        { error: 'Only step="complete" is supported. Use URL params to pass data between steps.' },
+        { status: 400 }
+      );
+    }
+
     if (step === 'complete') {
       // Complete entire onboarding atomically
       if (!interests || !Array.isArray(interests) || 
@@ -23,155 +31,204 @@ export async function POST(req: Request) {
         );
       }
 
-      // Map subcategories to the format expected by the atomic function
-      const subcategoryData = subcategories.map(sub => ({
-        subcategory_id: sub.subcategory_id || sub.id,
-        interest_id: sub.interest_id
-      }));
+      // Handle subcategories: can be string array (from URL params) or object array (legacy)
+      // If strings, we need to fetch interest_id from DB
+      let subcategoryData: Array<{ subcategory_id: string; interest_id: string }> = [];
+      
+      if (subcategories.length > 0) {
+        // Check if subcategories are strings or objects
+        const isStringArray = typeof subcategories[0] === 'string';
+        
+        if (isStringArray) {
+          // Fetch interest_id for each subcategory from DB
+          const { data: subcategoriesFromDB, error: subcatFetchError } = await supabase
+            .from('subcategories')
+            .select('id, interest_id')
+            .in('id', subcategories as string[]);
 
-      console.log('[Onboarding API] Saving onboarding data:', {
+          if (subcatFetchError) {
+            console.error('[Onboarding API] Error fetching subcategory data:', subcatFetchError);
+            return NextResponse.json(
+              { error: 'Failed to validate subcategories' },
+              { status: 400 }
+            );
+          }
+
+          if (subcategoriesFromDB) {
+            subcategoryData = subcategoriesFromDB.map((sub: { id: string; interest_id: string }) => ({
+              subcategory_id: sub.id,
+              interest_id: sub.interest_id
+            }));
+          }
+        } else {
+          // Legacy object format
+          subcategoryData = (subcategories as any[]).map(sub => ({
+            subcategory_id: sub.subcategory_id || sub.id,
+            interest_id: sub.interest_id
+          }));
+        }
+      }
+
+      // Clean and validate inputs
+      const validInterests = Array.from(new Set(
+        interests
+          .filter((id: any) => typeof id === 'string' && id.trim().length > 0)
+          .map((id: string) => id.trim())
+      ));
+
+      const validDealbreakers = Array.from(new Set(
+        dealbreakers
+          .filter((id: any) => typeof id === 'string' && id.trim().length > 0)
+          .map((id: string) => id.trim())
+      ));
+
+      if (validInterests.length === 0) {
+        return NextResponse.json(
+          { error: 'At least one interest is required' },
+          { status: 400 }
+        );
+      }
+
+      if (validDealbreakers.length === 0) {
+        return NextResponse.json(
+          { error: 'At least one dealbreaker is required' },
+          { status: 400 }
+        );
+      }
+
+      console.log('[Onboarding API] Saving onboarding data atomically:', {
         userId: user.id,
-        interestIds: interests,
-        interestIdsType: Array.isArray(interests) ? 'array' : typeof interests,
-        interestIdsLength: Array.isArray(interests) ? interests.length : 'N/A',
+        interestIds: validInterests,
         subcategoryData: subcategoryData,
-        dealbreakerIds: dealbreakers,
+        dealbreakerIds: validDealbreakers,
       });
 
-      // Try atomic function first, fallback to individual steps if function doesn't exist
-      let useAtomic = true;
+      // Try atomic RPC function first
       const { error: completeError } = await supabase.rpc('complete_onboarding_atomic', {
         p_user_id: user.id,
-        p_interest_ids: interests,
+        p_interest_ids: validInterests,
         p_subcategory_data: subcategoryData,
-        p_dealbreaker_ids: dealbreakers
-      });
-
-      console.log('[Onboarding API] complete_onboarding_atomic result:', {
-        error: completeError?.message,
-        code: completeError?.code,
+        p_dealbreaker_ids: validDealbreakers
       });
 
       if (completeError) {
-        console.error('[Onboarding API] Atomic function failed, falling back to individual steps:', completeError);
-        useAtomic = false;
+        // Check if RPC function doesn't exist (fallback to manual transaction-like flow)
+        const isRpcMissing = completeError.message?.includes('function') || 
+                            completeError.message?.includes('does not exist') ||
+                            completeError.code === '42883';
         
-        // Fallback to individual step saving
-        // Save interests
-        if (interests && Array.isArray(interests)) {
-          console.log('[Onboarding API] Fallback: Saving interests via replace_user_interests:', {
-            userId: user.id,
-            interestIds: interests,
-          });
-          const { error: interestsError } = await supabase.rpc('replace_user_interests', {
-            p_user_id: user.id,
-            p_interest_ids: interests
-          });
-          if (interestsError) {
-            console.error('[Onboarding API] Error saving interests:', interestsError);
-            throw interestsError;
-          } else {
-            console.log('[Onboarding API] Successfully saved interests');
+        if (isRpcMissing) {
+          console.log('[Onboarding API] RPC function not found, using manual transaction-like flow');
+          
+          // Manual transaction-like flow: delete old rows, insert new rows, update profile
+          // Delete existing data
+          const { error: deleteInterestsError } = await supabase
+            .from('user_interests')
+            .delete()
+            .eq('user_id', user.id);
+          
+          if (deleteInterestsError) {
+            console.error('[Onboarding API] Error deleting user_interests:', deleteInterestsError);
+            throw deleteInterestsError;
           }
-        }
 
-        // Save subcategories
-        if (subcategoryData && Array.isArray(subcategoryData)) {
-          const { error: subcategoriesError } = await supabase.rpc('replace_user_subcategories', {
-            p_user_id: user.id,
-            p_subcategory_data: subcategoryData
-          });
-          if (subcategoriesError) {
-            console.error('Error saving subcategories:', subcategoriesError);
-            throw subcategoriesError;
+          const { error: deleteSubcategoriesError } = await supabase
+            .from('user_subcategories')
+            .delete()
+            .eq('user_id', user.id);
+          
+          if (deleteSubcategoriesError) {
+            console.error('[Onboarding API] Error deleting user_subcategories:', deleteSubcategoriesError);
+            throw deleteSubcategoriesError;
           }
-        }
 
-        // Save dealbreakers
-        if (dealbreakers && Array.isArray(dealbreakers)) {
-          const { error: dealbreakersError } = await supabase.rpc('replace_user_dealbreakers', {
-            p_user_id: user.id,
-            p_dealbreaker_ids: dealbreakers
-          });
-          if (dealbreakersError) {
-            console.error('Error saving dealbreakers:', dealbreakersError);
-            throw dealbreakersError;
+          const { error: deleteDealbreakersError } = await supabase
+            .from('user_dealbreakers')
+            .delete()
+            .eq('user_id', user.id);
+          
+          if (deleteDealbreakersError) {
+            console.error('[Onboarding API] Error deleting user_dealbreakers:', deleteDealbreakersError);
+            throw deleteDealbreakersError;
           }
+
+          // Insert new data
+          if (validInterests.length > 0) {
+            const interestRows = validInterests.map((interest_id: string) => ({
+              user_id: user.id,
+              interest_id
+            }));
+
+            const { error: insertInterestsError } = await supabase
+              .from('user_interests')
+              .insert(interestRows);
+
+            if (insertInterestsError) {
+              console.error('[Onboarding API] Error inserting user_interests:', insertInterestsError);
+              throw insertInterestsError;
+            }
+          }
+
+          if (subcategoryData.length > 0) {
+            const subcategoryRows = subcategoryData.map((item: { subcategory_id: string; interest_id: string }) => ({
+              user_id: user.id,
+              subcategory_id: item.subcategory_id,
+              interest_id: item.interest_id
+            }));
+
+            const { error: insertSubcategoriesError } = await supabase
+              .from('user_subcategories')
+              .insert(subcategoryRows);
+
+            if (insertSubcategoriesError) {
+              console.error('[Onboarding API] Error inserting user_subcategories:', insertSubcategoriesError);
+              throw insertSubcategoriesError;
+            }
+          }
+
+          if (validDealbreakers.length > 0) {
+            const dealbreakerRows = validDealbreakers.map((dealbreaker_id: string) => ({
+              user_id: user.id,
+              dealbreaker_id
+            }));
+
+            const { error: insertDealbreakersError } = await supabase
+              .from('user_dealbreakers')
+              .insert(dealbreakerRows);
+
+            if (insertDealbreakersError) {
+              console.error('[Onboarding API] Error inserting user_dealbreakers:', insertDealbreakersError);
+              throw insertDealbreakersError;
+            }
+          }
+
+          // Update profile with counts and completion status
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .update({
+              onboarding_step: 'complete',
+              onboarding_complete: true,
+              interests_count: validInterests.length,
+              subcategories_count: subcategoryData.length,
+              dealbreakers_count: validDealbreakers.length,
+              updated_at: new Date().toISOString()
+            })
+            .eq('user_id', user.id);
+
+          if (profileError) {
+            console.error('[Onboarding API] Error updating profile:', profileError);
+            throw profileError;
+          }
+
+          console.log('[Onboarding API] Successfully saved onboarding data (manual flow)');
+        } else {
+          // RPC exists but failed for another reason
+          console.error('[Onboarding API] Atomic function error:', completeError);
+          throw completeError;
         }
-
-        // Update profile
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
-            onboarding_step: 'complete',
-            onboarding_complete: true,
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', user.id);
-
-        if (profileError) {
-          console.error('Error updating profile:', profileError);
-          throw profileError;
-        }
-      }
-
-    } else {
-      // Handle individual steps (keeping for backward compatibility)
-      
-      // Save interests
-      if (interests && Array.isArray(interests)) {
-        const { error } = await supabase.rpc('replace_user_interests', {
-          p_user_id: user.id,
-          p_interest_ids: interests
-        });
-        if (error) {
-          console.error('Error saving interests:', error);
-          throw error;
-        }
-      }
-
-      // Save subcategories with their parent interest IDs
-      if (subcategories && Array.isArray(subcategories)) {
-        const subcategoryData = subcategories.map(sub => ({
-          subcategory_id: sub.id,
-          interest_id: sub.interest_id
-        }));
-        
-        const { error } = await supabase.rpc('replace_user_subcategories', {
-          p_user_id: user.id,
-          p_subcategory_data: subcategoryData
-        });
-        if (error) {
-          console.error('Error saving subcategories:', error);
-          throw error;
-        }
-      }
-
-      // Save dealbreakers
-      if (dealbreakers && Array.isArray(dealbreakers)) {
-        const { error } = await supabase.rpc('replace_user_dealbreakers', {
-          p_user_id: user.id,
-          p_dealbreaker_ids: dealbreakers
-        });
-        if (error) {
-          console.error('Error saving dealbreakers:', error);
-          throw error;
-        }
-      }
-
-      // Update profile step (only for individual steps)
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          onboarding_step: step,
-          onboarding_complete: step === 'complete',
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', user.id);
-
-      if (profileError) {
-        console.error('Error updating profile:', profileError);
-        throw profileError;
+      } else {
+        // Atomic function succeeded
+        console.log('[Onboarding API] Successfully saved onboarding data (atomic RPC)');
       }
     }
 

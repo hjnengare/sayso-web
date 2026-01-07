@@ -15,6 +15,7 @@ export function encodeSelections(selections: string[]): string {
   }
 
   // Clean, trim, dedupe
+  // Note: URLSearchParams will handle URL encoding automatically
   const cleaned = Array.from(new Set(
     selections
       .filter(s => s && typeof s === 'string')
@@ -38,6 +39,7 @@ export function decodeSelections(param: string | null | undefined): string[] {
   }
 
   // Split, trim, filter empty, dedupe
+  // Note: URLSearchParams.get() already handles URL decoding automatically
   const decoded = Array.from(new Set(
     param
       .split(',')
@@ -85,6 +87,15 @@ export function buildOnboardingUrl(
 
   const queryString = searchParams.toString();
   const fullUrl = queryString ? `${basePath}?${queryString}` : basePath;
+
+  // Debug logging
+  console.log('[buildOnboardingUrl] Built URL:', {
+    basePath,
+    params,
+    queryString,
+    fullUrl,
+    length: fullUrl.length
+  });
 
   // Check if URL is too long - use sessionStorage as fallback
   if (fullUrl.length > MAX_URL_LENGTH) {

@@ -197,16 +197,40 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       const completionMessage = getStepCompletionMessage(currentStep);
       showToast(completionMessage, 'success', 3000);
 
-      // Navigate to the next step - NO SAVING until final step
-      if (nextStepName === 'complete') {
-        router.push('/home');
-      } else if (nextStepName === 'subcategories' && currentStep === 'interests') {
-        // Pass selected interests as URL params to subcategories
+      // Navigate to the next step using URL params - NO SAVING until /complete
+      if (nextStepName === 'subcategories' && currentStep === 'interests') {
+        // Pass interests as URL params
         const interestParams = selectedInterests.length > 0
           ? `?interests=${selectedInterests.join(',')}`
           : '';
         router.push(`/subcategories${interestParams}`);
+      } else if (nextStepName === 'deal-breakers' && currentStep === 'subcategories') {
+        // Pass interests and subcategories as URL params
+        const params = new URLSearchParams();
+        if (selectedInterests.length > 0) {
+          params.set('interests', selectedInterests.join(','));
+        }
+        if (selectedSubInterests.length > 0) {
+          params.set('subcategories', selectedSubInterests.join(','));
+        }
+        const queryString = params.toString();
+        router.push(`/deal-breakers${queryString ? `?${queryString}` : ''}`);
+      } else if (nextStepName === 'complete' && currentStep === 'deal-breakers') {
+        // Pass all selections as URL params to /complete
+        const params = new URLSearchParams();
+        if (selectedInterests.length > 0) {
+          params.set('interests', selectedInterests.join(','));
+        }
+        if (selectedSubInterests.length > 0) {
+          params.set('subcategories', selectedSubInterests.join(','));
+        }
+        if (selectedDealbreakers.length > 0) {
+          params.set('dealbreakers', selectedDealbreakers.join(','));
+        }
+        const queryString = params.toString();
+        router.push(`/complete${queryString ? `?${queryString}` : ''}`);
       } else {
+        // Fallback for any other case
         router.push(`/${nextStepName}`);
       }
     } catch (error) {
@@ -215,7 +239,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [user, currentStep, selectedInterests, showToast, getStepCompletionMessage, router]);
+  }, [user, currentStep, selectedInterests, selectedSubInterests, selectedDealbreakers, showToast, getStepCompletionMessage, router]);
 
   const completeOnboarding = useCallback(async () => {
     if (!user) return;
@@ -245,40 +269,49 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       setError(null);
 
       // Use unified onboarding API to save all final data
+      // Subcategories should be passed as string array (ids only) - API will resolve interest_id
       const response = await fetch('/api/user/onboarding', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           step: 'complete',
           interests: selectedInterests,
-          subcategories: selectedSubInterests.map(subId => ({
-            subcategory_id: subId,
-            interest_id: getInterestIdForSubcategory(subId)
-          })),
+          subcategories: selectedSubInterests, // String array - API will resolve interest_id
           dealbreakers: selectedDealbreakers
         })
       });
 
       if (!response.ok) {
-        throw new Error('Failed to complete onboarding');
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || 'Failed to complete onboarding');
       }
 
-      // Clear localStorage after successful completion
+      // Clear localStorage and sessionStorage after successful completion
       if (typeof window !== 'undefined') {
         localStorage.removeItem('onboarding_interests');
         localStorage.removeItem('onboarding_subcategories');
         localStorage.removeItem('onboarding_dealbreakers');
+        // Clear any sessionStorage keys used for URL param fallback
+        Object.keys(sessionStorage).forEach(key => {
+          if (key.startsWith('onboarding_')) {
+            sessionStorage.removeItem(key);
+          }
+        });
       }
 
       // Show completion toast
       showToast('🎉 Welcome to sayso! Your profile is now complete.', 'success', 4000);
+
+      // Redirect to /home after successful save
+      // Note: The /complete page also handles this, but this ensures it happens
+      router.push('/home');
     } catch (error) {
       console.error('Error completing onboarding:', error);
-      setError('Failed to complete onboarding');
+      setError(error instanceof Error ? error.message : 'Failed to complete onboarding');
     } finally {
       setIsLoading(false);
     }
-  }, [user, selectedInterests, selectedSubInterests, selectedDealbreakers, getInterestIdForSubcategory, showToast]);
+  }, [user, selectedInterests, selectedSubInterests, selectedDealbreakers, showToast, router]);
 
   const resetOnboarding = useCallback(() => {
     setSelectedInterests([]);

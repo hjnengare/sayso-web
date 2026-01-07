@@ -78,41 +78,24 @@ function DealBreakersContent() {
     router.prefetch('/complete');
   }, [router]);
 
-  // Load saved dealbreakers from database on mount (for back navigation)
-  // CRITICAL: Only hydrate if user has actually saved dealbreakers (dealbreakers_count > 0)
-  // Brand-new users must see ZERO dealbreakers selected
+  // CRITICAL: Do NOT hydrate from DB - only use URL params or sessionStorage
+  // Brand-new users must start with empty selections
+  // Hydrate from URL params if present (for back navigation)
   useEffect(() => {
-    const loadSavedDealbreakers = async () => {
-      try {
-        const response = await fetch('/api/user/onboarding');
-        if (response && response.ok) {
-          const data = await response.json();
-          const dealbreakersCount = data.dealbreakers_count || 0;
-          const savedDealbreakers = data.dealbreakers || [];
-          
-          // ONLY hydrate if user has explicitly saved dealbreakers before
-          // This prevents preselection for brand-new users
-          if (dealbreakersCount > 0 && savedDealbreakers.length > 0) {
-            console.log('[Deal-breakers] Loaded saved dealbreakers from DB:', savedDealbreakers);
-            setSelectedDealbreakers(savedDealbreakers);
-            setContextDealbreakers(savedDealbreakers);
-          } else {
-            // Brand-new user - ensure empty state
-            console.log('[Deal-breakers] New user detected, starting with empty selection');
-            setSelectedDealbreakers([]);
-            setContextDealbreakers([]);
-          }
-        }
-      } catch (error) {
-        console.error('[Deal-breakers] Error loading saved dealbreakers:', error);
-        // On error, ensure empty state for new users
-        setSelectedDealbreakers([]);
-        setContextDealbreakers([]);
-      }
-    };
-
-    loadSavedDealbreakers();
-  }, [setContextDealbreakers]);
+    const params = parseOnboardingParams(searchParams);
+    
+    // Set dealbreakers from URL if present (for back navigation)
+    if (params.dealbreakers.length > 0) {
+      console.log('[Deal-breakers] Hydrating from URL params:', params.dealbreakers);
+      setSelectedDealbreakers(params.dealbreakers);
+      setContextDealbreakers(params.dealbreakers);
+    } else {
+      // Start with empty state
+      console.log('[Deal-breakers] Starting with empty selection (no URL params)');
+      setSelectedDealbreakers([]);
+      setContextDealbreakers([]);
+    }
+  }, [searchParams, setContextDealbreakers]);
 
   const handleDealbreakerToggle = useCallback((dealbreakerId: string) => {
     setSelectedDealbreakers(prev => {
