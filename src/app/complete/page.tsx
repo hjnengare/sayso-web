@@ -239,32 +239,84 @@ function CompletePageContent() {
           const status = response.status;
           
           try {
-            // Try to parse as JSON first
-            const contentType = response.headers.get('content-type');
+            // Clone response to read it without consuming the original
+            const responseClone = response.clone();
+            
+            // Try to get content type safely
+            let contentType = null;
+            try {
+              contentType = response.headers.get('content-type');
+            } catch (e) {
+              console.warn('[Complete] Could not read content-type header:', e);
+            }
+            
+            // Try to parse response body
             if (contentType && contentType.includes('application/json')) {
-              const errorData = await response.json();
-              errorMessage = errorData.error || errorData.message || errorMessage;
-              console.error('[Complete] API error response:', {
-                status,
-                error: errorData,
-                errorMessage
-              });
+              try {
+                const errorData = await responseClone.json();
+                // Check if errorData is not empty
+                if (errorData && typeof errorData === 'object') {
+                  errorMessage = errorData.error || errorData.message || errorMessage;
+                  console.error('[Complete] API error response:', {
+                    status,
+                    error: errorData,
+                    errorMessage,
+                    hasError: !!errorData.error,
+                    hasMessage: !!errorData.message
+                  });
+                } else {
+                  // Empty object or invalid response
+                  errorMessage = `Server error (${status}). Please try again.`;
+                  console.error('[Complete] API returned empty or invalid JSON:', {
+                    status,
+                    errorData
+                  });
+                }
+              } catch (jsonError) {
+                // JSON parsing failed, try text
+                try {
+                  const errorText = await response.text();
+                  errorMessage = errorText || errorMessage;
+                  console.error('[Complete] API error (text after JSON parse failed):', {
+                    status,
+                    errorText,
+                    jsonError
+                  });
+                } catch (textError) {
+                  errorMessage = `Server error (${status}). Please try again.`;
+                  console.error('[Complete] Could not read response body:', {
+                    status,
+                    jsonError,
+                    textError
+                  });
+                }
+              }
             } else {
               // Not JSON, try text
-              const errorText = await response.text();
-              errorMessage = errorText || errorMessage;
-              console.error('[Complete] API error (text):', {
-                status,
-                errorText,
-                errorMessage
-              });
+              try {
+                const errorText = await response.text();
+                errorMessage = errorText || errorMessage;
+                console.error('[Complete] API error (text):', {
+                  status,
+                  errorText,
+                  contentType
+                });
+              } catch (textError) {
+                errorMessage = `Server error (${status}). Please try again.`;
+                console.error('[Complete] Could not read response as text:', {
+                  status,
+                  textError,
+                  contentType
+                });
+              }
             }
           } catch (e) {
-            // If parsing fails, use status code
+            // If all parsing fails, use status code
             errorMessage = `Server error (${status}). Please try again.`;
-            console.error('[Complete] API error (parse failed):', {
+            console.error('[Complete] API error (all parsing failed):', {
               status,
-              error: e
+              error: e instanceof Error ? e.message : String(e),
+              stack: e instanceof Error ? e.stack : undefined
             });
           }
           

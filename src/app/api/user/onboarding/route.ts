@@ -48,8 +48,57 @@ export async function POST(req: Request) {
       });
 
       // Handle subcategories: can be string array (from URL params) or object array (legacy)
-      // If strings, we need to fetch interest_id from DB
+      // Use static mapping instead of database query (subcategories table doesn't exist)
       let subcategoryData: Array<{ subcategory_id: string; interest_id: string }> = [];
+      
+      // Static subcategory mapping (matches subcategories page and API)
+      const SUBCATEGORY_MAPPING: Record<string, string> = {
+        // Food & Drink
+        "restaurants": "food-drink",
+        "cafes": "food-drink",
+        "bars": "food-drink",
+        "fast-food": "food-drink",
+        "fine-dining": "food-drink",
+        // Beauty & Wellness
+        "gyms": "beauty-wellness",
+        "spas": "beauty-wellness",
+        "salons": "beauty-wellness",
+        "wellness": "beauty-wellness",
+        "nail-salons": "beauty-wellness",
+        // Professional Services
+        "education-learning": "professional-services",
+        "transport-travel": "professional-services",
+        "finance-insurance": "professional-services",
+        "plumbers": "professional-services",
+        "electricians": "professional-services",
+        "legal-services": "professional-services",
+        // Outdoors & Adventure
+        "hiking": "outdoors-adventure",
+        "cycling": "outdoors-adventure",
+        "water-sports": "outdoors-adventure",
+        "camping": "outdoors-adventure",
+        // Entertainment & Experiences
+        "events-festivals": "experiences-entertainment",
+        "sports-recreation": "experiences-entertainment",
+        "nightlife": "experiences-entertainment",
+        "comedy-clubs": "experiences-entertainment",
+        "cinemas": "experiences-entertainment",
+        // Arts & Culture
+        "museums": "arts-culture",
+        "galleries": "arts-culture",
+        "theaters": "arts-culture",
+        "concerts": "arts-culture",
+        // Family & Pets
+        "family-activities": "family-pets",
+        "pet-services": "family-pets",
+        "childcare": "family-pets",
+        "veterinarians": "family-pets",
+        // Shopping & Lifestyle
+        "fashion": "shopping-lifestyle",
+        "electronics": "shopping-lifestyle",
+        "home-decor": "shopping-lifestyle",
+        "books": "shopping-lifestyle"
+      };
       
       // Allow empty subcategories array (user might not have selected any)
       if (subcategories.length > 0) {
@@ -67,52 +116,40 @@ export async function POST(req: Request) {
             // Allow empty subcategories - user might not have selected any
             subcategoryData = [];
           } else {
-            // Fetch interest_id for each subcategory from DB
-            const { data: subcategoriesFromDB, error: subcatFetchError } = await supabase
-              .from('subcategories')
-              .select('id, interest_id')
-              .in('id', validSubcategoryIds);
-
-            if (subcatFetchError) {
-              console.error('[Onboarding API] Error fetching subcategory data:', {
-                error: subcatFetchError,
-                requestedIds: validSubcategoryIds
-              });
-              return NextResponse.json(
-                { error: `Failed to validate subcategories: ${subcatFetchError.message || 'Database error'}` },
-                { status: 400 }
-              );
-            }
-
-            // Validate that we found all subcategories
-            if (!subcategoriesFromDB || subcategoriesFromDB.length === 0) {
-              console.error('[Onboarding API] No subcategories found in database for IDs:', validSubcategoryIds);
-              return NextResponse.json(
-                { error: `No subcategories found in database for the provided IDs. Please ensure the subcategory IDs are correct.` },
-                { status: 400 }
-              );
-            }
-
-            // Check if all requested subcategories were found
-            const foundIds = new Set(subcategoriesFromDB.map((sub: { id: string }) => sub.id));
-            const missingIds = validSubcategoryIds.filter(id => !foundIds.has(id));
+            // Map subcategory IDs to interest_ids using static mapping
+            const mappedSubcategories: Array<{ subcategory_id: string; interest_id: string }> = [];
+            const missingIds: string[] = [];
             
+            for (const subcategoryId of validSubcategoryIds) {
+              const interestId = SUBCATEGORY_MAPPING[subcategoryId];
+              if (interestId) {
+                mappedSubcategories.push({
+                  subcategory_id: subcategoryId,
+                  interest_id: interestId
+                });
+              } else {
+                missingIds.push(subcategoryId);
+              }
+            }
+            
+            // Validate that we found all subcategories
             if (missingIds.length > 0) {
-              console.error('[Onboarding API] Some subcategories not found:', {
+              console.error('[Onboarding API] Some subcategories not found in mapping:', {
                 missing: missingIds,
-                found: Array.from(foundIds),
+                found: mappedSubcategories.map(s => s.subcategory_id),
                 requested: validSubcategoryIds
               });
               return NextResponse.json(
-                { error: `Some subcategories were not found in database: ${missingIds.join(', ')}` },
+                { error: `Invalid subcategory IDs: ${missingIds.join(', ')}` },
                 { status: 400 }
               );
             }
-
-            subcategoryData = subcategoriesFromDB.map((sub: { id: string; interest_id: string }) => ({
-              subcategory_id: sub.id,
-              interest_id: sub.interest_id
-            }));
+            
+            subcategoryData = mappedSubcategories;
+            console.log('[Onboarding API] Mapped subcategories:', {
+              count: subcategoryData.length,
+              sample: subcategoryData.slice(0, 3)
+            });
           }
         } else {
           // Legacy object format
