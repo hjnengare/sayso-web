@@ -76,39 +76,8 @@ function CompletePageContent() {
   const hasRedirectedRef = useRef(false);
   const hasMarkedCompleteRef = useRef(false);
 
-  // STRICT STATE MACHINE: Use onboarding_step (not counts) for routing
-  // Middleware already enforces access, but we do a defensive check here
-  useEffect(() => {
-    if (!user) return;
-    
-    const currentStep = user.profile?.onboarding_step;
-    
-    // If onboarding is already complete, redirect to home
-    if (user.profile?.onboarding_complete === true) {
-      console.log('[Complete Page] Onboarding already complete, redirecting to home');
-      router.replace('/home');
-      return;
-    }
-    
-    // If user is on an earlier step, redirect to their required step
-    // Only allow access if user is on 'deal-breakers' or 'complete' step
-    if (currentStep && currentStep !== 'deal-breakers' && currentStep !== 'complete') {
-      console.log('[Complete Page] User must complete previous steps first, redirecting:', {
-        currentStep
-      });
-      
-      const stepToRoute: Record<string, string> = {
-        'interests': '/interests',
-        'subcategories': '/subcategories',
-        'deal-breakers': '/deal-breakers',
-        'complete': '/complete',
-      };
-      
-      const requiredRoute = stepToRoute[currentStep] || '/interests';
-      router.replace(requiredRoute);
-      return;
-    }
-  }, [user, router]);
+  // Trust middleware for routing - no defensive checks needed
+  // Middleware is the single source of truth for onboarding access
 
   // Mark onboarding as complete when this page shows (server-side check)
   // CRITICAL: This is the SINGLE AUTHORITATIVE PLACE that marks onboarding as complete
