@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Fontdiner_Swanky } from "next/font/google";
 import { ArrowRight, CheckCircle } from "react-feather";
-import { ShieldCheck, Clock, Smile, BadgeDollarSign, Star, Heart, Sparkles, Award } from "lucide-react";
+import { ShieldCheck, Clock, Smile, BadgeDollarSign } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useReducedMotion } from "../utils/useReducedMotion";
 import OnboardingLayout from "../components/Onboarding/OnboardingLayout";
@@ -367,15 +367,16 @@ function CompletePageContent() {
   // Handle manual redirect when button is clicked - navigate immediately
   const handleContinueClick = (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     // Clear auto-redirect timer
     if (redirectTimerRef.current) {
       clearTimeout(redirectTimerRef.current);
     }
-    // Navigate immediately (no wait)
+    // Navigate immediately to home
     if (!hasRedirectedRef.current) {
       hasRedirectedRef.current = true;
       console.log('[Complete] User clicked button, navigating to home immediately');
-      router.replace('/home');
+      router.push('/home');
     }
   };
 
@@ -487,35 +488,6 @@ function CompletePageContent() {
               })}
             </div>
           )}
-
-          {/* Horizontal floating decorative icons above button */}
-          <div className="floating-icons-row" aria-hidden="true">
-            <div className="floating-icon-item">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-coral/25 to-coral/15 border-2 border-coral/30 flex items-center justify-center backdrop-blur-sm shadow-sm">
-                <Star className="w-5 h-5 md:w-6 md:h-6 text-coral fill-coral/30" />
-              </div>
-            </div>
-            <div className="floating-icon-item">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-sage/25 to-sage/15 border-2 border-sage/30 flex items-center justify-center backdrop-blur-sm shadow-sm">
-                <Heart className="w-5 h-5 md:w-6 md:h-6 text-sage fill-sage/30" />
-              </div>
-            </div>
-            <div className="floating-icon-item">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-coral/25 to-sage/25 border-2 border-coral/30 flex items-center justify-center backdrop-blur-sm shadow-sm">
-                <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-coral" />
-              </div>
-            </div>
-            <div className="floating-icon-item">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-sage/25 to-coral/25 border-2 border-sage/30 flex items-center justify-center backdrop-blur-sm shadow-sm">
-                <Award className="w-5 h-5 md:w-6 md:h-6 text-sage" />
-              </div>
-            </div>
-            <div className="floating-icon-item">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-coral/25 to-coral/15 border-2 border-coral/30 flex items-center justify-center backdrop-blur-sm shadow-sm">
-                <Star className="w-5 h-5 md:w-6 md:h-6 text-coral fill-coral/30" />
-              </div>
-            </div>
-          </div>
 
           {/* Continue CTA */}
           <div>
