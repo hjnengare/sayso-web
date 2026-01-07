@@ -74,56 +74,128 @@ export async function middleware(request: NextRequest) {
     }
   );
 
+  // Define public routes that should always be accessible
+  const publicRoutes = [
+    '/business/',
+    '/event/',
+    '/special/',
+    '/category/',
+    '/explore/',
+    '/trending',
+    '/for-you',
+    '/notifications',
+    '/sitemap.xml',
+    '/robots.txt',
+  ];
+  const isPublicRoute = publicRoutes.some(route => 
+    request.nextUrl.pathname.startsWith(route) || 
+    request.nextUrl.pathname === route
+  );
+
   let user = null;
+  let authError = null;
+  
   try {
-    const { data: { user: authUser }, error } = await supabase.auth.getUser();
+    // Attempt to get user with timeout protection
+    const getUserPromise = supabase.auth.getUser();
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Auth check timeout')), 5000)
+    );
     
-    // Handle invalid JWT/user errors - only clear session for truly invalid cases
+    const { data: { user: authUser }, error } = await Promise.race([
+      getUserPromise,
+      timeoutPromise
+    ]) as { data: { user: any }, error: any };
+    
+    // Handle authentication errors with better categorization
     if (error) {
+      authError = error;
       const errorMessage = error.message?.toLowerCase() || '';
+      const errorCode = error.code?.toLowerCase() || '';
+      
+      // Categorize errors
       const isFatalError = (
         errorMessage.includes('user from sub claim') ||
         errorMessage.includes('jwt does not exist') ||
         errorMessage.includes('user does not exist') ||
-        error.code === 'user_not_found'
+        errorCode === 'user_not_found'
       );
       
+      const isRefreshError = (
+        errorMessage.includes('refresh token') ||
+        errorMessage.includes('invalid refresh token') ||
+        errorCode === 'refresh_token_not_found'
+      );
+      
+      const isNetworkError = (
+        errorMessage.includes('fetch') ||
+        errorMessage.includes('network') ||
+        errorMessage.includes('connection') ||
+        errorMessage.includes('timeout') ||
+        errorCode === 'network_error'
+      );
+
+      // For fatal errors on protected routes, clear session and redirect
       if (isFatalError) {
-        console.warn('Middleware: Invalid user in JWT:', error.message);
+        console.warn('Middleware: Fatal auth error, clearing session:', error.message);
+        try {
+          response.cookies.delete('sb-access-token');
+          response.cookies.delete('sb-refresh-token');
+        } catch (clearError) {
+          console.warn('Middleware: Error clearing cookies:', clearError);
+        }
         
-        // Only redirect protected routes - allow public routes to continue
+        // Only redirect protected routes, allow public routes
         const protectedRoutes = ['/interests', '/subcategories', '/deal-breakers', '/complete', '/home', '/profile', '/reviews', '/write-review', '/leaderboard', '/saved', '/dm', '/reviewer'];
         const isProtectedRoute = protectedRoutes.some(route =>
           request.nextUrl.pathname.startsWith(route)
         );
         
         if (isProtectedRoute) {
-          // Only clear cookies and redirect if accessing a protected route
-          try {
-            response.cookies.delete('sb-access-token');
-            response.cookies.delete('sb-refresh-token');
-          } catch (clearError) {
-            console.warn('Middleware: Error clearing cookies:', clearError);
-          }
           return NextResponse.redirect(new URL('/onboarding', request.url));
         }
-        
-        // For public routes, allow access even with invalid JWT
-        // Don't clear cookies here - let the client handle session refresh
-        console.log('Middleware: Invalid JWT on public route, allowing access');
+        // For public routes, allow access even with fatal error
         return response;
       }
       
-      // For other auth errors (network issues, temporary failures), continue without user
-      // This allows pages to load and handle auth state client-side
-      console.warn('Middleware: Auth error (non-fatal), continuing without user:', error.message);
+      // For refresh token errors, try to refresh session once
+      if (isRefreshError && !isPublicRoute) {
+        try {
+          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+          if (!refreshError && refreshData?.session) {
+            console.log('Middleware: Successfully refreshed session');
+            user = refreshData.session.user;
+            return response; // Continue with refreshed session
+          }
+        } catch (refreshErr) {
+          console.warn('Middleware: Failed to refresh session:', refreshErr);
+        }
+      }
+      
+      // For network errors on public routes, allow access
+      if (isNetworkError && isPublicRoute) {
+        console.warn('Middleware: Network error on public route, allowing access:', error.message);
+        return response;
+      }
+      
+      // For other non-fatal errors, log and continue without user
+      console.warn('Middleware: Non-fatal auth error:', error.message);
     } else {
       user = authUser;
     }
   } catch (error) {
-    console.error('Middleware: Unexpected error getting user:', error);
-    // Continue without user - allow pages to load and handle auth client-side
-    // This prevents blocking access due to temporary middleware errors
+    // Handle timeout and unexpected errors
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error('Middleware: Unexpected error getting user:', errorMessage);
+    
+    // For public routes, allow access even on errors
+    if (isPublicRoute) {
+      console.log('Middleware: Error on public route, allowing access');
+      return response;
+    }
+    
+    // For protected routes, continue without user (will redirect below if needed)
+    authError = error instanceof Error ? error : new Error(String(error));
   }
 
   console.log('Middleware: Checking route', {
@@ -313,10 +385,17 @@ export async function middleware(request: NextRequest) {
   }
 
   // Redirect unauthenticated users from protected routes
-  if (isProtectedRoute && !user) {
+  // But allow public routes even without authentication
+  if (isProtectedRoute && !user && !isPublicRoute) {
     console.log('Middleware: Redirecting unauthenticated user to onboarding');
     const redirectUrl = new URL('/onboarding', request.url);
     return NextResponse.redirect(redirectUrl);
+  }
+  
+  // Allow public routes to proceed without authentication
+  if (isPublicRoute) {
+    console.log('Middleware: Allowing access to public route:', request.nextUrl.pathname);
+    return response;
   }
 
   // Redirect authenticated users without email verification from protected routes

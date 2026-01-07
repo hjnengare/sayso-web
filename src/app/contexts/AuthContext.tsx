@@ -32,26 +32,85 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const router = useRouter();
   const supabase = getBrowserSupabase();
 
-  // Initialize auth state
+  // Initialize auth state with retry logic
   useEffect(() => {
+    let isMounted = true;
+    let retryCount = 0;
+    const MAX_RETRIES = 3;
+    
     const initializeAuth = async () => {
       console.log('AuthContext: Initializing auth...');
       setIsLoading(true);
 
-      try {
-        const currentUser = await AuthService.getCurrentUser();
-        console.log('AuthContext: Got current user:', currentUser ? {
-          id: currentUser.id,
-          email: currentUser.email,
-          has_profile: !!currentUser.profile
-        } : null);
-        setUser(currentUser);
-      } catch (error) {
-        console.error('Error initializing auth:', error);
-      } finally {
-        console.log('AuthContext: Initialization complete, isLoading = false');
-        setIsLoading(false);
-      }
+      const attemptInit = async (attempt: number): Promise<void> => {
+        if (!isMounted) return;
+        
+        try {
+          const currentUser = await AuthService.getCurrentUser();
+          
+          if (!isMounted) return;
+          
+          console.log('AuthContext: Got current user:', currentUser ? {
+            id: currentUser.id,
+            email: currentUser.email,
+            has_profile: !!currentUser.profile
+          } : null);
+          
+          setUser(currentUser);
+          setIsLoading(false);
+        } catch (error) {
+          console.error(`AuthContext: Error initializing auth (attempt ${attempt}):`, error);
+          
+          // Retry on network errors
+          if (attempt < MAX_RETRIES) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            const isNetworkError = 
+              errorMessage.toLowerCase().includes('fetch') ||
+              errorMessage.toLowerCase().includes('network') ||
+              errorMessage.toLowerCase().includes('connection');
+            
+            if (isNetworkError) {
+              await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+              return attemptInit(attempt + 1);
+            }
+          }
+          
+          if (isMounted) {
+            setIsLoading(false);
+          }
+        }
+      };
+
+      attemptInit(1);
+      
+      // Listen for storage events (cross-tab synchronization)
+      const handleStorageChange = (e: StorageEvent) => {
+        if (e.key === 'auth_state_changed' && e.newValue) {
+          try {
+            const authEvent = JSON.parse(e.newValue);
+            if (authEvent.type === 'SIGNED_IN' || authEvent.type === 'SIGNED_OUT') {
+              console.log('AuthContext: Auth state changed in another tab, refreshing...');
+              // Refresh user state when auth changes in another tab
+              AuthService.getCurrentUser().then(user => {
+                if (isMounted) {
+                  setUser(user);
+                }
+              }).catch(err => {
+                console.warn('AuthContext: Error refreshing after storage event:', err);
+              });
+            }
+          } catch (err) {
+            console.warn('AuthContext: Error parsing storage event:', err);
+          }
+        }
+      };
+      
+      window.addEventListener('storage', handleStorageChange);
+      
+      return () => {
+        isMounted = false;
+        window.removeEventListener('storage', handleStorageChange);
+      };
     };
 
     initializeAuth();
@@ -64,6 +123,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
         session_exists: !!session,
         email_confirmed_at: session?.user?.email_confirmed_at
       });
+      
+      // Broadcast auth state change to other tabs
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('auth_state_changed', JSON.stringify({
+            type: event,
+            timestamp: Date.now(),
+            user_id: session?.user?.id
+          }));
+          // Remove the item after a short delay to allow other tabs to pick it up
+          setTimeout(() => {
+            localStorage.removeItem('auth_state_changed');
+          }, 100);
+        } catch (err) {
+          // Ignore localStorage errors (private browsing, etc.)
+          console.warn('AuthContext: Could not broadcast auth state change:', err);
+        }
+      }
       
       // Optimize for email verification events - update immediately if email is confirmed
       if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
@@ -85,6 +162,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
       }
       
+      // Handle token refresh events
+      if (event === 'TOKEN_REFRESHED' && session?.user) {
+        try {
+          const currentUser = await AuthService.getCurrentUser();
+          if (currentUser) {
+            console.log('AuthContext: Token refreshed, updating user state');
+            setUser(currentUser);
+          }
+        } catch (error) {
+          console.warn('AuthContext: Error getting user after token refresh:', error);
+        }
+        return;
+      }
+      
       // Only update user state - middleware handles all routing logic
       if (session?.user) {
         try {
@@ -98,8 +189,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setIsLoading(false);
         } catch (error) {
           console.warn('AuthContext: Error getting user from session:', error);
-          // If there's an error getting user, clear the state
-          setUser(null);
+          // Retry once on error
+          try {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const retryUser = await AuthService.getCurrentUser();
+            setUser(retryUser);
+          } catch (retryError) {
+            console.warn('AuthContext: Retry failed, clearing user state:', retryError);
+            // If retry fails, clear the state
+            setUser(null);
+          }
           setIsLoading(false);
         }
       } else {

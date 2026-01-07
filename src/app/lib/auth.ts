@@ -220,12 +220,36 @@ export class AuthService {
     }
   }
 
-  static async getCurrentUser(): Promise<AuthUser | null> {
+  static async getCurrentUser(retryCount = 0): Promise<AuthUser | null> {
     const supabase = this.getClient();
+    const MAX_RETRIES = 2;
+    
     try {
+      // Get current session first to check if refresh is needed
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      // If session exists but is expired, try to refresh it
+      if (session && session.expires_at) {
+        const expiresAt = session.expires_at * 1000; // Convert to milliseconds
+        const now = Date.now();
+        const timeUntilExpiry = expiresAt - now;
+        
+        // If token expires in less than 5 minutes, refresh proactively
+        if (timeUntilExpiry < 5 * 60 * 1000 && timeUntilExpiry > 0) {
+          try {
+            const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+            if (!refreshError && refreshData?.session) {
+              console.log('AuthService: Proactively refreshed session');
+            }
+          } catch (refreshErr) {
+            console.warn('AuthService: Failed to proactively refresh session:', refreshErr);
+          }
+        }
+      }
+
       const { data: { user }, error } = await supabase.auth.getUser();
 
-      // Handle authentication errors - clear invalid session
+      // Handle authentication errors with retry logic
       if (error) {
         const errorMessage = error.message?.toLowerCase() || '';
         const errorCode = error.code?.toLowerCase() || '';
@@ -244,11 +268,39 @@ export class AuthService {
           errorCode === 'user_not_found' ||
           errorCode === 'session_not_found';
 
+        const isNetworkError = 
+          errorMessage.includes('fetch') ||
+          errorMessage.includes('network') ||
+          errorMessage.includes('connection') ||
+          errorMessage.includes('timeout') ||
+          errorCode === 'network_error';
+
+        // For network errors, retry up to MAX_RETRIES times
+        if (isNetworkError && retryCount < MAX_RETRIES) {
+          console.warn(`AuthService: Network error, retrying (${retryCount + 1}/${MAX_RETRIES}):`, error.message);
+          await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1))); // Exponential backoff
+          return this.getCurrentUser(retryCount + 1);
+        }
+
+        // For refresh token errors, try to refresh session once
+        if (errorMessage.includes('refresh token') && retryCount === 0) {
+          try {
+            const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+            if (!refreshError && refreshData?.session) {
+              console.log('AuthService: Successfully refreshed session after error');
+              // Retry getting user after refresh
+              return this.getCurrentUser(retryCount + 1);
+            }
+          } catch (refreshErr) {
+            console.warn('AuthService: Failed to refresh session:', refreshErr);
+          }
+        }
+
         // For session errors, silently return null (user is not authenticated)
         if (isSessionError) {
           // Only log if it's not a simple "session missing" (which is expected for unauthenticated users)
           if (!errorMessage.includes('session missing') && !errorMessage.includes('auth session missing')) {
-            console.warn('Invalid session detected, clearing session:', {
+            console.warn('AuthService: Invalid session detected, clearing session:', {
               message: error.message,
               code: error.code
             });
@@ -257,19 +309,27 @@ export class AuthService {
               await supabase.auth.signOut();
             } catch (signOutError) {
               // Ignore sign out errors - we're already handling an error state
-              console.warn('Error during sign out after session failure:', signOutError);
+              console.warn('AuthService: Error during sign out after session failure:', signOutError);
             }
           }
           return null;
         }
+        
         // For other errors, log and return null
-        console.error('Error getting current user:', error);
+        console.error('AuthService: Error getting current user:', error);
         return null;
       }
 
       if (!user) return null;
 
-      const profile = await this.getUserProfile(user.id);
+      // Get user profile with error handling
+      let profile;
+      try {
+        profile = await this.getUserProfile(user.id);
+      } catch (profileError) {
+        console.warn('AuthService: Error fetching profile, continuing without profile:', profileError);
+        profile = undefined;
+      }
 
       return {
         id: user.id,
@@ -280,9 +340,22 @@ export class AuthService {
         profile: profile
       };
     } catch (error) {
-      // Handle unexpected errors
+      // Handle unexpected errors with retry for network issues
       const errorMessage = error instanceof Error ? error.message : String(error);
       const lowerMessage = errorMessage.toLowerCase();
+      
+      const isNetworkError = 
+        lowerMessage.includes('fetch') ||
+        lowerMessage.includes('network') ||
+        lowerMessage.includes('connection') ||
+        lowerMessage.includes('timeout');
+      
+      // Retry on network errors
+      if (isNetworkError && retryCount < MAX_RETRIES) {
+        console.warn(`AuthService: Network error in catch, retrying (${retryCount + 1}/${MAX_RETRIES}):`, errorMessage);
+        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+        return this.getCurrentUser(retryCount + 1);
+      }
       
       // Check if it's a session/auth error that requires clearing the session
       const isSessionError = 
@@ -298,16 +371,15 @@ export class AuthService {
       if (isSessionError) {
         // Only log and clear if it's not a simple "session missing" (which is expected for unauthenticated users)
         if (!lowerMessage.includes('session missing') && !lowerMessage.includes('auth session missing')) {
-          console.warn('Invalid session detected in catch block, clearing session:', errorMessage);
+          console.warn('AuthService: Invalid session detected in catch block, clearing session:', errorMessage);
           try {
-            const supabase = this.getClient();
             await supabase.auth.signOut();
           } catch (signOutError) {
-            console.warn('Error during sign out after session failure:', signOutError);
+            console.warn('AuthService: Error during sign out after session failure:', signOutError);
           }
         }
       } else {
-        console.error('Error getting current user:', error);
+        console.error('AuthService: Unexpected error getting current user:', error);
       }
       return null;
     }
