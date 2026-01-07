@@ -166,184 +166,118 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // Derive onboarding state from profile counts (source of truth)
-  // This uses the count fields in profiles table which are maintained by triggers/RPC functions
-  let onboardingState = null;
-  let onboardingComplete = false;
+  // STRICT STATE MACHINE: Use onboarding_step as SINGLE source of truth
+  // Counts are for UI display only, NOT for routing decisions
+  let onboardingAccess = null;
   if (user && user.email_confirmed_at) {
     try {
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('onboarding_step, onboarding_complete, interests_count, subcategories_count, dealbreakers_count')
+        .select('onboarding_step, onboarding_complete')
         .eq('user_id', user.id)
         .maybeSingle();
       
       if (profileData) {
-        const interestsCount = profileData.interests_count || 0;
-        const subcategoriesCount = profileData.subcategories_count || 0;
-        const dealbreakersCount = profileData.dealbreakers_count || 0;
-        
-        // Determine next route based on counts (same logic as OnboardingGuard)
-        let nextRoute: string = '/interests';
-        if (interestsCount === 0) {
-          nextRoute = '/interests';
-        } else if (subcategoriesCount === 0) {
-          nextRoute = '/subcategories';
-        } else if (dealbreakersCount === 0) {
-          nextRoute = '/deal-breakers';
-        } else {
-          nextRoute = '/complete';
-        }
-        
-        // Also check onboarding_step for more accurate routing
-        const currentStep = profileData.onboarding_step;
-        if (currentStep) {
-          const stepMap: Record<string, string> = {
-            interests: '/subcategories',
-            subcategories: '/deal-breakers',
-            'deal-breakers': '/complete',
-            complete: '/complete',
-          };
-          if (stepMap[currentStep]) {
-            nextRoute = stepMap[currentStep];
-          }
-        }
-        
-        // Completion requires all three: interests > 0, subcategories > 0, dealbreakers > 0
-        // AND onboarding_complete flag must be true
-        const isComplete = profileData.onboarding_complete === true && 
-                          interestsCount > 0 && 
-                          subcategoriesCount > 0 && 
-                          dealbreakersCount > 0;
-        
-        onboardingState = {
-          interestsCount,
-          subcategoriesCount,
-          dealbreakersCount,
-          nextRoute: nextRoute as '/interests' | '/subcategories' | '/deal-breakers' | '/complete',
-          isComplete
-        };
-        
-        onboardingComplete = isComplete;
-        
-        console.log('Middleware: Onboarding state derived from profile', {
-          interestsCount,
-          subcategoriesCount,
-          dealbreakersCount,
-          nextRoute,
-          isComplete,
-          onboarding_step: currentStep,
+        onboardingAccess = getOnboardingAccess({
+          onboarding_step: profileData.onboarding_step,
           onboarding_complete: profileData.onboarding_complete,
+        });
+        
+        console.log('[Middleware] Onboarding access determined:', {
+          onboarding_step: profileData.onboarding_step,
+          onboarding_complete: profileData.onboarding_complete,
+          requiredStep: onboardingAccess.step,
+          requiredRoute: onboardingAccess.currentRoute,
           pathname: request.nextUrl.pathname
         });
       } else {
         // No profile found, default to requiring interests step
-        onboardingState = {
-          interestsCount: 0,
-          subcategoriesCount: 0,
-          dealbreakersCount: 0,
-          nextRoute: '/interests' as const,
-          isComplete: false
-        };
+        onboardingAccess = getOnboardingAccess(null);
+        console.log('[Middleware] No profile found, defaulting to interests step');
       }
     } catch (error) {
-      console.error('Middleware: Error deriving onboarding state:', error);
+      console.error('[Middleware] Error getting onboarding access:', error);
       // On error, default to requiring interests step
-      onboardingState = {
-        interestsCount: 0,
-        subcategoriesCount: 0,
-        dealbreakersCount: 0,
-        nextRoute: '/interests' as const,
-        isComplete: false
-      };
+      onboardingAccess = getOnboardingAccess(null);
     }
   }
 
-  // CRITICAL: Block access to /home and other protected routes unless:
-  // 1. Email is verified AND
-  // 2. Onboarding is fully completed (derived from join tables)
-  // Join tables are the SINGLE SOURCE OF TRUTH for completion
+  // STRICT: Block access to /home and other protected routes unless onboarding is complete
   if (isProtectedRoute && !isOnboardingRoute && user && user.email_confirmed_at) {
-    // STRICT CHECK: Only allow access if onboarding is complete (derived from join tables)
-    if (onboardingComplete && onboardingState?.isComplete) {
-      console.log('Middleware: User has completed onboarding, allowing access to protected route');
-      return response;
+    if (onboardingAccess && onboardingAccess.step === 'complete' && onboardingAccess.canAccess('/complete')) {
+      // Check if onboarding_complete flag is true (user finished /complete page)
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('onboarding_complete')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (profileData?.onboarding_complete === true) {
+        console.log('[Middleware] User has completed onboarding, allowing access to protected route');
+        return response;
+      }
     }
     
-    // Otherwise, redirect to the REQUIRED onboarding step (derived from join tables)
-    const nextRoute = onboardingState?.nextRoute || '/interests';
-    console.log('Middleware: User has not completed onboarding', {
-      interestsCount: onboardingState?.interestsCount,
-      subcategoriesCount: onboardingState?.subcategoriesCount,
-      dealbreakersCount: onboardingState?.dealbreakersCount,
-      isComplete: onboardingState?.isComplete,
-      redirecting_to: nextRoute
+    // Otherwise, redirect to the REQUIRED onboarding step
+    const requiredRoute = onboardingAccess?.currentRoute || '/interests';
+    console.log('[Middleware] User has not completed onboarding, redirecting to required step:', {
+      requiredRoute,
+      pathname: request.nextUrl.pathname
     });
-    const redirectUrl = new URL(nextRoute, request.url);
+    const redirectUrl = new URL(requiredRoute, request.url);
     return NextResponse.redirect(redirectUrl);
   }
 
-  // Allow access to onboarding routes
-  // Users can navigate between onboarding steps, but completed users should go to home
+  // STRICT STATE MACHINE: Enforce onboarding route access rules
   if (isOnboardingRoute && user && user.email_confirmed_at) {
     const currentPath = request.nextUrl.pathname;
 
-    // CRITICAL: If onboarding is complete (derived from join tables), redirect to home (except /complete page for celebration)
-    if (onboardingComplete && onboardingState?.isComplete) {
+    if (!onboardingAccess) {
+      // Fallback: redirect to interests if we can't determine access
+      console.log('[Middleware] Cannot determine onboarding access, redirecting to interests');
+      const redirectUrl = new URL('/interests', request.url);
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    // RULE 1: If onboarding_complete=true, redirect ALL onboarding routes to /home
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('onboarding_complete')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    
+    if (profileData?.onboarding_complete === true) {
       // Allow /complete page for celebration, but redirect other onboarding routes to home
       if (currentPath !== '/complete') {
-        console.log('Middleware: User completed onboarding, redirecting to home');
+        console.log('[Middleware] User completed onboarding, redirecting to home');
         const redirectUrl = new URL('/home', request.url);
         return NextResponse.redirect(redirectUrl);
       }
       // Allow /complete page even if already complete (for celebration)
-      console.log('Middleware: Allowing access to /complete page (celebration)');
+      console.log('[Middleware] Allowing access to /complete page (celebration)');
       return response;
     }
 
-    // CRITICAL: Block /complete page unless onboarding is actually complete (derived from join tables)
-    if (currentPath === '/complete' && !onboardingState?.isComplete) {
-      const nextRoute = onboardingState?.nextRoute || '/interests';
-      console.log('Middleware: Blocking access to /complete page - onboarding not complete', {
-        interestsCount: onboardingState?.interestsCount,
-        subcategoriesCount: onboardingState?.subcategoriesCount,
-        dealbreakersCount: onboardingState?.dealbreakersCount,
-        isComplete: onboardingState?.isComplete,
-        redirecting_to: nextRoute
-      });
-      const redirectUrl = new URL(nextRoute, request.url);
-      return NextResponse.redirect(redirectUrl);
-    }
-
-    // Only block skipping AHEAD - allow backward navigation to previous steps
-    const nextRoute = onboardingState?.nextRoute || '/interests';
-    const stepOrder = ['/interests', '/subcategories', '/deal-breakers', '/complete'];
-    const currentIndex = stepOrder.indexOf(currentPath);
-    const nextRouteIndex = stepOrder.indexOf(nextRoute);
-    
-    // Only redirect if user is trying to skip ahead (forward) to a step they haven't reached yet
-    // Allow backward navigation (currentIndex < nextRouteIndex) and current step access
-    if (currentPath !== '/complete' && currentIndex > nextRouteIndex) {
-      console.log('Middleware: Blocking skip ahead - redirecting to correct onboarding step', {
+    // RULE 2: Check if user is trying to skip ahead (access later step)
+    const redirectRoute = onboardingAccess.redirectFor(currentPath);
+    if (redirectRoute) {
+      console.log('[Middleware] Blocking skip ahead - redirecting to required step:', {
         currentPath,
-        nextRoute,
-        currentIndex,
-        nextRouteIndex,
-        interestsCount: onboardingState?.interestsCount,
-        subcategoriesCount: onboardingState?.subcategoriesCount,
-        dealbreakersCount: onboardingState?.dealbreakersCount
+        requiredRoute: redirectRoute,
+        requiredStep: onboardingAccess.step
       });
-      const redirectUrl = new URL(nextRoute, request.url);
+      const redirectUrl = new URL(redirectRoute, request.url);
       return NextResponse.redirect(redirectUrl);
     }
-    
-    // Allow access if:
-    // 1. User is on their next required step (currentIndex === nextRouteIndex)
-    // 2. User is going backward (currentIndex < nextRouteIndex)
-    // 3. User is on /complete page (handled above)
 
-    // Allow access to correct onboarding step
-    console.log('Middleware: Allowing access to onboarding route:', currentPath);
+    // RULE 3: Allow access if:
+    // - User is on their required step (currentPath === requiredRoute)
+    // - User is going backward (currentPath is earlier step)
+    console.log('[Middleware] Allowing access to onboarding route:', {
+      currentPath,
+      requiredStep: onboardingAccess.step,
+      requiredRoute: onboardingAccess.currentRoute
+    });
     return response;
   }
 
