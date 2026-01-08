@@ -1,158 +1,103 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "../contexts/AuthContext";
 import { ONBOARDING_STEPS } from "../contexts/onboarding-steps";
 import { PageLoader } from "./Loader";
-import { getBrowserSupabase } from "@/app/lib/supabase/client";
 
+// Simple loading component
 const PageLoading = () => <PageLoader size="lg" variant="wavy" color="sage" />;
 
 interface OnboardingGuardProps {
   children: React.ReactNode;
 }
 
-type ProfileLite = {
-  onboarding_step: string | null;
-  onboarding_complete: boolean | null;
-  interests_count: number | null;
-  subcategories_count: number | null;
-  dealbreakers_count: number | null;
-};
-
 export default function OnboardingGuard({ children }: OnboardingGuardProps) {
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
-  const supabase = useMemo(() => getBrowserSupabase(), []);
-
-  const [profile, setProfile] = useState<ProfileLite | null>(null);
-  const [profileLoading, setProfileLoading] = useState(false);
-
-  const isOnboardingRoute = useMemo(
-    () => ONBOARDING_STEPS.some(step => pathname === step.path || pathname.startsWith(step.path)),
+  // Memoize expensive calculations
+  const isOnboardingRoute = useMemo(() =>
+    ONBOARDING_STEPS.some(step => pathname === step.path || pathname.startsWith(step.path)),
     [pathname]
   );
 
-  // ✅ Same logic as middleware: onboarding_step is primary, counts are fallback
-  const getNextOnboardingStep = useCallback((p: ProfileLite | null): string => {
-    if (!p) return "interests";
+  // Protected routes that require authentication (matches middleware)
+  const protectedRoutes = useMemo(() => [
+    // Onboarding routes
+    '/interests', '/subcategories', '/deal-breakers', '/complete',
+    // Main app routes
+    '/home', '/profile', '/saved', '/dm', '/reviewer',
+    // Content discovery routes
+    '/explore', '/for-you', '/trending', '/events-specials',
+    // Review routes
+    '/write-review', '/reviews',
+    // Leaderboard
+    '/leaderboard',
+    // Event and special routes
+    '/event', '/special',
+    // User action routes
+    '/notifications', '/add-business', '/claim-business',
+    // Business review routes (business viewing is public, but review/edit need auth)
+    // Note: We check for /business/[id]/review pattern in the route matching
+  ], []);
 
-    const currentStep = p.onboarding_step || null;
+  const isProtectedRoute = useMemo(() =>
+    protectedRoutes.some(route => pathname === route || pathname.startsWith(route + '/')),
+    [pathname, protectedRoutes]
+  );
 
-    if (p.onboarding_complete && currentStep === "complete") return "complete";
+  // Public routes that don't require authentication
+  const publicRoutes = useMemo(() => [
+    '/onboarding', '/register', '/login', '/verify-email', 
+    '/forgot-password', '/reset-password', '/auth/callback',
+    '/business/login', '/business/verification-status'
+  ], []);
 
-    if (currentStep) {
-      const stepMap: Record<string, string> = {
-        interests: "subcategories",
-        subcategories: "deal-breakers",
-        "deal-breakers": "complete",
-        complete: "complete",
-      };
-      if (stepMap[currentStep]) return stepMap[currentStep];
-    }
+  const isPublicRoute = useMemo(() =>
+    publicRoutes.some(route => pathname === route || pathname.startsWith(route + '/')),
+    [pathname, publicRoutes]
+  );
 
-    // fallback
-    const interestsCount = p.interests_count || 0;
-    const subcategoriesCount = p.subcategories_count || 0;
-    const dealbreakersCount = p.dealbreakers_count || 0;
-
-    if (interestsCount === 0) return "interests";
-    if (subcategoriesCount === 0) return "subcategories";
-    if (dealbreakersCount === 0) return "deal-breakers";
-    return "complete";
-  }, []);
-
-  // ✅ Fetch a fresh lightweight profile whenever user/path changes inside onboarding
-  useEffect(() => {
-    if (!user || !isOnboardingRoute) return;
-
-    let cancelled = false;
-
-    (async () => {
-      setProfileLoading(true);
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("onboarding_step,onboarding_complete,interests_count,subcategories_count,dealbreakers_count")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (!cancelled) {
-        setProfile(error ? null : (data as ProfileLite | null));
-        setProfileLoading(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [user, pathname, isOnboardingRoute, supabase]);
-
+  // Simplified navigation logic - minimal checks, let middleware and pages handle validation
   const handleNavigation = useCallback(() => {
     if (isLoading) return;
-    if (!isOnboardingRoute) return;
 
-    // unauth user
-    if (!user && pathname !== "/onboarding" && pathname !== "/register" && pathname !== "/login") {
-      router.replace("/onboarding");
-      return;
-    }
-    if (!user) return;
-
-    // email check
-    if (!user.email_verified) {
-      router.replace("/verify-email");
+    // CRITICAL: Block unauthenticated users from accessing protected routes
+    if (isProtectedRoute && !isPublicRoute && !user) {
+      console.log('OnboardingGuard: Unauthenticated user trying to access protected route, redirecting to onboarding');
+      router.replace('/onboarding');
       return;
     }
 
-    // IMPORTANT: wait for fresh profile so we don't bounce based on stale counts
-    if (profileLoading) return;
+    // Skip guard for public routes
+    if (isPublicRoute && !isOnboardingRoute) return;
 
-    // Allow /complete page access (same as your intent)
-    if (pathname === "/complete") {
-      const next = getNextOnboardingStep(profile);
-      if (next !== "complete") router.replace(`/${next}`);
-      return;
-    }
-
-    // If completed, send to home
-    if (profile?.onboarding_complete) {
+    // If user is already onboarded and trying to access ANY onboarding route, redirect to home
+    // EXCEPT for the complete page, which should be allowed as the final step
+    if (user?.profile?.onboarding_complete && pathname !== "/complete") {
       router.replace("/home");
       return;
     }
 
-    // Enforce "don't skip ahead" using fresh profile (not user.profile)
-    const nextStep = getNextOnboardingStep(profile);
-
-    const stepOrder = ["interests", "subcategories", "deal-breakers", "complete"];
-    const pathToStep: Record<string, string> = {
-      "/interests": "interests",
-      "/subcategories": "subcategories",
-      "/deal-breakers": "deal-breakers",
-      "/complete": "complete",
-    };
-
-    const current = pathToStep[pathname] || "interests";
-    const currentIndex = stepOrder.indexOf(current);
-    const nextStepIndex = stepOrder.indexOf(nextStep);
-
-    // Allow backward navigation - user can always go back to previous steps
-    // Only block skipping AHEAD (forward) to steps they haven't completed yet
-    if (currentIndex > nextStepIndex) {
-      // User is trying to skip ahead - redirect to their actual next step
-      router.replace(`/${nextStep}`);
+    // For protected onboarding steps, check email verification
+    const protectedSteps = ["/interests", "/subcategories", "/deal-breakers", "/complete"];
+    if (user && protectedSteps.includes(pathname) && !user.email_verified) {
+      router.replace("/verify-email");
       return;
     }
-    // If currentIndex <= nextStepIndex, allow navigation (including backward)
-  }, [isLoading, isOnboardingRoute, user, pathname, router, profile, profileLoading, getNextOnboardingStep]);
+
+    // Allow navigation - middleware and pages handle validation
+  }, [user, isLoading, pathname, router, isOnboardingRoute, isProtectedRoute, isPublicRoute]);
 
   useEffect(() => {
     handleNavigation();
   }, [handleNavigation]);
 
-  if (isLoading || (isOnboardingRoute && user && profileLoading)) {
+  // Show loading while checking auth
+  if (isLoading) {
     return <PageLoading />;
   }
 

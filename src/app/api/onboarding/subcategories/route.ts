@@ -3,43 +3,8 @@ import { getServerSupabase } from '../../../lib/supabase/server';
 import { performance as nodePerformance } from 'perf_hooks';
 
 /**
- * Helper function to update profile onboarding step with verification
- */
-async function updateProfileStep(
-  supabase: any,
-  userId: string,
-  step: string
-) {
-  const { data, error } = await supabase
-    .from('profiles')
-    .update({
-      onboarding_step: step,
-      updated_at: new Date().toISOString()
-    })
-    .eq('user_id', userId)
-    .select('onboarding_step')
-    .single();
-
-  if (error) {
-    console.error('[Subcategories API] Profile update error:', {
-      error: error.message,
-      code: error.code,
-      details: error.details,
-    });
-    throw error;
-  }
-
-  // Verify the update actually worked
-  if (!data || data.onboarding_step !== step) {
-    throw new Error(`Profile onboarding_step did not update correctly. Expected: ${step}, Got: ${data?.onboarding_step}`);
-  }
-
-  return data;
-}
-
-/**
  * POST /api/onboarding/subcategories
- * Lightweight endpoint to save subcategories and mark step as done
+ * Saves subcategories to user_subcategories table and updates onboarding_step
  */
 export async function POST(req: Request) {
   const startTime = nodePerformance.now();
@@ -55,34 +20,54 @@ export async function POST(req: Request) {
     const body = await req.json().catch(() => ({}));
     const raw = Array.isArray(body?.subcategories) ? body.subcategories : [];
 
-    // Log incoming payload for debugging
-    console.log('[Subcategories API] Incoming payload:', {
-      rawLength: raw.length,
-      raw: raw
-    });
+    // Valid interest IDs (to filter them out from subcategories)
+    const VALID_INTEREST_IDS = [
+      'food-drink',
+      'beauty-wellness',
+      'professional-services',
+      'outdoors-adventure',
+      'experiences-entertainment',
+      'arts-culture',
+      'family-pets',
+      'shopping-lifestyle'
+    ];
 
     // Clean and validate input - filter out null/invalid subcategory_ids
+    // Expected format: array of {subcategory_id, interest_id} objects
+    // IMPORTANT: Ensure subcategory_id is NOT an interest_id
     const cleaned = raw
       .filter((x: any) => {
-        const isValid = x && 
+        const hasValidStructure = x && 
           typeof x.subcategory_id === "string" && 
-          x.subcategory_id.trim().length > 0;
-        return isValid;
+          x.subcategory_id.trim().length > 0 &&
+          x.interest_id &&
+          typeof x.interest_id === "string" &&
+          x.interest_id.trim().length > 0;
+        
+        if (!hasValidStructure) return false;
+
+        const subcategoryId = x.subcategory_id.trim();
+        const interestId = x.interest_id.trim();
+
+        // CRITICAL: Filter out any subcategory_id that matches an interest_id
+        // This prevents interests from being counted as subcategories
+        if (VALID_INTEREST_IDS.includes(subcategoryId)) {
+          console.warn('[Subcategories API] Filtered out interest ID passed as subcategory:', subcategoryId);
+          return false;
+        }
+
+        // Ensure interest_id is a valid interest
+        if (!VALID_INTEREST_IDS.includes(interestId)) {
+          console.warn('[Subcategories API] Invalid interest_id:', interestId);
+          return false;
+        }
+
+        return true;
       })
       .map((x: any) => ({
         subcategory_id: x.subcategory_id.trim(),
-        interest_id: String(x.interest_id || "").trim(),
+        interest_id: x.interest_id.trim(),
       }));
-
-    // Log rejected items for debugging
-    const rejected = raw.filter((x: any) => {
-      return !x || 
-        typeof x.subcategory_id !== "string" || 
-        x.subcategory_id.trim().length === 0;
-    });
-    if (rejected.length > 0) {
-      console.warn('[Subcategories API] Rejected invalid items:', rejected);
-    }
 
     // Validate we have at least one valid subcategory
     if (cleaned.length === 0) {
@@ -92,145 +77,82 @@ export async function POST(req: Request) {
       );
     }
 
-    // Guard against missing interest_id
-    const missingInterest = cleaned.find((x) => !x.interest_id || x.interest_id.trim().length === 0);
-    if (missingInterest) {
-      console.error('[Subcategories API] Missing interest_id:', missingInterest);
-      return NextResponse.json(
-        { ok: false, error: 'One or more subcategories missing interest_id' },
-        { status: 400 }
-      );
-    }
-
-    console.log('[Subcategories API] Cleaned subcategories:', {
-      count: cleaned.length,
-      items: cleaned
-    });
-
-    // Final validation: ensure no null/undefined subcategory_ids before insert
-    const invalidBeforeInsert = cleaned.filter(sub => 
-      !sub.subcategory_id || 
-      typeof sub.subcategory_id !== 'string' || 
-      sub.subcategory_id.trim().length === 0
-    );
-    if (invalidBeforeInsert.length > 0) {
-      console.error('[Subcategories API] CRITICAL: Invalid subcategories detected right before insert:', invalidBeforeInsert);
-      return NextResponse.json(
-        { error: `Cannot insert ${invalidBeforeInsert.length} invalid subcategory entries with null/undefined subcategory_id` },
-        { status: 400 }
-      );
-    }
-
     const writeStart = nodePerformance.now();
 
-    // Use cleaned data for insert
-    const subcategoryData = cleaned;
-
-    // Single atomic operation: save subcategories and update profile
+    // Save subcategories to user_subcategories table using RPC function
     const { error: subcategoriesError } = await supabase.rpc('replace_user_subcategories', {
       p_user_id: user.id,
-      p_subcategory_data: subcategoryData
+      p_subcategory_data: cleaned
     });
 
     if (subcategoriesError) {
       console.error('[Subcategories API] Error saving subcategories:', subcategoriesError);
-      return NextResponse.json(
-        { error: 'Failed to save subcategories', details: subcategoriesError.message },
-        { status: 500 }
-      );
+      // Fallback to manual insert if RPC doesn't exist
+      if (subcategoriesError.message?.includes('function') || subcategoriesError.message?.includes('does not exist')) {
+        console.log('[Subcategories API] RPC function not found, using fallback method');
+        
+        // Delete existing subcategories
+        const { error: deleteError } = await supabase
+          .from('user_subcategories')
+          .delete()
+          .eq('user_id', user.id);
+
+        if (deleteError) {
+          console.error('[Subcategories API] Error deleting existing subcategories:', deleteError);
+          throw deleteError;
+        }
+
+        // Insert new subcategories
+        if (cleaned.length > 0) {
+          const rows = cleaned.map((item: { subcategory_id: string; interest_id: string }) => ({
+            user_id: user.id,
+            subcategory_id: item.subcategory_id,
+            interest_id: item.interest_id
+          }));
+
+          const { error: insertError } = await supabase
+            .from('user_subcategories')
+            .insert(rows);
+
+          if (insertError) {
+            console.error('[Subcategories API] Error inserting subcategories:', insertError);
+            throw insertError;
+          }
+        }
+      } else {
+        throw subcategoriesError;
+      }
     }
 
-    // Update profile to mark subcategories step as done and update subcategories_count (with verification)
-    // CRITICAL: Check if onboarding should be marked complete
-    // Completion criteria: interests_count > 0 && subcategories_count > 0 && dealbreakers_count > 0
-    // ALL THREE STEPS ARE REQUIRED
-    try {
-      // First, get current profile to check interests_count and dealbreakers_count
-      const { data: currentProfile } = await supabase
-        .from('profiles')
-        .select('interests_count, subcategories_count, dealbreakers_count')
-        .eq('user_id', user.id)
-        .single();
+    // Update onboarding_step to deal-breakers
+    const { error: stepError } = await supabase
+      .from('profiles')
+      .update({
+        onboarding_step: 'deal-breakers',
+        subcategories_count: cleaned.length,
+        updated_at: new Date().toISOString()
+      })
+      .eq('user_id', user.id);
 
-      const interestsCount = currentProfile?.interests_count || 0;
-      const newSubcategoriesCount = subcategoryData.length;
-      const dealbreakersCount = currentProfile?.dealbreakers_count || 0;
-
-      // CRITICAL: After saving subcategories, ALWAYS advance to deal-breakers step
-      // Deal-breakers are REQUIRED, so we never mark complete here
-      // The step MUST advance to 'deal-breakers' to allow user to continue
-      const nextStep = 'deal-breakers';
-
-      console.log('[Subcategories API] Advancing onboarding step:', {
-        interestsCount,
-        subcategoriesCount: newSubcategoriesCount,
-        dealbreakersCount,
-        currentStep: 'subcategories',
-        nextStep: nextStep,
-        reason: 'Subcategories saved - advancing to deal-breakers (required step)'
-      });
-
-      // Update profile to advance to deal-breakers step
-      // This is CRITICAL - without this update, user will be stuck in a loop
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          onboarding_step: nextStep,
-          onboarding_complete: false, // Never mark complete here - deal-breakers are required
-          subcategories_count: newSubcategoriesCount,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', user.id)
-        .select('onboarding_step, onboarding_complete, subcategories_count')
-        .single();
-
-      if (profileError) {
-        throw profileError;
-      }
-
-      // Verify the update actually worked - CRITICAL for preventing loops
-      if (!profileData || profileData.onboarding_step !== nextStep) {
-        console.error('[Subcategories API] PROFILE UPDATE FAILED:', {
-          expected: nextStep,
-          actual: profileData?.onboarding_step,
-          profileData
-        });
-        throw new Error(`Profile onboarding_step did not update correctly. Expected: ${nextStep}, Got: ${profileData?.onboarding_step}. This will cause an infinite loop.`);
-      }
-
-      // Verify subcategories_count was updated
-      if (profileData.subcategories_count !== newSubcategoriesCount) {
-        console.error('[Subcategories API] SUBCATEGORIES COUNT UPDATE FAILED:', {
-          expected: newSubcategoriesCount,
-          actual: profileData.subcategories_count
-        });
-        throw new Error(`Profile subcategories_count did not update correctly. Expected: ${newSubcategoriesCount}, Got: ${profileData.subcategories_count}`);
-      }
-
-      console.log('[Subcategories API] Profile updated:', {
-        onboarding_step: profileData.onboarding_step,
-        onboarding_complete: profileData.onboarding_complete,
-        subcategories_count: profileData.subcategories_count
-      });
-    } catch (profileError: any) {
-      console.error('[Subcategories API] Error updating profile:', profileError);
-      // Subcategories are saved, but profile update failed - throw to ensure user knows
-      throw new Error(`Failed to update profile step: ${profileError.message}`);
+    if (stepError) {
+      console.error('[Subcategories API] Error updating onboarding_step:', stepError);
+      throw stepError;
     }
 
     const writeTime = nodePerformance.now() - writeStart;
     const totalTime = nodePerformance.now() - startTime;
 
-    console.log('[Subcategories API] Save completed', {
+    console.log('[Subcategories API] Subcategories saved successfully', {
       userId: user.id,
-      subcategoriesCount: subcategoryData.length,
+      subcategoriesCount: cleaned.length,
       writeTime: `${writeTime.toFixed(2)}ms`,
       totalTime: `${totalTime.toFixed(2)}ms`
     });
 
     return NextResponse.json({
       ok: true,
-      subcategoriesCount: subcategoryData.length,
+      subcategoriesCount: cleaned.length,
+      onboarding_step: 'deal-breakers', // Return updated step for immediate UI update
       performance: {
         writeTime: writeTime,
         totalTime: totalTime
@@ -250,4 +172,3 @@ export async function POST(req: Request) {
     );
   }
 }
-

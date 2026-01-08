@@ -727,7 +727,7 @@ export default function DMChatListPage() {
                 animate={{ x: 0 }}
                 exit={{ x: '-100%' }}
                 transition={{ type: 'tween', duration: 0.3, ease: 'easeInOut' }}
-                className="relative z-10 mx-auto w-full max-w-[2000px] px-4 sm:px-6 pt-20 sm:pt-24 flex flex-col min-h-[calc(100vh-80px)]"
+                className="relative z-10 mx-auto w-full max-w-[2000px] px-4 sm:px-6 pt-20 sm:pt-24 flex flex-col h-dvh sm:min-h-[calc(100vh-80px)]"
               >
             {/* Breadcrumb Navigation */}
                 <nav className="mb-4 sm:mb-6 flex-shrink-0" aria-label="Breadcrumb">
@@ -809,7 +809,7 @@ export default function DMChatListPage() {
                 </div>
               </div>
             ) : (
-              <div className="space-y-0">
+              <div className="flex-1 overflow-y-auto space-y-0">
                 {filteredChats.map((chat) => (
                   <ChatItem
                     key={chat.id}

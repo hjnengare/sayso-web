@@ -342,7 +342,7 @@ export default function ForYouPage() {
           </div>
 
           {/* Category Filter Pills - positioned directly underneath search input */}
-          <div className="py-4 px-4">
+          <div className="px-2">
             <CategoryFilterPills
               selectedCategoryIds={selectedInterestIds}
               preferredCategoryIds={preferenceInterestIds || []}

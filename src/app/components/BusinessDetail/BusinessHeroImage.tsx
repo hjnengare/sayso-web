@@ -25,7 +25,7 @@ export default function BusinessHeroImage({
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.6 }}
-      className="relative w-full aspect-[4/3] sm:aspect-[16/9] lg:aspect-[21/9] rounded-[20px] overflow-hidden border border-white/60 ring-1 ring-white/30"
+      className="relative w-full h-[80vh] sm:h-auto sm:aspect-[16/9] lg:aspect-[21/9] rounded-[20px] overflow-hidden border border-white/60 ring-1 ring-white/30"
     >
       {hasImage ? (
         <>
@@ -66,8 +66,8 @@ export default function BusinessHeroImage({
       ) : (
         <div className="absolute inset-0 bg-card-bg flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center">
-              <Star className="w-10 h-10 sm:w-12 sm:h-12 text-navbar-bg/90" strokeWidth={1.5} />
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-coral/20 to-coral/10 flex items-center justify-center">
+              <Star className="w-10 h-10 sm:w-12 sm:h-12 text-charcoal" strokeWidth={1.5} />
             </div>
             <p className="text-body-sm text-charcoal/70 font-medium uppercase tracking-wide" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
               NO PHOTOS YET

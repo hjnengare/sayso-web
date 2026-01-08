@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { Fontdiner_Swanky } from "next/font/google";
 import WavyTypedTitle from "../../../components/Animations/WavyTypedTitle";
 
@@ -13,6 +14,38 @@ interface InterestHeaderProps {
   isOnline: boolean;
 }
 
+const headerVariants = {
+  hidden: {
+    opacity: 0,
+    y: 10,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.4,
+      ease: [0.25, 0.8, 0.25, 1] as [number, number, number, number],
+      delay: 0.05,
+    },
+  },
+};
+
+const offlineBadgeVariants = {
+  hidden: {
+    opacity: 0,
+    scale: 0.8,
+  },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: {
+      duration: 0.3,
+      ease: "easeOut" as const,
+      delay: 0.1,
+    },
+  },
+};
+
 export default function InterestHeader({ isOnline }: InterestHeaderProps) {
   const titleStyle = {
     fontFamily: '"Urbanist", -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
@@ -25,7 +58,12 @@ export default function InterestHeader({ isOnline }: InterestHeaderProps) {
   return (
     <>
       {!isOnline && (
-        <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20 enter-fade" style={{ animationDelay: "0.1s" }}>
+        <motion.div
+          className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20"
+          variants={offlineBadgeVariants}
+          initial="hidden"
+          animate="visible"
+        >
           <div
             className="bg-gradient-to-br from-orange-50/95 to-orange-50/90 border border-orange-200/60 rounded-full px-3 py-1 flex items-center gap-2 ring-1 ring-orange-200/30 md:backdrop-blur-sm"
             style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif", fontWeight: 600 }}
@@ -33,10 +71,15 @@ export default function InterestHeader({ isOnline }: InterestHeaderProps) {
             <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
             <span className="text-sm sm:text-xs font-semibold text-orange-700">Offline</span>
           </div>
-        </div>
+        </motion.div>
       )}
 
-      <div className="text-center mb-4 pt-4 sm:pt-6 enter-fade title-no-break" style={{ animationDelay: "0.05s" }}>
+      <motion.div
+        className="text-center mb-4 pt-4 sm:pt-6 title-no-break"
+        variants={headerVariants}
+        initial="hidden"
+        animate="visible"
+      >
         <div className="inline-block relative mb-2">
           <WavyTypedTitle
             text="What interests you?"
@@ -59,7 +102,7 @@ export default function InterestHeader({ isOnline }: InterestHeaderProps) {
         >
           Pick a few things you love and let&apos;s personalise your experience!
         </p>
-      </div>
+      </motion.div>
     </>
   );
 }

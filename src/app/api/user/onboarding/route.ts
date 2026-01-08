@@ -1,55 +1,16 @@
 import { NextResponse } from "next/server";
 import { getServerSupabase } from "../../../lib/supabase/server";
-import { performance as nodePerformance } from 'perf_hooks';
 
 /**
- * Helper function to update profile onboarding status with verification
- * Uses .select().single() to ensure the update actually succeeded
+ * @deprecated Use per-step endpoints instead:
+ * - POST /api/onboarding/interests
+ * - POST /api/onboarding/subcategories
+ * - POST /api/onboarding/deal-breakers
+ * - POST /api/onboarding/complete
+ * 
+ * This endpoint is kept for backward compatibility but should not be used for new code.
  */
-async function updateProfileOnboarding(
-  supabase: any,
-  userId: string,
-  step: string,
-  complete: boolean
-) {
-  const { data, error } = await supabase
-    .from('profiles')
-    .update({
-      onboarding_step: step,
-      onboarding_complete: complete,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('user_id', userId)
-    .select('onboarding_step, onboarding_complete')
-    .single();
-
-  if (error) {
-    console.error('[Onboarding API] Profile update error:', {
-      error: error.message,
-      code: error.code,
-      details: error.details,
-      hint: error.hint,
-    });
-    throw error;
-  }
-
-  // Hard assert: verify the update actually worked
-  if (!data || data.onboarding_step !== step || data.onboarding_complete !== complete) {
-    const errorMessage = `Profile onboarding fields did not update correctly. Expected: step=${step}, complete=${complete}, Got: step=${data?.onboarding_step}, complete=${data?.onboarding_complete}`;
-    console.error('[Onboarding API]', errorMessage);
-    throw new Error(errorMessage);
-  }
-
-  console.log('[Onboarding API] Profile update verified:', {
-    onboarding_step: data.onboarding_step,
-    onboarding_complete: data.onboarding_complete,
-  });
-
-  return data;
-}
-
 export async function POST(req: Request) {
-  const startTime = nodePerformance.now();
   const supabase = await getServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -58,197 +19,170 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { step, interests, subcategories, dealbreakers, markComplete } = await req.json();
+    const { step, interests, subcategories, dealbreakers } = await req.json();
 
-    // Handle case where we just want to mark onboarding as complete (from /complete page)
-    // CRITICAL: This is the SINGLE AUTHORITATIVE PLACE that marks onboarding as complete
-    if (step === 'complete' && markComplete === true && !interests && !subcategories && !dealbreakers) {
-      console.log('[Onboarding API] Marking onboarding as complete (server-side check)');
-      
-      // CRITICAL: Verify completion criteria before marking complete
-      // Completion criteria: interests_count > 0 && subcategories_count > 0 && dealbreakers_count > 0
-      // ALL THREE STEPS ARE REQUIRED
-      const { data: currentProfile } = await supabase
-        .from('profiles')
-        .select('interests_count, subcategories_count, dealbreakers_count, onboarding_complete, onboarding_step')
-        .eq('user_id', user.id)
-        .single();
-
-      if (!currentProfile) {
-        return NextResponse.json(
-          { error: 'Profile not found' },
-          { status: 404 }
-        );
-      }
-
-      const interestsCount = currentProfile.interests_count || 0;
-      const subcategoriesCount = currentProfile.subcategories_count || 0;
-      const dealbreakersCount = currentProfile.dealbreakers_count || 0;
-      const meetsCriteria = interestsCount > 0 && subcategoriesCount > 0 && dealbreakersCount > 0;
-
-      console.log('[Onboarding API] Completion check:', {
-        interestsCount,
-        subcategoriesCount,
-        dealbreakersCount,
-        meetsCriteria,
-        current_onboarding_complete: currentProfile.onboarding_complete,
-        current_onboarding_step: currentProfile.onboarding_step,
-        criteria: 'interests_count > 0 && subcategories_count > 0 && dealbreakers_count > 0'
-      });
-
-      if (!meetsCriteria) {
-        console.warn('[Onboarding API] Completion criteria not met, cannot mark as complete', {
-          interestsCount,
-          subcategoriesCount,
-          dealbreakersCount,
-          required: 'interests_count > 0 && subcategories_count > 0 && dealbreakers_count > 0'
-        });
-        return NextResponse.json(
-          { 
-            error: 'Onboarding completion criteria not met',
-            details: {
-              interestsCount,
-              subcategoriesCount,
-              dealbreakersCount,
-              required: 'interests_count > 0 && subcategories_count > 0 && dealbreakers_count > 0'
-            }
-          },
-          { status: 400 }
-        );
-      }
-
-      // Mark as complete with verification
-      await updateProfileOnboarding(supabase, user.id, 'complete', true);
-      
-      const totalTime = nodePerformance.now() - startTime;
-      console.log('[Onboarding API] Onboarding marked as complete successfully', {
-        userId: user.id,
-        interestsCount,
-        subcategoriesCount,
-        dealbreakersCount,
-        totalTime: `${totalTime.toFixed(2)}ms`
-      });
-
-      return NextResponse.json({ 
-        success: true,
-        message: 'Onboarding marked as complete',
-        data: {
-          interestsCount,
-          subcategoriesCount,
-          dealbreakersCount
-        }
-      });
+    // ONLY allow step='complete' - URL param flow doesn't save intermediate steps
+    if (step !== 'complete') {
+      return NextResponse.json(
+        { error: 'Only step="complete" is supported. Use URL params to pass data between steps.' },
+        { status: 400 }
+      );
     }
 
     if (step === 'complete') {
-      const writeStart = nodePerformance.now();
       // Complete entire onboarding atomically
       if (!interests || !Array.isArray(interests) || 
           !subcategories || !Array.isArray(subcategories) || 
           !dealbreakers || !Array.isArray(dealbreakers)) {
+        console.error('[Onboarding API] Missing required arrays:', {
+          hasInterests: !!interests && Array.isArray(interests),
+          hasSubcategories: !!subcategories && Array.isArray(subcategories),
+          hasDealbreakers: !!dealbreakers && Array.isArray(dealbreakers),
+          interestsType: typeof interests,
+          subcategoriesType: typeof subcategories,
+          dealbreakersType: typeof dealbreakers
+        });
         return NextResponse.json(
           { error: 'All data arrays are required for completion' },
           { status: 400 }
         );
       }
 
-      // CRITICAL: Hard-validate and clean subcategories BEFORE mapping
-      // Filter out any entries with null/undefined subcategory_id to prevent NOT NULL constraint violations
-      const cleanedSubcategories = subcategories.filter((sub) => {
-        // Must have a valid subcategory_id (either sub.subcategory_id or sub.id)
-        const subcategoryId = sub?.subcategory_id || sub?.id;
-        const isValid = 
-          subcategoryId && 
-          typeof subcategoryId === 'string' && 
-          subcategoryId.trim().length > 0 &&
-          sub?.interest_id &&
-          typeof sub.interest_id === 'string' &&
-          sub.interest_id.trim().length > 0;
-        
-        if (!isValid) {
-          console.error('[Onboarding API] Invalid subcategory entry (filtered out):', {
-            sub,
-            subcategoryId,
-            subcategoryIdType: typeof subcategoryId,
-            interestId: sub?.interest_id,
-            interestIdType: typeof sub?.interest_id
-          });
-        }
-        return isValid;
+      console.log('[Onboarding API] Received data:', {
+        interestsCount: interests.length,
+        subcategoriesCount: subcategories.length,
+        dealbreakersCount: dealbreakers.length,
+        subcategoriesSample: subcategories.slice(0, 3),
+        subcategoriesType: typeof subcategories[0]
       });
 
-      // Log if any entries were filtered out
-      if (cleanedSubcategories.length !== subcategories.length) {
-        console.error('[Onboarding API] Invalid subcategory payload detected:', {
-          originalCount: subcategories.length,
-          cleanedCount: cleanedSubcategories.length,
-          filteredOut: subcategories.length - cleanedSubcategories.length,
-          originalPayload: subcategories
-        });
-      }
-
-      // Map cleaned subcategories to the format expected by the atomic function
-      const subcategoryData = cleanedSubcategories.map(sub => {
-        const subcategoryId = (sub.subcategory_id || sub.id || '').trim();
-        const interestId = (sub.interest_id || '').trim();
+      // Handle subcategories: can be string array (from URL params) or object array (legacy)
+      // Use static mapping instead of database query (subcategories table doesn't exist)
+      let subcategoryData: Array<{ subcategory_id: string; interest_id: string }> = [];
+      
+      // Static subcategory mapping (matches subcategories page and API)
+      const SUBCATEGORY_MAPPING: Record<string, string> = {
+        // Food & Drink
+        "restaurants": "food-drink",
+        "cafes": "food-drink",
+        "bars": "food-drink",
+        "fast-food": "food-drink",
+        "fine-dining": "food-drink",
+        // Beauty & Wellness
+        "gyms": "beauty-wellness",
+        "spas": "beauty-wellness",
+        "salons": "beauty-wellness",
+        "wellness": "beauty-wellness",
+        "nail-salons": "beauty-wellness",
+        // Professional Services
+        "education-learning": "professional-services",
+        "transport-travel": "professional-services",
+        "finance-insurance": "professional-services",
+        "plumbers": "professional-services",
+        "electricians": "professional-services",
+        "legal-services": "professional-services",
+        // Outdoors & Adventure
+        "hiking": "outdoors-adventure",
+        "cycling": "outdoors-adventure",
+        "water-sports": "outdoors-adventure",
+        "camping": "outdoors-adventure",
+        // Entertainment & Experiences
+        "events-festivals": "experiences-entertainment",
+        "sports-recreation": "experiences-entertainment",
+        "nightlife": "experiences-entertainment",
+        "comedy-clubs": "experiences-entertainment",
+        "cinemas": "experiences-entertainment",
+        // Arts & Culture
+        "museums": "arts-culture",
+        "galleries": "arts-culture",
+        "theaters": "arts-culture",
+        "concerts": "arts-culture",
+        // Family & Pets
+        "family-activities": "family-pets",
+        "pet-services": "family-pets",
+        "childcare": "family-pets",
+        "veterinarians": "family-pets",
+        // Shopping & Lifestyle
+        "fashion": "shopping-lifestyle",
+        "electronics": "shopping-lifestyle",
+        "home-decor": "shopping-lifestyle",
+        "books": "shopping-lifestyle"
+      };
+      
+      // Allow empty subcategories array (user might not have selected any)
+      if (subcategories.length > 0) {
+        // Check if subcategories are strings or objects
+        const isStringArray = typeof subcategories[0] === 'string';
         
-        // Double-check (should never happen after filter, but defensive)
-        if (!subcategoryId || !interestId) {
-          throw new Error(`Invalid subcategory after cleaning: subcategory_id=${subcategoryId}, interest_id=${interestId}`);
+        if (isStringArray) {
+          // Clean and validate subcategory IDs
+          const validSubcategoryIds = (subcategories as string[])
+            .filter(id => id && typeof id === 'string' && id.trim().length > 0)
+            .map(id => id.trim());
+
+          if (validSubcategoryIds.length === 0) {
+            console.warn('[Onboarding API] No valid subcategory IDs provided');
+            // Allow empty subcategories - user might not have selected any
+            subcategoryData = [];
+          } else {
+            // Map subcategory IDs to interest_ids using static mapping
+            const mappedSubcategories: Array<{ subcategory_id: string; interest_id: string }> = [];
+            const missingIds: string[] = [];
+            
+            for (const subcategoryId of validSubcategoryIds) {
+              const interestId = SUBCATEGORY_MAPPING[subcategoryId];
+              if (interestId) {
+                mappedSubcategories.push({
+                  subcategory_id: subcategoryId,
+                  interest_id: interestId
+                });
+              } else {
+                missingIds.push(subcategoryId);
+              }
+            }
+            
+            // Validate that we found all subcategories
+            if (missingIds.length > 0) {
+              console.error('[Onboarding API] Some subcategories not found in mapping:', {
+                missing: missingIds,
+                found: mappedSubcategories.map(s => s.subcategory_id),
+                requested: validSubcategoryIds
+              });
+              return NextResponse.json(
+                { error: `Invalid subcategory IDs: ${missingIds.join(', ')}` },
+                { status: 400 }
+              );
+            }
+            
+            subcategoryData = mappedSubcategories;
+            console.log('[Onboarding API] Mapped subcategories:', {
+              count: subcategoryData.length,
+              sample: subcategoryData.slice(0, 3)
+            });
+          }
+        } else {
+          // Legacy object format
+          subcategoryData = (subcategories as any[])
+            .filter(sub => sub && (sub.subcategory_id || sub.id) && sub.interest_id)
+            .map(sub => ({
+              subcategory_id: sub.subcategory_id || sub.id,
+              interest_id: sub.interest_id
+            }));
         }
-        
-        return {
-          subcategory_id: subcategoryId,
-          interest_id: interestId
-        };
-      });
-
-      // Validate data before attempting save
-      if (interests.length === 0) {
-        return NextResponse.json(
-          { error: 'At least one interest is required' },
-          { status: 400 }
-        );
       }
 
-      // Validate that we have at least one valid subcategory after cleaning
-      if (subcategoryData.length === 0 && subcategories.length > 0) {
-        console.error('[Onboarding API] All subcategories were invalid after cleaning:', {
-          originalCount: subcategories.length,
-          originalPayload: subcategories
-        });
-        return NextResponse.json(
-          { error: 'All subcategories were invalid. Each subcategory must have a valid subcategory_id and interest_id.' },
-          { status: 400 }
-        );
-      }
-
-      // CRITICAL: Log payload right before insert to catch any remaining issues
       console.log('[Onboarding API] Saving onboarding data:', {
         userId: user.id,
         interestIds: interests,
         interestIdsType: Array.isArray(interests) ? 'array' : typeof interests,
         interestIdsLength: Array.isArray(interests) ? interests.length : 'N/A',
         subcategoryData: subcategoryData,
-        subcategoryDataLength: subcategoryData.length,
         dealbreakerIds: dealbreakers,
-        dealbreakersLength: dealbreakers.length,
       });
-
-      // Final validation: ensure no null/undefined subcategory_ids before insert
-      const invalidBeforeInsert = subcategoryData.filter(sub => 
-        !sub.subcategory_id || 
-        typeof sub.subcategory_id !== 'string' || 
-        sub.subcategory_id.trim().length === 0
-      );
-      if (invalidBeforeInsert.length > 0) {
-        console.error('[Onboarding API] CRITICAL: Invalid subcategories detected right before insert:', invalidBeforeInsert);
-        throw new Error(`Cannot insert ${invalidBeforeInsert.length} invalid subcategory entries with null/undefined subcategory_id`);
-      }
 
       // Try atomic function first, fallback to individual steps if function doesn't exist
       let useAtomic = true;
-      const { error: completeError, data: completeData } = await supabase.rpc('complete_onboarding_atomic', {
+      const { error: completeError } = await supabase.rpc('complete_onboarding_atomic', {
         p_user_id: user.id,
         p_interest_ids: interests,
         p_subcategory_data: subcategoryData,
@@ -256,24 +190,9 @@ export async function POST(req: Request) {
       });
 
       console.log('[Onboarding API] complete_onboarding_atomic result:', {
-        success: !completeError,
         error: completeError?.message,
         code: completeError?.code,
-        details: completeError?.details,
-        hint: completeError?.hint,
       });
-
-      // Always update profile after atomic function succeeds
-      // Even though atomic function should update it, we verify and force-update to be bulletproof
-      if (!completeError) {
-        console.log('[Onboarding API] Atomic function succeeded, updating profile...');
-        try {
-          await updateProfileOnboarding(supabase, user.id, 'complete', true);
-        } catch (profileError) {
-          console.error('[Onboarding API] Failed to update profile after atomic function:', profileError);
-          throw profileError;
-        }
-      }
 
       if (completeError) {
         console.error('[Onboarding API] Atomic function failed, falling back to individual steps:', completeError);
@@ -292,7 +211,10 @@ export async function POST(req: Request) {
           });
           if (interestsError) {
             console.error('[Onboarding API] Error saving interests:', interestsError);
-            throw interestsError;
+            return NextResponse.json(
+              { error: `Failed to save interests: ${interestsError.message || 'Unknown error'}` },
+              { status: 500 }
+            );
           } else {
             console.log('[Onboarding API] Successfully saved interests');
           }
@@ -305,8 +227,11 @@ export async function POST(req: Request) {
             p_subcategory_data: subcategoryData
           });
           if (subcategoriesError) {
-            console.error('Error saving subcategories:', subcategoriesError);
-            throw subcategoriesError;
+            console.error('[Onboarding API] Error saving subcategories:', subcategoriesError);
+            return NextResponse.json(
+              { error: `Failed to save subcategories: ${subcategoriesError.message || 'Unknown error'}` },
+              { status: 500 }
+            );
           }
         }
 
@@ -317,204 +242,44 @@ export async function POST(req: Request) {
             p_dealbreaker_ids: dealbreakers
           });
           if (dealbreakersError) {
-            console.error('Error saving dealbreakers:', dealbreakersError);
-            throw dealbreakersError;
+            console.error('[Onboarding API] Error saving dealbreakers:', dealbreakersError);
+            return NextResponse.json(
+              { error: `Failed to save dealbreakers: ${dealbreakersError.message || 'Unknown error'}` },
+              { status: 500 }
+            );
           }
         }
 
-        // Update profile with verification
-        await updateProfileOnboarding(supabase, user.id, 'complete', true);
-      }
-
-      const writeTime = nodePerformance.now() - writeStart;
-      const totalTime = nodePerformance.now() - startTime;
-
-      console.log('[Onboarding API] Complete step saved', {
-        userId: user.id,
-        interestsCount: interests?.length || 0,
-        subcategoriesCount: subcategories?.length || 0,
-        dealbreakersCount: dealbreakers?.length || 0,
-        writeTime: `${writeTime.toFixed(2)}ms`,
-        totalTime: `${totalTime.toFixed(2)}ms`
-      });
-
-    } else {
-      // Handle individual steps (keeping for backward compatibility)
-      
-      // Save interests
-      if (interests && Array.isArray(interests)) {
-        const { error } = await supabase.rpc('replace_user_interests', {
-          p_user_id: user.id,
-          p_interest_ids: interests
-        });
-        if (error) {
-          console.error('Error saving interests:', error);
-          throw error;
-        }
-      }
-
-      // Save subcategories with their parent interest IDs
-      if (subcategories && Array.isArray(subcategories)) {
-        // CRITICAL: Hard-validate and clean subcategories BEFORE mapping
-        // Filter out any entries with null/undefined subcategory_id to prevent NOT NULL constraint violations
-        const cleanedSubcategories = subcategories.filter((sub) => {
-          // Must have a valid subcategory_id (either sub.subcategory_id or sub.id)
-          const subcategoryId = sub?.subcategory_id || sub?.id;
-          const isValid = 
-            subcategoryId && 
-            typeof subcategoryId === 'string' && 
-            subcategoryId.trim().length > 0 &&
-            sub?.interest_id &&
-            typeof sub.interest_id === 'string' &&
-            sub.interest_id.trim().length > 0;
-          
-          if (!isValid) {
-            console.error('[Onboarding API] Invalid subcategory entry (filtered out):', {
-              sub,
-              subcategoryId,
-              subcategoryIdType: typeof subcategoryId,
-              interestId: sub?.interest_id,
-              interestIdType: typeof sub?.interest_id
-            });
-          }
-          return isValid;
-        });
-
-        // Log if any entries were filtered out
-        if (cleanedSubcategories.length !== subcategories.length) {
-          console.error('[Onboarding API] Invalid subcategory payload detected (individual step):', {
-            originalCount: subcategories.length,
-            cleanedCount: cleanedSubcategories.length,
-            filteredOut: subcategories.length - cleanedSubcategories.length,
-            originalPayload: subcategories
-          });
-        }
-
-        // Map cleaned subcategories to the format expected by the RPC function
-        const subcategoryData = cleanedSubcategories.map(sub => {
-          const subcategoryId = (sub.subcategory_id || sub.id || '').trim();
-          const interestId = (sub.interest_id || '').trim();
-          
-          // Double-check (should never happen after filter, but defensive)
-          if (!subcategoryId || !interestId) {
-            throw new Error(`Invalid subcategory after cleaning: subcategory_id=${subcategoryId}, interest_id=${interestId}`);
-          }
-          
-          return {
-            subcategory_id: subcategoryId,
-            interest_id: interestId
-          };
-        });
-
-        // Only proceed if we have at least one valid subcategory
-        if (subcategoryData.length > 0) {
-          const { error } = await supabase.rpc('replace_user_subcategories', {
-            p_user_id: user.id,
-            p_subcategory_data: subcategoryData
-          });
-          if (error) {
-            console.error('[Onboarding API] Error saving subcategories:', error);
-            throw error;
-          }
-        } else if (subcategories.length > 0) {
-          // If we had subcategories but all were invalid, throw an error
-          console.error('[Onboarding API] All subcategories were invalid after cleaning (individual step)');
-          throw new Error('All subcategories were invalid. Each subcategory must have a valid subcategory_id and interest_id.');
-        }
-      }
-
-      // Save dealbreakers
-      if (dealbreakers && Array.isArray(dealbreakers)) {
-        const { error } = await supabase.rpc('replace_user_dealbreakers', {
-          p_user_id: user.id,
-          p_dealbreaker_ids: dealbreakers
-        });
-        if (error) {
-          console.error('Error saving dealbreakers:', error);
-          throw error;
-        }
-      }
-
-      // Update profile step (only for individual steps) with verification
-      // For deal-breakers step, advance to 'complete' step (but don't mark onboarding_complete yet)
-      // Completion is only marked when user visits /complete page
-      // Also update the appropriate count field based on the step
-      if (step === 'deal-breakers') {
-        // CRITICAL: After saving deal-breakers, advance to 'complete' step
-        // This allows user to access /complete page
-        // But onboarding_complete stays false until /complete page marks it
-        const { data: profileData, error: profileError } = await supabase
+        // Update profile
+        const { error: profileError } = await supabase
           .from('profiles')
           .update({
-            onboarding_step: 'complete', // Advance to complete step (not 'deal-breakers')
-            onboarding_complete: false, // Don't mark complete yet - that happens on /complete page
-            dealbreakers_count: dealbreakers?.length || 0,
+            onboarding_step: 'complete',
+            onboarding_complete: true,
             updated_at: new Date().toISOString()
           })
-          .eq('user_id', user.id)
-          .select('onboarding_step, onboarding_complete, dealbreakers_count')
-          .single();
+          .eq('user_id', user.id);
 
         if (profileError) {
-          throw profileError;
+          console.error('[Onboarding API] Error updating profile:', profileError);
+          return NextResponse.json(
+            { error: `Failed to update profile: ${profileError.message || 'Unknown error'}` },
+            { status: 500 }
+          );
         }
-
-        // Verify the update actually worked - CRITICAL for preventing loops
-        if (!profileData || profileData.onboarding_step !== 'complete') {
-          console.error('[Onboarding API] PROFILE UPDATE FAILED for deal-breakers:', {
-            expected: 'complete',
-            actual: profileData?.onboarding_step,
-            profileData
-          });
-          throw new Error(`Profile onboarding_step did not update correctly. Expected: complete, Got: ${profileData?.onboarding_step}. This will cause an infinite loop.`);
-        }
-
-        console.log('[Onboarding API] Deal-breakers saved, advanced to complete step:', {
-          onboarding_step: profileData.onboarding_step,
-          onboarding_complete: profileData.onboarding_complete,
-          dealbreakers_count: profileData.dealbreakers_count
-        });
-      } else {
-        await updateProfileOnboarding(supabase, user.id, step, false);
       }
     }
 
-    const totalTime = nodePerformance.now() - startTime;
-    
-    console.log('[Onboarding API] Save completed', {
-      userId: user.id,
-      step: step || 'complete',
-      totalTime: `${totalTime.toFixed(2)}ms`
-    });
-
     return NextResponse.json({ 
       success: true,
-      message: 'Onboarding progress saved successfully',
-      performance: {
-        totalTime: totalTime
-      }
+      message: 'Onboarding progress saved successfully'
     });
 
-  } catch (error: any) {
-    const totalTime = nodePerformance.now() - startTime;
-    console.error('[Onboarding API] Error saving onboarding data:', {
-      error: error?.message || error,
-      code: error?.code,
-      details: error?.details,
-      hint: error?.hint,
-      stack: error?.stack,
-      totalTime: `${totalTime.toFixed(2)}ms`
-    });
-    
-    // Provide more specific error messages
-    const errorMessage = error?.message || error?.details || "Failed to save onboarding progress";
-    
+  } catch (error) {
+    console.error('[Onboarding API] Unexpected error saving onboarding data:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { 
-        error: errorMessage,
-        errorCode: error?.code,
-        performance: { totalTime }
-      },
+      { error: `Failed to save onboarding progress: ${errorMessage}` },
       { status: 500 }
     );
   }
@@ -530,28 +295,50 @@ export async function GET() {
   }
 
   try {
-    // Get user's interests
-    const { data: interests } = await supabase
-      .from('user_interests')
-      .select('interest_id')
-      .eq('user_id', user.id);
+    // Get user's profile to check counts (CRITICAL: Only hydrate if user has actually saved data)
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('interests_count, subcategories_count, dealbreakers_count')
+      .eq('user_id', user.id)
+      .single();
 
-    // Get user's subcategories
-    const { data: subcategories } = await supabase
-      .from('user_subcategories')
-      .select('subcategory_id, interest_id')
-      .eq('user_id', user.id);
+    // Get user's interests - ONLY if interests_count > 0
+    let interests: string[] = [];
+    if (profile && profile.interests_count && profile.interests_count > 0) {
+      const { data: interestsData } = await supabase
+        .from('user_interests')
+        .select('interest_id')
+        .eq('user_id', user.id);
+      interests = interestsData?.map(i => i.interest_id) || [];
+    }
 
-    // Get user's dealbreakers
-    const { data: dealbreakers } = await supabase
-      .from('user_dealbreakers')
-      .select('dealbreaker_id')
-      .eq('user_id', user.id);
+    // Get user's subcategories - ONLY if subcategories_count > 0
+    let subcategories: any[] = [];
+    if (profile && profile.subcategories_count && profile.subcategories_count > 0) {
+      const { data: subcategoriesData } = await supabase
+        .from('user_subcategories')
+        .select('subcategory_id, interest_id')
+        .eq('user_id', user.id);
+      subcategories = subcategoriesData || [];
+    }
+
+    // Get user's dealbreakers - ONLY if dealbreakers_count > 0
+    let dealbreakers: string[] = [];
+    if (profile && profile.dealbreakers_count && profile.dealbreakers_count > 0) {
+      const { data: dealbreakersData } = await supabase
+        .from('user_dealbreakers')
+        .select('dealbreaker_id')
+        .eq('user_id', user.id);
+      dealbreakers = dealbreakersData?.map(d => d.dealbreaker_id) || [];
+    }
 
     return NextResponse.json({
-      interests: interests?.map(i => i.interest_id) || [],
-      subcategories: subcategories || [],
-      dealbreakers: dealbreakers?.map(d => d.dealbreaker_id) || []
+      interests,
+      subcategories,
+      dealbreakers,
+      interests_count: profile?.interests_count || 0,
+      subcategories_count: profile?.subcategories_count || 0,
+      dealbreakers_count: profile?.dealbreakers_count || 0
     });
 
   } catch (error) {

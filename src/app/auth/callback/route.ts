@@ -131,30 +131,32 @@ export async function GET(request: Request) {
           }
         } else {
           // Existing user - check onboarding status
-          if (profile.onboarding_complete && profile.onboarding_step === 'complete') {
+          // STRICT: Use onboarding_step as single source of truth
+          if (profile.onboarding_complete === true) {
             // User has completed onboarding, redirect to home
+            console.log('[Auth Callback] User completed onboarding, redirecting to home');
             return NextResponse.redirect(new URL('/home', request.url));
           } else {
-            // User exists but onboarding incomplete - redirect to next step
+            // User exists but onboarding incomplete - redirect to required step
             if (user.email_confirmed_at) {
-              // Determine next step based on profile
-              const interestsCount = profile.interests_count || 0;
-              const subcategoriesCount = profile.subcategories_count || 0;
-              const dealbreakersCount = profile.dealbreakers_count || 0;
+              // Use onboarding_step to determine required route (default: 'interests')
+              const requiredStep = profile.onboarding_step || 'interests';
+              const stepToRoute: Record<string, string> = {
+                'interests': '/interests',
+                'subcategories': '/subcategories',
+                'deal-breakers': '/deal-breakers',
+                'complete': '/complete',
+              };
               
-              let nextStep = 'interests';
-              if (interestsCount === 0) {
-                nextStep = 'interests';
-              } else if (subcategoriesCount === 0) {
-                nextStep = 'subcategories';
-              } else if (dealbreakersCount === 0) {
-                nextStep = 'deal-breakers';
-              } else {
-                nextStep = 'complete';
-              }
+              const requiredRoute = stepToRoute[requiredStep] || '/interests';
+              console.log('[Auth Callback] Redirecting to required onboarding step:', {
+                onboarding_step: requiredStep,
+                requiredRoute,
+                onboarding_complete: profile.onboarding_complete
+              });
               
-              const dest = new URL(`/${nextStep}`, request.url);
-              if (nextStep === 'interests') {
+              const dest = new URL(requiredRoute, request.url);
+              if (requiredRoute === '/interests') {
                 dest.searchParams.set('verified', '1');
               }
               return NextResponse.redirect(dest);

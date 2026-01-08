@@ -1,5 +1,7 @@
 "use client";
 
+import { memo } from "react";
+import { motion } from "framer-motion";
 import SubcategoryGroup from "./SubcategoryGroup";
 
 interface SubcategoryItem {
@@ -22,22 +24,39 @@ interface SubcategoryGridProps {
   onToggle: (id: string, interestId: string) => void;
   subcategories: SubcategoryItem[];
   loading: boolean;
+  shakingIds?: Set<string>;
 }
 
-export default function SubcategoryGrid({ 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05,
+    },
+  },
+};
+
+function SubcategoryGrid({ 
   groupedSubcategories, 
   selectedSubcategories, 
   maxSelections,
   onToggle, 
   subcategories, 
-  loading 
+  loading,
+  shakingIds = new Set()
 }: SubcategoryGridProps) {
   const sfPro = {
     fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
   };
 
   return (
-    <div className="space-y-6">
+    <motion.div
+      className="space-y-6"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
       {Object.entries(groupedSubcategories).map(([interestId, group], groupIndex) => (
         <SubcategoryGroup
           key={interestId}
@@ -48,14 +67,23 @@ export default function SubcategoryGrid({
           maxSelections={maxSelections}
           onToggle={onToggle}
           groupIndex={groupIndex}
+          shakingIds={shakingIds}
         />
       ))}
 
       {subcategories.length === 0 && !loading && (
-        <div className="text-center text-charcoal/60 py-8" style={sfPro}>
+        <motion.div
+          className="text-center text-charcoal/60 py-8"
+          style={sfPro}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
           <p>No subcategories found for your selected interests.</p>
-        </div>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 }
+
+export default memo(SubcategoryGrid);

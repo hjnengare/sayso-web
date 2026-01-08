@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import OnboardingButton from "../Onboarding/OnboardingButton";
 
 interface InterestActionsProps {
@@ -10,6 +11,22 @@ interface InterestActionsProps {
   onContinue: () => void;
 }
 
+const actionsVariants = {
+  hidden: {
+    opacity: 0,
+    y: 10,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.4,
+      ease: [0.25, 0.8, 0.25, 1] as [number, number, number, number],
+      delay: 0.15,
+    },
+  },
+};
+
 export default function InterestActions({ 
   canProceed, 
   isNavigating, 
@@ -18,7 +35,12 @@ export default function InterestActions({
   onContinue
 }: InterestActionsProps) {
   return (
-    <div className="pt-4 space-y-4 enter-fade" style={{ animationDelay: "0.15s" }}>
+    <motion.div
+      className="pt-4 space-y-4"
+      variants={actionsVariants}
+      initial="hidden"
+      animate="visible"
+    >
       <OnboardingButton
         canProceed={canProceed}
         isNavigating={isNavigating}
@@ -26,6 +48,6 @@ export default function InterestActions({
         onClick={onContinue}
         variant="continue"
       />
-    </div>
+    </motion.div>
   );
 }

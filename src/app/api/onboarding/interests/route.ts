@@ -3,44 +3,8 @@ import { getServerSupabase } from '../../../lib/supabase/server';
 import { performance as nodePerformance } from 'perf_hooks';
 
 /**
- * Helper function to update profile onboarding step with verification
- */
-async function updateProfileStep(
-  supabase: any,
-  userId: string,
-  step: string
-) {
-  const { data, error } = await supabase
-    .from('profiles')
-    .update({
-      onboarding_step: step,
-      updated_at: new Date().toISOString()
-    })
-    .eq('user_id', userId)
-    .select('onboarding_step')
-    .single();
-
-  if (error) {
-    console.error('[Interests API] Profile update error:', {
-      error: error.message,
-      code: error.code,
-      details: error.details,
-    });
-    throw error;
-  }
-
-  // Verify the update actually worked
-  if (!data || data.onboarding_step !== step) {
-    throw new Error(`Profile onboarding_step did not update correctly. Expected: ${step}, Got: ${data?.onboarding_step}`);
-  }
-
-  return data;
-}
-
-/**
  * POST /api/onboarding/interests
- * Lightweight endpoint to save interests and mark step as done
- * Returns immediately after minimal write operations
+ * Saves interests to user_interests table and updates onboarding_step
  */
 export async function POST(req: Request) {
   const startTime = nodePerformance.now();
@@ -62,62 +26,93 @@ export async function POST(req: Request) {
       );
     }
 
+    // Validate all interest IDs are strings
+    const validInterests = interests.filter((id: any) => 
+      typeof id === 'string' && id.trim().length > 0
+    );
+
+    if (validInterests.length === 0) {
+      return NextResponse.json(
+        { error: 'No valid interests provided' },
+        { status: 400 }
+      );
+    }
+
     const writeStart = nodePerformance.now();
 
-    // Single atomic operation: save interests and update profile
+    // Save interests to user_interests table using RPC function
     const { error: interestsError } = await supabase.rpc('replace_user_interests', {
       p_user_id: user.id,
-      p_interest_ids: interests
+      p_interest_ids: validInterests
     });
 
     if (interestsError) {
       console.error('[Interests API] Error saving interests:', interestsError);
-      return NextResponse.json(
-        { error: 'Failed to save interests', details: interestsError.message },
-        { status: 500 }
-      );
+      // Fallback to manual insert if RPC doesn't exist
+      if (interestsError.message?.includes('function') || interestsError.message?.includes('does not exist')) {
+        console.log('[Interests API] RPC function not found, using fallback method');
+        
+        // Delete existing interests
+        const { error: deleteError } = await supabase
+          .from('user_interests')
+          .delete()
+          .eq('user_id', user.id);
+
+        if (deleteError) {
+          console.error('[Interests API] Error deleting existing interests:', deleteError);
+          throw deleteError;
+        }
+
+        // Insert new interests
+        if (validInterests.length > 0) {
+          const rows = validInterests.map((interest_id: string) => ({
+            user_id: user.id,
+            interest_id: interest_id.trim()
+          }));
+
+          const { error: insertError } = await supabase
+            .from('user_interests')
+            .insert(rows);
+
+          if (insertError) {
+            console.error('[Interests API] Error inserting interests:', insertError);
+            throw insertError;
+          }
+        }
+      } else {
+        throw interestsError;
+      }
     }
 
-    // Update profile to mark interests step as done and update interests_count (with verification)
-    try {
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          onboarding_step: 'subcategories',
-          interests_count: interests.length,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', user.id)
-        .select('onboarding_step, interests_count')
-        .single();
+    // Update onboarding_step to subcategories
+    const { error: stepError } = await supabase
+      .from('profiles')
+      .update({
+        onboarding_step: 'subcategories',
+        interests_count: validInterests.length,
+        updated_at: new Date().toISOString()
+      })
+      .eq('user_id', user.id);
 
-      if (profileError) {
-        throw profileError;
-      }
-
-      // Verify the update actually worked
-      if (!profileData || profileData.onboarding_step !== 'subcategories') {
-        throw new Error(`Profile onboarding_step did not update correctly. Expected: subcategories, Got: ${profileData?.onboarding_step}`);
-      }
-    } catch (profileError: any) {
-      console.error('[Interests API] Error updating profile:', profileError);
-      // Interests are saved, but profile update failed - throw to ensure user knows
-      throw new Error(`Failed to update profile step: ${profileError.message}`);
+    if (stepError) {
+      console.error('[Interests API] Error updating onboarding_step:', stepError);
+      throw stepError;
     }
 
     const writeTime = nodePerformance.now() - writeStart;
     const totalTime = nodePerformance.now() - startTime;
 
-    console.log('[Interests API] Save completed', {
+    console.log('[Interests API] Interests saved successfully', {
       userId: user.id,
-      interestsCount: interests.length,
+      interestsCount: validInterests.length,
       writeTime: `${writeTime.toFixed(2)}ms`,
       totalTime: `${totalTime.toFixed(2)}ms`
     });
 
     return NextResponse.json({
       ok: true,
-      interestsCount: interests.length,
+      interestsCount: validInterests.length,
+      onboarding_step: 'subcategories', // Return updated step for immediate UI update
       performance: {
         writeTime: writeTime,
         totalTime: totalTime
@@ -137,4 +132,3 @@ export async function POST(req: Request) {
     );
   }
 }
-

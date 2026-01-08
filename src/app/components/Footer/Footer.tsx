@@ -9,9 +9,11 @@ import Logo from "../Logo/Logo";
 export default function Footer() {
   // Use useState and useEffect to set year only on client to avoid hydration mismatch
   const [currentYear, setCurrentYear] = useState<number>(2025);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setCurrentYear(new Date().getFullYear());
+    setMounted(true);
   }, []);
 
   const footerLinks = {
@@ -33,15 +35,15 @@ export default function Footer() {
 
 
   return (
-    <footer className="relative overflow-hidden pb-safe-area-bottom bg-gradient-to-b from-charcoal via-charcoal to-charcoal/95 text-off-white rounded-[20px] p-4 m-4 shadow-md">
+    <footer className="relative overflow-hidden pb-safe-area-bottom bg-gradient-to-b from-charcoal via-charcoal to-charcoal/95 text-off-white rounded-3xl p-4 m-2 shadow-md">
       {/* Decorative background elements */}
-      <div className="absolute inset-0 opacity-5 rounded-[20px] overflow-hidden">
+      <div className="absolute inset-0 opacity-5 rounded-3xl overflow-hidden">
         <div className="absolute top-0 left-0 w-96 h-96 bg-sage rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-coral rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
       </div>
       
       {/* Subtle grid pattern */}
-      <div className="absolute inset-0 opacity-[0.02] rounded-[20px]" style={{
+      <div className="absolute inset-0 opacity-[0.02] rounded-3xl" style={{
         backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
                           linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
         backgroundSize: '50px 50px'
@@ -168,7 +170,7 @@ export default function Footer() {
             {/* Copyright */}
             <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4 text-center md:text-left">
               <p className="font-urbanist text-xs sm:text-sm text-off-white/70">
-                © {currentYear} sayso. All rights reserved.
+                © {mounted ? currentYear : 2025} sayso. All rights reserved.
               </p>
             </div>
           </div>
