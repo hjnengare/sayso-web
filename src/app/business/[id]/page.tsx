@@ -3,17 +3,10 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { Fontdiner_Swanky } from "next/font/google";
 import { usePageTitle } from "../../hooks/usePageTitle";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageLoader, Loader } from "../../components/Loader";
 import WavyTypedTitle from "../../../components/Animations/WavyTypedTitle";
-
-const swanky = Fontdiner_Swanky({
-  weight: "400",
-  subsets: ["latin"],
-  display: "swap",
-});
 import {
     MessageSquare,
     X,
@@ -528,12 +521,13 @@ export default function BusinessProfilePage() {
                                     <WavyTypedTitle
                                         text="Community Reviews"
                                         as="h1"
-                                        className={`${swanky.className} text-lg sm:text-xl font-semibold text-charcoal rounded-lg cursor-default`}
+                                        className="font-urbanist text-lg sm:text-xl font-700 text-charcoal rounded-lg cursor-default"
                                         typingSpeedMs={40}
                                         startDelayMs={300}
                                         disableWave={true}
                                         style={{ 
-                                            fontFamily: swanky.style.fontFamily,
+                                            fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                                            fontWeight: 700,
                                         }}
                                     />
                                 </div>

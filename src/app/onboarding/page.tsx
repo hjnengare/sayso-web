@@ -2,17 +2,10 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
-import { Fontdiner_Swanky } from "next/font/google";
 import { useMounted } from "../hooks/useMounted";
 import { useScrollReveal } from "../hooks/useScrollReveal";
 import Logo from "../components/Logo/Logo";
 import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
-
-const swanky = Fontdiner_Swanky({
-  weight: "400",
-  subsets: ["latin"],
-  display: "swap",
-});
 
 const styles = `
   @keyframes fadeInUp {
@@ -161,7 +154,7 @@ export default function OnboardingPage() {
           {/* Main content */}
           <div className="text-center flex-1 flex flex-col justify-center min-h-0 py-4 space-y-6 md:space-y-8">
             <div data-reveal className="title-no-break w-full block overflow-hidden">
-              <h2 className={`${swanky.className} text-2xl sm:text-3xl md:text-5xl font-semibold mb-5 md:mb-6 leading-[1.2] tracking-tight px-6 sm:px-4 md:px-2 text-charcoal no-hyphens block w-full`} style={{ fontFamily: swanky.style.fontFamily }}>
+              <h2 className="font-urbanist text-2xl sm:text-3xl md:text-5xl font-700 mb-5 md:mb-6 leading-[1.2] tracking-tight px-6 sm:px-4 md:px-2 text-charcoal no-hyphens block w-full" style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif", fontWeight: 700 }}>
                 <div className="block whitespace-nowrap">
                   <WavyTypedTitle
                     text="Discover gems near you!"
@@ -174,7 +167,8 @@ export default function OnboardingPage() {
                     triggerOnTypingComplete={true}
                     enableScrollTrigger={false}
                     style={{ 
-                      fontFamily: swanky.style.fontFamily,
+                      fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                      fontWeight: 700,
                       wordBreak: 'keep-all',
                       overflowWrap: 'normal',
                       whiteSpace: 'nowrap',

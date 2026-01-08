@@ -1,17 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Fontdiner_Swanky } from "next/font/google";
 import SimilarBusinessCard from "./SimilarBusinessCard";
 import StaggeredContainer from "../Animations/StaggeredContainer";
 import AnimatedElement from "../Animations/AnimatedElement";
 import WavyTypedTitle from "../../../components/Animations/WavyTypedTitle";
-
-const swanky = Fontdiner_Swanky({
-  weight: "400",
-  subsets: ["latin"],
-  display: "swap",
-});
 
 interface SimilarBusinessesProps {
   currentBusinessId: string;
@@ -138,13 +131,14 @@ export default function SimilarBusinesses({
             <WavyTypedTitle
               text="You Might Also Like"
               as="h3"
-              className={`${swanky.className} text-lg sm:text-xl font-semibold text-charcoal`}
+              className="font-urbanist text-lg sm:text-xl font-700 text-charcoal"
                 typingSpeedMs={40}
                 startDelayMs={300}
                 waveVariant="subtle"
                 loopWave={true}
                 style={{ 
-                  fontFamily: swanky.style.fontFamily,
+                  fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                  fontWeight: 700,
                 }}
               />
             </div>
@@ -196,7 +190,7 @@ export default function SimilarBusinesses({
             <WavyTypedTitle
               text="You Might Also Like"
               as="h2"
-              className={`${swanky.className} text-lg sm:text-xl font-semibold text-charcoal`}
+              className="font-urbanist text-lg sm:text-xl font-700 text-charcoal"
               typingSpeedMs={40}
               startDelayMs={300}
               waveVariant="subtle"
@@ -204,7 +198,8 @@ export default function SimilarBusinesses({
               triggerOnTypingComplete={false}
               enableScrollTrigger={false}
               style={{ 
-                fontFamily: swanky.style.fontFamily,
+                fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                fontWeight: 700,
               }}
             />
           </div>

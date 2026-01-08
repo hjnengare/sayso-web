@@ -3,14 +3,7 @@
 import Link from "next/link";
 import { ArrowRight } from "react-feather";
 import { Laptop, Heart, DollarSign, Moon } from "lucide-react";
-import { Fontdiner_Swanky } from "next/font/google";
 import WavyTypedTitle from "../../../components/Animations/WavyTypedTitle";
-
-const swanky = Fontdiner_Swanky({
-  weight: "400",
-  subsets: ["latin"],
-  display: "swap",
-});
 
 // Map collection IDs to Lucide React icons
 const COLLECTION_ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -66,7 +59,7 @@ export default function Collections({ onCollectionClick }: CollectionsProps) {
         <WavyTypedTitle
           text="Curated Collections"
           as="h2"
-          className={`${swanky.className} text-h2 sm:text-h1 font-bold text-charcoal px-3 sm:px-4 py-1 rounded-lg cursor-default`}
+          className="font-urbanist text-h2 sm:text-h1 font-700 text-charcoal px-3 sm:px-4 py-1 rounded-lg cursor-default"
           typingSpeedMs={40}
           startDelayMs={300}
           waveVariant="subtle"
@@ -74,7 +67,8 @@ export default function Collections({ onCollectionClick }: CollectionsProps) {
           enableScrollTrigger={true}
           disableWave={true}
           style={{ 
-            fontFamily: swanky.style.fontFamily,
+            fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+            fontWeight: 700,
           }}
         />
         <Link

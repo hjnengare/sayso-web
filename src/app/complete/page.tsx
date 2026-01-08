@@ -2,7 +2,6 @@
 
 import { useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
-import { Fontdiner_Swanky } from "next/font/google";
 import { ArrowRight, CheckCircle } from "react-feather";
 import { ShieldCheck, Clock, Smile, BadgeDollarSign } from "lucide-react";
 import { useReducedMotion } from "../utils/useReducedMotion";
@@ -12,12 +11,6 @@ import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
 import { Loader } from "../components/Loader";
 import { useCompletePage } from "../hooks/useCompletePage";
 import { OnboardingErrorBoundary } from "../components/Onboarding/OnboardingErrorBoundary";
-
-const swanky = Fontdiner_Swanky({
-  weight: "400",
-  subsets: ["latin"],
-  display: "swap",
-});
 
 // Dealbreaker icon mapping
 const DEALBREAKER_ICONS: { [key: string]: React.ComponentType<{ className?: string }> } = {
@@ -278,7 +271,7 @@ function CompletePageContent() {
             <WavyTypedTitle
               text="You're all set!"
               as="h1"
-              className={`${swanky.className} text-lg md:text-4xl lg:text-5xl font-700 mb-4 tracking-tight leading-snug text-charcoal`}
+              className="font-urbanist text-lg md:text-4xl lg:text-5xl font-700 mb-4 tracking-tight leading-snug text-charcoal"
               typingSpeedMs={40}
               startDelayMs={300}
               waveVariant="subtle"
@@ -286,7 +279,8 @@ function CompletePageContent() {
               triggerOnTypingComplete={true}
               enableScrollTrigger={false}
               style={{ 
-                fontFamily: swanky.style.fontFamily,
+                fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                fontWeight: 700,
               }}
             />
           </div>

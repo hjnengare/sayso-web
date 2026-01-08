@@ -1,14 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Fontdiner_Swanky } from "next/font/google";
 import WavyTypedTitle from "../../../components/Animations/WavyTypedTitle";
-
-const swanky = Fontdiner_Swanky({
-  weight: "400",
-  subsets: ["latin"],
-  display: "swap",
-});
 
 const headerVariants = {
   hidden: {
@@ -42,7 +35,7 @@ export default function SubcategoryHeader() {
       <WavyTypedTitle
         text="Pick your subcategories"
         as="h2"
-        className={`${swanky.className} text-2xl md:text-3xl lg:text-4xl font-bold mb-2 tracking-tight px-6 sm:px-4 md:px-2 text-charcoal`}
+        className="font-urbanist text-2xl md:text-3xl lg:text-4xl font-700 mb-2 tracking-tight px-6 sm:px-4 md:px-2 text-charcoal"
         typingSpeedMs={40}
         startDelayMs={300}
         waveVariant="subtle"
@@ -50,7 +43,8 @@ export default function SubcategoryHeader() {
         triggerOnTypingComplete={true}
         enableScrollTrigger={false}
         style={{ 
-          fontFamily: swanky.style.fontFamily,
+          fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+          fontWeight: 700,
         }}
       />
       <p

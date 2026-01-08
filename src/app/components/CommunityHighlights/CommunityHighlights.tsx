@@ -3,7 +3,6 @@
 
 import { useRouter } from "next/navigation";
 import { Award, ArrowRight } from "react-feather";
-import { Fontdiner_Swanky } from "next/font/google";
 import ReviewerCard from "../ReviewerCard/ReviewerCard";
 import BusinessOfTheMonthCard from "../BusinessCard/BusinessOfTheMonthCard";
 import ScrollableSection from "../ScrollableSection/ScrollableSection";
@@ -13,12 +12,6 @@ import {
   Reviewer,
   BusinessOfTheMonth,
 } from "../../data/communityHighlightsData";
-
-const swanky = Fontdiner_Swanky({
-  weight: "400",
-  subsets: ["latin"],
-  display: "swap",
-});
 
 // Sample review texts for variety
 const sampleReviewTexts = [
@@ -79,7 +72,7 @@ export default function CommunityHighlights({
           <WavyTypedTitle
             text={title}
             as="h2"
-            className={`${swanky.className} text-h2 sm:text-h1 font-bold text-charcoal hover:text-sage transition-all duration-300 px-3 sm:px-4 py-1 hover:bg-sage/5 rounded-lg cursor-default`}
+            className="font-urbanist text-h2 sm:text-h1 font-700 text-charcoal hover:text-sage transition-all duration-300 px-3 sm:px-4 py-1 hover:bg-sage/5 rounded-lg cursor-default"
             typingSpeedMs={40}
             startDelayMs={300}
             waveVariant="subtle"
@@ -87,7 +80,8 @@ export default function CommunityHighlights({
             enableScrollTrigger={true}
             disableWave={true}
             style={{ 
-              fontFamily: swanky.style.fontFamily,
+              fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+              fontWeight: 700,
             }}
           />
         </div>
@@ -97,8 +91,8 @@ export default function CommunityHighlights({
           <div className="mt-1">
             <div className="pb-4 sm:pb-8 md:pb-10 flex flex-wrap items-center justify-between gap-2">
                 <h3
-                  className={`${swanky.className} text-base font-bold text-charcoal transition-all duration-300 px-3 sm:px-4 py-1 rounded-lg cursor-none`}
-                  style={{ fontFamily: swanky.style.fontFamily }}
+                  className="font-urbanist text-base font-700 text-charcoal transition-all duration-300 px-3 sm:px-4 py-1 rounded-lg cursor-none"
+                  style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif", fontWeight: 700 }}
                 >
                   <span className="sm:hidden">Top Contributors</span>
                   <span className="hidden sm:inline">Top Contributors This Month</span>
@@ -164,8 +158,8 @@ export default function CommunityHighlights({
             <div className="mx-auto w-full max-w-[2000px] relative z-10">
               <div className="pb-4 sm:pb-8 md:pb-10 flex flex-wrap items-center justify-between gap-2">
                 <h3
-                  className={`${swanky.className} text-base font-bold text-charcoal transition-all duration-300 px-3 sm:px-4 py-1 rounded-lg cursor-default`}
-                  style={{ fontFamily: swanky.style.fontFamily }}
+                  className="font-urbanist text-base font-700 text-charcoal transition-all duration-300 px-3 sm:px-4 py-1 rounded-lg cursor-default"
+                  style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif", fontWeight: 700 }}
                 >
                   <span className="sm:hidden">Featured Businesses</span>
                   <span className="hidden sm:inline">Featured Businesses of the Month by Category</span>

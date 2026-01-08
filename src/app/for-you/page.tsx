@@ -3,7 +3,6 @@
 import { useMemo, useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { Fontdiner_Swanky } from "next/font/google";
 import Header from "../components/Header/Header";
 import Footer from "../components/Footer/Footer";
 import BusinessCard from "../components/BusinessCard/BusinessCard";
@@ -23,11 +22,6 @@ import CategoryFilterPills from "../components/Home/CategoryFilterPills";
 import BusinessGridSkeleton from "../components/Explore/BusinessGridSkeleton";
 import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
 
-const swanky = Fontdiner_Swanky({
-  weight: "400",
-  subsets: ["latin"],
-  display: "swap",
-});
 
 // Note: dynamic and revalidate cannot be exported from client components
 // Client components are automatically dynamic
@@ -293,9 +287,10 @@ export default function ForYouPage() {
           <div className="mb-6 sm:mb-8 px-4 sm:px-6 text-center pt-4">
             <div className="my-4">
               <h1 
-                className={`${swanky.className} text-2xl sm:text-3xl md:text-4xl font-semibold leading-[1.2] tracking-tight text-charcoal mx-auto`}
+                className="font-urbanist text-2xl sm:text-3xl md:text-4xl font-700 leading-[1.2] tracking-tight text-charcoal mx-auto"
                 style={{ 
-                  fontFamily: swanky.style.fontFamily,
+                  fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                  fontWeight: 700,
                   wordBreak: 'keep-all',
                   overflowWrap: 'break-word',
                   whiteSpace: 'normal',
@@ -312,7 +307,8 @@ export default function ForYouPage() {
                   loopWave={true}
                   enableScrollTrigger={true}
                   style={{
-                    fontFamily: swanky.style.fontFamily,
+                    fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                    fontWeight: 700,
                     wordBreak: 'keep-all',
                     overflowWrap: 'break-word',
                     whiteSpace: 'normal',

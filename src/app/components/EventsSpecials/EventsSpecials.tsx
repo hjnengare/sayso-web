@@ -3,19 +3,12 @@
 
 import { useRouter } from "next/navigation";
 import { ArrowRight } from "react-feather";
-import { Fontdiner_Swanky } from "next/font/google";
 import EventCard from "../EventCard/EventCard";
 import EventCardSkeleton from "../EventCard/EventCardSkeleton";
 import { Event, EVENTS_AND_SPECIALS } from "../../data/eventsData";
 import ScrollableSection from "../ScrollableSection/ScrollableSection";
 import { useToast } from "../../contexts/ToastContext";
 import WavyTypedTitle from "../../../components/Animations/WavyTypedTitle";
-
-const swanky = Fontdiner_Swanky({
-  weight: "400",
-  subsets: ["latin"],
-  display: "swap",
-});
 
 export default function EventsSpecials({
   title = "Events & Specials",
@@ -119,7 +112,7 @@ export default function EventsSpecials({
           <WavyTypedTitle
             text={title}
             as="h2"
-            className={`${swanky.className} text-h2 sm:text-h1 font-bold text-charcoal hover:text-sage transition-all duration-300 px-3 sm:px-4 py-1 hover:bg-sage/5 rounded-lg cursor-default`}
+            className="font-urbanist text-h2 sm:text-h1 font-700 text-charcoal hover:text-sage transition-all duration-300 px-3 sm:px-4 py-1 hover:bg-sage/5 rounded-lg cursor-default"
             typingSpeedMs={40}
             startDelayMs={300}
             waveVariant="subtle"
@@ -127,7 +120,8 @@ export default function EventsSpecials({
             enableScrollTrigger={true}
             disableWave={true}
             style={{ 
-              fontFamily: swanky.style.fontFamily,
+              fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+              fontWeight: 700,
             }}
           />
 

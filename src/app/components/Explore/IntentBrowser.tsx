@@ -2,14 +2,7 @@
 
 import Link from "next/link";
 import { Utensils, Coffee, Activity, Heart, PartyPopper, ShoppingBag, Wrench } from "lucide-react";
-import { Fontdiner_Swanky } from "next/font/google";
 import WavyTypedTitle from "../../../components/Animations/WavyTypedTitle";
-
-const swanky = Fontdiner_Swanky({
-  weight: "400",
-  subsets: ["latin"],
-  display: "swap",
-});
 
 const INTENTS = [
   { id: 'eat', label: 'Eat', icon: Utensils, color: 'from-coral/20 to-coral/10' },
@@ -38,7 +31,7 @@ export default function IntentBrowser({ onIntentClick }: IntentBrowserProps) {
       <WavyTypedTitle
         text="Browse by Intent"
         as="h2"
-        className={`${swanky.className} text-h2 sm:text-h1 font-bold text-charcoal px-3 sm:px-4 py-1 rounded-lg cursor-default`}
+        className="font-urbanist text-h2 sm:text-h1 font-700 text-charcoal px-3 sm:px-4 py-1 rounded-lg cursor-default"
         typingSpeedMs={40}
         startDelayMs={300}
         waveVariant="subtle"
@@ -46,7 +39,8 @@ export default function IntentBrowser({ onIntentClick }: IntentBrowserProps) {
         enableScrollTrigger={true}
         disableWave={true}
         style={{ 
-          fontFamily: swanky.style.fontFamily,
+          fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+          fontWeight: 700,
         }}
       />
       
