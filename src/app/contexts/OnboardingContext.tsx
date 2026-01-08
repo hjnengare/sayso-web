@@ -196,26 +196,29 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
 
       // Show success toast for step completion
       const completionMessage = getStepCompletionMessage(currentStep);
-      showToast(completionMessage, 'success', 3000);
+      showToast(completionMessage, 'success', 2000);
 
+      // Add a small delay to allow toast to be visible, then navigate
       // Navigate to the next step - NO SAVING until final step
       // Use replace for faster navigation and prefetch for instant loading
-      if (nextStepName === 'complete') {
-        router.prefetch('/home');
-        router.replace('/home');
-      } else if (nextStepName === 'subcategories' && currentStep === 'interests') {
-        // Pass selected interests as URL params to subcategories
-        const interestParams = selectedInterests.length > 0
-          ? `?interests=${selectedInterests.join(',')}`
-          : '';
-        const nextUrl = `/subcategories${interestParams}`;
-        router.prefetch(nextUrl);
-        router.replace(nextUrl);
-      } else {
-        const nextUrl = `/${nextStepName}`;
-        router.prefetch(nextUrl);
-        router.replace(nextUrl);
-      }
+      setTimeout(() => {
+        if (nextStepName === 'complete') {
+          router.prefetch('/home');
+          router.replace('/home');
+        } else if (nextStepName === 'subcategories' && currentStep === 'interests') {
+          // Pass selected interests as URL params to subcategories
+          const interestParams = selectedInterests.length > 0
+            ? `?interests=${selectedInterests.join(',')}`
+            : '';
+          const nextUrl = `/subcategories${interestParams}`;
+          router.prefetch(nextUrl);
+          router.replace(nextUrl);
+        } else {
+          const nextUrl = `/${nextStepName}`;
+          router.prefetch(nextUrl);
+          router.replace(nextUrl);
+        }
+      }, 500);
     } catch (error) {
       console.error('Error proceeding to next step:', error);
       setError('Failed to navigate to next step');
@@ -227,47 +230,53 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
   const completeOnboarding = useCallback(async () => {
     if (!user) return;
 
-    // Prerequisite rule: no interests = no subcategories = no deal-breakers = no complete
-    // Bail out early if any prerequisite is missing (don't call API)
-    if (!selectedInterests || selectedInterests.length === 0) {
-      console.warn('Cannot complete onboarding: interests are required');
-      setError('Interests are required to complete onboarding');
-      return;
-    }
-
-    if (!selectedSubInterests || selectedSubInterests.length === 0) {
-      console.warn('Cannot complete onboarding: subcategories are required');
-      setError('Subcategories are required to complete onboarding');
-      return;
-    }
-
-    if (!selectedDealbreakers || selectedDealbreakers.length === 0) {
-      console.warn('Cannot complete onboarding: deal-breakers are required');
-      setError('Deal-breakers are required to complete onboarding');
-      return;
-    }
-
     try {
       setIsLoading(true);
       setError(null);
 
-      // Use unified onboarding API to save all final data
-      const response = await fetch('/api/user/onboarding', {
+      // Load data from database first (single source of truth)
+      // This ensures we have the latest saved data, not stale context state
+      const dbDataResponse = await fetch('/api/user/onboarding');
+      let dbInterests: string[] = [];
+      let dbSubcategories: any[] = [];
+      let dbDealbreakers: string[] = [];
+
+      if (dbDataResponse.ok) {
+        const dbData = await dbDataResponse.json();
+        dbInterests = dbData.interests || [];
+        dbSubcategories = dbData.subcategories || [];
+        dbDealbreakers = dbData.dealbreakers || [];
+      }
+
+      // Use database data if available, otherwise fall back to context state
+      const finalInterests = dbInterests.length > 0 ? dbInterests : selectedInterests;
+      const finalSubcategories = dbSubcategories.length > 0 ? dbSubcategories : selectedSubInterests.map(subId => ({
+        subcategory_id: subId,
+        interest_id: getInterestIdForSubcategory(subId)
+      }));
+      const finalDealbreakers = dbDealbreakers.length > 0 ? dbDealbreakers : selectedDealbreakers;
+
+      // Call the dedicated complete API endpoint (not the unified one)
+      // This endpoint only marks completion and verifies prerequisites from DB
+      const response = await fetch('/api/onboarding/complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          step: 'complete',
-          interests: selectedInterests,
-          subcategories: selectedSubInterests.map(subId => ({
-            subcategory_id: subId,
-            interest_id: getInterestIdForSubcategory(subId)
-          })),
-          dealbreakers: selectedDealbreakers
-        })
+        credentials: 'include',
       });
 
+      let payload: any = null;
+      try { payload = await response.json(); } catch {}
+
+      if (response.status === 401) {
+        setError('Your session expired. Please log in again.');
+        showToast('Your session expired. Please log in again.', 'warning', 3000);
+        return;
+      }
+
       if (!response.ok) {
-        throw new Error('Failed to complete onboarding');
+        const errorMsg = payload?.error || payload?.message || 'Failed to complete onboarding';
+        setError(errorMsg);
+        throw new Error(errorMsg);
       }
 
       // Clear localStorage after successful completion
@@ -279,13 +288,21 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
 
       // Show completion toast
       showToast('🎉 Welcome to sayso! Your profile is now complete.', 'success', 4000);
-    } catch (error) {
+
+      // Navigate to home after a brief delay
+      setTimeout(() => {
+        router.prefetch('/home');
+        router.replace('/home');
+      }, 500);
+    } catch (error: any) {
       console.error('Error completing onboarding:', error);
-      setError('Failed to complete onboarding');
+      const errorMsg = error?.message || 'Failed to complete onboarding';
+      setError(errorMsg);
+      showToast(errorMsg, 'error', 3000);
     } finally {
       setIsLoading(false);
     }
-  }, [user, selectedInterests, selectedSubInterests, selectedDealbreakers, getInterestIdForSubcategory, showToast]);
+  }, [user, selectedInterests, selectedSubInterests, selectedDealbreakers, getInterestIdForSubcategory, showToast, router]);
 
   const resetOnboarding = useCallback(() => {
     setSelectedInterests([]);

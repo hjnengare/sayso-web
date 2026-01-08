@@ -924,9 +924,7 @@ export default function DMChatListPage() {
         </AnimatePresence>
       </div>
 
-      <div className="hidden lg:block">
-        <Footer />
-      </div>
+      <Footer />
     </div>
   );
 }

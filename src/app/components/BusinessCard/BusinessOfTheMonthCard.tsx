@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Image as ImageIcon, Star, Edit, Bookmark, Share2, Award } from "react-feather";
 import { Scissors, Coffee, UtensilsCrossed, Wine, Dumbbell, Activity, Heart, Book, ShoppingBag, Home, Briefcase, MapPin, Music, Film, Camera, Car, GraduationCap, CreditCard, Tag } from "lucide-react";
@@ -14,6 +14,7 @@ import { BusinessOfTheMonth } from "../../data/communityHighlightsData";
 import { getCategoryPng, getCategoryPngFromLabels, isPngIcon } from "../../utils/categoryToPngMapping";
 import { useSavedItems } from "../../contexts/SavedItemsContext";
 import { useToast } from "../../contexts/ToastContext";
+import { motion, useReducedMotion } from "framer-motion";
 
 // Generate a unique color for each business based on its ID
 // This ensures every business card icon has a different color
@@ -126,14 +127,39 @@ const getCategoryIcon = (category: string): React.ComponentType<React.SVGProps<S
   return Tag;
 };
 
-export default function BusinessOfTheMonthCard({ business }: { business: BusinessOfTheMonth }) {
+export default function BusinessOfTheMonthCard({ business, index = 0 }: { business: BusinessOfTheMonth; index?: number }) {
   const router = useRouter();
   const { toggleSavedItem, isItemSaved } = useSavedItems();
   const { showToast } = useToast();
+  const prefersReducedMotion = useReducedMotion();
+  const [isMobile, setIsMobile] = useState(true);
   
   const idForSnap = useMemo(() => `business-month-${business.id}`, [business.id]);
   const [imgError, setImgError] = useState(false);
   const [usingFallback, setUsingFallback] = useState(false);
+
+  // Check if mobile for animation
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Animation variants
+  const cardInitial = prefersReducedMotion
+    ? { opacity: 0 }
+    : isMobile
+    ? { opacity: 0 }
+    : { opacity: 0, y: 40, x: index % 2 === 0 ? -20 : 20 };
+
+  const cardAnimate = prefersReducedMotion
+    ? { opacity: 1 }
+    : isMobile
+    ? { opacity: 1 }
+    : { opacity: 1, y: 0, x: 0 };
   
   // Get business identifier for routing (slug or ID)
   const businessIdentifier = (business as any).slug || business.id;
@@ -260,12 +286,20 @@ export default function BusinessOfTheMonthCard({ business }: { business: Busines
   };
 
   return (
-    <li
+    <motion.li
       id={idForSnap}
       className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto sm:min-w-[25%] md:min-w-[25%] xl:min-w-[25%] list-none"
       style={{
         fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
         fontWeight: 600,
+      }}
+      initial={cardInitial}
+      whileInView={cardAnimate}
+      viewport={{ amount: isMobile ? 0.1 : 0.2, once: false }}
+      transition={{
+        duration: prefersReducedMotion ? 0.2 : isMobile ? 0.4 : 0.5,
+        delay: index * 0.05,
+        ease: "easeOut",
       }}
     >
       <div
@@ -609,6 +643,6 @@ export default function BusinessOfTheMonthCard({ business }: { business: Busines
           </div>
         </div>
       </div>
-    </li>
+    </motion.li>
   );
 }

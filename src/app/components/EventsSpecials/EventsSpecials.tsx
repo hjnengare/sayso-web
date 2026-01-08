@@ -149,9 +149,9 @@ export default function EventsSpecials({
           <div className="md:hidden">
             <ScrollableSection>
               <div className="flex gap-3 items-stretch">
-                {displayEvents.map((event) => (
+                {displayEvents.map((event, index) => (
                   <div key={event.id} className="snap-start snap-always flex-shrink-0 w-[100vw] list-none flex">
-                    <EventCard event={event} onBookmark={handleBookmark} />
+                    <EventCard event={event} onBookmark={handleBookmark} index={index} />
                   </div>
                 ))}
               </div>
@@ -160,9 +160,9 @@ export default function EventsSpecials({
           
           {/* Desktop: Grid layout */}
           <div className="hidden md:grid md:grid-cols-2 xl:grid-cols-4 gap-3">
-            {displayEvents.map((event) => (
+            {displayEvents.map((event, index) => (
               <div key={event.id} className="list-none flex">
-                <EventCard event={event} onBookmark={handleBookmark} />
+                <EventCard event={event} onBookmark={handleBookmark} index={index} />
               </div>
             ))}
           </div>

@@ -77,6 +77,7 @@ export default function TopReviewers({
                 <ReviewerCard
                   key={reviewer.id}
                   reviewer={reviewer}
+                  index={index}
                   latestReview={{
                     id: `${reviewer.id}-latest`,
                     reviewer,

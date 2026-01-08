@@ -1330,3 +1330,15 @@
     }
   }
 }
+
+/* Scroll snap and smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Animated sections - mobile gets fade, desktop gets slide */
+@media (max-width: 767px) {
+  .animated-section [data-section-index] {
+    transform: none !important;
+  }
+}

@@ -41,49 +41,6 @@ import { useReviewSubmission } from "@/app/hooks/useReviews";
 import { useRouter } from "next/navigation";
 import Header from "../components/Header/Header";
 
-const animations = `
-  @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-  
-  @keyframes slideInFromTop {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  
-  @keyframes fadeInScale {
-    from { opacity: 0; transform: scale(0.96) translateY(-12px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
-  }
-  
-  .animate-fade-in-up {
-    animation: fadeInUp 0.6s ease-out forwards;
-  }
-  
-  .animate-fade-in {
-    animation: fadeIn 0.4s ease-out forwards;
-  }
-  
-  .animate-slide-in-top {
-    animation: slideInFromTop 0.5s ease-out forwards;
-  }
-  
-  .animate-fade-in-scale {
-    animation: fadeInScale 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
-  
-  .animate-delay-100 { animation-delay: 0.1s; opacity: 0; }
-  .animate-delay-200 { animation-delay: 0.2s; opacity: 0; }
-  .animate-delay-300 { animation-delay: 0.3s; opacity: 0; }
-`;
-
-
 // Types
 import type { EnhancedProfile, UserStats } from '@/app/lib/types/user';
 
@@ -862,7 +819,6 @@ function ProfileContent() {
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: animations }} />
       <style jsx global>{`
         .font-urbanist {
           font-family: "Urbanist", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, system-ui,

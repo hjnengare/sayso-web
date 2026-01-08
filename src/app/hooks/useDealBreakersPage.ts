@@ -9,6 +9,7 @@ import { useOnboardingData } from './useOnboardingData';
 import { useOnboarding } from '../contexts/OnboardingContext';
 import { useToast } from '../contexts/ToastContext';
 import { validateSelectionCount } from '../lib/onboarding/validation';
+import { useOnboardingSafety } from './useOnboardingSafety';
 
 interface DealBreaker {
   id: string;
@@ -42,6 +43,13 @@ export function useDealBreakersPage(): UseDealBreakersPageReturn {
   const { showToast } = useToast();
   const { setSelectedDealbreakers, nextStep, isLoading: contextLoading, error: contextError } = useOnboarding();
   const [isNavigating, setIsNavigating] = useState(false);
+  
+  // Safety utilities
+  const { isMounted, withTimeout, preventDoubleSubmit, handleBeforeUnload } = useOnboardingSafety({
+    timeout: 30000,
+    preventDoubleSubmit: true,
+    checkSessionOnMount: true,
+  });
 
   const {
     data,
@@ -94,7 +102,7 @@ export function useDealBreakersPage(): UseDealBreakersPageReturn {
   );
 
   // Handle next navigation - saves to DB and advances step
-  const handleNext = useCallback(async () => {
+  const handleNextInternal = useCallback(async () => {
     // Validate selections
     const validation = validateSelectionCount(selectedDealbreakers, {
       min: 1,
@@ -106,14 +114,17 @@ export function useDealBreakersPage(): UseDealBreakersPageReturn {
       return;
     }
 
+    // Safe state update (only if mounted)
+    if (!isMounted()) return;
     setIsNavigating(true);
 
     try {
       // Ensure OnboardingContext has latest selections
+      if (!isMounted()) return;
       setSelectedDealbreakers(selectedDealbreakers);
       
-      // Save to API
-      const response = await fetch('/api/onboarding/deal-breakers', {
+      // Save to API with timeout
+      const fetchPromise = fetch('/api/onboarding/deal-breakers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -122,12 +133,15 @@ export function useDealBreakersPage(): UseDealBreakersPageReturn {
         })
       });
 
+      const response = await withTimeout(fetchPromise, 30000);
+
       let payload: any = null;
       try { payload = await response.json(); } catch {}
 
       if (response.status === 401) {
+        if (!isMounted()) return;
         showToast('Your session expired. Please log in again.', 'warning', 3000);
-        router.push('/login');
+        router.replace('/login'); // Use replace to prevent back navigation
         return;
       }
 
@@ -137,13 +151,51 @@ export function useDealBreakersPage(): UseDealBreakersPageReturn {
       }
 
       // Navigate to next step
-      await nextStep();
+      try {
+        await nextStep();
+      } catch (navError) {
+        console.error('[Deal-breakers] Navigation error:', navError);
+        if (isMounted()) {
+          setIsNavigating(false);
+          showToast('Navigation failed. Please try again.', 'error', 3000);
+        }
+        return;
+      }
+
+      // Reset navigating state after navigation completes
+      setTimeout(() => {
+        if (isMounted()) {
+          setIsNavigating(false);
+        }
+      }, 1000);
     } catch (error: any) {
       console.error('[Deal-breakers] Submit error:', error);
-      showToast(error?.message || 'Failed to save dealbreakers. Please try again.', 'error', 3000);
-      setIsNavigating(false);
+      
+      // Handle timeout specifically
+      if (error?.message?.includes('timeout') || error?.name === 'AbortError') {
+        if (isMounted()) {
+          showToast('Request timed out. Please check your connection and try again.', 'error', 5000);
+          setIsNavigating(false);
+        }
+        return;
+      }
+
+      if (isMounted()) {
+        showToast(error?.message || 'Failed to save dealbreakers. Please try again.', 'error', 3000);
+        setIsNavigating(false);
+      }
     }
-  }, [selectedDealbreakers, setSelectedDealbreakers, nextStep, showToast, router]);
+  }, [selectedDealbreakers, setSelectedDealbreakers, nextStep, showToast, router, isMounted, withTimeout]);
+
+  // Wrap with double-submit prevention
+  const handleNext = preventDoubleSubmit(handleNextInternal);
+
+  // Handle beforeunload warning when saving
+  useEffect(() => {
+    if (isNavigating) {
+      return handleBeforeUnload(isNavigating);
+    }
+  }, [isNavigating, handleBeforeUnload]);
 
   // Check if can proceed
   const canProceed = useMemo(() => {

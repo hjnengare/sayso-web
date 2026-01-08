@@ -9,6 +9,7 @@ import { useOnboardingData } from './useOnboardingData';
 import { useOnboarding } from '../contexts/OnboardingContext';
 import { useToast } from '../contexts/ToastContext';
 import { validateSelectionCount, validateInterestIds } from '../lib/onboarding/validation';
+import { useOnboardingSafety } from './useOnboardingSafety';
 
 const INTERESTS: Array<{ id: string; name: string }> = [
   { id: 'food-drink', name: 'Food & Drink' },
@@ -47,6 +48,13 @@ export function useInterestsPage(): UseInterestsPageReturn {
   const [animatingIds, setAnimatingIds] = useState<Set<string>>(new Set());
   const [shakingIds, setShakingIds] = useState<Set<string>>(new Set());
   const hasPrefetchedRef = useRef(false);
+  
+  // Safety utilities
+  const { isMounted, withTimeout, preventDoubleSubmit, handleBeforeUnload } = useOnboardingSafety({
+    timeout: 30000,
+    preventDoubleSubmit: true,
+    checkSessionOnMount: true,
+  });
 
   const {
     data,
@@ -155,7 +163,7 @@ export function useInterestsPage(): UseInterestsPageReturn {
   );
 
   // Handle next navigation - saves to DB and advances step
-  const handleNext = useCallback(async () => {
+  const handleNextInternal = useCallback(async () => {
     console.log('[useInterestsPage] handleNext called', { 
       selectedCount: selectedInterests?.length || 0,
       interests: selectedInterests 
@@ -173,17 +181,20 @@ export function useInterestsPage(): UseInterestsPageReturn {
       return;
     }
 
+    // Safe state update (only if mounted)
+    if (!isMounted()) return;
     console.log('[useInterestsPage] Validation passed, setting navigating state...');
     setIsNavigating(true);
 
     try {
       // Ensure OnboardingContext has latest selections
+      if (!isMounted()) return;
       console.log('[useInterestsPage] Syncing selections to context...');
       setSelectedInterests(selectedInterests);
       
-      // Save to API
+      // Save to API with timeout
       console.log('[useInterestsPage] Saving interests to API...');
-      const response = await fetch('/api/onboarding/interests', {
+      const fetchPromise = fetch('/api/onboarding/interests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -192,12 +203,15 @@ export function useInterestsPage(): UseInterestsPageReturn {
         })
       });
 
+      const response = await withTimeout(fetchPromise, 30000);
+
       let payload: any = null;
       try { payload = await response.json(); } catch {}
 
       if (response.status === 401) {
+        if (!isMounted()) return;
         showToast('Your session expired. Please log in again.', 'warning', 3000);
-        router.push('/login');
+        router.replace('/login'); // Use replace to prevent back navigation
         return;
       }
 
@@ -207,14 +221,55 @@ export function useInterestsPage(): UseInterestsPageReturn {
       }
 
       console.log('[useInterestsPage] Save successful, navigating to next step...');
-      // Navigate to next step
-      await nextStep();
+      
+      // Navigate to next step (nextStep will show its own toast)
+      try {
+        await nextStep();
+      } catch (navError) {
+        console.error('[useInterestsPage] Navigation error:', navError);
+        // If navigation fails, reset state so user can try again
+        if (isMounted()) {
+          setIsNavigating(false);
+          showToast('Navigation failed. Please try again.', 'error', 3000);
+        }
+        return;
+      }
+      
+      // Reset navigating state after navigation completes
+      // Use a timeout as safety in case navigation is delayed
+      setTimeout(() => {
+        if (isMounted()) {
+          setIsNavigating(false);
+        }
+      }, 1000);
     } catch (error: any) {
       console.error('[useInterestsPage] Unexpected error in handleNext:', error);
-      showToast(error?.message || 'Failed to save interests. Please try again.', 'error', 3000);
-      setIsNavigating(false);
+      
+      // Handle timeout specifically
+      if (error?.message?.includes('timeout') || error?.name === 'AbortError') {
+        if (isMounted()) {
+          showToast('Request timed out. Please check your connection and try again.', 'error', 5000);
+          setIsNavigating(false);
+        }
+        return;
+      }
+
+      if (isMounted()) {
+        showToast(error?.message || 'Failed to save interests. Please try again.', 'error', 3000);
+        setIsNavigating(false);
+      }
     }
-  }, [selectedInterests, setSelectedInterests, nextStep, showToast, router]);
+  }, [selectedInterests, setSelectedInterests, nextStep, showToast, router, isMounted, withTimeout]);
+
+  // Wrap with double-submit prevention
+  const handleNext = preventDoubleSubmit(handleNextInternal);
+
+  // Handle beforeunload warning when saving
+  useEffect(() => {
+    if (isNavigating) {
+      return handleBeforeUnload(isNavigating);
+    }
+  }, [isNavigating, handleBeforeUnload]);
 
   // Check if can proceed
   const canProceed = useMemo(() => {

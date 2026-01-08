@@ -1,7 +1,8 @@
 "use client";
 
 import { useOnboarding } from "../../contexts/OnboardingContext";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 
 interface CategoryFilterPillsProps {
   selectedCategoryIds: string[]; // Active filters (user-initiated)
@@ -16,6 +17,8 @@ export default function CategoryFilterPills({
 }: CategoryFilterPillsProps) {
   // Get all available interests catalog from OnboardingContext
   const { interests, loadInterests, isLoading } = useOnboarding();
+  const prefersReducedMotion = useReducedMotion();
+  const [isMobile, setIsMobile] = useState(true);
   
   // Load interests catalog on mount if not already loaded
   useEffect(() => {
@@ -23,6 +26,16 @@ export default function CategoryFilterPills({
       loadInterests();
     }
   }, [interests.length, isLoading, loadInterests]);
+
+  // Check if mobile for animation
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   
   const loading = isLoading;
 
@@ -67,7 +80,7 @@ export default function CategoryFilterPills({
       }}
     >
       <div className="flex items-center gap-2 min-w-max sm:min-w-0 sm:flex-wrap">
-        {interests.map((interest) => {
+        {interests.map((interest, index) => {
           const isActive = selectedCategoryIds.includes(interest.id); // Active filter (user-initiated)
           const isPreferred = preferredCategoryIds.includes(interest.id); // User preference (visual only)
           
@@ -75,9 +88,22 @@ export default function CategoryFilterPills({
           // - isActive: filled/bold (explicit filter)
           // - isPreferred: subtle highlight (preference indicator)
           // - Both: filled + indicator
+
+          // Animation variants
+          const pillInitial = prefersReducedMotion
+            ? { opacity: 0 }
+            : isMobile
+            ? { opacity: 0, scale: 0.8 }
+            : { opacity: 0, y: 10, scale: 0.9 };
+
+          const pillAnimate = prefersReducedMotion
+            ? { opacity: 1 }
+            : isMobile
+            ? { opacity: 1, scale: 1 }
+            : { opacity: 1, y: 0, scale: 1 };
           
           return (
-            <button
+            <motion.button
               key={interest.id}
               onClick={() => onToggleCategory(interest.id)}
               className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-urbanist font-600 text-body-sm sm:text-body transition-all duration-200 active:scale-95 flex-shrink-0 whitespace-nowrap relative ${
@@ -88,13 +114,21 @@ export default function CategoryFilterPills({
                   : "bg-sage/10 text-charcoal/70 hover:bg-sage/20 hover:text-sage border border-sage/30" // Default: neutral
               }`}
               style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+              initial={pillInitial}
+              whileInView={pillAnimate}
+              viewport={{ amount: 0.1, once: false }}
+              transition={{
+                duration: prefersReducedMotion ? 0.2 : isMobile ? 0.3 : 0.4,
+                delay: index * 0.03,
+                ease: "easeOut",
+              }}
             >
               {interest.name}
               {/* ✅ Visual indicator for preferred (when not active) */}
               {isPreferred && !isActive && (
                 <span className="absolute -top-1 -right-1 w-2 h-2 bg-sage rounded-full border border-white" />
               )}
-            </button>
+            </motion.button>
           );
         })}
       </div>

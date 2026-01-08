@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { useOnboardingData } from './useOnboardingData';
 import { useOnboarding } from '../contexts/OnboardingContext';
 import { useToast } from '../contexts/ToastContext';
+import { useOnboardingSafety } from './useOnboardingSafety';
 
 interface SubcategoryItem {
   id: string;
@@ -107,6 +108,13 @@ export function useSubcategoriesPage(): UseSubcategoriesPageReturn {
   const { setSelectedSubInterests, setSelectedInterests, nextStep, isLoading: contextLoading, error: contextError } = useOnboarding();
   const [isNavigating, setIsNavigating] = useState(false);
   const [shakingIds, setShakingIds] = useState<Set<string>>(new Set());
+  
+  // Safety utilities
+  const { isMounted, withTimeout, preventDoubleSubmit, handleBeforeUnload } = useOnboardingSafety({
+    timeout: 30000,
+    preventDoubleSubmit: true,
+    checkSessionOnMount: true,
+  });
 
   const {
     data,
@@ -207,7 +215,7 @@ export function useSubcategoriesPage(): UseSubcategoriesPageReturn {
   );
 
   // Handle next navigation - saves to DB and advances step
-  const handleNext = useCallback(async () => {
+  const handleNextInternal = useCallback(async () => {
     // Filter out any interest IDs that might have been passed as subcategories
     const validSubcategories = selectedSubcategories.filter(
       (id) => !VALID_INTEREST_IDS.includes(id)
@@ -232,14 +240,17 @@ export function useSubcategoriesPage(): UseSubcategoriesPageReturn {
       return;
     }
 
+    // Safe state update (only if mounted)
+    if (!isMounted()) return;
     setIsNavigating(true);
 
     try {
       // Ensure OnboardingContext has latest selections
+      if (!isMounted()) return;
       setSelectedSubInterests(validSubcategories);
       
-      // Save to API
-      const response = await fetch('/api/onboarding/subcategories', {
+      // Save to API with timeout
+      const fetchPromise = fetch('/api/onboarding/subcategories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -248,12 +259,15 @@ export function useSubcategoriesPage(): UseSubcategoriesPageReturn {
         })
       });
 
+      const response = await withTimeout(fetchPromise, 30000);
+
       let payload: any = null;
       try { payload = await response.json(); } catch {}
 
       if (response.status === 401) {
+        if (!isMounted()) return;
         showToast('Your session expired. Please log in again.', 'warning', 3000);
-        router.push('/login');
+        router.replace('/login'); // Use replace to prevent back navigation
         return;
       }
 
@@ -263,13 +277,51 @@ export function useSubcategoriesPage(): UseSubcategoriesPageReturn {
       }
 
       // Navigate to next step
-      await nextStep();
+      try {
+        await nextStep();
+      } catch (navError) {
+        console.error('[Subcategories] Navigation error:', navError);
+        if (isMounted()) {
+          setIsNavigating(false);
+          showToast('Navigation failed. Please try again.', 'error', 3000);
+        }
+        return;
+      }
+
+      // Reset navigating state after navigation completes
+      setTimeout(() => {
+        if (isMounted()) {
+          setIsNavigating(false);
+        }
+      }, 1000);
     } catch (error: any) {
       console.error('[Subcategories] Submit error:', error);
-      showToast(error?.message || 'Failed to save subcategories. Please try again.', 'error', 3000);
-      setIsNavigating(false);
+      
+      // Handle timeout specifically
+      if (error?.message?.includes('timeout') || error?.name === 'AbortError') {
+        if (isMounted()) {
+          showToast('Request timed out. Please check your connection and try again.', 'error', 5000);
+          setIsNavigating(false);
+        }
+        return;
+      }
+
+      if (isMounted()) {
+        showToast(error?.message || 'Failed to save subcategories. Please try again.', 'error', 3000);
+        setIsNavigating(false);
+      }
     }
-  }, [selectedSubcategories, setSelectedSubInterests, nextStep, showToast, router]);
+  }, [selectedSubcategories, setSelectedSubInterests, nextStep, showToast, router, isMounted, withTimeout]);
+
+  // Wrap with double-submit prevention
+  const handleNext = preventDoubleSubmit(handleNextInternal);
+
+  // Handle beforeunload warning when saving
+  useEffect(() => {
+    if (isNavigating) {
+      return handleBeforeUnload(isNavigating);
+    }
+  }, [isNavigating, handleBeforeUnload]);
 
   // Check if can proceed
   const canProceed = useMemo(() => {

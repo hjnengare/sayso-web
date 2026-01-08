@@ -132,6 +132,7 @@ export default function CommunityHighlights({
                     <ReviewerCard
                       reviewer={reviewer}
                       variant="reviewer"
+                      index={index}
                       latestReview={actualReview || {
                         id: `${reviewer.id}-latest`,
                         reviewer,
@@ -185,10 +186,11 @@ export default function CommunityHighlights({
               <ScrollableSection>
                 {/* Gap harmonizes with card radius/shadows; list semantics preserved via <li> inside cards */}
                 <div className="flex gap-3 items-stretch pt-2 list-none">
-                  {businessesOfTheMonth.map((business) => (
+                  {businessesOfTheMonth.map((business, index) => (
                     <BusinessOfTheMonthCard
                       key={business.id}
                       business={business}
+                      index={index}
                     />
                   ))}
                 </div>

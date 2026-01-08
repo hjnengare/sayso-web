@@ -22,6 +22,7 @@ import BusinessRowSkeleton from "../components/BusinessRow/BusinessRowSkeleton";
 import FeaturedBusinessesSkeleton from "../components/CommunityHighlights/FeaturedBusinessesSkeleton";
 import BusinessCard from "../components/BusinessCard/BusinessCard";
 import { Loader } from "../components/Loader/Loader";
+import ScrollHint from "../components/ScrollHint/ScrollHint";
 import {
   FEATURED_REVIEWS,
   TOP_REVIEWERS,
@@ -433,7 +434,7 @@ export default function Home() {
         whiteText={true}
       />
 
-      <main className="bg-off-white relative pt-20 sm:pt-24 pb-16">
+      <main className="bg-off-white relative pt-20 sm:pt-24 pb-16 snap-y snap-proximity md:snap-mandatory">
         <div className="mx-auto w-full max-w-[2000px]">
           {/* Search Input at top of home content */}
           <div ref={searchWrapRef} className="py-8 px-4 sm:px-6">
@@ -555,9 +556,9 @@ export default function Home() {
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-3">
-                        {searchResults.map((business) => (
+                        {searchResults.map((business, index) => (
                           <div key={business.id} className="list-none">
-                            <BusinessCard business={business} compact inGrid={true} />
+                            <BusinessCard business={business} compact inGrid={true} index={index} />
                           </div>
                         ))}
                       </div>
@@ -578,7 +579,7 @@ export default function Home() {
             >
               {/* ✅ For You Section - Only show when NOT filtered, NOT searching, AND prefs are ready */}
               {!isFiltered && !isSearchActive && !prefsLoading && (
-              <div className="relative z-10">
+                <div className="relative z-10 snap-start">
                   {forYouLoading ? (
                     <BusinessRowSkeleton title="For You Now" />
                   ) : forYouError ? (
@@ -609,14 +610,14 @@ export default function Home() {
               )}
               {/* Show skeleton while prefs are loading */}
               {!isFiltered && !isSearchActive && prefsLoading && (
-                <div className="relative z-10">
+                <div className="relative z-10 snap-start">
                   <BusinessRowSkeleton title="For You Now" />
                 </div>
               )}
 
               {/* ✅ Filtered Results Section - Show when filters are active */}
               {isFiltered && (
-                <div className="relative z-10">
+                <div className="relative z-10 snap-start">
                   {allBusinessesLoading ? (
                     <BusinessRowSkeleton title="Filtered Results" />
                   ) : allBusinesses.length > 0 ? (
@@ -630,30 +631,30 @@ export default function Home() {
                     <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-charcoal/70">
                       No businesses match your filters. Try adjusting your selections.
                     </div>
-                )}
-              </div>
+                  )}
+                </div>
               )}
 
               {/* Trending Section - Only show when not filtered */}
               {!isFiltered && (
-              <div className="relative z-10">
-                {trendingLoading && <BusinessRowSkeleton title="Trending Now" />}
-                {!trendingLoading && hasTrendingBusinesses && (
-                  <MemoizedBusinessRow title="Trending Now" businesses={trendingBusinesses} cta="See More" href="/trending" />
-                )}
-                {!trendingLoading && !hasTrendingBusinesses && !trendingError && (
-                  <MemoizedBusinessRow title="Trending Now" businesses={[]} cta="See More" href="/trending" />
-                )}
-                {trendingError && !trendingLoading && (
-                  <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral">
-                    Trending businesses are still loading. Refresh to try again.
-                  </div>
-                )}
-              </div>
+                <div className="relative z-10 snap-start">
+                  {trendingLoading && <BusinessRowSkeleton title="Trending Now" />}
+                  {!trendingLoading && hasTrendingBusinesses && (
+                    <MemoizedBusinessRow title="Trending Now" businesses={trendingBusinesses} cta="See More" href="/trending" />
+                  )}
+                  {!trendingLoading && !hasTrendingBusinesses && !trendingError && (
+                    <MemoizedBusinessRow title="Trending Now" businesses={[]} cta="See More" href="/trending" />
+                  )}
+                  {trendingError && !trendingLoading && (
+                    <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral">
+                      Trending businesses are still loading. Refresh to try again.
+                    </div>
+                  )}
+                </div>
               )}
 
               {/* Events & Specials */}
-              <div className="relative z-10">
+              <div className="relative z-10 snap-start">
                 <EventsSpecials 
                   events={events.length > 0 ? events : []} 
                   loading={eventsLoading}
@@ -661,7 +662,7 @@ export default function Home() {
               </div>
 
               {/* Community Highlights */}
-              <div className="relative z-10">
+              <div className="relative z-10 snap-start">
                 {allBusinessesLoading ? (
                   <FeaturedBusinessesSkeleton count={4} />
                 ) : (
@@ -678,6 +679,7 @@ export default function Home() {
           </AnimatePresence>
         </div>
       </main>
+      <ScrollHint />
       <Footer />
       {/* Anchored Filter Modal for home search */}
       <FilterModal

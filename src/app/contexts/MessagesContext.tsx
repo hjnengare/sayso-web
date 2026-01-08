@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { useAuth } from "./AuthContext";
+import { apiClient } from "../lib/api/apiClient";
 
 interface MessagesContextType {
   unreadCount: number;
@@ -29,26 +30,17 @@ export function MessagesProvider({ children }: MessagesProviderProps) {
 
     try {
       setIsLoading(true);
-      const response = await fetch('/api/messages/conversations');
       
-      // Handle different error status codes gracefully
-      if (!response.ok) {
-        // If unauthorized (401), user is not logged in or session expired - not an error
-        if (response.status === 401) {
-          setUnreadCount(0);
-          setIsLoading(false);
-          return;
+      // Use shared API client with deduplication and caching
+      const result = await apiClient.fetch<{ data: any[] }>(
+        '/api/messages/conversations',
+        {},
+        {
+          ttl: 10000, // 10 second cache
+          useCache: true,
+          cacheKey: '/api/messages/conversations',
         }
-        
-        // For other errors, log but don't throw - just set count to 0
-        const errorData = await response.json().catch(() => ({}));
-        console.warn('Failed to fetch conversations:', response.status, errorData);
-        setUnreadCount(0);
-        setIsLoading(false);
-        return;
-      }
-      
-      const result = await response.json();
+      );
       
       // Sum up unread counts from all conversations
       const totalUnread = (result.data || []).reduce(
@@ -58,11 +50,19 @@ export function MessagesProvider({ children }: MessagesProviderProps) {
       
       setUnreadCount(totalUnread);
       setIsLoading(false);
-    } catch (error) {
-      // Network errors or other exceptions - silently handle
-      // Only log if it's not a network error (which is common when offline)
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        // Network error - user might be offline, silently handle
+    } catch (error: any) {
+      // Handle errors gracefully
+      const errorMessage = error?.message || '';
+      
+      // If unauthorized (401), user is not logged in or session expired - not an error
+      if (errorMessage.includes('401')) {
+        setUnreadCount(0);
+        setIsLoading(false);
+        return;
+      }
+      
+      // Network errors - silently handle (user might be offline)
+      if (errorMessage.includes('fetch') || errorMessage.includes('network')) {
         setUnreadCount(0);
         setIsLoading(false);
       } else {
@@ -74,11 +74,18 @@ export function MessagesProvider({ children }: MessagesProviderProps) {
   }, [user]);
 
   useEffect(() => {
+    if (!user) {
+      setUnreadCount(0);
+      setIsLoading(false);
+      return;
+    }
+
     fetchUnreadCount();
-    // Poll for updates every 30 seconds
-    const interval = setInterval(fetchUnreadCount, 30000);
+    // Poll for updates every 60 seconds (reduced from 30s to reduce load)
+    // API client will deduplicate concurrent requests
+    const interval = setInterval(fetchUnreadCount, 60000);
     return () => clearInterval(interval);
-  }, [fetchUnreadCount]);
+  }, [fetchUnreadCount, user]);
 
   return (
     <MessagesContext.Provider
