@@ -53,7 +53,7 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
   const publicRoutes = useMemo(() => [
     '/onboarding', '/register', '/login', '/verify-email', 
     '/forgot-password', '/reset-password', '/auth/callback',
-    '/business/login', '/business/verification-status'
+    '/business/verification-status'
   ], []);
 
   const isPublicRoute = useMemo(() =>

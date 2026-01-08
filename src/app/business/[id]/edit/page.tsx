@@ -69,7 +69,7 @@ export default function BusinessEditPage() {
     const { showToast } = useToast();
     const paramId = params?.id;
     const businessId = Array.isArray(paramId) ? paramId[0] : paramId;
-    const redirectTarget = businessId ? `/business/${businessId}` : "/business/login";
+    const redirectTarget = businessId ? `/business/${businessId}` : "/login";
     
     const { isChecking, hasAccess } = useRequireBusinessOwner({
         businessId,

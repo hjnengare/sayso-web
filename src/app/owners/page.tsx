@@ -23,7 +23,7 @@ export default function OwnersPage() {
       if (authLoading) return;
       
       if (!user) {
-        router.push('/business/login');
+        router.push('/login');
         return;
       }
 

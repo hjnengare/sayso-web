@@ -244,8 +244,6 @@ export async function middleware(request: NextRequest) {
   // Business edit route - requires authentication and ownership (ownership checked in component)
   const isBusinessEditRoute = request.nextUrl.pathname.match(/^\/business\/[^\/]+\/edit/);
   
-  // Business login route - allow access but redirect if already logged in
-  const isBusinessLoginRoute = request.nextUrl.pathname.startsWith('/business/login');
   
   // Business routes that require authentication (but ownership is checked in component)
   const businessAuthRoutes = ['/for-businesses'];
@@ -376,7 +374,7 @@ export async function middleware(request: NextRequest) {
   // Note: Ownership verification is done in the component using useRequireBusinessOwner
   if (isOwnersRoute && !user) {
     console.log('Middleware: Redirecting unauthenticated user from owners route');
-    const redirectUrl = new URL('/business/login', request.url);
+    const redirectUrl = new URL('/login', request.url);
     return NextResponse.redirect(redirectUrl);
   }
 
@@ -391,7 +389,7 @@ export async function middleware(request: NextRequest) {
   if (isBusinessEditRoute && !user) {
     console.log('Middleware: Redirecting unauthenticated user from business edit route');
     const businessId = request.nextUrl.pathname.match(/^\/business\/([^\/]+)\/edit/)?.[1];
-    const redirectUrl = new URL(`/business/login?redirect=${encodeURIComponent(request.nextUrl.pathname)}`, request.url);
+    const redirectUrl = new URL(`/login?redirect=${encodeURIComponent(request.nextUrl.pathname)}`, request.url);
     return NextResponse.redirect(redirectUrl);
   }
 
@@ -414,31 +412,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
   
-  // Business login route - redirect authenticated users to owners dashboard
-  if (isBusinessLoginRoute && user && user.email_confirmed_at) {
-    // Check if user has businesses, redirect to owners if they do
-    try {
-      const { data: owners } = await supabase
-        .from('business_owners')
-        .select('business_id')
-        .eq('user_id', user.id)
-        .limit(1);
-      
-      if (owners && owners.length > 0) {
-        console.log('Middleware: Authenticated business owner on login page, redirecting to owners');
-        const redirectUrl = new URL('/owners', request.url);
-        return NextResponse.redirect(redirectUrl);
-      }
-    } catch (error) {
-      console.error('Middleware: Error checking business ownership:', error);
-      // Continue - allow access to login page
-    }
-  }
 
   // Protect business auth routes (for-businesses) - require authentication
   if (isBusinessAuthRoute && !user) {
     console.log('Middleware: Redirecting unauthenticated user from for-businesses route');
-    const redirectUrl = new URL('/business/login?redirect=/for-businesses', request.url);
+    const redirectUrl = new URL('/login?redirect=/for-businesses', request.url);
     return NextResponse.redirect(redirectUrl);
   }
 

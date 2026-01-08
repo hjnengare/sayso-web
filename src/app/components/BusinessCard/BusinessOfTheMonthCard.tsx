@@ -325,10 +325,6 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
         >
           <div 
             className="relative w-full h-full"
-            style={{
-              padding: '8px',
-              boxSizing: 'border-box',
-            }}
           >
             {!imgError && displayImage ? (
               isImagePng || displayImage.includes('/png/') || displayImage.endsWith('.png') || usingFallback ? (

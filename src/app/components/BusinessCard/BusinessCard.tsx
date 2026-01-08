@@ -487,10 +487,6 @@ function BusinessCard({
         >
           <div 
             className="relative w-full h-full"
-            style={{
-              padding: '8px',
-              boxSizing: 'border-box',
-            }}
           >
             {!imgError && displayImage ? (
               isImagePng || displayImage.includes('/png/') || displayImage.endsWith('.png') || usingFallback ? (

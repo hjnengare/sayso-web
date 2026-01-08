@@ -101,7 +101,7 @@ function ClaimBusinessPageContent() {
   const handleClaimClick = (business: BusinessSearchResult) => {
     if (!user) {
       // Redirect to business login with redirect back to for-businesses with businessId
-      router.push(`/business/login?redirect=/for-businesses?businessId=${business.id}`);
+      router.push(`/login?redirect=/for-businesses?businessId=${business.id}`);
       return;
     }
 

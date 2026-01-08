@@ -442,7 +442,7 @@ describe('ClaimBusinessPage', () => {
       await user.click(screen.getByRole('button', { name: /log in to claim/i }));
 
       expect(mockPush).toHaveBeenCalledWith(
-        expect.stringContaining('/business/login?redirect=/claim-business?businessId=business-1')
+        expect.stringContaining('/login?redirect=/claim-business?businessId=business-1')
       );
     });
   });
