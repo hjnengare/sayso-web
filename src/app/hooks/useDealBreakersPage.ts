@@ -113,27 +113,37 @@ export function useDealBreakersPage(): UseDealBreakersPageReturn {
       setSelectedDealbreakers(selectedDealbreakers);
       
       // Save to API
-      const response = await fetch('/api/user/onboarding', {
+      const response = await fetch('/api/onboarding/deal-breakers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
-          step: 'deal-breakers',
           dealbreakers: selectedDealbreakers
         })
       });
 
+      let payload: any = null;
+      try { payload = await response.json(); } catch {}
+
+      if (response.status === 401) {
+        showToast('Your session expired. Please log in again.', 'warning', 3000);
+        router.push('/login');
+        return;
+      }
+
       if (!response.ok) {
-        throw new Error('Failed to save dealbreakers');
+        const msg = payload?.error || payload?.message || 'Failed to save dealbreakers';
+        throw new Error(msg);
       }
 
       // Navigate to next step
       await nextStep();
-    } catch (error) {
+    } catch (error: any) {
       console.error('[Deal-breakers] Submit error:', error);
-      showToast('Failed to save dealbreakers. Please try again.', 'error', 3000);
+      showToast(error?.message || 'Failed to save dealbreakers. Please try again.', 'error', 3000);
       setIsNavigating(false);
     }
-  }, [selectedDealbreakers, setSelectedDealbreakers, nextStep, showToast]);
+  }, [selectedDealbreakers, setSelectedDealbreakers, nextStep, showToast, router]);
 
   // Check if can proceed
   const canProceed = useMemo(() => {

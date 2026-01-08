@@ -54,7 +54,7 @@ export function useInterestsPage(): UseInterestsPageReturn {
     error: dataError,
     updateInterests,
   } = useOnboardingData({
-    loadFromDatabase: true,
+    loadFromDatabase: false, // Don't load from DB on first step to avoid pre-selecting old data for new users
   });
 
   const selectedInterests = data.interests;
@@ -183,28 +183,38 @@ export function useInterestsPage(): UseInterestsPageReturn {
       
       // Save to API
       console.log('[useInterestsPage] Saving interests to API...');
-      const response = await fetch('/api/user/onboarding', {
+      const response = await fetch('/api/onboarding/interests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
-          step: 'interests',
           interests: selectedInterests
         })
       });
 
+      let payload: any = null;
+      try { payload = await response.json(); } catch {}
+
+      if (response.status === 401) {
+        showToast('Your session expired. Please log in again.', 'warning', 3000);
+        router.push('/login');
+        return;
+      }
+
       if (!response.ok) {
-        throw new Error('Failed to save interests');
+        const msg = payload?.error || payload?.message || 'Failed to save interests';
+        throw new Error(msg);
       }
 
       console.log('[useInterestsPage] Save successful, navigating to next step...');
       // Navigate to next step
       await nextStep();
-    } catch (error) {
+    } catch (error: any) {
       console.error('[useInterestsPage] Unexpected error in handleNext:', error);
-      showToast('Failed to save interests. Please try again.', 'error', 3000);
+      showToast(error?.message || 'Failed to save interests. Please try again.', 'error', 3000);
       setIsNavigating(false);
     }
-  }, [selectedInterests, setSelectedInterests, nextStep, showToast]);
+  }, [selectedInterests, setSelectedInterests, nextStep, showToast, router]);
 
   // Check if can proceed
   const canProceed = useMemo(() => {

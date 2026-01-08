@@ -239,27 +239,37 @@ export function useSubcategoriesPage(): UseSubcategoriesPageReturn {
       setSelectedSubInterests(validSubcategories);
       
       // Save to API
-      const response = await fetch('/api/user/onboarding', {
+      const response = await fetch('/api/onboarding/subcategories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
-          step: 'subcategories',
           subcategories: subcategoriesWithInterestIds
         })
       });
 
+      let payload: any = null;
+      try { payload = await response.json(); } catch {}
+
+      if (response.status === 401) {
+        showToast('Your session expired. Please log in again.', 'warning', 3000);
+        router.push('/login');
+        return;
+      }
+
       if (!response.ok) {
-        throw new Error('Failed to save subcategories');
+        const msg = payload?.error || payload?.message || 'Failed to save subcategories';
+        throw new Error(msg);
       }
 
       // Navigate to next step
       await nextStep();
-    } catch (error) {
+    } catch (error: any) {
       console.error('[Subcategories] Submit error:', error);
-      showToast('Failed to save subcategories. Please try again.', 'error', 3000);
+      showToast(error?.message || 'Failed to save subcategories. Please try again.', 'error', 3000);
       setIsNavigating(false);
     }
-  }, [selectedSubcategories, setSelectedSubInterests, nextStep, showToast]);
+  }, [selectedSubcategories, setSelectedSubInterests, nextStep, showToast, router]);
 
   // Check if can proceed
   const canProceed = useMemo(() => {
