@@ -12,9 +12,9 @@ interface EventsGridProps {
 export default function EventsGrid({ events, onBookmark }: EventsGridProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
-      {events.map((event) => (
+      {events.map((event, index) => (
         <div key={event.id} className="list-none relative group">
-          <EventCard event={event} onBookmark={onBookmark} />
+          <EventCard event={event} onBookmark={onBookmark} index={index} />
         </div>
       ))}
     </div>

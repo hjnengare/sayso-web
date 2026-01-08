@@ -1,9 +1,10 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from "react";
 import { useAuth } from "./AuthContext";
 import type { ToastNotificationData } from "../data/notificationData";
 import { formatTimeAgo } from "../utils/formatTimeAgo";
+import { apiClient } from "../lib/api/apiClient";
 
 interface NotificationsContextType {
   notifications: ToastNotificationData[];
@@ -66,28 +67,18 @@ export function NotificationsProvider({ children }: NotificationsProviderProps) 
 
     try {
       setIsLoading(true);
-      const response = await fetch('/api/notifications');
       
-      // Handle authentication errors gracefully (user might not have session yet)
-      if (!response.ok) {
-        // 401/403 means user is not authenticated - this is expected during transitions
-        if (response.status === 401 || response.status === 403) {
-          console.log('Notifications: User not authenticated yet, skipping fetch');
-          setNotifications([]);
-          setReadNotifications(new Set());
-          setIsLoading(false);
-          return;
+      // Use shared API client with deduplication and caching
+      const data = await apiClient.fetch<{ notifications: DatabaseNotification[] }>(
+        '/api/notifications',
+        {},
+        {
+          ttl: 10000, // 10 second cache
+          useCache: true,
+          cacheKey: '/api/notifications',
         }
-        
-        // For other errors, log but don't throw
-        const errorText = await response.text().catch(() => 'Unknown error');
-        console.error('Error fetching notifications:', response.status, errorText);
-        setNotifications([]);
-        setIsLoading(false);
-        return;
-      }
-
-      const data = await response.json();
+      );
+      
       const dbNotifications: DatabaseNotification[] = data.notifications || [];
       
       // Convert database notifications to ToastNotificationData format
@@ -103,11 +94,27 @@ export function NotificationsProvider({ children }: NotificationsProviderProps) 
       setReadNotifications(readIds);
       
       setIsLoading(false);
-    } catch (error) {
-      // Network errors or other exceptions - handle gracefully
-      console.error('Error fetching notifications:', error);
-      setNotifications([]);
-      setIsLoading(false);
+    } catch (error: any) {
+      // Handle errors gracefully
+      const errorMessage = error?.message || '';
+      
+      // 401/403 means user is not authenticated - this is expected during transitions
+      if (errorMessage.includes('401') || errorMessage.includes('403')) {
+        setNotifications([]);
+        setReadNotifications(new Set());
+        setIsLoading(false);
+        return;
+      }
+      
+      // Network errors - handle gracefully
+      if (errorMessage.includes('fetch') || errorMessage.includes('network')) {
+        setNotifications([]);
+        setIsLoading(false);
+      } else {
+        console.error('Error fetching notifications:', error);
+        setNotifications([]);
+        setIsLoading(false);
+      }
     }
   }, [user, convertToToastNotification]);
 

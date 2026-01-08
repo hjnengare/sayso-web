@@ -43,7 +43,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" data-scroll-behavior="smooth">
+    <html lang="en" className="scroll-smooth">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, viewport-fit=cover, user-scalable=no, shrink-to-fit=no" />
         <meta name="mobile-web-app-capable" content="yes" />
@@ -131,7 +131,7 @@ export default function RootLayout({
         
         {/* Canonical tag removed - set per page via metadata */}
       </head>
-      <body className={`${urbanist.className} no-layout-shift`}>
+      <body className={`${urbanist.className} no-layout-shift scroll-smooth`}>
         <WebVitals />
         <ClientLayoutWrapper />
         <ToastProvider>

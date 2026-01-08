@@ -175,8 +175,17 @@ export async function middleware(request: NextRequest) {
         return response;
       }
       
-      // For other non-fatal errors, log and continue without user
-      console.warn('Middleware: Non-fatal auth error:', error.message);
+      // For other non-fatal errors, only log if it's unexpected
+      // "Auth session missing" is expected for unauthenticated users, don't log it
+      const isExpectedError = (
+        errorMessage.includes('session missing') ||
+        errorMessage.includes('auth session missing') ||
+        errorCode === 'session_not_found'
+      );
+      
+      if (!isExpectedError) {
+        console.warn('Middleware: Non-fatal auth error:', error.message);
+      }
     } else {
       user = authUser;
     }

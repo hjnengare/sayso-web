@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from "react";
 import { useAuth } from "./AuthContext";
 import { useToast } from "./ToastContext";
+import { apiClient } from "../lib/api/apiClient";
 
 interface SavedItemsContextType {
   savedItems: string[];
@@ -37,63 +38,18 @@ export function SavedItemsProvider({ children }: SavedItemsProviderProps) {
 
     try {
       setIsLoading(true);
-      const response = await fetch('/api/saved/businesses?limit=100');
       
-      if (!response.ok) {
-        if (response.status === 401) {
-          // User not authenticated - this is expected for logged out users
-          setSavedItems([]);
-          setIsLoading(false);
-          return;
+      // Use shared API client with deduplication and caching
+      const data = await apiClient.fetch<{ businesses: any[] }>(
+        '/api/saved/businesses?limit=100',
+        {},
+        {
+          ttl: 15000, // 15 second cache (saved items change less frequently)
+          useCache: true,
+          cacheKey: '/api/saved/businesses',
         }
-        
-        // Try to get error details from response
-        let errorMessage = 'Failed to fetch saved businesses';
-        let errorCode: string | undefined;
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.error || errorData.message || errorMessage;
-          errorCode = errorData.code;
-        } catch {
-          // If JSON parsing fails, use default message
-        }
-        
-        // Check if it's a table/permission error (similar to rate limiting)
-        const isTableError = response.status === 500 && (
-          errorCode === '42P01' || // relation does not exist
-          errorCode === '42501' || // insufficient privilege
-          errorMessage.toLowerCase().includes('relation') ||
-          errorMessage.toLowerCase().includes('does not exist') ||
-          errorMessage.toLowerCase().includes('permission denied')
-        );
-        
-        // Only log meaningful errors, not expected ones
-        if (isTableError) {
-          console.warn('Saved businesses table not accessible, feature disabled:', {
-            status: response.status,
-            code: errorCode,
-          });
-        } else if (response.status >= 500) {
-          // Only log server errors, not client errors (4xx)
-          const errorDetails = {
-            status: response.status,
-            statusText: response.statusText,
-            message: errorMessage,
-            code: errorCode,
-          };
-          console.warn('Error fetching saved items (non-critical):', errorDetails);
-        }
-        
-        // Don't throw error - just keep existing saved items
-        // This prevents loss of data if API temporarily fails
-        // Set empty array if no items were previously loaded
-        if (savedItems.length === 0) {
-          setSavedItems([]);
-        }
-        return;
-      }
-
-      const data = await response.json();
+      );
+      
       const businessIds = (data.businesses || []).map((b: any) => b.id);
       console.log('SavedItemsContext - Fetched saved items:', {
         totalBusinesses: data.businesses?.length || 0,
@@ -101,9 +57,16 @@ export function SavedItemsProvider({ children }: SavedItemsProviderProps) {
         count: businessIds.length
       });
       setSavedItems(businessIds);
-    } catch (error) {
-      // Better error logging - only log if it's a network/unexpected error
-      const errorMessage = error instanceof Error ? error.message : String(error);
+    } catch (error: any) {
+      // Handle errors gracefully
+      const errorMessage = error?.message || '';
+      
+      if (errorMessage.includes('401')) {
+        // User not authenticated - this is expected for logged out users
+        setSavedItems([]);
+        setIsLoading(false);
+        return;
+      }
       
       // Check if it's a network error
       const isNetworkError = errorMessage.includes('fetch') || 
@@ -111,21 +74,16 @@ export function SavedItemsProvider({ children }: SavedItemsProviderProps) {
                            errorMessage.includes('Failed to fetch');
       
       if (isNetworkError) {
-        console.warn('Network error fetching saved items (non-critical):', errorMessage);
+        // Network error - silently handle
+        if (savedItems.length === 0) {
+          setSavedItems([]);
+        }
       } else {
         // Only log unexpected errors
-        const errorStack = error instanceof Error ? error.stack : undefined;
-        console.warn('Error fetching saved items (non-critical):', {
-          message: errorMessage,
-          stack: errorStack,
-        });
-      }
-      
-      // On error, keep existing saved items (don't clear them)
-      // This prevents loss of data if API temporarily fails
-      // Set empty array if no items were previously loaded
-      if (savedItems.length === 0) {
-        setSavedItems([]);
+        console.warn('Error fetching saved items (non-critical):', errorMessage);
+        if (savedItems.length === 0) {
+          setSavedItems([]);
+        }
       }
     } finally {
       setIsLoading(false);

@@ -7,6 +7,7 @@ import { Fontdiner_Swanky } from "next/font/google";
 import { Edit, Star, ChevronUp, Info, ChevronRight } from "react-feather";
 import Link from "next/link";
 import confetti from "canvas-confetti";
+import { motion, AnimatePresence } from "framer-motion";
 import { useReviewForm } from "../../../hooks/useReviewForm";
 import { useReviewSubmission, useReviews } from "../../../hooks/useReviews";
 import { PageLoader } from "../../../components/Loader";
@@ -25,77 +26,7 @@ const swanky = Fontdiner_Swanky({
   display: "swap",
 });
 
-// CSS animations with elements spawning from different sides
-const animations = `
-  @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-  
-  @keyframes slideInFromTop {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  
-  @keyframes slideInFromLeft {
-    from { opacity: 0; transform: translateX(-40px); }
-    to { opacity: 1; transform: translateX(0); }
-  }
-  
-  @keyframes slideInFromRight {
-    from { opacity: 0; transform: translateX(40px); }
-    to { opacity: 1; transform: translateX(0); }
-  }
-  
-  @keyframes fadeInScale {
-    from { opacity: 0; transform: scale(0.96) translateY(-12px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
-  }
-  
-  @keyframes gentleFadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-  
-  .animate-fade-in-up {
-    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
-  
-  .animate-fade-in {
-    animation: fadeIn 0.6s ease-out forwards;
-  }
-  
-  .animate-slide-in-top {
-    animation: slideInFromTop 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
-  
-  .animate-slide-in-left {
-    animation: slideInFromLeft 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
-  
-  .animate-slide-in-right {
-    animation: slideInFromRight 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
-  
-  .animate-fade-in-scale {
-    animation: fadeInScale 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
-  
-  .animate-gentle-fade {
-    animation: gentleFadeIn 0.7s ease-out forwards;
-  }
-  
-  .animate-delay-100 { animation-delay: 0.1s; opacity: 0; }
-  .animate-delay-200 { animation-delay: 0.2s; opacity: 0; }
-  .animate-delay-300 { animation-delay: 0.3s; opacity: 0; }
-  .animate-delay-400 { animation-delay: 0.4s; opacity: 0; }
-  .animate-delay-500 { animation-delay: 0.5s; opacity: 0; }
-`;
+// CSS animations removed - using Framer Motion instead
 
 // Lazy load BusinessCarousel for mobile
 const BusinessCarousel = dynamic(() => import("../../../components/ReviewForm/BusinessCarousel"), {
@@ -501,12 +432,14 @@ function WriteReviewContent() {
           <p className="text-body text-charcoal/70 mb-6" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
             {error || "The business you're looking for doesn't exist."}
           </p>
-          <button
+          <motion.button
             onClick={() => router.back()}
-            className="px-6 py-3 bg-sage text-white rounded-full text-body font-semibold hover:bg-sage/90 transition-colors"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="px-6 py-3 bg-sage text-white rounded-full text-body font-semibold"
           >
             Go Back
-          </button>
+          </motion.button>
         </div>
       </div>
     );
@@ -514,7 +447,6 @@ function WriteReviewContent() {
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: animations }} />
       <style jsx global>{`
         .font-urbanist {
           font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text",
@@ -525,7 +457,11 @@ function WriteReviewContent() {
           font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
         }
       `}</style>
-      <div
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3 }}
         className="min-h-dvh bg-off-white relative overflow-x-hidden font-urbanist"
         style={{
           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif',
@@ -725,20 +661,28 @@ function WriteReviewContent() {
         </div>
 
         {/* Scroll to Top Button */}
-        {showScrollTop && (
-          <button
-            onClick={scrollToTop}
-            className="fixed bottom-6 right-6 z-[100] w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-sage to-sage/90 hover:from-sage/90 hover:to-sage/80 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center border border-sage/30 hover:scale-110"
-            style={{
-              position: 'fixed',
-              bottom: '1.5rem',
-              right: '1.5rem',
-            }}
-            aria-label="Scroll to top"
-          >
-            <ChevronUp className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2.5} />
-          </button>
-        )}
+        <AnimatePresence>
+          {showScrollTop && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={scrollToTop}
+              className="fixed bottom-6 right-6 z-[100] w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-sage to-sage/90 text-white rounded-full shadow-lg flex items-center justify-center border border-sage/30"
+              style={{
+                position: 'fixed',
+                bottom: '1.5rem',
+                right: '1.5rem',
+              }}
+              aria-label="Scroll to top"
+              transition={{ duration: 0.2 }}
+            >
+              <ChevronUp className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2.5} />
+            </motion.button>
+          )}
+        </AnimatePresence>
 
         <AnimatedElement index={4} direction="bottom">
         <Footer />
@@ -753,7 +697,7 @@ function WriteReviewContent() {
             onClose={() => setIsInfoModalOpen(false)}
           />
         )}
-      </div>
+      </motion.div>
     </>
   );
 }

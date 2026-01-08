@@ -9,18 +9,27 @@ export interface OnboardingData {
   dealbreakers: string[];
 }
 
+import { apiClient } from '../api/apiClient';
+
 /**
  * Load data from database
  */
 export async function loadFromDatabase(): Promise<Partial<OnboardingData>> {
   try {
-    const response = await fetch('/api/user/onboarding');
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const data = await response.json();
+    // Use shared API client with deduplication and caching
+    const data = await apiClient.fetch<{
+      interests?: string[];
+      subcategories?: { subcategory_id: string }[];
+      dealbreakers?: string[];
+    }>(
+      '/api/user/onboarding',
+      {},
+      {
+        ttl: 10000, // 10 second cache
+        useCache: true,
+        cacheKey: '/api/user/onboarding',
+      }
+    );
     
     return {
       interests: data.interests || [],

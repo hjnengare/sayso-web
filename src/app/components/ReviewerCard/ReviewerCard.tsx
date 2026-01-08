@@ -8,6 +8,7 @@ import ProfilePicture from "./ProfilePicture";
 import ReviewerStats from "./ReviewerStats";
 import ReviewContent from "./ReviewContent";
 import VerifiedBadge from "../VerifiedBadge/VerifiedBadge";
+import { motion, useReducedMotion } from "framer-motion";
 
 // Generate a unique color for each badge based on reviewer ID
 // This ensures every badge has a different color
@@ -98,6 +99,7 @@ interface ReviewerCardProps {
   reviewer?: Reviewer;
   latestReview?: Review;
   variant?: "reviewer" | "review";
+  index?: number;
 }
 
 export default function ReviewerCard({
@@ -105,6 +107,7 @@ export default function ReviewerCard({
   reviewer,
   latestReview,
   variant = "review",
+  index = 0,
 }: ReviewerCardProps) {
   const reviewerData = reviewer || review?.reviewer;
   const idForSnap = useMemo(
@@ -113,12 +116,45 @@ export default function ReviewerCard({
   );
   const [imgError, setImgError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
+  const [isMobile, setIsMobile] = useState(true);
+
+  // Check if mobile for animation
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Animation variants
+  const cardInitial = prefersReducedMotion
+    ? { opacity: 0 }
+    : isMobile
+    ? { opacity: 0 }
+    : { opacity: 0, y: 40, x: index % 2 === 0 ? -20 : 20 };
+
+  const cardAnimate = prefersReducedMotion
+    ? { opacity: 1 }
+    : isMobile
+    ? { opacity: 1 }
+    : { opacity: 1, y: 0, x: 0 };
 
   if (variant === "reviewer" || reviewer) {
     return (
-      <div
+      <motion.div
         id={idForSnap}
         className="snap-start snap-always w-full sm:w-[240px] flex-shrink-0"
+        initial={cardInitial}
+        whileInView={cardAnimate}
+        viewport={{ amount: isMobile ? 0.1 : 0.2, once: false }}
+        transition={{
+          duration: prefersReducedMotion ? 0.2 : isMobile ? 0.4 : 0.5,
+          delay: index * 0.05,
+          ease: "easeOut",
+        }}
       >
         <Link
           href={`/reviewer/${reviewerData?.id || ''}`}
@@ -275,13 +311,23 @@ export default function ReviewerCard({
           </div>
         </div>
         </Link>
-      </div>
+      </motion.div>
     );
   }
 
   // --- REVIEW CARD VARIANT ---
   return (
-    <li className="w-[calc(50vw-12px)] sm:w-auto sm:min-w-[213px] flex-shrink-0">
+    <motion.li 
+      className="w-[calc(50vw-12px)] sm:w-auto sm:min-w-[213px] flex-shrink-0"
+      initial={cardInitial}
+      whileInView={cardAnimate}
+      viewport={{ amount: isMobile ? 0.1 : 0.2, once: false }}
+      transition={{
+        duration: prefersReducedMotion ? 0.2 : isMobile ? 0.4 : 0.5,
+        delay: index * 0.05,
+        ease: "easeOut",
+      }}
+    >
       <Link
         href={`/reviewer/${review?.reviewer?.id || ''}`}
         className="block"
@@ -361,6 +407,6 @@ export default function ReviewerCard({
         />
       </div>
       </Link>
-    </li>
+    </motion.li>
   );
 }

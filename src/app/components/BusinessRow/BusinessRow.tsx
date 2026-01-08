@@ -123,9 +123,9 @@ export default function BusinessRow({
             }
           `}} />
           <div className="flex gap-3 items-stretch pt-2">
-            {businesses.map((business) => (
+            {businesses.map((business, index) => (
               <div key={business.id} className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto sm:min-w-[25%] md:min-w-[25%] xl:min-w-[25%] list-none flex business-card-full-width">
-                <BusinessCard business={business} />
+                <BusinessCard business={business} index={index} />
               </div>
             ))}
           </div>
