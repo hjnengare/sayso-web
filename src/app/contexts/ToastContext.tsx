@@ -11,9 +11,10 @@ interface Toast {
 }
 
 interface ToastContextType {
-  showToast: (message: string, type?: Toast['type'], duration?: number) => void;
-  showToastOnce: (key: string, message: string, type?: Toast['type'], duration?: number) => void;
+  showToast: (message: string, type?: Toast['type'], duration?: number) => string;
+  showToastOnce: (key: string, message: string, type?: Toast['type'], duration?: number) => string | null;
   removeToast: (id: string) => void;
+  clearAllToasts: () => void;
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
@@ -36,7 +37,7 @@ export function ToastProvider({ children }: ToastProviderProps) {
     return `toast_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   };
 
-  const showToast = (message: string, type: Toast['type'] = 'info', duration = 4000) => {
+  const showToast = (message: string, type: Toast['type'] = 'info', duration = 4000): string => {
     const id = generateUniqueId();
     const newToast: Toast = { id, message, type, duration };
 
@@ -52,17 +53,24 @@ export function ToastProvider({ children }: ToastProviderProps) {
       // Add to queue if toasts are already showing
       setToastQueue(prev => [...prev, newToast]);
     }
+    
+    return id;
   };
 
-  const showToastOnce = (key: string, message: string, type: Toast['type'] = 'info', duration = 4000) => {
-    if (seenToasts.has(key)) return;
+  const showToastOnce = (key: string, message: string, type: Toast['type'] = 'info', duration = 4000): string | null => {
+    if (seenToasts.has(key)) return null;
     
     seenToasts.add(key);
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('shown-toasts', JSON.stringify(Array.from(seenToasts)));
     }
     
-    showToast(message, type, duration);
+    return showToast(message, type, duration);
+  };
+
+  const clearAllToasts = () => {
+    setToasts([]);
+    setToastQueue([]);
   };
 
   const removeToast = (id: string) => {
@@ -120,7 +128,8 @@ export function ToastProvider({ children }: ToastProviderProps) {
   const value: ToastContextType = {
     showToast,
     showToastOnce,
-    removeToast
+    removeToast,
+    clearAllToasts
   };
 
   return (

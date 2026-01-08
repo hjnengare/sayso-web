@@ -476,10 +476,10 @@ export default function Header({
                   // Navigate to notifications page or open notifications dropdown
                   router.push('/notifications');
                 }}
-                className={`group w-11 h-11 sm:w-12 sm:h-12 md:w-12 md:h-12 flex items-center justify-center rounded-lg transition-all duration-200 relative shadow-md ${isNotificationsActive ? 'text-sage bg-sage/5' : whiteText ? 'text-white hover:text-white/80 hover:bg-white/10' : 'text-charcoal/80 hover:text-sage hover:bg-sage/5'}`}
+                className={`group w-11 h-11 sm:w-12 sm:h-12 md:w-12 md:h-12 flex items-center justify-center rounded-lg transition-all duration-200 relative shadow-md ${isNotificationsActive ? 'bg-sage/5' : whiteText ? 'text-white hover:bg-white/10' : 'text-charcoal/80 hover:bg-sage/5'}`}
                 aria-label="Notifications"
               >
-                <Bell className={`w-6 h-6 sm:w-5 sm:h-5 transition-transform duration-200 group-hover:scale-110 ${isNotificationsActive ? 'text-navbar-bg/90' : 'text-current'}`} fill={isNotificationsActive ? 'currentColor' : 'none'} style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }} />
+                <Bell className={`w-6 h-6 sm:w-5 sm:h-5 transition-all duration-200 group-hover:scale-110 ${isNotificationsActive ? 'text-sage' : whiteText ? 'text-white group-hover:text-white/80' : 'text-current group-hover:text-sage'}`} fill={isNotificationsActive ? 'currentColor' : 'none'} style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }} />
                 {unreadCount > 0 && (
                   <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-5 px-1.5 text-white text-[11px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
                     {unreadCount > 99 ? '99+' : unreadCount}
@@ -490,10 +490,10 @@ export default function Header({
               {/* Saved Bookmark Icon - Mobile Only */}
               <OptimizedLink
                 href="/saved"
-                className={`md:hidden group w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center rounded-lg transition-all duration-200 min-h-[44px] min-w-[44px] touch-manipulation relative shadow-md ${isSavedActive ? 'text-sage bg-sage/5' : whiteText ? 'text-white hover:text-white/80 hover:bg-white/10' : 'text-charcoal/80 hover:text-sage hover:bg-sage/5'}`}
+                className={`md:hidden group w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center rounded-lg transition-all duration-200 min-h-[44px] min-w-[44px] touch-manipulation relative shadow-md ${isSavedActive ? 'bg-sage/5' : whiteText ? 'text-white hover:bg-white/10' : 'text-charcoal/80 hover:bg-sage/5'}`}
                 aria-label="View saved businesses"
               >
-                <Bookmark className={`w-6 h-6 sm:w-5 sm:h-5 transition-transform duration-200 group-hover:scale-110 ${isSavedActive ? 'text-navbar-bg/90' : 'text-current'}`} fill={isSavedActive ? 'currentColor' : 'none'} style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }} />
+                <Bookmark className={`w-6 h-6 sm:w-5 sm:h-5 transition-all duration-200 group-hover:scale-110 ${isSavedActive ? 'text-sage' : whiteText ? 'text-white group-hover:text-white/80' : 'text-current group-hover:text-sage'}`} fill={isSavedActive ? 'currentColor' : 'none'} style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }} />
                 {savedCount > 0 && (
                   <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-5 px-1.5 text-white text-[11px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
                     {savedCount > 99 ? '99+' : savedCount}
@@ -504,10 +504,10 @@ export default function Header({
               {/* Messages/DM Icon - Mobile Only */}
               <OptimizedLink
                 href="/dm"
-                className={`md:hidden group w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center rounded-lg transition-all duration-200 min-h-[44px] min-w-[44px] touch-manipulation relative shadow-md ${isMessagesActive ? 'text-sage bg-sage/5' : whiteText ? 'text-white hover:text-white/80 hover:bg-white/10' : 'text-charcoal/80 hover:text-sage hover:bg-sage/5'}`}
+                className={`md:hidden group w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center rounded-lg transition-all duration-200 min-h-[44px] min-w-[44px] touch-manipulation relative shadow-md ${isMessagesActive ? 'bg-sage/5' : whiteText ? 'text-white hover:bg-white/10' : 'text-charcoal/80 hover:bg-sage/5'}`}
                 aria-label="Messages"
               >
-                <MessageCircle className={`w-6 h-6 sm:w-5 sm:h-5 transition-transform duration-200 group-hover:scale-110 ${isMessagesActive ? 'text-navbar-bg/90' : 'text-current'}`} fill={isMessagesActive ? 'currentColor' : 'none'} style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }} />
+                <MessageCircle className={`w-6 h-6 sm:w-5 sm:h-5 transition-all duration-200 group-hover:scale-110 ${isMessagesActive ? 'text-sage' : whiteText ? 'text-white group-hover:text-white/80' : 'text-current group-hover:text-sage'}`} fill={isMessagesActive ? 'currentColor' : 'none'} style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }} />
                 {unreadMessagesCount > 0 && (
                   <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-5 px-1.5 text-white text-[11px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
                     {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
@@ -542,10 +542,10 @@ export default function Header({
               {/* Saved */}
               <OptimizedLink
                 href="/saved"
-                className={`group hidden md:flex w-9 h-9 lg:w-10 lg:h-10 items-center justify-center rounded-lg transition-all duration-200 relative shadow-md ${isSavedActive ? 'text-sage bg-sage/5' : whiteText ? 'text-white hover:text-white/85 hover:bg-white/10' : 'text-charcoal/80 hover:text-sage hover:bg-sage/5'}`}
+                className={`group hidden md:flex w-9 h-9 lg:w-10 lg:h-10 items-center justify-center rounded-lg transition-all duration-200 relative shadow-md ${isSavedActive ? 'bg-sage/5' : whiteText ? 'text-white hover:bg-white/10' : 'text-charcoal/80 hover:bg-sage/5'}`}
                 aria-label="Saved"
               >
-                <Bookmark className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-200 group-hover:scale-110 ${isSavedActive ? 'text-navbar-bg/90' : 'text-current'}`} fill={isSavedActive ? 'currentColor' : 'none'} style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }} />
+                <Bookmark className={`w-4 h-4 sm:w-5 sm:h-5 transition-all duration-200 group-hover:scale-110 ${isSavedActive ? 'text-sage' : whiteText ? 'text-white group-hover:text-white/85' : 'text-current group-hover:text-sage'}`} fill={isSavedActive ? 'currentColor' : 'none'} style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }} />
                 {savedCount > 0 && (
                   <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-5 px-1.5 text-white text-[11px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
                     {savedCount > 99 ? '99+' : savedCount}
@@ -556,10 +556,10 @@ export default function Header({
               {/* Messages/DM */}
               <OptimizedLink
                 href="/dm"
-                className={`group hidden md:flex w-9 h-9 lg:w-10 lg:h-10 items-center justify-center rounded-lg transition-all duration-200 relative shadow-md ${isMessagesActive ? 'text-sage bg-sage/5' : whiteText ? 'text-white hover:text-white/85 hover:bg-white/10' : 'text-charcoal/80 hover:text-sage hover:bg-sage/5'}`}
+                className={`group hidden md:flex w-9 h-9 lg:w-10 lg:h-10 items-center justify-center rounded-lg transition-all duration-200 relative shadow-md ${isMessagesActive ? 'bg-sage/5' : whiteText ? 'text-white hover:bg-white/10' : 'text-charcoal/80 hover:bg-sage/5'}`}
                 aria-label="Messages"
               >
-                <MessageCircle className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-200 group-hover:scale-110 ${isMessagesActive ? 'text-navbar-bg/90' : 'text-current'}`} fill={isMessagesActive ? 'currentColor' : 'none'} style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }} />
+                <MessageCircle className={`w-4 h-4 sm:w-5 sm:h-5 transition-all duration-200 group-hover:scale-110 ${isMessagesActive ? 'text-sage' : whiteText ? 'text-white group-hover:text-white/85' : 'text-current group-hover:text-sage'}`} fill={isMessagesActive ? 'currentColor' : 'none'} style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }} />
                 {unreadMessagesCount > 0 && (
                   <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-5 px-1.5 text-white text-[11px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
                     {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
@@ -570,10 +570,10 @@ export default function Header({
               {/* Profile */}
               <OptimizedLink
                 href="/profile"
-                className={`group hidden md:flex w-9 h-9 lg:w-10 lg:h-10 items-center justify-center rounded-lg transition-all duration-200 shadow-md ${isProfileActive ? 'text-sage bg-sage/5' : whiteText ? 'text-white hover:text-white/85 hover:bg-white/10' : 'text-charcoal/80 hover:text-sage hover:bg-sage/5'}`}
+                className={`group hidden md:flex w-9 h-9 lg:w-10 lg:h-10 items-center justify-center rounded-lg transition-all duration-200 shadow-md ${isProfileActive ? 'bg-sage/5' : whiteText ? 'text-white hover:bg-white/10' : 'text-charcoal/80 hover:bg-sage/5'}`}
                 aria-label="Profile"
               >
-                <User className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-200 group-hover:scale-110 ${isProfileActive ? 'text-navbar-bg/90' : 'text-current'}`} fill={isProfileActive ? 'currentColor' : 'none'} style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }} />
+                <User className={`w-4 h-4 sm:w-5 sm:h-5 transition-all duration-200 group-hover:scale-110 ${isProfileActive ? 'text-sage' : whiteText ? 'text-white group-hover:text-white/85' : 'text-current group-hover:text-sage'}`} fill={isProfileActive ? 'currentColor' : 'none'} style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }} />
               </OptimizedLink>
             </div>
           </div>

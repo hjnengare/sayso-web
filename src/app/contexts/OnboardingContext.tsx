@@ -243,7 +243,11 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
         console.log('[OnboardingContext] User profile refreshed');
       }
 
-      showToast(`Great! ${selectedInterests.length} interests selected.`, 'success', 3000);
+      // Show toast briefly before navigation
+      showToast(`Great! ${selectedInterests.length} interests selected.`, 'success', 1500);
+      
+      // Wait for toast to be visible, then navigate
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
       // Navigate to next step (use replace to avoid adding to history)
       console.log('[OnboardingContext] Navigating to /subcategories...');
