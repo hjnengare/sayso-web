@@ -214,8 +214,8 @@ export function EditProfileModal({
                           />
                         </div>
                       ) : (
-                        <div className="w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center bg-sage/20 rounded-full border-4 border-white shadow-lg ring-2 ring-sage/20">
-                          <User className="text-sage" size={32} strokeWidth={2.5} />
+                        <div className="w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center bg-navbar-bg/90 rounded-full border-4 border-white shadow-lg ring-2 ring-sage/20">
+                          <User className="text-white/80" size={32} strokeWidth={2.5} />
                         </div>
                       )}
                     </div>
