@@ -1,10 +1,11 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Star, Trophy, MapPin } from "lucide-react";
-import FallbackImage from "../FallbackImage/FallbackImage";
+import { Star, Trophy, MapPin, ImageIcon } from "lucide-react";
+import OptimizedImage from "../Performance/OptimizedImage";
 import { BusinessOfTheMonth } from "../../data/communityHighlightsData";
+import { getCategoryPng, getCategoryPngFromLabels, isPngIcon } from "../../utils/categoryToPngMapping";
 
 interface BusinessLeaderboardItemProps {
   business: BusinessOfTheMonth;
@@ -13,6 +14,9 @@ interface BusinessLeaderboardItemProps {
 }
 
 function BusinessLeaderboardItem({ business, index, rank }: BusinessLeaderboardItemProps) {
+  const [imgError, setImgError] = useState(false);
+  const [usingFallback, setUsingFallback] = useState(false);
+
   const getBadgeStyles = () => {
     switch (rank) {
       case 1:
@@ -23,6 +27,73 @@ function BusinessLeaderboardItem({ business, index, rank }: BusinessLeaderboardI
         return "from-charcoal/70 to-charcoal/50 text-white";
       default:
         return "from-charcoal/15 to-charcoal/10 text-charcoal/70";
+    }
+  };
+
+  // Image fallback logic - matches BusinessCard pattern
+  const categoryKey = (business as any).subInterestId || (business as any).interestId || business.category || "default";
+  const displayCategoryLabel = (business as any).subInterestLabel || business.category;
+
+  const getDisplayImage = useMemo(() => {
+    // Priority 1: Check uploaded_images array (new source of truth)
+    const uploadedImages = (business as any).uploaded_images;
+    if (uploadedImages && Array.isArray(uploadedImages) && uploadedImages.length > 0) {
+      const firstImageUrl = uploadedImages[0];
+      
+      if (firstImageUrl && 
+          typeof firstImageUrl === 'string' && 
+          firstImageUrl.trim() !== '' &&
+          !isPngIcon(firstImageUrl) &&
+          !firstImageUrl.includes('/png/')) {
+        return { image: firstImageUrl, isPng: false };
+      }
+    }
+
+    // Priority 2: External image_url
+    const imageUrl = (business as any).image_url;
+    if (imageUrl &&
+      typeof imageUrl === 'string' &&
+      imageUrl.trim() !== '' &&
+      !isPngIcon(imageUrl)) {
+      return { image: imageUrl, isPng: false };
+    }
+
+    // Priority 3: Legacy image field
+    if (business.image &&
+      typeof business.image === 'string' &&
+      business.image.trim() !== '' &&
+      !isPngIcon(business.image)) {
+      return { image: business.image, isPng: false };
+    }
+
+    // Priority 4: Category PNG fallback
+    const categoryPng = getCategoryPngFromLabels([
+      (business as any).subInterestId,
+      (business as any).subInterestLabel,
+      business.category,
+      categoryKey,
+      business.monthAchievement
+    ]);
+    return { image: categoryPng, isPng: true };
+  }, [
+    business.image,
+    (business as any).image_url,
+    (business as any).uploaded_images,
+    categoryKey,
+    business.category,
+    business.monthAchievement,
+  ]);
+
+  const displayImage = getDisplayImage.image;
+  const isImagePng = getDisplayImage.isPng;
+  const displayAlt = business.alt || business.name;
+
+  const handleImageError = () => {
+    if (!usingFallback && !isImagePng) {
+      setUsingFallback(true);
+      setImgError(false);
+    } else {
+      setImgError(true);
     }
   };
 
@@ -38,15 +109,65 @@ function BusinessLeaderboardItem({ business, index, rank }: BusinessLeaderboardI
           <div className={`w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br ${getBadgeStyles()} rounded-full flex items-center justify-center font-urbanist text-caption sm:text-body-sm font-600 shadow-[0_4px_12px_rgba(0,0,0,0.1)] flex-shrink-0 border border-white/40`}>
             {rank <= 3 ? <Trophy className="w-3 h-3 sm:w-4 sm:h-4" /> : rank}
           </div>
-          <div className="w-12 h-12 sm:w-14 sm:h-14 relative rounded-lg overflow-hidden border-2 border-white shadow-[0_4px_20px_rgba(0,0,0,0.15)] ring-2 ring-white/50 flex-shrink-0">
-            <FallbackImage
-              src={business.image}
-              alt={business.alt}
-              fill
-              className="object-cover"
-              sizes="(max-width: 640px) 48px, 56px"
-              fallbackType="business"
-            />
+          <div className="w-12 h-12 sm:w-14 sm:h-14 relative rounded-lg overflow-hidden border-2 border-white shadow-[0_4px_20px_rgba(0,0,0,0.15)] ring-2 ring-white/50 flex-shrink-0 flex items-center justify-center">
+            {!imgError && displayImage ? (
+              isImagePng || displayImage.includes('/png/') || displayImage.endsWith('.png') || usingFallback ? (
+                <div className="relative w-full h-full flex items-center justify-center bg-gradient-to-br from-off-white/95 to-off-white/85">
+                  <OptimizedImage
+                    src={usingFallback ? getCategoryPng(categoryKey) : displayImage}
+                    alt={displayAlt}
+                    width={56}
+                    height={56}
+                    sizes="(max-width: 640px) 48px, 56px"
+                    className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
+                    priority={false}
+                    quality={90}
+                    onError={handleImageError}
+                  />
+                </div>
+              ) : (
+                <div className="relative w-full h-full flex items-center justify-center">
+                  <OptimizedImage
+                    src={displayImage}
+                    alt={displayAlt}
+                    width={56}
+                    height={56}
+                    sizes="(max-width: 640px) 48px, 56px"
+                    className="w-full h-full object-cover"
+                    priority={false}
+                    quality={90}
+                    onError={handleImageError}
+                  />
+                </div>
+              )
+            ) : (
+              <div
+                className="relative w-full h-full flex items-center justify-center"
+                style={{ backgroundColor: '#E5E0E5' }}
+              >
+                <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center">
+                  <OptimizedImage
+                    src={getCategoryPng(categoryKey)}
+                    alt={displayAlt}
+                    width={40}
+                    height={40}
+                    sizes="40px"
+                    className="w-full h-full object-contain opacity-60"
+                    priority={false}
+                    quality={90}
+                    onError={() => setImgError(true)}
+                  />
+                </div>
+              </div>
+            )}
+            {imgError && (
+              <div
+                className="absolute inset-0 flex items-center justify-center"
+                style={{ backgroundColor: '#E5E0E5' }}
+              >
+                <ImageIcon className="w-4 h-4 sm:w-5 sm:h-5 text-charcoal/20" aria-hidden="true" />
+              </div>
+            )}
           </div>
           <div className="min-w-0 flex-1">
             <div className="font-urbanist text-body-sm sm:text-body font-600 text-charcoal truncate">{business.name}</div>

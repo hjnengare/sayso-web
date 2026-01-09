@@ -3,7 +3,7 @@
 import nextDynamic from "next/dynamic";
 import Link from "next/link";
 import { useState, useEffect, useMemo, useRef } from "react";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { ChevronRight, ChevronUp } from "react-feather";
 import Pagination from "../components/EventsPage/Pagination";
 import EmailVerificationGuard from "../components/Auth/EmailVerificationGuard";
@@ -254,7 +254,12 @@ export default function SavedPage() {
 
         <div className="relative">
           <div className="pt-20 sm:pt-24 pb-12 sm:pb-16 md:pb-20">
-            <div className="mx-auto w-full max-w-[2000px] px-3 relative mb-4">
+            <motion.div
+              className="mx-auto w-full max-w-[2000px] px-3 relative mb-4"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
               {/* Breadcrumb Navigation */}
               <nav
                 className="mb-4 sm:mb-6 px-2"
@@ -289,7 +294,7 @@ export default function SavedPage() {
                   </li>
                 </ol>
               </nav>
-            </div>
+            </motion.div>
 
             {isLoading || savedItemsLoading ? (
               <div className="flex items-center justify-center py-12">
@@ -318,10 +323,20 @@ export default function SavedPage() {
                 </div>
               </div>
             ) : savedBusinesses.length > 0 ? (
-              <div className="relative z-10">
+              <motion.div
+                className="relative z-10"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+              >
                 <div className="mx-auto w-full max-w-[2000px] px-2">
                   {/* Title */}
-                  <div className="mb-6 sm:mb-8 px-2">
+                  <motion.div
+                    className="mb-6 sm:mb-8 px-2"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.1 }}
+                  >
                     <h1
                       className="text-h2 sm:text-h1 font-bold text-charcoal"
                       style={{
@@ -341,7 +356,7 @@ export default function SavedPage() {
                       {filteredBusinesses.length} {filteredBusinesses.length === 1 ? "business" : "businesses"} saved
                       {selectedCategory && selectedCategory !== 'All' && ` in ${selectedCategory}`}
                     </p>
-                  </div>
+                  </motion.div>
 
                   {/* Category Filters */}
                   {categories.length > 1 && (
@@ -412,7 +427,7 @@ export default function SavedPage() {
                     disabled={isPaginationLoading}
                   />
                 </div>
-              </div>
+              </motion.div>
             ) : (
               <div className="relative z-10 min-h-[calc(100vh-200px)] flex items-center justify-center">
                 <EmptySavedState />

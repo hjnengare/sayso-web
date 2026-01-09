@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Fontdiner_Swanky } from "next/font/google";
 import Header from "../components/Header/Header";
 import Footer from "../components/Footer/Footer";
 import FilterTabs from "../components/EventsPage/FilterTabs";
@@ -20,12 +19,6 @@ import { useEvents } from "../hooks/useEvents";
 import { ChevronUp, ChevronRight } from "react-feather";
 import { Loader } from "../components/Loader/Loader";
 import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
-
-const swanky = Fontdiner_Swanky({
-  weight: "400",
-  subsets: ["latin"],
-  display: "swap",
-});
 
 const ITEMS_PER_PAGE = 12;
 
@@ -186,9 +179,9 @@ export default function EventsSpecialsPage() {
           <div className="mb-6 sm:mb-8 px-4 sm:px-6 text-center pt-4">
             <div className="my-4">
               <h1 
-                className={`${swanky.className} text-2xl sm:text-3xl md:text-4xl font-semibold leading-[1.2] tracking-tight text-charcoal mx-auto`}
+                className="text-2xl sm:text-3xl md:text-4xl font-semibold leading-[1.2] tracking-tight text-charcoal mx-auto font-urbanist"
                 style={{ 
-                  fontFamily: swanky.style.fontFamily,
+                  fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
                   wordBreak: 'keep-all',
                   overflowWrap: 'break-word',
                   whiteSpace: 'normal',
@@ -205,7 +198,7 @@ export default function EventsSpecialsPage() {
                   loopWave={true}
                   enableScrollTrigger={true}
                   style={{
-                    fontFamily: swanky.style.fontFamily,
+                    fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
                     wordBreak: 'keep-all',
                     overflowWrap: 'break-word',
                     whiteSpace: 'normal',

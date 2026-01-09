@@ -93,7 +93,7 @@ export default function NotificationsPage() {
       />
 
       <div className="relative">
-        <div className="pt-20 sm:pt-24">
+        <div className="pt-20 sm:pt-24 pb-12 sm:pb-16 md:pb-20">
           <div className="mx-auto w-full max-w-[2000px] px-3 relative mb-4">
             {/* Breadcrumb Navigation */}
             <nav
@@ -137,43 +137,81 @@ export default function NotificationsPage() {
             </div>
           ) : notifications.length === 0 ? (
             <div className="relative z-10 min-h-[calc(100vh-200px)] flex items-center justify-center">
-              <div
+              <motion.div
                 className="mx-auto w-full max-w-[2000px] px-2 font-urbanist w-full"
                 style={{
                   fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
                 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.4 }}
               >
-                <div className="text-center w-full">
-                  <div className="w-20 h-20 mx-auto mb-6 bg-charcoal/10 rounded-full flex items-center justify-center">
+                <motion.div
+                  className="text-center w-full"
+                  initial="hidden"
+                  animate="visible"
+                  variants={{
+                    hidden: { opacity: 0 },
+                    visible: {
+                      opacity: 1,
+                      transition: {
+                        staggerChildren: 0.15,
+                        delayChildren: 0.1,
+                      },
+                    },
+                  }}
+                >
+                  <motion.div
+                    className="w-20 h-20 mx-auto mb-6 bg-charcoal/10 rounded-full flex items-center justify-center"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
+                  >
                     <Bell className="w-10 h-10 text-charcoal/60" strokeWidth={1.5} />
-                  </div>
+                  </motion.div>
 
-                  <h3 
+                  <motion.h3
                     className="text-h2 font-semibold text-charcoal mb-2"
                     style={{
                       fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
                     }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
                   >
                     No notifications yet
-                  </h3>
+                  </motion.h3>
 
-                  <p 
+                  <motion.p
                     className="text-body-sm text-charcoal/60 mb-6 max-w-md mx-auto"
                     style={{
                       fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
                       fontWeight: 500,
                     }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, ease: "easeOut", delay: 0.15 }}
                   >
                     When you receive notifications, they'll appear here
-                  </p>
-                </div>
-              </div>
+                  </motion.p>
+                </motion.div>
+              </motion.div>
             </div>
           ) : (
-            <div className="relative z-10">
+            <motion.div
+              className="relative z-10"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+            >
               <div className="mx-auto w-full max-w-[2000px] px-2">
                 {/* Title */}
-                <div className="mb-6 sm:mb-8 px-2">
+                <motion.div
+                  className="mb-6 sm:mb-8 px-2"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.1 }}
+                >
                   <div className="flex items-center justify-between gap-4 flex-wrap">
                     <div>
                       <h1
@@ -206,10 +244,15 @@ export default function NotificationsPage() {
                       </button>
                     )}
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Filter Pills */}
-                <div className="mb-6 px-2">
+                <motion.div
+                  className="mb-6 px-2"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.2 }}
+                >
                   <div 
                     className="flex items-center gap-2 overflow-x-auto scrollbar-hide -mx-2 px-2"
                     style={{ 
@@ -246,7 +289,7 @@ export default function NotificationsPage() {
                       );
                     })}
                   </div>
-                </div>
+                </motion.div>
 
                 {filteredNotifications.length === 0 ? (
                   <div className="pb-12 sm:pb-16 md:pb-20 text-center py-12">
@@ -333,23 +376,23 @@ export default function NotificationsPage() {
                   </div>
                 )}
               </div>
-            </div>
+            </motion.div>
           )}
-
-          <Footer />
         </div>
 
-        {/* Scroll to Top Button */}
-        {showScrollTop && (
-          <button
-            onClick={scrollToTop}
-            className="fixed bottom-6 right-6 z-40 w-12 h-12 bg-navbar-bg hover:bg-navbar-bg backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg border border-white/20 hover:scale-110 transition-all duration-300"
-            aria-label="Scroll to top"
-          >
-            <ChevronUp className="w-6 h-6 text-white" strokeWidth={2.5} />
-          </button>
-        )}
+        <Footer />
       </div>
+
+      {/* Scroll to Top Button */}
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-6 right-6 z-40 w-12 h-12 bg-navbar-bg hover:bg-navbar-bg backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg border border-white/20 hover:scale-110 transition-all duration-300"
+          aria-label="Scroll to top"
+        >
+          <ChevronUp className="w-6 h-6 text-white" strokeWidth={2.5} />
+        </button>
+      )}
     </div>
   );
 }

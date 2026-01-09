@@ -2,11 +2,10 @@
 "use client";
 
 import { useState, useMemo, memo, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import nextDynamic from "next/dynamic";
-import { Fontdiner_Swanky } from "next/font/google";
 import { ChevronRight, Award } from "react-feather";
 import EmailVerificationGuard from "../components/Auth/EmailVerificationGuard";
 import Header from "../components/Header/Header";
@@ -16,12 +15,6 @@ import LeaderboardTitle from "../components/Leaderboard/LeaderboardTitle";
 import { Tabs } from "@/components/atoms/Tabs";
 import { Loader } from "../components/Loader/Loader";
 import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
-
-const swanky = Fontdiner_Swanky({
-  weight: "400",
-  subsets: ["latin"],
-  display: "swap",
-});
 
 // Dynamically import BusinessOfMonthLeaderboard to improve initial load time
 const BusinessOfMonthLeaderboard = nextDynamic(
@@ -197,6 +190,52 @@ function LeaderboardPage() {
     { id: "businesses", label: "Top Businesses" },
   ];
 
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+        ease: [0.16, 1, 0.3, 1],
+      },
+    },
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, scale: 0.95, y: 20 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: [0.16, 1, 0.3, 1],
+      },
+    },
+    exit: {
+      opacity: 0,
+      scale: 0.95,
+      y: -20,
+      transition: {
+        duration: 0.3,
+        ease: [0.16, 1, 0.3, 1],
+      },
+    },
+  };
+
   return (
     <EmailVerificationGuard>
       <div className="min-h-dvh bg-off-white">
@@ -209,13 +248,22 @@ function LeaderboardPage() {
           whiteText={true}
         />
 
-        <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
+        <motion.div 
+          className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
             <div className="pt-20 sm:pt-24">
               {/* Hero Section */}
                 <section className="relative z-10 pb-6 sm:pb-8 md:pb-12">
                   <div className="mx-auto w-full max-w-[2000px] px-2">
                     {/* Breadcrumb */}
-                    <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
+                    <motion.nav 
+                      className="mb-4 sm:mb-6 px-2" 
+                      aria-label="Breadcrumb"
+                      variants={itemVariants}
+                    >
                       <ol className="flex items-center gap-2 text-sm sm:text-base">
                         <li>
                           <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
@@ -231,15 +279,18 @@ function LeaderboardPage() {
                           </span>
                         </li>
                       </ol>
-                    </nav>
+                    </motion.nav>
 
                     {/* Title and Description Block */}
-                    <div className="mb-6 sm:mb-8 px-4 sm:px-6 text-center pt-4">
+                    <motion.div 
+                      className="mb-6 sm:mb-8 px-4 sm:px-6 text-center pt-4"
+                      variants={itemVariants}
+                    >
                       <div className="my-4">
                         <h1 
-                          className={`${swanky.className} text-2xl sm:text-3xl md:text-4xl font-semibold leading-[1.2] tracking-tight text-charcoal mx-auto`}
+                          className="text-2xl sm:text-3xl md:text-4xl font-semibold leading-[1.2] tracking-tight text-charcoal mx-auto font-urbanist"
                           style={{ 
-                            fontFamily: swanky.style.fontFamily,
+                            fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
                             wordBreak: 'keep-all',
                             overflowWrap: 'break-word',
                             whiteSpace: 'normal',
@@ -256,7 +307,7 @@ function LeaderboardPage() {
                             loopWave={true}
                             enableScrollTrigger={true}
                             style={{
-                              fontFamily: swanky.style.fontFamily,
+                              fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
                               wordBreak: 'keep-all',
                               overflowWrap: 'break-word',
                               whiteSpace: 'normal',
@@ -265,11 +316,15 @@ function LeaderboardPage() {
                           />
                         </h1>
                       </div>
-                      <p className="text-sm sm:text-base text-charcoal/70 max-w-2xl mx-auto leading-relaxed" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                      <motion.p 
+                        className="text-sm sm:text-base text-charcoal/70 max-w-2xl mx-auto leading-relaxed" 
+                        style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                        variants={itemVariants}
+                      >
                         Celebrate the top contributors and businesses in our community. 
                         See who's making a difference and discover the most loved local spots.
-                      </p>
-                    </div>
+                      </motion.p>
+                    </motion.div>
                   </div>
                 </section>
 
@@ -284,15 +339,23 @@ function LeaderboardPage() {
                     <div className="max-w-[800px] mx-auto pt-4 sm:pt-6 md:pt-8">
 
                       {/* Tabs */}
-                        <div className="flex justify-center mb-4 sm:mb-6 md:mb-8 px-2">
+                        <motion.div 
+                          className="flex justify-center mb-4 sm:mb-6 md:mb-8 px-2"
+                          variants={itemVariants}
+                        >
                           <Tabs tabs={tabs} activeTab={activeTab} onTabChange={handleTabChange} />
-                        </div>
+                        </motion.div>
 
                       {/* Leaderboard Content */}
-                        <motion.div
-                          key={activeTab}
-                          className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-[20px] ring-1 ring-white/20 p-3 sm:p-4 md:p-6 lg:p-8 mb-6 sm:mb-8 md:mb-12 relative overflow-hidden"
-                        >
+                        <AnimatePresence mode="wait">
+                          <motion.div
+                            key={activeTab}
+                            variants={cardVariants}
+                            initial="hidden"
+                            animate="visible"
+                            exit="exit"
+                            className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-[20px] ring-1 ring-white/20 shadow-md p-3 sm:p-4 md:p-6 lg:p-8 mb-6 sm:mb-8 md:mb-12 relative overflow-hidden"
+                          >
                           {/* Card decorative elements */}
                           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-sage/10 to-transparent rounded-full blur-lg"></div>
                           <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-coral/10 to-transparent rounded-full blur-lg"></div>
@@ -357,13 +420,14 @@ function LeaderboardPage() {
                             )}
                           </div>
                         </motion.div>
+                        </AnimatePresence>
                     </div>
                   </div>
                 </section>
             </div>
+        </motion.div>
 
-            <Footer />
-          </div>
+        <Footer />
       </div>
     </EmailVerificationGuard>
   );
