@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSupabase } from '../../../lib/supabase/server';
 import { performance as nodePerformance } from 'perf_hooks';
+import { addNoCacheHeaders } from '../../../lib/utils/responseHeaders';
 
 // Force dynamic rendering and disable caching for onboarding data
 export const dynamic = "force-dynamic";
@@ -18,7 +19,8 @@ export async function POST(req: Request) {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return addNoCacheHeaders(response);
     }
 
     const body = await req.json().catch(() => ({}));
@@ -75,10 +77,11 @@ export async function POST(req: Request) {
 
     // Validate we have at least one valid subcategory
     if (cleaned.length === 0) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         { ok: false, error: 'No valid subcategories provided' },
         { status: 400 }
       );
+      return addNoCacheHeaders(response);
     }
 
     const writeStart = nodePerformance.now();
@@ -153,7 +156,7 @@ export async function POST(req: Request) {
       totalTime: `${totalTime.toFixed(2)}ms`
     });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       ok: true,
       subcategoriesCount: cleaned.length,
       onboarding_step: 'deal-breakers', // Return updated step for immediate UI update
@@ -162,11 +165,12 @@ export async function POST(req: Request) {
         totalTime: totalTime
       }
     });
+    return addNoCacheHeaders(response);
 
   } catch (error: any) {
     const totalTime = nodePerformance.now() - startTime;
     console.error('[Subcategories API] Unexpected error:', error);
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         error: 'Failed to save subcategories',
         message: error.message,
@@ -174,5 +178,6 @@ export async function POST(req: Request) {
       },
       { status: 500 }
     );
+    return addNoCacheHeaders(response);
   }
 }

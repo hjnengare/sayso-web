@@ -112,8 +112,8 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       setIsLoading(true);
       setError(null);
 
-      // Load from catalog API
-      const response = await fetch('/api/interests');
+      // Load from catalog API - no cache for fresh data
+      const response = await fetch('/api/interests', { cache: 'no-store' });
       if (response.ok) {
         const data = await response.json();
         if (data.interests && Array.isArray(data.interests)) {
@@ -244,6 +244,9 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       const dbDataResponse = await fetch('/api/user/onboarding', {
         cache: 'no-store',
         credentials: 'include',
+        headers: {
+          'Cache-Control': 'no-store',
+        },
       });
       let dbInterests: string[] = [];
       let dbSubcategories: any[] = [];
@@ -268,7 +271,10 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       // This endpoint only marks completion and verifies prerequisites from DB
       const response = await fetch('/api/onboarding/complete', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store',
+        },
         credentials: 'include',
         cache: 'no-store',
       });

@@ -274,10 +274,17 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json({ 
+    const response = NextResponse.json({ 
       success: true,
       message: 'Onboarding progress saved successfully'
     });
+    
+    // Disable all caching for fresh data
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    
+    return response;
 
   } catch (error) {
     console.error('[Onboarding API] Unexpected error saving onboarding data:', error);
@@ -336,7 +343,7 @@ export async function GET(req: Request) {
       dealbreakers = dealbreakersData?.map(d => d.dealbreaker_id) || [];
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       interests,
       subcategories,
       dealbreakers,
@@ -344,6 +351,13 @@ export async function GET(req: Request) {
       subcategories_count: profile?.subcategories_count || 0,
       dealbreakers_count: profile?.dealbreakers_count || 0
     });
+    
+    // Disable all caching for fresh data
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    
+    return response;
 
   } catch (error) {
     console.error('Error fetching onboarding data:', error);

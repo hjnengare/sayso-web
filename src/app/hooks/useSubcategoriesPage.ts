@@ -261,6 +261,7 @@ export function useSubcategoriesPage(): UseSubcategoriesPageReturn {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
+        cache: 'no-store', // Ensure fresh data
         body: JSON.stringify({
           subcategories: subcategoriesWithInterestIds
         })

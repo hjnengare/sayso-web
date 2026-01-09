@@ -145,7 +145,7 @@ function ProfileContent() {
 
       try {
         setProfileLoading(true);
-        const response = await fetch('/api/user/profile');
+        const response = await fetch('/api/user/profile', { cache: 'no-store' });
         
         if (!response.ok) {
           if (response.status === 401) {
@@ -201,7 +201,7 @@ function ProfileContent() {
 
       try {
         setStatsLoading(true);
-        const response = await fetch('/api/user/stats');
+        const response = await fetch('/api/user/stats', { cache: 'no-store' });
         
         if (!response.ok) {
           if (response.status === 401) {
@@ -298,7 +298,7 @@ function ProfileContent() {
       try {
         setSavedBusinessesLoading(true);
         // Limit to 20 for faster loading - user can see more on saved page
-        const response = await fetch('/api/saved/businesses?limit=20&page=1');
+        const response = await fetch('/api/saved/businesses?limit=20&page=1', { cache: 'no-store' });
         
         if (!response.ok) {
           if (response.status === 401) {
@@ -425,7 +425,7 @@ function ProfileContent() {
 
       try {
         setAchievementsLoading(true);
-        const response = await fetch('/api/user/achievements');
+        const response = await fetch('/api/user/achievements', { cache: 'no-store' });
         
         if (!response.ok) {
           if (response.status === 401) {
@@ -608,7 +608,7 @@ function ProfileContent() {
       });
 
       // Refresh enhanced profile from API to get latest data
-      const profileResponse = await fetch('/api/user/profile');
+      const profileResponse = await fetch('/api/user/profile', { cache: 'no-store' });
       if (profileResponse.ok) {
         const profileResult = await profileResponse.json();
         if (profileResult.data) {
@@ -662,6 +662,7 @@ function ProfileContent() {
     try {
       const response = await fetch('/api/user/deactivate-account', {
         method: 'POST',
+        cache: 'no-store',
       });
 
       if (!response.ok) {
@@ -690,6 +691,7 @@ function ProfileContent() {
     try {
       const response = await fetch('/api/user/delete-account', {
         method: 'DELETE',
+        cache: 'no-store',
       });
 
       if (!response.ok) {

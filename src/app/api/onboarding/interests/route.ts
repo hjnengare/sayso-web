@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSupabase } from '../../../lib/supabase/server';
 import { performance as nodePerformance } from 'perf_hooks';
+import { addNoCacheHeaders } from '../../../lib/utils/responseHeaders';
 
 // Force dynamic rendering and disable caching for onboarding data
 export const dynamic = "force-dynamic";
@@ -18,16 +19,18 @@ export async function POST(req: Request) {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return addNoCacheHeaders(response);
     }
 
     const { interests } = await req.json();
 
     if (!interests || !Array.isArray(interests) || interests.length === 0) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         { error: 'Interests array is required' },
         { status: 400 }
       );
+      return addNoCacheHeaders(response);
     }
 
     // Validate all interest IDs are strings
@@ -36,10 +39,11 @@ export async function POST(req: Request) {
     );
 
     if (validInterests.length === 0) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         { error: 'No valid interests provided' },
         { status: 400 }
       );
+      return addNoCacheHeaders(response);
     }
 
     const writeStart = nodePerformance.now();
@@ -113,7 +117,7 @@ export async function POST(req: Request) {
       totalTime: `${totalTime.toFixed(2)}ms`
     });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       ok: true,
       interestsCount: validInterests.length,
       onboarding_step: 'subcategories', // Return updated step for immediate UI update
@@ -122,11 +126,12 @@ export async function POST(req: Request) {
         totalTime: totalTime
       }
     });
+    return addNoCacheHeaders(response);
 
   } catch (error: any) {
     const totalTime = nodePerformance.now() - startTime;
     console.error('[Interests API] Unexpected error:', error);
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         error: 'Failed to save interests',
         message: error.message,
@@ -134,5 +139,6 @@ export async function POST(req: Request) {
       },
       { status: 500 }
     );
+    return addNoCacheHeaders(response);
   }
 }

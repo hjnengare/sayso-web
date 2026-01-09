@@ -206,6 +206,7 @@ export function useInterestsPage(): UseInterestsPageReturn {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
+        cache: 'no-store', // Ensure fresh data
         body: JSON.stringify({
           interests: selectedInterests
         })

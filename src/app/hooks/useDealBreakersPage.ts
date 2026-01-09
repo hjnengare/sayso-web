@@ -135,6 +135,7 @@ export function useDealBreakersPage(): UseDealBreakersPageReturn {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
+        cache: 'no-store', // Ensure fresh data
         body: JSON.stringify({
           dealbreakers: selectedDealbreakers
         })

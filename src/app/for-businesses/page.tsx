@@ -18,14 +18,7 @@ import { ClaimModal } from "../components/BusinessClaim/ClaimModal";
 import Link from "next/link";
 import Header from "../components/Header/Header";
 import { Suspense } from "react";
-import { Fontdiner_Swanky } from "next/font/google";
 import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
-
-const swanky = Fontdiner_Swanky({
-  weight: "400",
-  subsets: ["latin"],
-  display: "swap",
-});
 
 const Footer = dynamic(() => import("../components/Footer/Footer"), {
   loading: () => null,
@@ -286,7 +279,7 @@ function ClaimBusinessPageContent() {
                       <WavyTypedTitle
                         text="Own or manage a business?"
                         as="h2"
-                        className={`${swanky.className} text-lg sm:text-xl md:text-2xl font-semibold mb-2 text-center leading-[1.2] tracking-tight text-charcoal`}
+                        className="text-lg sm:text-xl md:text-2xl font-semibold mb-2 text-center leading-[1.2] tracking-tight text-charcoal font-urbanist"
                         typingSpeedMs={40}
                         startDelayMs={300}
                         waveVariant="subtle"
@@ -294,7 +287,7 @@ function ClaimBusinessPageContent() {
                         triggerOnTypingComplete={true}
                         enableScrollTrigger={false}
                         style={{ 
-                          fontFamily: swanky.style.fontFamily,
+                          fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
                         }}
                       />
                     </div>
