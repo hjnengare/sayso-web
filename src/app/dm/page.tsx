@@ -1038,7 +1038,7 @@ export default function DMChatListPage() {
                       </div>
                     ) : filteredChats.length === 0 ? (
                       // Empty State Group - Centered (Mobile)
-                      <div className="flex items-center justify-center py-12">
+                      <div className="flex items-center justify-center min-h-[60vh]">
                         <div
                           className="text-center w-full max-w-xs mx-auto px-4"
                           style={{ fontFamily: "Urbanist, system-ui, sans-serif" }}
