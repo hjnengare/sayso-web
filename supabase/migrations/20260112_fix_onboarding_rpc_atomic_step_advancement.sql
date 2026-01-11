@@ -9,6 +9,9 @@
 -- 1. UPDATE replace_user_interests TO ADVANCE STEP
 -- =============================================
 
+-- Drop existing function to allow return type change
+DROP FUNCTION IF EXISTS public.replace_user_interests(UUID, TEXT[]);
+
 CREATE OR REPLACE FUNCTION public.replace_user_interests(
   p_user_id UUID,
   p_interest_ids TEXT[]
@@ -69,6 +72,9 @@ $$;
 -- =============================================
 -- 2. UPDATE replace_user_subcategories TO ADVANCE STEP
 -- =============================================
+
+-- Drop existing function to allow return type change
+DROP FUNCTION IF EXISTS public.replace_user_subcategories(UUID, JSONB[]);
 
 CREATE OR REPLACE FUNCTION public.replace_user_subcategories(
   p_user_id UUID,
@@ -134,6 +140,9 @@ $$;
 -- =============================================
 -- 3. UPDATE replace_user_dealbreakers TO ADVANCE STEP AND COMPLETE
 -- =============================================
+
+-- Drop existing function to allow return type change
+DROP FUNCTION IF EXISTS public.replace_user_dealbreakers(UUID, TEXT[]);
 
 CREATE OR REPLACE FUNCTION public.replace_user_dealbreakers(
   p_user_id UUID,
