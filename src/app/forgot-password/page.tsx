@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Fontdiner_Swanky } from "next/font/google";
+import { Urbanist } from "next/font/google";
 import { ArrowLeft } from "react-feather";
 import { AuthService } from "../lib/auth";
 import { useToast } from "../contexts/ToastContext";
@@ -15,8 +15,8 @@ import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
 import { authStyles } from "../components/Auth/Shared/authStyles";
 import { EmailInput } from "../components/Auth/Shared/EmailInput";
 
-const swanky = Fontdiner_Swanky({
-  weight: "400",
+const urbanist = Urbanist({
+  weight: ["400", "600", "700", "800"],
   subsets: ["latin"],
   display: "swap",
 });
@@ -129,13 +129,13 @@ export default function ForgotPasswordPage() {
               <WavyTypedTitle
                 text="Check your email"
                 as="h2"
-                className={`${swanky.className} text-3xl md:text-4xl font-semibold mb-2 text-center leading-[1.2] px-2 tracking-tight text-charcoal`}
+                className={`${urbanist.className} text-3xl md:text-4xl font-semibold mb-2 text-center leading-[1.2] px-2 tracking-tight text-charcoal`}
                 typingSpeedMs={40}
                 startDelayMs={300}
                 waveVariant="subtle"
                 loopWave={false}
                 style={{ 
-                  fontFamily: swanky.style.fontFamily,
+                  fontFamily: urbanist.style.fontFamily,
                 }}
               />
             </div>
@@ -236,13 +236,13 @@ export default function ForgotPasswordPage() {
             <WavyTypedTitle
               text="Forgot password?"
               as="h2"
-              className={`${swanky.className} text-3xl md:text-4xl font-semibold mb-2 text-center leading-[1.2] px-2 tracking-tight text-charcoal`}
+              className={`${urbanist.className} text-3xl md:text-4xl font-semibold mb-2 text-center leading-[1.2] px-2 tracking-tight text-charcoal`}
               typingSpeedMs={40}
               startDelayMs={300}
               waveVariant="subtle"
               loopWave={false}
               style={{ 
-                fontFamily: swanky.style.fontFamily,
+                fontFamily: urbanist.style.fontFamily,
               }}
             />
           </div>

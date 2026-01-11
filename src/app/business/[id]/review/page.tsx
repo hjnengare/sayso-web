@@ -3,7 +3,7 @@
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
-import { Fontdiner_Swanky } from "next/font/google";
+import { Urbanist } from "next/font/google";
 import { Edit, Star, ChevronUp, Info, ChevronRight } from "react-feather";
 import Link from "next/link";
 import confetti from "canvas-confetti";
@@ -20,8 +20,8 @@ import Header from "../../../components/Header/Header";
 import AnimatedElement from "../../../components/Animations/AnimatedElement";
 import WavyTypedTitle from "../../../../components/Animations/WavyTypedTitle";
 
-const swanky = Fontdiner_Swanky({
-  weight: "400",
+const urbanist = Urbanist({
+  weight: ["400", "600", "700", "800"],
   subsets: ["latin"],
   display: "swap",
 });
@@ -570,14 +570,14 @@ function WriteReviewContent() {
                             <WavyTypedTitle
                               text="What Others Are Saying"
                               as="h2"
-                              className={`${swanky.className} text-h3 font-semibold text-charcoal border-b border-charcoal/10 pt-4 pb-2`}
+                              className={`${urbanist.className} text-h3 font-semibold text-charcoal border-b border-charcoal/10 pt-4 pb-2`}
                               typingSpeedMs={40}
                               startDelayMs={300}
                               waveVariant="subtle"
                               loopWave={true}
                               disableWave={true}
                               style={{ 
-                                fontFamily: swanky.style.fontFamily,
+                                fontFamily: urbanist.style.fontFamily,
                               }}
                             />
                           </div>

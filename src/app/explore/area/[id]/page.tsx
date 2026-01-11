@@ -9,10 +9,10 @@ import BusinessCard from "../../../components/BusinessCard/BusinessCard";
 import { useBusinesses } from "../../../hooks/useBusinesses";
 import { Loader } from "../../../components/Loader/Loader";
 import { ChevronLeft, ChevronRight, MapPin } from "react-feather";
-import { Fontdiner_Swanky } from "next/font/google";
+import { Urbanist } from "next/font/google";
 
-const swanky = Fontdiner_Swanky({
-  weight: "400",
+const urbanist = Urbanist({
+  weight: ["400", "600", "700", "800"],
   subsets: ["latin"],
   display: "swap",
 });
@@ -124,8 +124,8 @@ function AreaDetailContent() {
                 </div>
                 <div className="text-center">
                   <h1 
-                    className={`${swanky.className} text-2xl sm:text-3xl md:text-4xl font-semibold leading-[1.2] tracking-tight text-charcoal`}
-                    style={{ fontFamily: swanky.style.fontFamily }}
+                    className={`${urbanist.className} text-2xl sm:text-3xl md:text-4xl font-semibold leading-[1.2] tracking-tight text-charcoal`}
+                    style={{ fontFamily: urbanist.style.fontFamily }}
                   >
                     {area.name}
                   </h1>

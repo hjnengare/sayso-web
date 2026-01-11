@@ -33,7 +33,7 @@ import Header from "../components/Header/Header";
 import dynamic from "next/dynamic";
 import { getBrowserSupabase } from "../lib/supabase/client";
 import { authStyles } from "../components/Auth/Shared/authStyles";
-import { Fontdiner_Swanky } from "next/font/google";
+import { Urbanist } from "next/font/google";
 import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
 import { STORAGE_BUCKETS } from "../lib/utils/storageBucketConfig";
 
@@ -42,8 +42,8 @@ const LocationPicker = dynamic(() => import("../components/AddBusiness/LocationP
     loading: () => null,
 });
 
-const swanky = Fontdiner_Swanky({
-    weight: "400",
+const urbanist = Urbanist({
+    weight: ["400", "600", "700", "800"],
     subsets: ["latin"],
     display: "swap",
 });
@@ -740,7 +740,7 @@ export default function AddBusinessPage() {
                                             <WavyTypedTitle
                                                 text="Add Your Business"
                                                 as="h1"
-                                                className={`${swanky.className} text-2xl sm:text-3xl font-semibold mb-2 text-center leading-[1.2] tracking-tight text-charcoal`}
+                                                className={`${urbanist.className} text-2xl sm:text-3xl font-semibold mb-2 text-center leading-[1.2] tracking-tight text-charcoal`}
                                                 typingSpeedMs={40}
                                                 startDelayMs={300}
                                                 waveVariant="subtle"
@@ -748,7 +748,7 @@ export default function AddBusinessPage() {
                                                 triggerOnTypingComplete={true}
                                                 enableScrollTrigger={false}
                                                 style={{ 
-                                                    fontFamily: swanky.style.fontFamily,
+                                                    fontFamily: urbanist.style.fontFamily,
                                                 }}
                                             />
                                         </div>

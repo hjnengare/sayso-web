@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Fontdiner_Swanky } from "next/font/google";
+import { Urbanist } from "next/font/google";
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { usePrefersReducedMotion } from '../utils/hooks/usePrefersReducedMotion';
@@ -11,8 +11,8 @@ import { Mail, CheckCircle, ExternalLink, ArrowLeft } from 'react-feather';
 import { Loader as AppLoader } from '../components/Loader';
 import WavyTypedTitle from '../../components/Animations/WavyTypedTitle';
 
-const swanky = Fontdiner_Swanky({
-  weight: "400",
+const urbanist = Urbanist({
+  weight: ["400", "600", "700", "800"],
   subsets: ["latin"],
   display: "swap",
 });
@@ -444,13 +444,13 @@ export default function VerifyEmailPage() {
               <WavyTypedTitle
                 text="Check Your Email"
                 as="h2"
-                className={`${swanky.className} text-3xl md:text-4xl font-semibold mb-2 text-center leading-[1.2] px-2 tracking-tight text-charcoal`}
+                className={`${urbanist.className} text-3xl md:text-4xl font-semibold mb-2 text-center leading-[1.2] px-2 tracking-tight text-charcoal`}
                 typingSpeedMs={40}
                 startDelayMs={300}
                 waveVariant="subtle"
                 loopWave={false}
                 style={{ 
-                  fontFamily: swanky.style.fontFamily,
+                  fontFamily: urbanist.style.fontFamily,
                 }}
               />
             </div>

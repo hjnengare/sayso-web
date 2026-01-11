@@ -354,7 +354,7 @@ export const WavyTypedTitle: React.FC<WavyTypedTitleProps> = ({
         aria-label={text}
         style={{
           // CRITICAL: Apply style prop FIRST - fontFamily must be set immediately (before typing)
-          // This ensures Swanky font is applied from the very start
+          // This ensures Urbanist font is applied from the very start
           ...(style || {}),
         }}
       >
@@ -394,7 +394,7 @@ export const WavyTypedTitle: React.FC<WavyTypedTitleProps> = ({
                   willChange: shouldAnimate ? "transform" : "auto",
                   // Preserve space width even when hidden
                   minWidth: isSpace ? "0.25em" : "auto",
-                  // CRITICAL: Inherit font from parent Component - ensures Swanky is applied from start
+                  // CRITICAL: Inherit font from parent Component - ensures Urbanist is applied from start
                   fontFamily: "inherit",
                 }}
               >

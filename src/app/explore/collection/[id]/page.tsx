@@ -10,10 +10,10 @@ import { useBusinesses } from "../../../hooks/useBusinesses";
 import BusinessGridSkeleton from "../../../components/Explore/BusinessGridSkeleton";
 import { ChevronLeft, ChevronRight } from "react-feather";
 import { Laptop, Heart, DollarSign, Moon } from "lucide-react";
-import { Fontdiner_Swanky } from "next/font/google";
+import { Urbanist } from "next/font/google";
 
-const swanky = Fontdiner_Swanky({
-  weight: "400",
+const urbanist = Urbanist({
+  weight: ["400", "600", "700", "800"],
   subsets: ["latin"],
   display: "swap",
 });
@@ -166,8 +166,8 @@ function CollectionDetailContent() {
                 </div>
                 <div>
                   <h1
-                    className={`${swanky.className} text-2xl sm:text-3xl md:text-4xl font-semibold leading-[1.2] tracking-tight text-charcoal`}
-                    style={{ fontFamily: swanky.style.fontFamily }}
+                    className={`${urbanist.className} text-2xl sm:text-3xl md:text-4xl font-semibold leading-[1.2] tracking-tight text-charcoal`}
+                    style={{ fontFamily: urbanist.style.fontFamily }}
                   >
                     {collection.title}
                   </h1>

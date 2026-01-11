@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS public.badges (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   description TEXT NOT NULL,
+  
   badge_group TEXT NOT NULL CHECK (badge_group IN ('milestone', 'category_explorer', 'category_specialist', 'community', 'personality')),
   category_key TEXT NULL, -- Only for category-specific badges (e.g., 'food-drink', 'shopping')
   rule_type TEXT NOT NULL CHECK (rule_type IN (
@@ -90,6 +91,14 @@ CREATE INDEX IF NOT EXISTS idx_user_badge_progress_badge_id ON public.user_badge
 ALTER TABLE public.badges ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_badges ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_badge_progress ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Anyone can read badges" ON public.badges;
+DROP POLICY IF EXISTS "Users can read their own badges" ON public.user_badges;
+DROP POLICY IF EXISTS "No direct insert to user_badges" ON public.user_badges;
+DROP POLICY IF EXISTS "Users can read their own badge progress" ON public.user_badge_progress;
+DROP POLICY IF EXISTS "No direct insert/update to user_badge_progress" ON public.user_badge_progress;
+DROP POLICY IF EXISTS "No direct update to user_badge_progress" ON public.user_badge_progress;
 
 -- Badges: Public read access
 CREATE POLICY "Anyone can read badges"

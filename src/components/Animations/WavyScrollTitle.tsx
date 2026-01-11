@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import WavyTypedTitle from "./WavyTypedTitle";
-import { Fontdiner_Swanky } from "next/font/google";
+import { Urbanist } from "next/font/google";
 
-const swanky = Fontdiner_Swanky({
-  weight: "400",
+const urbanist = Urbanist({
+  weight: ["400", "600", "700", "800"],
   subsets: ["latin"],
   display: "swap",
 });
@@ -112,7 +112,7 @@ export const WavyScrollTitle: React.FC<WavyScrollTitleProps> = ({
         className={className}
         style={{
           ...style,
-          fontFamily: swanky.style.fontFamily,
+          fontFamily: urbanist.style.fontFamily,
         }}
       >
         {text}
