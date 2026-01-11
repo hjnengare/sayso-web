@@ -106,24 +106,28 @@ export default function CategoryFilterPills({
     <div className="relative">
       {/* Left Scroll Indicator - Hidden on mobile */}
       {showLeftScroll && !isMobile && (
-        <button
+        <motion.button
           onClick={scrollLeft}
           className="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 items-center justify-center bg-navbar-bg rounded-full shadow-md hover:shadow-lg transition-all"
           aria-label="Scroll left"
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         >
           <ChevronLeft className="w-5 h-5 text-white" strokeWidth={2.5} />
-        </button>
+        </motion.button>
       )}
 
       {/* Right Scroll Indicator - Hidden on mobile */}
       {showRightScroll && !isMobile && (
-        <button
+        <motion.button
           onClick={scrollRight}
           className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 items-center justify-center bg-navbar-bg rounded-full shadow-md hover:shadow-lg transition-all"
           aria-label="Scroll right"
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         >
           <ChevronRight className="w-5 h-5 text-white" strokeWidth={2.5} />
-        </button>
+        </motion.button>
       )}
 
       <div
