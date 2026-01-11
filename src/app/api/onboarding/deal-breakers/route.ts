@@ -119,6 +119,14 @@ export async function POST(req: Request) {
     }
 
     const writeTime = nodePerformance.now() - writeStart;
+
+    // Fetch fresh state to return to client
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('onboarding_step, onboarding_complete, interests_count, subcategories_count, dealbreakers_count')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
     const totalTime = nodePerformance.now() - startTime;
 
     console.log('[Deal-breakers API] Dealbreakers saved successfully', {
@@ -130,8 +138,12 @@ export async function POST(req: Request) {
 
     const response = NextResponse.json({
       ok: true,
-      dealbreakersCount: validDealbreakers.length,
-      onboarding_step: 'complete', // Return updated step for immediate UI update
+      // Return fresh onboarding state for immediate UI update (no refetch needed)
+      onboarding_step: profile?.onboarding_step || 'complete',
+      onboarding_complete: profile?.onboarding_complete || false,
+      interests_count: profile?.interests_count || 0,
+      subcategories_count: profile?.subcategories_count || 0,
+      dealbreakers_count: profile?.dealbreakers_count || validDealbreakers.length,
       performance: {
         writeTime: writeTime,
         totalTime: totalTime

@@ -18,6 +18,11 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
   const router = useRouter();
   const pathname = usePathname();
 
+  // Extract stable primitives to prevent re-render loops
+  const userId = user?.id ?? null;
+  const emailVerified = user?.email_verified ?? false;
+  const onboardingComplete = user?.profile?.onboarding_complete ?? false;
+
   // Memoize expensive calculations
   const isOnboardingRoute = useMemo(() =>
     ONBOARDING_STEPS.some(step => pathname === step.path || pathname.startsWith(step.path)),
@@ -51,7 +56,7 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
 
   // Public routes that don't require authentication
   const publicRoutes = useMemo(() => [
-    '/onboarding', '/register', '/login', '/verify-email', 
+    '/onboarding', '/register', '/login', '/verify-email',
     '/forgot-password', '/reset-password', '/auth/callback',
     '/business/verification-status'
   ], []);
@@ -66,7 +71,7 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
     if (isLoading) return;
 
     // CRITICAL: Block unauthenticated users from accessing protected routes
-    if (isProtectedRoute && !isPublicRoute && !user) {
+    if (isProtectedRoute && !isPublicRoute && !userId) {
       console.log('OnboardingGuard: Unauthenticated user trying to access protected route, redirecting to onboarding');
       router.replace('/onboarding');
       return;
@@ -77,20 +82,20 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
 
     // If user is already onboarded and trying to access ANY onboarding route, redirect to home
     // EXCEPT for the complete page, which should be allowed as the final step
-    if (user?.profile?.onboarding_complete && pathname !== "/complete") {
+    if (onboardingComplete && pathname !== "/complete") {
       router.replace("/home");
       return;
     }
 
     // For protected onboarding steps, check email verification
     const protectedSteps = ["/interests", "/subcategories", "/deal-breakers", "/complete"];
-    if (user && protectedSteps.includes(pathname) && !user.email_verified) {
+    if (userId && protectedSteps.includes(pathname) && !emailVerified) {
       router.replace("/verify-email");
       return;
     }
 
     // Allow navigation - middleware and pages handle validation
-  }, [user, isLoading, pathname, router, isOnboardingRoute, isProtectedRoute, isPublicRoute]);
+  }, [userId, emailVerified, onboardingComplete, isLoading, pathname, router, isOnboardingRoute, isProtectedRoute, isPublicRoute]);
 
   useEffect(() => {
     handleNavigation();

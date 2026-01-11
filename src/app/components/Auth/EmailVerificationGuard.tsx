@@ -14,10 +14,10 @@ interface EmailVerificationGuardProps {
   onVerificationRequired?: () => void;
 }
 
-export default function EmailVerificationGuard({ 
-  children, 
+export default function EmailVerificationGuard({
+  children,
   fallback,
-  onVerificationRequired 
+  onVerificationRequired
 }: EmailVerificationGuardProps) {
   const { user, isLoading, updateUser } = useAuth();
   const { showToast } = useToast();
@@ -30,9 +30,14 @@ export default function EmailVerificationGuard({
   // Check both 'email_verified' and 'verified' params to handle different redirect scenarios
   const isVerifiedFromUrl = emailVerifiedParam === 'true' || verifiedParam === '1';
 
+  // Extract stable primitives to prevent re-render loops
+  const userId = user?.id ?? null;
+  const userEmail = user?.email ?? null;
+  const emailVerified = user?.email_verified ?? false;
+
   // Force refresh user state if we detect verification from URL
   useEffect(() => {
-    if (isVerifiedFromUrl && user && !user.email_verified) {
+    if (isVerifiedFromUrl && userId && !emailVerified) {
       // Optimistically update user state
       AuthService.getCurrentUser().then(freshUser => {
         if (freshUser?.email_verified) {
@@ -43,7 +48,7 @@ export default function EmailVerificationGuard({
       });
     }
     // Also refresh if we have verified param but user state hasn't updated yet
-    if ((verifiedParam === '1' || emailVerifiedParam === 'true') && user && !user.email_verified) {
+    if ((verifiedParam === '1' || emailVerifiedParam === 'true') && userId && !emailVerified) {
       // Refresh user state to get latest verification status
       AuthService.getCurrentUser().then(freshUser => {
         if (freshUser?.email_verified) {
@@ -53,20 +58,18 @@ export default function EmailVerificationGuard({
         // Silently fail - will be handled by normal flow
       });
     }
-  }, [isVerifiedFromUrl, user, updateUser, verifiedParam, emailVerifiedParam]);
+  }, [isVerifiedFromUrl, userId, emailVerified, updateUser, verifiedParam, emailVerifiedParam]);
 
   // More accurate user existence check - check if we have user data, not just the object
-  const userExists = !!(user && (user.email || user.id));
-  
+  const userExists = !!(userId || userEmail);
+
   console.log('EmailVerificationGuard: Checking access', {
     user_exists: userExists,
-    user_object_exists: !!user,
-    user_id: user?.id,
-    email: user?.email,
-    email_verified: user?.email_verified,
+    user_id: userId,
+    email: userEmail,
+    email_verified: emailVerified,
     isVerifiedFromUrl,
-    isLoading,
-    user_type: user ? typeof user : 'null'
+    isLoading
   });
 
   // Show loading only briefly - don't block if we have URL verification signal
@@ -83,15 +86,13 @@ export default function EmailVerificationGuard({
 
   // If user is not logged in, show children (they'll be handled by ProtectedRoute)
   // Check both user object existence and if it has essential data
-  if (!user || (!user.email && !user.id)) {
-    console.log('EmailVerificationGuard: No user or incomplete user data, allowing access (ProtectedRoute will handle)', {
-      user: user ? { id: user.id, email: user.email } : null
-    });
+  if (!userId && !userEmail) {
+    console.log('EmailVerificationGuard: No user or incomplete user data, allowing access (ProtectedRoute will handle)');
     return <>{children}</>;
   }
 
   // If email is verified (from user state or URL param), show children immediately
-  if (user.email_verified || isVerifiedFromUrl) {
+  if (emailVerified || isVerifiedFromUrl) {
     console.log('EmailVerificationGuard: Email verified, allowing access');
     return <>{children}</>;
   }
@@ -99,12 +100,12 @@ export default function EmailVerificationGuard({
   // If email is not verified, show verification prompt
   console.log('EmailVerificationGuard: Email not verified, blocking access');
   const handleResendVerification = async () => {
-    if (!user.email) return;
+    if (!userEmail) return;
 
     setIsResending(true);
     try {
-      const { error } = await AuthService.resendVerificationEmail(user.email);
-      
+      const { error } = await AuthService.resendVerificationEmail(userEmail);
+
       if (error) {
         showToast(error.message, 'error');
       } else {
@@ -137,7 +138,7 @@ export default function EmailVerificationGuard({
 
           {/* Description */}
           <p className="font-urbanist text-sm text-charcoal/70 mb-6 leading-relaxed">
-            We've sent a verification link to <span className="font-600 text-charcoal">{user.email}</span>. 
+            We've sent a verification link to <span className="font-600 text-charcoal">{userEmail}</span>. 
             Please check your email and click the link to verify your account.
           </p>
 

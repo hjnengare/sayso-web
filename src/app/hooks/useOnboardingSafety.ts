@@ -8,14 +8,14 @@
  */
 
 import { useRef, useCallback, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { apiClient } from '../lib/api/apiClient';
 
 interface UseOnboardingSafetyOptions {
   timeout?: number; // Network timeout in ms (default: 30000)
   preventDoubleSubmit?: boolean; // Prevent rapid clicks (default: true)
-  checkSessionOnMount?: boolean; // Check session validity on mount (default: true)
+  checkSessionOnMount?: boolean; // Check session validity on mount (default: false - changed default)
 }
 
 interface UseOnboardingSafetyReturn {
@@ -35,13 +35,16 @@ export function useOnboardingSafety(
   const {
     timeout = 30000,
     preventDoubleSubmit: enablePreventDoubleSubmit = true,
-    checkSessionOnMount = true,
+    checkSessionOnMount = false, // Changed default to false
   } = options;
 
   const isMountedRef = useRef(true);
   const isSubmittingRef = useRef(false);
+  const hasCheckedSessionRef = useRef(false);
   const router = useRouter();
-  const { user, refreshUser } = useAuth();
+  const pathname = usePathname();
+  const { user } = useAuth();
+  const userId = user?.id ?? null; // Stable primitive
 
   // Track component mount state
   useEffect(() => {
@@ -51,14 +54,51 @@ export function useOnboardingSafety(
     };
   }, []);
 
-  // Check session on mount
+  // Check session ONCE per route change (not on every user object change)
   useEffect(() => {
-    if (checkSessionOnMount && user) {
-      checkSession().catch((error) => {
-        console.error('[useOnboardingSafety] Session check failed:', error);
-      });
+    if (!checkSessionOnMount || !userId) {
+      return;
     }
-  }, [checkSessionOnMount, user]);
+
+    // Only check if we haven't checked for this route yet
+    if (hasCheckedSessionRef.current) {
+      return;
+    }
+
+    hasCheckedSessionRef.current = true;
+
+    // Reset on route change
+    const checkSessionOnce = async () => {
+      try {
+        await apiClient.fetch(
+          '/api/user/onboarding',
+          {
+            method: 'GET',
+            signal: AbortSignal.timeout(10000), // Increased to 10s
+          },
+          {
+            useCache: false,
+          }
+        );
+      } catch (error: any) {
+        const errorMessage = error?.message || '';
+
+        if (errorMessage.includes('401')) {
+          console.warn('[useOnboardingSafety] Session expired');
+          router.replace('/login');
+        } else if (error.name !== 'AbortError' && !errorMessage.includes('timeout')) {
+          console.warn('[useOnboardingSafety] Session check failed:', errorMessage);
+        }
+      }
+    };
+
+    checkSessionOnce();
+
+    // Reset check flag when route changes
+    return () => {
+      hasCheckedSessionRef.current = false;
+    };
+  }, [pathname, userId, checkSessionOnMount, router]); // ✅ Only pathname and userId (stable)
 
   // Safe state setter (only if mounted)
   const isMounted = useCallback(() => {
@@ -115,38 +155,30 @@ export function useOnboardingSafety(
     [enablePreventDoubleSubmit]
   );
 
-  // Check session validity
+  // Check session validity (manual call only, not automatic)
   const checkSession = useCallback(async (): Promise<boolean> => {
     try {
-      if (!user) {
+      if (!userId) {
         return false;
       }
 
       // Check if session is still valid by making a lightweight API call
-      // Use shared API client with short cache (session checks should be fresh)
       try {
         await apiClient.fetch(
           '/api/user/onboarding',
           {
             method: 'GET',
-            signal: AbortSignal.timeout(5000), // 5s timeout for session check
+            signal: AbortSignal.timeout(10000), // 10s timeout
           },
           {
-            ttl: 2000, // 2 second cache (short for session checks)
             useCache: false, // Don't cache session checks
-            cacheKey: '/api/user/onboarding-session-check',
           }
         );
-
-        // Refresh user data if needed
-        if (refreshUser) {
-          await refreshUser();
-        }
 
         return true;
       } catch (fetchError: any) {
         const errorMessage = fetchError?.message || '';
-        
+
         if (errorMessage.includes('401')) {
           console.warn('[useOnboardingSafety] Session expired');
           router.replace('/login');
@@ -165,7 +197,7 @@ export function useOnboardingSafety(
       console.error('[useOnboardingSafety] Session check error:', error);
       return false;
     }
-  }, [user, router, refreshUser]);
+  }, [userId, router]);
 
   // Handle beforeunload warning
   const handleBeforeUnload = useCallback(
@@ -196,4 +228,3 @@ export function useOnboardingSafety(
     handleBeforeUnload,
   };
 }
-

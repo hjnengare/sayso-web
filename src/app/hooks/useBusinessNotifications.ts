@@ -193,5 +193,5 @@ export function useBusinessNotifications() {
         console.log('🔌 Unsubscribed from reviews notifications');
       }
     };
-  }, [showToast]);
+  }, []); // ✅ Empty deps - subscribe once on mount, global subscriptions don't need user context
 }
