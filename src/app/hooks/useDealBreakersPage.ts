@@ -167,11 +167,13 @@ export function useDealBreakersPage(): UseDealBreakersPageReturn {
       if (payload && typeof payload === 'object') {
         try {
           await updateUser({
-            onboarding_step: payload.onboarding_step,
-            onboarding_complete: payload.onboarding_complete,
-            interests_count: payload.interests_count,
-            subcategories_count: payload.subcategories_count,
-            dealbreakers_count: payload.dealbreakers_count,
+            profile: {
+              onboarding_step: payload.onboarding_step,
+              onboarding_complete: payload.onboarding_complete,
+              interests_count: payload.interests_count,
+              subcategories_count: payload.subcategories_count,
+              dealbreakers_count: payload.dealbreakers_count,
+            } as any
           });
           console.log('[useDealBreakersPage] User profile updated from API response:', {
             onboarding_step: payload.onboarding_step,
