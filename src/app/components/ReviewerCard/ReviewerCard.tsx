@@ -9,6 +9,7 @@ import ReviewerStats from "./ReviewerStats";
 import ReviewContent from "./ReviewContent";
 import VerifiedBadge from "../VerifiedBadge/VerifiedBadge";
 import { motion, useReducedMotion } from "framer-motion";
+import BadgePill, { BadgePillData } from "../Badges/BadgePill";
 
 // Generate a unique color for each badge based on reviewer ID
 // This ensures every badge has a different color
@@ -118,6 +119,7 @@ export default function ReviewerCard({
   const [isHovered, setIsHovered] = useState(false);
   const prefersReducedMotion = useReducedMotion();
   const [isMobile, setIsMobile] = useState(true);
+  const [userBadges, setUserBadges] = useState<BadgePillData[]>([]);
 
   // Check if mobile for animation
   useEffect(() => {
@@ -128,6 +130,44 @@ export default function ReviewerCard({
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Fetch user's badges (top 2 most relevant)
+  useEffect(() => {
+    if (!reviewerData?.id) return;
+
+    async function fetchUserBadges() {
+      try {
+        const response = await fetch(`/api/badges/user?user_id=${reviewerData.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          // Get earned badges only
+          const earnedBadges = (data.badges || [])
+            .filter((b: any) => b.earned)
+            .map((b: any) => ({
+              id: b.id,
+              name: b.name,
+              icon_path: b.icon_path,
+              badge_group: b.badge_group,
+            }));
+
+          // Prioritize: milestone > specialist > explorer > community
+          const priorityOrder = ['milestone', 'specialist', 'explorer', 'community'];
+          const sortedBadges = earnedBadges.sort((a: any, b: any) => {
+            const aIndex = priorityOrder.indexOf(a.badge_group);
+            const bIndex = priorityOrder.indexOf(b.badge_group);
+            return aIndex - bIndex;
+          });
+
+          // Take top 2
+          setUserBadges(sortedBadges.slice(0, 2));
+        }
+      } catch (err) {
+        console.error('Error fetching user badges:', err);
+      }
+    }
+
+    fetchUserBadges();
+  }, [reviewerData?.id]);
 
   // Animation variants
   const cardInitial = prefersReducedMotion
@@ -258,43 +298,16 @@ export default function ReviewerCard({
             )}
 
             {/* Badges with entrance animation */}
-            <div className="mt-auto flex items-center justify-between">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                {reviewerData?.badge && (
-                  <div className="flex items-center gap-1.5">
-                    <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${getUniqueBadgeColor(reviewerData?.id || '', reviewerData.badge)} flex items-center justify-center flex-shrink-0`}>
-                      {(() => {
-                        const BadgeIcon = getBadgeIcon(reviewerData.badge);
-                        return <BadgeIcon className="w-4 h-4 text-charcoal/70" strokeWidth={2.5} />;
-                      })()}
-                    </div>
-                    <span className="sr-only">
-                      {reviewerData.badge === "top"
-                        ? "Top"
-                        : reviewerData.badge === "verified"
-                        ? "Verified"
-                        : "Local"}
-                    </span>
-                  </div>
-                )}
-
-                {reviewerData?.trophyBadge && (
-                  <div className="flex items-center gap-1.5">
-                    <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${getUniqueBadgeColor(reviewerData?.id || '', reviewerData.trophyBadge)} flex items-center justify-center flex-shrink-0`}>
-                      {(() => {
-                        const TrophyIcon = getTrophyBadgeIcon(reviewerData.trophyBadge);
-                        return <TrophyIcon className="w-4 h-4 text-charcoal/70" strokeWidth={2.5} />;
-                      })()}
-                    </div>
-                    <span className="sr-only">
-                      {reviewerData.trophyBadge}
-                    </span>
-                  </div>
-                )}
+            <div className="mt-auto flex items-center justify-between gap-2">
+              {/* User's earned badges from badge system */}
+              <div className="flex items-center gap-1.5 flex-wrap flex-1 min-w-0">
+                {userBadges.map((badge) => (
+                  <BadgePill key={badge.id} badge={badge} size="sm" />
+                ))}
               </div>
 
               {/* Card Actions - always visible on mobile, slide-up on desktop */}
-              <div className="flex gap-1.5 transition-all duration-500 ease-out md:translate-y-4 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100">
+              <div className="flex gap-1.5 transition-all duration-500 ease-out md:translate-y-4 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100 flex-shrink-0">
                 <button
                   className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 w-11 h-11 sm:w-8 sm:h-8 bg-navbar-bg rounded-full flex items-center justify-center hover:bg-navbar-bg/90 hover:scale-110 active:scale-95 transition-all duration-300 touch-manipulation shadow-md"
                   onClick={(e) => {

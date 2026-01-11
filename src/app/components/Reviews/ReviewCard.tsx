@@ -12,6 +12,7 @@ import { useReviewSubmission } from '../../hooks/useReviews';
 import { useSavedItems } from '../../contexts/SavedItemsContext';
 import { getDisplayUsername } from '../../utils/generateUsername';
 import { ConfirmationDialog } from '../../../components/molecules/ConfirmationDialog/ConfirmationDialog';
+import BadgePill, { BadgePillData } from '../Badges/BadgePill';
 
 interface ReviewCardProps {
   review: ReviewWithUser;
@@ -72,6 +73,44 @@ export default function ReviewCard({
   const [showDeleteReplyDialog, setShowDeleteReplyDialog] = useState(false);
   const [replyToDelete, setReplyToDelete] = useState<string | null>(null);
   const replyFormRef = useRef<HTMLDivElement>(null);
+  const [userBadges, setUserBadges] = useState<BadgePillData[]>([]);
+
+  // Fetch user's badges (top 2 most relevant)
+  useEffect(() => {
+    if (!review.user_id) return;
+
+    async function fetchUserBadges() {
+      try {
+        const response = await fetch(`/api/badges/user?user_id=${review.user_id}`);
+        if (response.ok) {
+          const data = await response.json();
+          // Get earned badges only
+          const earnedBadges = (data.badges || [])
+            .filter((b: any) => b.earned)
+            .map((b: any) => ({
+              id: b.id,
+              name: b.name,
+              icon_path: b.icon_path,
+            }));
+
+          // Prioritize: milestone > specialist > explorer > community
+          const priorityOrder = ['milestone', 'specialist', 'explorer', 'community'];
+          const sortedBadges = earnedBadges.sort((a: any, b: any) => {
+            const aIndex = priorityOrder.indexOf(a.badge_group);
+            const bIndex = priorityOrder.indexOf(b.badge_group);
+            return aIndex - bIndex;
+          });
+
+          // Take top 2
+          setUserBadges(sortedBadges.slice(0, 2));
+        }
+      } catch (err) {
+        console.error('Error fetching user badges:', err);
+      }
+    }
+
+    fetchUserBadges();
+  }, [review.user_id]);
 
   // Fetch helpful status and count on mount
   useEffect(() => {
