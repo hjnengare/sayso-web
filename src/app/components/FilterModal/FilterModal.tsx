@@ -101,6 +101,27 @@ export default function FilterModal({
     };
   }, [isVisible, updatePosition]);
 
+  // Scroll modal into view when it opens
+  useEffect(() => {
+    if (!isVisible || !isOpen) return;
+
+    // Small delay to ensure modal is rendered and positioned
+    const timer = setTimeout(() => {
+      const anchor = anchorRef?.current;
+      if (anchor) {
+        // Scroll to anchor element with some padding
+        const rect = anchor.getBoundingClientRect();
+        const scrollTop = window.scrollY + rect.top - 20; // 20px padding from top
+        window.scrollTo({
+          top: scrollTop,
+          behavior: 'smooth'
+        });
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [isVisible, isOpen, anchorRef]);
+
   // Body scroll lock when modal is open
   useEffect(() => {
     if (!isVisible || !isOpen) return;
@@ -219,10 +240,8 @@ export default function FilterModal({
           left: style.left,
           width: style.width || (typeof window !== 'undefined' ? `calc(100vw - 32px)` : 400),
           maxWidth: "calc(100vw - 32px)", // 16px padding on each side
-          // Reserve space at the bottom - more generous height to ensure content is visible
-          maxHeight: typeof window !== 'undefined' && window.innerWidth < 768
-            ? `calc(100vh - ${style.top + 20}px - env(safe-area-inset-bottom, 0px))`
-            : `calc(100vh - ${style.top + 20}px)`, // More space on all screens
+          height: "50dvh",
+          maxHeight: "50dvh",
           display: 'flex',
           flexDirection: 'column',
           outline: "none",
@@ -251,12 +270,8 @@ export default function FilterModal({
         {/* body */}
         <div
           className="px-4 sm:px-5 md:px-6 py-4 space-y-3 sm:space-y-4 overflow-y-auto overscroll-contain flex-1 min-h-0"
-          style={{ 
+          style={{
             WebkitOverflowScrolling: 'touch',
-            // More generous height calculation - reserve space for header (~60px) and footer (~80px)
-            maxHeight: typeof window !== 'undefined' && window.innerWidth < 768
-              ? 'calc(100vh - 140px - env(safe-area-inset-bottom, 0px))'
-              : 'calc(100vh - 140px)',
           }}
           onWheel={(e) => {
             // Prevent scroll propagation to body
