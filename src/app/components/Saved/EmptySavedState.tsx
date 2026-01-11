@@ -25,7 +25,6 @@ export default function EmptySavedState() {
       y: 0,
       transition: {
         duration: 0.5,
-        ease: "easeOut",
       },
     },
   };
@@ -37,7 +36,6 @@ export default function EmptySavedState() {
       scale: 1,
       transition: {
         duration: 0.4,
-        ease: "easeOut",
       },
     },
   };

@@ -209,7 +209,6 @@ function LeaderboardPage() {
       y: 0,
       transition: {
         duration: 0.5,
-        ease: [0.16, 1, 0.3, 1],
       },
     },
   };
@@ -222,7 +221,6 @@ function LeaderboardPage() {
       y: 0,
       transition: {
         duration: 0.6,
-        ease: [0.16, 1, 0.3, 1],
       },
     },
     exit: {
@@ -231,7 +229,6 @@ function LeaderboardPage() {
       y: -20,
       transition: {
         duration: 0.3,
-        ease: [0.16, 1, 0.3, 1],
       },
     },
   };
