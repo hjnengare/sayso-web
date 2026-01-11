@@ -673,6 +673,8 @@ export async function GET(req: Request) {
           sub_interest_id: b.sub_interest_id,
           latitude: b.latitude,
           longitude: b.longitude,
+          lat: b.latitude, // Map for map component
+          lng: b.longitude, // Map for map component
           total_reviews: b.business_stats?.[0]?.total_reviews || 0,
           average_rating: b.business_stats?.[0]?.average_rating || 0,
           percentiles: b.business_stats?.[0]?.percentiles || null,
@@ -1512,6 +1514,8 @@ function normalizeBusinessRows(rows: DatabaseBusinessRow[]): BusinessRPCResult[]
       slug: row.slug,
       latitude: row.latitude,
       longitude: row.longitude,
+      lat: row.latitude, // Map for map component
+      lng: row.longitude, // Map for map component
       created_at: row.created_at,
       updated_at: row.updated_at,
       total_reviews: stats?.total_reviews || 0,

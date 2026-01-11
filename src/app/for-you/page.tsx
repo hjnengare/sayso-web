@@ -13,7 +13,7 @@ import SearchInput from "../components/SearchInput/SearchInput";
 import { FilterState } from "../components/FilterModal/FilterModal";
 import ActiveFilterBadges from "../components/FilterActiveBadges/ActiveFilterBadges";
 import SuggestiveFilters from "../components/SuggestiveFilters/SuggestiveFilters";
-import SearchResultsMap from "../components/BusinessMap/SearchResultsMap";
+import BusinessesMap, { BusinessMapItem } from "../components/maps/BusinessesMap";
 import { List, Map as MapIcon } from "react-feather";
 import { ChevronRight, ChevronUp } from "react-feather";
 import { Loader } from "../components/Loader/Loader";
@@ -129,7 +129,20 @@ export default function ForYouPage() {
 
   const totalCount = useMemo(() => businesses.length, [businesses.length]);
 
-
+  // Convert businesses to map format (filter out null coords)
+  const mapBusinesses = useMemo((): BusinessMapItem[] => {
+    return businesses
+      .filter(b => b.lat != null && b.lng != null)
+      .map(b => ({
+        id: b.id,
+        name: b.name,
+        lat: b.lat!,
+        lng: b.lng!,
+        category: b.category,
+        image_url: b.image_url,
+        slug: b.slug,
+      }));
+  }, [businesses]);
 
   const handleClearFilters = () => {
     // ✅ Reset filter state - return to default mode
@@ -436,12 +449,9 @@ export default function ForYouPage() {
                         transition={{ duration: 0.3 }}
                         className="w-full h-[calc(100vh-300px)] min-h-[500px] rounded-[20px] overflow-hidden border border-white/30 shadow-lg"
                       >
-                        <SearchResultsMap
-                          businesses={businesses}
-                          userLocation={userLocation}
-                          onBusinessClick={(business) => {
-                            window.location.href = `/business/${business.slug || business.id}`;
-                          }}
+                        <BusinessesMap
+                          businesses={mapBusinesses}
+                          className="w-full h-full"
                         />
                       </motion.div>
                     ) : (

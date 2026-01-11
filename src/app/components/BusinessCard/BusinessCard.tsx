@@ -54,6 +54,8 @@ type Business = {
   address?: string;
   amenity?: string;
   tags?: string[];
+  lat?: number; // Latitude for map display
+  lng?: number; // Longitude for map display
 };
 
 const formatCategoryLabel = (value?: string) => {
