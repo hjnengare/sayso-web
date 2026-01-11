@@ -1,8 +1,9 @@
 "use client";
 
 import { useOnboarding } from "../../contexts/OnboardingContext";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import { ChevronLeft, ChevronRight } from "react-feather";
 
 interface CategoryFilterPillsProps {
   selectedCategoryIds: string[]; // Active filters (user-initiated)
@@ -19,6 +20,9 @@ export default function CategoryFilterPills({
   const { interests, loadInterests, isLoading } = useOnboarding();
   const prefersReducedMotion = useReducedMotion();
   const [isMobile, setIsMobile] = useState(true);
+  const [showLeftScroll, setShowLeftScroll] = useState(false);
+  const [showRightScroll, setShowRightScroll] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   
   // Load interests catalog on mount if not already loaded
   useEffect(() => {
@@ -36,7 +40,34 @@ export default function CategoryFilterPills({
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-  
+
+  // Check scroll position and update indicators
+  const checkScroll = () => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const { scrollLeft, scrollWidth, clientWidth } = container;
+    const isScrollable = scrollWidth > clientWidth;
+
+    setShowLeftScroll(isScrollable && scrollLeft > 10);
+    setShowRightScroll(isScrollable && scrollLeft < scrollWidth - clientWidth - 10);
+  };
+
+  // Check scroll on mount and when interests change
+  useEffect(() => {
+    checkScroll();
+    window.addEventListener('resize', checkScroll);
+    return () => window.removeEventListener('resize', checkScroll);
+  }, [interests]);
+
+  const scrollLeft = () => {
+    scrollContainerRef.current?.scrollBy({ left: -200, behavior: 'smooth' });
+  };
+
+  const scrollRight = () => {
+    scrollContainerRef.current?.scrollBy({ left: 200, behavior: 'smooth' });
+  };
+
   const loading = isLoading;
 
   // Show loading skeleton while loading
@@ -72,14 +103,39 @@ export default function CategoryFilterPills({
   }
 
   return (
-    <div
-      className="flex items-center justify-center gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0"
-      style={{
-        WebkitOverflowScrolling: 'touch',
-        scrollBehavior: 'smooth',
-      }}
-    >
-      <div className="flex items-center gap-2 min-w-max">
+    <div className="relative">
+      {/* Left Scroll Indicator - Hidden on mobile */}
+      {showLeftScroll && !isMobile && (
+        <button
+          onClick={scrollLeft}
+          className="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 items-center justify-center bg-gradient-to-r from-off-white to-transparent rounded-full shadow-md hover:shadow-lg transition-all"
+          aria-label="Scroll left"
+        >
+          <ChevronLeft className="w-5 h-5 text-charcoal/70" strokeWidth={2.5} />
+        </button>
+      )}
+
+      {/* Right Scroll Indicator - Hidden on mobile */}
+      {showRightScroll && !isMobile && (
+        <button
+          onClick={scrollRight}
+          className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 items-center justify-center bg-gradient-to-l from-off-white to-transparent rounded-full shadow-md hover:shadow-lg transition-all"
+          aria-label="Scroll right"
+        >
+          <ChevronRight className="w-5 h-5 text-charcoal/70" strokeWidth={2.5} />
+        </button>
+      )}
+
+      <div
+        ref={scrollContainerRef}
+        onScroll={checkScroll}
+        className="flex items-center justify-center gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0"
+        style={{
+          WebkitOverflowScrolling: 'touch',
+          scrollBehavior: 'smooth',
+        }}
+      >
+        <div className="flex items-center gap-2 min-w-max">
         {interests.map((interest, index) => {
           const isActive = selectedCategoryIds.includes(interest.id); // Active filter (user-initiated)
           const isPreferred = preferredCategoryIds.includes(interest.id); // User preference (visual only)
@@ -131,6 +187,7 @@ export default function CategoryFilterPills({
             </motion.button>
           );
         })}
+        </div>
       </div>
     </div>
   );
