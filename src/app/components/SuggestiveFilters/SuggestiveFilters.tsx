@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, MapPin, DollarSign } from "react-feather";
+import { Star, MapPin, X } from "react-feather";
 import { FilterState } from "../FilterModal/FilterModal";
 
 interface SuggestiveFiltersProps {
@@ -13,6 +14,8 @@ export default function SuggestiveFilters({
   filters,
   onUpdateFilter,
 }: SuggestiveFiltersProps) {
+  const [isVisible, setIsVisible] = useState(true);
+
   const ratingOptions = [
     { value: 5, label: "5★ Only", icon: "⭐" },
     { value: 4, label: "4★+", icon: "⭐" },
@@ -52,8 +55,31 @@ export default function SuggestiveFilters({
     },
   };
 
+  // Don't render if user has hidden the suggestions
+  if (!isVisible) return null;
+
+  // Don't render if both filters are already active
+  const hasNoActiveFilters = !filters.minRating && !filters.distance;
+  if (!hasNoActiveFilters) return null;
+
   return (
     <div className="px-4 sm:px-6 py-3">
+      <div className="flex items-center justify-between mb-2">
+        <p
+          className="text-xs font-medium text-charcoal/60 px-1"
+          style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+        >
+          Quick filters
+        </p>
+        <button
+          onClick={() => setIsVisible(false)}
+          className="p-1 rounded-full text-charcoal/40 hover:text-charcoal/70 hover:bg-charcoal/5 transition-colors"
+          aria-label="Hide filter suggestions"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+
       {/* Rating Filters Row */}
       <AnimatePresence>
         {!filters.minRating && (
@@ -65,10 +91,10 @@ export default function SuggestiveFilters({
             className="mb-3"
           >
             <p
-              className="text-xs font-medium text-charcoal/60 mb-2 px-1"
+              className="text-xs font-medium text-charcoal/50 mb-2 px-1"
               style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
             >
-              Filter by rating
+              Rating
             </p>
             <div className="flex flex-wrap gap-2">
               {ratingOptions.map((option) => (
@@ -100,10 +126,10 @@ export default function SuggestiveFilters({
             exit="exit"
           >
             <p
-              className="text-xs font-medium text-charcoal/60 mb-2 px-1"
+              className="text-xs font-medium text-charcoal/50 mb-2 px-1"
               style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
             >
-              Filter by distance
+              Distance
             </p>
             <div className="flex flex-wrap gap-2">
               {distanceOptions.map((option) => (
