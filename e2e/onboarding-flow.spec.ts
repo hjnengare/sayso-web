@@ -1,6 +1,9 @@
 /**
- * E2E tests for complete onboarding workflow
+ * E2E tests for complete onboarding workflow (localStorage-first architecture)
  * Tests the full path: /onboarding → /register → /interests → /subcategories → /deal-breakers → /complete → /home
+ *
+ * Architecture: Selections are stored in localStorage during interests/subcategories/dealbreakers,
+ * then all data is saved to Supabase in a single transaction on the complete page.
  */
 
 import { test, expect } from '@playwright/test';
@@ -14,19 +17,19 @@ test.describe('Onboarding Flow', () => {
   test('should complete full onboarding flow from start to finish', async ({ page }) => {
     // Step 1: Landing page → Register
     await expect(page).toHaveURL(/.*onboarding/);
-    
+
     // Click "Get Started" button
     const getStartedButton = page.getByRole('link', { name: /get started/i });
     await getStartedButton.click();
 
     // Step 2: Registration page
     await expect(page).toHaveURL(/.*register/);
-    
+
     // Fill registration form
     const email = `test-${Date.now()}@example.com`;
     await page.fill('input[name="email"]', email);
     await page.fill('input[name="password"]', 'TestPassword123!');
-    
+
     // Submit registration
     await page.click('button[type="submit"]');
 
@@ -44,48 +47,63 @@ test.describe('Onboarding Flow', () => {
 
     // Step 4: Interests selection (3-6 required)
     await expect(page).toHaveURL(/.*interests/);
-    
-    // Select 3 interests
+
+    // Verify page loads instantly without loader (localStorage-first)
     const interestButtons = page.locator('[data-interest-id]');
+    await expect(interestButtons.first()).toBeVisible({ timeout: 2000 });
+
     const interestCount = await interestButtons.count();
-    
+
     // Select first 3 interests
+    const selectedInterests = [];
     for (let i = 0; i < Math.min(3, interestCount); i++) {
-      await interestButtons.nth(i).click();
+      const button = interestButtons.nth(i);
+      const interestId = await button.getAttribute('data-interest-id');
+      selectedInterests.push(interestId);
+      await button.click();
     }
+
+    // Verify localStorage was updated
+    const localStorageInterests = await page.evaluate(() => {
+      return JSON.parse(localStorage.getItem('onboarding_interests') || '[]');
+    });
+    expect(localStorageInterests.length).toBe(3);
 
     // Verify continue button is enabled
     const continueButton = page.getByTestId('continue-button');
     await expect(continueButton).not.toBeDisabled();
 
-    // Click continue
+    // Click continue - should navigate without API call
     await continueButton.click();
 
     // Step 5: Subcategories selection
     await expect(page).toHaveURL(/.*subcategories/);
-    await expect(page.url()).toContain('interests=');
 
-    // Wait for subcategories to load
+    // Wait for subcategories to load (filtered by selected interests)
     await page.waitForSelector('[data-subcategory-id]', { timeout: 5000 });
 
     // Select at least 1 subcategory
     const subcategoryButtons = page.locator('[data-subcategory-id]');
     const subcategoryCount = await subcategoryButtons.count();
-    
+
     if (subcategoryCount > 0) {
       await subcategoryButtons.first().click();
-      
+
+      // Verify localStorage was updated
+      const localStorageSubcategories = await page.evaluate(() => {
+        return JSON.parse(localStorage.getItem('onboarding_subcategories') || '[]');
+      });
+      expect(localStorageSubcategories.length).toBeGreaterThanOrEqual(1);
+
       // Verify continue button is enabled
       const subcategoryContinueButton = page.getByTestId('continue-button');
       await expect(subcategoryContinueButton).not.toBeDisabled();
-      
+
       await subcategoryContinueButton.click();
     }
 
     // Step 6: Deal-breakers selection
     await expect(page).toHaveURL(/.*deal-breakers/);
-    await expect(page.url()).toContain('interests=');
-    await expect(page.url()).toContain('subcategories=');
 
     // Wait for deal-breakers to load
     await page.waitForSelector('[data-dealbreaker-id]', { timeout: 5000 });
@@ -93,26 +111,42 @@ test.describe('Onboarding Flow', () => {
     // Select at least 1 deal-breaker
     const dealbreakerButtons = page.locator('[data-dealbreaker-id]');
     const dealbreakerCount = await dealbreakerButtons.count();
-    
+
     if (dealbreakerCount > 0) {
       await dealbreakerButtons.first().click();
-      
+
+      // Verify localStorage was updated
+      const localStorageDealbreakers = await page.evaluate(() => {
+        return JSON.parse(localStorage.getItem('onboarding_dealbreakers') || '[]');
+      });
+      expect(localStorageDealbreakers.length).toBeGreaterThanOrEqual(1);
+
       // Verify complete button is enabled
       const completeButton = page.getByTestId('complete-button');
       await expect(completeButton).not.toBeDisabled();
-      
-      // Intercept the API call to verify payload
-      const onboardingRequestPromise = page.waitForRequest(
-        (request) => request.url().includes('/api/user/onboarding') && request.method() === 'POST'
-      );
 
       await completeButton.click();
 
-      // Step 7: Verify API call payload
+      // Step 7: Complete page
+      await expect(page).toHaveURL(/.*complete/, { timeout: 10000 });
+
+      // Wait for "Continue to Home" button
+      const continueToHomeButton = page.getByRole('button', { name: /continue to home/i });
+      await expect(continueToHomeButton).toBeVisible({ timeout: 5000 });
+
+      // Intercept the API call to verify payload (should happen when clicking Continue to Home)
+      const onboardingRequestPromise = page.waitForRequest(
+        (request) => request.url().includes('/api/onboarding/complete') && request.method() === 'POST'
+      );
+
+      // Click "Continue to Home" - this triggers the save to Supabase
+      await continueToHomeButton.click();
+
+      // Step 8: Verify API call payload
       const request = await onboardingRequestPromise;
       const requestBody = request.postDataJSON();
 
-      expect(requestBody).toHaveProperty('step', 'complete');
+      // Verify all data is sent in a single request
       expect(requestBody).toHaveProperty('interests');
       expect(requestBody).toHaveProperty('subcategories');
       expect(requestBody).toHaveProperty('dealbreakers');
@@ -123,38 +157,114 @@ test.describe('Onboarding Flow', () => {
       expect(requestBody.subcategories.length).toBeGreaterThanOrEqual(1);
       expect(requestBody.dealbreakers.length).toBeGreaterThanOrEqual(1);
 
-      // Step 8: Completion page
-      await expect(page).toHaveURL(/.*complete/, { timeout: 10000 });
+      // Step 9: Verify localStorage was cleared after successful save
+      await page.waitForURL(/.*home/, { timeout: 5000 });
 
-      // Step 9: Auto-redirect to home (or manual click)
-      await expect(page).toHaveURL(/.*home/, { timeout: 5000 });
+      const clearedLocalStorage = await page.evaluate(() => {
+        return {
+          interests: localStorage.getItem('onboarding_interests'),
+          subcategories: localStorage.getItem('onboarding_subcategories'),
+          dealbreakers: localStorage.getItem('onboarding_dealbreakers'),
+        };
+      });
+
+      // localStorage should be cleared after successful completion
+      expect(clearedLocalStorage.interests).toBeNull();
+      expect(clearedLocalStorage.subcategories).toBeNull();
+      expect(clearedLocalStorage.dealbreakers).toBeNull();
+    }
+  });
+
+  test('should NOT show loading state on interests page', async ({ page }) => {
+    // Navigate directly to interests page
+    await page.goto('/interests');
+    await expect(page).toHaveURL(/.*interests/);
+
+    // Page should load instantly without showing loader
+    const interestButtons = page.locator('[data-interest-id]');
+
+    // Interests should be visible immediately (no API call, static data)
+    await expect(interestButtons.first()).toBeVisible({ timeout: 1000 });
+
+    // Verify no loader is shown
+    const loader = page.locator('[data-testid="loader"]');
+    await expect(loader).not.toBeVisible();
+  });
+
+  test('should persist selections across page reloads using localStorage', async ({ page }) => {
+    // Navigate to interests page
+    await page.goto('/interests');
+    await expect(page).toHaveURL(/.*interests/);
+
+    // Select 3 interests
+    const interestButtons = page.locator('[data-interest-id]');
+    for (let i = 0; i < 3; i++) {
+      await interestButtons.nth(i).click();
+    }
+
+    // Get selected interest IDs
+    const selectedIds = await page.evaluate(() => {
+      return JSON.parse(localStorage.getItem('onboarding_interests') || '[]');
+    });
+    expect(selectedIds.length).toBe(3);
+
+    // Reload the page
+    await page.reload();
+
+    // Verify selections are still active after reload
+    const reloadedSelections = await page.evaluate(() => {
+      return JSON.parse(localStorage.getItem('onboarding_interests') || '[]');
+    });
+    expect(reloadedSelections).toEqual(selectedIds);
+
+    // Verify UI reflects the persisted selections
+    for (let i = 0; i < 3; i++) {
+      const button = interestButtons.nth(i);
+      await expect(button).toHaveClass(/selected|active/);
     }
   });
 
   test('should validate interests selection limits (3-6)', async ({ page }) => {
-    // Navigate to interests page (assuming already registered/logged in)
+    // Navigate to interests page
     await page.goto('/interests');
     await expect(page).toHaveURL(/.*interests/);
 
     const interestButtons = page.locator('[data-interest-id]');
     const interestCount = await interestButtons.count();
 
-    // Try to select more than 6
-    for (let i = 0; i < Math.min(7, interestCount); i++) {
+    // Select minimum (3)
+    for (let i = 0; i < 3; i++) {
       await interestButtons.nth(i).click();
     }
 
-    // Should show toast for exceeding max
-    // Note: This depends on your toast implementation
+    // Continue button should be enabled
     const continueButton = page.getByTestId('continue-button');
-    
-    // With 6 or fewer, button should be enabled
-    // With 7, should show warning (but test might need adjustment based on UI)
+    await expect(continueButton).not.toBeDisabled();
+
+    // Try to select more than 6
+    for (let i = 3; i < Math.min(7, interestCount); i++) {
+      await interestButtons.nth(i).click();
+    }
+
+    // If 7th was clicked, should show toast warning
+    if (interestCount > 6) {
+      // Toast should be visible (implementation-specific selector)
+      const toast = page.locator('[role="alert"], .toast');
+      await expect(toast).toBeVisible({ timeout: 2000 });
+    }
   });
 
   test('should validate subcategories selection limit (10)', async ({ page }) => {
-    // Navigate to subcategories with interests
-    await page.goto('/subcategories?interests=food-drink,beauty-wellness');
+    // Navigate with pre-selected interests in localStorage
+    await page.goto('/interests');
+
+    // Select interests via localStorage
+    await page.evaluate(() => {
+      localStorage.setItem('onboarding_interests', JSON.stringify(['food-drink', 'beauty-wellness']));
+    });
+
+    // Navigate to subcategories
+    await page.goto('/subcategories');
     await expect(page).toHaveURL(/.*subcategories/);
 
     // Wait for subcategories to load
@@ -172,12 +282,21 @@ test.describe('Onboarding Flow', () => {
     if (subcategoryCount > 10) {
       await subcategoryButtons.nth(10).click();
       // Should show warning toast
+      const toast = page.locator('[role="alert"], .toast');
+      await expect(toast).toBeVisible({ timeout: 2000 });
     }
   });
 
   test('should validate deal-breakers selection limit (3)', async ({ page }) => {
-    // Navigate to deal-breakers with interests and subcategories
-    await page.goto('/deal-breakers?interests=food-drink&subcategories=sushi');
+    // Set up localStorage with interests and subcategories
+    await page.goto('/interests');
+    await page.evaluate(() => {
+      localStorage.setItem('onboarding_interests', JSON.stringify(['food-drink']));
+      localStorage.setItem('onboarding_subcategories', JSON.stringify(['restaurants']));
+    });
+
+    // Navigate to deal-breakers
+    await page.goto('/deal-breakers');
     await expect(page).toHaveURL(/.*deal-breakers/);
 
     // Wait for deal-breakers to load
@@ -195,87 +314,83 @@ test.describe('Onboarding Flow', () => {
     if (dealbreakerCount > 3) {
       await dealbreakerButtons.nth(3).click();
       // Should show warning toast
+      const toast = page.locator('[role="alert"], .toast');
+      await expect(toast).toBeVisible({ timeout: 2000 });
     }
   });
 });
 
-test.describe('Onboarding Regression Guardrails', () => {
-  test('should still land on /complete even if /api/user/onboarding fails', async ({ page }) => {
-    // Navigate to deal-breakers
-    await page.goto('/deal-breakers?interests=food-drink&subcategories=sushi');
-
-    // Intercept and fail the onboarding API call
-    await page.route('/api/user/onboarding', async (route) => {
-      await route.fulfill({
-        status: 500,
-        contentType: 'application/json',
-        body: JSON.stringify({ error: 'Internal server error' }),
-      });
-    });
-
-    // Select a deal-breaker
-    await page.waitForSelector('[data-dealbreaker-id]', { timeout: 5000 });
-    const dealbreakerButtons = page.locator('[data-dealbreaker-id]');
-    if (await dealbreakerButtons.count() > 0) {
-      await dealbreakerButtons.first().click();
-
-      // Click complete button
-      const completeButton = page.getByTestId('complete-button');
-      await expect(completeButton).not.toBeDisabled();
-      await completeButton.click();
-
-      // Should still navigate to /complete page (graceful degradation)
-      await expect(page).toHaveURL(/.*complete/, { timeout: 10000 });
-    }
-  });
-
-  test('should use fallback interests if /api/interests fails', async ({ page }) => {
-    // Intercept and fail the interests API call
-    await page.route('/api/interests', async (route) => {
-      await route.fulfill({
-        status: 500,
-        contentType: 'application/json',
-        body: JSON.stringify({ error: 'Internal server error' }),
-      });
-    });
-
-    // Navigate to interests page
+test.describe('Onboarding Error Handling', () => {
+  test('should handle API failure on complete page gracefully', async ({ page }) => {
+    // Set up localStorage with complete onboarding data
     await page.goto('/interests');
+    await page.evaluate(() => {
+      localStorage.setItem('onboarding_interests', JSON.stringify(['food-drink', 'beauty-wellness', 'professional-services']));
+      localStorage.setItem('onboarding_subcategories', JSON.stringify(['restaurants', 'gyms']));
+      localStorage.setItem('onboarding_dealbreakers', JSON.stringify(['trustworthiness']));
+    });
 
-    // Should still show interests (fallback data)
-    // The page should render with fallback interests
-    await page.waitForSelector('[data-interest-id]', { timeout: 5000 });
-    
-    const interestButtons = page.locator('[data-interest-id]');
-    const interestCount = await interestButtons.count();
-    
-    // Should have fallback interests available
-    expect(interestCount).toBeGreaterThan(0);
+    // Navigate to complete page
+    await page.goto('/complete');
+
+    // Intercept and fail the onboarding complete API call
+    await page.route('/api/onboarding/complete', async (route) => {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: 'Internal server error' }),
+      });
+    });
+
+    // Click "Continue to Home" button
+    const continueButton = page.getByRole('button', { name: /continue to home/i });
+    await continueButton.click();
+
+    // Should show error toast
+    const toast = page.locator('[role="alert"], .toast');
+    await expect(toast).toBeVisible({ timeout: 3000 });
+    await expect(toast).toContainText(/failed|error/i);
+
+    // Should NOT navigate to home page on error
+    await expect(page).toHaveURL(/.*complete/);
+
+    // localStorage should NOT be cleared (so user can retry)
+    const persistedData = await page.evaluate(() => {
+      return {
+        interests: localStorage.getItem('onboarding_interests'),
+        subcategories: localStorage.getItem('onboarding_subcategories'),
+        dealbreakers: localStorage.getItem('onboarding_dealbreakers'),
+      };
+    });
+
+    expect(persistedData.interests).not.toBeNull();
+    expect(persistedData.subcategories).not.toBeNull();
+    expect(persistedData.dealbreakers).not.toBeNull();
   });
 
-  test('should handle network errors gracefully during onboarding completion', async ({ page }) => {
-    // Navigate to deal-breakers
-    await page.goto('/deal-breakers?interests=food-drink&subcategories=sushi');
+  test('should handle network errors gracefully on complete page', async ({ page }) => {
+    // Set up localStorage with complete onboarding data
+    await page.goto('/interests');
+    await page.evaluate(() => {
+      localStorage.setItem('onboarding_interests', JSON.stringify(['food-drink', 'beauty-wellness', 'professional-services']));
+      localStorage.setItem('onboarding_subcategories', JSON.stringify(['restaurants']));
+      localStorage.setItem('onboarding_dealbreakers', JSON.stringify(['trustworthiness']));
+    });
+
+    // Navigate to complete page
+    await page.goto('/complete');
 
     // Intercept and simulate network error
-    await page.route('/api/user/onboarding', async (route) => {
+    await page.route('/api/onboarding/complete', async (route) => {
       await route.abort('failed');
     });
 
-    // Select a deal-breaker
-    await page.waitForSelector('[data-dealbreaker-id]', { timeout: 5000 });
-    const dealbreakerButtons = page.locator('[data-dealbreaker-id]');
-    if (await dealbreakerButtons.count() > 0) {
-      await dealbreakerButtons.first().click();
+    // Click "Continue to Home" button
+    const continueButton = page.getByRole('button', { name: /continue to home/i });
+    await continueButton.click();
 
-      // Click complete button
-      const completeButton = page.getByTestId('complete-button');
-      await expect(completeButton).not.toBeDisabled();
-      await completeButton.click();
-
-      // Should still navigate to /complete page (graceful degradation)
-      await expect(page).toHaveURL(/.*complete/, { timeout: 10000 });
-    }
+    // Should show error message
+    const toast = page.locator('[role="alert"], .toast');
+    await expect(toast).toBeVisible({ timeout: 3000 });
   });
 });
-
