@@ -74,7 +74,7 @@ export default function CategoryFilterPills({
   if (loading) {
     return (
       <div
-        className="flex items-center justify-center gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0"
+        className="flex items-center justify-center gap-2 overflow-x-auto scrollbar-hide px-4 sm:mx-0 sm:px-0"
         style={{
           WebkitOverflowScrolling: 'touch',
           scrollBehavior: 'smooth',

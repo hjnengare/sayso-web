@@ -1,5 +1,5 @@
 /**
- * useCompletePage Hook
+ * useCompletePage Hook (Simplified - localStorage only)
  * Encapsulates all logic for the complete page
  */
 
@@ -7,8 +7,6 @@ import { useState, useCallback, useEffect } from 'react';
 import { useOnboarding } from '../contexts/OnboardingContext';
 import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../contexts/AuthContext';
-import { useOnboardingData } from './useOnboardingData';
-import { apiClient } from '../lib/api/apiClient';
 
 export interface UseCompletePageReturn {
   isSaving: boolean;
@@ -24,28 +22,23 @@ export interface UseCompletePageReturn {
 export function useCompletePage(): UseCompletePageReturn {
   const { showToast } = useToast();
   const { user } = useAuth();
-  const { completeOnboarding, isLoading: contextLoading, error: contextError } = useOnboarding();
+  const {
+    selectedInterests,
+    selectedSubInterests,
+    selectedDealbreakers,
+    completeOnboarding,
+    isLoading: contextLoading,
+    error: contextError
+  } = useOnboarding();
   const [isSaving, setIsSaving] = useState(false);
   const [hasSaved, setHasSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Load data from DB to display on complete page (refresh-proof)
-  const { data, isLoading: dataLoading, refresh: refreshOnboardingData } = useOnboardingData({
-    loadFromDatabase: true,
-  });
-
-  // Refresh onboarding data and clear cache when page mounts
-  useEffect(() => {
-    // Clear cache to ensure fresh data
-    apiClient.invalidateCache('/api/user/onboarding');
-    // Refresh data from database
-    refreshOnboardingData();
-  }, [refreshOnboardingData]);
-
-  const interests: string[] = data.interests || [];
-  const subcategories: string[] = data.subcategories || [];
-  const dealbreakers: string[] = data.dealbreakers || [];
-  const isLoading = contextLoading || dataLoading;
+  // Get data from localStorage (OnboardingContext)
+  const interests: string[] = selectedInterests || [];
+  const subcategories: string[] = selectedSubInterests || [];
+  const dealbreakers: string[] = selectedDealbreakers || [];
+  const isLoading = contextLoading;
 
   // Verify user is at correct step - middleware should handle redirects
   useEffect(() => {
@@ -54,7 +47,7 @@ export function useCompletePage(): UseCompletePageReturn {
     }
   }, [user]);
 
-  // Handle continue button click - marks onboarding as complete
+  // Handle continue button click - saves all data and marks onboarding as complete
   const handleContinue = useCallback(
     async (e: React.MouseEvent) => {
       e.preventDefault();
@@ -68,13 +61,10 @@ export function useCompletePage(): UseCompletePageReturn {
       setError(null);
 
       try {
-        // Submit to API (marks onboarding_complete=true)
-        // Data should already be saved from previous steps
+        // Save all data to database and mark onboarding as complete
+        // This will save interests, subcategories, dealbreakers from localStorage
         await completeOnboarding();
-        
-        // Clear onboarding cache after successful completion
-        apiClient.invalidateCache('/api/user/onboarding');
-        
+
         // If no error was thrown, consider it successful
         if (!contextError) {
           setHasSaved(true);

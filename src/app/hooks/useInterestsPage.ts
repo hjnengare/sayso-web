@@ -1,17 +1,12 @@
 /**
- * useInterestsPage Hook
- * Encapsulates all logic for the interests page
+ * useInterestsPage Hook (Simplified - localStorage only)
+ * Encapsulates all logic for the interests page without DB calls
  */
 
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useOnboardingData } from './useOnboardingData';
 import { useOnboarding } from '../contexts/OnboardingContext';
 import { useToast } from '../contexts/ToastContext';
-import { validateSelectionCount, validateInterestIds } from '../lib/onboarding/validation';
-import { useOnboardingSafety } from './useOnboardingSafety';
-import { apiClient } from '../lib/api/apiClient';
-import { useAuth } from '../contexts/AuthContext';
 
 const INTERESTS: Array<{ id: string; name: string }> = [
   { id: 'food-drink', name: 'Food & Drink' },
@@ -26,8 +21,6 @@ const INTERESTS: Array<{ id: string; name: string }> = [
 
 const MIN_SELECTIONS = 3;
 const MAX_SELECTIONS = 6;
-
-const VALID_INTEREST_IDS = INTERESTS.map((i) => i.id);
 
 export interface UseInterestsPageReturn {
   interests: typeof INTERESTS;
@@ -45,55 +38,29 @@ export interface UseInterestsPageReturn {
 export function useInterestsPage(): UseInterestsPageReturn {
   const router = useRouter();
   const { showToast } = useToast();
-  const { setSelectedInterests, isLoading: contextLoading, error: contextError } = useOnboarding();
-  const { updateUser } = useAuth();
+  const {
+    selectedInterests,
+    setSelectedInterests,
+    isLoading: contextLoading,
+    error: contextError
+  } = useOnboarding();
+
   const [isNavigating, setIsNavigating] = useState(false);
   const [animatingIds, setAnimatingIds] = useState<Set<string>>(new Set());
   const [shakingIds, setShakingIds] = useState<Set<string>>(new Set());
   const hasPrefetchedRef = useRef(false);
-  
-  // Safety utilities
-  const { isMounted, withTimeout, preventDoubleSubmit, handleBeforeUnload } = useOnboardingSafety({
-    timeout: 30000,
-    preventDoubleSubmit: true,
-    checkSessionOnMount: true,
-  });
 
-  const {
-    data,
-    isLoading: dataLoading,
-    error: dataError,
-    updateInterests,
-    refresh: refreshOnboardingData,
-  } = useOnboardingData({
-    loadFromDatabase: false, // Don't load from DB on first step to avoid pre-selecting old data for new users
-  });
-
-  const selectedInterests = data.interests;
-  
-  // Sync OnboardingContext with useOnboardingData
-  useEffect(() => {
-    if (selectedInterests.length > 0) {
-      setSelectedInterests(selectedInterests);
-    }
-  }, [selectedInterests, setSelectedInterests]);
-  
-  const isLoading = dataLoading || contextLoading;
-  // Convert string error from context to Error object if needed
-  const error: Error | null = dataError || (contextError ? new Error(contextError) : null);
-
-  // Skip unnecessary data refresh - interests page doesn't load from DB initially
-  // This reduces unnecessary API calls on mount
+  const isLoading = contextLoading;
+  const error: Error | null = contextError ? new Error(contextError) : null;
 
   // Early prefetching of all onboarding pages for instant navigation
   useEffect(() => {
-    // Prefetch all next onboarding pages immediately
     router.prefetch('/subcategories');
     router.prefetch('/deal-breakers');
     router.prefetch('/complete');
   }, [router]);
 
-  // Additional prefetch when minimum reached (double-prefetch for reliability)
+  // Additional prefetch when minimum reached
   useEffect(() => {
     if (selectedInterests.length >= MIN_SELECTIONS && !hasPrefetchedRef.current) {
       router.prefetch('/subcategories');
@@ -136,13 +103,6 @@ export function useInterestsPage(): UseInterestsPageReturn {
   // Handle interest toggle
   const handleToggle = useCallback(
     (interestId: string) => {
-      // Validate interest ID
-      const idValidation = validateInterestIds([interestId], VALID_INTEREST_IDS);
-      if (!idValidation.valid) {
-        console.warn('[Interests] Invalid interest ID:', interestId);
-        return;
-      }
-
       const isCurrentlySelected = selectedInterests.includes(interestId);
       triggerBounce(interestId);
 
@@ -153,12 +113,12 @@ export function useInterestsPage(): UseInterestsPageReturn {
         return;
       }
 
-      // Toggle selection
+      // Toggle selection (saves to localStorage automatically)
       const newSelection = isCurrentlySelected
         ? selectedInterests.filter((id) => id !== interestId)
         : [...selectedInterests, interestId];
 
-      updateInterests(newSelection);
+      setSelectedInterests(newSelection);
 
       // Show feedback
       if (!isCurrentlySelected) {
@@ -169,144 +129,42 @@ export function useInterestsPage(): UseInterestsPageReturn {
         }
       }
     },
-    [selectedInterests, updateInterests, showToast, triggerBounce, triggerShake]
+    [selectedInterests, setSelectedInterests, showToast, triggerBounce, triggerShake]
   );
 
-  // Handle next navigation - saves to DB and advances step
-  const handleNextInternal = useCallback(async () => {
-    console.log('[useInterestsPage] handleNext called', { 
-      selectedCount: selectedInterests?.length || 0,
-      interests: selectedInterests 
-    });
-
+  // Handle next navigation (just navigate, no API call)
+  const handleNext = useCallback(() => {
     // Validate selections
-    const validation = validateSelectionCount(selectedInterests, {
-      min: MIN_SELECTIONS,
-      max: MAX_SELECTIONS,
-    }, 'interests');
-
-    if (!validation.valid) {
-      console.warn('[useInterestsPage] Validation failed:', validation.errors);
-      validation.errors.forEach((error) => showToast(error, 'warning', 3000));
+    if (selectedInterests.length < MIN_SELECTIONS) {
+      showToast(`Please select at least ${MIN_SELECTIONS} interests`, 'warning', 3000);
       return;
     }
 
-    // Safe state update (only if mounted)
-    if (!isMounted()) return;
-    console.log('[useInterestsPage] Validation passed, setting navigating state...');
+    if (selectedInterests.length > MAX_SELECTIONS) {
+      showToast(`Please select no more than ${MAX_SELECTIONS} interests`, 'warning', 3000);
+      return;
+    }
+
     setIsNavigating(true);
 
-    try {
-      // Ensure OnboardingContext has latest selections
-      if (!isMounted()) return;
-      console.log('[useInterestsPage] Syncing selections to context...');
-      setSelectedInterests(selectedInterests);
-      
-      // Save to API with timeout
-      console.log('[useInterestsPage] Saving interests to API...');
-      const fetchPromise = fetch('/api/onboarding/interests', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        cache: 'no-store', // Ensure fresh data
-        body: JSON.stringify({
-          interests: selectedInterests
-        })
-      });
+    // Show success toast
+    showToast(`Great! ${selectedInterests.length} interests selected. Let's explore sub-categories!`, 'success', 2000);
 
-      const response = await withTimeout(fetchPromise, 30000);
+    // Navigate to subcategories
+    router.replace('/subcategories');
 
-      let payload: any = null;
-      try { payload = await response.json(); } catch {}
-
-      if (response.status === 401) {
-        if (!isMounted()) return;
-        showToast('Your session expired. Please log in again.', 'warning', 3000);
-        router.replace('/login'); // Use replace to prevent back navigation
-        return;
-      }
-
-      if (!response.ok) {
-        const msg = payload?.error || payload?.message || 'Failed to save interests';
-        throw new Error(msg);
-      }
-
-      console.log('[useInterestsPage] Save successful, updating user profile from API response...');
-
-      // CRITICAL FIX: Update AuthContext directly with state from API response
-      // This eliminates race condition from separate refreshUser() query
-      if (payload && typeof payload === 'object') {
-        try {
-          await updateUser({
-            profile: {
-              onboarding_step: payload.onboarding_step,
-              onboarding_complete: payload.onboarding_complete,
-              interests_count: payload.interests_count,
-              subcategories_count: payload.subcategories_count,
-              dealbreakers_count: payload.dealbreakers_count,
-            } as any
-          });
-          console.log('[useInterestsPage] User profile updated from API response:', {
-            onboarding_step: payload.onboarding_step,
-            interests_count: payload.interests_count,
-          });
-        } catch (updateError) {
-          console.warn('[useInterestsPage] Failed to update user profile:', updateError);
-          // Continue anyway - the DB is updated, navigation should work
-        }
-      }
-
-      // Show success toast
-      showToast(`Great! ${selectedInterests.length} interests selected. Let's explore sub-categories!`, 'success', 2000);
-
-      // ✅ Navigate directly to next step (DB is already updated, profile is refreshed)
-      // Use replace instead of push to prevent back button issues
-      router.replace('/subcategories');
-
-      // Reset navigating state after navigation completes
-      // Use a timeout as safety in case navigation is delayed
-      setTimeout(() => {
-        if (isMounted()) {
-          setIsNavigating(false);
-        }
-      }, 1000);
-    } catch (error: any) {
-      console.error('[useInterestsPage] Unexpected error in handleNext:', error);
-      
-      // Handle timeout specifically
-      if (error?.message?.includes('timeout') || error?.name === 'AbortError') {
-        if (isMounted()) {
-          showToast('Request timed out. Please check your connection and try again.', 'error', 5000);
-          setIsNavigating(false);
-        }
-        return;
-      }
-
-      if (isMounted()) {
-        showToast(error?.message || 'Failed to save interests. Please try again.', 'error', 3000);
-        setIsNavigating(false);
-      }
-    }
-  }, [selectedInterests, setSelectedInterests, showToast, router, isMounted, withTimeout]);
-
-  // Wrap with double-submit prevention
-  const handleNext = preventDoubleSubmit(handleNextInternal);
-
-  // Handle beforeunload warning when saving
-  useEffect(() => {
-    if (isNavigating) {
-      return handleBeforeUnload(isNavigating);
-    }
-  }, [isNavigating, handleBeforeUnload]);
+    // Reset navigating state
+    setTimeout(() => {
+      setIsNavigating(false);
+    }, 1000);
+  }, [selectedInterests, showToast, router]);
 
   // Check if can proceed
   const canProceed = useMemo(() => {
-    const validation = validateSelectionCount(selectedInterests, {
-      min: MIN_SELECTIONS,
-      max: MAX_SELECTIONS,
-    }, 'interests');
-    return validation.valid && !isNavigating;
-  }, [selectedInterests, isNavigating]);
+    return selectedInterests.length >= MIN_SELECTIONS &&
+           selectedInterests.length <= MAX_SELECTIONS &&
+           !isNavigating;
+  }, [selectedInterests.length, isNavigating]);
 
   return {
     interests: INTERESTS,
@@ -321,4 +179,3 @@ export function useInterestsPage(): UseInterestsPageReturn {
     error,
   };
 }
-

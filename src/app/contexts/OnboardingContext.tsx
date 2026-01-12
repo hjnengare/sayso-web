@@ -74,11 +74,30 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
   const [interests, setInterests] = useState<Interest[]>([]);
   const [subInterests, setSubInterests] = useState<Subcategory[]>([]);
 
-  // Start with empty state - no preselected content
-  const [selectedInterests, setSelectedInterestsState] = useState<string[]>([]);
+  // Initialize from localStorage on mount
+  const [selectedInterests, setSelectedInterestsState] = useState<string[]>(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('onboarding_interests');
+      return stored ? JSON.parse(stored) : [];
+    }
+    return [];
+  });
 
-  const [selectedSubInterests, setSelectedSubInterestsState] = useState<string[]>([]);
-  const [selectedDealbreakers, setSelectedDealbreakerssState] = useState<string[]>([]);
+  const [selectedSubInterests, setSelectedSubInterestsState] = useState<string[]>(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('onboarding_subcategories');
+      return stored ? JSON.parse(stored) : [];
+    }
+    return [];
+  });
+
+  const [selectedDealbreakers, setSelectedDealbreakerssState] = useState<string[]>(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('onboarding_dealbreakers');
+      return stored ? JSON.parse(stored) : [];
+    }
+    return [];
+  });
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -238,57 +257,44 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       setIsLoading(true);
       setError(null);
 
-      // Load data from database first (single source of truth)
-      // This ensures we have the latest saved data, not stale context state
-      // Disable caching to ensure we get fresh data during onboarding
-      const dbDataResponse = await fetch('/api/user/onboarding', {
-        cache: 'no-store',
-        credentials: 'include',
-        headers: {
-          'Cache-Control': 'no-store',
-        },
-      });
-      let dbInterests: string[] = [];
-      let dbSubcategories: any[] = [];
-      let dbDealbreakers: string[] = [];
-
-      if (dbDataResponse.ok) {
-        const dbData = await dbDataResponse.json();
-        dbInterests = dbData.interests || [];
-        dbSubcategories = dbData.subcategories || [];
-        dbDealbreakers = dbData.dealbreakers || [];
-      }
-
-      // Use database data if available, otherwise fall back to context state
-      const finalInterests = dbInterests.length > 0 ? dbInterests : selectedInterests;
-      const finalSubcategories = dbSubcategories.length > 0 ? dbSubcategories : selectedSubInterests.map(subId => ({
+      // Prepare subcategories with interest_id mapping
+      const subcategoriesWithInterests = selectedSubInterests.map(subId => ({
         subcategory_id: subId,
         interest_id: getInterestIdForSubcategory(subId)
-      }));
-      const finalDealbreakers = dbDealbreakers.length > 0 ? dbDealbreakers : selectedDealbreakers;
+      })).filter(item => item.interest_id); // Filter out any without valid interest_id
 
-      // Call the dedicated complete API endpoint (not the unified one)
-      // This endpoint only marks completion and verifies prerequisites from DB
+      // Validate we have required data
+      if (selectedInterests.length === 0) {
+        throw new Error('Please select at least one interest');
+      }
+      if (subcategoriesWithInterests.length === 0) {
+        throw new Error('Please select at least one subcategory');
+      }
+      if (selectedDealbreakers.length === 0) {
+        throw new Error('Please select at least one dealbreaker');
+      }
+
+      // Save all onboarding data to database in one call
       const response = await fetch('/api/onboarding/complete', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Cache-Control': 'no-store',
         },
         credentials: 'include',
-        cache: 'no-store',
+        body: JSON.stringify({
+          interests: selectedInterests,
+          subcategories: subcategoriesWithInterests,
+          dealbreakers: selectedDealbreakers
+        }),
       });
 
       let payload: any = null;
       try { payload = await response.json(); } catch {}
 
-      // Clear onboarding cache after completion
-      const { apiClient } = await import('../lib/api/apiClient');
-      apiClient.invalidateCache('/api/user/onboarding');
-
       if (response.status === 401) {
         setError('Your session expired. Please log in again.');
         showToast('Your session expired. Please log in again.', 'warning', 3000);
+        router.replace('/login');
         return;
       }
 
@@ -296,6 +302,24 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
         const errorMsg = payload?.error || payload?.message || 'Failed to complete onboarding';
         setError(errorMsg);
         throw new Error(errorMsg);
+      }
+
+      // Update AuthContext with the completed onboarding status
+      if (payload && typeof payload === 'object') {
+        try {
+          await updateUser({
+            profile: {
+              onboarding_step: payload.onboarding_step,
+              onboarding_complete: payload.onboarding_complete,
+              interests_count: payload.interests_count,
+              subcategories_count: payload.subcategories_count,
+              dealbreakers_count: payload.dealbreakers_count,
+            } as any
+          });
+        } catch (updateError) {
+          console.warn('Failed to update user profile:', updateError);
+          // Continue anyway - the DB is updated
+        }
       }
 
       // Clear localStorage after successful completion
@@ -308,11 +332,8 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       // Show completion toast
       showToast('🎉 Welcome to sayso! Your profile is now complete.', 'success', 4000);
 
-      // Navigate to home after a brief delay
-      setTimeout(() => {
-        router.prefetch('/home');
-        router.replace('/home');
-      }, 500);
+      // Navigate to home
+      router.replace('/home');
     } catch (error: any) {
       console.error('Error completing onboarding:', error);
       const errorMsg = error?.message || 'Failed to complete onboarding';
@@ -321,7 +342,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [user, selectedInterests, selectedSubInterests, selectedDealbreakers, getInterestIdForSubcategory, showToast, router]);
+  }, [user, selectedInterests, selectedSubInterests, selectedDealbreakers, getInterestIdForSubcategory, showToast, router, updateUser]);
 
   const resetOnboarding = useCallback(() => {
     setSelectedInterests([]);
