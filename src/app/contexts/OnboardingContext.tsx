@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from './AuthContext';
 import { useToast } from './ToastContext';
@@ -103,6 +103,34 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
   const [error, setError] = useState<string | null>(null);
 
   const currentStep = user?.profile?.onboarding_step || 'interests';
+
+  // Clear localStorage if user is starting fresh onboarding
+  useEffect(() => {
+    if (user && typeof window !== 'undefined') {
+      const onboardingStep = user.profile?.onboarding_step;
+      const isStartingFresh = !onboardingStep || onboardingStep === 'interests';
+
+      // If user is at the start and onboarding is not complete, clear any stale localStorage
+      if (isStartingFresh && !user.profile?.onboarding_complete) {
+        const hasStoredData =
+          localStorage.getItem('onboarding_interests') ||
+          localStorage.getItem('onboarding_subcategories') ||
+          localStorage.getItem('onboarding_dealbreakers');
+
+        if (hasStoredData) {
+          console.log('[OnboardingContext] Clearing stale localStorage for fresh start');
+          localStorage.removeItem('onboarding_interests');
+          localStorage.removeItem('onboarding_subcategories');
+          localStorage.removeItem('onboarding_dealbreakers');
+
+          // Clear state too
+          setSelectedInterestsState([]);
+          setSelectedSubInterestsState([]);
+          setSelectedDealbreakerssState([]);
+        }
+      }
+    }
+  }, [user]);
 
   // Wrapper functions that persist to localStorage
   const setSelectedInterests = useCallback((interests: string[]) => {
