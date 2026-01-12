@@ -1,67 +1,74 @@
 /**
  * E2E tests for complete onboarding workflow (localStorage-first architecture)
- * Tests the full path: /onboarding → /register → /interests → /subcategories → /deal-breakers → /complete → /home
+ * Tests the full path: /interests → /subcategories → /deal-breakers → /complete → /home
  *
  * Architecture: Selections are stored in localStorage during interests/subcategories/dealbreakers,
  * then all data is saved to Supabase in a single transaction on the complete page.
  *
- * Note: These tests require a verified test user. Set E2E_TEST_EMAIL and E2E_TEST_PASSWORD environment variables,
- * or the tests will create a new user (which requires email verification).
+ * SETUP REQUIRED:
+ * These tests require E2E_TEST_EMAIL and E2E_TEST_PASSWORD environment variables.
+ *
+ * To set up a test user:
+ * 1. Register a new user via the app
+ * 2. Verify the email address
+ * 3. Set environment variables:
+ *    - E2E_TEST_EMAIL=your-test-user@example.com
+ *    - E2E_TEST_PASSWORD=YourTestPassword123!
+ * 4. Run tests: npx playwright test e2e/onboarding-flow.spec.ts
+ *
+ * The test user will be logged in before each test, and onboarding localStorage
+ * will be cleared to ensure a fresh onboarding state.
  */
 
 import { test, expect, Page } from '@playwright/test';
 
 /**
  * Helper function to authenticate a test user
- * Creates a new user or uses existing credentials from environment variables
+ * Uses existing credentials from environment variables or throws error
  */
 async function authenticateTestUser(page: Page): Promise<{ email: string; password: string }> {
+  // Clear any existing auth state first
+  await page.context().clearCookies();
+  await page.goto('/');
+  await page.evaluate(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+
   // Check if test credentials are provided
   const testEmail = process.env.E2E_TEST_EMAIL;
   const testPassword = process.env.E2E_TEST_PASSWORD;
 
-  if (testEmail && testPassword) {
-    // Use existing test user - login
-    await page.goto('/login');
-    await page.locator('input[type="email"]').fill(testEmail);
-    await page.locator('input[type="password"]').fill(testPassword);
-    const submitButton = page.getByRole('button', { name: /sign in/i });
-    await expect(submitButton).not.toBeDisabled({ timeout: 5000 });
-    await submitButton.click();
-
-    // Wait for redirect (could be /interests, /home, or /verify-email)
-    await page.waitForURL(/.*\/(interests|home|verify-email|subcategories|deal-breakers)/, { timeout: 10000 });
-
-    return { email: testEmail, password: testPassword };
+  if (!testEmail || !testPassword) {
+    throw new Error(
+      'E2E_TEST_EMAIL and E2E_TEST_PASSWORD environment variables are required. ' +
+      'Please create a verified test user and set these variables.'
+    );
   }
 
-  // No test credentials - create new user
-  await page.goto('/register');
-  await expect(page.getByText(/create your account/i)).toBeVisible({ timeout: 10000 });
+  // Login with test credentials
+  await page.goto('/login', { waitUntil: 'domcontentloaded', timeout: 30000 });
+  await expect(page.getByText(/welcome back/i)).toBeVisible({ timeout: 10000 });
 
-  const timestamp = Date.now();
-  const email = `e2e-test-${timestamp}@example.com`;
-  const password = 'TestPassword123!';
-  const username = `test${timestamp.toString().slice(-6)}`;
-
-  await page.locator('input[type="text"]').first().fill(username);
-  await page.locator('input[type="email"]').fill(email);
-  await page.locator('input[type="password"]').fill(password);
-  await page.locator('input[type="checkbox"]').check();
-
-  const submitButton = page.getByRole('button', { name: /create account/i });
-  await expect(submitButton).not.toBeDisabled({ timeout: 10000 });
+  await page.locator('input[type="email"]').fill(testEmail);
+  await page.locator('input[type="password"]').fill(testPassword);
+  const submitButton = page.getByRole('button', { name: /sign in/i });
+  await expect(submitButton).not.toBeDisabled({ timeout: 5000 });
   await submitButton.click();
 
-  // Wait for redirect to verify-email or interests
-  await page.waitForURL(/.*\/(verify-email|interests)/, { timeout: 15000 });
+  // Wait for redirect (could be /interests, /home, or /verify-email)
+  await page.waitForURL(/.*\/(interests|home|verify-email|subcategories|deal-breakers|complete)/, { timeout: 15000 });
 
-  // If on verify-email, skip these tests (requires email verification setup)
-  if (page.url().includes('/verify-email')) {
-    throw new Error('Email verification required. Please set E2E_TEST_EMAIL and E2E_TEST_PASSWORD with verified user credentials.');
+  // Verify authentication succeeded
+  if (page.url().includes('/login')) {
+    throw new Error('Login failed. Please check E2E_TEST_EMAIL and E2E_TEST_PASSWORD credentials.');
   }
 
-  return { email, password };
+  if (page.url().includes('/verify-email')) {
+    throw new Error('Test user email not verified. Please verify the test user email first.');
+  }
+
+  return { email: testEmail, password: testPassword };
 }
 
 test.describe('Onboarding Flow', () => {
