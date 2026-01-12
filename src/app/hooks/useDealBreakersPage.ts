@@ -71,8 +71,8 @@ export function useDealBreakersPage(): UseDealBreakersPageReturn {
     [selectedDealbreakers, setSelectedDealbreakers, showToast]
   );
 
-  // Handle next navigation (just navigate, no API call)
-  const handleNext = useCallback(() => {
+  // Handle next navigation - save to DB and navigate
+  const handleNext = useCallback(async () => {
     if (selectedDealbreakers.length === 0) {
       showToast('Please select at least one deal-breaker', 'warning', 2000);
       return;
@@ -80,16 +80,30 @@ export function useDealBreakersPage(): UseDealBreakersPageReturn {
 
     setIsNavigating(true);
 
-    // Show success toast
-    showToast(`Excellent! ${selectedDealbreakers.length} dealbreakers set. Almost done!`, 'success', 2000);
+    try {
+      // Save dealbreakers to database
+      const response = await fetch('/api/onboarding/deal-breakers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dealbreakers: selectedDealbreakers }),
+      });
 
-    // Navigate to complete page
-    router.replace('/complete');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to save deal-breakers');
+      }
 
-    // Reset navigating state
-    setTimeout(() => {
+      // Show success toast
+      showToast(`Excellent! ${selectedDealbreakers.length} dealbreakers set. Almost done!`, 'success', 2000);
+
+      // Navigate to complete page
+      router.replace('/complete');
+    } catch (error) {
+      console.error('[Deal-breakers] Error saving:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save deal-breakers';
+      showToast(errorMessage, 'error', 4000);
       setIsNavigating(false);
-    }, 1000);
+    }
   }, [selectedDealbreakers, showToast, router]);
 
   // Check if can proceed

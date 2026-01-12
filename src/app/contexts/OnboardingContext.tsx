@@ -284,35 +284,14 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       setIsLoading(true);
       setError(null);
 
-      // Prepare subcategories with interest_id mapping
-      const subcategoriesWithInterests = selectedSubInterests.map(subId => ({
-        subcategory_id: subId,
-        interest_id: getInterestIdForSubcategory(subId)
-      })).filter(item => item.interest_id); // Filter out any without valid interest_id
-
-      // Validate we have required data
-      if (selectedInterests.length === 0) {
-        throw new Error('Please select at least one interest');
-      }
-      if (subcategoriesWithInterests.length === 0) {
-        throw new Error('Please select at least one subcategory');
-      }
-      if (selectedDealbreakers.length === 0) {
-        throw new Error('Please select at least one dealbreaker');
-      }
-
-      // Save all onboarding data to database in one call
+      // Mark onboarding as complete
+      // Note: Interests, subcategories, and dealbreakers were already saved in previous steps
       const response = await fetch('/api/onboarding/complete', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({
-          interests: selectedInterests,
-          subcategories: subcategoriesWithInterests,
-          dealbreakers: selectedDealbreakers
-        }),
       });
 
       let payload: any = null;

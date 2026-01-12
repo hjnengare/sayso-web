@@ -171,8 +171,8 @@ export function useSubcategoriesPage(): UseSubcategoriesPageReturn {
     [selectedSubInterests, setSelectedSubInterests, showToast, triggerShake]
   );
 
-  // Handle next navigation (just navigate, no API call)
-  const handleNext = useCallback(() => {
+  // Handle next navigation - save to DB and navigate
+  const handleNext = useCallback(async () => {
     if (selectedSubInterests.length === 0) {
       showToast('Please select at least one subcategory', 'warning', 2000);
       return;
@@ -180,16 +180,30 @@ export function useSubcategoriesPage(): UseSubcategoriesPageReturn {
 
     setIsNavigating(true);
 
-    // Show success toast
-    showToast(`Perfect! ${selectedSubInterests.length} sub-interests added. Now let's set your dealbreakers.`, 'success', 2000);
+    try {
+      // Save subcategories to database
+      const response = await fetch('/api/onboarding/subcategories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subcategories: selectedSubInterests }),
+      });
 
-    // Navigate to deal-breakers
-    router.replace('/deal-breakers');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to save subcategories');
+      }
 
-    // Reset navigating state
-    setTimeout(() => {
+      // Show success toast
+      showToast(`Perfect! ${selectedSubInterests.length} sub-interests added. Now let's set your dealbreakers.`, 'success', 2000);
+
+      // Navigate to deal-breakers
+      router.replace('/deal-breakers');
+    } catch (error) {
+      console.error('[Subcategories] Error saving:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save subcategories';
+      showToast(errorMessage, 'error', 4000);
       setIsNavigating(false);
-    }, 1000);
+    }
   }, [selectedSubInterests, showToast, router]);
 
   // Check if can proceed

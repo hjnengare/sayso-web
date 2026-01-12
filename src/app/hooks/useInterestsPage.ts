@@ -1,6 +1,7 @@
 /**
- * useInterestsPage Hook (Simplified - localStorage only)
- * Encapsulates all logic for the interests page without DB calls
+ * useInterestsPage Hook
+ * Encapsulates all logic for the interests page
+ * Saves selections to DB when clicking next to advance onboarding_step
  */
 
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
@@ -129,8 +130,8 @@ export function useInterestsPage(): UseInterestsPageReturn {
     [selectedInterests, setSelectedInterests, showToast, triggerBounce, triggerShake]
   );
 
-  // Handle next navigation (just navigate, no API call)
-  const handleNext = useCallback(() => {
+  // Handle next navigation - save to DB and navigate
+  const handleNext = useCallback(async () => {
     // Validate selections
     if (selectedInterests.length < MIN_SELECTIONS) {
       showToast(`Please select at least ${MIN_SELECTIONS} interests`, 'warning', 3000);
@@ -144,16 +145,30 @@ export function useInterestsPage(): UseInterestsPageReturn {
 
     setIsNavigating(true);
 
-    // Show success toast
-    showToast(`Great! ${selectedInterests.length} interests selected. Let's explore sub-categories!`, 'success', 2000);
+    try {
+      // Save interests to database
+      const response = await fetch('/api/onboarding/interests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ interests: selectedInterests }),
+      });
 
-    // Navigate to subcategories
-    router.replace('/subcategories');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to save interests');
+      }
 
-    // Reset navigating state
-    setTimeout(() => {
+      // Show success toast
+      showToast(`Great! ${selectedInterests.length} interests selected. Let's explore sub-categories!`, 'success', 2000);
+
+      // Navigate to subcategories
+      router.replace('/subcategories');
+    } catch (error) {
+      console.error('[Interests] Error saving:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save interests';
+      showToast(errorMessage, 'error', 4000);
       setIsNavigating(false);
-    }, 1000);
+    }
   }, [selectedInterests, showToast, router]);
 
   // Check if can proceed

@@ -9,10 +9,10 @@ export const revalidate = 0;
 
 /**
  * POST /api/onboarding/complete
- * Saves ALL onboarding data and marks onboarding as complete
+ * Marks onboarding as complete (data already saved in previous steps)
  *
- * This endpoint receives interests, subcategories, and dealbreakers from localStorage
- * and saves them all to the database in a single transaction
+ * Note: Interests, subcategories, and dealbreakers are saved in earlier steps
+ * This endpoint only sets onboarding_complete=true
  */
 export async function POST(req: Request) {
   const startTime = nodePerformance.now();
@@ -26,71 +26,9 @@ export async function POST(req: Request) {
       return addNoCacheHeaders(response);
     }
 
-    // Parse request body
-    const body = await req.json();
-    const { interests, subcategories, dealbreakers } = body;
-
-    // Validate required data
-    if (!interests || !Array.isArray(interests) || interests.length === 0) {
-      const response = NextResponse.json(
-        { error: 'Interests are required' },
-        { status: 400 }
-      );
-      return addNoCacheHeaders(response);
-    }
-
-    if (!subcategories || !Array.isArray(subcategories) || subcategories.length === 0) {
-      const response = NextResponse.json(
-        { error: 'Subcategories are required' },
-        { status: 400 }
-      );
-      return addNoCacheHeaders(response);
-    }
-
-    if (!dealbreakers || !Array.isArray(dealbreakers) || dealbreakers.length === 0) {
-      const response = NextResponse.json(
-        { error: 'Dealbreakers are required' },
-        { status: 400 }
-      );
-      return addNoCacheHeaders(response);
-    }
-
     const writeStart = nodePerformance.now();
 
-    // 1. Save interests using RPC function
-    const { error: interestsError } = await supabase.rpc('replace_user_interests', {
-      p_user_id: user.id,
-      p_interest_ids: interests
-    });
-
-    if (interestsError) {
-      console.error('[Complete API] Error saving interests:', interestsError);
-      throw new Error('Failed to save interests');
-    }
-
-    // 2. Save subcategories using RPC function
-    const { error: subcategoriesError } = await supabase.rpc('replace_user_subcategories', {
-      p_user_id: user.id,
-      p_subcategories: subcategories
-    });
-
-    if (subcategoriesError) {
-      console.error('[Complete API] Error saving subcategories:', subcategoriesError);
-      throw new Error('Failed to save subcategories');
-    }
-
-    // 3. Save dealbreakers using RPC function
-    const { error: dealbreakersError } = await supabase.rpc('replace_user_dealbreakers', {
-      p_user_id: user.id,
-      p_dealbreaker_ids: dealbreakers
-    });
-
-    if (dealbreakersError) {
-      console.error('[Complete API] Error saving dealbreakers:', dealbreakersError);
-      throw new Error('Failed to save dealbreakers');
-    }
-
-    // 4. Mark onboarding as complete
+    // Mark onboarding as complete
     const { error: updateError } = await supabase
       .from('profiles')
       .update({
@@ -110,9 +48,6 @@ export async function POST(req: Request) {
 
     console.log('[Complete API] Onboarding completed successfully', {
       userId: user.id,
-      interests: interests.length,
-      subcategories: subcategories.length,
-      dealbreakers: dealbreakers.length,
       writeTime: `${writeTime.toFixed(2)}ms`,
       totalTime: `${totalTime.toFixed(2)}ms`
     });
@@ -122,10 +57,7 @@ export async function POST(req: Request) {
       success: true,
       message: 'Onboarding completed successfully',
       onboarding_step: 'complete',
-      onboarding_complete: true,
-      interests_count: interests.length,
-      subcategories_count: subcategories.length,
-      dealbreakers_count: dealbreakers.length
+      onboarding_complete: true
     });
     return addNoCacheHeaders(response);
 

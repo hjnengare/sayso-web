@@ -56,7 +56,8 @@
       "Bash(move OPTIMIZATION_SUMMARY.md docs )",
       "Bash(move:*)",
       "Bash(move REFACTORING_SUMMARY.md docs )",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(xargs:*)"
     ],
     "deny": [],
     "ask": []
