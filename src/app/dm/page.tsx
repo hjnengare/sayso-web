@@ -238,6 +238,56 @@ export default function DMChatListPage() {
     }
   }, [user, businessId]);
 
+  // Handle deep links from query parameters
+  useEffect(() => {
+    const handleDeepLink = async () => {
+      const ownerId = searchParams?.get("owner_id");
+      const conversationId = searchParams?.get("conversation");
+      const businessIdFromQuery = searchParams?.get("business_id");
+
+      // If conversation ID is provided, select that conversation
+      if (conversationId) {
+        setSelectedChatId(conversationId);
+        return;
+      }
+
+      // If owner_id is provided, create or get conversation
+      if (ownerId && user) {
+        try {
+          const response = await fetch("/api/messages/conversations", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              owner_id: ownerId,
+              business_id: businessIdFromQuery || undefined,
+            }),
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            const conversation = result.data;
+
+            // Set the selected chat to the owner_id (chat id is owner_id in current structure)
+            setSelectedChatId(ownerId);
+
+            // Update URL to conversation ID without reload
+            const newUrl = `/dm?conversation=${conversation.id}${businessIdFromQuery ? `&business_id=${businessIdFromQuery}` : ''}`;
+            window.history.replaceState({}, '', newUrl);
+
+            // Refetch conversations to include the new one if it was just created
+            // The existing fetchConversations effect will handle this
+          }
+        } catch (error) {
+          console.error("Error creating conversation:", error);
+        }
+      }
+    };
+
+    if (user && searchParams) {
+      handleDeepLink();
+    }
+  }, [user, searchParams]);
+
   const filteredChats = chats.filter((chat) =>
     chat.businessName.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -356,7 +406,7 @@ export default function DMChatListPage() {
     <>
       {/* APPLICATION_SHELL - Desktop */}
       <div
-        className="hidden lg:flex lg:flex-col lg:h-screen bg-off-white overflow-hidden"
+        className="hidden md:flex md:flex-col md:h-screen bg-off-white overflow-hidden"
         style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}
       >
         {/* TopNav - Fixed */}
@@ -744,7 +794,7 @@ export default function DMChatListPage() {
 
       {/* APPLICATION_SHELL - Mobile */}
       <div
-        className="lg:hidden flex flex-col h-screen bg-off-white overflow-hidden"
+        className="md:hidden flex flex-col h-screen bg-off-white overflow-hidden"
         style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}
       >
         {/* TopNav - Fixed */}
