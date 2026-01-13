@@ -1,6 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { usePathname } from 'next/navigation';
 import { CheckCircle, XCircle, AlertTriangle, Info, X, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -24,6 +25,7 @@ interface ToastProviderProps {
 }
 
 export function ToastProvider({ children }: ToastProviderProps) {
+  const pathname = usePathname();
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [toastQueue, setToastQueue] = useState<Toast[]>([]);
 
@@ -31,6 +33,14 @@ export function ToastProvider({ children }: ToastProviderProps) {
   const seenToasts = typeof window !== 'undefined'
     ? new Set<string>(JSON.parse(sessionStorage.getItem('shown-toasts') || '[]'))
     : new Set<string>();
+
+  // Clear all toasts when route changes
+  useEffect(() => {
+    console.log('[ToastContext] Route changed to:', pathname);
+    console.log('[ToastContext] Clearing all toasts and queue');
+    setToasts([]);
+    setToastQueue([]);
+  }, [pathname]);
 
   // Generate unique ID to prevent collisions
   const generateUniqueId = () => {

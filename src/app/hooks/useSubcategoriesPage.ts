@@ -193,10 +193,8 @@ export function useSubcategoriesPage(): UseSubcategoriesPageReturn {
         throw new Error(error.message || 'Failed to save subcategories');
       }
 
-      // Show success toast
-      showToast(`Perfect! ${selectedSubInterests.length} sub-interests added. Now let's set your dealbreakers.`, 'success', 2000);
-
-      // Navigate to deal-breakers
+      // Navigate immediately - no toast needed since navigation is the success indicator
+      // The toast was appearing on the next page due to timing issues
       router.replace('/deal-breakers');
     } catch (error) {
       console.error('[Subcategories] Error saving:', error);

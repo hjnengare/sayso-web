@@ -39,43 +39,61 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const MAX_RETRIES = 3;
     
     const initializeAuth = async () => {
-      console.log('AuthContext: Initializing auth...');
+      console.log('[AuthContext] Initializing auth...');
       setIsLoading(true);
 
       const attemptInit = async (attempt: number): Promise<void> => {
-        if (!isMounted) return;
-        
+        if (!isMounted) {
+          console.log('[AuthContext] Component unmounted, aborting init');
+          return;
+        }
+
+        console.log(`[AuthContext] Auth init attempt ${attempt}/${MAX_RETRIES}`);
+
         try {
+          console.log('[AuthContext] Calling AuthService.getCurrentUser()...');
           const currentUser = await AuthService.getCurrentUser();
-          
-          if (!isMounted) return;
-          
-          console.log('AuthContext: Got current user:', currentUser ? {
+
+          if (!isMounted) {
+            console.log('[AuthContext] Component unmounted after getCurrentUser');
+            return;
+          }
+
+          console.log('[AuthContext] Got current user:', currentUser ? {
             id: currentUser.id,
             email: currentUser.email,
-            has_profile: !!currentUser.profile
+            email_verified: currentUser.email_verified,
+            has_profile: !!currentUser.profile,
+            onboarding_step: currentUser.profile?.onboarding_step
           } : null);
-          
+
           setUser(currentUser);
           setIsLoading(false);
+          console.log('[AuthContext] Auth initialization complete, isLoading set to false');
         } catch (error) {
-          console.error(`AuthContext: Error initializing auth (attempt ${attempt}):`, error);
-          
+          console.error(`[AuthContext] Error initializing auth (attempt ${attempt}/${MAX_RETRIES}):`, error);
+
           // Retry on network errors
           if (attempt < MAX_RETRIES) {
             const errorMessage = error instanceof Error ? error.message : String(error);
-            const isNetworkError = 
+            const isNetworkError =
               errorMessage.toLowerCase().includes('fetch') ||
               errorMessage.toLowerCase().includes('network') ||
               errorMessage.toLowerCase().includes('connection');
-            
+
             if (isNetworkError) {
+              console.log(`[AuthContext] Network error detected, retrying in ${1000 * attempt}ms...`);
               await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
               return attemptInit(attempt + 1);
+            } else {
+              console.log('[AuthContext] Non-network error, stopping retries');
             }
+          } else {
+            console.log('[AuthContext] Max retries reached');
           }
-          
+
           if (isMounted) {
+            console.log('[AuthContext] Setting isLoading to false after error');
             setIsLoading(false);
           }
         }

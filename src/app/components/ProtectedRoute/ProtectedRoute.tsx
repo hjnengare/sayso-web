@@ -40,8 +40,21 @@ export default function ProtectedRoute({
   const dealbreakersCount = user?.profile?.dealbreakers_count ?? 0;
 
   useEffect(() => {
+    console.log('[ProtectedRoute] useEffect triggered', {
+      isLoading,
+      isVerifiedFromUrl,
+      pathname,
+      userId: !!userId,
+      emailVerified,
+      onboardingStep,
+      onboardingComplete
+    });
+
     // Don't block if we have verification signal from URL
-    if (isLoading && !isVerifiedFromUrl) return; // Wait for auth state to load
+    if (isLoading && !isVerifiedFromUrl) {
+      console.log('[ProtectedRoute] Still loading auth state, waiting...');
+      return; // Wait for auth state to load
+    }
 
     console.log('ProtectedRoute: Checking route protection', {
       requiresAuth,

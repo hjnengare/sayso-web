@@ -93,10 +93,8 @@ export function useDealBreakersPage(): UseDealBreakersPageReturn {
         throw new Error(error.message || 'Failed to save deal-breakers');
       }
 
-      // Show success toast
-      showToast(`Excellent! ${selectedDealbreakers.length} dealbreakers set. Almost done!`, 'success', 2000);
-
-      // Navigate to complete page
+      // Navigate immediately - no toast needed since navigation is the success indicator
+      // The toast was appearing on the next page due to timing issues
       router.replace('/complete');
     } catch (error) {
       console.error('[Deal-breakers] Error saving:', error);

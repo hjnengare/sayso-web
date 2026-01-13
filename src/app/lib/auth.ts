@@ -221,12 +221,18 @@ export class AuthService {
   }
 
   static async getCurrentUser(retryCount = 0): Promise<AuthUser | null> {
+    console.log(`[AuthService.getCurrentUser] Starting (attempt ${retryCount + 1})`);
     const supabase = this.getClient();
     const MAX_RETRIES = 2;
-    
+
     try {
       // Get current session first to check if refresh is needed
+      console.log('[AuthService.getCurrentUser] Getting session...');
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      console.log('[AuthService.getCurrentUser] Got session:', {
+        has_session: !!session,
+        session_error: sessionError?.message
+      });
       
       // If session exists but is expired, try to refresh it
       if (session && session.expires_at) {
@@ -247,7 +253,14 @@ export class AuthService {
         }
       }
 
+      console.log('[AuthService.getCurrentUser] Getting user...');
       const { data: { user }, error } = await supabase.auth.getUser();
+      console.log('[AuthService.getCurrentUser] Got user:', {
+        has_user: !!user,
+        user_id: user?.id,
+        email: user?.email,
+        error: error?.message
+      });
 
       // Handle authentication errors with retry logic
       if (error) {
@@ -320,17 +333,27 @@ export class AuthService {
         return null;
       }
 
-      if (!user) return null;
+      if (!user) {
+        console.log('[AuthService.getCurrentUser] No user found, returning null');
+        return null;
+      }
 
       // Get user profile with error handling
       let profile;
       try {
+        console.log('[AuthService.getCurrentUser] Fetching profile for user:', user.id);
         profile = await this.getUserProfile(user.id);
+        console.log('[AuthService.getCurrentUser] Got profile:', {
+          has_profile: !!profile,
+          onboarding_step: profile?.onboarding_step,
+          email_verified: user.email_confirmed_at !== null
+        });
       } catch (profileError) {
         console.warn('AuthService: Error fetching profile, continuing without profile:', profileError);
         profile = undefined;
       }
 
+      console.log('[AuthService.getCurrentUser] Returning user with profile');
       return {
         id: user.id,
         email: user.email!,

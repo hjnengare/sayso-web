@@ -37,24 +37,44 @@ export default function EmailVerificationGuard({
 
   // Force refresh user state if we detect verification from URL
   useEffect(() => {
+    console.log('[EmailVerificationGuard] useEffect triggered', {
+      isVerifiedFromUrl,
+      userId,
+      emailVerified,
+      verifiedParam,
+      emailVerifiedParam
+    });
+
     if (isVerifiedFromUrl && userId && !emailVerified) {
+      console.log('[EmailVerificationGuard] Starting optimistic user refresh');
       // Optimistically update user state
       AuthService.getCurrentUser().then(freshUser => {
+        console.log('[EmailVerificationGuard] Got fresh user', {
+          user_exists: !!freshUser,
+          email_verified: freshUser?.email_verified
+        });
         if (freshUser?.email_verified) {
           updateUser({ email_verified: true });
         }
-      }).catch(() => {
+      }).catch((err) => {
+        console.error('[EmailVerificationGuard] Error refreshing user:', err);
         // Silently fail - will be handled by normal flow
       });
     }
     // Also refresh if we have verified param but user state hasn't updated yet
     if ((verifiedParam === '1' || emailVerifiedParam === 'true') && userId && !emailVerified) {
+      console.log('[EmailVerificationGuard] Starting verified param refresh');
       // Refresh user state to get latest verification status
       AuthService.getCurrentUser().then(freshUser => {
+        console.log('[EmailVerificationGuard] Got fresh user from verified param', {
+          user_exists: !!freshUser,
+          email_verified: freshUser?.email_verified
+        });
         if (freshUser?.email_verified) {
           updateUser({ email_verified: true });
         }
-      }).catch(() => {
+      }).catch((err) => {
+        console.error('[EmailVerificationGuard] Error refreshing user from verified param:', err);
         // Silently fail - will be handled by normal flow
       });
     }

@@ -158,10 +158,8 @@ export function useInterestsPage(): UseInterestsPageReturn {
         throw new Error(error.message || 'Failed to save interests');
       }
 
-      // Show success toast
-      showToast(`Great! ${selectedInterests.length} interests selected. Let's explore sub-categories!`, 'success', 2000);
-
-      // Navigate to subcategories
+      // Navigate immediately - no toast needed since navigation is the success indicator
+      // The toast was appearing on the next page due to timing issues
       router.replace('/subcategories');
     } catch (error) {
       console.error('[Interests] Error saving:', error);
