@@ -69,17 +69,27 @@ export default function ActiveFilterBadges({
             <Star className="w-3.5 h-3.5" />
             <span>{filters.minRating}+ Rating</span>
             <ChevronDown className={`w-3.5 h-3.5 transition-transform ${openDropdown === 'rating' ? 'rotate-180' : ''}`} />
-            <button
+            <span
               onClick={(e) => {
                 e.stopPropagation();
                 onRemoveFilter('minRating');
                 setOpenDropdown(null);
               }}
-              className="ml-1 hover:bg-sage/30 rounded-full p-0.5 transition-colors"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onRemoveFilter('minRating');
+                  setOpenDropdown(null);
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              className="ml-1 hover:bg-sage/30 rounded-full p-0.5 transition-colors cursor-pointer"
               aria-label="Remove rating filter"
             >
               <X className="w-3 h-3" />
-            </button>
+            </span>
           </button>
 
           <AnimatePresence>
@@ -129,17 +139,27 @@ export default function ActiveFilterBadges({
             <MapPin className="w-3.5 h-3.5" />
             <span>Within {filters.distance}</span>
             <ChevronDown className={`w-3.5 h-3.5 transition-transform ${openDropdown === 'distance' ? 'rotate-180' : ''}`} />
-            <button
+            <span
               onClick={(e) => {
                 e.stopPropagation();
                 onRemoveFilter('distance');
                 setOpenDropdown(null);
               }}
-              className="ml-1 hover:bg-coral/30 rounded-full p-0.5 transition-colors"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onRemoveFilter('distance');
+                  setOpenDropdown(null);
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              className="ml-1 hover:bg-coral/30 rounded-full p-0.5 transition-colors cursor-pointer"
               aria-label="Remove distance filter"
             >
               <X className="w-3 h-3" />
-            </button>
+            </span>
           </button>
 
           <AnimatePresence>
