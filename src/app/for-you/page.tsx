@@ -19,7 +19,6 @@ import { ChevronRight, ChevronUp } from "react-feather";
 import { Loader } from "../components/Loader/Loader";
 import { usePredefinedPageTitle } from "../hooks/usePageTitle";
 import Pagination from "../components/EventsPage/Pagination";
-import CategoryFilterPills from "../components/Home/CategoryFilterPills";
 import BusinessGridSkeleton from "../components/Explore/BusinessGridSkeleton";
 import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
 
@@ -335,14 +334,6 @@ export default function ForYouPage() {
             />
           </div>
 
-          {/* Category Filter Pills - positioned directly underneath search input */}
-          <div className="px-2">
-            <CategoryFilterPills
-              selectedCategoryIds={selectedInterestIds}
-              preferredCategoryIds={preferenceInterestIds || []}
-              onToggleCategory={handleToggleInterest}
-            />
-          </div>
 
           {/* Suggestive Filters - Show when no filters active */}
           <SuggestiveFilters
