@@ -1089,6 +1089,55 @@ function ProfileContent() {
                       </section>
                     )}
 
+                    {/* Badges & Achievements Section */}
+                    {achievements.length > 0 && (
+                      <section
+                        className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-lg p-6 sm:p-8 animate-fade-in-up"
+                        aria-label="Badges and achievements"
+                      >
+                        <h3 className="text-lg font-bold text-charcoal mb-4" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                          Badges & Achievements
+                        </h3>
+                        {achievementsLoading ? (
+                          <div className="flex items-center justify-center py-8">
+                            <Loader size="md" variant="wavy" color="sage" />
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {achievements.map((userAchievement) => {
+                              const badge = userAchievement.achievements;
+                              const earnedDate = new Date(userAchievement.earned_at).toLocaleDateString('en-US', {
+                                month: 'short',
+                                year: 'numeric'
+                              });
+
+                              return (
+                                <div
+                                  key={userAchievement.achievement_id}
+                                  className="bg-off-white/50 rounded-[20px] p-4 border border-white/40"
+                                >
+                                  <div className="flex items-center gap-3 mb-2">
+                                    <span className="text-2xl">{badge.icon}</span>
+                                    <div>
+                                      <div className="text-sm font-bold text-charcoal" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                                        {badge.name}
+                                      </div>
+                                      <div className="text-xs text-charcoal/60" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                                        Earned {earnedDate}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <p className="text-xs text-charcoal/70" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                                    {badge.description}
+                                  </p>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </section>
+                    )}
+
                     {/* My Businesses Section */}
                     <section
                       className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-md p-6 sm:p-8 space-y-4"
