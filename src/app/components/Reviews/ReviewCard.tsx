@@ -557,7 +557,6 @@ export default function ReviewCard({
                   whileHover={{ scale: 1.05 }}
                   className="inline-flex items-center px-3 py-1 bg-sage/10 text-sage text-sm font-500 rounded-full border border-sage/20 hover:bg-sage/20 transition-colors duration-300"
                 >
-                  <span className="mr-1">@</span>
                   {tag}
                 </motion.span>
               ))}
