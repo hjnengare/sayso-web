@@ -414,7 +414,7 @@ function ProfileContent() {
     fetchUserReviews();
   }, [user?.id]);
 
-  // Fetch user achievements
+  // Fetch user achievements (badges)
   useEffect(() => {
     const fetchAchievements = async () => {
       if (!user?.id) {
@@ -424,30 +424,32 @@ function ProfileContent() {
 
       try {
         setAchievementsLoading(true);
-        const response = await fetch('/api/user/achievements', { cache: 'no-store' });
+        // Use badges API instead of old achievements API
+        const response = await fetch(`/api/badges/user?user_id=${user.id}`, { cache: 'no-store' });
 
         if (!response.ok) {
           if (response.status === 401) {
             setAchievements([]);
             return;
           }
-          console.warn('Error fetching achievements:', response.status);
+          console.warn('Error fetching badges:', response.status);
           setAchievements([]);
           return;
         }
 
         const result = await response.json();
-        if (result.data && Array.isArray(result.data)) {
-          // Transform API response to match UserAchievement interface
-          const transformedAchievements: UserAchievement[] = result.data.map((achievement: any) => ({
-            achievement_id: achievement.name.toLowerCase().replace(/\s+/g, '-'),
-            earned_at: achievement.earnedAt || new Date().toISOString(),
+        if (result.ok && result.badges && Array.isArray(result.badges)) {
+          // Filter only earned badges and transform to UserAchievement interface
+          const earnedBadges = result.badges.filter((badge: any) => badge.earned);
+          const transformedAchievements: UserAchievement[] = earnedBadges.map((badge: any) => ({
+            achievement_id: badge.id,
+            earned_at: badge.awarded_at || new Date().toISOString(),
             achievements: {
-              id: achievement.name.toLowerCase().replace(/\s+/g, '-'),
-              name: achievement.name,
-              description: achievement.description,
-              icon: achievement.icon,
-              category: 'general',
+              id: badge.id,
+              name: badge.name,
+              description: badge.description,
+              icon: badge.icon_path, // Use icon_path from badges table
+              category: badge.badge_group || 'general',
             },
           }));
           setAchievements(transformedAchievements);
@@ -455,7 +457,7 @@ function ProfileContent() {
           setAchievements([]);
         }
       } catch (err) {
-        console.warn('Error fetching achievements:', err);
+        console.warn('Error fetching badges:', err);
         setAchievements([]);
       } finally {
         setAchievementsLoading(false);
@@ -1027,7 +1029,7 @@ function ProfileContent() {
                       >
                         <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-md p-4">
                           <div className="flex items-center gap-2 mb-2">
-                            <ThumbsUp className="w-5 h-5 text-coral" />
+                            <ThumbsUp className="w-5 h-5 text-navbar-bg" />
                             <span className="text-sm text-charcoal/70">Helpful votes</span>
                           </div>
                           <p className="text-2xl font-bold text-charcoal">
@@ -1037,7 +1039,7 @@ function ProfileContent() {
                         </div>
                         <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-md p-4">
                           <div className="flex items-center gap-2 mb-2">
-                            <StarIcon className="w-5 h-5 text-coral" />
+                            <StarIcon className="w-5 h-5 text-navbar-bg" />
                             <span className="text-sm text-charcoal/70">Reviews</span>
                           </div>
                           <p className="text-2xl font-bold text-charcoal">
@@ -1047,7 +1049,7 @@ function ProfileContent() {
                         </div>
                         <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-md p-4">
                           <div className="flex items-center gap-2 mb-2">
-                            <Award className="w-5 h-5 text-coral" />
+                            <Award className="w-5 h-5 text-navbar-bg" />
                             <span className="text-sm text-charcoal/70">Badges</span>
                           </div>
                           <p className="text-2xl font-bold text-charcoal">{badgesCount}</p>
@@ -1055,7 +1057,7 @@ function ProfileContent() {
                         </div>
                         <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-md p-4">
                           <div className="flex items-center gap-2 mb-2">
-                            <Eye className="w-5 h-5 text-coral" />
+                            <Eye className="w-5 h-5 text-navbar-bg" />
                             <span className="text-sm text-charcoal/70">Interests</span>
                           </div>
                           <p className="text-2xl font-bold text-charcoal">{interestsCount}</p>
@@ -1064,7 +1066,7 @@ function ProfileContent() {
                         {userStats && (
                           <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-md p-4 sm:col-span-2">
                             <div className="flex items-center gap-2 mb-2">
-                              <Briefcase className="w-5 h-5 text-coral" />
+                              <Briefcase className="w-5 h-5 text-navbar-bg" />
                               <span className="text-sm text-charcoal/70">Saved Businesses</span>
                             </div>
                             <p className="text-2xl font-bold text-charcoal">
@@ -1112,8 +1114,8 @@ function ProfileContent() {
                       >
                         <div className="flex items-center justify-between">
                           <h3 className="text-base font-semibold text-charcoal flex items-center gap-3">
-                            <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-coral/20 to-coral/10">
-                              <Store className="w-5 h-5 text-coral" />
+                            <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-navbar-bg/20 to-navbar-bg/10">
+                              <Store className="w-5 h-5 text-navbar-bg" />
                             </span>
                             My Businesses
                           </h3>
@@ -1196,8 +1198,8 @@ function ProfileContent() {
                       >
                         <div className="flex items-center justify-between">
                           <h3 className="text-base font-semibold text-charcoal flex items-center gap-3">
-                            <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-sage/20 to-sage/10">
-                              <Briefcase className="w-5 h-5 text-sage" />
+                            <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-navbar-bg/20 to-navbar-bg/10">
+                              <Briefcase className="w-5 h-5 text-navbar-bg" />
                             </span>
                             Manage Your Business Presence
                           </h3>
@@ -1240,8 +1242,8 @@ function ProfileContent() {
                         aria-label="Account actions"
                       >
                         <div className="flex items-center gap-3">
-                          <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-coral/20 to-coral/10">
-                            <AlertTriangle className="w-5 h-5 text-coral" />
+                          <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-navbar-bg/20 to-navbar-bg/10">
+                            <AlertTriangle className="w-5 h-5 text-navbar-bg" />
                           </span>
                           <h3 className="text-base font-semibold text-charcoal">
                             Account Actions

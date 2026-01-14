@@ -500,9 +500,9 @@ export default function Home() {
             />
           </div>
 
-          {/* Inline Filters - Show when searching */}
+          {/* Inline Filters - Always visible */}
           <InlineFilters
-            show={isSearchActive}
+            show={true}
             filters={filters}
             onDistanceChange={handleInlineDistanceChange}
             onRatingChange={handleInlineRatingChange}

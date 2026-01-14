@@ -53,6 +53,108 @@ const Footer = dynamic(() => import("../components/Footer/Footer"), {
     ssr: false,
 });
 
+// Generic Custom Dropdown Component
+interface CustomDropdownProps {
+    value: string;
+    onChange: (value: string) => void;
+    placeholder: string;
+    options: Array<{ value: string; label: string }>;
+    className?: string;
+}
+
+const CustomDropdown: React.FC<CustomDropdownProps> = ({ value, onChange, placeholder, options, className = 'flex-1' }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    const dropdownMenuRef = useRef<HTMLDivElement>(null);
+
+    // Handle click outside to close
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+
+        if (isOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isOpen]);
+
+    const displayValue = options.find(opt => opt.value === value)?.label || placeholder;
+
+    return (
+        <div ref={dropdownRef} className={`relative ${isOpen ? 'z-[9999]' : 'z-auto'} ${className}`}>
+            <button
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
+                className="w-full bg-off-white rounded-[20px] border border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.12),0_4px_16px_rgba(0,0,0,0.08)] backdrop-blur-xl pl-4 pr-10 py-3 text-sm font-semibold text-charcoal focus:outline-none focus:ring-2 focus:ring-navbar-bg/30 focus:border-navbar-bg transition-all duration-200 hover:shadow-[0_8px_40px_rgba(0,0,0,0.15)] cursor-pointer text-left flex items-center justify-between"
+            >
+                <span className={value ? 'text-charcoal' : 'text-charcoal/50'}>{displayValue}</span>
+                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isOpen && (
+                <div
+                    ref={dropdownMenuRef}
+                    className="absolute z-[10000] w-full mt-2 bg-off-white rounded-[20px] border border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.12),0_4px_16px_rgba(0,0,0,0.08)] backdrop-blur-xl overflow-hidden max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-navbar-bg/20 scrollbar-track-transparent"
+                    style={{
+                        fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                        animation: 'fadeInScale 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                    }}
+                >
+                    {options.map((option, index) => (
+                        <button
+                            key={index}
+                            type="button"
+                            onClick={() => {
+                                onChange(option.value);
+                                setIsOpen(false);
+                            }}
+                            className={`w-full px-4 py-3 text-left text-sm font-semibold transition-all duration-150 ${
+                                option.value === value
+                                    ? 'bg-gradient-to-r from-sage/10 to-sage/5 text-charcoal'
+                                    : 'text-charcoal hover:bg-gradient-to-r hover:from-sage/10 hover:to-coral/5'
+                            }`}
+                            style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
+                        >
+                            {option.label}
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
+// Custom Time Dropdown Component (wrapper around CustomDropdown)
+interface TimeDropdownProps {
+    value: string;
+    onChange: (value: string) => void;
+    placeholder: string;
+}
+
+const TimeDropdown: React.FC<TimeDropdownProps> = ({ value, onChange, placeholder }) => {
+    const times = ['12:00 AM', '1:00 AM', '2:00 AM', '3:00 AM', '4:00 AM', '5:00 AM', '6:00 AM', '7:00 AM', '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM', '7:00 PM', '8:00 PM', '9:00 PM', '10:00 PM', '11:00 PM'];
+
+    // Build time options
+    const timeOptions = times.map(t => ({ value: t, label: t }));
+
+    // Add "Closed" option if placeholder is "Closed"
+    if (placeholder === 'Closed') {
+        timeOptions.unshift({ value: '', label: 'Closed' });
+    } else {
+        // Add empty option for other cases
+        timeOptions.unshift({ value: '', label: placeholder });
+    }
+
+    return <CustomDropdown value={value} onChange={onChange} placeholder={placeholder} options={timeOptions} className="flex-1" />;
+};
+
 // CSS animations
 const animations = `
   @keyframes fadeInUp {
@@ -672,10 +774,10 @@ export default function AddBusinessPage() {
     };
 
     const priceRanges = [
-        { value: "R", label: "R - Budget Friendly" },
-        { value: "RR", label: "RR - Moderate" },
-        { value: "RRR", label: "RRR - Upscale" },
-        { value: "RRRR", label: "RRRR - Luxury" },
+        { value: "$", label: "Budget Friendly" },
+        { value: "$$", label: "Moderate" },
+        { value: "$$$", label: "Upscale" },
+        { value: "$$$$", label: "Luxury" },
     ];
 
     // Show loader while checking auth
@@ -1253,18 +1355,13 @@ export default function AddBusinessPage() {
                                                         <label className="block text-sm font-semibold text-white mb-2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
                                                             Price Range
                                                         </label>
-                                                        <select
+                                                        <CustomDropdown
                                                             value={formData.priceRange}
-                                                            onChange={(e) => handleInputChange('priceRange', e.target.value)}
-                                                            style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
-                                                            className="w-full bg-white/95 backdrop-blur-sm border pl-4 pr-4 py-3 sm:py-4 md:py-5 text-body font-semibold text-charcoal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 input-mobile rounded-full border-white/60 focus:ring-navbar-bg/30 focus:border-navbar-bg"
-                                                        >
-                                                            {priceRanges.map(range => (
-                                                                <option key={range.value} value={range.value}>
-                                                                    {range.label}
-                                                                </option>
-                                                            ))}
-                                                        </select>
+                                                            onChange={(value) => handleInputChange('priceRange', value)}
+                                                            placeholder="Select price range"
+                                                            options={priceRanges}
+                                                            className="w-full"
+                                                        />
                                                     </div>
                                                 </div>
                                             </div>
@@ -1349,7 +1446,7 @@ export default function AddBusinessPage() {
                                                     Business Hours (Optional)
                                                 </h3>
 
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                <div className="space-y-3">
                                                     {[
                                                         { key: "monday", label: "Monday" },
                                                         { key: "tuesday", label: "Tuesday" },
@@ -1358,21 +1455,41 @@ export default function AddBusinessPage() {
                                                         { key: "friday", label: "Friday" },
                                                         { key: "saturday", label: "Saturday" },
                                                         { key: "sunday", label: "Sunday" },
-                                                    ].map(day => (
-                                                        <div key={day.key} className="flex items-center gap-3">
-                                                            <label className="w-24 text-sm font-semibold text-white flex-shrink-0" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
-                                                                {day.label}
-                                                            </label>
-                                                            <input
-                                                                type="text"
-                                                                value={formData.hours[day.key as keyof typeof formData.hours]}
-                                                                onChange={(e) => handleHoursChange(day.key, e.target.value)}
-                                                                style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
-                                                                className="flex-1 bg-white/95 backdrop-blur-sm border pl-4 pr-4 py-3 sm:py-4 md:py-5 text-body font-semibold text-charcoal placeholder-charcoal/50 placeholder:font-normal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 input-mobile rounded-full border-white/60 focus:ring-navbar-bg/30 focus:border-navbar-bg"
-                                                                placeholder="e.g., 9:00 AM - 5:00 PM"
-                                                            />
-                                                        </div>
-                                                    ))}
+                                                    ].map(day => {
+                                                        const currentValue = formData.hours[day.key as keyof typeof formData.hours];
+                                                        const [openTime, closeTime] = currentValue ? currentValue.split(' - ') : ['', ''];
+
+                                                        return (
+                                                            <div key={day.key} className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                                                                <label className="w-24 text-sm font-semibold text-white flex-shrink-0" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
+                                                                    {day.label}
+                                                                </label>
+                                                                <div className="flex items-center gap-2 flex-1 w-full">
+                                                                    <TimeDropdown
+                                                                        value={openTime}
+                                                                        onChange={(value) => {
+                                                                            const newValue = value && closeTime ? `${value} - ${closeTime}` : value;
+                                                                            handleHoursChange(day.key, newValue);
+                                                                        }}
+                                                                        placeholder="Closed"
+                                                                    />
+                                                                    {openTime && (
+                                                                        <>
+                                                                            <span className="text-white text-sm font-semibold px-2">to</span>
+                                                                            <TimeDropdown
+                                                                                value={closeTime}
+                                                                                onChange={(value) => {
+                                                                                    const newValue = `${openTime} - ${value}`;
+                                                                                    handleHoursChange(day.key, newValue);
+                                                                                }}
+                                                                                placeholder="Select"
+                                                                            />
+                                                                        </>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
                                         </div>

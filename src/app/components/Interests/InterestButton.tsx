@@ -145,7 +145,7 @@ function InterestButton({
       suppressHydrationWarning
     >
       <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
-        <span 
+        <span
           className="text-[15px] md:text-base font-semibold text-center leading-tight"
           style={{
             wordBreak: 'keep-all',
@@ -156,7 +156,7 @@ function InterestButton({
             msHyphens: 'none',
           }}
         >
-          {interest.name}
+          {typeof interest.name === 'string' ? interest.name : String(interest.name || interest.id)}
         </span>
         {isSelected && (
           <motion.div

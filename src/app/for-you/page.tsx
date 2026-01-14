@@ -370,18 +370,12 @@ export default function ForYouPage() {
             />
           </div>
 
-          {/* Inline Filters - Show when searching */}
+          {/* Inline Filters - Always visible */}
           <InlineFilters
-            show={debouncedSearchQuery.trim().length > 0}
+            show={true}
             filters={filters}
             onDistanceChange={handleInlineDistanceChange}
             onRatingChange={handleInlineRatingChange}
-          />
-
-          {/* Suggestive Filters - Show when no filters active */}
-          <SuggestiveFilters
-            filters={filters}
-            onUpdateFilter={handleUpdateFilter}
           />
 
           {/* Active Filter Badges - Show when filters are active */}

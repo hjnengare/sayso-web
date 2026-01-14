@@ -57,9 +57,13 @@
       "Bash(move:*)",
       "Bash(move REFACTORING_SUMMARY.md docs )",
       "Bash(ls:*)",
-      "Bash(xargs:*)"
+      "Bash(xargs:*)",
+      "Bash(psql:*)"
     ],
     "deny": [],
-    "ask": []
+    "ask": [],
+    "additionalDirectories": [
+      "c:\\Users\\HilarioNengare\\Projects\\KLIO"
+    ]
   }
 }

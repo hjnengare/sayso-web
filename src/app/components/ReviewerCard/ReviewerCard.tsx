@@ -410,6 +410,15 @@ export default function ReviewerCard({
           </div>
         </div>
 
+        {/* User's earned badges - shown below reviewer info */}
+        {userBadges.length > 0 && (
+          <div className="px-2 pb-2 flex items-center gap-1.5 flex-wrap">
+            {userBadges.map((badge) => (
+              <BadgePill key={badge.id} badge={badge} size="sm" />
+            ))}
+          </div>
+        )}
+
         <ReviewContent
           businessName={review?.businessName || ""}
           businessType={review?.businessType || ""}

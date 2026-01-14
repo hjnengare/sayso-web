@@ -14,7 +14,6 @@ import { useDebounce } from "../hooks/useDebounce";
 import SearchInput from "../components/SearchInput/SearchInput";
 import { FilterState } from "../components/FilterModal/FilterModal";
 import ActiveFilterBadges from "../components/FilterActiveBadges/ActiveFilterBadges";
-import SuggestiveFilters from "../components/SuggestiveFilters/SuggestiveFilters";
 import InlineFilters from "../components/Home/InlineFilters";
 import BusinessesMap, { BusinessMapItem } from "../components/maps/BusinessesMap";
 import { List, Map as MapIcon } from "react-feather";
@@ -434,18 +433,12 @@ export default function TrendingPage() {
             />
           </div>
 
-          {/* Inline Filters - Show when searching */}
+          {/* Inline Filters - Always visible */}
           <InlineFilters
-            show={debouncedSearchQuery.trim().length > 0}
+            show={true}
             filters={filters}
             onDistanceChange={handleInlineDistanceChange}
             onRatingChange={handleInlineRatingChange}
-          />
-
-          {/* Suggestive Filters - Show when no filters active */}
-          <SuggestiveFilters
-            filters={filters}
-            onUpdateFilter={handleUpdateFilter}
           />
 
           {/* Active Filter Badges - Show when filters are active */}

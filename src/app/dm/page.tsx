@@ -384,8 +384,7 @@ export default function DMChatListPage() {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      // @ts-expect-error reuse submit handler signature
-      handleSend(e);
+      handleSend(e as any);
     }
   };
 

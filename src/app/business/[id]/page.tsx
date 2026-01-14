@@ -431,6 +431,8 @@ export default function BusinessProfilePage() {
                                                 alt={businessData.name}
                                                 rating={businessData.rating}
                                                 verified={businessData.verified}
+                                                images={businessData.images}
+                                                uploaded_images={businessData.uploaded_images}
                                             />
                                             <BusinessInfoComponent
                                                 name={businessData.name}
