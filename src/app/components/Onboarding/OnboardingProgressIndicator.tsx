@@ -22,7 +22,7 @@ export default function OnboardingProgressIndicator({
   return (
     <div className={`w-full ${className}`}>
       {/* Progress bar */}
-      <div className="h-1 bg-slate-200 rounded-full overflow-hidden mb-2">
+      <div className="h-2 bg-slate-200 rounded-full overflow-hidden mb-3">
         <div
           className="h-full bg-gradient-to-r from-sage to-sage/80 transition-all duration-500"
           style={{ width: `${percentage}%` }}
@@ -31,7 +31,7 @@ export default function OnboardingProgressIndicator({
 
       {/* Step indicator */}
       {showLabels && labels.length > 0 && (
-        <div className="flex justify-between text-xs text-slate-600 px-1">
+        <div className="flex justify-between text-sm text-slate-600 px-1">
           {labels.map((label, idx) => (
             <span
               key={idx}
@@ -48,7 +48,7 @@ export default function OnboardingProgressIndicator({
 
       {/* Numeric indicator */}
       {!showLabels && (
-        <p className="text-xs text-slate-600 text-right">
+        <p className="text-sm text-slate-600 text-right font-medium">
           Step {currentStep} of {totalSteps}
         </p>
       )}

@@ -175,7 +175,7 @@ export default function OnboardingLayout({
             <button
               onClick={handleBackClick}
               aria-label="Go back"
-              className="text-charcoal hover:text-charcoal/80 transition-all duration-300 p-2 hover:bg-off-white/50 rounded-lg block md:backdrop-blur-xl border border-white/30 hover:border-white/50 cursor-pointer"
+              className="text-white hover:text-white transition-all duration-300 p-2 bg-navbar-bg/90 hover:bg-navbar-bg rounded-full block md:backdrop-blur-xl border border-navbar-bg/60 hover:border-navbar-bg cursor-pointer"
             >
               {/* ✅ Lucide back arrow */}
               <ArrowLeft className="w-6 h-6" strokeWidth={2.5} />

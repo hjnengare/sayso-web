@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight } from "react-feather";
+import { motion } from "framer-motion";
 
 interface OnboardingButtonProps {
   canProceed: boolean;
@@ -38,10 +39,10 @@ export default function OnboardingButton({
     }
 
     if (variant === "complete") {
-      return `Complete Setup${selectedCount && selectedCount > 0 ? ` (${selectedCount} selected)` : ""}`;
+      return "Complete Setup";
     }
 
-    return `Continue${selectedCount && selectedCount > 0 ? ` (${selectedCount} selected)` : ""}`;
+    return "Continue";
   };
 
   const getButtonColor = () => {
@@ -75,12 +76,16 @@ export default function OnboardingButton({
   };
 
   return (
-    <button
+    <motion.button
       type="button"
       className={`w-full text-sm font-600 py-4 px-4 rounded-full transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 btn-target btn-press shadow-md ${getButtonColor()}`}
       onClick={handleClick}
       disabled={!canProceed || isProcessing}
       style={sfPro}
+      whileHover={canProceed && !isProcessing ? { scale: 1.02, y: -2 } : {}}
+      whileTap={canProceed && !isProcessing ? { scale: 0.98 } : {}}
+      animate={isProcessing ? { opacity: 0.9 } : { opacity: 1 }}
+      transition={{ type: "spring", stiffness: 400, damping: 25 }}
     >
       {isProcessing ? (
         <>
@@ -89,11 +94,25 @@ export default function OnboardingButton({
         </>
       ) : (
         <>
-          {getButtonText()}
-          {variant === "continue" && <ArrowRight className="w-4 h-4" aria-hidden="true" />}
+          <motion.span
+            initial={{ x: 0 }}
+            whileHover={{ x: 2 }}
+            transition={{ type: "spring", stiffness: 500, damping: 20 }}
+          >
+            {getButtonText()}
+          </motion.span>
+          {variant === "continue" && (
+            <motion.div
+              initial={{ x: 0 }}
+              whileHover={{ x: 4 }}
+              transition={{ type: "spring", stiffness: 500, damping: 20 }}
+            >
+              <ArrowRight className="w-4 h-4" aria-hidden="true" />
+            </motion.div>
+          )}
         </>
       )}
-    </button>
+    </motion.button>
   );
 }
 

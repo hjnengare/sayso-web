@@ -28,9 +28,9 @@ export default function OnboardingBackButton({
     <button
       onClick={handleBack}
       className={`
-        inline-flex items-center gap-2 px-4 py-2 rounded-lg
-        text-slate-600 hover:text-slate-900
-        bg-slate-100 hover:bg-slate-200
+        inline-flex items-center gap-2 px-4 py-2 rounded-full
+        text-white hover:text-white
+        bg-navbar-bg/90 hover:bg-navbar-bg
         transition-all duration-200
         font-medium text-sm
         ${className}

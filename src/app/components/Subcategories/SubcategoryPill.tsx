@@ -115,7 +115,7 @@ function SubcategoryPill({
         relative flex items-center gap-2 rounded-full border-2 px-4 py-2 text-sm font-medium
         focus:outline-none focus:ring-2 focus:ring-sage focus:ring-offset-2
         ${isSelected
-          ? 'border-coral bg-gradient-to-br from-coral to-coral/90 text-white ring-1 ring-coral/30 backdrop-blur-sm'
+          ? 'border-coral bg-gradient-to-br from-coral to-coral/90 text-white'
           : isDisabled
           ? 'border-charcoal/10 bg-charcoal/5 text-charcoal/40 cursor-not-allowed opacity-60'
           : 'border-sage/30 bg-gradient-to-br from-sage/10 to-sage/5 text-sage backdrop-blur-sm'

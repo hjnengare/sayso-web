@@ -386,10 +386,7 @@ export default function RegisterPage() {
                     className="w-full bg-gradient-to-r from-coral to-coral/80 text-white text-body font-semibold py-4 px-2 rounded-full hover:from-coral/90 hover:to-coral transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 btn-target btn-press"
                   >
                     {isFormDisabled ? (
-                      <>
-                        <InlineLoader size="xs" variant="wavy" color="white" />
-                        Creating account...
-                      </>
+                      <InlineLoader size="xs" variant="wavy" color="white" />
                     ) : (
                       "Create account"
                     )}

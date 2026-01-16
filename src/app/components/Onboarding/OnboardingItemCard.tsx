@@ -32,20 +32,20 @@ export default function OnboardingItemCard({
       onClick={() => !disabled && onClick?.()}
       className={`
         relative group cursor-pointer
-        transition-all duration-300 ease-out
+        transition-all duration-200 ease-in-out
         ${shaking ? "animate-shake" : ""}
-        ${animated ? "hover:scale-105" : ""}
+        ${animated ? "sm:hover:scale-105" : ""}
         ${disabled ? "opacity-50 cursor-not-allowed" : ""}
         ${className}
       `}
     >
       <div
         className={`
-          p-4 rounded-[16px] border-2 transition-all duration-300
+          p-4 rounded-[16px] border-2 transition-all duration-200
           flex flex-col items-center justify-center gap-2
           ${isSelected
-            ? "border-sage bg-sage/10 ring-2 ring-sage/20 shadow-lg"
-            : "border-slate-200 bg-white hover:border-sage/50 hover:bg-sage/5"
+            ? "border-sage bg-sage/10"
+            : "border-slate-200 bg-white sm:hover:border-sage/50 sm:hover:bg-sage/5"
           }
           ${disabled ? "opacity-50" : ""}
         `}
