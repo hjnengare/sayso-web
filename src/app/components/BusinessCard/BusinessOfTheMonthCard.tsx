@@ -513,7 +513,7 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
                       const uniqueColor = getUniqueBusinessColor(business.id);
                       return (
                         <>
-                          <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${uniqueColor} flex items-center justify-center flex-shrink-0`}>
+                          <div className="w-8 h-8 rounded-full bg-off-white/20 flex items-center justify-center flex-shrink-0">
                             <CategoryIcon className="w-4 h-4 text-charcoal/70" strokeWidth={2.5} />
                           </div>
                           <span 

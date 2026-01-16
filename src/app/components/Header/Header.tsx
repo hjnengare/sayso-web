@@ -4,9 +4,29 @@
 import { useRef, useState, useEffect, useLayoutEffect, useCallback, Fragment } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { createPortal } from "react-dom";
-import { User, X, ChevronDown, Compass, Bookmark, Bell, Edit, MessageCircle } from "react-feather";
+import { User, X, ChevronDown, Compass, Bookmark, Bell, Edit, MessageCircle, Lock } from "react-feather";
+import { motion, AnimatePresence } from "framer-motion";
 import FilterModal, { FilterState } from "../FilterModal/FilterModal";
 import SearchInput from "../SearchInput/SearchInput";
+
+// Tooltip component for locked items
+const LockedTooltip = ({ show, label }: { show: boolean; label: string }) => (
+  <AnimatePresence>
+    {show && (
+      <motion.div
+        initial={{ opacity: 0, y: 4, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 2, scale: 0.98 }}
+        transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+        className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1.5 bg-sage backdrop-blur-sm text-white text-xs font-medium rounded-lg whitespace-nowrap shadow-lg border border-sage/20 z-50"
+        style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+      >
+        Sign in to {label}
+        <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-sage rotate-45 border-l border-t border-sage/20" />
+      </motion.div>
+    )}
+  </AnimatePresence>
+);
 import { useSavedItems } from "../../contexts/SavedItemsContext";
 import { useNotifications } from "../../contexts/NotificationsContext";
 import { useMessages } from "../../contexts/MessagesContext";
@@ -24,10 +44,10 @@ const PRIMARY_LINKS = [
 ] as const;
 
 const DISCOVER_LINKS = [
-  { key: "for-you", label: "For You", description: "Personalized picks", href: "/for-you" },
-  { key: "trending", label: "Trending", description: "What's hot right now", href: "/trending" },
-  { key: "leaderboard", label: "Leaderboard", description: "Top community voices", href: "/leaderboard" },
-  { key: "events-specials", label: "Events & Specials", description: "Seasonal happenings & offers", href: "/events-specials" },
+  { key: "for-you", label: "For You", description: "Personalized picks", href: "/for-you", requiresAuth: true },
+  { key: "trending", label: "Trending", description: "What's hot right now", href: "/trending", requiresAuth: false },
+  { key: "leaderboard", label: "Leaderboard", description: "Top community voices", href: "/leaderboard", requiresAuth: false },
+  { key: "events-specials", label: "Events & Specials", description: "Seasonal happenings & offers", href: "/events-specials", requiresAuth: false },
 ] as const;
 
 
@@ -79,6 +99,12 @@ export default function Header({
   // Check if we're on the Explore page and need to enforce authentication
   const isOnExplorePage = pathname === '/explore';
   const requiresAuthForNav = isOnExplorePage && !authLoading && !user;
+
+  // Check if user is unauthenticated (guest mode)
+  const isGuest = !authLoading && !user;
+
+  // Hover states for locked item tooltips
+  const [hoveredLockedItem, setHoveredLockedItem] = useState<string | null>(null);
 
   // Handler to intercept navigation clicks and redirect to login if needed
   const handleNavClick = useCallback((href: string, e?: React.MouseEvent) => {
@@ -421,12 +447,13 @@ export default function Header({
                               <h3 className="text-sm md:text-base font-semibold text-charcoal" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>Discover</h3>
                             </div>
                             <div className="py-3">
-                              {DISCOVER_LINKS.map(({ key: subKey, label: subLabel, description, href: subHref }) => {
+                              {DISCOVER_LINKS.map(({ key: subKey, label: subLabel, description, href: subHref, requiresAuth }) => {
                                 const isActive = pathname === subHref || pathname?.startsWith(subHref);
+                                const showLockIndicator = isGuest && requiresAuth;
                                 return (
                                 <OptimizedLink
                                   key={subKey}
-                                  href={subHref}
+                                  href={showLockIndicator ? '/login' : subHref}
                                   onClick={(e) => {
                                     handleNavClick(subHref, e);
                                     clearDiscoverHoverTimeout();
@@ -436,8 +463,15 @@ export default function Header({
                                   style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                                 >
                                   <div className="flex-1">
-                                    <div className={`text-sm font-semibold ${isActive ? 'text-sage' : 'text-charcoal group-hover:text-coral'}`}>{subLabel}</div>
-                                    <div className="text-sm sm:text-xs text-charcoal/60 mt-0.5">{description}</div>
+                                    <div className={`text-sm font-semibold flex items-center gap-1.5 ${isActive ? 'text-sage' : 'text-charcoal group-hover:text-coral'}`}>
+                                      {subLabel}
+                                      {showLockIndicator && (
+                                        <Lock className="w-3 h-3 text-charcoal/40" />
+                                      )}
+                                    </div>
+                                    <div className="text-sm sm:text-xs text-charcoal/60 mt-0.5">
+                                      {showLockIndicator ? 'Sign in for personalized picks' : description}
+                                    </div>
                                   </div>
                                 </OptimizedLink>
                                 );
@@ -489,12 +523,16 @@ export default function Header({
 
               {/* Saved Bookmark Icon - Mobile Only */}
               <OptimizedLink
-                href="/saved"
+                href={isGuest ? '/login' : '/saved'}
                 className={`md:hidden group w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center rounded-lg transition-all duration-200 min-h-[44px] min-w-[44px] touch-manipulation relative shadow-md ${isSavedActive ? 'text-sage bg-sage/5' : whiteText ? 'text-white hover:text-white/80 hover:bg-white/10' : 'text-charcoal/80 hover:text-sage hover:bg-sage/5'}`}
-                aria-label="View saved businesses"
+                aria-label={isGuest ? 'Sign in to view saved' : 'View saved businesses'}
               >
                 <Bookmark className={`w-6 h-6 sm:w-5 sm:h-5 transition-all duration-200 group-hover:scale-110 ${isSavedActive ? 'text-sage' : whiteText ? 'text-white group-hover:text-white/80' : 'text-current group-hover:text-sage'}`} fill={isSavedActive ? 'currentColor' : 'none'} style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }} />
-                {savedCount > 0 && (
+                {isGuest ? (
+                  <span className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center w-4 h-4 rounded-full bg-charcoal/60 border border-white/20">
+                    <Lock className="w-2 h-2 text-white" />
+                  </span>
+                ) : savedCount > 0 && (
                   <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-5 px-1.5 text-white text-[11px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
                     {savedCount > 99 ? '99+' : savedCount}
                   </span>
@@ -503,12 +541,16 @@ export default function Header({
 
               {/* Messages/DM Icon - Mobile Only */}
               <OptimizedLink
-                href="/dm"
+                href={isGuest ? '/login' : '/dm'}
                 className={`md:hidden group w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center rounded-lg transition-all duration-200 min-h-[44px] min-w-[44px] touch-manipulation relative shadow-md ${isMessagesActive ? 'text-sage bg-sage/5' : whiteText ? 'text-white hover:text-white/80 hover:bg-white/10' : 'text-charcoal/80 hover:text-sage hover:bg-sage/5'}`}
-                aria-label="Messages"
+                aria-label={isGuest ? 'Sign in to view messages' : 'Messages'}
               >
                 <MessageCircle className={`w-6 h-6 sm:w-5 sm:h-5 transition-all duration-200 group-hover:scale-110 ${isMessagesActive ? 'text-sage' : whiteText ? 'text-white group-hover:text-white/80' : 'text-current group-hover:text-sage'}`} fill={isMessagesActive ? 'currentColor' : 'none'} style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }} />
-                {unreadMessagesCount > 0 && (
+                {isGuest ? (
+                  <span className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center w-4 h-4 rounded-full bg-charcoal/60 border border-white/20">
+                    <Lock className="w-2 h-2 text-white" />
+                  </span>
+                ) : unreadMessagesCount > 0 && (
                   <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-5 px-1.5 text-white text-[11px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
                     {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
                   </span>
@@ -540,41 +582,75 @@ export default function Header({
               </button>
 
               {/* Saved */}
-              <OptimizedLink
-                href="/saved"
-                className={`group hidden md:flex w-9 h-9 lg:w-10 lg:h-10 items-center justify-center rounded-lg transition-all duration-200 relative shadow-md ${isSavedActive ? 'text-sage bg-sage/5' : whiteText ? 'text-white hover:text-white/85 hover:bg-white/10' : 'text-charcoal/80 hover:text-sage hover:bg-sage/5'}`}
-                aria-label="Saved"
+              <div
+                className="relative hidden md:block"
+                onMouseEnter={() => isGuest && setHoveredLockedItem('saved')}
+                onMouseLeave={() => setHoveredLockedItem(null)}
               >
-                <Bookmark className={`w-4 h-4 sm:w-5 sm:h-5 transition-all duration-200 group-hover:scale-110 ${isSavedActive ? 'text-sage' : whiteText ? 'text-white group-hover:text-white/85' : 'text-current group-hover:text-sage'}`} fill={isSavedActive ? 'currentColor' : 'none'} style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }} />
-                {savedCount > 0 && (
-                  <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-5 px-1.5 text-white text-[11px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
-                    {savedCount > 99 ? '99+' : savedCount}
-                  </span>
-                )}
-              </OptimizedLink>
+                <OptimizedLink
+                  href={isGuest ? '/login' : '/saved'}
+                  className={`group flex w-9 h-9 lg:w-10 lg:h-10 items-center justify-center rounded-lg transition-all duration-200 relative shadow-md ${isSavedActive ? 'text-sage bg-sage/5' : whiteText ? 'text-white hover:text-white/85 hover:bg-white/10' : 'text-charcoal/80 hover:text-sage hover:bg-sage/5'}`}
+                  aria-label={isGuest ? 'Sign in to view saved' : 'Saved'}
+                >
+                  <Bookmark className={`w-4 h-4 sm:w-5 sm:h-5 transition-all duration-200 group-hover:scale-110 ${isSavedActive ? 'text-sage' : whiteText ? 'text-white group-hover:text-white/85' : 'text-current group-hover:text-sage'}`} fill={isSavedActive ? 'currentColor' : 'none'} style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }} />
+                  {isGuest ? (
+                    <span className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center w-4 h-4 rounded-full bg-charcoal/60 border border-white/20">
+                      <Lock className="w-2 h-2 text-white" />
+                    </span>
+                  ) : savedCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-5 px-1.5 text-white text-[11px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
+                      {savedCount > 99 ? '99+' : savedCount}
+                    </span>
+                  )}
+                </OptimizedLink>
+                <LockedTooltip show={hoveredLockedItem === 'saved'} label="view saved" />
+              </div>
 
               {/* Messages/DM */}
-              <OptimizedLink
-                href="/dm"
-                className={`group hidden md:flex w-9 h-9 lg:w-10 lg:h-10 items-center justify-center rounded-lg transition-all duration-200 relative shadow-md ${isMessagesActive ? 'text-sage bg-sage/5' : whiteText ? 'text-white hover:text-white/85 hover:bg-white/10' : 'text-charcoal/80 hover:text-sage hover:bg-sage/5'}`}
-                aria-label="Messages"
+              <div
+                className="relative hidden md:block"
+                onMouseEnter={() => isGuest && setHoveredLockedItem('messages')}
+                onMouseLeave={() => setHoveredLockedItem(null)}
               >
-                <MessageCircle className={`w-4 h-4 sm:w-5 sm:h-5 transition-all duration-200 group-hover:scale-110 ${isMessagesActive ? 'text-sage' : whiteText ? 'text-white group-hover:text-white/85' : 'text-current group-hover:text-sage'}`} fill={isMessagesActive ? 'currentColor' : 'none'} style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }} />
-                {unreadMessagesCount > 0 && (
-                  <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-5 px-1.5 text-white text-[11px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
-                    {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
-                  </span>
-                )}
-              </OptimizedLink>
+                <OptimizedLink
+                  href={isGuest ? '/login' : '/dm'}
+                  className={`group flex w-9 h-9 lg:w-10 lg:h-10 items-center justify-center rounded-lg transition-all duration-200 relative shadow-md ${isMessagesActive ? 'text-sage bg-sage/5' : whiteText ? 'text-white hover:text-white/85 hover:bg-white/10' : 'text-charcoal/80 hover:text-sage hover:bg-sage/5'}`}
+                  aria-label={isGuest ? 'Sign in to view messages' : 'Messages'}
+                >
+                  <MessageCircle className={`w-4 h-4 sm:w-5 sm:h-5 transition-all duration-200 group-hover:scale-110 ${isMessagesActive ? 'text-sage' : whiteText ? 'text-white group-hover:text-white/85' : 'text-current group-hover:text-sage'}`} fill={isMessagesActive ? 'currentColor' : 'none'} style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }} />
+                  {isGuest ? (
+                    <span className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center w-4 h-4 rounded-full bg-charcoal/60 border border-white/20">
+                      <Lock className="w-2 h-2 text-white" />
+                    </span>
+                  ) : unreadMessagesCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-5 px-1.5 text-white text-[11px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
+                      {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
+                    </span>
+                  )}
+                </OptimizedLink>
+                <LockedTooltip show={hoveredLockedItem === 'messages'} label="view messages" />
+              </div>
 
               {/* Profile */}
-              <OptimizedLink
-                href="/profile"
-                className={`group hidden md:flex w-9 h-9 lg:w-10 lg:h-10 items-center justify-center rounded-lg transition-all duration-200 shadow-md ${isProfileActive ? 'text-sage bg-sage/5' : whiteText ? 'text-white hover:text-white/85 hover:bg-white/10' : 'text-charcoal/80 hover:text-sage hover:bg-sage/5'}`}
-                aria-label="Profile"
+              <div
+                className="relative hidden md:block"
+                onMouseEnter={() => isGuest && setHoveredLockedItem('profile')}
+                onMouseLeave={() => setHoveredLockedItem(null)}
               >
-                <User className={`w-4 h-4 sm:w-5 sm:h-5 transition-all duration-200 group-hover:scale-110 ${isProfileActive ? 'text-sage' : whiteText ? 'text-white group-hover:text-white/85' : 'text-current group-hover:text-sage'}`} fill={isProfileActive ? 'currentColor' : 'none'} style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }} />
-              </OptimizedLink>
+                <OptimizedLink
+                  href={isGuest ? '/login' : '/profile'}
+                  className={`group flex w-9 h-9 lg:w-10 lg:h-10 items-center justify-center rounded-lg transition-all duration-200 relative shadow-md ${isProfileActive ? 'text-sage bg-sage/5' : whiteText ? 'text-white hover:text-white/85 hover:bg-white/10' : 'text-charcoal/80 hover:text-sage hover:bg-sage/5'}`}
+                  aria-label={isGuest ? 'Sign in' : 'Profile'}
+                >
+                  <User className={`w-4 h-4 sm:w-5 sm:h-5 transition-all duration-200 group-hover:scale-110 ${isProfileActive ? 'text-sage' : whiteText ? 'text-white group-hover:text-white/85' : 'text-current group-hover:text-sage'}`} fill={isProfileActive ? 'currentColor' : 'none'} style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }} />
+                  {isGuest && (
+                    <span className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center w-4 h-4 rounded-full bg-charcoal/60 border border-white/20">
+                      <Lock className="w-2 h-2 text-white" />
+                    </span>
+                  )}
+                </OptimizedLink>
+                <LockedTooltip show={hoveredLockedItem === 'profile'} label="view profile" />
+              </div>
             </div>
           </div>
         </div>
@@ -660,23 +736,31 @@ export default function Header({
                 <span className="text-sm font-semibold text-white/80 tracking-wide uppercase">Discover</span>
               </div>
               <div className="space-y-1 pl-4">
-                {DISCOVER_LINKS.map(({ key, label, href }, index) => (
-                  <OptimizedLink
-                    key={key}
-                    href={href}
-                    onClick={(e) => {
-                      handleNavClick(href, e);
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className={`py-2 rounded-[20px] text-base font-normal text-white/90 hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-200 min-h-[44px] flex items-center justify-start ${mobileRevealClass}`}
-                    style={{
-                      fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                      transitionDelay: `${(primaryCount + index) * 60}ms`,
-                    }}
-                  >
-                    <span className="text-left">{label}</span>
-                  </OptimizedLink>
-                ))}
+                {DISCOVER_LINKS.map(({ key, label, href, requiresAuth }, index) => {
+                  const showLockIndicator = isGuest && requiresAuth;
+                  return (
+                    <OptimizedLink
+                      key={key}
+                      href={showLockIndicator ? '/login' : href}
+                      onClick={(e) => {
+                        handleNavClick(href, e);
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`py-2 rounded-[20px] text-base font-normal text-white/90 hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-200 min-h-[44px] flex items-center justify-start ${mobileRevealClass}`}
+                      style={{
+                        fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                        transitionDelay: `${(primaryCount + index) * 60}ms`,
+                      }}
+                    >
+                      <span className="text-left flex items-center gap-1.5">
+                        {label}
+                        {showLockIndicator && (
+                          <Lock className="w-3 h-3 text-white/40" />
+                        )}
+                      </span>
+                    </OptimizedLink>
+                  );
+                })}
               </div>
             </div>
             
