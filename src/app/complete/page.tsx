@@ -5,12 +5,16 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, CheckCircle } from "react-feather";
 import { ShieldCheck, Clock, Smile, BadgeDollarSign } from "lucide-react";
 import { useReducedMotion } from "../utils/useReducedMotion";
-import OnboardingLayout from "../components/Onboarding/OnboardingLayout";
+import { 
+  OnboardingLayout, 
+  OnboardingErrorBoundary, 
+  OnboardingErrorBanner,
+  OnboardingActionBar 
+} from "../components/Onboarding";
 import ProtectedRoute from "../components/ProtectedRoute/ProtectedRoute";
 import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
 import { Loader } from "../components/Loader";
 import { useCompletePage } from "../hooks/useCompletePage";
-import { OnboardingErrorBoundary } from "../components/Onboarding/OnboardingErrorBoundary";
 
 // Dealbreaker icon mapping
 const DEALBREAKER_ICONS: { [key: string]: React.ComponentType<{ className?: string }> } = {
@@ -22,7 +26,6 @@ const DEALBREAKER_ICONS: { [key: string]: React.ComponentType<{ className?: stri
 
 // 🎨 Additional animations + highlight removal
 const completeStyles = `
-  /* Prevent word breaking in titles on mobile */
   .title-no-break {
     word-break: keep-all;
     overflow-wrap: normal;
@@ -44,69 +47,20 @@ const completeStyles = `
     }
   }
 
-  /* 🔒 Remove browser tap highlight overlay */
   * {
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Floating dealbreaker icons - horizontal above button */
   @keyframes floatIcon {
     0%, 100% { transform: translateY(0) scale(1); }
     50% { transform: translateY(-8px) scale(1.05); }
   }
 
-  /* Horizontal floating decorative icons */
   @keyframes floatHorizontal {
     0%, 100% { transform: translateX(0) translateY(0) rotate(0deg); }
     25% { transform: translateX(5px) translateY(-6px) rotate(5deg); }
     50% { transform: translateX(-3px) translateY(-10px) rotate(-3deg); }
     75% { transform: translateX(3px) translateY(-4px) rotate(2deg); }
-  }
-
-  .floating-icons-row {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 1.25rem;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
-    padding: 0 1rem;
-  }
-
-  .floating-icon-item {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
-    z-index: 1;
-    animation: floatHorizontal 4s ease-in-out infinite;
-  }
-
-  .floating-icon-item:nth-child(1) {
-    animation-delay: 0s;
-  }
-
-  .floating-icon-item:nth-child(2) {
-    animation-delay: 0.4s;
-  }
-
-  .floating-icon-item:nth-child(3) {
-    animation-delay: 0.8s;
-  }
-
-  .floating-icon-item:nth-child(4) {
-    animation-delay: 1.2s;
-  }
-
-  .floating-icon-item:nth-child(5) {
-    animation-delay: 1.6s;
-  }
-
-  @media (max-width: 768px) {
-    .floating-icons-row {
-      gap: 0.875rem;
-      margin-bottom: 1.25rem;
-    }
   }
 
   .dealbreakers-icons-container {
@@ -129,21 +83,10 @@ const completeStyles = `
     animation: floatIcon 3s ease-in-out infinite;
   }
 
-  .floating-dealbreaker-icon:nth-child(1) {
-    animation-delay: 0s;
-  }
-
-  .floating-dealbreaker-icon:nth-child(2) {
-    animation-delay: 0.3s;
-  }
-
-  .floating-dealbreaker-icon:nth-child(3) {
-    animation-delay: 0.6s;
-  }
-
-  .floating-dealbreaker-icon:nth-child(4) {
-    animation-delay: 0.9s;
-  }
+  .floating-dealbreaker-icon:nth-child(1) { animation-delay: 0s; }
+  .floating-dealbreaker-icon:nth-child(2) { animation-delay: 0.3s; }
+  .floating-dealbreaker-icon:nth-child(3) { animation-delay: 0.6s; }
+  .floating-dealbreaker-icon:nth-child(4) { animation-delay: 0.9s; }
 
   @media (max-width: 768px) {
     .dealbreakers-icons-container {
@@ -241,10 +184,10 @@ function CompletePageContent() {
         cancelled = true;
       };
     }
-  }, [reducedMotion, isSaving, isSaving, router]);
+  }, [reducedMotion, isSaving, router]);
 
   // Show loading state while saving
-  if (isSaving || isSaving) {
+  if (isSaving) {
     return (
       <OnboardingLayout step={4} showProgress={false}>
         <div className="flex items-center justify-center min-h-[400px]">
@@ -257,10 +200,7 @@ function CompletePageContent() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: completeStyles }} />
-      <OnboardingLayout
-        step={4}
-        showProgress={false}
-      >
+      <OnboardingLayout step={4} showProgress={false}>
         <div
           className="text-center animate-fade-in-up flex-1 flex flex-col justify-center px-4 relative"
           style={
@@ -274,11 +214,11 @@ function CompletePageContent() {
           }
         >
           {/* Heading */}
-          <div className="title-no-break">
+          <div className="title-no-break mb-4">
             <WavyTypedTitle
               text="You're all set!"
               as="h1"
-              className="font-urbanist text-lg md:text-4xl lg:text-5xl font-700 mb-4 tracking-tight leading-snug text-charcoal"
+              className="font-urbanist text-lg md:text-4xl lg:text-5xl font-700 tracking-tight leading-snug text-charcoal"
               typingSpeedMs={40}
               startDelayMs={300}
               waveVariant="subtle"
@@ -291,11 +231,13 @@ function CompletePageContent() {
               }}
             />
           </div>
+
+          {/* Subheading */}
           <p className="text-base md:text-lg font-normal text-charcoal/70 mb-4 leading-relaxed" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
             Time to discover what&apos;s out there.
           </p>
 
-          {/* Floating dealbreaker icons - horizontal above button */}
+          {/* Floating dealbreaker icons */}
           {selectedDealbreakers.length > 0 && (
             <div className="dealbreakers-icons-container">
               {selectedDealbreakers.map((dealbreakerId) => {
@@ -318,16 +260,10 @@ function CompletePageContent() {
           )}
 
           {/* Error message */}
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-[20px] p-4 text-center mb-4">
-              <p className="text-sm font-semibold text-red-600">
-                {error}
-              </p>
-            </div>
-          )}
+          <OnboardingErrorBanner error={error} className="mb-6" />
 
           {/* Continue CTA */}
-          <div>
+          <OnboardingActionBar align="center">
             <button
               onClick={handleContinue}
               disabled={isSaving}
@@ -339,7 +275,7 @@ function CompletePageContent() {
               {isSaving ? 'Saving...' : 'Continue to Home'}
               <ArrowRight className="w-5 h-5 ml-2 inline-block" />
             </button>
-          </div>
+          </OnboardingActionBar>
 
           {/* Completion badge */}
           <div className="mt-8">

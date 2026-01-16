@@ -6,6 +6,7 @@ import { useMounted } from "../hooks/useMounted";
 import { useScrollReveal } from "../hooks/useScrollReveal";
 import Logo from "../components/Logo/Logo";
 import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
+import { OnboardingCard, OnboardingActionBar } from "../components/Onboarding";
 
 const styles = `
   @keyframes fadeInUp {
@@ -51,7 +52,6 @@ const styles = `
     pointer-events: none;
     border-radius: 0.25rem;
   }
-  
 
   @media (prefers-reduced-motion: reduce) {
     * { animation: none !important; transition: none !important; }
@@ -69,21 +69,6 @@ const styles = `
 
   .btn-press:active { transform: scale(0.98); transition: transform 0.1s ease; }
 
-  .btn-premium {
-    position: relative;
-    background: linear-gradient(135deg, #7D9B76 0%, #6B8A64 100%);
-    border: 1px solid rgba(255,255,255,0.3);
-    ring: 1px solid rgba(125,155,118,0.2);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    backdrop-filter: blur(10px);
-  }
-  .btn-premium:hover {
-    transform: translateY(-2px);
-    border-color: rgba(255,255,255,0.4);
-    ring-color: rgba(125,155,118,0.3);
-  }
-  .btn-premium:active { transform: translateY(0); }
-
   :focus-visible {
     outline: none;
     ring: 2px solid rgba(104,163,130,0.40);
@@ -100,7 +85,6 @@ const styles = `
     overflow-wrap: break-word;
   }
 
-  /* Prevent word breaking in title on mobile */
   .title-no-break {
     word-break: keep-all;
     overflow-wrap: break-word;
@@ -116,7 +100,6 @@ const styles = `
       max-width: 100%;
     }
     
-    /* Prevent breaking within words - allow wrapping at word boundaries */
     .title-no-break h2 {
       white-space: normal;
       word-break: keep-all;
@@ -124,7 +107,6 @@ const styles = `
       hyphens: none;
     }
   }
-
 `;
 
 export default function OnboardingPage() {
@@ -153,6 +135,7 @@ export default function OnboardingPage() {
 
           {/* Main content */}
           <div className="text-center flex-1 flex flex-col justify-center min-h-0 py-4 space-y-6 md:space-y-8">
+            {/* Hero Title */}
             <div data-reveal className="title-no-break w-full block overflow-hidden">
               <h2 className="font-urbanist text-2xl sm:text-3xl md:text-5xl font-700 mb-5 md:mb-6 leading-[1.2] tracking-tight px-6 sm:px-4 md:px-2 text-charcoal no-hyphens block w-full" style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif", fontWeight: 700 }}>
                 <div className="block whitespace-nowrap">
@@ -181,6 +164,7 @@ export default function OnboardingPage() {
               </h2>
             </div>
 
+            {/* Description */}
             <p
               data-reveal
               className="text-body font-normal text-charcoal/70 leading-[1.55] max-w-[70ch] mx-auto px-4 no-hyphens"
@@ -192,6 +176,7 @@ export default function OnboardingPage() {
               Explore trusted businesses, leave reviews and see what&apos;s trending around you
             </p>
 
+            {/* CTA Buttons */}
             <div className="space-y-3 md:space-y-4 max-w-xs md:max-w-md mx-auto pt-2 md:pt-4">
               <div data-reveal>
                 <Link
@@ -206,21 +191,17 @@ export default function OnboardingPage() {
                 </Link>
               </div>
 
-              <div data-reveal className=" text-center text-charcoal/70 hover:text-charcoal transition-colors duration-300 text-sm font-medium"
+              {/* Login Link */}
+              <div data-reveal className="text-center text-charcoal/70 hover:text-charcoal transition-colors duration-300 text-sm font-medium"
                   style={{
                     fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
                     fontWeight: 500,
                   }}>
-             <span > Already have an account? </span>
-                <Link
-                  href="/login"
-                  
-                >
+                <span>Already have an account? </span>
+                <Link href="/login" className="font-semibold text-charcoal hover:underline">
                   Log in
                 </Link>
               </div>
-
-              
             </div>
           </div>
 

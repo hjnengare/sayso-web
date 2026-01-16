@@ -17,7 +17,6 @@ import InlineFilters from "../components/Home/InlineFilters";
 import SearchResultsMap from "../components/BusinessMap/SearchResultsMap";
 import { motion, AnimatePresence } from "framer-motion";
 import { List, Map as MapIcon } from "react-feather";
-import HeroCarousel from "../components/Hero/HeroCarousel";
 import BusinessRow from "../components/BusinessRow/BusinessRow";
 import BusinessRowSkeleton from "../components/BusinessRow/BusinessRowSkeleton";
 import FeaturedBusinessesSkeleton from "../components/CommunityHighlights/FeaturedBusinessesSkeleton";
@@ -33,7 +32,6 @@ import { useEvents } from "../hooks/useEvents";
 import { useRoutePrefetch } from "../hooks/useRoutePrefetch";
 import { useDebounce } from "../hooks/useDebounce";
 import { useUserPreferences } from "../hooks/useUserPreferences";
-import CategoryFilterPills from "../components/Home/CategoryFilterPills";
 import { useAuth } from "../contexts/AuthContext";
 
 // Note: dynamic and revalidate cannot be exported from client components

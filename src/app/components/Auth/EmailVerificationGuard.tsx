@@ -36,61 +36,25 @@ export default function EmailVerificationGuard({
   const emailVerified = user?.email_verified ?? false;
 
   // Force refresh user state if we detect verification from URL
+  // Only depends on stable primitives to prevent render loops
   useEffect(() => {
-    console.log('[EmailVerificationGuard] useEffect triggered', {
-      isVerifiedFromUrl,
-      userId,
-      emailVerified,
-      verifiedParam,
-      emailVerifiedParam
-    });
+    if (!isVerifiedFromUrl || !userId || emailVerified) {
+      return;
+    }
 
-    if (isVerifiedFromUrl && userId && !emailVerified) {
-      console.log('[EmailVerificationGuard] Starting optimistic user refresh');
-      // Optimistically update user state
-      AuthService.getCurrentUser().then(freshUser => {
-        console.log('[EmailVerificationGuard] Got fresh user', {
-          user_exists: !!freshUser,
-          email_verified: freshUser?.email_verified
-        });
-        if (freshUser?.email_verified) {
-          updateUser({ email_verified: true });
-        }
-      }).catch((err) => {
-        console.error('[EmailVerificationGuard] Error refreshing user:', err);
-        // Silently fail - will be handled by normal flow
-      });
-    }
-    // Also refresh if we have verified param but user state hasn't updated yet
-    if ((verifiedParam === '1' || emailVerifiedParam === 'true') && userId && !emailVerified) {
-      console.log('[EmailVerificationGuard] Starting verified param refresh');
-      // Refresh user state to get latest verification status
-      AuthService.getCurrentUser().then(freshUser => {
-        console.log('[EmailVerificationGuard] Got fresh user from verified param', {
-          user_exists: !!freshUser,
-          email_verified: freshUser?.email_verified
-        });
-        if (freshUser?.email_verified) {
-          updateUser({ email_verified: true });
-        }
-      }).catch((err) => {
-        console.error('[EmailVerificationGuard] Error refreshing user from verified param:', err);
-        // Silently fail - will be handled by normal flow
-      });
-    }
-  }, [isVerifiedFromUrl, userId, emailVerified, updateUser, verifiedParam, emailVerifiedParam]);
+    // Optimistically update user state
+    AuthService.getCurrentUser().then(freshUser => {
+      if (freshUser?.email_verified) {
+        updateUser({ email_verified: true });
+      }
+    }).catch((err) => {
+      console.error('[EmailVerificationGuard] Error refreshing user:', err);
+      // Silently fail - will be handled by normal flow
+    });
+  }, [isVerifiedFromUrl, userId, emailVerified]);
 
   // More accurate user existence check - check if we have user data, not just the object
   const userExists = !!(userId || userEmail);
-
-  console.log('EmailVerificationGuard: Checking access', {
-    user_exists: userExists,
-    user_id: userId,
-    email: userEmail,
-    email_verified: emailVerified,
-    isVerifiedFromUrl,
-    isLoading
-  });
 
   // Show loading only briefly - don't block if we have URL verification signal
   if (isLoading && !isVerifiedFromUrl) {
@@ -107,18 +71,15 @@ export default function EmailVerificationGuard({
   // If user is not logged in, show children (they'll be handled by ProtectedRoute)
   // Check both user object existence and if it has essential data
   if (!userId && !userEmail) {
-    console.log('EmailVerificationGuard: No user or incomplete user data, allowing access (ProtectedRoute will handle)');
     return <>{children}</>;
   }
 
   // If email is verified (from user state or URL param), show children immediately
   if (emailVerified || isVerifiedFromUrl) {
-    console.log('EmailVerificationGuard: Email verified, allowing access');
     return <>{children}</>;
   }
 
   // If email is not verified, show verification prompt
-  console.log('EmailVerificationGuard: Email not verified, blocking access');
   const handleResendVerification = async () => {
     if (!userEmail) return;
 
