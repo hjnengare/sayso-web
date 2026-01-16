@@ -6,8 +6,10 @@
 "use client";
 
 import { memo, useState, useEffect, useMemo, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import nextDynamic from "next/dynamic";
-import { ChevronUp } from "react-feather";
+import { ChevronUp, Lock } from "react-feather";
+import Link from "next/link";
 import { usePredefinedPageTitle } from "../hooks/usePageTitle";
 import Header from "../components/Header/Header";
 import SearchInput from "../components/SearchInput/SearchInput";
@@ -62,6 +64,10 @@ const MemoizedBusinessRow = memo(BusinessRow);
 
 export default function Home() {
   usePredefinedPageTitle('home');
+  
+  const searchParams = useSearchParams();
+  const isGuestMode = searchParams.get('guest') === 'true';
+  const { user } = useAuth();
   
   // Scroll to top button state (mobile only)
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -615,31 +621,81 @@ export default function Home() {
               {/* ✅ For You Section - Only show when NOT filtered, NOT searching, AND prefs are ready */}
               {!isFiltered && !isSearchActive && !prefsLoading && (
                 <div className="relative z-10 snap-start">
-                  {forYouLoading ? (
-                    <BusinessRowSkeleton title="For You Now" />
-                  ) : forYouError ? (
-                  <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral">
-                    Couldn't load personalized picks right now. We'll retry in the background.
-                  </div>
-                  ) : forYouBusinesses.length > 0 ? (
-                    <MemoizedBusinessRow 
-                      title="For You" 
-                      businesses={forYouBusinesses} 
-                      cta="See More" 
-                      href="/for-you" 
-                    />
-                  ) : (
-                    // ✅ Show helpful message when personalized query returns 0 (instead of hiding)
-                    <div className="mx-auto w-full max-w-[2000px] px-2 py-4">
-                      <div className="bg-sage/10 border border-sage/30 rounded-lg p-6 text-center">
-                        <p className="text-body text-charcoal/70 mb-2">
-                          We're still learning your taste
-                        </p>
-                        <p className="text-body-sm text-charcoal/50">
-                          Explore a bit and we'll personalize more recommendations for you.
-                        </p>
+                  {isGuestMode ? (
+                    /* Guest Mode: Show Sign-Up Call-to-Action */
+                    <div className="mx-auto w-full max-w-[2000px] px-2">
+                      <div className="relative overflow-hidden rounded-[20px] bg-gradient-to-br from-sage/20 via-sage/10 to-coral/10 border border-sage/30 backdrop-blur-sm p-8 sm:p-10 md:p-12">
+                        {/* Decorative background elements */}
+                        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                          <div className="absolute -top-20 -right-20 w-40 h-40 bg-sage/10 rounded-full blur-3xl" />
+                          <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-coral/10 rounded-full blur-3xl" />
+                        </div>
+                        
+                        <div className="relative z-10 text-center space-y-4 sm:space-y-5">
+                          <div className="flex justify-center mb-4">
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-sage/20 flex items-center justify-center">
+                              <Lock className="w-6 h-6 sm:w-7 sm:h-7 text-sage" strokeWidth={2.5} />
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-charcoal mb-2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                              Unlock Your Personalized Experience
+                            </h3>
+                            <p className="text-body sm:text-base text-charcoal/70 max-w-[60ch] mx-auto leading-relaxed mb-6 sm:mb-8" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                              Sign up to get recommendations tailored to your interests, save your favorite businesses, and be part of our community.
+                            </p>
+                          </div>
+                          
+                          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 pt-4">
+                            <Link
+                              href="/register"
+                              className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3.5 bg-gradient-to-r from-coral to-coral/80 hover:from-coral/90 hover:to-coral/70 text-white rounded-full font-semibold transition-all duration-300 shadow-md hover:shadow-lg text-center"
+                              style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                            >
+                              Create Free Account
+                            </Link>
+                            <Link
+                              href="/login"
+                              className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3.5 bg-white/60 hover:bg-white/80 text-charcoal rounded-full font-semibold transition-all duration-300 border border-charcoal/20 hover:border-charcoal/30 text-center"
+                              style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                            >
+                              Sign In
+                            </Link>
+                          </div>
+                        </div>
                       </div>
                     </div>
+                  ) : (
+                    /* Regular For You Section (Authenticated Users) */
+                    <>
+                      {forYouLoading ? (
+                        <BusinessRowSkeleton title="For You Now" />
+                      ) : forYouError ? (
+                      <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral">
+                        Couldn't load personalized picks right now. We'll retry in the background.
+                      </div>
+                      ) : forYouBusinesses.length > 0 ? (
+                        <MemoizedBusinessRow 
+                          title="For You" 
+                          businesses={forYouBusinesses} 
+                          cta="See More" 
+                          href="/for-you" 
+                        />
+                      ) : (
+                        // ✅ Show helpful message when personalized query returns 0 (instead of hiding)
+                        <div className="mx-auto w-full max-w-[2000px] px-2 py-4">
+                          <div className="bg-sage/10 border border-sage/30 rounded-lg p-6 text-center">
+                            <p className="text-body text-charcoal/70 mb-2">
+                              We're still learning your taste
+                            </p>
+                            <p className="text-body-sm text-charcoal/50">
+                              Explore a bit and we'll personalize more recommendations for you.
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               )}
