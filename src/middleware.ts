@@ -362,8 +362,12 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // Redirect unauthenticated users from protected routes
-  if (isProtectedRoute && !user && !isPublicRoute) {
+  // Check for guest mode to allow /home access without authentication
+  const isGuestMode = request.nextUrl.searchParams.get('guest') === 'true';
+  const isGuestModeHome = isGuestMode && request.nextUrl.pathname === '/home';
+
+  // Redirect unauthenticated users from protected routes (except for guest mode /home)
+  if (isProtectedRoute && !user && !isPublicRoute && !isGuestModeHome) {
     const redirectUrl = new URL('/onboarding', request.url);
     return NextResponse.redirect(redirectUrl);
   }
