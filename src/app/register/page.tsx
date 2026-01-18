@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Fontdiner_Swanky } from "next/font/google";
 import { ArrowLeft } from "react-feather";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
@@ -24,12 +23,6 @@ import { SocialLoginButtons } from "../components/Auth/Shared/SocialLoginButtons
 import { UsernameInput } from "../components/Auth/Register/UsernameInput";
 import { RegistrationProgress } from "../components/Auth/Register/RegistrationProgress";
 import { usePasswordStrength, validatePassword } from "../components/Auth/Register/usePasswordStrength";
-
-const swanky = Fontdiner_Swanky({
-  weight: "400",
-  subsets: ["latin"],
-  display: "swap",
-});
 
 export default function RegisterPage() {
   usePredefinedPageTitle('register');
@@ -299,7 +292,7 @@ export default function RegisterPage() {
             <WavyTypedTitle
               text="Create an account"
               as="h2"
-              className={`${swanky.className} text-3xl md:text-4xl font-semibold mb-2 text-center leading-[1.2] px-2 tracking-tight text-charcoal`}
+              className="text-3xl md:text-4xl font-semibold mb-2 text-center leading-[1.2] px-2 tracking-tight text-charcoal"
               typingSpeedMs={40}
               startDelayMs={300}
               waveVariant="subtle"
@@ -307,7 +300,8 @@ export default function RegisterPage() {
               triggerOnTypingComplete={true}
               enableScrollTrigger={false}
               style={{ 
-                fontFamily: swanky.style.fontFamily,
+                fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                fontWeight: 700,
               }}
             />
           </div>
