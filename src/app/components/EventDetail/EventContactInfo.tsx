@@ -10,6 +10,12 @@ interface EventContactInfoProps {
 }
 
 export default function EventContactInfo({ event }: EventContactInfoProps) {
+  const websiteUrl = event.url || event.purchaseUrl || event.bookingUrl || (event as any).ticketmaster_url || "";
+  const contactText = event.bookingContact || "";
+  const primaryLocation = event.venueAddress || event.location || "";
+  const secondaryLocation = [event.city, event.country].filter(Boolean).join(", ");
+  const hasAnyInfo = !!(contactText || websiteUrl || primaryLocation || secondaryLocation);
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -29,35 +35,57 @@ export default function EventContactInfo({ event }: EventContactInfoProps) {
           Contact Information
         </h3>
 
-        <div className="space-y-2.5">
-          <div className="flex items-center gap-2.5">
-            <Phone className="text-navbar-bg" size={16} />
-            <span
-              className="text-body-sm text-charcoal/70"
-              style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-            >
-              +44 20 1234 5678
-            </span>
+        {hasAnyInfo ? (
+          <div className="space-y-2.5">
+            {contactText && (
+              <div className="flex items-center gap-2.5">
+                <Phone className="text-navbar-bg" size={16} />
+                <span
+                  className="text-body-sm text-charcoal/70"
+                  style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                >
+                  {contactText}
+                </span>
+              </div>
+            )}
+
+            {websiteUrl && (
+              <div className="flex items-center gap-2.5">
+                <Globe className="text-navbar-bg" size={16} />
+                <a
+                  href={websiteUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-body-sm text-navbar-bg font-600 underline underline-offset-4"
+                  style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                >
+                  Visit booking page
+                </a>
+              </div>
+            )}
+
+            {(primaryLocation || secondaryLocation) && (
+              <div className="flex items-center gap-2.5">
+                <MapPin className="text-navbar-bg" size={16} />
+                <span
+                  className="text-body-sm text-charcoal/70"
+                  style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                >
+                  {primaryLocation}
+                  {primaryLocation && secondaryLocation ? ", " : ""}
+                  {secondaryLocation}
+                </span>
+              </div>
+            )}
           </div>
-          <div className="flex items-center gap-2.5">
-            <Globe className="text-navbar-bg" size={16} />
-            <span
-              className="text-body-sm text-charcoal/70"
-              style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-            >
-              www.example.com
-            </span>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <MapPin className="text-navbar-bg" size={16} />
-            <span
-              className="text-body-sm text-charcoal/70"
-              style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-            >
-              {event.location}
-            </span>
-          </div>
-        </div>
+        ) : (
+          <p
+            className="text-body-sm text-charcoal/70"
+            style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+          >
+            Contact details are not available for this event yet.
+          </p>
+        )}
       </div>
     </motion.div>
   );

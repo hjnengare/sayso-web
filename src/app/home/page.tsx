@@ -369,6 +369,11 @@ export default function Home() {
 
     const bySubCategory = new Map<string, any>();
 
+    const normalizeCategory = (value?: string | null) => {
+      if (!value || value === "uncategorized") return "Miscellaneous";
+      return value;
+    };
+
     const getDisplayRating = (b: any) =>
       (typeof b.totalRating === "number" && b.totalRating) ||
       (typeof b.rating === "number" && b.rating) ||
@@ -381,7 +386,7 @@ export default function Home() {
       0;
 
     const toTitle = (value?: string) =>
-      (value || "Business")
+      (value || "Miscellaneous")
         .toString()
         .split(/[-_]/)
         .filter(Boolean)
@@ -391,7 +396,7 @@ export default function Home() {
     // Group by subInterestLabel or subInterestId first (more specific), fallback to category
     for (const b of allBusinesses) {
       // Use subInterestLabel or subInterestId for more granular grouping
-      const subCat = (b.subInterestLabel || b.subInterestId || b.category || "Business") as string;
+      const subCat = normalizeCategory((b.subInterestLabel || b.subInterestId || b.category || "Miscellaneous") as string);
       const existing = bySubCategory.get(subCat);
       if (!existing || getDisplayRating(b) > getDisplayRating(existing)) {
         bySubCategory.set(subCat, b);
@@ -401,13 +406,13 @@ export default function Home() {
     const results = Array.from(bySubCategory.entries()).map(([subCat, b], index) => {
       const rating = getDisplayRating(b);
       const reviews = getReviews(b);
-      const categoryLabel = toTitle(b.subInterestLabel || b.subInterestId || b.category || subCat);
+      const categoryLabel = toTitle(subCat);
       return {
         id: b.id,
         name: b.name,
         image: b.image || b.image_url || (b.uploaded_images && b.uploaded_images.length > 0 ? b.uploaded_images[0] : null) || "",
         alt: b.alt || b.name,
-        category: b.category || "Business",
+        category: normalizeCategory(b.category) || categoryLabel,
         description: b.description || `Featured in ${categoryLabel}`,
         location: b.location || b.address || "Cape Town",
         rating: rating > 0 ? 5 : 0,

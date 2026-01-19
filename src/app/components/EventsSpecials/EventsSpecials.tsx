@@ -11,6 +11,58 @@ import { useToast } from "../../contexts/ToastContext";
 import WavyTypedTitle from "../../../components/Animations/WavyTypedTitle";
 import { useState, useEffect } from "react";
 
+const normalize = (value: string | undefined | null) =>
+  (value || '')
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '-');
+
+const buildCanonicalKey = (event: Event) => event.canonicalKey || event.id || `${normalize(event.title)}|${normalize(event.location)}`;
+
+const aggregateEvents = (events: Event[]): Event[] => {
+  const map = new Map<string, Event & { occurrences?: Array<{ startDate: string; endDate?: string }>; startDateISO?: string; endDateISO?: string }>();
+
+  for (const evt of events) {
+    const key = buildCanonicalKey(evt);
+    const startISO = evt.startDateISO || evt.startDate;
+    const endISO = evt.endDateISO || evt.endDate;
+
+    const existing = map.get(key);
+    if (!existing) {
+      map.set(key, {
+        ...evt,
+        canonicalKey: key,
+        startDateISO: startISO,
+        endDateISO: endISO,
+        occurrences: evt.occurrences || [{ startDate: startISO, endDate: endISO }],
+      });
+      continue;
+    }
+
+    const occurrences = [...(existing.occurrences || []), ...(evt.occurrences || [{ startDate: startISO, endDate: endISO }])];
+    const allStarts = occurrences.map((o) => o.startDate).filter(Boolean);
+    const allEnds = occurrences.map((o) => o.endDate).filter(Boolean);
+    const minStart = allStarts.length ? allStarts.slice().sort()[0] : existing.startDateISO;
+    const maxEnd = allEnds.length ? allEnds.slice().sort()[allEnds.length - 1] : existing.endDateISO;
+
+    map.set(key, {
+      ...existing,
+      occurrences,
+      startDateISO: minStart,
+      endDateISO: maxEnd,
+      startDate: minStart || existing.startDate,
+      endDate: maxEnd || existing.endDate,
+    });
+  }
+
+  return Array.from(map.values()).sort((a, b) => {
+    const aDate = a.startDateISO ? new Date(a.startDateISO).getTime() : new Date(a.startDate).getTime();
+    const bDate = b.startDateISO ? new Date(b.startDateISO).getTime() : new Date(b.startDate).getTime();
+    return aDate - bDate;
+  });
+};
+
 export default function EventsSpecials({
   title = "Events & Specials",
   events,
@@ -35,7 +87,11 @@ export default function EventsSpecials({
       try {
         setLoadingBusinessEvents(true);
         const res = await fetch('/api/events/business-events');
-        if (!res.ok) throw new Error('Failed to fetch business events');
+        if (!res.ok) {
+          console.warn('[EventsSpecials] business-events returned non-200', res.status);
+          setBusinessEvents([]);
+          return;
+        }
         const result = await res.json();
         setBusinessEvents(result.data || []);
       } catch (error) {
@@ -115,14 +171,10 @@ export default function EventsSpecials({
 
   // Merge business events with provided events, sorted by start date
   // Only use real data - no fallback to static events
-  const displayEvents = [
+  const displayEvents = aggregateEvents([
     ...(businessEvents || []),
     ...(events || []),
-  ].sort((a, b) => {
-    const dateA = new Date(a.startDate).getTime();
-    const dateB = new Date(b.startDate).getTime();
-    return dateA - dateB;
-  }).slice(0, 4); // Limit to first 4 events
+  ]).slice(0, 4); // Limit to first 4 events after consolidation
 
   // Only show if we have real events
   if (!loadingBusinessEvents && displayEvents.length === 0) {

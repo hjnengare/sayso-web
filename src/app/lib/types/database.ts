@@ -149,8 +149,94 @@ export interface ReviewWithUser extends Review {
   images?: ReviewImage[];
 }
 
+// Event Review Types
+export interface EventReview {
+  id: string;
+  event_id: string;
+  user_id: string;
+  rating: number; // 1-5
+  title?: string;
+  content: string;
+  tags: string[];
+  helpful_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EventReviewImage {
+  id: string;
+  review_id: string;
+  image_url: string;
+  alt_text?: string;
+  created_at: string;
+}
+
+export interface EventReviewWithUser extends EventReview {
+  user: {
+    id: string;
+    name?: string;
+    username?: string | null;
+    display_name?: string | null;
+    email?: string | null;
+    avatar_url?: string;
+  };
+  images?: EventReviewImage[];
+}
+
+// Special Review Types
+export interface SpecialReview {
+  id: string;
+  special_id: string;
+  user_id: string;
+  rating: number; // 1-5
+  title?: string;
+  content: string;
+  tags: string[];
+  helpful_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SpecialReviewImage {
+  id: string;
+  review_id: string;
+  image_url: string;
+  alt_text?: string;
+  created_at: string;
+}
+
+export interface SpecialReviewWithUser extends SpecialReview {
+  user: {
+    id: string;
+    name?: string;
+    username?: string | null;
+    display_name?: string | null;
+    email?: string | null;
+    avatar_url?: string;
+  };
+  images?: SpecialReviewImage[];
+}
+
 export interface ReviewFormData {
   business_id: string;
+  rating: number;
+  title?: string;
+  content: string;
+  tags: string[];
+  images?: File[];
+}
+
+export interface EventReviewFormData {
+  event_id: string;
+  rating: number;
+  title?: string;
+  content: string;
+  tags: string[];
+  images?: File[];
+}
+
+export interface SpecialReviewFormData {
+  special_id: string;
   rating: number;
   title?: string;
   content: string;

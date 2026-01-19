@@ -2,8 +2,44 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/link";
+import { useToast } from "../../contexts/ToastContext";
 
-export default function EventActionCard() {
+interface EventActionCardProps {
+  eventId?: string;
+  hasReviewed?: boolean;
+  bookingUrl?: string;
+  ticketmasterUrl?: string;
+  bookingContact?: string;
+  purchaseUrl?: string;
+}
+
+export default function EventActionCard({
+  eventId,
+  hasReviewed = false,
+  bookingUrl,
+  ticketmasterUrl,
+  bookingContact,
+  purchaseUrl,
+}: EventActionCardProps) {
+  const { showToast } = useToast();
+
+  const handleReserveClick = () => {
+    const cleanUrl = (value?: string) => value?.trim() || "";
+    const url = cleanUrl(ticketmasterUrl) || cleanUrl(bookingUrl) || cleanUrl(purchaseUrl);
+
+    if (url) {
+      window.open(url, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    if (bookingContact) {
+      showToast?.(bookingContact, "info");
+      return;
+    }
+
+    showToast?.("Booking link not available yet.", "info");
+  };
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -24,19 +60,30 @@ export default function EventActionCard() {
         </h3>
 
         <div className="space-y-3">
-          <button
+          <motion.button
+            type="button"
+            onClick={handleReserveClick}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             className="w-full bg-gradient-to-br from-navbar-bg to-navbar-bg/90 text-white font-semibold py-3 px-5 rounded-full transition-all duration-300 hover:bg-navbar-bg border border-white/30 shadow-md text-body-sm"
             style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
           >
             Reserve Your Spot
-          </button>
+          </motion.button>
 
-          <button
-            className="w-full bg-gradient-to-br from-white/50 to-white/30 backdrop-blur-sm text-charcoal font-semibold py-3 px-5 rounded-full transition-all duration-300 hover:bg-charcoal hover:text-white border border-white/40 shadow-md text-body-sm"
-            style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-          >
-            Contact Organizer
-          </button>
+          {eventId && (
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Link
+                href={`/event/${eventId}/review`}
+                className={`w-full inline-flex items-center justify-center gap-2 bg-gradient-to-br from-coral to-coral/90 text-white font-semibold py-3 px-5 rounded-full transition-all duration-300 hover:scale-105 border border-white/30 shadow-md text-body-sm ${
+                  hasReviewed ? 'opacity-50 pointer-events-none' : ''
+                }`}
+                style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+              >
+                {hasReviewed ? 'Already Reviewed' : 'Write Review'}
+              </Link>
+            </motion.div>
+          )}
         </div>
       </div>
     </motion.div>

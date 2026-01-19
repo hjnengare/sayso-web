@@ -48,7 +48,13 @@ export default function EventBanner({
       </div>
 
       {/* Badges */}
-      <EventBadge startDate={startDate} endDate={endDate} eventId={eventId} />
+      <EventBadge 
+        startDate={startDate} 
+        endDate={endDate} 
+        eventId={eventId}
+        // Pass-through optional props for consistency when parent has them
+        // These props will be undefined here unless the parent forwards them
+      />
     </div>
   );
 }

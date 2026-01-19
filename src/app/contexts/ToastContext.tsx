@@ -128,8 +128,8 @@ export function ToastProvider({ children }: ToastProviderProps) {
     <ToastContext.Provider value={value}>
       {children}
 
-      {/* Toast Container - Top-center position with Framer Motion */}
-      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] flex flex-col gap-2 pointer-events-none max-w-sm px-4">
+      {/* Toast Container - Top-center position with Framer Motion - Responsive */}
+      <div className="fixed top-2 sm:top-4 left-1/2 -translate-x-1/2 z-[9999] flex flex-col gap-2 pointer-events-none w-full px-2 sm:px-4 max-w-full sm:max-w-sm">
         <AnimatePresence mode="popLayout">
           {toasts.map((toast) => (
             <motion.div
@@ -145,11 +145,11 @@ export function ToastProvider({ children }: ToastProviderProps) {
                 layout: { duration: 0.2 }
               }}
               className={`
-                pointer-events-auto max-w-sm w-full backdrop-blur-xl rounded-lg px-4 py-3 shadow-lg
+                pointer-events-auto w-full backdrop-blur-xl rounded-lg px-3 sm:px-4 py-2.5 sm:py-3 shadow-lg
                 ${getToastStyles(toast.type)}
               `}
             >
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2">
                 <motion.div
                   className="flex-shrink-0"
                   initial={{ scale: 0, rotate: -180 }}
@@ -159,13 +159,13 @@ export function ToastProvider({ children }: ToastProviderProps) {
                   {getToastIcon(toast.type)}
                 </motion.div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-urbanist text-xs font-600 leading-tight break-words">
+                  <p className="font-urbanist text-xs sm:text-sm font-600 leading-tight break-words">
                     {toast.message}
                   </p>
                 </div>
                 <motion.button
                   onClick={() => removeToast(toast.id)}
-                  className="flex-shrink-0 ml-2 opacity-70 hover:opacity-100 transition-opacity duration-200 p-0.5 hover:bg-white/20 rounded-full"
+                  className="flex-shrink-0 ml-1.5 sm:ml-2 opacity-70 hover:opacity-100 transition-opacity duration-200 p-0.5 hover:bg-white/20 rounded-full"
                   aria-label="Dismiss notification"
                   whileHover={{ scale: 1.1, rotate: 90 }}
                   whileTap={{ scale: 0.9 }}

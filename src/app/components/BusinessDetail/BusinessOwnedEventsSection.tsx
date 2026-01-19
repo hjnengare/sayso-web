@@ -12,6 +12,8 @@ interface BusinessEvent {
   icon?: string;
   price?: number;
   businessId: string;
+  bookingUrl?: string;
+  bookingContact?: string;
 }
 
 interface BusinessOwnedEventsSectionProps {
@@ -132,6 +134,28 @@ export default function BusinessOwnedEventsSection({
                   {event.description}
                 </p>
               )}
+
+              {/* Booking CTA / Info */}
+              <div className="pt-2">
+                {event.bookingUrl && event.bookingUrl.trim() ? (
+                  <a
+                    href={event.bookingUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-3 py-2 bg-coral text-white rounded-full text-xs font-semibold hover:bg-coral/90 transition"
+                  >
+                    Reserve your spot
+                  </a>
+                ) : event.bookingContact && event.bookingContact.trim() ? (
+                  <div className="inline-flex items-center gap-2 px-3 py-2 bg-charcoal/10 text-charcoal rounded-full text-xs font-semibold">
+                    {event.bookingContact}
+                  </div>
+                ) : (
+                  <div className="inline-flex items-center gap-2 px-3 py-2 bg-charcoal/10 text-charcoal/70 rounded-full text-xs font-semibold">
+                    Limited availability
+                  </div>
+                )}
+              </div>
 
               {/* Badge */}
               <div className="pt-2 border-t border-charcoal/10">

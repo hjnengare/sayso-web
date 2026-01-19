@@ -6,12 +6,32 @@ export type Event = {
   alt?: string;
   icon?: string; // SVG icon identifier
   location: string;
-  rating: number;
-  startDate: string; // Running date
-  endDate?: string; // Optional end date for multi-day events
+  rating?: number | null;
+  startDate: string; // Running date (formatted)
+  endDate?: string; // Optional end date for multi-day events (formatted)
   price?: string;
   description?: string;
+    bookingUrl?: string;
+    bookingContact?: string;
+    source?: string; // e.g., ticketmaster, internal
+    ticketmasterAttractionId?: string;
+    ticketmaster_url?: string;
+    venueId?: string;
+    venueName?: string;
+    venueAddress?: string;
+    city?: string;
+    country?: string;
+    url?: string;
+    purchaseUrl?: string;
+    segment?: string;
+    genre?: string;
+    subGenre?: string;
   href?: string;
+  // Date metadata to support consolidation/sorting
+  startDateISO?: string; // Raw ISO start date if available
+  endDateISO?: string;   // Raw ISO end date if available
+  occurrences?: Array<{ startDate: string; endDate?: string; bookingUrl?: string }>; // All occurrences for detail view
+  canonicalKey?: string; // Stable key used for consolidation
   // Business ownership fields
   businessId?: string; // Links event to business
   businessName?: string; // For context in listings

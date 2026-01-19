@@ -28,17 +28,17 @@ function LeaderboardPodium({ topReviewers }: LeaderboardPodiumProps) {
         className="text-center group cursor-pointer flex-1 w-full max-w-[100px] sm:max-w-[140px] md:max-w-[180px] lg:max-w-[200px] order-1"
       >
         <div className="relative mb-1.5 sm:mb-2 md:mb-3">
-          <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 relative rounded-full overflow-hidden border-2 sm:border-[3px] md:border-4 border-white shadow-[0_8px_30px_rgba(0,0,0,0.2)] mx-auto ring-2 sm:ring-[3px] md:ring-4 ring-coral/30">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 relative rounded-full overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.2)] mx-auto">
             <FallbackImage
               src={topReviewers[1].avatar}
               alt={topReviewers[1].username}
               fill
-              className="object-cover"
+              className="object-contain p-1 sm:p-1.5 md:p-2"
               sizes="(max-width: 640px) 48px, (max-width: 768px) 64px, (max-width: 1024px) 80px, 96px"
               fallbackType="profile"
             />
           </div>
-          <div className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 md:-top-2 md:-right-2 w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 bg-gradient-to-br from-coral to-coral/80 rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.3)] border-[1.5px] sm:border-2 border-white ring-[1.5px] sm:ring-2 ring-white/50">
+          <div className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 md:-top-2 md:-right-2 w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 bg-gradient-to-br from-coral to-coral/80 rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.3)] border-[1.5px] sm:border-2 border-white">
             <span className="text-[10px] sm:text-body-sm md:text-body font-bold text-white">2</span>
           </div>
         </div>
@@ -62,17 +62,17 @@ function LeaderboardPodium({ topReviewers }: LeaderboardPodiumProps) {
         className="text-center group cursor-pointer flex-1 w-full max-w-[120px] sm:max-w-[160px] md:max-w-[200px] lg:max-w-[240px] order-2"
       >
         <div className="relative mb-1.5 sm:mb-2 md:mb-3">
-          <div className="w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 relative rounded-full overflow-hidden border-2 sm:border-[3px] md:border-4 border-white shadow-[0_12px_40px_rgba(0,0,0,0.25)] mx-auto ring-2 sm:ring-[3px] md:ring-4 ring-sage">
+          <div className="w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 relative rounded-full overflow-hidden shadow-[0_12px_40px_rgba(0,0,0,0.25)] mx-auto">
             <FallbackImage
               src={topReviewers[0].avatar}
               alt={topReviewers[0].username}
               fill
-              className="object-cover"
+              className="object-contain p-1 sm:p-1.5 md:p-2"
               sizes="(max-width: 640px) 56px, (max-width: 768px) 80px, (max-width: 1024px) 96px, 128px"
               fallbackType="profile"
             />
           </div>
-          <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 md:-top-3 md:-right-3 w-7 h-7 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full flex items-center justify-center shadow-[0_8px_30px_rgba(0,0,0,0.3)] border-[1.5px] sm:border-2 border-white ring-[1.5px] sm:ring-2 ring-white/50">
+          <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 md:-top-3 md:-right-3 w-7 h-7 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full flex items-center justify-center shadow-[0_8px_30px_rgba(0,0,0,0.3)] border-[1.5px] sm:border-2 border-white">
             <Trophy className="w-3.5 h-3.5 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
           </div>
         </div>
@@ -96,17 +96,17 @@ function LeaderboardPodium({ topReviewers }: LeaderboardPodiumProps) {
         className="text-center group cursor-pointer flex-1 w-full max-w-[100px] sm:max-w-[140px] md:max-w-[180px] lg:max-w-[200px] order-3"
       >
         <div className="relative mb-1.5 sm:mb-2 md:mb-3">
-          <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 relative rounded-full overflow-hidden border-2 sm:border-[3px] md:border-4 border-white shadow-[0_8px_30px_rgba(0,0,0,0.2)] mx-auto ring-2 sm:ring-[3px] md:ring-4 ring-charcoal/20">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 relative rounded-full overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.2)] mx-auto">
             <FallbackImage
               src={topReviewers[2].avatar}
               alt={topReviewers[2].username}
               fill
-              className="object-cover"
+              className="object-contain p-1 sm:p-1.5 md:p-2"
               sizes="(max-width: 640px) 48px, (max-width: 768px) 64px, (max-width: 1024px) 80px, 96px"
               fallbackType="profile"
             />
           </div>
-          <div className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 md:-top-2 md:-right-2 w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 bg-gradient-to-br from-charcoal/70 to-charcoal/50 rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.3)] border-[1.5px] sm:border-2 border-white ring-[1.5px] sm:ring-2 ring-white/50">
+          <div className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 md:-top-2 md:-right-2 w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 bg-gradient-to-br from-charcoal/70 to-charcoal/50 rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.3)] border-[1.5px] sm:border-2 border-white">
             <span className="text-[10px] sm:text-body-sm md:text-body font-bold text-white">3</span>
           </div>
         </div>

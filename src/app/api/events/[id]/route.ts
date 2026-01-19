@@ -42,8 +42,14 @@ export async function GET(
         { status: 404 }
       );
     }
-
+       // Transform Ticketmaster event to include booking URL
+       const transformedEvent = {
+         ...event,
+         ticketmaster_url: event.url || event.ticketmaster_url,
+         bookingUrl: event.url || event.ticketmaster_url,
+       };
     return NextResponse.json({ event });
+       return NextResponse.json({ event: transformedEvent });
   } catch (error: any) {
     console.error('[Events API] Unexpected error:', error);
     return NextResponse.json(

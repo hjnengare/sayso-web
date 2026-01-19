@@ -120,6 +120,11 @@ function LeaderboardPage() {
 
     const byInterest = new Map<string, any>();
 
+    const normalizeInterestId = (value?: string | null) => {
+      if (!value || value === "uncategorized") return "miscellaneous";
+      return value;
+    };
+
     const getDisplayRating = (b: any) =>
       (typeof b.totalRating === "number" && b.totalRating) ||
       (typeof b.rating === "number" && b.rating) ||
@@ -132,7 +137,7 @@ function LeaderboardPage() {
       0;
 
     const toTitle = (value?: string) =>
-      (value || "Business")
+      (value || "Miscellaneous")
         .toString()
         .split(/[-_]/)
         .filter(Boolean)
@@ -141,7 +146,7 @@ function LeaderboardPage() {
 
     for (const b of allBusinesses) {
       // Group by interestId instead of category
-      const interestId = (b.interestId || "uncategorized") as string;
+      const interestId = normalizeInterestId(b.interestId as string | undefined);
       const existing = byInterest.get(interestId);
       if (!existing || getDisplayRating(b) > getDisplayRating(existing)) {
         byInterest.set(interestId, b);
@@ -157,7 +162,7 @@ function LeaderboardPage() {
         name: b.name,
         image: b.image || b.image_url || (b.uploaded_images && b.uploaded_images.length > 0 ? b.uploaded_images[0] : null) || "",
         alt: b.alt || b.name,
-        category: b.category || "Business",
+        category: b.category || interestLabel || "Miscellaneous",
         description: b.description || `Featured in ${interestLabel}`,
         interestId: interestId,
         location: b.location || b.address || "Cape Town",

@@ -52,10 +52,10 @@ export default function OnboardingButton({
         : 'bg-charcoal/10 text-charcoal/60 cursor-not-allowed';
     }
     
-    // Default continue button uses sage gradient
+    // Continue button matches EventCard "Learn more" styling
     return canProceed
-      ? 'bg-gradient-to-r from-sage to-sage/80 text-white hover:from-sage/90 hover:to-sage'
-      : 'bg-charcoal/10 text-charcoal/60 cursor-not-allowed';
+      ? 'bg-navbar-bg/90 text-off-white border border-navbar-bg/70 shadow-sm hover:bg-navbar-bg'
+      : 'bg-charcoal/10 text-charcoal/60 border border-charcoal/20 cursor-not-allowed shadow-none';
   };
 
   const handleClick = () => {
@@ -78,7 +78,7 @@ export default function OnboardingButton({
   return (
     <motion.button
       type="button"
-      className={`w-full text-sm font-600 py-4 px-4 rounded-full transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 btn-target btn-press shadow-md ${getButtonColor()}`}
+      className={`w-full min-h-[44px] text-sm font-600 py-3 px-4 rounded-full transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 btn-target btn-press ${getButtonColor()}`}
       onClick={handleClick}
       disabled={!canProceed || isProcessing}
       style={sfPro}

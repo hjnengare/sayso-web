@@ -24,28 +24,34 @@ export default function EventInfo({ event }: EventInfoProps) {
       </h1>
 
       <div className="flex items-center gap-3 mb-4 flex-wrap">
-        {/* Rating Badge - matching BusinessCard style */}
-        <div className="inline-flex items-center gap-1 rounded-full bg-off-white/95 backdrop-blur-xl px-3 py-1.5 text-charcoal border border-white/40">
-          <Star className="w-3.5 h-3.5 text-coral fill-coral" aria-hidden />
-          <span
-            className="text-body-sm font-semibold text-charcoal"
-            style={{ 
-              fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-              fontWeight: 600
-            }}
-          >
-            {Number(event.rating).toFixed(1)}
-          </span>
-        </div>
-        <div className="flex items-center gap-1.5 text-charcoal/70">
-          <MapPin size={14} />
-          <span
-            className="text-body-sm font-medium"
-            style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-          >
-            {event.location}
-          </span>
-        </div>
+        {event.rating != null && (
+          <div className="inline-flex items-center gap-1 rounded-full bg-off-white/95 backdrop-blur-xl px-3 py-1.5 text-charcoal border border-white/40">
+            <Star className="w-3.5 h-3.5 text-coral fill-coral" aria-hidden />
+            <span
+              className="text-body-sm font-semibold text-charcoal"
+              style={{ 
+                fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                fontWeight: 600
+              }}
+            >
+              {Number(event.rating).toFixed(1)}
+            </span>
+          </div>
+        )}
+
+        {(event.location || event.city || event.country) && (
+          <div className="flex items-center gap-1.5 text-charcoal/70">
+            <MapPin size={14} />
+            <span
+              className="text-body-sm font-medium"
+              style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+            >
+              {[event.location, [event.city, event.country].filter(Boolean).join(", ")]
+                .filter(Boolean)
+                .join(" · ") || "Location TBD"}
+            </span>
+          </div>
+        )}
       </div>
     </motion.div>
   );

@@ -3,7 +3,7 @@
 import { useState, useEffect, use, useRef } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, Calendar } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { Event } from "../../data/eventsData";
 import { useToast } from "../../contexts/ToastContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -23,9 +23,6 @@ import {
   EventLocation,
   EventPersonalizationInsights,
 } from "../../components/EventDetail";
-
-// Note: dynamic and revalidate cannot be exported from client components
-// Client components are automatically dynamic
 
 const Footer = nextDynamic(() => import("../../components/Footer/Footer"), {
   loading: () => null,
@@ -52,40 +49,27 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
     mapSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  // Unwrap the params Promise using React.use()
+  const resolvedParams = use(params);
+
   // Check if event is already saved on mount
   useEffect(() => {
     if (!event) return;
 
     const checkSavedStatus = async () => {
       try {
-        // Prefer saving businesses; fall back to events when no businessId is available
-        if (event.businessId) {
-          const response = await fetch(`/api/user/saved`);
-          if (response.ok) {
-            const data = await response.json();
-            const isSavedBusiness = Array.isArray(data.businesses)
-              ? data.businesses.some((b: any) => b.id === event.businessId)
-              : false;
-            setIsLiked(isSavedBusiness);
-          }
-        } else {
-          const response = await fetch(`/api/user/saved-events?event_id=${event.id}`);
-          if (response.ok) {
-            const data = await response.json();
-            setIsLiked(data.isSaved || false);
-          }
+        const response = await fetch(`/api/user/saved-events?event_id=${event.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setIsLiked(data.isSaved || false);
         }
       } catch (error) {
-        // Silently fail - user might not be logged in
         console.log('Could not check saved status:', error);
       }
     };
 
     checkSavedStatus();
   }, [event]);
-
-  // Unwrap the params Promise using React.use()
-  const resolvedParams = use(params);
 
   // Check if user has reviewed
   useEffect(() => {
@@ -173,13 +157,6 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
           return 'calendar-outline';
         };
 
-        const bookingUrl = dbEvent.ticket_url || dbEvent.booking_url || dbEvent.purchase_url || undefined;
-        const bookingContact = dbEvent.booking_contact || dbEvent.bookingContact || undefined;
-        const ticketmasterUrl = dbEvent.ticketmaster_url || dbEvent.url || undefined;
-        const venueAddress = dbEvent.venue_address || dbEvent.venueAddress || undefined;
-        const country = dbEvent.country || undefined;
-        const businessId = dbEvent.business_id || dbEvent.businessId || undefined;
-
         const transformedEvent: Event = {
           id: dbEvent.ticketmaster_id || dbEvent.id,
           title: dbEvent.title || 'Untitled Event',
@@ -187,25 +164,13 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
           image: dbEvent.image_url || null,
           alt: `${dbEvent.title} at ${dbEvent.venue_name || dbEvent.city || 'location'}`,
           icon: getIcon(dbEvent.segment, dbEvent.genre),
-          location: dbEvent.venue_name || venueAddress || dbEvent.city || 'Location TBD',
-          rating: dbEvent.rating ?? null,
+          location: dbEvent.venue_name || dbEvent.city || 'Location TBD',
+          rating: 4.5,
           startDate: formatDate(dbEvent.start_date),
           endDate: dbEvent.end_date ? formatDate(dbEvent.end_date) : undefined,
           price: formatPrice(dbEvent.price_range),
           description: dbEvent.description || undefined,
           href: `/event/${dbEvent.ticketmaster_id || dbEvent.id}`,
-          bookingUrl,
-          bookingContact,
-          ticketmaster_url: ticketmasterUrl,
-          purchaseUrl: dbEvent.purchase_url || bookingUrl,
-          venueAddress,
-          venueName: dbEvent.venue_name || undefined,
-          country,
-          url: ticketmasterUrl,
-          segment: dbEvent.segment || undefined,
-          genre: dbEvent.genre || undefined,
-          subGenre: dbEvent.sub_genre || undefined,
-          businessId,
         };
 
         setEvent(transformedEvent);
@@ -229,97 +194,40 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
 
   const handleLike = async () => {
     if (!event) return;
-
+    
     if (!user) {
-      showToast("Please log in to save items", "error");
+      showToast("Please log in to save events", "error");
       return;
     }
-
+    
     const newLikedState = !isLiked;
     setIsLiked(newLikedState);
     
     try {
       if (newLikedState) {
-        let response;
-        let saveType = 'event';
-        
-        // Try to save as business first if businessId exists
-        if (event.businessId) {
-          try {
-            response = await fetch('/api/user/saved', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ business_id: event.businessId }),
-            });
-            
-            if (response.ok) {
-              saveType = 'business';
-            } else if (response.status === 404 || response.status === 400) {
-              // Business not found or invalid, fall back to event save
-              console.warn('Business save failed, falling back to event save');
-              response = null;
-            } else {
-              // Other errors, throw
-              const errorData = await response.json().catch(() => ({}));
-              throw new Error(errorData.error || 'Failed to save as business');
-            }
-          } catch (err) {
-            console.warn('Business save error, falling back to event:', err);
-            response = null;
-          }
-        }
-        
-        // Fall back to event save if business save failed
-        if (!response || !response.ok) {
-          response = await fetch('/api/user/saved-events', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ event_id: event.id }),
-          });
-          saveType = 'event';
-        }
+        const response = await fetch('/api/user/saved-events', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ event_id: event.id }),
+        });
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           if (response.status === 401) {
-            showToast("Please log in to save items", "error");
+            showToast("Please log in to save events", "error");
             setIsLiked(!newLikedState);
             return;
           }
-          throw new Error(errorData.error || 'Failed to save');
+          throw new Error(errorData.error || 'Failed to save event');
         }
-        showToast(saveType === 'business' ? "Business saved to favorites" : "Event saved to favorites", "success");
+        showToast("Event saved to favorites", "success");
       } else {
-        // Try to delete as business first if businessId exists
-        let response;
-        
-        if (event.businessId) {
-          try {
-            response = await fetch(`/api/user/saved?business_id=${event.businessId}`, {
-              method: 'DELETE',
-            });
-            
-            if (response.ok) {
-              showToast("Business removed from favorites", "success");
-              return;
-            } else if (response.status === 404 || response.status === 400) {
-              // Business not found, fall back to event delete
-              console.warn('Business delete failed, falling back to event delete');
-            } else {
-              throw new Error('Failed to remove business');
-            }
-          } catch (err) {
-            console.warn('Business delete error, falling back to event:', err);
-          }
-        }
-        
-        // Fall back to event delete
-        response = await fetch(`/api/user/saved-events?event_id=${event.id}`, {
+        const response = await fetch(`/api/user/saved-events?event_id=${event.id}`, {
           method: 'DELETE',
         });
 
         if (!response.ok) {
-          throw new Error('Failed to unsave');
+          throw new Error('Failed to unsave event');
         }
         showToast("Event removed from favorites", "success");
       }
@@ -327,7 +235,7 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
       setIsLiked(!newLikedState);
       const errorMessage = error instanceof Error ? error.message : 'Failed to update favorites';
       showToast(errorMessage, "error");
-      console.error('Error saving/unsaving:', error);
+      console.error('Error saving/unsaving event:', error);
     }
   };
 
@@ -343,7 +251,7 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
     }
   };
 
-  // Loading state - show full page loader with transition
+  // Loading state
   if (loading) {
     return (
       <div className="min-h-dvh bg-off-white">
@@ -366,11 +274,8 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
     return (
       <div className="min-h-dvh bg-off-white flex items-center justify-center">
         <div className="text-center p-6">
-          <div className="w-16 h-16 bg-gradient-to-br from-white/40 to-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4 border border-white/40">
-            <Calendar className="w-7 h-7 text-charcoal" />
-          </div>
-          <h1 className="text-2xl font-bold text-charcoal mb-4" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>Event Not Found</h1>
-          <Link href="/events-specials" className="px-6 py-2.5 bg-gradient-to-br from-charcoal to-charcoal/90 text-white rounded-full text-sm font-600 hover:bg-charcoal/90 transition-all duration-300 border border-white/30 inline-block" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+          <h1 className="text-2xl font-bold text-charcoal mb-4" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>Event Not Found</h1>
+          <Link href="/events-specials" className="px-6 py-2.5 bg-charcoal text-white rounded-full text-sm font-semibold hover:bg-charcoal/90 transition-all duration-300 border border-white/30 inline-block" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
             Back to Events & Specials
           </Link>
         </div>
@@ -381,10 +286,11 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
   return (
     <AnimatePresence mode="wait">
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -10 }}
-        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        key={resolvedParams.id}
+        initial={{ opacity: 0, y: 20, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: -20, scale: 0.98 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         className="min-h-dvh bg-off-white font-urbanist"
         style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
       >
@@ -399,18 +305,11 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
 
         <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
           <div className="pt-20 sm:pt-24">
-
-            {/* Main Content Section */}
-            <section
-              className="relative"
-              style={{
-                fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-              }}
-            >
+            <section className="relative" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
               <div className="mx-auto w-full max-w-[2000px] px-2 relative z-10">
                 {/* Breadcrumb Navigation */}
-                <nav className="pt-4 mb-6 sm:mb-8 px-2" aria-label="Breadcrumb">
-                  <ol className="flex items-center gap-2 text-sm sm:text-base flex-nowrap overflow-x-auto scrollbar-hide">
+                <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
+                  <ol className="flex items-center gap-2 text-sm sm:text-base">
                     <li className="hidden sm:block">
                       <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium">Home</Link>
                     </li>
@@ -437,13 +336,20 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
                       <EventInfo event={event} />
                       <EventDescription event={event} />
                       <EventDetailsCard event={event} />
+                      
+                      {/* Event Location */}
+                      <div ref={mapSectionRef}>
+                        <EventLocation
+                          name={event.title}
+                          venue={event.location}
+                          city={event.location}
+                        />
+                      </div>
 
-                      {/* Contact Info - Mobile Only (hide when direct booking is available) */}
-                      {!((event.bookingUrl || event.purchaseUrl || (event as any).ticketmaster_url || (event as any).url)) && (
-                        <div className="lg:hidden">
-                          <EventContactInfo event={event} />
-                        </div>
-                      )}
+                      {/* Contact Info - Mobile Only */}
+                      <div className="lg:hidden">
+                        <EventContactInfo event={event} />
+                      </div>
                     </div>
 
                     {/* Right Column - Sidebar */}
@@ -457,13 +363,11 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
                         bookingContact={event.bookingContact}
                       />
                       <EventPersonalizationInsights event={{ id: event.id, rating: event.rating, totalReviews: reviews.length }} />
-
-                      {/* Contact Info - Desktop Only (hide when direct booking is available) */}
-                      {!((event.bookingUrl || event.purchaseUrl || (event as any).ticketmaster_url || (event as any).url)) && (
-                        <div className="hidden lg:block">
-                          <EventContactInfo event={event} />
-                        </div>
-                      )}
+                      
+                      {/* Contact Info - Desktop Only */}
+                      <div className="hidden lg:block">
+                        <EventContactInfo event={event} />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -505,12 +409,10 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
             </section>
 
             <div className="border-t border-charcoal/10 mt-12"></div>
+            <Footer />
           </div>
         </div>
-
-        <Footer />
       </motion.div>
     </AnimatePresence>
   );
 }
-

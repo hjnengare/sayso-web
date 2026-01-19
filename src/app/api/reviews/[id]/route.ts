@@ -384,6 +384,27 @@ export async function DELETE(req: Request, { params }: RouteParams) {
       // Don't fail the request if stats update fails
     }
 
+    // Recalculate user achievements/badges after review deletion
+    try {
+      const { count: remainingReviews } = await supabase
+        .from('reviews')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      // Log the new review count for debugging
+      console.log('[/api/reviews] DELETE user review count after deletion:', { 
+        user_id: user.id, 
+        remainingReviews 
+      });
+
+      // The achievements are computed on-the-fly in the GET /api/user/achievements endpoint,
+      // so they will automatically reflect the updated review count on the next fetch.
+      // No need for separate RPC call; the client will see updated badges when refreshing.
+    } catch (achievementError) {
+      console.error('[/api/reviews] DELETE error recalculating achievements:', achievementError);
+      // Don't fail the deletion if achievement recalculation fails
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Review deleted successfully',

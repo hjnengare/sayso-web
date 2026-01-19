@@ -42,14 +42,14 @@ function LeaderboardUser({ user, index, isMobile = false }: LeaderboardUserProps
         initial={{ opacity: 0, x: -10 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: index * 0.05, duration: 0.3 }}
-        className="group bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[20px] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)] cursor-pointer border border-white/50 backdrop-blur-md ring-1 ring-white/20 hover:shadow-[0_12px_40px_rgb(0,0,0,0.18)] transition-shadow duration-300"
+        className="group bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[20px] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)] cursor-pointer backdrop-blur-md hover:shadow-[0_12px_40px_rgb(0,0,0,0.18)] transition-shadow duration-300"
       >
         <div className="flex items-center justify-between p-3 sm:p-4">
           <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-            <div className={`w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br ${getBadgeStyles()} rounded-full flex items-center justify-center font-urbanist text-caption sm:text-body-sm font-600 shadow-[0_4px_12px_rgba(0,0,0,0.1)] flex-shrink-0 border border-white/40`}>
+            <div className={`w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br ${getBadgeStyles()} rounded-full flex items-center justify-center font-urbanist text-caption sm:text-body-sm font-600 shadow-[0_4px_12px_rgba(0,0,0,0.1)] flex-shrink-0`}>
               {user.rank <= 3 ? <Trophy className="w-3 h-3 sm:w-4 sm:h-4" /> : user.rank}
             </div>
-            <div className="w-12 h-12 sm:w-14 sm:h-14 relative rounded-lg overflow-hidden border-2 border-white shadow-[0_4px_20px_rgba(0,0,0,0.15)] ring-2 ring-white/50 flex-shrink-0">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 relative rounded-lg overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.15)] flex-shrink-0">
               <FallbackImage
                 src={user.avatar}
                 alt={user.username}
@@ -67,7 +67,7 @@ function LeaderboardUser({ user, index, isMobile = false }: LeaderboardUserProps
             </div>
           </div>
           <div className="flex flex-col items-end gap-1 flex-shrink-0 ml-2">
-            <div className="bg-gradient-to-br from-off-white via-off-white to-off-white/90 backdrop-blur-xl px-2 sm:px-3 py-1 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.15)] border border-white/60 ring-1 ring-white/30 flex items-center gap-1">
+            <div className="bg-gradient-to-br from-off-white via-off-white to-off-white/90 backdrop-blur-xl px-2 sm:px-3 py-1 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.15)] flex items-center gap-1">
               <Star className="w-3 h-3 sm:w-4 sm:h-4 text-coral fill-coral" />
               <span className="font-urbanist text-caption sm:text-body-sm font-600 text-charcoal">{user.totalRating?.toFixed(1) || "4.8"}</span>
             </div>

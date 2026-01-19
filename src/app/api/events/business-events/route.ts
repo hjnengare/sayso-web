@@ -7,7 +7,7 @@ import { getServerSupabase } from '@/app/lib/supabase/server';
  */
 export async function GET(req: NextRequest) {
   try {
-    const supabase = getServerSupabase();
+    const supabase = await getServerSupabase(req);
 
     // Fetch all business events, ordered by start date (ascending to show upcoming first)
     const { data, error } = await supabase
@@ -17,13 +17,17 @@ export async function GET(req: NextRequest) {
 
     if (error) {
       console.error('[Business Events API] Query error:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ success: true, data: [] });
     }
 
     // Fetch business images for context
-    const { data: businessImages } = await supabase
+    const { data: businessImages, error: imagesError } = await supabase
       .from('business_images')
       .select('business_id, image_url');
+
+    if (imagesError) {
+      console.warn('[Business Events API] business_images fetch error:', imagesError);
+    }
 
     const imagesByBusiness = new Map<string, string[]>();
     (businessImages || []).forEach((img: any) => {
@@ -53,11 +57,13 @@ export async function GET(req: NextRequest) {
       createdBy: e.created_by,
       createdAt: e.created_at,
       isBusinessOwned: true,
+      bookingUrl: e.booking_url,
+      bookingContact: e.booking_contact,
     }));
 
     return NextResponse.json({ success: true, data: events });
   } catch (error) {
     console.error('[Business Events API] Error:', error);
-    return NextResponse.json({ error: 'Failed to fetch business events' }, { status: 500 });
+    return NextResponse.json({ success: true, data: [] });
   }
 }

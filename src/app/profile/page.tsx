@@ -891,6 +891,34 @@ function ProfileContent() {
         if (userStats) {
           setUserStats(prev => prev ? { ...prev, totalReviewsWritten: Math.max(0, prev.totalReviewsWritten - 1) } : null);
         }
+
+        // Refetch achievements/badges since review count changed
+        if (user?.id) {
+          try {
+            const response = await fetch(`/api/badges/user?user_id=${user.id}`, { cache: 'no-store' });
+            if (response.ok) {
+              const result = await response.json();
+              if (result.ok && result.badges && Array.isArray(result.badges)) {
+                const earnedBadges = result.badges.filter((badge: any) => badge.earned);
+                const transformedAchievements: UserAchievement[] = earnedBadges.map((badge: any) => ({
+                  achievement_id: badge.id,
+                  earned_at: badge.awarded_at || new Date().toISOString(),
+                  achievements: {
+                    id: badge.id,
+                    name: badge.name,
+                    description: badge.description,
+                    icon: badge.icon_path,
+                    category: badge.badge_group || 'general',
+                  },
+                }));
+                setAchievements(transformedAchievements);
+              }
+            }
+          } catch (achievementErr) {
+            console.error('Error refetching achievements after review deletion:', achievementErr);
+            // Continue anyway, user can refresh page if needed
+          }
+        }
       } else {
         setDeleteError('Failed to delete review');
       }

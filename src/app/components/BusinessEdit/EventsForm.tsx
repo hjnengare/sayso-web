@@ -11,6 +11,8 @@ interface EventFormData {
   description?: string;
   icon?: string;
   price?: number;
+  bookingUrl?: string;
+  bookingContact?: string;
 }
 
 interface BusinessEvent extends EventFormData {
@@ -45,6 +47,8 @@ export default function EventsForm({ businessId, businessName }: EventsFormProps
     description: '',
     icon: '🎉',
     price: undefined,
+    bookingUrl: '',
+    bookingContact: '',
   });
 
   // Fetch events on mount
@@ -158,6 +162,8 @@ export default function EventsForm({ businessId, businessName }: EventsFormProps
       description: '',
       icon: '🎉',
       price: undefined,
+      bookingUrl: '',
+      bookingContact: '',
     });
     setEditingId(null);
     setShowForm(false);
@@ -314,6 +320,41 @@ export default function EventsForm({ businessId, businessName }: EventsFormProps
                   min="0"
                   className="w-full px-4 py-2 rounded-lg border border-charcoal/20 focus:outline-none focus:ring-2 focus:ring-coral"
                 />
+                </div>
+
+                {/* Booking Information */}
+                <div className="bg-charcoal/5 rounded-lg p-4 border border-charcoal/10">
+                  <h5 className="font-semibold text-charcoal text-sm mb-3">Booking & Availability</h5>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-charcoal mb-1">
+                        Booking URL (optional)
+                      </label>
+                      <input
+                        type="url"
+                        name="bookingUrl"
+                        value={formData.bookingUrl || ''}
+                        onChange={handleInputChange}
+                        placeholder="https://example.com/book-event"
+                        className="w-full px-4 py-2 rounded-lg border border-charcoal/20 focus:outline-none focus:ring-2 focus:ring-coral"
+                      />
+                      <p className="text-xs text-charcoal/50 mt-1">Link to external booking system (Eventbrite, Bookings.com, etc.)</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-charcoal mb-1">
+                        Booking Contact (optional)
+                      </label>
+                      <input
+                        type="text"
+                        name="bookingContact"
+                        value={formData.bookingContact || ''}
+                        onChange={handleInputChange}
+                        placeholder="e.g., Call us or Check availability"
+                        className="w-full px-4 py-2 rounded-lg border border-charcoal/20 focus:outline-none focus:ring-2 focus:ring-coral"
+                      />
+                      <p className="text-xs text-charcoal/50 mt-1">Shown when no booking URL available (e.g., "Contact business to book")</p>
+                    </div>
+                  </div>
               </div>
             </div>
 

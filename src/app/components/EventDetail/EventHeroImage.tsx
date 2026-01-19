@@ -79,16 +79,17 @@ export default function EventHeroImage({
         </span>
       </div>
 
-      {/* Rating Badge - matching BusinessCard style */}
-      <div className="absolute top-6 right-6 z-20 inline-flex items-center gap-1 rounded-full bg-off-white/95 backdrop-blur-xl px-3 py-1.5 text-charcoal border border-white/40">
-        <Star className="w-3.5 h-3.5 text-coral fill-coral" aria-hidden />
-        <span className="text-body-sm font-semibold text-charcoal" style={{ 
-          fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', 
-          fontWeight: 600
-        }}>
-          {Number(event.rating).toFixed(1)}
-        </span>
-      </div>
+      {event.rating != null && (
+        <div className="absolute top-6 right-6 z-20 inline-flex items-center gap-1 rounded-full bg-off-white/95 backdrop-blur-xl px-3 py-1.5 text-charcoal border border-white/40">
+          <Star className="w-3.5 h-3.5 text-coral fill-coral" aria-hidden />
+          <span className="text-body-sm font-semibold text-charcoal" style={{ 
+            fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', 
+            fontWeight: 600
+          }}>
+            {Number(event.rating).toFixed(1)}
+          </span>
+        </div>
+      )}
 
       {/* Like Button */}
       <button

@@ -29,7 +29,7 @@ export default function EventDetailsCard({ event }: EventDetailsCardProps) {
           Event Details
         </h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="flex flex-col gap-4">
         <div className="flex items-center gap-2.5">
           <div className="w-10 h-10 bg-white/30 rounded-full flex items-center justify-center">
             <Calendar className="text-navbar-bg" size={18} />
@@ -45,7 +45,7 @@ export default function EventDetailsCard({ event }: EventDetailsCardProps) {
               className="text-body-sm font-semibold text-charcoal"
               style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
             >
-              {event.startDate}
+              {event.startDate || "Date TBA"}
             </p>
             {event.endDate && (
               <p
@@ -58,45 +58,49 @@ export default function EventDetailsCard({ event }: EventDetailsCardProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5">
-          <div className="w-10 h-10 bg-white/30 rounded-full flex items-center justify-center">
-            <Clock className="text-navbar-bg" size={18} />
+        {event.segment && (
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 bg-white/30 rounded-full flex items-center justify-center">
+              <Clock className="text-navbar-bg" size={18} />
+            </div>
+            <div>
+              <p
+                className="text-caption text-charcoal/60"
+                style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+              >
+                Category
+              </p>
+              <p
+                className="text-body-sm font-semibold text-charcoal"
+                style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+              >
+                {[event.segment, event.genre].filter(Boolean).join(" · ")}
+              </p>
+            </div>
           </div>
-          <div>
-            <p
-              className="text-caption text-charcoal/60"
-              style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-            >
-              Duration
-            </p>
-            <p
-              className="text-body-sm font-semibold text-charcoal"
-              style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-            >
-              2-3 hours
-            </p>
-          </div>
-        </div>
+        )}
 
-        <div className="flex items-center gap-2.5">
-          <div className="w-10 h-10 bg-white/30 rounded-full flex items-center justify-center">
-            <Users className="text-navbar-bg" size={18} />
+        {event.venueName && (
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 bg-white/30 rounded-full flex items-center justify-center">
+              <Users className="text-navbar-bg" size={18} />
+            </div>
+            <div>
+              <p
+                className="text-caption text-charcoal/60"
+                style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+              >
+                Venue
+              </p>
+              <p
+                className="text-body-sm font-semibold text-charcoal"
+                style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+              >
+                {[event.venueName, event.venueAddress].filter(Boolean).join(", ")}
+              </p>
+            </div>
           </div>
-          <div>
-            <p
-              className="text-caption text-charcoal/60"
-              style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-            >
-              Capacity
-            </p>
-            <p
-              className="text-body-sm font-semibold text-charcoal"
-              style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-            >
-              Up to 20 people
-            </p>
-          </div>
-        </div>
+        )}
 
         {event.price && (
           <div className="flex items-center gap-2.5">

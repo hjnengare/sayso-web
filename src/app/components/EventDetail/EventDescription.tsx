@@ -28,7 +28,7 @@ export default function EventDescription({ event }: EventDescriptionProps) {
           About This Event
         </h2>
         <p
-          className="text-body text-charcoal/70 leading-relaxed"
+          className="text-body text-charcoal/70 leading-relaxed break-words"
           style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
         >
         {event.description || "Join us for an amazing experience! This event promises to be unforgettable with great company, beautiful surroundings, and memorable moments. Don't miss out on this special opportunity to connect with like-minded people and create lasting memories."}

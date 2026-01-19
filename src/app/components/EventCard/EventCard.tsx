@@ -49,9 +49,31 @@ const EVENT_SPORT_KEYWORDS = [
 ];
 
 const getEventMediaImage = (event: Event) => {
+  // Priority 0: Uploaded images array (newer events)
+  const uploadedImages = (event as any).uploaded_images as string[] | undefined;
+  if (uploadedImages && Array.isArray(uploadedImages) && uploadedImages.length > 0) {
+    const first = uploadedImages.find((img) => typeof img === "string" && img.trim()) || uploadedImages[0];
+    if (first && typeof first === "string" && first.trim()) {
+      return first;
+    }
+  }
+
   // Priority 1: Use real uploaded images from event
   if (event.image && event.image.trim()) {
     return event.image;
+  }
+
+  // Priority 1b: Common API aliases
+  if ((event as any).image_url && typeof (event as any).image_url === "string" && (event as any).image_url.trim()) {
+    return (event as any).image_url as string;
+  }
+
+  if ((event as any).heroImage && typeof (event as any).heroImage === "string" && (event as any).heroImage.trim()) {
+    return (event as any).heroImage as string;
+  }
+
+  if ((event as any).bannerImage && typeof (event as any).bannerImage === "string" && (event as any).bannerImage.trim()) {
+    return (event as any).bannerImage as string;
   }
 
   // Priority 2: Use business image carousel if available (for business-owned events)
@@ -99,8 +121,12 @@ export default function EventCard({ event, onBookmark, index = 0 }: EventCardPro
   const router = useRouter();
   const iconPng = getEventIconPng(event.icon);
   const mediaImage = getEventMediaImage(event);
+  const hasRealImage = Boolean(event.image?.trim() || (event as any).businessImages?.length);
   const prefersReducedMotion = useReducedMotion();
   const [isMobile, setIsMobile] = useState(true);
+  // PNG fallback icons don't need loading state - only real images do
+  const [imageLoaded, setImageLoaded] = useState(!hasRealImage);
+  const showLoadingOverlay = hasRealImage && !imageLoaded;
 
   // Check if mobile for animation
   useEffect(() => {
@@ -125,12 +151,55 @@ export default function EventCard({ event, onBookmark, index = 0 }: EventCardPro
     ? { opacity: 1 }
     : { opacity: 1, y: 0, x: 0 };
   
-  const handleLearnMoreClick = (e: MouseEvent<HTMLButtonElement>) => {
+  // Determine booking behavior based on event source
+  const getBookingInfo = () => {
+    // Ticketmaster events (have ticketmaster_url or similar)
+    if ((event as any).ticketmaster_url) {
+      return {
+        type: 'ticketmaster' as const,
+        url: (event as any).ticketmaster_url,
+        label: 'Reserve your spot',
+      };
+    }
+
+    // Business-owned events with booking URL
+    if ((event as any).bookingUrl && (event as any).bookingUrl.trim()) {
+      return {
+        type: 'booking_url' as const,
+        url: (event as any).bookingUrl,
+        label: 'Reserve your spot',
+      };
+    }
+
+    // Business-owned events with custom contact message
+    if ((event as any).bookingContact && (event as any).bookingContact.trim()) {
+      return {
+        type: 'contact_only' as const,
+        label: (event as any).bookingContact,
+      };
+    }
+
+    // Default: limited availability message
+    return {
+      type: 'no_booking' as const,
+      label: 'Learn more',
+    };
+  };
+
+  const bookingInfo = getBookingInfo();
+
+  const handlePrimaryAction = (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (bookingInfo.type === 'ticketmaster' || bookingInfo.type === 'booking_url') {
+      window.open(bookingInfo.url, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
     router.push(`/event/${event.id}`);
   };
-  
+
   return (
     <motion.li
       className="flex w-full"
@@ -165,19 +234,35 @@ export default function EventCard({ event, onBookmark, index = 0 }: EventCardPro
               className="relative w-full h-full"
             >
               <div className="relative w-full h-full overflow-hidden flex items-center justify-center bg-gradient-to-br from-off-white/95 to-off-white/85 rounded-[20px] shadow-sm">
+                {showLoadingOverlay && (
+                  <div className="absolute inset-0 bg-charcoal/5 animate-pulse z-10 flex items-center justify-center">
+                    <span className="w-10 h-10 border-2 border-white/50 border-t-navbar-bg rounded-full animate-spin" aria-hidden />
+                    <span className="sr-only">Loading image</span>
+                  </div>
+                )}
                 <Image
                   src={mediaImage}
                   alt={event.alt || event.title}
-                  width={160}
-                  height={160}
-                  className="object-contain w-32 h-32 sm:w-36 sm:h-36 md:w-32 md:h-32"
+                  fill
+                  sizes="(max-width: 640px) 100vw, 540px"
+                  className={hasRealImage ? 'object-cover' : 'object-contain w-32 h-32 sm:w-36 sm:h-36 md:w-32 md:h-32'}
+                  quality={hasRealImage ? 90 : undefined}
                   priority={false}
+                  onLoadingComplete={() => setImageLoaded(true)}
+                  onError={() => setImageLoaded(true)}
                 />
               </div>
             </div>
 
             {/* Premium glass badges */}
-            <EventBadge startDate={event.startDate} endDate={event.endDate} eventId={event.id} />
+            <EventBadge 
+              startDate={event.startDate} 
+              endDate={event.endDate} 
+              startDateISO={event.startDateISO}
+              endDateISO={event.endDateISO}
+              occurrences={event.occurrences}
+              eventId={event.id} 
+            />
           </div>
 
           {/* CONTENT - Minimal, premium spacing */}
@@ -194,7 +279,6 @@ export default function EventCard({ event, onBookmark, index = 0 }: EventCardPro
                 {event.title}
               </h3>
 
-              {/* Event or Special Description - Truncated with ellipsis for consistent layout */}
               <div className="w-full">
                 <p
                   className="text-caption sm:text-xs text-charcoal/60 leading-relaxed text-center overflow-hidden text-ellipsis line-clamp-2"
@@ -213,16 +297,33 @@ export default function EventCard({ event, onBookmark, index = 0 }: EventCardPro
               </div>
             </div>
 
-            <button
-              onClick={handleLearnMoreClick}
-              className="w-full min-h-[44px] py-3 px-4 bg-gradient-to-br from-navbar-bg to-navbar-bg/90 rounded-full flex items-center justify-center gap-2 hover:bg-navbar-bg transition-all duration-200 text-off-white border border-sage/50 shadow-md group"
-              aria-label="Learn more about this event"
-            >
-              <span className="text-sm font-semibold" style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}>
-                Learn More
-              </span>
-              <ArrowRight className="w-5 h-5 sm:w-[18px] sm:h-[18px] transition-transform duration-200 group-hover:translate-x-1" />
-            </button>
+            {(bookingInfo.type === 'ticketmaster' || bookingInfo.type === 'booking_url') ? (
+              // Clickable booking button for external URLs
+              <button
+                onClick={handlePrimaryAction}
+                className="w-full min-h-[44px] py-3 px-4 bg-gradient-to-br from-navbar-bg to-navbar-bg/90 rounded-full flex items-center justify-center gap-2 hover:bg-navbar-bg transition-all duration-200 text-off-white border border-sage/50 shadow-md group"
+                aria-label={bookingInfo.label}
+                title={bookingInfo.type === 'ticketmaster' ? 'Opens Ticketmaster in a new tab' : 'Opens booking page in a new tab'}
+              >
+                <span className="text-sm font-semibold" style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}>
+                  {bookingInfo.label}
+                </span>
+                <ArrowRight className="w-5 h-5 sm:w-[18px] sm:h-[18px] transition-transform duration-200 group-hover:translate-x-1" />
+              </button>
+            ) : (
+              // Route to event detail for limited availability / contact-only cases
+              <button
+                onClick={handlePrimaryAction}
+                className="w-full min-h-[44px] py-3 px-4 rounded-full flex items-center justify-center gap-2 text-off-white bg-navbar-bg/90 border border-navbar-bg/70 shadow-sm hover:bg-navbar-bg transition-colors group"
+                aria-label={bookingInfo.type === 'contact_only' ? 'View event details for booking instructions' : 'View event details'}
+                title={bookingInfo.type === 'contact_only' ? 'View details and booking instructions' : 'Limited availability — view event details'}
+              >
+                <span className="text-sm font-semibold" style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}>
+                  {bookingInfo.label}
+                </span>
+                <ArrowRight className="w-5 h-5 sm:w-[18px] sm:h-[18px] transition-transform duration-200 group-hover:translate-x-1 text-off-white" />
+              </button>
+            )}
           </div>
         </article>
     </motion.li>

@@ -22,15 +22,13 @@ const tagCategories = {
 const allTags = Object.values(tagCategories).flat();
 
 export default function TagSelector({ selectedTags, onTagToggle, availableTags }: TagSelectorProps) {
-  const [showMore, setShowMore] = useState(false);
-
-  // Use availableTags if provided, otherwise show defaults
+  // Use availableTags if provided, otherwise show defaults (limited to 4)
   const displayTags = useMemo(() => {
     if (availableTags.length > 0) {
-      return showMore ? [...availableTags, ...allTags.filter(t => !availableTags.includes(t))] : availableTags;
+      return availableTags.slice(0, 4);
     }
-    return showMore ? allTags : allTags.slice(0, 4);
-  }, [availableTags, showMore]);
+    return allTags.slice(0, 4);
+  }, [availableTags]);
 
   const canSelectMore = selectedTags.length < 4;
   const selectedCount = selectedTags.length;
@@ -127,20 +125,6 @@ export default function TagSelector({ selectedTags, onTagToggle, availableTags }
             );
           })}
         </AnimatePresence>
-
-        {/* Show more/less button */}
-        {(availableTags.length < allTags.length || !showMore) && (
-          <motion.button
-            layout
-            onClick={() => setShowMore(!showMore)}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            className="flex items-center gap-1 px-4 py-2.5 rounded-full border-2 border-dashed border-charcoal/20 text-base font-medium text-charcoal/60 hover:border-charcoal/40 hover:text-charcoal/70 transition-all duration-200"
-            style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
-          >
-            {showMore ? "Show less" : "More tags"}
-          </motion.button>
-        )}
       </div>
 
       {/* Helper text */}

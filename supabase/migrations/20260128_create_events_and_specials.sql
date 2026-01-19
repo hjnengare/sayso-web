@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS public.events_and_specials (
   image text,
   price numeric,
   rating numeric DEFAULT 0,
+  booking_url text,
+  booking_contact text,
   created_by uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   created_at timestamp WITH TIME ZONE DEFAULT now(),
   updated_at timestamp WITH TIME ZONE DEFAULT now()

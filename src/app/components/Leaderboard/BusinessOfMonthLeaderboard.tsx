@@ -21,6 +21,7 @@ const INTEREST_TITLES: { [key: string]: string } = {
   'arts-culture': 'Arts & Culture',
   'family-pets': 'Family & Pets',
   'shopping-lifestyle': 'Shopping & Lifestyle',
+  'miscellaneous': 'Miscellaneous',
 };
 
 interface BusinessOfMonthLeaderboardProps {
@@ -46,13 +47,19 @@ function BusinessOfMonthLeaderboard({
     { id: 'arts-culture', name: 'Arts & Culture' },
     { id: 'family-pets', name: 'Family & Pets' },
     { id: 'shopping-lifestyle', name: 'Shopping & Lifestyle' },
+    { id: 'miscellaneous', name: 'Miscellaneous' },
   ]);
+
+  const normalizeInterestId = (interestId?: string | null) => {
+    if (!interestId || interestId === 'uncategorized') return 'miscellaneous';
+    return interestId;
+  };
 
   // Extract unique interests from businesses
   const availableInterests = useMemo(() => {
     const uniqueInterestIds = Array.from(new Set(
       businesses
-        .map(b => (b as any).interestId)
+        .map(b => normalizeInterestId((b as any).interestId))
         .filter(Boolean)
     ));
     
@@ -64,7 +71,7 @@ function BusinessOfMonthLeaderboard({
   const sortedBusinesses = useMemo(() => {
     const filtered = selectedInterest === "all"
       ? businesses
-      : businesses.filter(b => (b as any).interestId === selectedInterest);
+      : businesses.filter(b => normalizeInterestId((b as any).interestId) === selectedInterest);
     const getScore = (b: BusinessOfTheMonth) => {
       if (typeof b.totalRating === "number") return b.totalRating;
       if (typeof b.rating === "number") return b.rating;

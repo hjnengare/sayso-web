@@ -313,11 +313,11 @@ export default function DMPage() {
         />
       </div>
 
-      <div className="flex-1 flex overflow-hidden min-h-0 md:pt-20">
+      <div className="flex-1 flex overflow-hidden min-h-0 pt-16 sm:pt-20 md:pt-20">
         {/* LEFT: Conversation list */}
         <div className="w-full md:w-[400px] lg:w-[480px] flex flex-col bg-off-white md:border-r border-white/60 overflow-hidden min-h-0">
           {/* Header */}
-          <div className="flex-shrink-0 px-6 pt-6 pb-4 bg-off-white">
+          <div className="flex-shrink-0 px-6 pt-4 sm:pt-6 pb-4 bg-off-white">
             <nav className="mb-4" aria-label="Breadcrumb">
               <ol className="flex items-center gap-2 text-sm">
                 <li>

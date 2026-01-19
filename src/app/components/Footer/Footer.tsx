@@ -3,7 +3,6 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import Logo from "../Logo/Logo";
 
 export default function Footer() {
@@ -23,13 +22,7 @@ export default function Footer() {
   ];
 
   return (
-    <motion.footer
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-50px" }}
-      transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
-      className="bg-charcoal text-off-white rounded-full mx-2 mb-2 px-4 py-3 shadow-md"
-    >
+    <footer className="bg-charcoal text-off-white rounded-full mx-2 mb-2 px-4 py-3 shadow-md">
       <div className="flex flex-wrap items-center justify-between gap-3">
         {/* Logo */}
         <Link href="/" className="flex-shrink-0 hover:opacity-80 transition-opacity">
@@ -63,6 +56,6 @@ export default function Footer() {
           font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
         }
       `}</style>
-    </motion.footer>
+    </footer>
   );
 }

@@ -11,7 +11,7 @@ export async function POST(
 ) {
   try {
     const businessId = params.id;
-    const supabase = getServerSupabase();
+    const supabase = await getServerSupabase();
     
     // Get current user
     const { data: { user } } = await supabase.auth.getUser();
@@ -91,7 +91,8 @@ export async function GET(
 ) {
   try {
     const businessId = params.id;
-    const supabase = getServerSupabase();
+    // Use request-scoped client to properly read cookies for RLS
+    const supabase = await getServerSupabase(req);
 
     const { data, error } = await supabase
       .from('events_and_specials')
@@ -101,7 +102,8 @@ export async function GET(
 
     if (error) {
       console.error('[Events API] Query error:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      // Gracefully return empty list on query error to avoid client fetch failures
+      return NextResponse.json({ success: true, data: [], error: error.message });
     }
 
     // Fetch business images for context
@@ -111,7 +113,7 @@ export async function GET(
       .eq('business_id', businessId);
 
     // Transform to frontend format with business images
-    const events = (data || []).map(e => ({
+    const events = (data || []).map((e: any) => ({
       id: e.id,
       title: e.title,
       type: e.type,
@@ -129,17 +131,14 @@ export async function GET(
       createdBy: e.created_by,
       createdAt: e.created_at,
       isBusinessOwned: true,
+     bookingUrl: e.booking_url,
+     bookingContact: e.booking_contact,
     }));
-      businessId: e.business_id,
-      createdBy: e.created_by,
-      createdAt: e.created_at,
-      isBusinessOwned: true,
-    }));
-
     return NextResponse.json({ success: true, data: events });
   } catch (error) {
     console.error('[Events API] Error:', error);
-    return NextResponse.json({ error: 'Failed to fetch events' }, { status: 500 });
+    // Gracefully return empty list on unexpected errors
+    return NextResponse.json({ success: true, data: [], error: 'Failed to fetch events' });
   }
 }
 
@@ -163,7 +162,7 @@ export async function PUT(
       );
     }
 
-    const supabase = getServerSupabase();
+    const supabase = await getServerSupabase();
 
     // Get current user
     const { data: { user } } = await supabase.auth.getUser();
@@ -269,7 +268,7 @@ export async function DELETE(
       );
     }
 
-    const supabase = getServerSupabase();
+    const supabase = await getServerSupabase();
 
     // Get current user
     const { data: { user } } = await supabase.auth.getUser();

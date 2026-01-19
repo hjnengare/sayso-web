@@ -97,7 +97,14 @@ export default function AddBusinessPage() {
                     throw new Error('Failed to load categories');
                 }
                 const data = await response.json();
-                setSubcategories(data.subcategories || []);
+                const fetched = Array.isArray(data.subcategories) ? data.subcategories : [];
+                const hasMisc = fetched.some((s: any) => (s?.id || '').toString().toLowerCase() === 'miscellaneous' || (s?.label || '').toLowerCase() === 'miscellaneous');
+                const miscOption = {
+                    id: 'miscellaneous',
+                    label: 'Miscellaneous',
+                    interest_id: 'miscellaneous',
+                };
+                setSubcategories(hasMisc ? fetched : [...fetched, miscOption]);
             } catch (error) {
                 console.error('Error loading subcategories:', error);
                 showToast('Failed to load categories', 'sage', 3000);
