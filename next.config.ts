@@ -29,6 +29,22 @@ const nextConfig: NextConfig = {
         hostname: '**.supabase.co',
         pathname: '/storage/v1/object/public/**',
       },
+      // Ticketmaster and external event image CDNs
+      {
+        protocol: 'https',
+        hostname: '**.ticketm.net',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.ticketmaster.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.tmgrup.com',
+        pathname: '/**',
+      },
     ],
     
     // Allow unoptimized images only in development
