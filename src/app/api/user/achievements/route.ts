@@ -82,12 +82,12 @@ export async function GET(req: Request) {
       earnedAt: string | null;
     }> = [];
 
-    // Activity & Milestone Badges (Section C from spec)
+    // Activity & Milestone Badges (Section C from spec - Badge names.pdf)
     if (totalReviews >= 100) {
       achievements.push({
         name: "Century Club",
         description: "Posted 100 reviews",
-        icon: "/badges/010-confetti.png", // Confetti for celebration milestone
+        icon: "/badges/048-award.png",
         earnedAt: firstReviewDate || accountCreatedAt,
       });
     }
@@ -95,7 +95,7 @@ export async function GET(req: Request) {
       achievements.push({
         name: "Review Machine",
         description: "Posted 50 reviews",
-        icon: "/badges/012-expertise.png", // Expertise/achievement icon
+        icon: "/badges/044-rocket.png",
         earnedAt: firstReviewDate || accountCreatedAt,
       });
     }
@@ -103,7 +103,7 @@ export async function GET(req: Request) {
       achievements.push({
         name: "Level Up!",
         description: "Posted 10 reviews",
-        icon: "/badges/020-magic-wand.png", // Magic wand for "leveling up"
+        icon: "/badges/041-speedometer.png",
         earnedAt: firstReviewDate || accountCreatedAt,
       });
     }
@@ -111,7 +111,7 @@ export async function GET(req: Request) {
       achievements.push({
         name: "Rookie Reviewer",
         description: "Posted 5 reviews",
-        icon: "/badges/008-baby.png", // Baby steps/rookie
+        icon: "/badges/030-badge.png",
         earnedAt: firstReviewDate || accountCreatedAt,
       });
     }
@@ -120,17 +120,17 @@ export async function GET(req: Request) {
       achievements.push({
         name: "New Voice",
         description: "Posted your first review",
-        icon: "/badges/005-social-life.png", // Social/communication icon for new voice
+        icon: "/badges/027-megaphone.png",
         earnedAt: firstReviewDate,
       });
     }
 
-    // Helpful Votes Achievements (matching Activity & Milestone spec)
+    // Helpful Votes Achievement - "Helpful Honeybee" (updated from Helpful Reviewer)
     if (helpfulVotes >= 10) {
       achievements.push({
-        name: "Helpful Reviewer",
-        description: "Get 10 helpful likes combined",
-        icon: "/badges/018-peace.png", // Peace/positive vibes for being helpful
+        name: "Helpful Honeybee",
+        description: "10 helpful likes",
+        icon: "/badges/021-like.png",
         earnedAt: accountCreatedAt,
       });
     }

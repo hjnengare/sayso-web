@@ -72,64 +72,86 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
   const router = useRouter();
   const [interests, setInterests] = useState<Interest[]>([]);
   const [subInterests, setSubInterests] = useState<Subcategory[]>([]);
+  const [isMounted, setIsMounted] = useState(false);
 
-  // Initialize from localStorage on mount
-  const [selectedInterests, setSelectedInterestsState] = useState<string[]>(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('onboarding_interests');
-      return stored ? JSON.parse(stored) : [];
-    }
-    return [];
-  });
-
-  const [selectedSubInterests, setSelectedSubInterestsState] = useState<string[]>(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('onboarding_subcategories');
-      return stored ? JSON.parse(stored) : [];
-    }
-    return [];
-  });
-
-  const [selectedDealbreakers, setSelectedDealbreakerssState] = useState<string[]>(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('onboarding_dealbreakers');
-      return stored ? JSON.parse(stored) : [];
-    }
-    return [];
-  });
+  // Initialize with empty arrays to prevent hydration mismatch
+  // localStorage will be loaded in useEffect after hydration
+  const [selectedInterests, setSelectedInterestsState] = useState<string[]>([]);
+  const [selectedSubInterests, setSelectedSubInterestsState] = useState<string[]>([]);
+  const [selectedDealbreakers, setSelectedDealbreakerssState] = useState<string[]>([]);
 
   const [isLoading, setIsLoading] = useState(false); // Internal loading state for API calls
   const [error, setError] = useState<string | null>(null);
 
   const currentStep = user?.profile?.onboarding_step || 'interests';
 
-  // Clear localStorage if user is starting fresh onboarding
+  // First: Check if we should clear localStorage for brand new users or fresh starts
   useEffect(() => {
-    if (user && typeof window !== 'undefined') {
+    if (user && !isMounted && typeof window !== 'undefined') {
       const onboardingStep = user.profile?.onboarding_step;
       const isStartingFresh = !onboardingStep || onboardingStep === 'interests';
+      const isOnboardingIncomplete = !user.profile?.onboarding_complete;
 
-      // If user is at the start and onboarding is not complete, clear any stale localStorage
-      if (isStartingFresh && !user.profile?.onboarding_complete) {
+      // For new users or users at interests step with incomplete onboarding
+      if (isStartingFresh && isOnboardingIncomplete) {
+        // Check if user has NO data saved (brand new user)
+        const hasNoDatabaseData = 
+          (user.profile?.interests_count || 0) === 0 &&
+          (user.profile?.subcategories_count || 0) === 0 &&
+          (user.profile?.dealbreakers_count || 0) === 0;
+
         const hasStoredData =
           localStorage.getItem('onboarding_interests') ||
           localStorage.getItem('onboarding_subcategories') ||
           localStorage.getItem('onboarding_dealbreakers');
 
-        if (hasStoredData) {
-          console.log('[OnboardingContext] Clearing stale localStorage for fresh start');
+        // If brand new user with stored data, it's stale - clear it
+        if (hasNoDatabaseData && hasStoredData) {
+          console.log('[OnboardingContext] Clearing stale localStorage for brand new user');
           localStorage.removeItem('onboarding_interests');
           localStorage.removeItem('onboarding_subcategories');
           localStorage.removeItem('onboarding_dealbreakers');
-
-          // Clear state too
-          setSelectedInterestsState([]);
-          setSelectedSubInterestsState([]);
-          setSelectedDealbreakerssState([]);
         }
       }
     }
-  }, [user]);
+  }, [user, isMounted]);
+
+  // Second: Load localStorage after hydration (only if not cleared above)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !isMounted) {
+      const stored = {
+        interests: localStorage.getItem('onboarding_interests'),
+        subcategories: localStorage.getItem('onboarding_subcategories'),
+        dealbreakers: localStorage.getItem('onboarding_dealbreakers'),
+      };
+
+      if (stored.interests) {
+        try {
+          setSelectedInterestsState(JSON.parse(stored.interests));
+        } catch (e) {
+          console.error('Failed to parse stored interests:', e);
+        }
+      }
+
+      if (stored.subcategories) {
+        try {
+          setSelectedSubInterestsState(JSON.parse(stored.subcategories));
+        } catch (e) {
+          console.error('Failed to parse stored subcategories:', e);
+        }
+      }
+
+      if (stored.dealbreakers) {
+        try {
+          setSelectedDealbreakerssState(JSON.parse(stored.dealbreakers));
+        } catch (e) {
+          console.error('Failed to parse stored dealbreakers:', e);
+        }
+      }
+
+      setIsMounted(true);
+    }
+  }, []);
 
   // Wrapper functions that persist to localStorage
   const setSelectedInterests = useCallback((interests: string[]) => {

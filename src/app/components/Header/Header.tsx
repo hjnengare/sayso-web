@@ -40,7 +40,7 @@ const sf = {
 } as const;
 
 const PRIMARY_LINKS = [
-  { key: "home", label: "Home", href: "/home" },
+  { key: "home", label: "Home", href: "/home", requiresAuth: true },
 ] as const;
 
 const DISCOVER_LINKS = [
@@ -323,7 +323,7 @@ export default function Header({
   const renderSearchInput = () => (
     <SearchInput
       variant="header"
-      placeholder="Discover exceptional local experiences, premium dining, and hidden gems..."
+      placeholder="Discover exceptional local experiences, premium dining, and gems..."
       mobilePlaceholder="Search places, coffee, yoga…"
       onSearch={(q) => console.log("search change:", q)}
       onSubmitQuery={handleSubmitQuery}
@@ -372,17 +372,21 @@ export default function Header({
 
             {/* Desktop nav - centered */}
             <nav className="hidden md:flex items-center space-x-1 lg:space-x-3 flex-1 justify-center">
-              {PRIMARY_LINKS.map(({ key, label, href }, index) => {
+              {PRIMARY_LINKS.map(({ key, label, href, requiresAuth }, index) => {
                 const isActive = pathname === href;
+                const showLockIndicator = isGuest && requiresAuth;
                 return (
                 <Fragment key={key}>
                 <OptimizedLink
-                    href={href}
+                    href={showLockIndicator ? '/login' : href}
                     onClick={(e) => handleNavClick(href, e)}
-                    className={`group capitalize px-2.5 lg:px-3.5 py-1.5 rounded-lg text-sm sm:text-xs sm:text-sm md:text-sm sm:text-xs lg:text-sm sm:text-xs font-semibold transition-all duration-200 relative ${isActive ? 'text-sage' : whiteText ? 'text-white hover:text-white/90 hover:bg-white/10' : 'text-charcoal/90 md:text-charcoal/95 hover:text-sage hover:bg-sage/5'}`}
+                    className={`group capitalize px-2.5 lg:px-3.5 py-1.5 rounded-lg text-sm sm:text-xs sm:text-sm md:text-sm sm:text-xs lg:text-sm sm:text-xs font-semibold transition-all duration-200 relative flex items-center gap-1.5 ${isActive ? 'text-sage' : whiteText ? 'text-white hover:text-white/90 hover:bg-white/10' : 'text-charcoal/90 md:text-charcoal/95 hover:text-sage hover:bg-sage/5'}`}
                   style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                 >
                     <span className="relative z-10">{label}</span>
+                    {showLockIndicator && (
+                      <Lock className="w-3.5 h-3.5 text-charcoal/60" />
+                    )}
                   </OptimizedLink>
 
                   {index === 0 && (
@@ -708,10 +712,12 @@ export default function Header({
 
           <nav className="flex flex-col py-2 px-3 overflow-y-auto flex-1 min-h-0">
             <div className="space-y-1">
-              {PRIMARY_LINKS.map(({ key, label, href }, index) => (
+              {PRIMARY_LINKS.map(({ key, label, href, requiresAuth }, index) => {
+                const showLockIndicator = isGuest && requiresAuth;
+                return (
                 <OptimizedLink
                   key={key}
-                  href={href}
+                  href={showLockIndicator ? '/login' : href}
                   onClick={(e) => {
                     handleNavClick(href, e);
                     setIsMobileMenuOpen(false);
@@ -722,84 +728,76 @@ export default function Header({
                     transitionDelay: `${index * 60}ms`,
                   }}
                 >
-                  <span className="text-left">
+                  <span className="text-left flex items-center gap-1.5">
                     {label}
+                    {showLockIndicator && (
+                      <Lock className="w-3 h-3 text-white/40" />
+                    )}
                   </span>
                 </OptimizedLink>
-              ))}
+              );
+              })}
             </div>
 
             <div className="h-px bg-charcoal/10 my-2 mx-3" />
 
-            <div className="px-3 py-1">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-sm font-semibold text-white/80 tracking-wide uppercase">Discover</span>
-              </div>
-              <div className="space-y-1 pl-4">
-                {DISCOVER_LINKS.map(({ key, label, href, requiresAuth }, index) => {
-                  const showLockIndicator = isGuest && requiresAuth;
-                  return (
-                    <OptimizedLink
-                      key={key}
-                      href={showLockIndicator ? '/login' : href}
-                      onClick={(e) => {
-                        handleNavClick(href, e);
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className={`py-2 rounded-[20px] text-base font-normal text-white/90 hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-200 min-h-[44px] flex items-center justify-start ${mobileRevealClass}`}
-                      style={{
-                        fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                        transitionDelay: `${(primaryCount + index) * 60}ms`,
-                      }}
-                    >
-                      <span className="text-left flex items-center gap-1.5">
-                        {label}
-                        {showLockIndicator && (
-                          <Lock className="w-3 h-3 text-white/40" />
-                        )}
-                      </span>
-                    </OptimizedLink>
-                  );
-                })}
-              </div>
+            <div className="space-y-1">
+              {DISCOVER_LINKS.map(({ key, label, href, requiresAuth }, index) => {
+                const showLockIndicator = isGuest && requiresAuth;
+                return (
+                  <OptimizedLink
+                    key={key}
+                    href={showLockIndicator ? '/login' : href}
+                    onClick={(e) => {
+                      handleNavClick(href, e);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className={`px-3 py-2 rounded-[20px] text-base font-normal text-white/90 hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-200 min-h-[44px] flex items-center justify-start ${mobileRevealClass}`}
+                    style={{
+                      fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                      transitionDelay: `${(primaryCount + index) * 60}ms`,
+                    }}
+                  >
+                    <span className="text-left flex items-center gap-1.5">
+                      {label}
+                      {showLockIndicator && (
+                        <Lock className="w-3 h-3 text-white/40" />
+                      )}
+                    </span>
+                  </OptimizedLink>
+                );
+              })}
             </div>
             
             <div className="h-px bg-charcoal/10 my-2 mx-3" />
             
             <div className="space-y-1">
-              <OptimizedLink
-                href="/for-businesses"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={`px-3 py-2 rounded-lg text-base font-normal text-white hover:text-white flex items-center justify-start transition-colors duration-200 min-h-[44px] ${mobileRevealClass}`}
-                style={{
-                  fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                  transitionDelay: `${(primaryCount + discoverCount + 1) * 60}ms`,
-                }}
-              >
-                <span className="text-left">For Businesses</span>
-              </OptimizedLink>
-              <OptimizedLink
-                href="/dm"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={`px-3 py-2 rounded-lg text-base font-normal text-white hover:text-white flex items-center justify-start transition-colors duration-200 min-h-[44px] ${mobileRevealClass}`}
-                style={{
-                  fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                  transitionDelay: `${(primaryCount + discoverCount + 2) * 60}ms`,
-                }}
-              >
-                <span className="text-left">Messages</span>
-              </OptimizedLink>
-              <OptimizedLink
-                href="/profile"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={`px-3 py-2 rounded-lg text-base font-normal text-white hover:text-white flex items-center justify-start transition-colors duration-200 min-h-[44px] ${mobileRevealClass}`}
-                style={{
-                  fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                  transitionDelay: `${(primaryCount + discoverCount + 3) * 60}ms`,
-                }}
-              >
-                <span className="text-left">Profile</span>
-              </OptimizedLink>
+              {[
+                { href: '/for-businesses', label: 'For Businesses', requiresAuth: false, delay: 1 },
+                { href: '/dm', label: 'Messages', requiresAuth: true, delay: 2 },
+                { href: '/profile', label: 'Profile', requiresAuth: true, delay: 3 },
+              ].map((item) => {
+                const showLockIndicator = isGuest && item.requiresAuth;
+                return (
+                  <OptimizedLink
+                    key={item.href}
+                    href={showLockIndicator ? '/login' : item.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`px-3 py-2 rounded-lg text-base font-normal text-white hover:text-white flex items-center justify-start transition-colors duration-200 min-h-[44px] ${mobileRevealClass}`}
+                    style={{
+                      fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                      transitionDelay: `${(primaryCount + discoverCount + item.delay) * 60}ms`,
+                    }}
+                  >
+                    <span className="text-left flex items-center gap-1.5">
+                      {item.label}
+                      {showLockIndicator && (
+                        <Lock className="w-3 h-3 text-white/40" />
+                      )}
+                    </span>
+                  </OptimizedLink>
+                );
+              })}
             </div>
           </nav>
         </div>

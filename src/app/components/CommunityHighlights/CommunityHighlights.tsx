@@ -2,6 +2,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import { Award, ArrowRight } from "lucide-react";
 import ReviewerCard from "../ReviewerCard/ReviewerCard";
 import BusinessOfTheMonthCard from "../BusinessCard/BusinessOfTheMonthCard";
@@ -11,7 +12,7 @@ import {
   Review,
   Reviewer,
   BusinessOfTheMonth,
-} from "../../data/communityHighlightsData";
+} from "../../types/community";
 
 // Sample review texts for variety
 const sampleReviewTexts = [
@@ -31,8 +32,8 @@ const sampleReviewTexts = [
 
 interface CommunityHighlightsProps {
   title?: string;
-  reviews: Review[];
-  topReviewers: Reviewer[];
+  reviews?: Review[]; // Made optional - will fetch from API if not provided
+  topReviewers?: Reviewer[]; // Made optional - will fetch from API if not provided
   businessesOfTheMonth?: BusinessOfTheMonth[];
   cta?: string;
   href?: string;
@@ -41,14 +42,59 @@ interface CommunityHighlightsProps {
 
 export default function CommunityHighlights({
   title = "Community Highlights",
-  reviews,
-  topReviewers,
+  reviews: propReviews,
+  topReviewers: propTopReviewers,
   businessesOfTheMonth,
   cta = "See More",
   href = "/leaderboard",
   variant = "reviews",
 }: CommunityHighlightsProps) {
   const router = useRouter();
+  const [reviews, setReviews] = useState<Review[]>(propReviews || []);
+  const [topReviewers, setTopReviewers] = useState<Reviewer[]>(propTopReviewers || []);
+  const [loading, setLoading] = useState(!propReviews && !propTopReviewers);
+
+  // Fetch data from API if not provided via props
+  useEffect(() => {
+    async function fetchData() {
+      if (!propTopReviewers || !propReviews) {
+        setLoading(true);
+        try {
+          // Fetch in parallel
+          const [reviewersRes, reviewsRes] = await Promise.all([
+            propTopReviewers ? Promise.resolve(null) : fetch('/api/reviewers/top?limit=12'),
+            propReviews ? Promise.resolve(null) : fetch('/api/reviews/recent?limit=10')
+          ]);
+
+          if (reviewersRes?.ok) {
+            const data = await reviewersRes.json();
+            setTopReviewers(data.reviewers || []);
+          }
+
+          if (reviewsRes?.ok) {
+            const data = await reviewsRes.json();
+            setReviews(data.reviews || []);
+          }
+        } catch (error) {
+          console.error('[CommunityHighlights] Failed to fetch data:', error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    }
+
+    fetchData();
+  }, [propTopReviewers, propReviews]);
+
+  if (loading) {
+    return (
+      <section className="relative m-0 w-full" aria-label={title}>
+        <div className="mx-auto w-full max-w-[2000px] relative z-10 px-2 py-8">
+          <div className="text-center text-charcoal/60">Loading community highlights...</div>
+        </div>
+      </section>
+    );
+  }
 
   if (
     (!topReviewers || topReviewers.length === 0) &&
@@ -143,6 +189,30 @@ export default function CommunityHighlights({
               })}
               </div>
             </ScrollableSection>
+          </div>
+        )}
+
+        {/* Top Contributors Empty State */}
+        {(!topReviewers || topReviewers.length === 0) && (
+          <div className="mt-1">
+            <div className="pb-4 sm:pb-8 md:pb-10 flex flex-wrap items-center justify-between gap-2">
+              <h3
+                className="font-urbanist text-base font-700 text-charcoal transition-all duration-300 px-3 sm:px-4 py-1 rounded-lg cursor-none"
+                style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif", fontWeight: 700 }}
+              >
+                <span className="sm:hidden">Top Contributors</span>
+                <span className="hidden sm:inline">Top Contributors This Month</span>
+              </h3>
+            </div>
+            
+            <div className="w-full bg-off-white border border-sage/20 rounded-3xl shadow-md px-6 py-16 text-center space-y-3">
+              <h2 className="text-h2 font-semibold text-charcoal" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                Top Contributors Appear Here
+              </h2>
+              <p className="text-body-sm text-charcoal/60 max-w-[70ch] mx-auto" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 500 }}>
+                Write and share reviews to become a top contributor and earn recognition badges.
+              </p>
+            </div>
           </div>
         )}
 

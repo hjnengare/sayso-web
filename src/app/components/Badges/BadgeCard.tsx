@@ -1,15 +1,17 @@
 "use client";
 
-import Image from 'next/image';
-import { motion } from 'framer-motion';
+import Image from "next/image";
+import { motion } from "framer-motion";
+import { getBadgeMapping, getBadgePngPath } from "../../lib/badgeMappings";
+import { Lock } from "lucide-react";
 
 export interface Badge {
   id: string;
   name: string;
   description: string;
-  badge_group: 'explorer' | 'specialist' | 'milestone' | 'community';
+  badge_group: "explorer" | "specialist" | "milestone" | "community";
   category_key?: string | null;
-  icon_path: string;
+  icon_path?: string;
   earned: boolean;
   awarded_at?: string | null;
 }
@@ -22,13 +24,18 @@ interface BadgeCardProps {
 export default function BadgeCard({ badge, onClick }: BadgeCardProps) {
   const isLocked = !badge.earned;
 
+  // Get the correct PNG path from mappings, fallback to icon_path if provided
+  const mapping = getBadgeMapping(badge.id);
+  const pngPath = mapping?.pngPath || badge.icon_path || getBadgePngPath(badge.id);
+
   return (
     <motion.div
       className={`
         relative flex flex-col items-center p-4 rounded-xl border-2 transition-all cursor-pointer
-        ${isLocked
-          ? 'bg-charcoal/5 border-charcoal/10'
-          : 'bg-gradient-to-br from-sage/5 to-coral/5 border-sage/30 shadow-md'
+        ${
+          isLocked
+            ? "bg-charcoal/5 border-charcoal/10"
+            : "bg-gradient-to-br from-sage/5 to-coral/5 border-sage/30 shadow-md"
         }
         hover:scale-105 active:scale-95
       `}
@@ -42,12 +49,12 @@ export default function BadgeCard({ badge, onClick }: BadgeCardProps) {
       {/* Badge Icon */}
       <div className="relative w-16 h-16 mb-3">
         <Image
-          src={badge.icon_path}
+          src={pngPath}
           alt={badge.name}
           fill
           className={`
             object-contain rounded-lg
-            ${isLocked ? 'grayscale opacity-40' : 'filter-none'}
+            ${isLocked ? "grayscale opacity-40" : "filter-none"}
           `}
           unoptimized
         />
@@ -55,19 +62,7 @@ export default function BadgeCard({ badge, onClick }: BadgeCardProps) {
         {/* Lock overlay for locked badges */}
         {isLocked && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <svg
-              className="w-6 h-6 text-charcoal/60"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-              />
-            </svg>
+            <Lock className="w-6 h-6 text-charcoal/60" />
           </div>
         )}
 
@@ -75,8 +70,8 @@ export default function BadgeCard({ badge, onClick }: BadgeCardProps) {
         {!isLocked && (
           <motion.div
             className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/30 to-transparent rounded-lg"
-            initial={{ x: '-100%' }}
-            animate={{ x: '200%' }}
+            initial={{ x: "-100%" }}
+            animate={{ x: "200%" }}
             transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
           />
         )}
@@ -86,7 +81,7 @@ export default function BadgeCard({ badge, onClick }: BadgeCardProps) {
       <h3
         className={`
           font-urbanist font-700 text-sm text-center mb-1
-          ${isLocked ? 'text-charcoal/70' : 'text-charcoal'}
+          ${isLocked ? "text-charcoal/70" : "text-charcoal"}
         `}
       >
         {badge.name}
@@ -96,7 +91,7 @@ export default function BadgeCard({ badge, onClick }: BadgeCardProps) {
       <p
         className={`
           font-urbanist text-xs text-center line-clamp-2
-          ${isLocked ? 'text-charcoal/60' : 'text-charcoal/70'}
+          ${isLocked ? "text-charcoal/60" : "text-charcoal/70"}
         `}
       >
         {badge.description}

@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Trophy, Star, ImageIcon } from "lucide-react";
 import Link from "next/link";
 import OptimizedImage from "../Performance/OptimizedImage";
-import { BusinessOfTheMonth } from "../../data/communityHighlightsData";
+import { BusinessOfTheMonth } from "../../types/community";
 import { getCategoryPng, getCategoryPngFromLabels, isPngIcon } from "../../utils/categoryToPngMapping";
 
 interface BusinessOfMonthPodiumProps {

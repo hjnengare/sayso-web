@@ -1,10 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import { ArrowRight } from "lucide-react";
 import ReviewerCard from "../ReviewerCard/ReviewerCard";
 import ScrollableSection from "../ScrollableSection/ScrollableSection";
-import { Reviewer } from "../../data/communityHighlightsData";
+import { Reviewer } from "../../types/community";
 
 // Sample review texts for variety
 const sampleReviewTexts = [
@@ -24,22 +25,56 @@ const sampleReviewTexts = [
 
 interface TopReviewersProps {
   title?: string;
-  reviewers: Reviewer[];
+  reviewers?: Reviewer[]; // Made optional - will fetch from API if not provided
   cta?: string;
   href?: string;
 }
 
 export default function TopReviewers({
   title = "Top Reviewers",
-  reviewers,
+  reviewers: propReviewers,
   cta = "See More",
   href = "/reviewers"
 }: TopReviewersProps) {
   const router = useRouter();
+  const [reviewers, setReviewers] = useState<Reviewer[]>(propReviewers || []);
+  const [loading, setLoading] = useState(!propReviewers);
+
+  // Fetch from API if not provided via props
+  useEffect(() => {
+    async function fetchReviewers() {
+      if (!propReviewers) {
+        setLoading(true);
+        try {
+          const response = await fetch('/api/reviewers/top?limit=12');
+          if (response.ok) {
+            const data = await response.json();
+            setReviewers(data.reviewers || []);
+          }
+        } catch (error) {
+          console.error('[TopReviewers] Failed to fetch reviewers:', error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    }
+
+    fetchReviewers();
+  }, [propReviewers]);
 
   const handleSeeMore = () => {
     router.push(href);
   };
+
+  if (loading) {
+    return (
+      <section className="py-8 bg-off-white relative" aria-label="top reviewers">
+        <div className="container mx-auto max-w-[1300px] px-4 relative z-10">
+          <div className="text-center text-charcoal/60">Loading top reviewers...</div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-8 bg-off-white  relative" aria-label="top reviewers" data-section>

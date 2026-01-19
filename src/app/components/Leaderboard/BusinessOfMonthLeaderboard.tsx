@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import BusinessOfMonthPodium from "./BusinessOfMonthPodium";
 import BusinessLeaderboardItem from "./BusinessLeaderboardItem";
-import { BusinessOfTheMonth } from "../../data/communityHighlightsData";
+import { BusinessOfTheMonth } from "../../types/community";
 
 interface Interest {
   id: string;
@@ -65,7 +65,12 @@ function BusinessOfMonthLeaderboard({
     const filtered = selectedInterest === "all"
       ? businesses
       : businesses.filter(b => (b as any).interestId === selectedInterest);
-    return [...filtered].sort((a, b) => b.totalRating - a.totalRating);
+    const getScore = (b: BusinessOfTheMonth) => {
+      if (typeof b.totalRating === "number") return b.totalRating;
+      if (typeof b.rating === "number") return b.rating;
+      return 0;
+    };
+    return [...filtered].sort((a, b) => getScore(b) - getScore(a));
   }, [businesses, selectedInterest]);
 
   // Memoize the business arrays to prevent unnecessary recalculations

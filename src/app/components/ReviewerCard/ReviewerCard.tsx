@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useMemo, useState, useEffect } from "react";
-import { Review, Reviewer } from "../../data/communityHighlightsData";
+import { Review, Reviewer } from "../../types/community";
 import ProfilePicture from "./ProfilePicture";
 import ReviewerStats from "./ReviewerStats";
 import ReviewContent from "./ReviewContent";
@@ -130,6 +130,8 @@ export default function ReviewerCard({
   }, []);
 
   // Fetch user's badges (top 2 most relevant)
+  // Note: Badge API expects real UUIDs from auth.users table
+  // Mock reviewer IDs ("1", "2", etc.) will return empty results gracefully
   useEffect(() => {
     if (!reviewerData?.id) return;
 

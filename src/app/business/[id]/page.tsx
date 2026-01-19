@@ -616,6 +616,7 @@ export default function BusinessProfilePage() {
                                                     location={businessData.location}
                                                     latitude={businessData.latitude}
                                                     longitude={businessData.longitude}
+                                                    isUserUploaded={!!business.owner_id}
                                                 />
                                             </div>
 

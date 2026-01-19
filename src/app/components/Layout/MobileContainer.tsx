@@ -15,6 +15,7 @@ export default function MobileContainer({
 }: MobileContainerProps) {
   const [isIOS, setIsIOS] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     // Detect iOS and mobile
@@ -24,14 +25,16 @@ export default function MobileContainer({
 
     setIsIOS(isIOSDevice);
     setIsMobile(isMobileDevice);
+    setIsMounted(true);
   }, []);
 
   // Build dynamic classes based on device type
+  // Only apply mobile-specific classes after hydration to prevent mismatch
   const containerClasses = [
     className,
-    isMobile ? 'mobile-vh-fix mobile-scroll-container' : '',
-    isIOS ? 'ios-minimal-ui' : '',
-    fullScreen && isMobile ? 'ios-fullscreen' : '',
+    isMounted && isMobile ? 'mobile-vh-fix mobile-scroll-container' : '',
+    isMounted && isIOS ? 'ios-minimal-ui' : '',
+    isMounted && fullScreen && isMobile ? 'ios-fullscreen' : '',
     'mobile-interaction', // Always add mobile interaction optimizations
   ].filter(Boolean).join(' ');
 

@@ -4,7 +4,7 @@ import { memo, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Star, Trophy, MapPin, ImageIcon } from "lucide-react";
 import OptimizedImage from "../Performance/OptimizedImage";
-import { BusinessOfTheMonth } from "../../data/communityHighlightsData";
+import { BusinessOfTheMonth } from "../../types/community";
 import { getCategoryPng, getCategoryPngFromLabels, isPngIcon } from "../../utils/categoryToPngMapping";
 
 interface BusinessLeaderboardItemProps {
@@ -72,7 +72,7 @@ function BusinessLeaderboardItem({ business, index, rank }: BusinessLeaderboardI
       (business as any).subInterestLabel,
       business.category,
       categoryKey,
-      business.monthAchievement
+      (business as any).badge
     ]);
     return { image: categoryPng, isPng: true };
   }, [
@@ -81,12 +81,12 @@ function BusinessLeaderboardItem({ business, index, rank }: BusinessLeaderboardI
     (business as any).uploaded_images,
     categoryKey,
     business.category,
-    business.monthAchievement,
+    (business as any).badge,
   ]);
 
   const displayImage = getDisplayImage.image;
   const isImagePng = getDisplayImage.isPng;
-  const displayAlt = business.alt || business.name;
+  const displayAlt = (business as any).alt || business.name;
 
   const handleImageError = () => {
     if (!usingFallback && !isImagePng) {
@@ -184,9 +184,9 @@ function BusinessLeaderboardItem({ business, index, rank }: BusinessLeaderboardI
         <div className="flex flex-col items-end gap-1 flex-shrink-0 ml-2">
           <div className="bg-gradient-to-br from-off-white via-off-white to-off-white/90 backdrop-blur-xl px-2 sm:px-3 py-1 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.15)] border border-white/60 ring-1 ring-white/30 flex items-center gap-1">
             <Star className="w-3 h-3 sm:w-4 sm:h-4 text-coral fill-coral" />
-            <span className="font-urbanist text-caption sm:text-body-sm font-600 text-charcoal">{business.reviews > 0 ? business.totalRating : "New"}</span>
+            <span className="font-urbanist text-caption sm:text-body-sm font-600 text-charcoal">{business.reviewCount > 0 ? business.rating : "New"}</span>
           </div>
-          <span className="font-urbanist text-caption sm:text-body-sm text-charcoal/70 whitespace-nowrap">{business.reviews > 0 ? `${business.reviews} reviews` : "No reviews yet"}</span>
+          <span className="font-urbanist text-caption sm:text-body-sm text-charcoal/70 whitespace-nowrap">{business.reviewCount > 0 ? `${business.reviewCount} reviews` : "No reviews yet"}</span>
         </div>
       </div>
     </motion.div>

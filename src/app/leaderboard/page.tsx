@@ -148,7 +148,7 @@ function LeaderboardPage() {
       }
     }
 
-    const results = Array.from(byInterest.entries()).map(([interestId, b]) => {
+    const results = Array.from(byInterest.entries()).map(([interestId, b], index) => {
       const rating = getDisplayRating(b);
       const reviews = getReviews(b);
       const interestLabel = toTitle(interestId);
@@ -158,12 +158,15 @@ function LeaderboardPage() {
         image: b.image || b.image_url || (b.uploaded_images && b.uploaded_images.length > 0 ? b.uploaded_images[0] : null) || "",
         alt: b.alt || b.name,
         category: b.category || "Business",
+        description: b.description || `Featured in ${interestLabel}`,
         interestId: interestId,
         location: b.location || b.address || "Cape Town",
         rating: rating > 0 ? 5 : 0,
+        reviewCount: reviews,
         totalRating: rating,
         reviews,
         badge: "featured" as const,
+        rank: index + 1,
         href: `/business/${b.slug || b.id}`,
         monthAchievement: `Featured ${interestLabel}`,
         verified: Boolean(b.verified),

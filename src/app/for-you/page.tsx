@@ -448,7 +448,7 @@ export default function ForYouPage() {
                   </div>
                 ) : (
                   /* Default empty state for filters/personalization */
-                  <div className="bg-white border border-sage/20 rounded-3xl shadow-sm px-6 py-16 text-center space-y-3">
+                  <div className="bg-white border border-sage/20 rounded-3xl shadow-md px-6 py-16 text-center space-y-3">
                     <h2 className="text-h2 font-semibold text-charcoal" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                       {isFiltered ? 'No businesses match your filters' : "We're still learning your taste"}
                     </h2>

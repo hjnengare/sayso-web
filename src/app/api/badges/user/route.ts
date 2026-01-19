@@ -1,9 +1,16 @@
 import { NextResponse } from 'next/server';
-import { getServerSupabase } from '../../../lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
+import { getBadgeMapping, getBadgePngPath } from '../../../lib/badgeMappings';
+
+// UUID validation regex
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 /**
  * GET /api/badges/user?user_id=xxx
  * Fetches all badges for a user (earned and unearned)
+ * Returns PNG paths from badge mappings for consistent display
+ * 
+ * PUBLIC ENDPOINT - Uses service role key to allow unauthenticated access
  */
 export async function GET(req: Request) {
   try {
@@ -14,7 +21,38 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'user_id required' }, { status: 400 });
     }
 
-    const supabase = await getServerSupabase(req);
+    // Validate UUID format to prevent Postgres errors
+    if (!UUID_REGEX.test(userId)) {
+      console.log(`[Badge Fetch] Invalid UUID format: ${userId}`);
+      // Return empty badges gracefully instead of 500
+      return NextResponse.json({
+        ok: true,
+        badges: [],
+        grouped: {
+          explorer: [],
+          specialist: [],
+          milestone: [],
+          community: []
+        },
+        stats: {
+          total: 0,
+          earned: 0,
+          percentage: 0
+        }
+      });
+    }
+
+    // Use service role client for public badge queries (bypasses RLS)
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    );
 
     // Fetch all badges with user's earned status
     const { data: allBadges, error: badgesError } = await supabase
@@ -24,7 +62,22 @@ export async function GET(req: Request) {
 
     if (badgesError) {
       console.error('[Badge Fetch] Error fetching badges:', badgesError);
-      return NextResponse.json({ error: 'Failed to fetch badges' }, { status: 500 });
+      // Return empty badges gracefully instead of 500
+      return NextResponse.json({
+        ok: true,
+        badges: [],
+        grouped: {
+          explorer: [],
+          specialist: [],
+          milestone: [],
+          community: []
+        },
+        stats: {
+          total: 0,
+          earned: 0,
+          percentage: 0
+        }
+      });
     }
 
     // Fetch user's earned badges
@@ -35,7 +88,8 @@ export async function GET(req: Request) {
 
     if (earnedError) {
       console.error('[Badge Fetch] Error fetching earned badges:', earnedError);
-      return NextResponse.json({ error: 'Failed to fetch earned badges' }, { status: 500 });
+      // Continue without earned badges rather than failing
+      // This allows the endpoint to still show all available badges
     }
 
     // Create a set of earned badge IDs for quick lookup
@@ -44,19 +98,27 @@ export async function GET(req: Request) {
       earnedBadges?.map(b => [b.badge_id, b.awarded_at]) || []
     );
 
-    // Combine data
-    const badgesWithStatus = allBadges?.map(badge => ({
-      ...badge,
-      earned: earnedBadgeIds.has(badge.id),
-      awarded_at: earnedBadgeMap.get(badge.id) || null
-    })) || [];
+    // Combine data with PNG paths from mappings
+    const badgesWithStatus = allBadges?.map(badge => {
+      const mapping = getBadgeMapping(badge.id);
+      return {
+        ...badge,
+        // Use mapping name/description if available (updated spec names)
+        name: mapping?.name || badge.name,
+        description: mapping?.description || badge.description,
+        // Add PNG path from mappings
+        icon_path: mapping?.pngPath || getBadgePngPath(badge.id),
+        earned: earnedBadgeIds.has(badge.id),
+        awarded_at: earnedBadgeMap.get(badge.id) || null
+      };
+    }) || [];
 
     // Group by badge_group
     const grouped = {
-      explorer: badgesWithStatus.filter(b => b.badge_group === 'explorer'),
-      specialist: badgesWithStatus.filter(b => b.badge_group === 'specialist'),
+      explorer: badgesWithStatus.filter(b => b.badge_group === 'explorer' || b.badge_group === 'category_explorer'),
+      specialist: badgesWithStatus.filter(b => b.badge_group === 'specialist' || b.badge_group === 'category_specialist'),
       milestone: badgesWithStatus.filter(b => b.badge_group === 'milestone'),
-      community: badgesWithStatus.filter(b => b.badge_group === 'community')
+      community: badgesWithStatus.filter(b => b.badge_group === 'community' || b.badge_group === 'personality')
     };
 
     // Calculate stats

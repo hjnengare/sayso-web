@@ -6,6 +6,7 @@ import { MapPin, ExternalLink, Maximize2, Copy, Check, X, Navigation, Share2, Ca
 import dynamic from "next/dynamic";
 import { createPortal } from "react-dom";
 import Logo from "../Logo/Logo";
+import AddressPill from "./AddressPill";
 
 // Dynamically import Mapbox to avoid SSR issues
 const MapboxMap = dynamic(() => import("./MapboxMap"), {
@@ -32,6 +33,7 @@ interface BusinessLocationProps {
     location?: string;
     latitude?: number | null;
     longitude?: number | null;
+    isUserUploaded?: boolean;
 }
 
 // Haversine formula to calculate distance
@@ -71,6 +73,7 @@ export default function BusinessLocation({
     location,
     latitude,
     longitude,
+    isUserUploaded = false,
 }: BusinessLocationProps) {
     const [isMapModalOpen, setIsMapModalOpen] = useState(false);
     const [copied, setCopied] = useState(false);
@@ -255,6 +258,22 @@ export default function BusinessLocation({
                             >
                                 {address}
                             </p>
+                        )}
+
+                        {/* Address Copy Pill - Non-intrusive metadata */}
+                        {(address || latitude || longitude) && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -3 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="mt-2"
+                            >
+                                <AddressPill
+                                    address={address}
+                                    latitude={latitude}
+                                    longitude={longitude}
+                                    isUserUploaded={isUserUploaded}
+                                />
+                            </motion.div>
                         )}
 
                         {/* Distance & Travel Time */}

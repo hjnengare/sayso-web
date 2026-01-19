@@ -24,7 +24,7 @@ import {
 import Footer from "../../components/Footer/Footer";
 import Header from "../../components/Header/Header";
 import { ReviewsList } from "@/components/organisms/ReviewsList";
-import { TOP_REVIEWERS, FEATURED_REVIEWS, type Reviewer } from "../../data/communityHighlightsData";
+import { Reviewer } from "../../types/community";
 
 // CSS animations
 const animations = `
@@ -116,6 +116,32 @@ export default function ReviewerProfilePage() {
     const reviewerId = params?.id as string;
     const [showScrollTop, setShowScrollTop] = useState(false);
     const [imgError, setImgError] = useState(false);
+    const [reviewer, setReviewer] = useState<ReviewerProfile | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    // Fetch reviewer data from API
+    useEffect(() => {
+        async function fetchReviewer() {
+            if (!reviewerId) return;
+            
+            setLoading(true);
+            try {
+                const response = await fetch(`/api/reviewers/${reviewerId}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setReviewer(data.reviewer);
+                } else {
+                    console.error('Failed to fetch reviewer:', response.statusText);
+                }
+            } catch (error) {
+                console.error('Error fetching reviewer:', error);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        fetchReviewer();
+    }, [reviewerId]);
 
     // Handle scroll to top button visibility
     useEffect(() => {
@@ -132,73 +158,29 @@ export default function ReviewerProfilePage() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    // Mock reviewer data (replace with API in production)
-    const reviewer: ReviewerProfile = useMemo(() => {
-        const baseReviewer = TOP_REVIEWERS.find(r => r.id === reviewerId) || TOP_REVIEWERS[0];
-        const reviewerReviews = FEATURED_REVIEWS.filter(r => r.reviewer.id === reviewerId).slice(0, 10);
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-off-white">
+                <Header />
+                <div className="container mx-auto px-4 py-20 text-center">
+                    <div className="text-charcoal/60">Loading reviewer profile...</div>
+                </div>
+                <Footer />
+            </div>
+        );
+    }
 
-        return {
-            id: baseReviewer.id,
-            name: baseReviewer.name,
-            profilePicture: baseReviewer.profilePicture,
-            reviewCount: baseReviewer.reviewCount,
-            rating: baseReviewer.rating,
-            badge: baseReviewer.badge,
-            trophyBadge: baseReviewer.trophyBadge,
-            location: baseReviewer.location,
-            memberSince: "Jan 2023",
-            helpfulVotes: Math.floor(baseReviewer.reviewCount * 3.5),
-            followers: Math.floor(baseReviewer.reviewCount * 2.1),
-            following: Math.floor(baseReviewer.reviewCount * 0.8),
-            totalViews: Math.floor(baseReviewer.reviewCount * 15.3),
-            averageRating: baseReviewer.rating,
-            reviews: reviewerReviews.length > 0 ? reviewerReviews.map(r => ({
-                id: r.id,
-                businessName: r.businessName,
-                businessType: r.businessType,
-                rating: r.rating,
-                text: r.reviewText,
-                date: r.date,
-                likes: r.likes,
-                tags: [],
-                images: r.images,
-            })) : [
-                {
-                    id: "1",
-                    businessName: "The Cozy Corner Cafe",
-                    businessType: "Coffee Shop",
-                    rating: 5,
-                    text: "Absolutely love this hidden gem! The barista remembers my order and the atmosphere is perfect for working. Their lavender latte is to die for!",
-                    date: "2 days ago",
-                    likes: 24,
-                    tags: ["cozy", "great coffee", "friendly staff"],
-                    images: ["https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=300&h=200&fit=crop"]
-                },
-                {
-                    id: "2",
-                    businessName: "Mama Rosa's Trattoria",
-                    businessType: "Italian Restaurant",
-                    rating: 5,
-                    text: "Best authentic Italian food outside of Italy! The pasta is made fresh daily and the tiramisu is heavenly. Service is impeccable too.",
-                    date: "1 week ago",
-                    likes: 31,
-                    tags: ["authentic", "fresh pasta", "excellent service"],
-                    images: ["https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=300&h=200&fit=crop"]
-                },
-            ],
-            badges: [
-                { id: "1", name: "Top Reviewer", icon: "🏆", description: "Among the top 10 reviewers this month", earnedDate: "Feb 2024" },
-                { id: "2", name: "Helpful Contributor", icon: "👍", description: "Received 100+ helpful votes", earnedDate: "Jan 2024" },
-                { id: "3", name: "Photo Expert", icon: "📸", description: "Added photos to 50+ reviews", earnedDate: "Dec 2023" },
-            ],
-            achievements: [
-                { id: "1", title: "First Review", description: "Posted your first review", icon: "⭐", unlocked: true },
-                { id: "2", title: "Century Club", description: "Posted 100 reviews", icon: "💯", unlocked: baseReviewer.reviewCount >= 100 },
-                { id: "3", title: "Photo Master", description: "Added 50 photos", icon: "📷", unlocked: true },
-                { id: "4", title: "Helpful Hero", description: "Received 500 helpful votes", icon: "👑", unlocked: false },
-            ],
-        };
-    }, [reviewerId]);
+    if (!reviewer) {
+        return (
+            <div className="min-h-screen bg-off-white">
+                <Header />
+                <div className="container mx-auto px-4 py-20 text-center">
+                    <div className="text-charcoal">Reviewer not found</div>
+                </div>
+                <Footer />
+            </div>
+        );
+    }
 
     return (
         <>

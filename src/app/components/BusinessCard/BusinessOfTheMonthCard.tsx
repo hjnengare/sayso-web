@@ -10,7 +10,7 @@ import { Scissors, Coffee, UtensilsCrossed, Wine, Dumbbell, Activity, Heart, Boo
 import Stars from "../Stars/Stars";
 import VerifiedBadge from "../VerifiedBadge/VerifiedBadge";
 import Tooltip from "../Tooltip/Tooltip";
-import { BusinessOfTheMonth } from "../../data/communityHighlightsData";
+import { BusinessOfTheMonth } from "../../types/community";
 import { getCategoryPng, getCategoryPngFromLabels, isPngIcon } from "../../utils/categoryToPngMapping";
 import { useSavedItems } from "../../contexts/SavedItemsContext";
 import { useToast } from "../../contexts/ToastContext";
@@ -164,14 +164,14 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
   // Get business identifier for routing (slug or ID)
   const businessIdentifier = (business as any).slug || business.id;
   const reviewRoute = `/business/${businessIdentifier}/review`;
-  const businessProfileRoute = business.href || `/business/${businessIdentifier}`;
+  const businessProfileRoute = (business as any).href || `/business/${businessIdentifier}`;
   const isSaved = isItemSaved(business.id);
 
-  const hasReviews = business.reviews > 0;
+  const hasReviews = business.reviewCount > 0;
   const ribbonText = useMemo(() => {
-    const src = business.monthAchievement || "";
+    const src = (business as any).monthAchievement || business.badge || "Featured";
     return src.replace(/^Best\s+/i, "Featured ");
-  }, [business.monthAchievement]);
+  }, [(business as any).monthAchievement, business.badge]);
 
   // Image fallback logic with edge case handling
   const getDisplayImage = useMemo(() => {
@@ -197,15 +197,15 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
       return { image: imageUrl, isPng: false };
     }
 
-    // Priority 3: Fallback to PNG based on specific labels (monthAchievement/category) for banners
-    const categoryPng = getCategoryPngFromLabels([business.monthAchievement, business.category]);
+    // Priority 3: Fallback to PNG based on specific labels (category) for banners
+    const categoryPng = getCategoryPngFromLabels([business.category]);
     return { image: categoryPng, isPng: true };
   }, [business]);
 
   const displayImage = getDisplayImage.image;
   const isImagePng = getDisplayImage.isPng;
-  const displayAlt = business.alt || business.name;
-  const displayTotal = typeof business.totalRating === "number" ? business.totalRating : (business as any).rating || 0;
+  const displayAlt = (business as any).alt || business.name;
+  const displayTotal = business.rating || 0;
 
   // Handle image error - fallback to PNG if uploaded image fails
   const handleImageError = () => {
@@ -388,7 +388,7 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
 
 
           {/* Premium glass badges */}
-          {business.verified && (
+          {(business as any).verified && (
             <div className="absolute left-4 top-4 z-20">
               <VerifiedBadge />
             </div>
@@ -559,7 +559,7 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
                             fontWeight: 700
                           }}
                         >
-                          {business.reviews}
+                          {business.reviewCount}
                         </span>
                         <span
                           role="link"
@@ -609,7 +609,7 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
                     )}
                   </div>
                   <div className="flex items-center justify-center gap-2 text-charcoal transition-all duration-300"
-                    aria-label={hasReviews ? `View ${business.reviews} reviews for ${business.name}` : `Be the first to review ${business.name}`}
+                    aria-label={hasReviews ? `View ${business.reviewCount} reviews for ${business.name}` : `Be the first to review ${business.name}`}
                   >
                     <Stars value={hasReviews && displayTotal > 0 ? displayTotal : 0} color="charcoal" size={18} spacing={2.5} />
                   </div>

@@ -25,10 +25,6 @@ import FeaturedBusinessesSkeleton from "../components/CommunityHighlights/Featur
 import BusinessCard from "../components/BusinessCard/BusinessCard";
 import { Loader } from "../components/Loader/Loader";
 import ScrollHint from "../components/ScrollHint/ScrollHint";
-import {
-  FEATURED_REVIEWS,
-  TOP_REVIEWERS,
-} from "../data/communityHighlightsData";
 import { useBusinesses, useForYouBusinesses, useTrendingBusinesses } from "../hooks/useBusinesses";
 import { useSimpleBusinessSearch } from "../hooks/useSimpleBusinessSearch";
 import { useEvents } from "../hooks/useEvents";
@@ -402,7 +398,7 @@ export default function Home() {
       }
     }
 
-    const results = Array.from(bySubCategory.entries()).map(([subCat, b]) => {
+    const results = Array.from(bySubCategory.entries()).map(([subCat, b], index) => {
       const rating = getDisplayRating(b);
       const reviews = getReviews(b);
       const categoryLabel = toTitle(b.subInterestLabel || b.subInterestId || b.category || subCat);
@@ -412,11 +408,14 @@ export default function Home() {
         image: b.image || b.image_url || (b.uploaded_images && b.uploaded_images.length > 0 ? b.uploaded_images[0] : null) || "",
         alt: b.alt || b.name,
         category: b.category || "Business",
+        description: b.description || `Featured in ${categoryLabel}`,
         location: b.location || b.address || "Cape Town",
         rating: rating > 0 ? 5 : 0,
+        reviewCount: reviews,
         totalRating: rating,
         reviews,
         badge: "featured" as const,
+        rank: index + 1,
         href: `/business/${b.slug || b.id}`,
         monthAchievement: `Featured ${categoryLabel}`,
         verified: Boolean(b.verified),
@@ -490,7 +489,7 @@ export default function Home() {
           <div ref={searchWrapRef} className="py-8 px-4 sm:px-6">
             <SearchInput
               variant="header"
-              placeholder="Discover cool local hidden gems..."
+              placeholder="Discover cool local gems..."
               mobilePlaceholder="Search places, coffee, yoga…"
               onSearch={handleSearchChange}
               onSubmitQuery={handleSubmitQuery}
@@ -741,8 +740,6 @@ export default function Home() {
                   <FeaturedBusinessesSkeleton count={4} />
                 ) : (
                   <CommunityHighlights
-                    reviews={FEATURED_REVIEWS}
-                    topReviewers={TOP_REVIEWERS}
                     businessesOfTheMonth={featuredByCategory}
                     variant="reviews"
                   />
