@@ -176,10 +176,10 @@ export async function GET(
         hasRating,
         percentiles: business.percentiles
           ? {
-              punctuality: business.percentiles.punctuality || 85,
-              friendliness: business.percentiles.friendliness || 85,
-              trustworthiness: business.percentiles.trustworthiness || 85,
-              'cost-effectiveness': business.percentiles['cost-effectiveness'] || 85,
+              punctuality: business.percentiles.punctuality || 100,
+              friendliness: business.percentiles.friendliness || 100,
+              trustworthiness: business.percentiles.trustworthiness || 100,
+              'cost-effectiveness': business.percentiles['cost-effectiveness'] || 100,
             }
           : undefined,
         // Include similarity score for debugging/analytics (optional)

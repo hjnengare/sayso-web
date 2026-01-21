@@ -1743,7 +1743,7 @@ const DEALBREAKER_RULES: Record<string, (business: BusinessRPCResult) => boolean
     if (business.price_range) {
       return business.price_range === '$' || business.price_range === '$$';
     }
-    const costEffectivenessScore = business.percentiles?.['cost-effectiveness'] ?? 85;
+    const costEffectivenessScore = business.percentiles?.['cost-effectiveness'] ?? 100;
     return costEffectivenessScore >= 75;
   },
 };
@@ -1842,10 +1842,10 @@ function transformBusinessForCard(business: BusinessRPCResult) {
     hasRating,
     percentiles: business.percentiles
       ? {
-          punctuality: business.percentiles.punctuality || 85,
-          friendliness: business.percentiles.friendliness || 85,
-          trustworthiness: business.percentiles.trustworthiness || 85,
-          'cost-effectiveness': business.percentiles['cost-effectiveness'] || 85,
+          punctuality: business.percentiles.punctuality || 100,
+          friendliness: business.percentiles.friendliness || 100,
+          trustworthiness: business.percentiles.trustworthiness || 100,
+          'cost-effectiveness': business.percentiles['cost-effectiveness'] || 100,
         }
       : undefined,
   };

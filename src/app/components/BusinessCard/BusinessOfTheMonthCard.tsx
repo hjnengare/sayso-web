@@ -205,7 +205,11 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
   const displayImage = getDisplayImage.image;
   const isImagePng = getDisplayImage.isPng;
   const displayAlt = (business as any).alt || business.name;
-  const displayTotal = business.rating || 0;
+  const displayTotal =
+    (typeof business.totalRating === "number" && business.totalRating > 0 && business.totalRating) ||
+    (typeof business.rating === "number" && business.rating > 0 && business.rating) ||
+    (typeof business?.stats?.average_rating === "number" && business.stats.average_rating > 0 && business.stats.average_rating) ||
+    0;
 
   // Handle image error - fallback to PNG if uploaded image fails
   const handleImageError = () => {
@@ -410,7 +414,7 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
 
           {hasReviews && displayTotal > 0 ? (
             <div className="absolute right-4 top-4 z-20 inline-flex items-center gap-1 rounded-full bg-off-white/95 backdrop-blur-xl px-3 py-1.5 text-charcoal border border-white/40">
-              <Star className="rounded-full p-1 w-3.5 h-3.5 text-charcoal fill-charcoal" strokeWidth={2.5} aria-hidden />
+              <Star className="rounded-full p-1 w-6 h-6 text-charcoal fill-charcoal" strokeWidth={2.5} aria-hidden />
               <span className="text-sm font-semibold text-charcoal" style={{ 
                 fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', 
                 fontWeight: 600

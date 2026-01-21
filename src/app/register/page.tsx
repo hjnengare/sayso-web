@@ -30,6 +30,7 @@ export default function RegisterPage() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [accountType, setAccountType] = useState<'user' | 'business_owner'>('user');
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
@@ -212,7 +213,7 @@ export default function RegisterPage() {
         return;
       }
 
-      const success = await register(normalizedEmail, password, username.trim());
+      const success = await register(normalizedEmail, password, username.trim(), accountType);
       
       if (success) {
         // Clear rate limit on successful registration
@@ -269,7 +270,7 @@ export default function RegisterPage() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: authStyles }} />
-      <div ref={containerRef} data-reduced={prefersReduced} className="min-h-[100dvh] bg-off-white flex flex-col relative overflow-hidden ios-inertia hide-scrollbar safe-area-full">
+      <div ref={containerRef} data-reduced={prefersReduced} className="h-[100dvh] bg-off-white flex flex-col relative overflow-y-auto ios-inertia safe-area-full">
 
         {/* Premium floating orbs background */}
         <div className="floating-orb floating-orb-1" aria-hidden="true" />
@@ -330,6 +331,42 @@ export default function RegisterPage() {
                   <p className="text-caption font-semibold text-orange-600" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>You&apos;re offline. We&apos;ll try again when you&apos;re back online.</p>
                 </div>
               )}
+
+              {/* Account Type Selection */}
+              <div className="space-y-3 mb-2">
+                <label className="block text-xs font-semibold text-white/60 uppercase tracking-wider" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                  Account Type
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAccountType('user')}
+                    disabled={isFormDisabled}
+                    className={`px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      accountType === 'user'
+                        ? 'bg-navbar-bg text-white shadow-lg shadow-white/10 border border-white/20'
+                        : 'bg-white/5 text-white/70 hover:bg-white/10 border border-white/10'
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                  >
+                    <span>Personal</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAccountType('business_owner')}
+                    disabled={isFormDisabled}
+                    className={`px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      accountType === 'business_owner'
+                        ? 'bg-navbar-bg text-white shadow-lg shadow-white/10 border border-white/20'
+                        : 'bg-white/5 text-white/70 hover:bg-white/10 border border-white/10'
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                  >
+                    <span>Business</span>
+                  </button>
+                </div>
+                <div className="h-px bg-white/15 w-full" />
+              </div>
 
               {/* Username Input */}
               <UsernameInput

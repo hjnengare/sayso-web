@@ -21,7 +21,6 @@ import {
   X,
   ChevronRight
 } from "lucide-react";
-import { Store } from "lucide-react";
 import { getBrowserSupabase } from "@/app/lib/supabase/client";
 
 // Import components directly for faster loading
@@ -38,6 +37,7 @@ import { useMemo } from "react";
 import { useReviewSubmission } from "@/app/hooks/useReviews";
 import { useRouter } from "next/navigation";
 import Header from "../components/Header/Header";
+import { getBadgePngPath } from "@/app/lib/badgeMappings";
 
 // Types
 import type { EnhancedProfile, UserStats } from '@/app/lib/types/user';
@@ -106,29 +106,6 @@ function AchievementsSkeleton() {
             <div className="w-12 h-12 bg-sage/20 rounded-full animate-pulse mb-3" />
             <div className="h-4 bg-white/30 rounded w-20 animate-pulse mb-2" />
             <div className="h-3 bg-white/20 rounded w-24 animate-pulse" />
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function BusinessesSkeleton() {
-  return (
-    <section className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-md p-6 sm:p-8 space-y-4">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-sage/20 rounded-full animate-pulse" />
-        <div className="h-5 bg-white/30 rounded w-32 animate-pulse" />
-      </div>
-      <div className="space-y-3">
-        {[1, 2].map((i) => (
-          <div key={i} className="flex items-center gap-4 p-4 bg-white/50 rounded-[16px] border border-white/60">
-            <div className="w-16 h-16 rounded-[12px] bg-sage/20 animate-pulse flex-shrink-0" />
-            <div className="flex-1 space-y-2">
-              <div className="h-4 bg-white/30 rounded w-36 animate-pulse" />
-              <div className="h-3 bg-white/20 rounded w-24 animate-pulse" />
-            </div>
-            <div className="w-5 h-5 bg-white/20 rounded animate-pulse" />
           </div>
         ))}
       </div>
@@ -262,6 +239,31 @@ function ProfileContent() {
   const [achievements, setAchievements] = useState<UserAchievement[]>([]);
   const [achievementsLoading, setAchievementsLoading] = useState(true);
 
+  // Track visibility changes to refetch data when returning to page
+  const refreshTriggerRef = React.useRef(0);
+
+  // Listen for page visibility changes to refresh data when user returns
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // Page became visible - increment ref to trigger refetches
+        refreshTriggerRef.current += 1;
+        
+        // Refetch all data by setting loading states
+        setProfileLoading(true);
+        setStatsLoading(true);
+        setReviewsLoading(true);
+        setAchievementsLoading(true);
+        setSavedBusinessesLoading(true);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
   // Fetch enhanced profile data from API
   useEffect(() => {
     const fetchEnhancedProfile = async () => {
@@ -363,56 +365,8 @@ function ProfileContent() {
   // Get saved businesses for mobile display - only fetch if user has saved items
   const [savedBusinesses, setSavedBusinesses] = useState<any[]>([]);
   const [savedBusinessesLoading, setSavedBusinessesLoading] = useState(false);
-  const [ownedBusinesses, setOwnedBusinesses] = useState<any[]>([]);
-  const [ownedBusinessesLoading, setOwnedBusinessesLoading] = useState(false);
 
-  // Fetch businesses owned by the user
-  useEffect(() => {
-    const fetchOwnedBusinesses = async () => {
-      if (!user?.id) {
-        setOwnedBusinesses([]);
-        setOwnedBusinessesLoading(false);
-        return;
-      }
 
-      try {
-        setOwnedBusinessesLoading(true);
-        const { data, error } = await supabase
-          .from('businesses')
-          .select('id, name, slug, category, location, image_url, verified, status, created_at, business_images(url, is_primary, sort_order)')
-          .eq('owner_id', user.id)
-          .eq('status', 'active')
-          .order('created_at', { ascending: false });
-
-        if (error) {
-          console.warn('Error fetching owned businesses:', error);
-          setOwnedBusinesses([]);
-          return;
-        }
-
-        // Transform business_images to uploaded_images format for compatibility
-        const transformedBusinesses = (data || []).map((business: any) => {
-          const uploaded_images = business.business_images
-            ?.filter((img: any) => img.is_primary || img.sort_order === 0)
-            .map((img: any) => img.url) || [];
-
-          return {
-            ...business,
-            uploaded_images: uploaded_images.length > 0 ? uploaded_images : (business.image_url ? [business.image_url] : []),
-          };
-        });
-
-        setOwnedBusinesses(transformedBusinesses);
-      } catch (error) {
-        console.warn('Error fetching owned businesses:', error);
-        setOwnedBusinesses([]);
-      } finally {
-        setOwnedBusinessesLoading(false);
-      }
-    };
-
-    fetchOwnedBusinesses();
-  }, [user?.id, supabase]);
 
   useEffect(() => {
     const fetchSavedBusinesses = async () => {
@@ -509,13 +463,16 @@ function ProfileContent() {
         const response = await fetch(`/api/user/reviews?page=1&pageSize=20`);
 
         if (!response.ok) {
-          console.error('Error fetching user reviews:', response.status);
+          console.error('Error fetching user reviews:', response.status, response.statusText);
           setUserReviews([]);
           return;
         }
 
         const result = await response.json();
+        console.log('User reviews API response:', result);
+        
         if (result.data?.data && Array.isArray(result.data.data)) {
+          console.log('Transforming reviews:', result.data.data);
           // Transform the data to match Review interface
           const transformedReviews: Review[] = result.data.data.map((r: any) => ({
             id: r.id,
@@ -527,8 +484,10 @@ function ProfileContent() {
             business_image_url: r.business?.image_url || null,
             business_slug: r.business?.slug || r.business?.id, // Store for navigation
           }));
+          console.log('Transformed reviews:', transformedReviews);
           setUserReviews(transformedReviews);
         } else {
+          console.warn('Unexpected API response structure:', result);
           setUserReviews([]);
         }
       } catch (err) {
@@ -555,20 +514,27 @@ function ProfileContent() {
         // Use badges API instead of old achievements API
         const response = await fetch(`/api/badges/user?user_id=${user.id}`, { cache: 'no-store' });
 
+        console.log('[Profile] Badges API response status:', response.status);
+
         if (!response.ok) {
           if (response.status === 401) {
+            console.warn('[Profile] Unauthorized - user not authenticated');
             setAchievements([]);
             return;
           }
-          console.warn('Error fetching badges:', response.status);
+          console.warn('[Profile] Error fetching badges:', response.status);
           setAchievements([]);
           return;
         }
 
         const result = await response.json();
+        console.log('[Profile] Badges API result:', result);
+        
         if (result.ok && result.badges && Array.isArray(result.badges)) {
           // Filter only earned badges and transform to UserAchievement interface
           const earnedBadges = result.badges.filter((badge: any) => badge.earned);
+          console.log('[Profile] Earned badges count:', earnedBadges.length, 'Total badges:', result.badges.length);
+          
           const transformedAchievements: UserAchievement[] = earnedBadges.map((badge: any) => ({
             achievement_id: badge.id,
             earned_at: badge.awarded_at || new Date().toISOString(),
@@ -580,12 +546,14 @@ function ProfileContent() {
               category: badge.badge_group || 'general',
             },
           }));
+          console.log('[Profile] Setting achievements:', transformedAchievements);
           setAchievements(transformedAchievements);
         } else {
+          console.warn('[Profile] Unexpected response format or no badges:', result);
           setAchievements([]);
         }
       } catch (err) {
-        console.warn('Error fetching badges:', err);
+        console.warn('[Profile] Error fetching badges:', err);
         setAchievements([]);
       } finally {
         setAchievementsLoading(false);
@@ -850,12 +818,14 @@ function ProfileContent() {
     profile.location ||
     profile.locale ||
     "Location not set";
-  const reviewsCount = userStats?.totalReviewsWritten ?? profile.reviews_count ?? 0;
+  // Use the actual reviews array length as primary source of truth, since we're fetching reviews directly
+  const reviewsCount = userReviews.length > 0 ? userReviews.length : (userStats?.totalReviewsWritten ?? profile.reviews_count ?? 0);
   const badgesCount = achievements.length; // Use actual achievements length instead of cached count
   const interestsCount = profile.interests_count ?? 0;
-  const helpfulVotesCount = userStats?.helpfulVotesReceived ??
-    userStats?.totalHelpfulVotesGiven ??
-    Math.max(0, reviewsCount * 3);
+  // Use actual helpful votes from userStats, fallback to 0
+  const helpfulVotesCount = userStats?.helpfulVotesReceived ?? 0;
+  // Use actual saved items count as primary source
+  const savedBusinessesCount = savedItems.length > 0 ? savedItems.length : (userStats?.totalBusinessesSaved ?? 0);
   const memberSinceLabel = userStats?.accountCreationDate
     ? formatMemberSince(userStats.accountCreationDate)
     : profile.created_at
@@ -950,6 +920,9 @@ function ProfileContent() {
       onDelete: () => handleDeleteReviewClick(review.id),
     };
   });
+
+  console.log('reviewsData prepared:', reviewsData);
+  console.log('userReviews:', userReviews);
 
   // Prepare achievements data
   const achievementsData = achievements.map((ua) => ({
@@ -1216,7 +1189,7 @@ function ProfileContent() {
                               <span className="text-sm text-charcoal/70">Saved Businesses</span>
                             </div>
                             <p className="text-2xl font-bold text-charcoal">
-                              {userStats.totalBusinessesSaved}
+                              {savedBusinessesCount}
                             </p>
                             <p className="text-xs text-charcoal/60">Your saved gems</p>
                           </div>
@@ -1243,123 +1216,53 @@ function ProfileContent() {
                       ) : (
                       <section
                         className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-md p-6 sm:p-8"
-                        aria-label="Your achievements"
+                        aria-label="Your badges and achievements"
                       >
-                        <AchievementsList
-                          achievements={achievementsData}
-                          title="Your Achievements"
-                        />
-                      </section>
-                      )}
-
-                      {/* My Businesses Section */}
-                      {ownedBusinessesLoading ? (
-                        <BusinessesSkeleton />
-                      ) : (
-                      <section
-                        className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-md p-6 sm:p-8 space-y-4"
-                        aria-label="My businesses"
-                      >
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-base font-semibold text-charcoal flex items-center gap-3">
-                            <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-navbar-bg/20 to-navbar-bg/10">
-                              <Store className="w-5 h-5 text-navbar-bg" />
-                            </span>
-                            My Businesses
+                        <div className="flex items-center gap-3 mb-6">
+                          <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-coral/20 to-coral/10">
+                            <Award className="w-5 h-5 text-coral" />
+                          </span>
+                          <h3 className="text-base font-semibold text-charcoal">
+                            Badges
                           </h3>
                         </div>
-                        {ownedBusinesses.length > 0 ? (
-                          <div className="space-y-3">
-                            {ownedBusinesses.map((business) => {
-                              const businessSlug = business.slug || business.id;
-                              const displayImage = business.uploaded_images?.[0] || business.image_url || null;
-                              return (
-                                <Link
-                                  key={business.id}
-                                  href={`/business/${businessSlug}/edit`}
-                                  className="flex items-center gap-4 p-4 bg-white/50 hover:bg-white/70 rounded-[16px] border border-white/60 transition-all duration-200 hover:shadow-md group"
-                                >
-                                  {displayImage ? (
-                                    <div className="relative w-16 h-16 rounded-[12px] overflow-hidden flex-shrink-0">
-                                      <Image
-                                        src={displayImage}
-                                        alt={business.name}
-                                        fill
-                                        className="object-cover"
-                                        sizes="64px"
-                                      />
-                                    </div>
-                                  ) : (
-                                    <div className="w-16 h-16 rounded-[12px] bg-gradient-to-br from-sage/20 to-sage/10 flex items-center justify-center flex-shrink-0">
-                                      <Store className="w-6 h-6 text-sage/60" />
-                                    </div>
-                                  )}
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <h4 className="text-sm font-semibold text-charcoal truncate group-hover:text-navbar-bg transition-colors">
-                                        {business.name}
-                                      </h4>
-                                      {business.verified && (
-                                        <Check className="w-4 h-4 text-sage flex-shrink-0" />
-                                      )}
-                                    </div>
-                                    <div className="flex items-center gap-2 text-xs text-charcoal/60">
-                                      <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
-                                      <span className="truncate">{business.location || 'Location not set'}</span>
-                                    </div>
-                                  </div>
-                                  <ChevronRight className="w-5 h-5 text-charcoal/60 group-hover:text-charcoal transition-colors flex-shrink-0" />
-                                </Link>
-                              );
-                            })}
-                            <Link
-                              href="/for-businesses"
-                              className="inline-flex items-center gap-2 px-4 py-2.5 bg-coral/90 hover:bg-coral text-white rounded-full text-sm font-semibold transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-md shadow-coral/20 border border-coral/30 w-fit mt-2"
-                            >
-                              <Briefcase className="w-4 h-4" />
-                              Add another business
-                            </Link>
+                        {achievements.length === 0 ? (
+                          <div className="text-center py-8">
+                            <p className="text-charcoal/60 text-sm">
+                              No badges earned yet. Start reviewing businesses to unlock badges!
+                            </p>
                           </div>
                         ) : (
-                          <div className="space-y-4">
-                            <p className="text-sm text-charcoal/70 font-medium max-w-[520px]">
-                              You haven't added any businesses yet. Start by adding your first business listing!
-                            </p>
-                            <Link
-                              href="/for-businesses"
-                              className="inline-flex items-center gap-2 px-4 py-2.5 bg-coral/90 hover:bg-coral text-white rounded-full text-sm font-semibold transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-md shadow-coral/20 border border-coral/30 w-fit"
-                            >
-                              <Briefcase className="w-4 h-4" />
-                              Add your business
-                            </Link>
+                          <div className="flex flex-wrap gap-4">
+                            {achievements.map((achievement) => {
+                              const correctPngPath = getBadgePngPath(achievement.achievement_id);
+                              return (
+                                <div
+                                  key={achievement.achievement_id}
+                                  className="flex items-center gap-3 p-4 bg-white/50 rounded-[16px] border border-white/60 flex-shrink-0"
+                                >
+                                  <div className="w-12 h-12 flex-shrink-0">
+                                    <Image
+                                      src={correctPngPath}
+                                      alt={achievement.achievements.name}
+                                      width={48}
+                                      height={48}
+                                      className="w-12 h-12 object-contain"
+                                    />
+                                  </div>
+                                  <div className="min-w-0">
+                                    <h4 className="text-sm font-semibold text-charcoal">{achievement.achievements.name}</h4>
+                                    <p className="text-xs text-charcoal/70">{achievement.achievements.description}</p>
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         )}
                       </section>
                       )}
 
-                      <section
-                        className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[20px] shadow-md p-6 sm:p-8 space-y-4"
-                        aria-label="Business management"
-                      >
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-base font-semibold text-charcoal flex items-center gap-3">
-                            <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-navbar-bg/20 to-navbar-bg/10">
-                              <Briefcase className="w-5 h-5 text-navbar-bg" />
-                            </span>
-                            Manage Your Business Presence
-                          </h3>
-                        </div>
-                        <p className="text-sm text-charcoal/70 font-medium max-w-[520px]">
-                          Keep your business information up to date, respond to community feedback, and track performance insights from one place.
-                        </p>
-                        <Link
-                          href={ownedBusinesses.length > 0 ? '/my-businesses' : '/for-businesses'}
-                          className="inline-flex items-center gap-2 px-4 py-2.5 bg-coral/90 hover:bg-coral text-white rounded-full text-sm font-semibold transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-md shadow-coral/20 border border-coral/30 w-fit"
-                        >
-                          <Briefcase className="w-4 h-4" />
-                          {ownedBusinesses.length > 0 ? 'Manage businesses' : 'Add your business'}
-                        </Link>
-                      </section>
+
 
                       {reviewsLoading ? (
                         <ReviewsSkeleton />
@@ -1369,12 +1272,15 @@ function ProfileContent() {
                         aria-label="Your contributions"
                       >
                         {reviewsData.length > 0 ? (
-                          <ReviewsList
-                            reviews={reviewsData}
-                            title="Your Contributions"
-                            initialDisplayCount={2}
-                            showToggle={true}
-                          />
+                          <>
+                            {console.log('Rendering ReviewsList with data:', reviewsData)}
+                            <ReviewsList
+                              reviews={reviewsData}
+                              title="Your Contributions"
+                              initialDisplayCount={2}
+                              showToggle={true}
+                            />
+                          </>
                         ) : (
                           <div className="text-center py-8">
                             <p className="text-charcoal/70">You haven't written any reviews yet.</p>

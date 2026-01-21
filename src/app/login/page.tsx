@@ -24,6 +24,7 @@ export default function LoginPage() {
   const [emailTouched, setEmailTouched] = useState(false);
   const [passwordTouched, setPasswordTouched] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [accountType, setAccountType] = useState<'user' | 'business_owner'>('user');
 
   const { login, isLoading: authLoading, error: authError } = useAuth();
   const { showToast } = useToast();
@@ -89,7 +90,7 @@ export default function LoginPage() {
         return;
       }
 
-      const loggedInUser = await login(email, password);
+      const loggedInUser = await login(email, password, accountType);
 
       if (loggedInUser) {
         // Clear rate limit on successful login
@@ -113,7 +114,7 @@ export default function LoginPage() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: authStyles }} />
-      <div ref={containerRef} className="min-h-[100dvh] bg-off-white flex flex-col relative overflow-hidden ios-inertia hide-scrollbar safe-area-full">
+      <div ref={containerRef} className="h-[100dvh] bg-off-white flex flex-col relative overflow-y-auto ios-inertia safe-area-full">
 
         {/* Back button with entrance animation */}
         <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-20 animate-slide-in-left animate-delay-200">
@@ -154,6 +155,42 @@ export default function LoginPage() {
                   <p className="text-caption font-semibold text-orange-600">{error}</p>
                 </div>
               )}
+
+              {/* Account Type Selection */}
+              <div className="space-y-3 mb-1">
+                <label className="block text-xs font-semibold text-white/60 uppercase tracking-wider" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                  Account Type
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAccountType('user')}
+                    disabled={isSubmitting}
+                    className={`px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      accountType === 'user'
+                        ? 'bg-navbar-bg text-white shadow-lg shadow-white/10 border border-white/20'
+                        : 'bg-white/5 text-white/70 hover:bg-white/10 border border-white/10'
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                  >
+                    <span>Personal</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAccountType('business_owner')}
+                    disabled={isSubmitting}
+                    className={`px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      accountType === 'business_owner'
+                        ? 'bg-navbar-bg text-white shadow-lg shadow-white/10 border border-white/20'
+                        : 'bg-white/5 text-white/70 hover:bg-white/10 border border-white/10'
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                  >
+                    <span>Business</span>
+                  </button>
+                </div>
+                <div className="h-px bg-white/15 w-full" />
+              </div>
 
               {/* Email Input */}
               <EmailInput

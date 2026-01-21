@@ -26,12 +26,12 @@ function BusinessImage({ business, size }: { business: BusinessOfTheMonth; size:
     const uploadedImages = (business as any).uploaded_images;
     if (uploadedImages && Array.isArray(uploadedImages) && uploadedImages.length > 0) {
       const firstImageUrl = uploadedImages[0];
-      
-      if (firstImageUrl && 
-          typeof firstImageUrl === 'string' && 
-          firstImageUrl.trim() !== '' &&
-          !isPngIcon(firstImageUrl) &&
-          !firstImageUrl.includes('/png/')) {
+
+      if (firstImageUrl &&
+        typeof firstImageUrl === 'string' &&
+        firstImageUrl.trim() !== '' &&
+        !isPngIcon(firstImageUrl) &&
+        !firstImageUrl.includes('/png/')) {
         return { image: firstImageUrl, isPng: false };
       }
     }
@@ -187,19 +187,25 @@ function BusinessOfMonthPodium({ topBusinesses }: BusinessOfMonthPodiumProps) {
           {businesses[1].href ? (
             <Link href={businesses[1].href} className="block">
               <div className="relative mb-2 sm:mb-3">
-                <div className="shadow-[0_8px_30px_rgba(0,0,0,0.2)] mx-auto ring-3 sm:ring-4 ring-coral/30">
+                <div className="flex items-center justify-center mx-auto">
                   <BusinessImage business={businesses[1]} size="small" />
                 </div>
-                <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-coral to-coral/80 rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.3)] border-2 border-white ring-2 ring-white/50">
-                  <span className="text-body-sm sm:text-body font-bold text-white">2</span>
-                </div>
+              <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-coral to-coral/80 rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.3)] border-2 border-white ring-2 ring-white/50">
+              <span className="text-body-sm sm:text-body font-bold text-white">2</span>
+            </div> 
               </div>
-              <div className="font-urbanist text-xs sm:text-body-sm md:text-body font-700 text-charcoal mb-1 line-clamp-2 px-1 sm:px-2 max-w-full min-h-[2rem] sm:min-h-[2.5rem] md:min-h-[3rem] break-words">{businesses[1].name}</div>
+
+              <div className="font-urbanist text-xs sm:text-body-sm md:text-body font-700 text-charcoal mb-1 line-clamp-2 px-1 sm:px-2 max-w-full min-h-[2rem] sm:min-h-[2.5rem] md:min-h-[3rem] break-words flex items-start justify-center gap-1">
+                
+                <span className="line-clamp-2">{businesses[1].name}</span>
+              </div>
+
               <div className="font-urbanist text-caption sm:text-body-sm text-charcoal/60 mb-2 flex items-center justify-center gap-1">
                 <Star className="w-3 h-3 sm:w-4 sm:h-4 text-coral fill-coral" />
                 <span className="font-700 text-charcoal">{businesses[1].totalRating?.toFixed(1) || "0.0"}</span>
                 <span className="text-charcoal/70">({businesses[1].reviews || 0})</span>
               </div>
+
               {/* Professional Podium Block */}
               <div className="relative mt-auto">
                 <div className="bg-gradient-to-b from-coral/50 to-coral/30 rounded-t-xl h-20 sm:h-28 md:h-32 w-full shadow-[0_8px_30px_rgba(0,0,0,0.15)] relative overflow-hidden">
@@ -210,19 +216,25 @@ function BusinessOfMonthPodium({ topBusinesses }: BusinessOfMonthPodiumProps) {
           ) : (
             <div>
               <div className="relative mb-2 sm:mb-3">
-                <div className="relative shadow-[0_8px_30px_rgba(0,0,0,0.2)] mx-auto ring-3 sm:ring-4 ring-coral/30">
+                <div className="relative flex items-center justify-center mx-auto">
                   <BusinessImage business={businesses[1]} size="small" />
                   <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-coral to-coral/80 rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.3)] border-2 border-white ring-2 ring-white/50">
                     <span className="text-body-sm sm:text-body font-bold text-white">2</span>
                   </div>
                 </div>
               </div>
-              <div className="font-urbanist text-xs sm:text-body-sm md:text-body font-700 text-charcoal mb-1 line-clamp-2 px-1 sm:px-2 max-w-full min-h-[2rem] sm:min-h-[2.5rem] md:min-h-[3rem] break-words">{businesses[1].name}</div>
+
+              <div className="font-urbanist text-xs sm:text-body-sm md:text-body font-700 text-charcoal mb-1 line-clamp-2 px-1 sm:px-2 max-w-full min-h-[2rem] sm:min-h-[2.5rem] md:min-h-[3rem] break-words flex items-start justify-center gap-1">
+                <span className="shrink-0 font-800 text-charcoal">2</span>
+                <span className="line-clamp-2">{businesses[1].name}</span>
+              </div>
+
               <div className="font-urbanist text-caption sm:text-body-sm text-charcoal/60 mb-2 flex items-center justify-center gap-1">
                 <Star className="w-3 h-3 sm:w-4 sm:h-4 text-coral fill-coral" />
                 <span className="font-700 text-charcoal">{businesses[1].totalRating?.toFixed(1) || "0.0"}</span>
                 <span className="text-charcoal/70">({businesses[1].reviews || 0})</span>
               </div>
+
               {/* Professional Podium Block */}
               <div className="relative mt-auto">
                 <div className="bg-gradient-to-b from-coral to-coral/70 rounded-t-xl h-20 sm:h-28 md:h-32 w-full shadow-[0_8px_30px_rgba(0,0,0,0.15)] relative overflow-hidden">
@@ -245,19 +257,27 @@ function BusinessOfMonthPodium({ topBusinesses }: BusinessOfMonthPodiumProps) {
           {businesses[0].href ? (
             <Link href={businesses[0].href} className="block">
               <div className="relative mb-2 sm:mb-3">
-                <div className="shadow-[0_12px_40px_rgba(0,0,0,0.25)] mx-auto ring-3 sm:ring-4 ring-sage">
+                <div className="flex items-center justify-center mx-auto">
                   <BusinessImage business={businesses[0]} size="medium" />
                 </div>
                 <div className="absolute -top-2 -right-2 sm:-top-3 sm:-right-3 w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full flex items-center justify-center shadow-[0_8px_30px_rgba(0,0,0,0.3)] border-2 border-white ring-2 ring-white/50">
                   <Trophy className="text-h3 sm:text-h2 text-white" />
                 </div>
               </div>
-              <div className="font-urbanist text-sm sm:text-body md:text-h3 font-700 text-charcoal mb-1 line-clamp-2 px-1 sm:px-2 max-w-full min-h-[2rem] sm:min-h-[2.5rem] md:min-h-[3rem] break-words">{businesses[0].name}</div>
+
+              <div className="font-urbanist text-sm sm:text-body md:text-h3 font-700 text-charcoal mb-1 line-clamp-2 px-1 sm:px-2 max-w-full min-h-[2rem] sm:min-h-[2.5rem] md:min-h-[3rem] break-words flex items-start justify-center gap-1">
+                <span className="shrink-0 inline-flex items-center gap-1 font-800 text-charcoal">
+                
+                </span>
+                <span className="line-clamp-2">{businesses[0].name}</span>
+              </div>
+
               <div className="font-urbanist text-caption sm:text-body-sm text-charcoal/60 mb-2 flex items-center justify-center gap-1">
                 <Star className="w-3 h-3 sm:w-4 sm:h-4 text-coral fill-coral" />
                 <span className="font-700 text-charcoal">{businesses[0].totalRating?.toFixed(1) || "0.0"}</span>
                 <span className="text-charcoal/70">({businesses[0].reviews || 0})</span>
               </div>
+
               {/* Professional Podium Block */}
               <div className="relative mt-auto">
                 <div className="bg-gradient-to-b from-sage/60 to-sage/35 rounded-t-xl h-24 sm:h-36 md:h-48 w-full shadow-[0_12px_40px_rgba(0,0,0,0.2)] relative overflow-hidden">
@@ -268,19 +288,28 @@ function BusinessOfMonthPodium({ topBusinesses }: BusinessOfMonthPodiumProps) {
           ) : (
             <div>
               <div className="relative mb-2 sm:mb-3">
-                <div className="relative shadow-[0_12px_40px_rgba(0,0,0,0.25)] mx-auto ring-3 sm:ring-4 ring-sage">
+                <div className="relative flex items-center justify-center mx-auto">
                   <BusinessImage business={businesses[0]} size="medium" />
                   <div className="absolute -top-2 -right-2 sm:-top-3 sm:-right-3 w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full flex items-center justify-center shadow-[0_8px_30px_rgba(0,0,0,0.3)] border-2 border-white ring-2 ring-white/50">
                     <Trophy className="text-h3 sm:text-h2 text-white" />
                   </div>
                 </div>
               </div>
-              <div className="font-urbanist text-sm sm:text-body md:text-h3 font-700 text-charcoal mb-1 line-clamp-2 px-1 sm:px-2 max-w-full min-h-[2rem] sm:min-h-[2.5rem] md:min-h-[3rem] break-words">{businesses[0].name}</div>
+
+              <div className="font-urbanist text-sm sm:text-body md:text-h3 font-700 text-charcoal mb-1 line-clamp-2 px-1 sm:px-2 max-w-full min-h-[2rem] sm:min-h-[2.5rem] md:min-h-[3rem] break-words flex items-start justify-center gap-1">
+                <span className="shrink-0 inline-flex items-center gap-1 font-800 text-charcoal">
+                  <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 fill-amber-500" />
+                  <span>1</span>
+                </span>
+                <span className="line-clamp-2">{businesses[0].name}</span>
+              </div>
+
               <div className="font-urbanist text-caption sm:text-body-sm text-charcoal/60 mb-2 flex items-center justify-center gap-1">
                 <Star className="w-3 h-3 sm:w-4 sm:h-4 text-coral fill-coral" />
                 <span className="font-700 text-charcoal">{businesses[0].totalRating?.toFixed(1) || "0.0"}</span>
                 <span className="text-charcoal/70">({businesses[0].reviews || 0})</span>
               </div>
+
               {/* Professional Podium Block */}
               <div className="relative mt-auto">
                 <div className="bg-gradient-to-b from-sage to-sage/70 rounded-t-xl h-24 sm:h-36 md:h-48 w-full shadow-[0_12px_40px_rgba(0,0,0,0.2)] relative overflow-hidden">
@@ -303,19 +332,25 @@ function BusinessOfMonthPodium({ topBusinesses }: BusinessOfMonthPodiumProps) {
           {businesses[2].href ? (
             <Link href={businesses[2].href} className="block">
               <div className="relative mb-2 sm:mb-3">
-                <div className="shadow-[0_8px_30px_rgba(0,0,0,0.2)] mx-auto ring-3 sm:ring-4 ring-charcoal/20">
+                <div className="flex items-center justify-center mx-auto">
                   <BusinessImage business={businesses[2]} size="small" />
                 </div>
                 <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-charcoal/70 to-charcoal/50 rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.3)] border-2 border-white ring-2 ring-white/50">
-                  <span className="text-body-sm sm:text-body font-bold text-white">3</span>
+                  <span className="text-body-sm sm:text-body font-bold text-white ">3</span>
                 </div>
               </div>
-              <div className="font-urbanist text-body-sm sm:text-body font-700 text-charcoal mb-1 truncate px-2 max-w-full overflow-hidden min-h-[1.5rem] sm:min-h-[1.75rem]">{businesses[2].name}</div>
+
+              <div className="font-urbanist text-body-sm sm:text-body font-700 text-charcoal mb-1 truncate px-2 max-w-full overflow-hidden min-h-[1.5rem] sm:min-h-[1.75rem] flex items-center justify-center gap-1">
+              
+                <span className="truncate">{businesses[2].name}</span>
+              </div>
+
               <div className="font-urbanist text-caption sm:text-body-sm text-charcoal/60 mb-2 flex items-center justify-center gap-1">
                 <Star className="w-3 h-3 sm:w-4 sm:h-4 text-coral fill-coral" />
                 <span className="font-700 text-charcoal">{businesses[2].totalRating?.toFixed(1) || "0.0"}</span>
                 <span className="text-charcoal/70">({businesses[2].reviews || 0})</span>
               </div>
+
               {/* Professional Podium Block */}
               <div className="relative mt-auto">
                 <div className="bg-gradient-to-b from-charcoal/40 to-charcoal/20 rounded-t-xl h-16 sm:h-24 md:h-28 w-full shadow-[0_8px_30px_rgba(0,0,0,0.15)] relative overflow-hidden">
@@ -326,19 +361,25 @@ function BusinessOfMonthPodium({ topBusinesses }: BusinessOfMonthPodiumProps) {
           ) : (
             <div>
               <div className="relative mb-2 sm:mb-3">
-                <div className="relative shadow-[0_8px_30px_rgba(0,0,0,0.2)] mx-auto ring-3 sm:ring-4 ring-charcoal/20">
+                <div className="relative flex items-center justify-center mx-auto ring-3 sm:ring-4 ring-charcoal/20">
                   <BusinessImage business={businesses[2]} size="small" />
                   <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-charcoal/70 to-charcoal/50 rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.3)] border-2 border-white ring-2 ring-white/50">
                     <span className="text-body-sm sm:text-body font-bold text-white">3</span>
                   </div>
                 </div>
               </div>
-              <div className="font-urbanist text-body-sm sm:text-body font-700 text-charcoal mb-1 truncate px-2 max-w-full overflow-hidden min-h-[1.5rem] sm:min-h-[1.75rem]">{businesses[2].name}</div>
+
+              <div className="font-urbanist text-body-sm sm:text-body font-700 text-charcoal mb-1 truncate px-2 max-w-full overflow-hidden min-h-[1.5rem] sm:min-h-[1.75rem] flex items-center justify-center gap-1">
+                <span className="shrink-0 font-800 text-charcoal">3</span>
+                <span className="truncate">{businesses[2].name}</span>
+              </div>
+
               <div className="font-urbanist text-caption sm:text-body-sm text-charcoal/60 mb-2 flex items-center justify-center gap-1">
                 <Star className="w-3 h-3 sm:w-4 sm:h-4 text-coral fill-coral" />
                 <span className="font-700 text-charcoal">{businesses[2].totalRating?.toFixed(1) || "0.0"}</span>
                 <span className="text-charcoal/70">({businesses[2].reviews || 0})</span>
               </div>
+
               {/* Professional Podium Block */}
               <div className="relative mt-auto">
                 <div className="bg-gradient-to-b from-charcoal/60 to-charcoal/40 rounded-t-xl h-16 sm:h-24 md:h-28 w-full shadow-[0_8px_30px_rgba(0,0,0,0.15)] relative overflow-hidden">

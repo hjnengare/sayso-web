@@ -63,7 +63,7 @@ const DEALBREAKER_RULES: Record<string, (business: BusinessForScoring) => boolea
     if (business.price_range) {
       return business.price_range === '$' || business.price_range === '$$';
     }
-    const costEffectivenessScore = business.percentiles?.['cost-effectiveness'] ?? 85;
+    const costEffectivenessScore = business.percentiles?.['cost-effectiveness'] ?? 100;
     return costEffectivenessScore >= 75;
   },
   'expensive': (business) => {

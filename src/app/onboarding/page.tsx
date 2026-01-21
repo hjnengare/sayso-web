@@ -195,13 +195,12 @@ export default function OnboardingPage() {
                     fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
                     fontWeight: 500,
                   }}>
-                <span>Ready to join? </span>
-                <Link href="/register" className="font-semibold text-coral hover:underline">
-                  Sign up
+                <Link href="/register" className="font-semibold text-charcoal hover:underline">
+                  Sign Up
                 </Link>
-                <span> or </span>
-                <Link href="/login" className="font-semibold text-charcoal hover:underline">
-                  Log in
+                <span className="text-charcoal/90" aria-hidden="true"> or </span>
+                <Link href="/login" className="font-semibold text-coral hover:underline">
+                  Log In
                 </Link>
               </div>
             </div>

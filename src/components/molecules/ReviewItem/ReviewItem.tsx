@@ -33,7 +33,7 @@ const BusinessThumb: React.FC<{
         style={{ width: size, height: size }}
         aria-label={`${name} placeholder image`}
       >
-        <Briefcase size={size * 0.5} className="text-sage" />
+        <Briefcase size={size * 0.5} className="text-white" />
       </div>
     );
   }

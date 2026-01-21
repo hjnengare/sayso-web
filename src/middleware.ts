@@ -291,14 +291,14 @@ export async function middleware(request: NextRequest) {
   // STRICT STATE MACHINE: Use onboarding_step as SINGLE source of truth
   // OPTIMIZED: Single DB read for profile data (no duplicate queries)
   let onboardingAccess = null;
-  let profileData: { onboarding_step: string | null; onboarding_complete: boolean | null } | null = null;
+  let profileData: { onboarding_step: string | null; onboarding_complete: boolean | null; role?: string | null; current_role?: string | null } | null = null;
   
   if (user && user.email_confirmed_at) {
     try {
       // Single DB read - reuse this data throughout middleware
       const { data, error: profileError } = await supabase
         .from('profiles')
-        .select('onboarding_step, onboarding_complete')
+        .select('onboarding_step, onboarding_complete, role, current_role')
         .eq('user_id', user.id)
         .maybeSingle();
       
@@ -440,6 +440,65 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
+  // ROLE-BASED ACCESS CONTROL: Enforce business routes to business accounts only
+  if (isBusinessAuthRoute && user && user.email_confirmed_at) {
+    const userCurrentRole = profileData?.current_role || 'user';
+    if (userCurrentRole !== 'business_owner') {
+      console.log('Middleware: Restricting non-business account from /for-businesses');
+      const redirectUrl = new URL('/home', request.url);
+      return NextResponse.redirect(redirectUrl);
+    }
+  }
+
+  // ROLE-BASED ACCESS CONTROL: Restrict /owners routes to business accounts only
+  if (isOwnersRoute && user && user.email_confirmed_at) {
+    const userCurrentRole = profileData?.current_role || 'user';
+    if (userCurrentRole !== 'business_owner') {
+      console.log('Middleware: Restricting non-business account from /owners routes');
+      const redirectUrl = new URL('/home', request.url);
+      return NextResponse.redirect(redirectUrl);
+    }
+  }
+
+  // ROLE-BASED ACCESS CONTROL: Restrict /business/[id]/edit to business owners
+  if (isBusinessEditRoute && user && user.email_confirmed_at) {
+    const userCurrentRole = profileData?.current_role || 'user';
+    if (userCurrentRole !== 'business_owner') {
+      console.log('Middleware: Restricting non-business account from business edit route');
+      const redirectUrl = new URL('/home', request.url);
+      return NextResponse.redirect(redirectUrl);
+    }
+  }
+
+  // ROLE-BASED ACCESS CONTROL: Restrict personal user routes from business accounts
+  const personalUserRoutes = ['/interests', '/subcategories', '/deal-breakers', '/for-you', '/profile', '/saved', '/my-businesses'];
+  const isPersonalUserRoute = personalUserRoutes.some(route => request.nextUrl.pathname.startsWith(route));
+  
+  // Special case: /interests, /subcategories, /deal-breakers are only for personal onboarding
+  // Business owners should skip these and go directly to /for-businesses
+  const isPersonalOnboardingRoute = request.nextUrl.pathname.startsWith('/interests') || 
+                                    request.nextUrl.pathname.startsWith('/subcategories') ||
+                                    request.nextUrl.pathname.startsWith('/deal-breakers');
+
+  if (isPersonalOnboardingRoute && user && user.email_confirmed_at) {
+    const userCurrentRole = profileData?.current_role || 'user';
+    if (userCurrentRole === 'business_owner') {
+      console.log('Middleware: Restricting business account from personal onboarding');
+      const redirectUrl = new URL('/for-businesses', request.url);
+      return NextResponse.redirect(redirectUrl);
+    }
+  }
+
+  if (isPersonalUserRoute && user && user.email_confirmed_at && request.nextUrl.pathname !== '/interests' && 
+      request.nextUrl.pathname !== '/subcategories' && request.nextUrl.pathname !== '/deal-breakers') {
+    const userCurrentRole = profileData?.current_role || 'user';
+    if (userCurrentRole === 'business_owner') {
+      console.log('Middleware: Restricting business account from personal user route:', request.nextUrl.pathname);
+      const redirectUrl = new URL('/for-businesses', request.url);
+      return NextResponse.redirect(redirectUrl);
+    }
+  }
+
   // Redirect authenticated users from auth pages
   if (isAuthRoute && user) {
     // Allow access to verify-email page regardless of verification status
@@ -449,8 +508,10 @@ export async function middleware(request: NextRequest) {
     }
 
     if (user.email_confirmed_at) {
-      console.log('Middleware: Redirecting verified user to interests');
-      const redirectUrl = new URL('/interests', request.url);
+      const userCurrentRole = profileData?.current_role || 'user';
+      const redirectTarget = userCurrentRole === 'business_owner' ? '/for-businesses' : '/interests';
+      console.log('Middleware: Redirecting verified user from auth page to', redirectTarget, 'for role', userCurrentRole);
+      const redirectUrl = new URL(redirectTarget, request.url);
       return NextResponse.redirect(redirectUrl);
     } else {
       console.log('Middleware: Redirecting unverified user to verify-email');

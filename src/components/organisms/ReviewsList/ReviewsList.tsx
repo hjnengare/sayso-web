@@ -52,15 +52,6 @@ export const ReviewsList: React.FC<ReviewsListProps> = ({
           ))}
         </div>
       ) : (
-        <Text variant="body-sm" color="secondary" align="center" className="py-8">No reviews yet</Text>
-      )}
-      {reviews.length > 0 ? (
-        <div className="space-y-3">
-          {displayedReviews.map((review, index) => (
-            <ReviewItem key={index} {...review} />
-          ))}
-        </div>
-      ) : (
         <p className="text-center text-charcoal/60 py-8 text-sm" style={{ fontFamily: '"SF Pro New", -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif', fontWeight: 600 }}>No reviews yet</p>
       )}
     </div>

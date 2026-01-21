@@ -7,6 +7,7 @@ import {
   type BusinessForScoring,
 } from "../../lib/services/personalizationService";
 import { CheckCircle, Info } from "lucide-react";
+import PercentileChipsSection from "./PercentileChipsSection";
 
 interface PersonalizationInsightsProps {
   business: {
@@ -70,20 +71,31 @@ export default function PersonalizationInsights({ business }: PersonalizationIns
   }
 
   return (
-    <div className="bg-gradient-to-br from-sage/10 via-sage/5 to-transparent border border-sage/20 rounded-[20px] p-4 space-y-3">
-      <div className="flex items-center gap-2">
-        <Info className="w-4 h-4 text-sage" />
-        <h3 className="text-sm font-semibold text-charcoal">Personalized for You</h3>
+    <div className="space-y-4">
+      {/* Personalization Insights */}
+      <div className="bg-gradient-to-br from-sage/10 via-sage/5 to-transparent border border-sage/20 rounded-[20px] p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <Info className="w-4 h-4 text-sage" />
+          <h3 className="text-sm font-semibold text-charcoal">Personalized for You</h3>
+        </div>
+
+        <div className="space-y-2">
+          {positiveInsights.map((insight, index) => (
+            <div key={index} className="flex items-start gap-2 text-sm text-charcoal/80">
+              <CheckCircle className="w-4 h-4 text-sage mt-0.5 flex-shrink-0" />
+              <span>{insight}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div className="space-y-2">
-        {positiveInsights.map((insight, index) => (
-          <div key={index} className="flex items-start gap-2 text-sm text-charcoal/80">
-            <CheckCircle className="w-4 h-4 text-sage mt-0.5 flex-shrink-0" />
-            <span>{insight}</span>
-          </div>
-        ))}
-      </div>
+      {/* Performance Metrics */}
+      <PercentileChipsSection
+        punctuality={business.percentiles?.punctuality || 0}
+        costEffectiveness={business.percentiles?.['cost-effectiveness'] || 0}
+        friendliness={business.percentiles?.friendliness || 0}
+        trustworthiness={business.percentiles?.trustworthiness || 0}
+      />
     </div>
   );
 }

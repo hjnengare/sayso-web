@@ -514,9 +514,9 @@ export default function BusinessProfilePage() {
         image: primaryImage,
         images: galleryImages,
         uploaded_images: business.uploaded_images || [], // Preserve uploaded_images array
-        trust: business.trust || business.stats?.percentiles?.trustworthiness || 85,
-        punctuality: business.punctuality || business.stats?.percentiles?.punctuality || 85,
-        friendliness: business.friendliness || business.stats?.percentiles?.friendliness || 85,
+        trust: business.trust || business.stats?.percentiles?.trustworthiness || 100,
+        punctuality: business.punctuality || business.stats?.percentiles?.punctuality || 100,
+        friendliness: business.friendliness || business.stats?.percentiles?.friendliness || 100,
         specials: [], // TODO: Fetch from events/specials table
         reviews: business.reviews || [],
     };

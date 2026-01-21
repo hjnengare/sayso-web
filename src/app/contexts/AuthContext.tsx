@@ -9,7 +9,7 @@ import type { AuthUser } from '../lib/types/database';
 
 interface AuthContextType {
   user: AuthUser | null;
-  login: (email: string, password: string) => Promise<AuthUser | null>;
+  login: (email: string, password: string, desiredRole?: 'user' | 'business_owner') => Promise<AuthUser | null>;
   register: (email: string, password: string, username: string) => Promise<boolean>;
   logout: () => Promise<void>;
   updateUser: (userData: Partial<AuthUser>) => Promise<void>;
@@ -229,7 +229,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => subscription.unsubscribe();
   }, [supabase]);
 
-  const login = async (email: string, password: string): Promise<AuthUser | null> => {
+  const login = async (email: string, password: string, desiredRole?: 'user' | 'business_owner'): Promise<AuthUser | null> => {
     setIsLoading(true);
     setError(null);
 
@@ -244,6 +244,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       if (authUser) {
         setUser(authUser);
+        let activeUser = authUser;
 
         // Clear rate limit on successful login
         try {
@@ -253,19 +254,62 @@ export function AuthProvider({ children }: AuthProviderProps) {
           // Don't fail login if rate limit clearing fails
         }
 
-        // Redirect based on onboarding status and email verification
+        // Optionally switch role if user selected a different mode and they have access
+        if (desiredRole && authUser.profile) {
+          const hasDesiredRole =
+            authUser.profile.role === 'both' || authUser.profile.role === desiredRole;
+          const needsSwitch = authUser.profile.current_role !== desiredRole;
+
+          if (hasDesiredRole && needsSwitch) {
+            try {
+              const response = await fetch('/api/user/switch-role', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ newRole: desiredRole })
+              });
+
+              if (response.ok) {
+                activeUser = {
+                  ...authUser,
+                  profile: {
+                    ...authUser.profile,
+                    current_role: desiredRole
+                  }
+                };
+                setUser(activeUser);
+              }
+            } catch (switchError) {
+              console.warn('AuthContext: Failed to switch role after login', switchError);
+            }
+          }
+        }
+
+        // Redirect based on role, onboarding status and email verification
         if (!authUser.email_verified) {
           // Redirect to email verification if not verified
           router.push('/verify-email');
-        } else if (authUser.profile?.onboarding_complete) {
-          // User has completed onboarding, redirect to home
-          router.push('/home');
+        } else if (activeUser.profile?.onboarding_complete) {
+          // User has completed onboarding, redirect based on current_role
+          const userCurrentRole = activeUser.profile?.current_role || 'user';
+          if (userCurrentRole === 'business_owner') {
+            router.push('/for-businesses');
+          } else {
+            router.push('/home');
+          }
         } else {
           // User is verified but onboarding incomplete - redirect to next step
+          // For business owners, skip personal onboarding and go to for-businesses
+          const userCurrentRole = activeUser.profile?.current_role || 'user';
+          if (userCurrentRole === 'business_owner') {
+            router.push('/for-businesses');
+            return authUser;
+          }
+
+          // Personal users proceed with normal onboarding
           // Determine next step based on what's been completed
-          const interestsCount = authUser.profile?.interests_count || 0;
-          const subcategoriesCount = authUser.profile?.subcategories_count || 0;
-          const dealbreakersCount = authUser.profile?.dealbreakers_count || 0;
+          const interestsCount = activeUser.profile?.interests_count || 0;
+          const subcategoriesCount = activeUser.profile?.subcategories_count || 0;
+          const dealbreakersCount = activeUser.profile?.dealbreakers_count || 0;
 
           let nextStep = 'interests';
           if (interestsCount === 0) {
@@ -282,7 +326,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
 
         setIsLoading(false);
-        return authUser;
+        return activeUser;
       }
 
       setIsLoading(false);
@@ -295,14 +339,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-    const register = async (email: string, password: string, username: string): Promise<boolean> => {
+    const register = async (email: string, password: string, username: string, accountType: 'user' | 'business_owner' = 'user'): Promise<boolean> => {
       setIsLoading(true);
       setError(null);
 
       try {
-        console.log('AuthContext: Starting registration...');
+        console.log('AuthContext: Starting registration...', { accountType });
         
-        const { user: authUser, session, error: authError } = await AuthService.signUp({ email, password, username });
+        const { user: authUser, session, error: authError } = await AuthService.signUp({ email, password, username, accountType });
 
         if (authError) {
           console.log('AuthContext: Registration error', authError);

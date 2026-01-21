@@ -233,22 +233,9 @@ function ClaimBusinessPageContent() {
                     <div className="w-14 h-14 sm:w-16 sm:h-16 bg-sage/10 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-sm border border-sage/20">
                       <Store className="w-6 h-6 sm:w-7 sm:h-7 text-sage" />
                     </div>
-                    <div className="inline-block relative mb-2 px-2">
-                      <WavyTypedTitle
-                        text="Own or manage a business?"
-                        as="h2"
-                        className="text-lg sm:text-xl md:text-2xl font-semibold mb-2 text-center leading-[1.2] tracking-tight text-charcoal font-urbanist"
-                        typingSpeedMs={40}
-                        startDelayMs={300}
-                        waveVariant="subtle"
-                        loopWave={false}
-                        triggerOnTypingComplete={true}
-                        enableScrollTrigger={false}
-                        style={{ 
-                          fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                        }}
-                      />
-                    </div>
+                    <h2 className="font-urbanist text-lg sm:text-xl md:text-2xl font-semibold text-charcoal mb-2 px-2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                      Own or manage a business?
+                    </h2>
                     <p className="font-urbanist text-sm sm:text-base text-charcoal/70 max-w-md mx-auto px-4 sm:px-0 break-keep" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', wordBreak: 'normal', overflowWrap: 'normal', whiteSpace: 'normal', hyphens: 'none', WebkitHyphens: 'none', MozHyphens: 'none', msHyphens: 'none' }}>
                       Claim your business profile to respond to reviews, update information, and connect with customers
                     </p>

@@ -1,502 +1,335 @@
 -- =============================================
--- UPDATE BADGES TO MATCH NEW SPEC (Badge names.pdf)
--- =============================================
--- This migration updates all badge names and descriptions
--- to match the latest Badge names.pdf specification
-
--- =============================================
--- A. CATEGORY EXPLORER BADGES
+-- UPDATE BADGES TO MATCH NEW SPEC
+-- 72 Badges, 72 Unique Icons, 1 Unused (007-home.png)
 -- =============================================
 
--- Update "The Sampler" to "The Dabbler"
-UPDATE public.badges SET
-  name = 'The Dabbler',
-  description = 'Review 1 business in at least 3 different categories'
-WHERE id = 'explorer_sampler';
+BEGIN;
 
--- Update "The Explorer" to "Newbie Nomad"
-UPDATE public.badges SET
-  name = 'Newbie Nomad',
-  description = 'Review 10 businesses across 5 categories'
-WHERE id = 'explorer_explorer';
+-- Update badge_group constraint
+ALTER TABLE public.badges
+  DROP CONSTRAINT IF EXISTS badges_badge_group_check;
 
--- Update "Local Legend" to "Curiosity Captain"
-UPDATE public.badges SET
-  name = 'Curiosity Captain',
-  description = 'Review 1 business in every category'
-WHERE id = 'explorer_local_legend';
+ALTER TABLE public.badges
+  ADD CONSTRAINT badges_badge_group_check
+  CHECK (badge_group IN ('explorer','specialist','milestone','community'));
 
--- Update "World Wanderer" to "Variety Voyager"
-UPDATE public.badges SET
-  name = 'Variety Voyager',
-  description = 'Review more than 1 business in every category'
-WHERE id = 'explorer_world_wanderer';
-
--- Update "Full Spectrum" to "Full Circle"
-UPDATE public.badges SET
-  name = 'Full Circle',
-  description = 'Review 50+ businesses across 8+ categories'
-WHERE id = 'explorer_full_spectrum';
+COMMIT;
 
 -- =============================================
--- B. FOOD & DRINK SPECIALIST
+-- A. CATEGORY EXPLORER BADGES (5 badges)
 -- =============================================
 
--- "Taste Taster" → "Taste Tester"
-UPDATE public.badges SET
-  name = 'Taste Tester',
-  description = '3 Food & Drink reviews'
-WHERE id = 'food_taste_taster';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('explorer_dabbler', 'The Dabbler', 'Reviewed 3 different categories', 'explorer', NULL, 'achievement', '011-compass.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Foodie Finder" → "Flavour Finder"
-UPDATE public.badges SET
-  name = 'Flavour Finder',
-  description = '10 Food & Drink reviews'
-WHERE id = 'food_foodie_finder';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('explorer_newbie_nomad', 'Newbie Nomad', 'Reviewed 5 different categories', 'explorer', NULL, 'achievement', '036-binocular.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Foodie Boss" stays the same but ensure correct capitalization
-UPDATE public.badges SET
-  name = 'Foodie Boss',
-  description = '25 Food & Drink reviews'
-WHERE id = 'food_foodie_boss';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('explorer_curiosity_captain', 'Curiosity Captain', 'Reviewed 6 different categories', 'explorer', NULL, 'achievement', '044-boat-captain-hat.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Coffee Lover" → "Coffee Connoisseur"
-UPDATE public.badges SET
-  name = 'Coffee Connoisseur',
-  description = '5 cafe reviews'
-WHERE id = 'food_coffee_lover';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('explorer_variety_voyager', 'Variety Voyager', 'Reviewed 7 different categories', 'explorer', NULL, 'achievement', '045-diversity.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Sweet Tooth Scout" → "Dessert Detective"
-UPDATE public.badges SET
-  name = 'Dessert Detective',
-  description = '5 dessert reviews'
-WHERE id = 'food_sweet_tooth';
-
--- "Brunch Enthusiast" stays the same
-UPDATE public.badges SET
-  name = 'Brunch Enthusiast',
-  description = '5 brunch spots'
-WHERE id = 'food_brunch_enthusiast';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('explorer_full_circle', 'Full Circle', 'Reviewed all 8 categories', 'explorer', NULL, 'achievement', '043-choice.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
 -- =============================================
--- B. BEAUTY & WELLNESS SPECIALIST
+-- B. SPECIALIST BADGES (48 badges)
 -- =============================================
 
--- "Glow Seeker" → "Glow Getter"
-UPDATE public.badges SET
-  name = 'Glow Getter',
-  description = '3 Beauty & Wellness reviews'
-WHERE id = 'beauty_glow_seeker';
+-- B.1 Food & Drink (6 badges)
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_food_taste_tester', 'Taste Tester', '3 Food & Drink reviews', 'specialist', 'food-drink', 'achievement', '047-tongue.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Beauty Explorer" → "Selfcare Superstar"
-UPDATE public.badges SET
-  name = 'Selfcare Superstar',
-  description = '10 Beauty & Wellness reviews'
-WHERE id = 'beauty_beauty_explorer';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_food_flavour_finder', 'Flavour Finder', '10 Food & Drink reviews', 'specialist', 'food-drink', 'achievement', '051-searcher.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Style Star" → "Beauty Boss"
-UPDATE public.badges SET
-  name = 'Beauty Boss',
-  description = '25 Beauty & Wellness reviews'
-WHERE id = 'beauty_style_star';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_food_foodie_boss', 'Foodie Boss', '25 Food & Drink reviews', 'specialist', 'food-drink', 'achievement', '049-leadership.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Nail Enthusiast" → "Cuticle Queen"
-UPDATE public.badges SET
-  name = 'Cuticle Queen',
-  description = '5 nail salon reviews'
-WHERE id = 'beauty_nail_enthusiast';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_food_coffee_connoisseur', 'Coffee Connoisseur', '5 café reviews', 'specialist', 'food-drink', 'achievement', '050-coffee-bean.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Style Whisperer" → "Mane Lover"
-UPDATE public.badges SET
-  name = 'Mane Lover',
-  description = '5 hair salon reviews'
-WHERE id = 'beauty_style_whisperer';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_food_dessert_detective', 'Dessert Detective', '5 dessert spot reviews', 'specialist', 'food-drink', 'achievement', '052-croissant.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Soft Life Guru" → "Serenity Seeker"
-UPDATE public.badges SET
-  name = 'Serenity Seeker',
-  description = '5 spa/wellness spot reviews'
-WHERE id = 'beauty_soft_life_guru';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_food_brunch_enthusiast', 'Brunch Enthusiast', '5 brunch spot reviews', 'specialist', 'food-drink', 'achievement', '048-extract.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- =============================================
--- B. ARTS & CULTURE SPECIALIST
--- =============================================
+-- B.2 Beauty & Wellness (6 badges)
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_beauty_glow_getter', 'Glow Getter', '3 Beauty & Wellness reviews', 'specialist', 'beauty-wellness', 'achievement', '053-woman.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Culture Curious" → "Heritage Hunter"
-UPDATE public.badges SET
-  name = 'Heritage Hunter',
-  description = '3 Arts & Culture reviews'
-WHERE id = 'arts_culture_curious';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_beauty_self_care_superstar', 'Self-Care Superstar', '10 Beauty & Wellness reviews', 'specialist', 'beauty-wellness', 'achievement', '054-self-love.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Art Explorer" → "Local Lore Seeker"
-UPDATE public.badges SET
-  name = 'Local Lore Seeker',
-  description = '10 Arts & Culture reviews'
-WHERE id = 'arts_art_explorer';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_beauty_beauty_boss', 'Beauty Boss', '25 Beauty & Wellness reviews', 'specialist', 'beauty-wellness', 'achievement', '055-makeover.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Culture Maven" → "Culture Master"
-UPDATE public.badges SET
-  name = 'Culture Master',
-  description = '25 Arts & Culture reviews'
-WHERE id = 'arts_culture_maven';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_beauty_cuticle_queen', 'Cuticle Queen', '5 nail salon reviews', 'specialist', 'beauty-wellness', 'achievement', '056-nail-polish.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Theatre Friend" → "Curtain Chaser"
-UPDATE public.badges SET
-  name = 'Curtain Chaser',
-  description = '5 theatre reviews'
-WHERE id = 'arts_theatre_friend';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_beauty_mane_lover', 'Mane Lover', '5 hair salon reviews', 'specialist', 'beauty-wellness', 'achievement', '057-lion.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Gallery Goer" → "Canvas Collector"
-UPDATE public.badges SET
-  name = 'Canvas Collector',
-  description = '5 gallery reviews'
-WHERE id = 'arts_gallery_goer';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_beauty_serenity_seeker', 'Serenity Seeker', '5 spa/wellness reviews', 'specialist', 'beauty-wellness', 'achievement', '018-peace.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Cinephile" stays the same
-UPDATE public.badges SET
-  name = 'Cinephile',
-  description = '5 cinema reviews'
-WHERE id = 'arts_cinephile';
+-- B.3 Arts & Culture (6 badges)
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_arts_heritage_hunter', 'Heritage Hunter', '3 Arts & Culture reviews', 'specialist', 'arts-culture', 'achievement', '059-heritage.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- =============================================
--- B. OUTDOORS & ADVENTURE SPECIALIST
--- =============================================
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_arts_local_lore_seeker', 'Local Lore Seeker', '10 Arts & Culture reviews', 'specialist', 'arts-culture', 'achievement', '060-history.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Fresh Air Friend" → "Nature Nomad"
-UPDATE public.badges SET
-  name = 'Nature Nomad',
-  description = '3 Outdoors & Adventure reviews'
-WHERE id = 'outdoors_fresh_air_friend';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_arts_culture_master', 'Culture Master', '25 Arts & Culture reviews', 'specialist', 'arts-culture', 'achievement', '061-master.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Adventure Explorer" → "Thrill Seeker"
-UPDATE public.badges SET
-  name = 'Thrill Seeker',
-  description = '10 Outdoors & Adventure reviews'
-WHERE id = 'outdoors_adventure_explorer';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_arts_curtain_chaser', 'Curtain Chaser', '5 theatre reviews', 'specialist', 'arts-culture', 'achievement', '014-mask.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Adventure Ace" → "Adventure Voyager"
-UPDATE public.badges SET
-  name = 'Adventure Voyager',
-  description = '25 Outdoors & Adventure reviews'
-WHERE id = 'outdoors_adventure_ace';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_arts_canvas_collector', 'Canvas Collector', '5 gallery reviews', 'specialist', 'arts-culture', 'achievement', '063-easel.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Trail Tracker" → "Trail Tamer"
-UPDATE public.badges SET
-  name = 'Trail Tamer',
-  description = '5 hiking trail reviews'
-WHERE id = 'outdoors_trail_tracker';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_arts_cinephile', 'Cinephile', '5 cinema reviews', 'specialist', 'arts-culture', 'achievement', '064-clapperboard.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Beach Browser" → "Beach Bum"
-UPDATE public.badges SET
-  name = 'Beach Bum',
-  description = '5 beach reviews'
-WHERE id = 'outdoors_beach_browser';
+-- B.4 Outdoors & Adventure (7 badges)
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_outdoors_nature_nomad', 'Nature Nomad', '3 Outdoors & Adventure reviews', 'specialist', 'outdoors-adventure', 'achievement', '065-seeding.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Nature Drifter" → "Botanical Buff"
-UPDATE public.badges SET
-  name = 'Botanical Buff',
-  description = '5 parks/gardens reviews'
-WHERE id = 'outdoors_nature_drifter';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_outdoors_thrill_seeker', 'Thrill Seeker', '10 Outdoors & Adventure reviews', 'specialist', 'outdoors-adventure', 'achievement', '066-skydiving.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Thrill Finder" → "Daredevil"
-UPDATE public.badges SET
-  name = 'Daredevil',
-  description = '3 extreme/adventure activities'
-WHERE id = 'outdoors_thrill_finder';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_outdoors_adventure_voyager', 'Adventure Voyager', '25 Outdoors & Adventure reviews', 'specialist', 'outdoors-adventure', 'achievement', '067-adventure-game.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- =============================================
--- B. SHOPPING & LIFESTYLE SPECIALIST
--- =============================================
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_outdoors_trail_tamer', 'Trail Tamer', '5 hiking trail reviews', 'specialist', 'outdoors-adventure', 'achievement', '068-trail-marker.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Shop Scout" → "Retail Royalty"
-UPDATE public.badges SET
-  name = 'Retail Royalty',
-  description = '3 Shopping & Lifestyle reviews'
-WHERE id = 'shopping_shop_scout';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_outdoors_beach_bum', 'Beach Bum', '5 beach reviews', 'specialist', 'outdoors-adventure', 'achievement', '069-wave.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Lifestyle Explorer" → "Shopaholic"
-UPDATE public.badges SET
-  name = 'Shopaholic',
-  description = '10 Shopping & Lifestyle reviews'
-WHERE id = 'shopping_lifestyle_explorer';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_outdoors_botanical_buff', 'Botanical Buff', '5 park/garden reviews', 'specialist', 'outdoors-adventure', 'achievement', '070-botanical.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- Remove the 25-review badge for Shopping (not in new spec)
--- We'll keep it but it can remain for legacy users
-UPDATE public.badges SET
-  name = 'Shopping Pro',
-  description = '25 Shopping & Lifestyle reviews (legacy)'
-WHERE id = 'shopping_retail_ranger';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_outdoors_daredevil', 'Daredevil', '3 adventure sports reviews', 'specialist', 'outdoors-adventure', 'achievement', '071-devil.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Style Spotter" stays the same
-UPDATE public.badges SET
-  name = 'Style Spotter',
-  description = '5 boutique reviews'
-WHERE id = 'shopping_style_spotter';
+-- B.5 Shopping & Lifestyle (5 badges)
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_shopping_retail_royalty', 'Retail Royalty', '3 Shopping & Lifestyle reviews', 'specialist', 'shopping-lifestyle', 'achievement', '072-jewel.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Gadget Grabber" → "Gadget Goblin"
-UPDATE public.badges SET
-  name = 'Gadget Goblin',
-  description = '5 electronics store reviews'
-WHERE id = 'shopping_gadget_grabber';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_shopping_shopaholic', 'Shopaholic', '10 Shopping & Lifestyle reviews', 'specialist', 'shopping-lifestyle', 'achievement', '073-shopaholic.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Budget Finder" → "Baddie on a Budget"
-UPDATE public.badges SET
-  name = 'Baddie on a Budget',
-  description = '3 affordable/discount store reviews'
-WHERE id = 'shopping_budget_finder';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_shopping_style_spotter', 'Style Spotter', '25 Shopping & Lifestyle reviews', 'specialist', 'shopping-lifestyle', 'achievement', '017-scarf.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- =============================================
--- B. FAMILY & PETS SPECIALIST
--- =============================================
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_shopping_gadget_goblin', 'Gadget Goblin', '5 electronics store reviews', 'specialist', 'shopping-lifestyle', 'achievement', '002-goblin.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Home Life Scout" → "Quality Time Seeker"
-UPDATE public.badges SET
-  name = 'Quality Time Seeker',
-  description = '3 Family & Pets reviews'
-WHERE id = 'family_home_life_scout';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_shopping_baddie_on_budget', 'Baddie on a Budget', '3 discount store reviews', 'specialist', 'shopping-lifestyle', 'achievement', '003-money-bag.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Everyday Companion" → "Bonding Buff"
-UPDATE public.badges SET
-  name = 'Bonding Buff',
-  description = '10 Family & Pets reviews'
-WHERE id = 'family_everyday_companion';
+-- B.6 Family & Pets (6 badges)
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_family_quality_time_seeker', 'Quality Time Seeker', '3 Family & Pets reviews', 'specialist', 'family-pets', 'achievement', '004-waiting.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Family & Pets Pro" → "Playtime Pro"
-UPDATE public.badges SET
-  name = 'Playtime Pro',
-  description = '25 Family & Pets reviews'
-WHERE id = 'family_family_pets_pro';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_family_bonding_buff', 'Bonding Buff', '10 Family & Pets reviews', 'specialist', 'family-pets', 'achievement', '005-social-life.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Care Companion" stays the same
-UPDATE public.badges SET
-  name = 'Care Companion',
-  description = '5 vet/groomer/childcare reviews'
-WHERE id = 'family_care_companion';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_family_playtime_pro', 'Playtime Pro', '25 Family & Pets reviews', 'specialist', 'family-pets', 'achievement', '006-toy.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Play & Paws Explorer" → "Play & Paws"
-UPDATE public.badges SET
-  name = 'Play & Paws',
-  description = '5 family/pet-friendly spot reviews'
-WHERE id = 'family_play_paws_explorer';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_family_care_companion', 'Care Companion', '5 vet/pet groomer/childcare reviews', 'specialist', 'family-pets', 'achievement', '008-baby.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Friendly Spaces Finder" stays the same
-UPDATE public.badges SET
-  name = 'Friendly Spaces Finder',
-  description = '5 kids/pets play area reviews'
-WHERE id = 'family_friendly_spaces';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_family_play_paws', 'Play & Paws', '5 family/pet-friendly spot reviews', 'specialist', 'family-pets', 'achievement', '009-mouse.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
+
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_family_friendly_spaces_finder', 'Friendly Spaces Finder', '5 kids/pets play area reviews', 'specialist', 'family-pets', 'achievement', '010-confetti.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
+
+-- B.7 Experiences & Entertainment (6 badges)
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_experiences_memory_maker', 'Memory Maker', '3 Experiences & Entertainment reviews', 'specialist', 'experiences-entertainment', 'achievement', '046-rec.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
+
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_experiences_curiosity_cruiser', 'Curiosity Cruiser', '10 Experiences & Entertainment reviews', 'specialist', 'experiences-entertainment', 'achievement', '026-gears.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
+
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_experiences_vibe_voyager', 'Vibe Voyager', '25 Experiences & Entertainment reviews', 'specialist', 'experiences-entertainment', 'achievement', '021-mindset.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
+
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_experiences_beat_chaser', 'Beat Chaser', '5 music venue reviews', 'specialist', 'experiences-entertainment', 'achievement', '013-vinyl.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
+
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_experiences_show_goer', 'Show Goer', '5 cinema/theatre reviews', 'specialist', 'experiences-entertainment', 'achievement', '062-decoration.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
+
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_experiences_weekend_warrior', 'Weekend Warrior', '3 weekend spot reviews', 'specialist', 'experiences-entertainment', 'achievement', '015-weekend.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
+
+-- B.8 Professional Services (6 badges)
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_services_service_scout', 'Service Scout', '3 Professional Services reviews', 'specialist', 'professional-services', 'achievement', '019-professional-services.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
+
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_services_solution_seeker', 'Solution Seeker', '10 Professional Services reviews', 'specialist', 'professional-services', 'achievement', '012-expertise.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
+
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_services_service_pro', 'Service Pro', '25 Professional Services reviews', 'specialist', 'professional-services', 'achievement', '023-ai-technology.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
+
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_services_fix_it_fairy', 'Fix-It Fairy', '5 repair/handyman reviews', 'specialist', 'professional-services', 'achievement', '016-wrench.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
+
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_services_money_minded', 'Money-Minded', '5 finance/insurance reviews', 'specialist', 'professional-services', 'achievement', '001-accessory.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
+
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('specialist_services_home_helper', 'Home Helper', '5 home service reviews', 'specialist', 'professional-services', 'achievement', '022-house.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
 -- =============================================
--- B. EXPERIENCES & ENTERTAINMENT SPECIALIST
+-- C. MILESTONE BADGES (10 badges)
 -- =============================================
 
--- "Fun Finder" → "Memory Maker"
-UPDATE public.badges SET
-  name = 'Memory Maker',
-  description = '3 Experiences & Entertainment reviews'
-WHERE id = 'experiences_fun_finder';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('milestone_new_voice', 'New Voice', 'Posted your first review', 'milestone', NULL, 'achievement', '027-aniversary.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Event Explorer" → "Curiosity Cruiser"
-UPDATE public.badges SET
-  name = 'Curiosity Cruiser',
-  description = '10 Experiences & Entertainment reviews'
-WHERE id = 'experiences_event_explorer';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('milestone_rookie_reviewer', 'Rookie Reviewer', 'Posted 5 reviews', 'milestone', NULL, 'achievement', '024-climbing-stairs.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Experience Pro" → "Vibe Voyager"
-UPDATE public.badges SET
-  name = 'Vibe Voyager',
-  description = '25 Experiences & Entertainment reviews'
-WHERE id = 'experiences_experience_pro';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('milestone_level_up', 'Level Up!', 'Posted 10 reviews', 'milestone', NULL, 'achievement', '025-level-up.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Music Lover" → "Beat Chaser"
-UPDATE public.badges SET
-  name = 'Beat Chaser',
-  description = '5 music venue reviews'
-WHERE id = 'experiences_music_lover';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('milestone_review_machine', 'Review Machine', 'Posted 50 reviews', 'milestone', NULL, 'achievement', '041-no-connection.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Show Goer" stays the same
-UPDATE public.badges SET
-  name = 'Show Goer',
-  description = '5 theatres/cinemas reviews'
-WHERE id = 'experiences_show_goer';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('milestone_century_club', 'Century Club', 'Posted 100 reviews', 'milestone', NULL, 'achievement', '042-test.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Sunday Chiller" → "Weekend Warrior"
-UPDATE public.badges SET
-  name = 'Weekend Warrior',
-  description = '3 weekend activity reviews'
-WHERE id = 'experiences_sunday_chiller';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('milestone_picture_pioneer', 'Picture Pioneer', 'Uploaded your first photo', 'milestone', NULL, 'achievement', '028-phone-camera.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- =============================================
--- B. PROFESSIONAL SERVICES SPECIALIST
--- =============================================
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('milestone_snapshot_superstar', 'Snapshot Superstar', 'Uploaded 15 photos', 'milestone', NULL, 'achievement', '029-camera.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Service Scout" stays the same
-UPDATE public.badges SET
-  name = 'Service Scout',
-  description = '3 Professional Services reviews'
-WHERE id = 'services_service_scout';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('milestone_helpful_honeybee', 'Helpful Honeybee', 'Got 10 helpful votes', 'milestone', NULL, 'achievement', '030-honeybee.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Local Helper" → "Solution Seeker"
-UPDATE public.badges SET
-  name = 'Solution Seeker',
-  description = '10 Professional Services reviews'
-WHERE id = 'services_local_helper';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('milestone_consistency_star', 'Consistency Star', 'Posted weekly for a month', 'milestone', NULL, 'achievement', '031-star.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Service Pro" stays the same
-UPDATE public.badges SET
-  name = 'Service Pro',
-  description = '25 Professional Services reviews'
-WHERE id = 'services_service_pro';
-
--- "Fix-It Finder" → "Fix-It Fairy"
-UPDATE public.badges SET
-  name = 'Fix-It Fairy',
-  description = '5 repair/handyman/plumber/electrician reviews'
-WHERE id = 'services_fix_it_finder';
-
--- "Money-Minded" stays the same
-UPDATE public.badges SET
-  name = 'Money-Minded',
-  description = '5 finance/insurance services'
-WHERE id = 'services_money_minded';
-
--- "Home Helper" stays the same
-UPDATE public.badges SET
-  name = 'Home Helper',
-  description = '5 home service reviews'
-WHERE id = 'services_home_helper';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('milestone_streak_spark', 'Streak Spark', 'Posted 7 days in a row', 'milestone', NULL, 'achievement', '032-fire.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
 -- =============================================
--- C. ACTIVITY & MILESTONE BADGES
+-- D. COMMUNITY BADGES (9 badges)
 -- =============================================
 
--- "New Voice" stays the same
-UPDATE public.badges SET
-  name = 'New Voice',
-  description = 'Posted your first review'
-WHERE id = 'milestone_new_voice';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('community_early_birdie', 'Early Birdie', 'First to review a business', 'community', NULL, 'achievement', '033-early.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Rookie Reviewer" stays the same
-UPDATE public.badges SET
-  name = 'Rookie Reviewer',
-  description = 'Posted 5 reviews'
-WHERE id = 'milestone_rookie_reviewer';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('community_community_helper', 'Community Helper', 'Review got 5+ helpful votes', 'community', NULL, 'achievement', '034-social-support.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Level Up!" stays the same
-UPDATE public.badges SET
-  name = 'Level Up!',
-  description = 'Posted 10 reviews'
-WHERE id = 'milestone_level_up';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('community_trend_starter', 'Trend Starter', 'Review made a place trend', 'community', NULL, 'achievement', '035-sunglasses.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Review Machine" stays the same
-UPDATE public.badges SET
-  name = 'Review Machine',
-  description = 'Posted 50 reviews'
-WHERE id = 'milestone_review_machine';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('community_columbus', 'Columbus', 'Reviewed 3 businesses with <3 reviews', 'community', NULL, 'achievement', '020-magic-wand.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Century Club" stays the same
-UPDATE public.badges SET
-  name = 'Century Club',
-  description = 'Posted 100 reviews'
-WHERE id = 'milestone_century_club';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('community_loyal_one', 'The Loyal One', 'Reviewed same business twice', 'community', NULL, 'achievement', '037-loyalty.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Take a Pic!" → "Picture Pioneer"
-UPDATE public.badges SET
-  name = 'Picture Pioneer',
-  description = 'First photo uploaded'
-WHERE id = 'milestone_take_pic';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('community_neighbourhood_plug', 'Neighbourhood Plug', 'Reviewed 10+ places in one suburb', 'community', NULL, 'achievement', '038-plug.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Visual Storyteller" → "Snapshot Superstar"
-UPDATE public.badges SET
-  name = 'Snapshot Superstar',
-  description = '15 photos uploaded'
-WHERE id = 'milestone_visual_storyteller';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('community_hidden_gem_hunter', 'Hidden Gem Hunter', 'Reviewed 5 underrated spots', 'community', NULL, 'achievement', '039-gem.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Helpful Reviewer" → "Helpful Honeybee"
-UPDATE public.badges SET
-  name = 'Helpful Honeybee',
-  description = '10 helpful likes'
-WHERE id = 'milestone_helpful_reviewer';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('community_lens_legend', 'Lens Legend', 'Photos got 3+ helpful votes', 'community', NULL, 'achievement', '040-lens.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
--- "Consistency Star" stays the same
-UPDATE public.badges SET
-  name = 'Consistency Star',
-  description = 'Review once a week for a month'
-WHERE id = 'milestone_consistency_star';
-
--- "Streak Star" → "Streak Spark"
-UPDATE public.badges SET
-  name = 'Streak Spark',
-  description = '7-day review streak'
-WHERE id = 'milestone_streak_star';
+INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, icon_name) VALUES 
+('community_plug_of_year', 'Plug of the Year', 'Top community contributor', 'community', NULL, 'achievement', '058-plant.png')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, badge_group = EXCLUDED.badge_group, category_key = EXCLUDED.category_key, rule_type = EXCLUDED.rule_type, icon_name = EXCLUDED.icon_name;
 
 -- =============================================
--- D. COMMUNITY & PERSONALITY BADGES
+-- SUMMARY
 -- =============================================
-
--- "Early Bird" → "Early Birdie"
-UPDATE public.badges SET
-  name = 'Early Birdie',
-  description = 'First to review a business'
-WHERE id = 'community_early_bird';
-
--- "Community Helper" stays the same
-UPDATE public.badges SET
-  name = 'Community Helper',
-  description = 'One of your reviews gets 5+ helpful votes'
-WHERE id = 'community_helper';
-
--- "Trend Starter" stays the same
-UPDATE public.badges SET
-  name = 'Trend Starter',
-  description = 'Your review sparks a rise in new reviews'
-WHERE id = 'community_trend_starter';
-
--- "Discoverer" → "Columbus"
-UPDATE public.badges SET
-  name = 'Columbus',
-  description = 'Review 3 businesses with fewer than 3 reviews each'
-WHERE id = 'community_discoverer';
-
--- "The Loyal One" stays the same
-UPDATE public.badges SET
-  name = 'The Loyal One',
-  description = 'Review the same business twice'
-WHERE id = 'community_loyal_one';
-
--- "Neighbourhood Plug" stays the same
-UPDATE public.badges SET
-  name = 'Neighbourhood Plug',
-  description = 'Review 10+ businesses in one suburb'
-WHERE id = 'community_neighbourhood_plug';
-
--- "Hidden Gem Finder" → "Hidden Gem Hunter"
-UPDATE public.badges SET
-  name = 'Hidden Gem Hunter',
-  description = 'Review 5 underrated spots'
-WHERE id = 'community_hidden_gem';
-
--- "Fun Storyteller" → "Lens Legend"
-UPDATE public.badges SET
-  name = 'Lens Legend',
-  description = 'Reviews + photos + 3 helpful votes'
-WHERE id = 'community_fun_storyteller';
-
--- Add new badge: "Plug of the Year"
-INSERT INTO public.badges (id, name, description, badge_group, category_key, rule_type, threshold, icon_name)
-VALUES (
-  'community_plug_of_year',
-  'Plug of the Year',
-  'Discover 5 places before anyone else',
-  'community',
-  NULL,
-  'first_review_for_business',
-  5,
-  'award'
-) ON CONFLICT (id) DO UPDATE SET
-  name = EXCLUDED.name,
-  description = EXCLUDED.description;
-
--- =============================================
--- MIGRATION COMPLETE
--- =============================================
--- All badge names and descriptions updated to match Badge names.pdf spec
+-- Total: 72 badges (5 explorer + 48 specialist + 10 milestone + 9 community)
+-- Icons used: 72 unique PNGs from 001-073 (excluding 007-home.png)
+-- Each badge has a unique icon_name, no reuse

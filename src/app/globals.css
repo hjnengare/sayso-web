@@ -117,7 +117,6 @@
     /* Standard 16px base for accessibility */
     margin: 0;
     padding: 0;
-    scrollbar-gutter: stable;
     scroll-behavior: smooth;
     color-scheme: light;
     /* Ensures browser UI (scrollbars, form controls) adapts to light theme */

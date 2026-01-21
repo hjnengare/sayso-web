@@ -7,4 +7,5 @@ export { default as BusinessDescription } from "./BusinessDescription";
 export { default as BusinessActionCard } from "./BusinessActionCard";
 export { default as BusinessContactInfo } from "./BusinessContactInfo";
 export { default as PersonalizationInsights } from "./PersonalizationInsights";
+export { default as PercentileChipsSection } from "./PercentileChipsSection";
 

@@ -147,20 +147,20 @@ export default function ForYouPage() {
   }, [businesses.length, searchResults.length, isSearchActive]);
 
   // Convert businesses to map format (filter out null coords)
+  // ✅ IMPORTANT: Use currentBusinesses for map to show only paginated items
   const mapBusinesses = useMemo((): BusinessMapItem[] => {
-    const businessesToMap = isSearchActive ? searchResults : businesses;
-    return businessesToMap
-      .filter(b => b.lat != null && b.lng != null)
+    return currentBusinesses
+      .filter(b => b.latitude != null && b.longitude != null)
       .map(b => ({
         id: b.id,
         name: b.name,
-        lat: b.lat!,
-        lng: b.lng!,
+        lat: b.latitude!,
+        lng: b.longitude!,
         category: b.category,
         image_url: b.image_url,
         slug: b.slug,
       }));
-  }, [businesses, searchResults, isSearchActive]);
+  }, [currentBusinesses]);
 
   const handleClearFilters = () => {
     // ✅ Reset filter state - return to default mode

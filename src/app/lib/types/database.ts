@@ -10,6 +10,8 @@ export interface User {
 
 export interface Profile {
   id: string;
+  role?: 'user' | 'business_owner' | 'both';
+  current_role?: 'user' | 'business_owner';
   onboarding_step: string;
   onboarding_complete: boolean;
   interests_count: number;
@@ -65,6 +67,7 @@ export interface SignUpData {
   email: string;
   password: string;
   username: string;
+  accountType?: 'user' | 'business_owner';
 }
 
 export interface SignInData {

@@ -20,7 +20,7 @@ export class AuthService {
     return process.env.NEXT_PUBLIC_BASE_URL || window.location.origin;
   }
 
-  static async signUp({ email, password, username }: SignUpData): Promise<{ user: AuthUser | null; session: Session | null; error: AuthError | null }> {
+  static async signUp({ email, password, username, accountType = 'user' }: SignUpData): Promise<{ user: AuthUser | null; session: Session | null; error: AuthError | null }> {
     const supabase = this.getClient();
     try {
       // Basic validation
@@ -82,7 +82,8 @@ export class AuthService {
         options: {
           emailRedirectTo: `${baseUrl}/auth/callback`,
           data: {
-            username: username.trim()
+            username: username.trim(),
+            accountType: accountType
           }
         }
       });

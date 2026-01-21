@@ -8,7 +8,9 @@ interface StarsProps {
 }
 
 export default function Stars({ value = 5, color = "amber", size = 15, spacing = 2 }: StarsProps) {
-  const full = value !== undefined ? Math.max(0, Math.min(5, Math.floor(value))) : 0;
+  const numericValue = value !== undefined ? Math.max(0, Math.min(5, value)) : 0;
+  const full = Math.floor(numericValue);
+  const hasHalf = numericValue % 1 >= 0.5;
   const gradientId = "starGradient";
 
   return (
@@ -26,26 +28,52 @@ export default function Stars({ value = 5, color = "amber", size = 15, spacing =
         </defs>
       </svg>
       {Array.from({ length: 5 }).map((_, i) => {
-        const active = i < full;
+        const isFullStar = i < full;
+        const isHalfStar = !isFullStar && i === full && hasHalf;
         // Use charcoal for all stars when color is "charcoal", otherwise use the original logic
         const starColor = color === "charcoal" ? "#404040" : color === "navbar-bg" ? "#722F37" : color === "coral/90" ? "#f87171" : "#f59e0b";
         return (
           <span
             key={i}
-            className="inline-flex items-center justify-center"
+            className="inline-flex items-center justify-center relative"
             style={{ width: size, height: size }}
             aria-hidden
           >
+            {/* Background star (empty) */}
             <Star
-              className="transition-all duration-200"
+              className="transition-all duration-200 absolute"
               style={{
                 width: size,
                 height: size,
                 stroke: starColor,
-                fill: active ? starColor : "transparent",
-                strokeWidth: 2.5 // bold
+                fill: "transparent",
+                strokeWidth: 2.5
               }}
             />
+            {/* Foreground star (filled/half-filled) */}
+            {(isFullStar || isHalfStar) && (
+              <div
+                style={{
+                  width: isFullStar ? "100%" : "50%",
+                  height: "100%",
+                  overflow: "hidden",
+                  position: "absolute",
+                  left: 0,
+                  top: 0
+                }}
+              >
+                <Star
+                  className="transition-all duration-200"
+                  style={{
+                    width: size,
+                    height: size,
+                    stroke: "none",
+                    fill: starColor,
+                    strokeWidth: 2.5
+                  }}
+                />
+              </div>
+            )}
           </span>
         );
       })}

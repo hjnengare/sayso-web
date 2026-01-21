@@ -91,6 +91,12 @@ export default function Header({
   const { unreadCount: unreadMessagesCount } = useMessages();
   const { user, isLoading: authLoading } = useAuth();
   
+  // Get user's current role for role-based navigation
+  const userCurrentRole = user?.profile?.current_role || 'user';
+  const isBusinessAccountUser = userCurrentRole === 'business_owner';
+  // Check if user has both roles available
+  const hasMultipleRoles = user?.profile?.role === 'both';
+  
   // Check if user is a business owner
   const { hasAccess: isBusinessOwner, isChecking: isCheckingBusinessOwner } = useRequireBusinessOwner({
     skipRedirect: true,
@@ -372,7 +378,7 @@ export default function Header({
 
             {/* Desktop nav - centered */}
             <nav className="hidden md:flex items-center space-x-1 lg:space-x-3 flex-1 justify-center">
-              {PRIMARY_LINKS.map(({ key, label, href, requiresAuth }, index) => {
+              {!isBusinessAccountUser && PRIMARY_LINKS.map(({ key, label, href, requiresAuth }, index) => {
                 const isActive = pathname === href;
                 const showLockIndicator = isGuest && requiresAuth;
                 return (
@@ -385,7 +391,7 @@ export default function Header({
                 >
                     <span className="relative z-10">{label}</span>
                     {showLockIndicator && (
-                      <Lock className="w-3.5 h-3.5 text-charcoal/60" />
+                      <Lock className={`w-3.5 h-3.5 ${whiteText ? 'text-white' : 'text-charcoal/60'}`} />
                     )}
                   </OptimizedLink>
 
@@ -490,20 +496,22 @@ export default function Header({
                 );
               })}
 
-              {/* For Businesses Link (desktop) */}
-              <OptimizedLink
-                href="/for-businesses"
-                className={`group capitalize px-2.5 lg:px-3.5 py-1.5 rounded-lg text-sm sm:text-xs sm:text-sm md:text-sm sm:text-xs lg:text-sm sm:text-xs font-semibold transition-all duration-200 relative ${
-                  isClaimBusinessActive
-                    ? 'text-sage'
-                    : whiteText
-                      ? 'text-white hover:text-white/90 hover:bg-white/10'
-                      : 'text-charcoal/90 md:text-charcoal/95 hover:text-sage hover:bg-sage/5'
-                }`}
-                style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-              >
-                <span className="relative z-10">For Businesses</span>
-              </OptimizedLink>
+              {/* For Businesses Link (desktop) - Only show for guests or business accounts */}
+              {(isGuest || isBusinessAccountUser) && (
+                <OptimizedLink
+                  href="/for-businesses"
+                  className={`group capitalize px-2.5 lg:px-3.5 py-1.5 rounded-lg text-sm sm:text-xs sm:text-sm md:text-sm sm:text-xs lg:text-sm sm:text-xs font-semibold transition-all duration-200 relative ${
+                    isClaimBusinessActive
+                      ? 'text-sage'
+                      : whiteText
+                        ? 'text-white hover:text-white/90 hover:bg-white/10'
+                        : 'text-charcoal/90 md:text-charcoal/95 hover:text-sage hover:bg-sage/5'
+                  }`}
+                  style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                >
+                  <span className="relative z-10">For Businesses</span>
+                </OptimizedLink>
+              )}
             </nav>
 
             {/* Right side */}
@@ -585,7 +593,8 @@ export default function Header({
                 )}
               </button>
 
-              {/* Saved */}
+              {/* Saved - Hidden for business accounts */}
+              {!isBusinessAccountUser && (
               <div
                 className="relative hidden md:block"
                 onMouseEnter={() => isGuest && setHoveredLockedItem('saved')}
@@ -609,8 +618,10 @@ export default function Header({
                 </OptimizedLink>
                 <LockedTooltip show={hoveredLockedItem === 'saved'} label="view saved" />
               </div>
+              )}
 
-              {/* Messages/DM */}
+              {/* Messages - Hidden for business accounts */}
+              {!isBusinessAccountUser && (
               <div
                 className="relative hidden md:block"
                 onMouseEnter={() => isGuest && setHoveredLockedItem('messages')}
@@ -633,8 +644,7 @@ export default function Header({
                   )}
                 </OptimizedLink>
                 <LockedTooltip show={hoveredLockedItem === 'messages'} label="view messages" />
-              </div>
-
+              </div>              )}
               {/* Profile */}
               <div
                 className="relative hidden md:block"
@@ -711,6 +721,7 @@ export default function Header({
           </div>
 
           <nav className="flex flex-col py-2 px-3 overflow-y-auto flex-1 min-h-0">
+            {!isBusinessAccountUser && (
             <div className="space-y-1">
               {PRIMARY_LINKS.map(({ key, label, href, requiresAuth }, index) => {
                 const showLockIndicator = isGuest && requiresAuth;
@@ -738,9 +749,11 @@ export default function Header({
               );
               })}
             </div>
+            )}
 
-            <div className="h-px bg-charcoal/10 my-2 mx-3" />
+            {!isBusinessAccountUser && <div className="h-px bg-charcoal/10 my-2 mx-3" />}
 
+            {!isBusinessAccountUser && (
             <div className="space-y-1">
               {DISCOVER_LINKS.map(({ key, label, href, requiresAuth }, index) => {
                 const showLockIndicator = isGuest && requiresAuth;
@@ -768,14 +781,24 @@ export default function Header({
                 );
               })}
             </div>
-            
+            )}
+
             <div className="h-px bg-charcoal/10 my-2 mx-3" />
-            
+
             <div className="space-y-1">
               {[
-                { href: '/for-businesses', label: 'For Businesses', requiresAuth: false, delay: 1 },
-                { href: '/dm', label: 'Messages', requiresAuth: true, delay: 2 },
-                { href: '/profile', label: 'Profile', requiresAuth: true, delay: 3 },
+                // Business account routes
+                ...(isBusinessAccountUser ? [
+                  { href: '/for-businesses', label: 'For Businesses', requiresAuth: true, delay: 1, businessOnly: true },
+                  { href: '/my-businesses', label: 'My Businesses', requiresAuth: true, delay: 2, businessOnly: true },
+                ] : []),
+                // Personal user routes
+                ...(isBusinessAccountUser ? [] : [
+                  { href: '/dm', label: 'Messages', requiresAuth: true, delay: 2, personalOnly: true },
+                  { href: '/saved', label: 'Saved', requiresAuth: true, delay: 3, personalOnly: true },
+                ]),
+                // Common routes
+                { href: '/profile', label: 'Profile', requiresAuth: true, delay: isBusinessAccountUser ? 3 : 4 },
               ].map((item) => {
                 const showLockIndicator = isGuest && item.requiresAuth;
                 return (
