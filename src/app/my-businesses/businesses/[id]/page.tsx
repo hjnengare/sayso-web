@@ -396,7 +396,7 @@ export default function OwnerBusinessDashboard() {
                 <ol className="flex items-center gap-2 text-sm sm:text-base">
                   <li>
                     <Link href="/my-businesses" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                      Your Businesses
+                      My Businesses
                     </Link>
                   </li>
                   <li className="flex items-center">

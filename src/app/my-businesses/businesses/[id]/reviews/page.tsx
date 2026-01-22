@@ -254,6 +254,14 @@ export default function OwnerReviewsPage() {
               <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
                 <ol className="flex items-center gap-2 text-sm sm:text-base">
                   <li>
+                    <Link href="/my-businesses" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                      My Businesses
+                    </Link>
+                  </li>
+                  <li className="flex items-center">
+                    <ChevronRight className="w-4 h-4 text-charcoal/60" />
+                  </li>
+                  <li>
                     <Link href={`/my-businesses/businesses/${businessId}`} className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                       {business?.name || 'Business'}
                     </Link>

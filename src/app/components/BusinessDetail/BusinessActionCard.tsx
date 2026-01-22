@@ -30,23 +30,12 @@ export default function BusinessActionCard({ businessSlug, businessId, isBusines
 
         <div className="space-y-3">
           <Link
-            href={hasReviewed ? '#' : `/business/${businessSlug}/review`}
-            className={`block w-full font-semibold py-3 px-5 rounded-full transition-all duration-300 border text-body-sm text-center ${
-              hasReviewed
-                ? 'bg-charcoal/10 text-charcoal/60 cursor-not-allowed border-charcoal/10 opacity-60 pointer-events-none'
-                : 'bg-gradient-to-br from-navbar-bg to-navbar-bg/90 text-white hover:bg-navbar-bg border-white/30 shadow-md'
-            }`}
+            href={`/business/${businessSlug}/review`}
+            className="block w-full font-semibold py-3 px-5 rounded-full transition-all duration-300 border text-body-sm text-center bg-gradient-to-br from-navbar-bg to-navbar-bg/90 text-white hover:bg-navbar-bg border-white/30 shadow-md"
             style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-            onClick={(e) => {
-              if (hasReviewed) {
-                e.preventDefault();
-                e.stopPropagation();
-              }
-            }}
-            aria-disabled={hasReviewed}
-            title={hasReviewed ? 'You have already reviewed this business' : 'Leave a Review'}
+            title={'Leave a Review'}
           >
-            {hasReviewed ? 'Already Reviewed' : 'Leave a Review'}
+            Leave a Review
           </Link>
 
           {ownerId && !isBusinessOwner && (

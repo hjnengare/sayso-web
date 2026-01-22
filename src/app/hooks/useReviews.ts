@@ -389,64 +389,10 @@ export function useReviewSubmission() {
 }
 
 export function useUserHasReviewed(businessId?: string) {
-  const [hasReviewed, setHasReviewed] = useState<boolean>(false);
-  const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
-
-  const checkReview = useCallback(async () => {
-    if (!businessId || !user?.id) {
-      setHasReviewed(false);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const response = await fetch(`/api/reviews?business_id=${businessId}&user_id=${user.id}&limit=1`);
-      
-      if (!response.ok) {
-        // If the API returns an error, try to get the error message
-        let errorMessage = response.statusText;
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.error || errorMessage;
-        } catch {
-          // If JSON parsing fails, use status text
-        }
-        
-        // If the API returns an error, assume user hasn't reviewed
-        // This is safe because we're checking for existence, not creating
-        console.warn('Failed to check review status:', response.status, errorMessage);
-        setHasReviewed(false);
-        return;
-      }
-
-      const result = await response.json();
-      const reviews = result.reviews || [];
-      
-      setHasReviewed(reviews.length > 0);
-    } catch (err) {
-      // Handle network errors or JSON parsing errors gracefully
-      console.error('Error checking review status:', err);
-      setHasReviewed(false);
-    } finally {
-      setLoading(false);
-    }
-  }, [businessId, user?.id]);
-
-  useEffect(() => {
-    let mounted = true;
-
-    const runCheck = async () => {
-      await checkReview();
-    };
-
-    runCheck();
-
-    return () => {
-      mounted = false;
-    };
-  }, [checkReview]);
+  // Multiple reviews per business are allowed, so always expose review actions
+  const hasReviewed = false;
+  const loading = false;
+  const checkReview = useCallback(async () => undefined, []);
 
   return { hasReviewed, loading, refetch: checkReview };
 }

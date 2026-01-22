@@ -53,7 +53,10 @@ const FALLBACK_SUBCATEGORIES = [
   { id: "fashion", label: "Fashion & Clothing", interest_id: "shopping-lifestyle" },
   { id: "electronics", label: "Electronics", interest_id: "shopping-lifestyle" },
   { id: "home-decor", label: "Home Decor", interest_id: "shopping-lifestyle" },
-  { id: "books", label: "Books & Media", interest_id: "shopping-lifestyle" }
+  { id: "books", label: "Books & Media", interest_id: "shopping-lifestyle" },
+
+  // Other
+  { id: "miscellaneous", label: "Miscellaneous", interest_id: "miscellaneous" }
 ];
 
 export async function GET(req: Request) {

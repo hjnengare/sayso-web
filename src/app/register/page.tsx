@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import { motion } from "framer-motion";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
 import { usePrefersReducedMotion } from "../utils/hooks/usePrefersReducedMotion";
@@ -230,6 +231,14 @@ export default function RegisterPage() {
           if (authError.includes('fetch') || authError.includes('network')) {
             setError('🌐 Connection error. Please check your internet connection and try again.');
             showToast('🌐 Connection error. Please check your internet connection and try again.', 'sage', 4000);
+          } else if (authError.includes('email_exists_can_add_account_type')) {
+            // Email already has one account type, can add another
+            setError('✅ This email already has an account! Log in and go to Settings to add a second account type.');
+            showToast('✅ Log in and add a second account type in Settings', 'success', 5000);
+            // Optionally redirect to login after a delay
+            setTimeout(() => {
+              router.push(`/login?email=${encodeURIComponent(normalizedEmail)}`);
+            }, 2000);
           } else if (
             authError.toLowerCase().includes('already in use') ||
             authError.toLowerCase().includes('already registered') ||
@@ -307,7 +316,9 @@ export default function RegisterPage() {
             />
           </div>
           <p className="text-body font-normal text-charcoal/70 mb-4 leading-[1.55] px-2 max-w-[70ch] mx-auto animate-fade-in-up animate-delay-700" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 400 }}>
-            Sign up today - share honest reviews, climb leaderboards, and rate any business!
+            {accountType === 'business_owner' 
+              ? 'Join as a business owner - manage your business profile, respond to reviews, and grow your brand!'
+              : 'Sign up today - share honest reviews, climb leaderboards, and rate any business!'}
           </p>
         </div>
 
@@ -337,32 +348,42 @@ export default function RegisterPage() {
                 <label className="block text-xs font-semibold text-white/60 uppercase tracking-wider" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                   Account Type
                 </label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="relative grid grid-cols-2 gap-2 bg-white/5 p-1 rounded-xl border border-white/10">
+                  {/* Animated background slider */}
+                  <motion.div
+                    className="absolute inset-y-1 bg-navbar-bg rounded-lg shadow-lg shadow-white/10"
+                    initial={false}
+                    animate={{
+                      x: accountType === 'user' ? 4 : 'calc(100% - 4px)',
+                      width: 'calc(50% - 4px)'
+                    }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 300,
+                      damping: 30
+                    }}
+                  />
                   <button
                     type="button"
                     onClick={() => setAccountType('user')}
                     disabled={isFormDisabled}
-                    className={`px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                      accountType === 'user'
-                        ? 'bg-navbar-bg text-white shadow-lg shadow-white/10 border border-white/20'
-                        : 'bg-white/5 text-white/70 hover:bg-white/10 border border-white/10'
-                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    className="relative z-10 px-4 py-3 rounded-lg text-sm font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                   >
-                    <span>Personal</span>
+                    <span className={`transition-colors duration-200 ${
+                      accountType === 'user' ? 'text-white' : 'text-white/70'
+                    }`}>Personal</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setAccountType('business_owner')}
                     disabled={isFormDisabled}
-                    className={`px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                      accountType === 'business_owner'
-                        ? 'bg-navbar-bg text-white shadow-lg shadow-white/10 border border-white/20'
-                        : 'bg-white/5 text-white/70 hover:bg-white/10 border border-white/10'
-                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    className="relative z-10 px-4 py-3 rounded-lg text-sm font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                   >
-                    <span>Business</span>
+                    <span className={`transition-colors duration-200 ${
+                      accountType === 'business_owner' ? 'text-white' : 'text-white/70'
+                    }`}>Business</span>
                   </button>
                 </div>
                 <div className="h-px bg-white/15 w-full" />
@@ -386,6 +407,7 @@ export default function RegisterPage() {
                 error={getEmailError()}
                 touched={emailTouched}
                 disabled={isFormDisabled}
+                placeholder={accountType === 'business_owner' ? 'business@example.com' : 'you@example.com'}
               />
 
               {/* Password Input */}
@@ -450,8 +472,8 @@ export default function RegisterPage() {
                 consentGiven={consent}
               />
 
-              {/* Social Login */}
-              <SocialLoginButtons />
+              {/* Social Login - Only show for Personal accounts */}
+              <SocialLoginButtons accountType={accountType} />
             </form>
 
             {/* Footer */}

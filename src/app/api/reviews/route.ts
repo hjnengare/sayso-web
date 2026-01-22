@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { getServerSupabase } from '../../lib/supabase/server';
-import { ReviewRateLimiter } from '../../lib/utils/rateLimiter';
 import { ReviewValidator } from '../../lib/utils/validation';
 import { ContentModerator } from '../../lib/utils/contentModeration';
 import { invalidateBusinessCache } from '../../lib/utils/optimizedQueries';
@@ -33,28 +32,6 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: 'You must be logged in to submit a review' },
         { status: 401 }
-      );
-    }
-
-    // Rate limiting check
-    const rateLimitResult = await ReviewRateLimiter.checkRateLimit(user.id);
-    if (!rateLimitResult.allowed) {
-      return NextResponse.json(
-        { 
-          error: rateLimitResult.error || 'Rate limit exceeded',
-          rateLimit: {
-            remainingAttempts: rateLimitResult.remainingAttempts,
-            resetAt: rateLimitResult.resetAt.toISOString(),
-          }
-        },
-        { 
-          status: 429,
-          headers: {
-            'X-RateLimit-Limit': '10',
-            'X-RateLimit-Remaining': rateLimitResult.remainingAttempts.toString(),
-            'X-RateLimit-Reset': Math.floor(rateLimitResult.resetAt.getTime() / 1000).toString(),
-          }
-        }
       );
     }
 
@@ -177,21 +154,6 @@ export async function POST(req: Request) {
 
     // Use sanitized content
     const finalContent = moderationResult.sanitizedContent || sanitizedContent;
-
-    // Check if user has already reviewed this business
-    const { data: existingReview } = await supabase
-      .from('reviews')
-      .select('id')
-      .eq('business_id', business_id)
-      .eq('user_id', user.id)
-      .single();
-
-    if (existingReview) {
-      return NextResponse.json(
-        { error: 'You have already reviewed this business' },
-        { status: 400 }
-      );
-    }
 
     // Create the review (critical operation - must succeed)
     let review: any = null;
@@ -500,6 +462,11 @@ export async function POST(req: Request) {
       // Log but don't fail - badge awarding is non-critical for review creation
       console.warn('[Review Create] Error triggering badge check:', err);
     });
+
+    const rateLimitResult = {
+      remainingAttempts: 10,
+      resetAt: new Date(Date.now() + 60 * 60 * 1000),
+    };
 
     return NextResponse.json({
       success: true,

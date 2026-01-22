@@ -86,7 +86,7 @@ export async function GET(request: Request) {
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('onboarding_step, onboarding_complete, interests_count, subcategories_count, dealbreakers_count')
+          .select('onboarding_step, onboarding_complete, interests_count, subcategories_count, dealbreakers_count, role, current_role')
           .eq('user_id', user.id)
           .single();
 
@@ -126,17 +126,30 @@ export async function GET(request: Request) {
           
           // Check if email is actually verified now
           if (user.email_confirmed_at) {
-            console.log('Email verified - redirecting to interests');
-            // Email is verified, proceed directly to interests
-            const dest = new URL('/interests', request.url);
-            dest.searchParams.set('verified', '1'); // one-time signal
-            dest.searchParams.set('email_verified', 'true'); // additional flag for client-side
-            // Copy cookies to redirect response
-            const redirectResponse = NextResponse.redirect(dest);
-            response.cookies.getAll().forEach(cookie => {
-              redirectResponse.cookies.set(cookie);
-            });
-            return redirectResponse;
+            // Check user's role to determine redirect destination
+            const userRole = profile?.role || profile?.current_role || 'user';
+            
+            if (userRole === 'business_owner') {
+              console.log('Email verified - business owner, redirecting to /claim-business');
+              const dest = new URL('/claim-business', request.url);
+              const redirectResponse = NextResponse.redirect(dest);
+              response.cookies.getAll().forEach(cookie => {
+                redirectResponse.cookies.set(cookie);
+              });
+              return redirectResponse;
+            } else {
+              console.log('Email verified - redirecting to interests');
+              // Email is verified, proceed directly to interests
+              const dest = new URL('/interests', request.url);
+              dest.searchParams.set('verified', '1'); // one-time signal
+              dest.searchParams.set('email_verified', 'true'); // additional flag for client-side
+              // Copy cookies to redirect response
+              const redirectResponse = NextResponse.redirect(dest);
+              response.cookies.getAll().forEach(cookie => {
+                redirectResponse.cookies.set(cookie);
+              });
+              return redirectResponse;
+            }
           } else {
             console.log('Email not yet verified - redirecting to verify-email');
             // Email not verified, redirect to verify-email page
@@ -153,24 +166,53 @@ export async function GET(request: Request) {
         const isNewUser = !profile;
         
         if (isNewUser) {
-          // New user from Google OAuth - profile should be created by trigger
-          // But ensure it exists and redirect to interests
-          console.log('Google OAuth: New user detected, ensuring profile exists');
+          // New user from Google OAuth - Check if email is tied to business ownership
+          console.log('Google OAuth: New user detected, checking for business email tie-in');
           
           // Wait a bit for trigger to potentially create profile
           await new Promise(resolve => setTimeout(resolve, 500));
           
-          // Check profile again
-          const { data: newProfile } = await supabase
-            .from('profiles')
-            .select('onboarding_step, onboarding_complete')
+          // Check if this email has any business owners linked to it
+          // (In case they registered a business under this email)
+          const { data: businessOwners } = await supabase
+            .from('business_owners')
+            .select('business_id')
             .eq('user_id', user.id)
-            .single();
+            .limit(1);
+          
+          // Also check business_ownership_requests for approved claims
+          const { data: ownershipRequests } = await supabase
+            .from('business_ownership_requests')
+            .select('business_id, status')
+            .eq('user_id', user.id)
+            .eq('status', 'approved')
+            .limit(1);
+
+          const hasBusinessOwnership = (businessOwners && businessOwners.length > 0) || 
+                                       (ownershipRequests && ownershipRequests.length > 0);
+
+          if (hasBusinessOwnership) {
+            // Email is tied to business ownership - redirect to role selection gate
+            console.log('OAuth Email has business ownership tie-in, redirecting to role selection');
+            const dest = new URL('/onboarding/select-account-type', request.url);
+            dest.searchParams.set('oauth', 'true');
+            dest.searchParams.set('business_tied', 'true');
+            const redirectResponse = NextResponse.redirect(dest);
+            response.cookies.getAll().forEach(cookie => {
+              redirectResponse.cookies.set(cookie);
+            });
+            return redirectResponse;
+          }
+
+          // New user from Google OAuth - profile should be created by trigger with 'user' role
+          // OAuth users get Personal accounts by default
+          console.log('Google OAuth: New user detected with no business tie-in, redirecting to interests for personal onboarding');
           
           if (user.email_confirmed_at) {
-            // Email is verified (Google emails are auto-verified), start onboarding
+            // Email is verified (Google emails are auto-verified), redirect to interests for personal onboarding
             const dest = new URL('/interests', request.url);
             dest.searchParams.set('verified', '1');
+            dest.searchParams.set('email_verified', 'true');
             // Copy cookies to redirect response
             const redirectResponse = NextResponse.redirect(dest);
             response.cookies.getAll().forEach(cookie => {
@@ -186,12 +228,31 @@ export async function GET(request: Request) {
             return redirectResponse;
           }
         } else {
+          // Existing user - check if business owner for proper redirect
+          const userRole = profile.role || profile.current_role;
+
+          // OAuth guard: If email already owns a business, require explicit role selection
+          if (type === 'oauth' && (userRole === 'business_owner' || profile.role === 'both')) {
+            const dest = new URL('/onboarding/select-account-type', request.url);
+            dest.searchParams.set('mode', 'oauth');
+            dest.searchParams.set('existingRole', 'business_owner');
+            if (user.email) {
+              dest.searchParams.set('email', user.email);
+            }
+
+            const redirectResponse = NextResponse.redirect(dest);
+            response.cookies.getAll().forEach(cookie => {
+              redirectResponse.cookies.set(cookie);
+            });
+            return redirectResponse;
+          }
           // Existing user - check onboarding status
           // STRICT: Use onboarding_step as single source of truth
           if (profile.onboarding_complete === true) {
-            // User has completed onboarding, redirect to home
-            console.log('[Auth Callback] User completed onboarding, redirecting to home');
-            const redirectResponse = NextResponse.redirect(new URL('/home', request.url));
+            // User has completed onboarding, redirect based on role
+            console.log('[Auth Callback] User completed onboarding, redirecting based on role:', userRole);
+            const destination = userRole === 'business_owner' ? '/claim-business' : '/home';
+            const redirectResponse = NextResponse.redirect(new URL(destination, request.url));
             response.cookies.getAll().forEach(cookie => {
               redirectResponse.cookies.set(cookie);
             });
@@ -199,6 +260,16 @@ export async function GET(request: Request) {
           } else {
             // User exists but onboarding incomplete - redirect to required step
             if (user.email_confirmed_at) {
+              // Business owners skip personal onboarding and go to claim-business
+              if (userRole === 'business_owner') {
+                console.log('[Auth Callback] Business owner, redirecting to /claim-business');
+                const redirectResponse = NextResponse.redirect(new URL('/claim-business', request.url));
+                response.cookies.getAll().forEach(cookie => {
+                  redirectResponse.cookies.set(cookie);
+                });
+                return redirectResponse;
+              }
+              
               // Use onboarding_step to determine required route (default: 'interests')
               const requiredStep = profile.onboarding_step || 'interests';
               const stepToRoute: Record<string, string> = {

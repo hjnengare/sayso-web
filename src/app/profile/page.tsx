@@ -1192,6 +1192,14 @@ function ProfileContent() {
                               {savedBusinessesCount}
                             </p>
                             <p className="text-xs text-charcoal/60">Your saved gems</p>
+                            <Link
+                              href="/saved"
+                              className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-navbar-bg hover:text-charcoal transition-colors"
+                              aria-label="View all saved businesses"
+                            >
+                              <span>View saved</span>
+                              <ChevronRight className="w-4 h-4" />
+                            </Link>
                           </div>
                         )}
                       </section>

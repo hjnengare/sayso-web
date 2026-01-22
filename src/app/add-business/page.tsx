@@ -12,7 +12,6 @@ import Header from "../components/Header/Header";
 import dynamic from "next/dynamic";
 import { authStyles } from "../components/Auth/Shared/authStyles";
 import { Urbanist } from "next/font/google";
-import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
 
 // Import extracted components
 import {
@@ -540,8 +539,8 @@ export default function AddBusinessPage() {
                                 <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
                                     <ol className="flex items-center gap-2 text-sm sm:text-base">
                                         <li>
-                                            <Link href="/for-businesses" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                                                for businesses
+                                            <Link href="/my-businesses" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                                                My Businesses
                                             </Link>
                                         </li>
                                         <li className="flex items-center">
@@ -564,20 +563,12 @@ export default function AddBusinessPage() {
                                         transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
                                     >
                                         <div className="inline-block relative mb-2">
-                                            <WavyTypedTitle
-                                                text="Create Business Profile"
-                                                as="h1"
+                                            <h1
                                                 className={`${urbanist.className} text-2xl sm:text-3xl font-semibold mb-2 text-center leading-[1.2] tracking-tight text-charcoal`}
-                                                typingSpeedMs={40}
-                                                startDelayMs={300}
-                                                waveVariant="subtle"
-                                                loopWave={false}
-                                                triggerOnTypingComplete={true}
-                                                enableScrollTrigger={false}
-                                                style={{
-                                                    fontFamily: urbanist.style.fontFamily,
-                                                }}
-                                            />
+                                                style={{ fontFamily: urbanist.style.fontFamily }}
+                                            >
+                                                Create Business Profile
+                                            </h1>
                                         </div>
                                         <motion.p
                                             className="text-sm sm:text-base text-charcoal/70 font-urbanist max-w-md mx-auto"
@@ -653,7 +644,7 @@ export default function AddBusinessPage() {
                                             transition={{ duration: 0.5, delay: 0.4 }}
                                         >
                                             <Link
-                                                href="/for-businesses"
+                                                href="/claim-business"
                                                 className="px-6 py-3 rounded-full border-2 border-charcoal/20 text-charcoal font-urbanist font-600 hover:bg-charcoal/5 transition-all duration-200 text-center"
                                             >
                                                 Cancel

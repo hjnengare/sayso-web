@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useState, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "../contexts/AuthContext";
+import { useSimpleBusinessSearch } from "../hooks/useSimpleBusinessSearch";
 import {
   Search,
   Store,
@@ -18,37 +19,23 @@ import { ClaimModal } from "../components/BusinessClaim/ClaimModal";
 import Link from "next/link";
 import Header from "../components/Header/Header";
 import { Suspense } from "react";
+import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
 
 const Footer = dynamic(() => import("../components/Footer/Footer"), {
   loading: () => null,
   ssr: false,
 });
 
-interface BusinessSearchResult {
-  id: string;
-  name: string;
-  category: string;
-  location: string;
-  address?: string;
-  phone?: string;
-  email?: string;
-  website?: string;
-  image_url?: string;
-  verified: boolean;
-  claim_status: 'unclaimed' | 'claimed' | 'pending';
-  pending_by_user?: boolean;
-  claimed_by_user?: boolean;
-}
-
 function ClaimBusinessPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, isLoading: authLoading } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
-  const [businesses, setBusinesses] = useState<BusinessSearchResult[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [selectedBusiness, setSelectedBusiness] = useState<BusinessSearchResult | null>(null);
+  const [selectedBusiness, setSelectedBusiness] = useState<any | null>(null);
   const [showClaimModal, setShowClaimModal] = useState(false);
+
+  // Use the simple business search hook with 300ms debounce
+  const { results: businesses, isSearching } = useSimpleBusinessSearch(searchQuery, 300);
 
   // Handle businessId from query params (after login redirect)
   useEffect(() => {
@@ -62,35 +49,7 @@ function ClaimBusinessPageContent() {
     }
   }, [searchParams, user, businesses]);
 
-  // Search businesses when query changes
-  useEffect(() => {
-    const searchBusinesses = async () => {
-      if (searchQuery.trim().length < 2) {
-        setBusinesses([]);
-        return;
-      }
-
-      setIsSearching(true);
-      try {
-        const response = await fetch(`/api/businesses/search?query=${encodeURIComponent(searchQuery.trim())}`);
-        if (!response.ok) {
-          throw new Error('Failed to search businesses');
-        }
-        const result = await response.json();
-        setBusinesses(result.businesses || []);
-      } catch (error) {
-        console.error('Error searching businesses:', error);
-        setBusinesses([]);
-      } finally {
-        setIsSearching(false);
-      }
-    };
-
-    const debounceTimer = setTimeout(searchBusinesses, 300);
-    return () => clearTimeout(debounceTimer);
-  }, [searchQuery]);
-
-  const handleClaimClick = (business: BusinessSearchResult) => {
+  const handleClaimClick = (business: any) => {
     if (!user) {
       // Redirect to business login with redirect back to claim-business with businessId
       router.push(`/login?redirect=/claim-business?businessId=${business.id}`);
@@ -132,7 +91,7 @@ function ClaimBusinessPageContent() {
     }
   };
 
-  const getStatusBadge = (business: BusinessSearchResult) => {
+  const getStatusBadge = (business: any) => {
     if (business.claimed_by_user) {
       return null; // Don't show badge if user owns it
     }
@@ -163,7 +122,7 @@ function ClaimBusinessPageContent() {
     );
   };
 
-  const getActionButton = (business: BusinessSearchResult) => {
+  const getActionButton = (business: any) => {
     if (!user) {
       return (
         <button
@@ -208,10 +167,11 @@ function ClaimBusinessPageContent() {
         <div className="flex flex-col gap-2">
           <span className="text-xs text-charcoal/60 text-center sm:text-left">Business already claimed</span>
           <Link
-            href="/support"
+            href="mailto:info@sayso.com?subject=Business%20claim%20support&body=Please%20share%20your%20business%20name%2C%20location%2C%20and%20ownership%20details."
             className="w-full sm:w-auto px-5 py-2.5 min-h-[44px] rounded-full text-sm font-semibold font-urbanist transition-all duration-200 flex-shrink-0
               border-2 border-charcoal/20 text-charcoal hover:bg-charcoal/5 text-center"
             style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+            aria-label="Email support about an already claimed business"
           >
             Contact support
           </Link>
@@ -232,7 +192,7 @@ function ClaimBusinessPageContent() {
   };
 
   return (
-    <div className="min-h-dvh bg-off-white" data-testid="claim-business-page">
+    <div className="min-h-dvh bg-off-white">
       {/* Header */}
       <Header
         showSearch={false}
@@ -249,8 +209,8 @@ function ClaimBusinessPageContent() {
           <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
             <ol className="flex items-center gap-2 text-sm sm:text-base">
               <li>
-                <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                  Home
+                <Link href="/my-businesses" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                  My Businesses
                 </Link>
               </li>
               <li className="flex items-center">
@@ -258,7 +218,7 @@ function ClaimBusinessPageContent() {
               </li>
               <li>
                 <span className="text-charcoal font-semibold" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                  For Businesses
+                  Claim Business
                 </span>
               </li>
             </ol>
@@ -312,7 +272,7 @@ function ClaimBusinessPageContent() {
                     {!isSearching && businesses.map((business) => (
                       <div
                         key={business.id}
-                        className="p-4 sm:p-5 bg-sage border border-sage/20 rounded-lg shadow-sm
+                        className="p-4 sm:p-5 bg-sage border border-sage/20 rounded-[20px] shadow-sm
                                    hover:border-sage/40 hover:shadow-md transition-all duration-300 group"
                       >
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
@@ -368,7 +328,7 @@ function ClaimBusinessPageContent() {
                   )}
 
                   {/* Help Section */}
-                  <div className="mt-8 sm:mt-12 mb-8 sm:mb-12 p-4 sm:p-6 bg-sage border border-sage/20 rounded-lg shadow-sm">
+                  <div className="mt-8 sm:mt-12 mb-8 sm:mb-12 p-4 sm:p-6 bg-sage border border-sage/20 rounded-[20px] shadow-md">
                     <h3 className="font-urbanist text-base sm:text-lg font-semibold text-white mb-2 px-1" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                       Need help claiming your business?
                     </h3>
@@ -377,15 +337,19 @@ function ClaimBusinessPageContent() {
                       or management authorisation.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3">
-                      <button className="w-full sm:w-auto px-5 py-2.5 min-h-[44px] border-2 border-white text-white rounded-full text-sm font-semibold font-urbanist
-                                         hover:bg-white hover:text-sage transition-all duration-300 active:scale-[0.98] touch-manipulation whitespace-nowrap"
-                                style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                      <Link
+                        href="mailto:info@sayso.com?subject=Need%20help%20claiming%20my%20business&body=Please%20include%20your%20business%20name%2C%20location%2C%20and%20any%20documents%20you%20have%20ready."
+                        className="w-full sm:w-auto px-5 py-2.5 min-h-[44px] border-2 border-white text-white rounded-full text-sm font-semibold font-urbanist
+                                         hover:bg-white hover:text-sage transition-all duration-300 active:scale-[0.98] touch-manipulation whitespace-nowrap text-center"
+                        style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                        aria-label="Email business support for claim assistance"
+                      >
                         Contact Support
-                      </button>
-                      <button className="w-full sm:w-auto px-6 py-2.5 min-h-[44px] bg-gradient-to-br from-coral to-coral/90 text-white text-sm font-semibold font-urbanist rounded-full hover:from-coral/90 hover:to-coral/80 transition-all duration-300 hover:shadow-lg active:scale-[0.98] touch-manipulation whitespace-nowrap"
+                      </Link>
+                      <Link href="/add-business" className="w-full sm:w-auto px-6 py-2.5 min-h-[44px] bg-gradient-to-br from-coral to-coral/90 text-white text-sm font-semibold font-urbanist rounded-full hover:from-coral/90 hover:to-coral/80 transition-all duration-300 hover:shadow-lg active:scale-[0.98] touch-manipulation whitespace-nowrap inline-flex items-center justify-center"
                               style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                        Learn More
-                      </button>
+                        Add New Business
+                      </Link>
                     </div>
                   </div>
                 </div>

@@ -110,10 +110,15 @@ BEGIN
       bs.percentiles,
       (
         (
-          CASE WHEN b.category = v_target_category THEN 40 ELSE 0 END +
-          CASE WHEN b.interest_id IS NOT NULL AND b.interest_id = v_target_interest_id THEN 30 ELSE 0 END +
-          CASE WHEN b.sub_interest_id IS NOT NULL AND b.sub_interest_id = v_target_sub_interest_id THEN 20 ELSE 0 END +
-          CASE WHEN b.price_range = v_target_price_range THEN 10 ELSE 0 END +
+          -- Category is mandatory and carries most weight
+          CASE WHEN b.category = v_target_category THEN 60 ELSE 0 END +
+          -- Sub-interest (subcategory) alignment for tighter matching
+          CASE WHEN b.sub_interest_id IS NOT NULL AND b.sub_interest_id = v_target_sub_interest_id THEN 25 ELSE 0 END +
+          -- Interest (parent category) alignment as secondary signal
+          CASE WHEN b.interest_id IS NOT NULL AND b.interest_id = v_target_interest_id THEN 15 ELSE 0 END +
+          -- Optional price range nudge (kept small)
+          CASE WHEN v_target_price_range IS NOT NULL AND b.price_range = v_target_price_range THEN 5 ELSE 0 END +
+          -- Geographic proximity as tie-breaker only (small weight)
           CASE 
             WHEN v_target_lat IS NOT NULL AND v_target_lng IS NOT NULL 
                  AND b.lat IS NOT NULL AND b.lng IS NOT NULL
@@ -122,17 +127,17 @@ BEGIN
                 WHEN v_has_postgis THEN
                   GREATEST(
                     0,
-                    30 - (
+                    10 - (
                       ST_Distance(
                         ST_MakePoint(v_target_lng, v_target_lat)::geography,
                         ST_MakePoint(b.lng, b.lat)::geography
                       ) / 1000.0
-                    ) / (p_radius_km / 30.0)
+                    ) / (p_radius_km / 10.0)
                   )
                 ELSE
                   GREATEST(
                     0,
-                    30 - (
+                    10 - (
                       6371 * acos(
                         LEAST(
                           1.0, 
@@ -143,15 +148,15 @@ BEGIN
                           sin(radians(b.lat))
                         )
                       )
-                    ) / (p_radius_km / 30.0)
+                    ) / (p_radius_km / 10.0)
                   )
               END
-            WHEN b.location = v_target_location THEN 15
             ELSE 0
           END +
+          -- Quality bonus, but only after core category match
           CASE 
-            WHEN COALESCE(bs.average_rating, 0) >= 4.0 AND COALESCE(bs.total_reviews, 0) >= 5 THEN 10
-            WHEN COALESCE(bs.average_rating, 0) >= 3.5 AND COALESCE(bs.total_reviews, 0) >= 3 THEN 5
+            WHEN COALESCE(bs.average_rating, 0) >= 4.0 AND COALESCE(bs.total_reviews, 0) >= 5 THEN 4
+            WHEN COALESCE(bs.average_rating, 0) >= 3.5 AND COALESCE(bs.total_reviews, 0) >= 3 THEN 2
             ELSE 0
           END
         )::numeric
@@ -184,10 +189,12 @@ BEGIN
     LEFT JOIN public.business_stats bs ON b.id = bs.business_id
     WHERE b.id != p_target_business_id
       AND b.status = 'active'
+      -- Only consider businesses sharing the primary category to avoid unrelated matches
+      AND b.category = v_target_category
+      -- Optional refinement signals; they do not widen beyond the category
       AND (
-        b.category = v_target_category 
-        OR b.interest_id = v_target_interest_id
-        OR b.sub_interest_id = v_target_sub_interest_id
+        (v_target_sub_interest_id IS NOT NULL AND b.sub_interest_id = v_target_sub_interest_id)
+        OR (v_target_interest_id IS NOT NULL AND b.interest_id = v_target_interest_id)
         OR (
           v_target_lat IS NOT NULL AND v_target_lng IS NOT NULL 
           AND b.lat IS NOT NULL AND b.lng IS NOT NULL
@@ -212,7 +219,11 @@ BEGIN
             ) <= p_radius_km)
           )
         )
-        OR b.location = v_target_location
+        OR (v_target_price_range IS NOT NULL AND b.price_range = v_target_price_range)
+        -- If no refinement signals are available, allow same-category businesses as fallback
+        OR (
+          v_target_sub_interest_id IS NULL AND v_target_interest_id IS NULL AND v_target_lat IS NULL AND v_target_price_range IS NULL
+        )
       )
   )
   SELECT 

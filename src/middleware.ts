@@ -232,7 +232,7 @@ export async function middleware(request: NextRequest) {
     // Event and special routes
     '/event', '/special',
     // User action routes
-    '/notifications', '/add-business', '/claim-business',
+    '/notifications', '/add-business', '/claim-business', '/settings',
   ];
   
   // Business routes that require authentication (review, edit, but NOT viewing)
@@ -244,31 +244,50 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith(route)
   ) || isBusinessReviewRoute;
 
-  // Business owner routes - require authentication, email verification, AND business ownership
-  // Note: Ownership verification is done in components using useRequireBusinessOwner
-  const ownersRoutes = ['/owners'];
+  // ============================================
+  // BUSINESS OWNER ROUTES - Professional Business Management
+  // ============================================
+  // Route Structure:
+  //   /claim-business     → Primary Business Dashboard (landing/overview for business owners)
+  //   /my-businesses      → Business Owner Hub (main management interface)
+  //   /my-businesses/businesses/[id] → Individual Business Management (specific business controls)
+  //   /my-businesses/businesses/[id]/reviews → Business Reviews Management (review responses & insights)
+  //   /owners* (legacy)   → Temporary redirect to /my-businesses*
+  //
+  // Access Requirements:
+  //   - All business routes require authentication
+  //   - /my-businesses/* routes verify business ownership at component level
+  //   - /business/[id]/edit verifies ownership at component level
+  // ============================================
+
+  // Business Owner Hub - requires authentication, email verification, and business ownership
+  // Ownership verification is done in components using useRequireBusinessOwner
+  const ownersRoutes = ['/my-businesses', '/owners'];
   const isOwnersRoute = ownersRoutes.some(route =>
     request.nextUrl.pathname.startsWith(route)
   );
   
-  // Business edit route - requires authentication and ownership (ownership checked in component)
+  // Business edit route - requires authentication and ownership (verified in component)
   const isBusinessEditRoute = request.nextUrl.pathname.match(/^\/business\/[^\/]+\/edit/);
   
-  
-  // Business routes that require authentication (but ownership is checked in component)
-  const businessAuthRoutes = ['/for-businesses'];
+  // Primary Business Dashboard (/claim-business) - requires authentication
+  // This is the main landing page for business owners
+  const businessAuthRoutes = ['/claim-business'];
   const isBusinessAuthRoute = businessAuthRoutes.some(route =>
     request.nextUrl.pathname.startsWith(route)
   );
   
   // Business profile pages are public - no protection needed
-  // Only /business/[id]/edit and /owners/* need protection
+  // Only /business/[id]/edit and /my-businesses/* (legacy /owners/*) need protection
 
   // Onboarding routes - users who completed onboarding should be redirected
   const onboardingRoutes = ['/interests', '/subcategories', '/deal-breakers', '/complete', '/onboarding'];
   const isOnboardingRoute = onboardingRoutes.some(route =>
     request.nextUrl.pathname.startsWith(route)
   );
+
+  // Account type selection route - allow new OAuth users to access
+  const isAccountTypeSelection = request.nextUrl.pathname.startsWith('/onboarding/select-account-type');
 
   // Auth routes - redirect authenticated users away
   const authRoutes = ['/login', '/register', '/verify-email'];
@@ -324,6 +343,57 @@ export async function middleware(request: NextRequest) {
   // STRICT: Block access to /home and other protected routes unless onboarding is complete
   if (isProtectedRoute && !isOnboardingRoute && user && user.email_confirmed_at) {
     // Use cached profileData - no additional DB read
+    const userCurrentRole = profileData?.current_role || 'user';
+    
+    // Business owners have different access rules
+    if (userCurrentRole === 'business_owner') {
+      // Business routes: Always allow without onboarding
+      const isBusinessRoute = ['/claim-business', '/my-businesses', '/add-business', '/settings'].some(route =>
+        request.nextUrl.pathname.startsWith(route)
+      );
+      
+      if (isBusinessRoute) {
+        return response; // Allow access to business routes
+      }
+      
+      // Direct Messages: ALLOW (business-customer communication)
+      if (request.nextUrl.pathname.startsWith('/dm')) {
+        return response;
+      }
+      
+      // Personal discovery routes: BLOCK business owners
+      const isPersonalDiscoveryRoute = request.nextUrl.pathname === '/home' ||
+                                       request.nextUrl.pathname.startsWith('/for-you') ||
+                                       request.nextUrl.pathname.startsWith('/trending') ||
+                                       request.nextUrl.pathname.startsWith('/explore') ||
+                                       request.nextUrl.pathname.startsWith('/leaderboard') ||
+                                       request.nextUrl.pathname.startsWith('/events-specials');
+      
+      if (isPersonalDiscoveryRoute) {
+        console.log('Middleware: Blocking business owner from personal discovery route:', request.nextUrl.pathname);
+        const redirectUrl = new URL('/claim-business', request.url);
+        return NextResponse.redirect(redirectUrl);
+      }
+      
+      // Personal-only features: BLOCK business owners
+      const isPersonalOnlyRoute = request.nextUrl.pathname.startsWith('/profile') ||
+                                  request.nextUrl.pathname.startsWith('/saved') ||
+                                  request.nextUrl.pathname.startsWith('/write-review') ||
+                                  request.nextUrl.pathname.startsWith('/reviewer');
+      
+      if (isPersonalOnlyRoute) {
+        console.log('Middleware: Blocking business owner from personal-only route:', request.nextUrl.pathname);
+        const redirectUrl = new URL('/my-businesses', request.url);
+        return NextResponse.redirect(redirectUrl);
+      }
+      
+      // All other routes: block by default (strict mode)
+      console.log('Middleware: Blocking business owner from unspecified route:', request.nextUrl.pathname);
+      const redirectUrl = new URL('/my-businesses', request.url);
+      return NextResponse.redirect(redirectUrl);
+    }
+    
+    // For personal users, check onboarding completion
     if (profileData?.onboarding_complete === true) {
       return response;
     }
@@ -338,11 +408,13 @@ export async function middleware(request: NextRequest) {
   if (isOnboardingRoute && user && user.email_confirmed_at && onboardingAccess) {
     const currentPath = request.nextUrl.pathname;
 
-    // RULE 1: If onboarding_complete=true, redirect onboarding routes to /home (except /complete)
+    // RULE 1: If onboarding_complete=true, redirect onboarding routes based on role
     // Use cached profileData - no additional DB read
     if (profileData?.onboarding_complete === true) {
       if (currentPath !== '/complete') {
-        const redirectUrl = new URL('/home', request.url);
+        const userCurrentRole = profileData?.current_role || 'user';
+        const destination = userCurrentRole === 'business_owner' ? '/claim-business' : '/home';
+        const redirectUrl = new URL(destination, request.url);
         return NextResponse.redirect(redirectUrl);
       }
       // Allow /complete page for celebration
@@ -387,13 +459,13 @@ export async function middleware(request: NextRequest) {
   // Protect owners routes - require authentication and email verification
   // Note: Ownership verification is done in the component using useRequireBusinessOwner
   if (isOwnersRoute && !user) {
-    console.log('Middleware: Redirecting unauthenticated user from owners route');
+    console.log('Middleware: Redirecting unauthenticated user from owner routes');
     const redirectUrl = new URL('/login', request.url);
     return NextResponse.redirect(redirectUrl);
   }
 
   if (isOwnersRoute && user && !user.email_confirmed_at) {
-    console.log('Middleware: Redirecting unverified user from owners route');
+    console.log('Middleware: Redirecting unverified user from owner routes');
     const redirectUrl = new URL('/verify-email', request.url);
     return NextResponse.redirect(redirectUrl);
   }
@@ -427,40 +499,43 @@ export async function middleware(request: NextRequest) {
   }
   
 
-  // Protect business auth routes (for-businesses) - require authentication
+  // Protect business auth routes (claim-business) - require authentication
   if (isBusinessAuthRoute && !user) {
-    console.log('Middleware: Redirecting unauthenticated user from for-businesses route');
-    const redirectUrl = new URL('/login?redirect=/for-businesses', request.url);
+    console.log('Middleware: Redirecting unauthenticated user from claim-business route');
+    const redirectUrl = new URL('/login?redirect=/claim-business', request.url);
     return NextResponse.redirect(redirectUrl);
   }
 
   if (isBusinessAuthRoute && user && !user.email_confirmed_at) {
-    console.log('Middleware: Redirecting unverified user from for-businesses route');
+    console.log('Middleware: Redirecting unverified user from claim-business route');
     const redirectUrl = new URL('/verify-email', request.url);
     return NextResponse.redirect(redirectUrl);
   }
 
   // ROLE-BASED ACCESS CONTROL: Enforce business routes to business accounts only
+  // ONLY restrict if trying to access business routes as a personal user
   if (isBusinessAuthRoute && user && user.email_confirmed_at) {
     const userCurrentRole = profileData?.current_role || 'user';
     if (userCurrentRole !== 'business_owner') {
-      console.log('Middleware: Restricting non-business account from /for-businesses');
+      console.log('Middleware: Restricting non-business account from /claim-business');
       const redirectUrl = new URL('/home', request.url);
       return NextResponse.redirect(redirectUrl);
     }
   }
 
-  // ROLE-BASED ACCESS CONTROL: Restrict /owners routes to business accounts only
+  // ROLE-BASED ACCESS CONTROL: Restrict /my-businesses (and legacy /owners) routes to business accounts only
+  // ONLY restrict if trying to access business routes as a personal user
   if (isOwnersRoute && user && user.email_confirmed_at) {
     const userCurrentRole = profileData?.current_role || 'user';
     if (userCurrentRole !== 'business_owner') {
-      console.log('Middleware: Restricting non-business account from /owners routes');
+      console.log('Middleware: Restricting non-business account from /my-businesses routes');
       const redirectUrl = new URL('/home', request.url);
       return NextResponse.redirect(redirectUrl);
     }
   }
 
   // ROLE-BASED ACCESS CONTROL: Restrict /business/[id]/edit to business owners
+  // ONLY restrict if trying to access edit as a personal user
   if (isBusinessEditRoute && user && user.email_confirmed_at) {
     const userCurrentRole = profileData?.current_role || 'user';
     if (userCurrentRole !== 'business_owner') {
@@ -470,33 +545,26 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // ROLE-BASED ACCESS CONTROL: Restrict personal user routes from business accounts
-  const personalUserRoutes = ['/interests', '/subcategories', '/deal-breakers', '/for-you', '/profile', '/saved', '/my-businesses'];
-  const isPersonalUserRoute = personalUserRoutes.some(route => request.nextUrl.pathname.startsWith(route));
-  
-  // Special case: /interests, /subcategories, /deal-breakers are only for personal onboarding
-  // Business owners should skip these and go directly to /for-businesses
+  // ROLE-BASED ACCESS CONTROL: Restrict personal-only onboarding routes from business accounts
+  // Business owners should NOT access personal onboarding (interests, deal-breakers, etc)
   const isPersonalOnboardingRoute = request.nextUrl.pathname.startsWith('/interests') || 
                                     request.nextUrl.pathname.startsWith('/subcategories') ||
-                                    request.nextUrl.pathname.startsWith('/deal-breakers');
+                                    request.nextUrl.pathname.startsWith('/deal-breakers') ||
+                                    request.nextUrl.pathname.startsWith('/complete');
 
   if (isPersonalOnboardingRoute && user && user.email_confirmed_at) {
     const userCurrentRole = profileData?.current_role || 'user';
     if (userCurrentRole === 'business_owner') {
       console.log('Middleware: Restricting business account from personal onboarding');
-      const redirectUrl = new URL('/for-businesses', request.url);
+      const redirectUrl = new URL('/claim-business', request.url);
       return NextResponse.redirect(redirectUrl);
     }
   }
 
-  if (isPersonalUserRoute && user && user.email_confirmed_at && request.nextUrl.pathname !== '/interests' && 
-      request.nextUrl.pathname !== '/subcategories' && request.nextUrl.pathname !== '/deal-breakers') {
-    const userCurrentRole = profileData?.current_role || 'user';
-    if (userCurrentRole === 'business_owner') {
-      console.log('Middleware: Restricting business account from personal user route:', request.nextUrl.pathname);
-      const redirectUrl = new URL('/for-businesses', request.url);
-      return NextResponse.redirect(redirectUrl);
-    }
+  // Allow account type selection for new OAuth users (even if authenticated)
+  if (isAccountTypeSelection) {
+    console.log('Middleware: Allowing access to account type selection page');
+    return response;
   }
 
   // Redirect authenticated users from auth pages
@@ -509,7 +577,7 @@ export async function middleware(request: NextRequest) {
 
     if (user.email_confirmed_at) {
       const userCurrentRole = profileData?.current_role || 'user';
-      const redirectTarget = userCurrentRole === 'business_owner' ? '/for-businesses' : '/interests';
+      const redirectTarget = userCurrentRole === 'business_owner' ? '/claim-business' : '/interests';
       console.log('Middleware: Redirecting verified user from auth page to', redirectTarget, 'for role', userCurrentRole);
       const redirectUrl = new URL(redirectTarget, request.url);
       return NextResponse.redirect(redirectUrl);

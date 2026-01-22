@@ -47,13 +47,11 @@ export default function SpecialActionCard({ specialId, hasReviewed = false }: Sp
                 {specialId && (
                     <Link
                         href={`/special/${specialId}/review`}
-                        className={`w-full inline-block text-center bg-gradient-to-r from-coral to-coral/90 hover:from-coral/90 hover:to-coral/80 text-white font-semibold py-3 px-5 rounded-full transition-all duration-300 hover:scale-105 border border-white/30 text-sm ${
-                            hasReviewed ? 'opacity-50 pointer-events-none' : ''
-                        }`}
+                        className="w-full inline-block text-center bg-gradient-to-r from-coral to-coral/90 hover:from-coral/90 hover:to-coral/80 text-white font-semibold py-3 px-5 rounded-full transition-all duration-300 hover:scale-105 border border-white/30 text-sm"
                         style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                     >
                         <Star className="w-4 h-4 inline-block mr-1.5" />
-                        {hasReviewed ? 'Already Reviewed' : 'Write Review'}
+                        Write Review
                     </Link>
                 )}
 

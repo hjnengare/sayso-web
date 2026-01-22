@@ -1,6 +1,6 @@
 /**
  * Simple business search hook
- * Implements the same search pattern as /for-businesses page
+ * Implements the same search pattern as /claim-business page
  * 
  * Features:
  * - 300ms debounce for efficient API calls

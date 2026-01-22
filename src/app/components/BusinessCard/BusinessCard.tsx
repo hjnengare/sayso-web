@@ -12,7 +12,6 @@ import Tooltip from "../Tooltip/Tooltip";
 import { useSavedItems } from "../../contexts/SavedItemsContext";
 import { useToast } from "../../contexts/ToastContext";
 import { getCategoryPng, getCategoryPngFromLabels, isPngIcon } from "../../utils/categoryToPngMapping";
-import { useUserHasReviewed } from "../../hooks/useReviews";
 
 type Percentiles = {
   punctuality?: number;
@@ -161,7 +160,7 @@ function BusinessCard({
   const router = useRouter();
   const { toggleSavedItem, isItemSaved } = useSavedItems();
   const { showToast } = useToast();
-  const { hasReviewed } = useUserHasReviewed(business.id);
+  const hasReviewed = false;
   const idForSnap = useMemo(() => `business-${business.id}`, [business.id]);
   const prefersReducedMotion = useReducedMotion();
   const [isMobile, setIsMobile] = useState(true);

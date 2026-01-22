@@ -79,6 +79,7 @@ import {
 export interface BadgeMapping {
   id: string;
   name: string;
+  description?: string;
   pngPath: string;
   lucideIcon: LucideIcon;
   badgeGroup: "explorer" | "specialist" | "milestone" | "community";

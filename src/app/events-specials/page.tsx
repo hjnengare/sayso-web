@@ -27,6 +27,7 @@ export default function EventsSpecialsPage() {
   const [selectedFilter, setSelectedFilter] = useState<"all" | "event" | "special">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
   const [isPaginationLoading, setIsPaginationLoading] = useState(false);
   const { showToast } = useToast();
   const previousPageRef = useRef(currentPage);
@@ -70,6 +71,13 @@ export default function EventsSpecialsPage() {
   useEffect(() => {
     setCurrentPage(1);
   }, [debouncedSearchQuery, selectedFilter]);
+
+  useEffect(() => {
+    const updateIsDesktop = () => setIsDesktop(typeof window !== "undefined" && window.innerWidth >= 1024);
+    updateIsDesktop();
+    window.addEventListener("resize", updateIsDesktop);
+    return () => window.removeEventListener("resize", updateIsDesktop);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -146,15 +154,33 @@ export default function EventsSpecialsPage() {
         }}
       >
         <div className="mx-auto w-full max-w-[2000px] px-2">
+          <style>{`
+            .desktop-card-shimmer {
+              position: relative;
+              overflow: hidden;
+            }
+            .desktop-shimmer-veil {
+              pointer-events: none;
+              position: absolute;
+              inset: 0;
+              background: linear-gradient(120deg, rgba(255,255,255,0) 45%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0) 55%);
+              transform: translateX(-150%);
+              animation: desktopShimmer 10s linear infinite;
+              opacity: 0.4;
+            }
+            @keyframes desktopShimmer {
+              0% { transform: translateX(-150%); }
+              100% { transform: translateX(150%); }
+            }
+          `}</style>
+
           <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
             <ol className="flex items-center gap-2 text-sm sm:text-base">
               <li>
                 <Link
                   href="/home"
                   className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium"
-                  style={{
-                    fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                  }}
+                  style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                 >
                   Home
                 </Link>
@@ -165,9 +191,7 @@ export default function EventsSpecialsPage() {
               <li>
                 <span
                   className="text-charcoal font-semibold"
-                  style={{
-                    fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                  }}
+                  style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                 >
                   Events & Specials
                 </span>
@@ -257,18 +281,30 @@ export default function EventsSpecialsPage() {
 
                 {/* Paginated Content with Smooth Transition */}
                 <AnimatePresence mode="wait" initial={false}>
-                  <motion.div
-                    key={currentPage}
-                    initial={{ opacity: 0, y: 20, scale: 0.98, filter: "blur(8px)" }}
-                    animate={{ opacity: isPaginationLoading ? 0 : 1, y: 0, scale: 1, filter: "blur(0px)" }}
-                    exit={{ opacity: 0, y: -20, scale: 0.98, filter: "blur(8px)" }}
-                    transition={{
-                      duration: 0.4,
-                      ease: [0.16, 1, 0.3, 1],
-                    }}
-                  >
-                    <EventsGrid events={currentEvents} onBookmark={handleBookmark} />
-                  </motion.div>
+                  {isDesktop ? (
+                    <div className="relative">
+                      <EventsGrid
+                        events={currentEvents}
+                        onBookmark={handleBookmark}
+                        disableMotion={true}
+                        cardWrapperClass="desktop-card-shimmer"
+                        cardOverlayClass="desktop-shimmer-veil"
+                      />
+                    </div>
+                  ) : (
+                    <motion.div
+                      key={currentPage}
+                      initial={{ opacity: 0, y: 20, scale: 0.98, filter: "blur(8px)" }}
+                      animate={{ opacity: isPaginationLoading ? 0 : 1, y: 0, scale: 1, filter: "blur(0px)" }}
+                      exit={{ opacity: 0, y: -20, scale: 0.98, filter: "blur(8px)" }}
+                      transition={{
+                        duration: 0.4,
+                        ease: [0.16, 1, 0.3, 1],
+                      }}
+                    >
+                      <EventsGrid events={currentEvents} onBookmark={handleBookmark} />
+                    </motion.div>
+                  )}
                 </AnimatePresence>
 
                 <Pagination

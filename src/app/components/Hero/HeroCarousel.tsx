@@ -4,7 +4,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { CSSProperties } from "react";
 import Image from "next/image";
-import Header from "../Header/Header";
+import { useRouter } from "next/navigation";
+import SearchInput from "../SearchInput/SearchInput";
+import FilterModal, { FilterState } from "../FilterModal/FilterModal";
+import ActiveFilterBadges from "../FilterActiveBadges/ActiveFilterBadges";
 import WavyTypedTitle from "../../../components/Animations/WavyTypedTitle";
 
 interface HeroSlide {
@@ -17,51 +20,34 @@ interface HeroSlide {
 const HERO_SLIDES: HeroSlide[] = [
   {
     id: "1",
-    image: "/hero/restaurant_cpt.jpg",
-    title: "Savor Cape Town's Flavors",
-    description: "Reserve tables at trusted eateries and uncover locals' favorite dining rooms, bakeries, and coffee bars.",
+    image: "/hero/arno-smit-qY_yTu7YBT4-unsplash.jpg",
+    title: "Discover Local Gems",
+    description: "Explore amazing local businesses, restaurants, and experiences in your city",
   },
   {
     id: "2",
-    image: "/hero/lifestyle-culture.jpg",
-    title: "Neighborhood Food Finds",
-    description: "Bookmark everyday spots delivering memorable meals, latte art, and late-night bites worth sharing.",
+    image: "/hero/caroline-lm-8BkF0sTC6Uo-unsplash.jpg",
+    title: "What's Trending Now",
+    description: "See what everyone is talking about right now",
   },
   {
     id: "3",
-    image: "/hero/practice-gallery-23.jpg",
-    title: "Expert Care On Call",
-    description: "Book trusted clinicians, therapists, and specialists who put people first and paperwork second.",
+    image: "/hero/devon-janse-van-rensburg-ODZIiIsn490-unsplash.jpg",
+    title: "Personalized For You",
+    description: "Get recommendations tailored to your interests",
   },
   {
     id: "4",
-    image: "/hero/wheelchair+and+nurse.webp",
-    title: "Support For Every Journey",
-    description: "Find compassionate caregivers, wellness pros, and mobility services tailored to your family's needs.",
-  },
-  {
-    id: "5",
-    image: "/hero/garden-services-9.jpg",
-    title: "Services You Can Trust",
-    description: "Hire vetted crews for home upgrades, garden makeovers, and fix-it projects without the guesswork.",
-  },
-  {
-    id: "6",
-    image: "/hero/outdoors-adventure.jpeg",
-    title: "Escape Into Nature",
-    description: "Scout sunrise hikes, coastal strolls, and adventure outfitters ready for your next breath of fresh air.",
-  },
-  {
-    id: "7",
-    image: "/hero/cpt_table_mountain.jpg",
-    title: "Iconic City Moments",
-    description: "Capture skyline panoramas, harbor sunsets, and mountain meetups curated by explorers who know the view.",
+    image: "/hero/edward-franklin-Nb_Q-M3Cdzg-unsplash.jpg",
+    title: "Connect with Locals",
+    description: "Support local businesses and discover hidden treasures",
   },
 ];
 
 const FONT_STACK = "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif";
 
 export default function HeroCarousel() {
+  const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -69,6 +55,12 @@ export default function HeroCarousel() {
   const containerRef = useRef<HTMLElement>(null);
   const currentIndexRef = useRef(currentIndex);
   const slides = HERO_SLIDES;
+
+  // Search and filter state
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [filters, setFilters] = useState<FilterState>({ minRating: null, distance: null });
+  const [isFilterVisible, setIsFilterVisible] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   // respect reduced motion
   const prefersReduced =
@@ -207,96 +199,131 @@ export default function HeroCarousel() {
     };
   }, [next, prev]);
 
+  const handleUpdateFilter = (filterType: 'minRating' | 'distance', value: number | string | null) => {
+    const newFilters = { ...filters, [filterType]: value };
+    setFilters(newFilters);
+  };
+
+  const handleClearFilters = () => {
+    setFilters({ minRating: null, distance: null });
+  };
+
   const goToSlide = (index: number) => {
     setCurrentIndex(index);
     setProgress(0); // Reset progress when manually navigating
     setPaused(true);
   };
 
+  // Filter handlers
+  const openFilters = () => {
+    if (isFilterVisible) return;
+    setIsFilterVisible(true);
+    setTimeout(() => setIsFilterOpen(true), 10);
+  };
+
+  const closeFilters = () => {
+    setIsFilterOpen(false);
+    setTimeout(() => setIsFilterVisible(false), 150);
+  };
+
+  const handleFiltersChange = (f: FilterState) => {
+    // Navigate to explore page with filters applied via URL params
+    const params = new URLSearchParams();
+    if (f.categories && f.categories.length > 0) {
+      params.set('categories', f.categories.join(','));
+    }
+    if (f.minRating !== null) {
+      params.set('min_rating', f.minRating.toString());
+    }
+    if (f.distance) {
+      params.set('distance', f.distance);
+    }
+
+    const queryString = params.toString();
+    const exploreUrl = queryString ? `/explore?${queryString}` : '/explore';
+    router.push(exploreUrl);
+    closeFilters();
+  };
+
+  const handleSubmitQuery = (query: string) => {
+    // Navigate to explore page with search query
+    const params = new URLSearchParams();
+    if (query.trim()) {
+      params.set('search', query.trim());
+    }
+    const queryString = params.toString();
+    const exploreUrl = queryString ? `/explore?${queryString}` : '/explore';
+    router.push(exploreUrl);
+  };
+
   return (
     <>
-      <div className="relative w-full px-0 top-0">
-        {/* Header */}
-        <Header 
-          showSearch={true} 
-          variant="white"
-          backgroundClassName="bg-navbar-bg"
-          topPosition="top-0"
-          reducedPadding={true}
-          whiteText={true}
+      {/* Active Filter Badges - Show on top of carousel */}
+      <div className="relative w-full px-4">
+        <ActiveFilterBadges
+          filters={filters}
+          onRemoveFilter={(filterType) => handleUpdateFilter(filterType, null)}
+          onUpdateFilter={handleUpdateFilter}
+          onClearAll={handleClearFilters}
         />
-        
-        {/* Hero Section */}
+      </div>
+
+      {/* Hero Container with padding */}
+      <div className="relative w-full px-2 py-4 md:p-4">
+        {/* Hero Section with rounded corners - 75vh responsive height */}
         <section
           ref={containerRef as React.RefObject<HTMLElement>}
-          className="relative h-[100vh] w-full overflow-hidden outline-none rounded-none"
+          className="relative h-[65vh] sm:h-[70vh] lg:h-[80vh] w-full overflow-hidden outline-none rounded-[20px] min-h-[400px] shadow-md"
           aria-label="Hero carousel"
           tabIndex={0}
           style={{ fontFamily: FONT_STACK }}
         >
-      {/* Liquid Glass Ambient Lighting */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-sage/10 pointer-events-none" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(255,255,255,0.15)_0%,_transparent_70%)] pointer-events-none" />
-      <div className="absolute inset-0 backdrop-blur-[1px] bg-off-white/5 mix-blend-overlay pointer-events-none" />
+          {/* Liquid Glass Ambient Lighting */}
+      <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-sage/10 pointer-events-none rounded-[20px]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(255,255,255,0.15)_0%,_transparent_70%)] pointer-events-none rounded-[20px]" />
+      <div className="absolute inset-0 backdrop-blur-[1px] bg-off-white/5 mix-blend-overlay pointer-events-none rounded-[20px]" />
       {/* Slides */}
       {slides.map((slide, index) => (
         <div
           key={slide.id}
           aria-hidden={index !== currentIndex}
-          className={`absolute inset-0 w-auto h-auto overflow-hidden transition-opacity duration-700 will-change-transform ${
+          className={`absolute inset-0 w-auto h-auto overflow-hidden transition-opacity duration-1000 ease-in-out will-change-transform rounded-[20px] ${
             index === currentIndex ? "opacity-100 z-10" : "opacity-0 z-0"
           }`}
         >
            {/* Full Background Image - All Screen Sizes */}
-           <div className="absolute inset-0">
+           <div className="absolute inset-0 rounded-[20px] overflow-hidden">
              <Image
                src={slide.image}
                alt={slide.title}
                fill
                priority={index === 0}
-               quality={100}
+               quality={95}
                className="object-cover scale-[1.02]"
-               style={{ filter: "brightness(1.05) contrast(1.08) saturate(1.12)" }}
-               sizes="100vw"
+               style={{ filter: "brightness(0.95) contrast(1.05) saturate(1.1)" }}
+               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 80vw"
              />
-             {/* Overlay for text readability */}
-             <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
+             {/* Multi-layered overlay for optimal text readability */}
+             <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent" />
+             <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/40" />
+             <div className="absolute inset-0 bg-black/20" />
            </div>
 
-           {/* Content - Text Left Aligned */}
-           <div className="absolute inset-0 z-20 flex items-center pt-16 pb-12">
-            <div className="mx-auto w-full max-w-[2200px] px-4 sm:px-8 xl:px-12 2xl:px-16">
-               <div className="max-w-lg sm:max-w-lg lg:max-w-2xl xl:max-w-3xl">
-                 {/* Text Content */}
-                 <div className="relative">
-                  <WavyTypedTitle
-                     text={slide.title}
-                     as="h1"
-                     className="text-off-white leading-[1.1] mb-6 sm:mb-6 font-extrabold tracking-tight whitespace-normal lg:whitespace-nowrap"
-                     typingSpeedMs={40}
-                     startDelayMs={300}
-                     waveVariant="subtle"
-                     loopWave={true}
-                     style={{
-                       fontSize: "clamp(36px, 6vw, 48px)",
-                     }}
-                   />
-           <p
-             className="text-off-white/90 leading-relaxed mb-8 whitespace-normal lg:whitespace-nowrap lg:max-w-none"
-             style={{
-              fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-              fontWeight: 600,
-              fontSize: "clamp(18px, 2vw, 20px)",
-               maxWidth: "70ch",
-               textWrap: "pretty" as CSSProperties["textWrap"],
-               hyphens: "none" as CSSProperties["hyphens"],
-               wordBreak: "normal" as CSSProperties["wordBreak"],
-             }}
-           >
-                     {slide.description}
-                   </p>
-                 </div>
-               </div>
+           {/* Left-aligned Text - Aligned with navbar left edge */}
+           <div className="absolute inset-0 z-20 flex items-center justify-start w-full" style={{ marginLeft: '5%' }}>
+             <div className="text-left">
+               <h2 
+                 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-off-white drop-shadow-lg mb-4"
+                 style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+               >
+                 Discover Local Gems
+               </h2>
+               <p 
+                 className="text-base sm:text-lg lg:text-xl text-off-white/90 drop-shadow-md max-w-xl"
+                 style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 500 }}
+               >
+                 Explore amazing local businesses, restaurants, and experiences in your city
+               </p>
              </div>
            </div>
         </div>
@@ -308,17 +335,17 @@ export default function HeroCarousel() {
       </div>
 
       {/* Minimal Progress Indicators */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-3">
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-3">
         {/* Dot Indicators */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           {slides.map((_, index) => (
             <button
               key={index}
               onClick={() => goToSlide(index)}
-              className={`transition-all duration-300 rounded-full focus:outline-none focus:ring-2 focus:ring-white/50 ${
+              className={`transition-all duration-500 ease-in-out rounded-full focus:outline-none focus:ring-2 focus:ring-white/50 hover:scale-110 ${
                 index === currentIndex
-                  ? "w-2 h-2 bg-white"
-                  : "w-1.5 h-1.5 bg-white/40 hover:bg-white/60"
+                  ? "w-8 h-2 bg-white shadow-lg"
+                  : "w-2 h-2 bg-white/40 hover:bg-white/70"
               }`}
               aria-label={`Go to slide ${index + 1}`}
               aria-current={index === currentIndex ? "true" : "false"}
@@ -328,6 +355,19 @@ export default function HeroCarousel() {
       </div>
         </section>
       </div>
+
+      {/* Filter Modal Portal */}
+      {isFilterVisible && (
+        <div className="fixed inset-0 z-50">
+          <FilterModal
+            isOpen={isFilterOpen}
+            isVisible={isFilterVisible}
+            onClose={closeFilters}
+            onFiltersChange={handleFiltersChange}
+            initialFilters={filters}
+          />
+        </div>
+      )}
     </>
   );
 }

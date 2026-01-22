@@ -137,8 +137,8 @@ export default function MyBusinessesPage() {
             <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
               <ol className="flex items-center gap-2 text-sm sm:text-base">
                 <li>
-                  <Link href="/profile" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                    Profile
+                  <Link href="/claim-business" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                    Claim Business
                   </Link>
                 </li>
                 <li className="flex items-center">
@@ -176,7 +176,7 @@ export default function MyBusinessesPage() {
                     Claim a business to get started managing your profile.
                   </p>
                   <Link
-                    href="/for-businesses"
+                    href="/claim-business"
                     className="inline-flex items-center px-6 py-3 bg-gradient-to-br from-coral to-coral/90 text-white rounded-full font-semibold hover:from-coral/90 hover:to-coral/80 transition-all duration-300"
                     style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                   >

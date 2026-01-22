@@ -32,6 +32,7 @@ import { useRoutePrefetch } from "../hooks/useRoutePrefetch";
 import { useDebounce } from "../hooks/useDebounce";
 import { useUserPreferences } from "../hooks/useUserPreferences";
 import { useAuth } from "../contexts/AuthContext";
+import HeroCarousel from "../components/Hero/HeroCarousel";
 
 // Note: dynamic and revalidate cannot be exported from client components
 // Client components are automatically dynamic
@@ -477,37 +478,26 @@ export default function Home() {
     <>
       <div className="min-h-dvh bg-off-white relative overflow-hidden" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
 
-      {/* Global navbar header fixed at top-0 */}
-      <Header
-        showSearch={true}
-        variant="frosty"
-        backgroundClassName="bg-navbar-bg"
-        searchLayout="floating"
-        topPosition="top-0"
-        reducedPadding={true}
-        whiteText={true}
-      />
+      {/* Header - positioned at top */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-navbar-bg">
+        <Header 
+          showSearch={true} 
+          variant="white"
+          backgroundClassName="bg-navbar-bg"
+          topPosition="top-0"
+          reducedPadding={true}
+          whiteText={true}
+        />
+      </div>
 
-      <main className="bg-off-white relative pt-20 sm:pt-24 pb-16 snap-y snap-proximity md:snap-mandatory">
+      {/* Hero Carousel - Account for header height (est. 70px) + extra spacing */}
+      <div className="pt-[90px]">
+        <HeroCarousel />
+      </div>
+
+      <main className="bg-off-white relative pb-16 snap-y snap-proximity md:snap-mandatory">
         <div className="mx-auto w-full max-w-[2000px]">
-          {/* Search Input at top of home content */}
-          <div ref={searchWrapRef} className="py-8 px-4 sm:px-6">
-            <SearchInput
-              variant="header"
-              placeholder="Discover cool local gems..."
-              mobilePlaceholder="Search places, coffee, yoga…"
-              onSearch={handleSearchChange}
-              onSubmitQuery={handleSubmitQuery}
-              onMapClick={() => {
-                if (isSearchActive) {
-                  setIsMapMode(!isMapMode);
-                }
-              }}
-              showMap={isSearchActive}
-              isMapMode={isMapMode}
-              showFilter={false}
-            />
-          </div>
+          {/* Search functionality moved to hero carousel */}
 
           {/* Inline Filters - Only show when user is typing/searching */}
           <InlineFilters

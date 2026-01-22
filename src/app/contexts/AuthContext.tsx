@@ -10,7 +10,7 @@ import type { AuthUser } from '../lib/types/database';
 interface AuthContextType {
   user: AuthUser | null;
   login: (email: string, password: string, desiredRole?: 'user' | 'business_owner') => Promise<AuthUser | null>;
-  register: (email: string, password: string, username: string) => Promise<boolean>;
+  register: (email: string, password: string, username: string, accountType?: 'user' | 'business_owner') => Promise<boolean>;
   logout: () => Promise<void>;
   updateUser: (userData: Partial<AuthUser>) => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -243,6 +243,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
 
       if (authUser) {
+        // Check if user has the desired role
+        if (desiredRole && authUser.profile) {
+          const userRole = authUser.profile.role;
+          const hasDesiredRole =
+            userRole === 'both' || userRole === desiredRole;
+
+          if (!hasDesiredRole) {
+            const accountTypeName = desiredRole === 'user' ? 'Personal' : 'Business';
+            const existingTypeName = userRole === 'user' ? 'Personal' : 'Business';
+            setError(`This email only has a ${existingTypeName} account. Please select ${existingTypeName} to log in, or register a new ${accountTypeName} account.`);
+            setIsLoading(false);
+            // Sign out since login was incorrect
+            await AuthService.signOut();
+            return null;
+          }
+        }
+
         setUser(authUser);
         let activeUser = authUser;
 
@@ -292,16 +309,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
           // User has completed onboarding, redirect based on current_role
           const userCurrentRole = activeUser.profile?.current_role || 'user';
           if (userCurrentRole === 'business_owner') {
-            router.push('/for-businesses');
+            router.push('/claim-business');
           } else {
             router.push('/home');
           }
         } else {
           // User is verified but onboarding incomplete - redirect to next step
-          // For business owners, skip personal onboarding and go to for-businesses
+          // For business owners, skip personal onboarding and go to claim-business
           const userCurrentRole = activeUser.profile?.current_role || 'user';
           if (userCurrentRole === 'business_owner') {
-            router.push('/for-businesses');
+            router.push('/claim-business');
             return authUser;
           }
 
@@ -344,23 +361,36 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setError(null);
 
       try {
-        console.log('AuthContext: Starting registration...', { accountType });
+        console.log('AuthContext: Starting registration...', { email, accountType });
         
         const { user: authUser, session, error: authError } = await AuthService.signUp({ email, password, username, accountType });
 
         if (authError) {
-          console.log('AuthContext: Registration error', authError);
-          // Handle specific error cases
+          console.error('AuthContext: Registration error details:', { 
+            message: authError?.message || 'Unknown error',
+            code: authError?.code || 'unknown',
+            fullError: authError
+          });
+          
+          // Pass through specific error codes as-is (they have special handling)
+          if (authError.code === 'email_exists_can_add_account_type') {
+            setError(`email_exists_can_add_account_type: ${authError.message}`);
+            setIsLoading(false);
+            return false;
+          }
+          
+          // Handle other specific error cases
           let errorMessage = authError.message;
           // Check for email already in use - check both code and message
           if (
             authError.code === 'user_exists' ||
+            authError.code === 'duplicate_account_type' ||
             authError.message.toLowerCase().includes('already in use') ||
             authError.message.toLowerCase().includes('already registered') ||
             authError.message.toLowerCase().includes('email already') ||
             authError.message.toLowerCase().includes('already exists')
           ) {
-            errorMessage = 'This email address is already in use. Please try logging in instead or use a different email.';
+            errorMessage = authError.message; // Use the descriptive message from auth.ts
           }
           setError(errorMessage);
           setIsLoading(false);

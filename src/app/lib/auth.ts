@@ -75,12 +75,46 @@ export class AuthService {
         };
       }
 
+      // Check if email already has THIS specific account type
+      // Allow same email to register for different account types (Personal + Business)
+      const { data: existingProfiles, error: profileCheckError } = await supabase
+        .from('profiles')
+        .select('role, user_id')
+        .eq('email', email.trim().toLowerCase());
+
+      if (profileCheckError) {
+        console.warn('Profile check error (non-blocking):', profileCheckError);
+      }
+
+      if (!profileCheckError && existingProfiles && existingProfiles.length > 0) {
+        const existingProfile = existingProfiles[0];
+        const existingRole = existingProfile.role;
+
+        // Check if trying to register with the SAME account type
+        if (existingRole === accountType) {
+          const accountTypeName = accountType === 'user' ? 'Personal' : 'Business';
+          console.log(`Email already has ${accountTypeName} account, blocking duplicate registration`);
+          return {
+            user: null,
+            session: null,
+            error: { 
+              message: `This email already has a ${accountTypeName} account. Please log in to your existing account instead.`,
+              code: 'duplicate_account_type'
+            }
+          };
+        }
+
+        // If trying to register DIFFERENT account type on same email, allow it
+        // User will need to log in after email verification
+        console.log(`Email can register for different account type (existing: ${existingRole}, new: ${accountType})`);
+      }
+
       const baseUrl = this.getBaseUrl();
       const { data, error } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
         password: password,
         options: {
-          emailRedirectTo: `${baseUrl}/auth/callback`,
+          emailRedirectTo: `${baseUrl}/auth/callback?type=signup`,
           data: {
             username: username.trim(),
             accountType: accountType
@@ -90,6 +124,36 @@ export class AuthService {
 
       if (error) {
         console.error('Supabase signup error:', error);
+        
+        // Check if error is because email already exists in auth.users
+        const errorMessage = error.message?.toLowerCase() || '';
+        const errorCode = error.code?.toLowerCase() || '';
+        
+        if (errorMessage.includes('already registered') || 
+            errorMessage.includes('user already exists') ||
+            errorCode === 'user_already_exists' ||
+            errorCode === 'over_email_signup_rate_limit') {
+          
+          // Email is already registered - check if they can add second account type
+          console.log('Email already registered in auth - checking if they can add second account type');
+          
+          if (existingProfiles && existingProfiles.length > 0) {
+            const existingRole = existingProfiles[0].role;
+            const desiredRole = accountType;
+            
+            if (existingRole !== 'both' && existingRole !== desiredRole) {
+              return {
+                user: null,
+                session: null,
+                error: { 
+                  message: `This email already has a ${existingRole === 'user' ? 'Personal' : 'Business'} account. Log in and go to Settings to add a ${desiredRole === 'user' ? 'Personal' : 'Business'} account to the same email.`,
+                  code: 'email_exists_can_add_account_type'
+                }
+              };
+            }
+          }
+        }
+        
         return {
           user: null,
           session: null,
@@ -101,28 +165,12 @@ export class AuthService {
         return {
           user: null,
           session: null,
-          error: { message: 'Registration failed. Please try again.' }
+          error: { message: 'Registration failed. Please try again.', code: 'registration_failed' }
         };
       }
 
-      // Ensure profile is created (fallback if database trigger fails, especially on mobile)
-      // Use a small delay to allow trigger to run first, then check and create if needed
-      try {
-        // Wait a bit for the trigger to potentially create the profile
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Try to ensure profile exists via API (non-blocking, won't fail registration)
-        fetch('/api/user/profile', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-        }).catch((err) => {
-          // Silently fail - profile creation is best effort
-          console.warn('Failed to ensure profile creation:', err);
-        });
-      } catch (profileError) {
-        // Don't fail registration if profile creation check fails
-        console.warn('Error ensuring profile creation:', profileError);
-      }
+      // Profile creation is handled by database trigger on auth.users insert
+      // No need for additional API call
 
       return {
         user: {
@@ -136,11 +184,13 @@ export class AuthService {
         error: null
       };
     } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'An unexpected error occurred';
       return {
         user: null,
         session: null,
         error: {
-          message: error instanceof Error ? error.message : 'An unexpected error occurred',
+          message,
+          code: 'unknown_error',
           details: error
         }
       };
@@ -416,7 +466,7 @@ export class AuthService {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('user_id, onboarding_step, interests_count, last_interests_updated, created_at, updated_at, avatar_url, username, display_name, is_top_reviewer, reviews_count, badges_count, subcategories_count, dealbreakers_count, is_active, deactivated_at')
+        .select('user_id, onboarding_step, interests_count, last_interests_updated, created_at, updated_at, avatar_url, username, display_name, is_top_reviewer, reviews_count, badges_count, subcategories_count, dealbreakers_count, is_active, deactivated_at, role, current_role, email')
         .eq('user_id', userId)
         .single();
 
@@ -466,10 +516,14 @@ export class AuthService {
         created_at: data.created_at,
         updated_at: data.updated_at,
         is_active: data.is_active !== undefined ? data.is_active : true,
-        deactivated_at: data.deactivated_at || undefined
+        deactivated_at: data.deactivated_at || undefined,
+        role: data.role || 'user',
+        current_role: data.current_role || 'user',
+        email: data.email || undefined
       };
 
       console.log('getUserProfile: Returning profile with avatar_url:', profile.avatar_url);
+      console.log('getUserProfile: Complete profile object:', profile);
       return profile;
     } catch (error) {
       console.error('Error fetching user profile:', error);

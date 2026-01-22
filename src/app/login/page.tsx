@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, useRef } from "react";
 import { ArrowLeft } from "lucide-react";
+import { motion } from "framer-motion";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
 import { useScrollReveal } from "../hooks/useScrollReveal";
@@ -139,7 +140,9 @@ export default function LoginPage() {
             />
           </div>
           <p className="text-body font-normal text-charcoal/70 mb-4 leading-[1.55] px-2 max-w-[70ch] mx-auto animate-fade-in-up animate-delay-700">
-            Sign in to continue discovering sayso
+            {accountType === 'business_owner'
+              ? 'Sign in to manage your business and engage with your customers'
+              : 'Sign in to continue discovering sayso'}
           </p>
         </div>
 
@@ -161,32 +164,42 @@ export default function LoginPage() {
                 <label className="block text-xs font-semibold text-white/60 uppercase tracking-wider" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                   Account Type
                 </label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="relative grid grid-cols-2 gap-2 bg-white/5 p-1 rounded-xl border border-white/10">
+                  {/* Animated background slider */}
+                  <motion.div
+                    className="absolute inset-y-1 bg-navbar-bg rounded-lg shadow-lg shadow-white/10"
+                    initial={false}
+                    animate={{
+                      x: accountType === 'user' ? 4 : 'calc(100% - 4px)',
+                      width: 'calc(50% - 4px)'
+                    }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 300,
+                      damping: 30
+                    }}
+                  />
                   <button
                     type="button"
                     onClick={() => setAccountType('user')}
                     disabled={isSubmitting}
-                    className={`px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                      accountType === 'user'
-                        ? 'bg-navbar-bg text-white shadow-lg shadow-white/10 border border-white/20'
-                        : 'bg-white/5 text-white/70 hover:bg-white/10 border border-white/10'
-                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    className="relative z-10 px-4 py-3 rounded-lg text-sm font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                   >
-                    <span>Personal</span>
+                    <span className={`transition-colors duration-200 ${
+                      accountType === 'user' ? 'text-white' : 'text-white/70'
+                    }`}>Personal</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setAccountType('business_owner')}
                     disabled={isSubmitting}
-                    className={`px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                      accountType === 'business_owner'
-                        ? 'bg-navbar-bg text-white shadow-lg shadow-white/10 border border-white/20'
-                        : 'bg-white/5 text-white/70 hover:bg-white/10 border border-white/10'
-                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    className="relative z-10 px-4 py-3 rounded-lg text-sm font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                   >
-                    <span>Business</span>
+                    <span className={`transition-colors duration-200 ${
+                      accountType === 'business_owner' ? 'text-white' : 'text-white/70'
+                    }`}>Business</span>
                   </button>
                 </div>
                 <div className="h-px bg-white/15 w-full" />
@@ -203,6 +216,7 @@ export default function LoginPage() {
                 error={getEmailError()}
                 touched={emailTouched}
                 disabled={isSubmitting}
+                placeholder={accountType === 'business_owner' ? 'business@example.com' : 'you@example.com'}
               />
 
               {/* Password Input */}
@@ -251,8 +265,8 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              {/* Social Login */}
-              <SocialLoginButtons />
+              {/* Social Login - Only show for Personal accounts */}
+              <SocialLoginButtons accountType={accountType} />
             </form>
 
             {/* Footer */}

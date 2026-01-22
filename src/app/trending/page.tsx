@@ -47,6 +47,7 @@ export default function TrendingPage() {
   }, [dealbreakerIds]);
 
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isPaginationLoading, setIsPaginationLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -269,6 +270,14 @@ export default function TrendingPage() {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
+
+  // Detect desktop breakpoint (lg and above)
+  useEffect(() => {
+    const updateIsDesktop = () => setIsDesktop(typeof window !== "undefined" && window.innerWidth >= 1024);
+    updateIsDesktop();
+    window.addEventListener("resize", updateIsDesktop);
+    return () => window.removeEventListener("resize", updateIsDesktop);
+  }, []);
 
   // Set mounted state on client side
   useEffect(() => {
@@ -560,35 +569,49 @@ export default function TrendingPage() {
                           />
                         </motion.div>
                       ) : (
-                        <motion.div
-                          key={currentPage}
-                          initial={{ opacity: 0, y: 20, scale: 0.98, filter: "blur(8px)" }}
-                          animate={{ opacity: isPaginationLoading ? 0 : 1, y: 0, scale: 1, filter: "blur(0px)" }}
-                          exit={{ opacity: 0, y: -20, scale: 0.98, filter: "blur(8px)" }}
-                          transition={{
-                            duration: 0.4,
-                            ease: [0.16, 1, 0.3, 1],
-                          }}
-                        >
+                        isDesktop ? (
                           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-5 lg:gap-6">
-                            {currentBusinesses.map((business, index) => (
-                              <motion.div
+                            {currentBusinesses.map((business) => (
+                              <div
                                 key={business.id}
-                                className="list-none"
-                                initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                transition={{
-                                  type: "spring",
-                                  damping: 25,
-                                  stiffness: 200,
-                                  delay: index * 0.06 + 0.1,
-                                }}
+                                className="list-none relative overflow-hidden desktop-card-shimmer"
                               >
+                                <span aria-hidden className="desktop-shimmer-veil" />
                                 <BusinessCard business={business} compact />
-                              </motion.div>
+                              </div>
                             ))}
                           </div>
-                        </motion.div>
+                        ) : (
+                          <motion.div
+                            key={currentPage}
+                            initial={{ opacity: 0, y: 20, scale: 0.98, filter: "blur(8px)" }}
+                            animate={{ opacity: isPaginationLoading ? 0 : 1, y: 0, scale: 1, filter: "blur(0px)" }}
+                            exit={{ opacity: 0, y: -20, scale: 0.98, filter: "blur(8px)" }}
+                            transition={{
+                              duration: 0.4,
+                              ease: [0.16, 1, 0.3, 1],
+                            }}
+                          >
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-5 lg:gap-6">
+                              {currentBusinesses.map((business, index) => (
+                                <motion.div
+                                  key={business.id}
+                                  className="list-none"
+                                  initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                                  transition={{
+                                    type: "spring",
+                                    damping: 25,
+                                    stiffness: 200,
+                                    delay: index * 0.06 + 0.1,
+                                  }}
+                                >
+                                  <BusinessCard business={business} compact />
+                                </motion.div>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )
                       )}
                     </AnimatePresence>
 
@@ -607,6 +630,27 @@ export default function TrendingPage() {
           </div>
         </div>
       </main>
+
+      {isDesktop && (
+        <style jsx>{`
+          .desktop-card-shimmer {
+            position: relative;
+          }
+          .desktop-card-shimmer .desktop-shimmer-veil {
+            position: absolute;
+            inset: -2px;
+            pointer-events: none;
+            background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.04) 35%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 65%, transparent 100%);
+            opacity: 0.08;
+            animation: desktopShimmer 10s linear infinite;
+          }
+          @keyframes desktopShimmer {
+            0% { transform: translateX(-120%); }
+            40% { transform: translateX(120%); }
+            100% { transform: translateX(120%); }
+          }
+        `}</style>
+      )}
 
       {/* Scroll to Top Button */}
       {showScrollTop && (

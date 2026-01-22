@@ -19,6 +19,7 @@ export default function Footer() {
     { name: "Privacy", href: "/privacy" },
     { name: "Terms", href: "/terms" },
     { name: "Contact", href: "/contact" },
+    { name: "Support", href: "mailto:info@sayso.com" },
   ];
 
   return (

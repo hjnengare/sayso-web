@@ -618,7 +618,7 @@ export default function BusinessEditPage() {
 
     const categories = [
         "Restaurant", "Cafe", "Bar", "Fast Food", "Fine Dining",
-        "Bakery", "Food Truck", "Catering", "Grocery", "Other"
+        "Bakery", "Food Truck", "Catering", "Grocery", "Other", "Miscellaneous"
     ];
 
     const priceRanges = ["$", "$$", "$$$", "$$$$"];
@@ -653,7 +653,7 @@ export default function BusinessEditPage() {
                             View Business
                         </Link>
                         <Link
-                          href="/for-businesses"
+                          href="/claim-business"
                             className="px-5 py-2.5 rounded-full border border-sage/40 text-charcoal font-urbanist font-600 hover:bg-sage/10 transition-all duration-200"
                         >
                             Claim Ownership

@@ -43,7 +43,7 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
   const [reviews, setReviews] = useState<EventReviewWithUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
-  const [hasReviewed, setHasReviewed] = useState(false);
+  const hasReviewed = false;
   const { showToast } = useToast();
   const { user } = useAuth();
   const mapSectionRef = useRef<HTMLDivElement>(null);
@@ -86,25 +86,6 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
 
   // Unwrap the params Promise using React.use()
   const resolvedParams = use(params);
-
-  // Check if user has reviewed
-  useEffect(() => {
-    if (!user || !resolvedParams.id) return;
-
-    const checkUserReview = async () => {
-      try {
-        const response = await fetch(`/api/events/${resolvedParams.id}/reviews?user_id=${user.id}`);
-        if (response.ok) {
-          const data = await response.json();
-          setHasReviewed(data.reviews && data.reviews.length > 0);
-        }
-      } catch (error) {
-        console.log('Could not check review status:', error);
-      }
-    };
-
-    checkUserReview();
-  }, [user, resolvedParams.id]);
 
   useEffect(() => {
     const fetchEvent = async () => {

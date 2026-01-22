@@ -151,7 +151,7 @@ export async function POST(
     // Send approval email (non-blocking)
     if (userEmail && business) {
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-      const dashboardUrl = `${baseUrl}/owners/businesses/${request.business_id}`;
+      const dashboardUrl = `${baseUrl}/my-businesses/businesses/${request.business_id}`;
 
       EmailService.sendClaimApprovedEmail({
         recipientEmail: userEmail,
