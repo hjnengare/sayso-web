@@ -342,9 +342,8 @@ export default function HeroCarousel() {
                  Explore amazing local businesses, restaurants, and experiences in your city
                </p>
                
-               {/* Conditional CTA Buttons */}
+               {/* Conditional CTA Button: Sign In for unauthenticated, Discover for authenticated */}
                {!user ? (
-                 /* Sign In button for unauthenticated users */
                  <Link
                    href="/login"
                    className="group relative inline-block rounded-full py-3 px-12 text-base font-semibold text-white text-center bg-gradient-to-r from-coral to-coral/80 hover:from-sage hover:to-sage transition-all duration-300 shadow-lg hover:shadow-xl focus:outline-none focus-visible:ring-4 focus-visible:ring-sage/30 focus-visible:ring-offset-2 min-w-[180px]"
@@ -356,16 +355,15 @@ export default function HeroCarousel() {
                    <span className="relative z-10">Sign In</span>
                  </Link>
                ) : (
-                 /* Write a Review button for authenticated users */
                  <Link
-                   href="/write-review"
-                   className="group relative inline-block rounded-full py-3 px-8 text-base font-semibold text-white text-center bg-gradient-to-r from-coral to-coral/80 hover:from-sage hover:to-sage transition-all duration-300 shadow-lg hover:shadow-xl focus:outline-none focus-visible:ring-4 focus-visible:ring-sage/30 focus-visible:ring-offset-2"
+                   href="/trending"
+                   className="group relative inline-block rounded-full py-3 px-12 text-base font-semibold text-white text-center bg-gradient-to-r from-coral to-coral/80 hover:from-sage hover:to-sage transition-all duration-300 shadow-lg hover:shadow-xl focus:outline-none focus-visible:ring-4 focus-visible:ring-sage/30 focus-visible:ring-offset-2 min-w-[180px]"
                    style={{
                      fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
                      fontWeight: 600,
                    }}
                  >
-                   <span className="relative z-10">Write a Review</span>
+                   <span className="relative z-10">Discover</span>
                  </Link>
                )}
              </div>
