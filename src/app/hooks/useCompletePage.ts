@@ -111,23 +111,31 @@ export function useCompletePage(): UseCompletePageReturn {
     };
   }, [user, authLoading, router, hasVerified]);
 
-  // Simple navigation to home - no saving needed
+  // Navigate based on user role
   const handleContinue = useCallback(() => {
     try {
-      console.log('[useCompletePage] DIAGNOSTIC: Hardcoded to /home');
+      // Get user's current role from profile
+      const currentRole = user?.profile?.current_role || 'user';
       
-      // TEMPORARY DIAGNOSTIC: Hardcode to /home to test
+      console.log('[useCompletePage] Navigating with role:', currentRole);
+      
+      // Route based on role:
+      // - business_owner → /claim-business (to set up business profile)
+      // - user (personal) → /home (browse and review businesses)
+      const destination = currentRole === 'business_owner' ? '/claim-business' : '/home';
+      
+      // Use window.location for hard redirect (bypasses client-side router cache)
       if (typeof window !== 'undefined') {
-        window.location.href = '/home';
+        window.location.href = destination;
       }
     } catch (error) {
       console.error('[useCompletePage] Error navigating:', error);
-      // Ultimate fallback
+      // Fallback to /home if something goes wrong
       if (typeof window !== 'undefined') {
         window.location.href = '/home';
       }
     }
-  }, []);
+  }, [user]);
 
   return {
     isVerifying,

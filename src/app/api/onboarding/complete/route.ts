@@ -34,6 +34,7 @@ export async function POST(req: Request) {
       .update({
         onboarding_step: 'complete',
         onboarding_complete: true,
+        current_role: 'user', // Ensure personal users have role set
         updated_at: new Date().toISOString()
       })
       .eq('user_id', user.id);
