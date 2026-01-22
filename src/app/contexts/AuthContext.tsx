@@ -32,11 +32,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const router = useRouter();
   const supabase = getBrowserSupabase();
 
-  // Initialize auth state with retry logic
+  // Initialize auth state with retry logic (mobile-optimized)
   useEffect(() => {
     let isMounted = true;
     let retryCount = 0;
-    const MAX_RETRIES = 3;
+    
+    // Mobile devices get fewer retries and shorter timeouts
+    const isMobile = typeof navigator !== 'undefined' && 
+      /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const MAX_RETRIES = isMobile ? 1 : 3;
+    const RETRY_DELAY_MS = isMobile ? 500 : 1000;
     
     const initializeAuth = async () => {
       console.log('[AuthContext] Initializing auth...');
@@ -82,8 +87,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
               errorMessage.toLowerCase().includes('connection');
 
             if (isNetworkError) {
-              console.log(`[AuthContext] Network error detected, retrying in ${1000 * attempt}ms...`);
-              await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+              const delay = RETRY_DELAY_MS * attempt;
+              console.log(`[AuthContext] Network error detected, retrying in ${delay}ms...`);
+              await new Promise(resolve => setTimeout(resolve, delay));
               return attemptInit(attempt + 1);
             } else {
               console.log('[AuthContext] Non-network error, stopping retries');

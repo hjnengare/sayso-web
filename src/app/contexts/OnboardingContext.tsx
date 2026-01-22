@@ -1,9 +1,24 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from './AuthContext';
 import { useToast } from './ToastContext';
+
+// Utility: Debounce localStorage writes for mobile performance
+function debounce<T extends (...args: any[]) => void>(fn: T, delay: number): T {
+  let timeoutId: NodeJS.Timeout;
+  return ((...args: any[]) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => fn(...args), delay);
+  }) as T;
+}
+
+// Mobile detection for performance optimizations
+const isMobileDevice = () => {
+  if (typeof navigator === 'undefined') return false;
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+};
 
 interface Interest {
   id: string;
@@ -85,94 +100,95 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
 
   const currentStep = user?.profile?.onboarding_step || 'interests';
 
-  // First: Check if we should clear localStorage for brand new users or fresh starts
+  // Consolidated initialization: Clear stale data + Load localStorage in single pass
   useEffect(() => {
-    if (user && !isMounted && typeof window !== 'undefined') {
-      const onboardingStep = user.profile?.onboarding_step;
-      const isStartingFresh = !onboardingStep || onboardingStep === 'interests';
-      const isOnboardingIncomplete = !user.profile?.onboarding_complete;
+    if (typeof window === 'undefined' || isMounted) return;
 
-      // For new users or users at interests step with incomplete onboarding
-      if (isStartingFresh && isOnboardingIncomplete) {
-        // Check if user has NO data saved (brand new user)
-        const hasNoDatabaseData = 
-          (user.profile?.interests_count || 0) === 0 &&
-          (user.profile?.subcategories_count || 0) === 0 &&
-          (user.profile?.dealbreakers_count || 0) === 0;
+    // Single-pass initialization for better mobile performance
+    const initializeOnboarding = () => {
+      let shouldLoadStorage = true;
 
-        const hasStoredData =
-          localStorage.getItem('onboarding_interests') ||
-          localStorage.getItem('onboarding_subcategories') ||
-          localStorage.getItem('onboarding_dealbreakers');
+      // Check if we need to clear stale data for brand new users
+      if (user) {
+        const onboardingStep = user.profile?.onboarding_step;
+        const isStartingFresh = !onboardingStep || onboardingStep === 'interests';
+        const isOnboardingIncomplete = !user.profile?.onboarding_complete;
 
-        // If brand new user with stored data, it's stale - clear it
-        if (hasNoDatabaseData && hasStoredData) {
-          console.log('[OnboardingContext] Clearing stale localStorage for brand new user');
-          localStorage.removeItem('onboarding_interests');
-          localStorage.removeItem('onboarding_subcategories');
-          localStorage.removeItem('onboarding_dealbreakers');
-        }
-      }
-    }
-  }, [user, isMounted]);
+        if (isStartingFresh && isOnboardingIncomplete) {
+          const hasNoDatabaseData = 
+            (user.profile?.interests_count || 0) === 0 &&
+            (user.profile?.subcategories_count || 0) === 0 &&
+            (user.profile?.dealbreakers_count || 0) === 0;
 
-  // Second: Load localStorage after hydration (only if not cleared above)
-  useEffect(() => {
-    if (typeof window !== 'undefined' && !isMounted) {
-      const stored = {
-        interests: localStorage.getItem('onboarding_interests'),
-        subcategories: localStorage.getItem('onboarding_subcategories'),
-        dealbreakers: localStorage.getItem('onboarding_dealbreakers'),
-      };
+          const hasStoredData =
+            localStorage.getItem('onboarding_interests') ||
+            localStorage.getItem('onboarding_subcategories') ||
+            localStorage.getItem('onboarding_dealbreakers');
 
-      if (stored.interests) {
-        try {
-          setSelectedInterestsState(JSON.parse(stored.interests));
-        } catch (e) {
-          console.error('Failed to parse stored interests:', e);
+          // If brand new user with stored data, it's stale - clear it
+          if (hasNoDatabaseData && hasStoredData) {
+            console.log('[OnboardingContext] Clearing stale localStorage for brand new user');
+            localStorage.removeItem('onboarding_interests');
+            localStorage.removeItem('onboarding_subcategories');
+            localStorage.removeItem('onboarding_dealbreakers');
+            shouldLoadStorage = false;
+          }
         }
       }
 
-      if (stored.subcategories) {
+      // Load from localStorage if not cleared
+      if (shouldLoadStorage) {
         try {
-          setSelectedSubInterestsState(JSON.parse(stored.subcategories));
-        } catch (e) {
-          console.error('Failed to parse stored subcategories:', e);
-        }
-      }
+          const stored = {
+            interests: localStorage.getItem('onboarding_interests'),
+            subcategories: localStorage.getItem('onboarding_subcategories'),
+            dealbreakers: localStorage.getItem('onboarding_dealbreakers'),
+          };
 
-      if (stored.dealbreakers) {
-        try {
-          setSelectedDealbreakerssState(JSON.parse(stored.dealbreakers));
+          if (stored.interests) setSelectedInterestsState(JSON.parse(stored.interests));
+          if (stored.subcategories) setSelectedSubInterestsState(JSON.parse(stored.subcategories));
+          if (stored.dealbreakers) setSelectedDealbreakerssState(JSON.parse(stored.dealbreakers));
         } catch (e) {
-          console.error('Failed to parse stored dealbreakers:', e);
+          console.error('[OnboardingContext] Failed to parse stored data:', e);
         }
       }
 
       setIsMounted(true);
-    }
-  }, []);
+    };
 
-  // Wrapper functions that persist to localStorage
+    initializeOnboarding();
+  }, [user, isMounted]);
+
+  // Debounced localStorage save for mobile performance (300ms)
+  const debouncedSaveRef = useRef(
+    debounce((key: string, value: string) => {
+      if (typeof window !== 'undefined') {
+        // Use requestIdleCallback for even better mobile performance
+        if ('requestIdleCallback' in window) {
+          requestIdleCallback(() => {
+            localStorage.setItem(key, value);
+          }, { timeout: 1000 });
+        } else {
+          localStorage.setItem(key, value);
+        }
+      }
+    }, 300)
+  );
+
+  // Wrapper functions that persist to localStorage (optimized for mobile)
   const setSelectedInterests = useCallback((interests: string[]) => {
     setSelectedInterestsState(interests);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('onboarding_interests', JSON.stringify(interests));
-    }
+    debouncedSaveRef.current('onboarding_interests', JSON.stringify(interests));
   }, []);
 
   const setSelectedSubInterests = useCallback((subcategories: string[]) => {
     setSelectedSubInterestsState(subcategories);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('onboarding_subcategories', JSON.stringify(subcategories));
-    }
+    debouncedSaveRef.current('onboarding_subcategories', JSON.stringify(subcategories));
   }, []);
 
   const setSelectedDealbreakers = useCallback((dealbreakers: string[]) => {
     setSelectedDealbreakerssState(dealbreakers);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('onboarding_dealbreakers', JSON.stringify(dealbreakers));
-    }
+    debouncedSaveRef.current('onboarding_dealbreakers', JSON.stringify(dealbreakers));
   }, []);
 
   const loadInterests = useCallback(async () => {
@@ -266,9 +282,16 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       const completionMessage = getStepCompletionMessage(currentStep);
       showToast(completionMessage, 'success', 2000);
 
-      // Prefetch all next onboarding pages early for instant navigation
-      const allNextRoutes = ['/subcategories', '/deal-breakers', '/complete'];
-      allNextRoutes.forEach(route => router.prefetch(route));
+      // Conditional prefetching: Only on desktop or good connections
+      const shouldPrefetch = !isMobileDevice() || 
+        (typeof navigator !== 'undefined' && 
+         (navigator as any).connection?.effectiveType === '4g');
+      
+      if (shouldPrefetch) {
+        // Prefetch all next onboarding pages early for instant navigation
+        const allNextRoutes = ['/subcategories', '/deal-breakers', '/complete'];
+        allNextRoutes.forEach(route => router.prefetch(route));
+      }
 
       // Navigate immediately (no delay) - prefetching makes it instant
       // Use exact step-to-route mapping to ensure correct navigation
