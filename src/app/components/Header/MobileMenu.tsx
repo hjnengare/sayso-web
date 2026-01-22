@@ -3,6 +3,7 @@ import { Lock, X } from "lucide-react";
 import OptimizedLink from "../Navigation/OptimizedLink";
 import Logo from "../Logo/Logo";
 import { NavLink } from "./DesktopNav";
+import { getMobileMenuActions, shouldShowLockIndicator } from "./headerActionsConfig";
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -29,15 +30,9 @@ export default function MobileMenu({
 }: MobileMenuProps) {
   const primaryCount = primaryLinks.length;
   const discoverCount = discoverLinks.length;
-  // Keep a single DM entry point on mobile (top bar), so we omit Messages from the drawer.
-  const commonActions = [
-    ...(isBusinessAccountUser ? [{ href: "/settings", label: "Settings", requiresAuth: true, delay: 2 }] : []),
-  ];
-  const personalActions = isBusinessAccountUser ? [] : [
-    { href: "/saved", label: "Saved", requiresAuth: true, delay: 2 },
-    { href: "/profile", label: "Profile", requiresAuth: true, delay: 3 },
-  ];
-  const actionItems = [...commonActions, ...personalActions];
+  // Use centralized mobile menu actions config
+  const actionItems = getMobileMenuActions(isBusinessAccountUser);
+  
   const mobileRevealClass = `transform transition-all duration-500 ease-out ${
     isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
   }`;
@@ -102,7 +97,7 @@ export default function MobileMenu({
             {!isBusinessAccountUser && (
               <div className="space-y-1">
                 {primaryLinks.map(({ key, label, href, requiresAuth }, index) => {
-                  const showLockIndicator = isGuest && requiresAuth;
+                  const showLockIndicator = shouldShowLockIndicator(isGuest, requiresAuth);
                   return (
                     <OptimizedLink
                       key={key}
@@ -132,7 +127,7 @@ export default function MobileMenu({
             {!isBusinessAccountUser && (
               <div className="space-y-1">
                 {discoverLinks.map(({ key, label, href, requiresAuth }, index) => {
-                  const showLockIndicator = isGuest && requiresAuth;
+                  const showLockIndicator = shouldShowLockIndicator(isGuest, requiresAuth);
                   return (
                     <OptimizedLink
                       key={key}
@@ -161,7 +156,7 @@ export default function MobileMenu({
 
             <div className="space-y-1">
               {actionItems.map((item, idx) => {
-                const showLockIndicator = isGuest && item.requiresAuth;
+                const showLockIndicator = shouldShowLockIndicator(isGuest, item.requiresAuth);
                 return (
                   <OptimizedLink
                     key={item.href}

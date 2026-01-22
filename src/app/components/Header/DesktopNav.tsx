@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { ChevronDown, Lock, Bell, MessageCircle, User, Settings } from "lucide-react";
 import OptimizedLink from "../Navigation/OptimizedLink";
 import LockedTooltip from "./LockedTooltip";
+import { shouldShowLockIndicator, getLinkHref } from "./headerActionsConfig";
 
 export type NavLink = {
   key: string;
@@ -99,11 +100,11 @@ export default function DesktopNav({
 
       {!isBusinessAccountUser && primaryLinks.map(({ key, label, href, requiresAuth }, index) => {
         const isActive = pathname === href;
-        const showLockIndicator = isGuest && requiresAuth;
+        const showLockIndicator = shouldShowLockIndicator(isGuest, requiresAuth);
         return (
           <Fragment key={key}>
             <OptimizedLink
-              href={showLockIndicator ? "/login" : href}
+              href={getLinkHref(href, requiresAuth, isGuest)}
               onClick={(e) => handleNavClick(href, e)}
               className={`group capitalize px-2.5 lg:px-3.5 py-1.5 rounded-lg text-sm sm:text-xs sm:text-sm md:text-sm sm:text-xs lg:text-sm sm:text-xs font-semibold transition-all duration-200 relative flex items-center gap-1.5 ${isActive ? "text-sage" : whiteText ? "text-white hover:text-white/90 hover:bg-white/10" : "text-charcoal/90 md:text-charcoal/95 hover:text-sage hover:bg-sage/5"}`}
               style={sf}
@@ -170,11 +171,11 @@ export default function DesktopNav({
                       <div className="py-3">
                         {discoverLinks.map(({ key: subKey, label: subLabel, description, href: subHref, requiresAuth }) => {
                           const isActive = pathname === subHref || pathname?.startsWith(subHref ?? "");
-                          const showLockIndicator = isGuest && requiresAuth;
+                          const showLockIndicator = shouldShowLockIndicator(isGuest, requiresAuth);
                           return (
                             <OptimizedLink
                               key={subKey}
-                              href={showLockIndicator ? "/login" : subHref}
+                              href={getLinkHref(subHref ?? "", requiresAuth, isGuest)}
                               onClick={(e) => {
                                 handleNavClick(subHref, e);
                                 clearDiscoverHoverTimeout();
