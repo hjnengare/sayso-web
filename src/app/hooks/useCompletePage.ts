@@ -113,23 +113,32 @@ export function useCompletePage(): UseCompletePageReturn {
   // Simple navigation to home - no saving needed
   const handleContinue = useCallback(() => {
     try {
-      console.log('[useCompletePage] Navigating to /home using router.push');
-      // Try router.push first
-      const result = router.push('/home');
+      console.log('[useCompletePage] Checking user role before navigation');
+      
+      // Determine destination based on user role
+      const userRole = user?.profile?.current_role || user?.profile?.role || 'user';
+      console.log('[useCompletePage] User role:', userRole);
+      
+      // Business owners go to /claim-business, personal users go to /home
+      const destination = userRole === 'business_owner' ? '/claim-business' : '/home';
+      
+      console.log('[useCompletePage] Navigating to:', destination);
+      const result = router.push(destination);
       console.log('[useCompletePage] Router.push result:', result);
     } catch (error) {
       console.error('[useCompletePage] Error with router.push:', error);
       // Fallback: use window.location for immediate hard redirect
       try {
         if (typeof window !== 'undefined') {
-          console.log('[useCompletePage] Using window.location.href fallback');
-          window.location.href = '/home';
+          const destination = (user?.profile?.current_role || user?.profile?.role) === 'business_owner' ? '/claim-business' : '/home';
+          console.log('[useCompletePage] Using window.location.href fallback to:', destination);
+          window.location.href = destination;
         }
       } catch (fallbackError) {
         console.error('[useCompletePage] Fallback also failed:', fallbackError);
       }
     }
-  }, [router]);
+  }, [router, user]);
 
   return {
     isVerifying,

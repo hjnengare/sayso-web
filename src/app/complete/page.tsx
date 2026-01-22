@@ -128,15 +128,16 @@ function CompletePageContent() {
     
     try {
       setIsNavigating(true);
-      console.log('[Complete Page] Initiating navigation to home');
+      console.log('[Complete Page] Initiating navigation to appropriate dashboard');
       // Call the hook's handler
       hookHandleContinue();
       
       // If still on page after 500ms, use hard redirect
       setTimeout(() => {
         if (typeof window !== 'undefined' && window.location.pathname === '/complete') {
-          console.log('[Complete Page] Navigation timeout - using window.location.href');
-          window.location.href = '/home';
+          const destination = (router as any).currentUser?.profile?.current_role === 'business_owner' ? '/claim-business' : '/home';
+          console.log('[Complete Page] Navigation timeout - using window.location.href to:', destination);
+          window.location.href = destination;
         }
       }, 500);
       
@@ -145,7 +146,7 @@ function CompletePageContent() {
         setIsNavigating(false);
       }, 3000);
     } catch (error) {
-      console.error('[Complete] Error navigating to home:', error);
+      console.error('[Complete] Error navigating:', error);
       // Immediate fallback
       if (typeof window !== 'undefined') {
         window.location.href = '/home';
