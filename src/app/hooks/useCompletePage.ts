@@ -115,17 +115,15 @@ export function useCompletePage(): UseCompletePageReturn {
   const handleContinue = useCallback(() => {
     try {
       console.log('[useCompletePage] Checking user role before navigation');
+      console.log('[useCompletePage] User profile:', {
+        has_profile: !!user?.profile,
+        role: user?.profile?.role,
+        current_role: user?.profile?.current_role
+      });
       
-      // Safely access user role
-      if (!user?.profile) {
-        console.warn('[useCompletePage] User profile not available, defaulting to /home');
-        router.push('/home');
-        return;
-      }
-
-      // Determine destination based on user role
-      const userRole = user.profile.current_role || user.profile.role || 'user';
-      console.log('[useCompletePage] User role:', userRole);
+      // Safely access user role - default to 'user' if not set
+      const userRole = user?.profile?.current_role || user?.profile?.role || 'user';
+      console.log('[useCompletePage] Resolved user role:', userRole);
       
       // Business owners go to /claim-business, personal users go to /home
       const destination = userRole === 'business_owner' ? '/claim-business' : '/home';
@@ -137,15 +135,15 @@ export function useCompletePage(): UseCompletePageReturn {
       // Fallback: use window.location for immediate hard redirect
       try {
         if (typeof window !== 'undefined') {
-          const destination = user?.profile?.current_role === 'business_owner' ? '/claim-business' : '/home';
-          console.log('[useCompletePage] Using window.location.href fallback to:', destination);
-          window.location.href = destination;
+          // Safe fallback - always try /home first, easier to redirect from there
+          console.log('[useCompletePage] Using window.location.href fallback to /home');
+          window.location.href = '/home';
         }
       } catch (fallbackError) {
         console.error('[useCompletePage] Fallback also failed:', fallbackError);
       }
     }
-  }, [router, user?.profile]);
+  }, [router, user?.profile?.current_role, user?.profile?.role]);
 
   return {
     isVerifying,
