@@ -112,7 +112,14 @@ export function useCompletePage(): UseCompletePageReturn {
 
   // Simple navigation to home - no saving needed
   const handleContinue = useCallback(() => {
-    router.push('/home');
+    try {
+      console.log('[useCompletePage] Navigating to /home');
+      router.push('/home');
+    } catch (error) {
+      console.error('[useCompletePage] Error navigating to home:', error);
+      // Fallback: use window.location if push fails
+      window.location.href = '/home';
+    }
   }, [router]);
 
   return {
