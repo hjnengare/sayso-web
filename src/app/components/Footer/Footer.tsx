@@ -23,15 +23,15 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="bg-charcoal text-off-white rounded-full mx-2 mb-2 px-4 py-3 shadow-md">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <footer className="bg-charcoal text-off-white rounded-xl mx-2 mb-2 px-3 py-4 sm:px-4 sm:py-3 shadow-md">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-3">
         {/* Logo */}
         <Link href="/" className="flex-shrink-0 hover:opacity-80 transition-opacity">
           <Logo variant="footer" />
         </Link>
 
         {/* Links */}
-        <nav className="flex items-center gap-4 sm:gap-6">
+        <nav className="flex flex-wrap items-center gap-3 sm:gap-4 md:gap-6 order-3 md:order-2 w-full md:w-auto">
           {links.map((link) => (
             <Link
               key={link.name}
@@ -44,7 +44,7 @@ export default function Footer() {
         </nav>
 
         {/* Copyright */}
-        <p className="font-urbanist text-xs text-off-white/50">
+        <p className="font-urbanist text-xs text-off-white/50 order-2 md:order-3">
           © {mounted ? currentYear : 2025} sayso
         </p>
       </div>
