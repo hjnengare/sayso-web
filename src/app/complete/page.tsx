@@ -128,8 +128,14 @@ function CompletePageContent() {
     
     try {
       setIsNavigating(true);
-      // Call the hook's handler which uses router.push
+      console.log('[Complete Page] Initiating navigation to home');
+      // Call the hook's handler which uses router.replace
       hookHandleContinue();
+      
+      // Reset state after 3 seconds in case navigation fails
+      setTimeout(() => {
+        setIsNavigating(false);
+      }, 3000);
     } catch (error) {
       console.error('[Complete] Error navigating to home:', error);
       setIsNavigating(false);

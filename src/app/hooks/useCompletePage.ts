@@ -114,11 +114,14 @@ export function useCompletePage(): UseCompletePageReturn {
   const handleContinue = useCallback(() => {
     try {
       console.log('[useCompletePage] Navigating to /home');
-      router.push('/home');
+      // Use replace instead of push to ensure clean navigation
+      router.replace('/home');
     } catch (error) {
       console.error('[useCompletePage] Error navigating to home:', error);
-      // Fallback: use window.location if push fails
-      window.location.href = '/home';
+      // Fallback: use window.location if replace fails
+      if (typeof window !== 'undefined') {
+        window.location.href = '/home';
+      }
     }
   }, [router]);
 
