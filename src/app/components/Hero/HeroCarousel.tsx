@@ -10,6 +10,7 @@ import SearchInput from "../SearchInput/SearchInput";
 import FilterModal, { FilterState } from "../FilterModal/FilterModal";
 import ActiveFilterBadges from "../FilterActiveBadges/ActiveFilterBadges";
 import WavyTypedTitle from "../../../components/Animations/WavyTypedTitle";
+import HeroSkeleton from "./HeroSkeleton";
 import { useAuth } from '../../contexts/AuthContext';
 
 interface HeroSlide {
@@ -50,7 +51,8 @@ const FONT_STACK = "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sa
 
 export default function HeroCarousel() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
+  const [isHeroReady, setIsHeroReady] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -58,6 +60,13 @@ export default function HeroCarousel() {
   const containerRef = useRef<HTMLElement>(null);
   const currentIndexRef = useRef(currentIndex);
   const slides = HERO_SLIDES;
+
+  // Mark hero as ready once auth state is known
+  useEffect(() => {
+    if (!authLoading) {
+      setIsHeroReady(true);
+    }
+  }, [authLoading]);
 
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -258,6 +267,11 @@ export default function HeroCarousel() {
     const exploreUrl = queryString ? `/explore?${queryString}` : '/explore';
     router.push(exploreUrl);
   };
+
+  // Show skeleton while auth is loading
+  if (!isHeroReady) {
+    return <HeroSkeleton />;
+  }
 
   return (
     <>
