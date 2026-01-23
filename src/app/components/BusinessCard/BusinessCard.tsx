@@ -12,6 +12,11 @@ import Tooltip from "../Tooltip/Tooltip";
 import { useSavedItems } from "../../contexts/SavedItemsContext";
 import { useToast } from "../../contexts/ToastContext";
 import { getCategoryPng, getCategoryPngFromLabels, isPngIcon } from "../../utils/categoryToPngMapping";
+import BusinessCardImage from "./parts/BusinessCardImage";
+import BusinessCardCategory from "./parts/BusinessCardCategory";
+import BusinessCardActions from "./parts/BusinessCardActions";
+import BusinessCardPercentiles from "./parts/BusinessCardPercentiles";
+import BusinessCardReviews from "./parts/BusinessCardReviews";
 
 type Percentiles = {
   punctuality?: number;
@@ -56,17 +61,10 @@ type Business = {
   lng?: number; // Longitude for map display
 };
 
-const formatCategoryLabel = (value?: string) => {
-  if (!value) return "Explore";
-  return value
-    .split(/[-_]/)
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-};
+
 
 // Map categories to lucide-react icons
-const getCategoryIcon = (category: string, subInterestId?: string, subInterestLabel?: string): React.ComponentType<React.SVGProps<SVGSVGElement>> => {
+export const getCategoryIcon = (category: string, subInterestId?: string, subInterestLabel?: string): React.ComponentType<React.SVGProps<SVGSVGElement>> => {
   // Normalize category/label for matching
   const normalizedCategory = (category || '').toLowerCase();
   const normalizedSubInterest = (subInterestId || subInterestLabel || '').toLowerCase();
@@ -319,9 +317,12 @@ function BusinessCard({
   }, [showInfoPopup]);
 
   // Image fallback logic
+
+  // Always use the raw category from the DB for display
   const categoryKey = business.subInterestId || business.category || "default";
-  const displayCategoryLabel =
-    business.subInterestLabel || formatCategoryLabel(categoryKey);
+  const displayCategoryLabel = business.category || "";
+  // Log for validation
+  console.log("BusinessCard category:", displayCategoryLabel);
 
   const getDisplayImage = useMemo(() => {
     // Priority 1: Check uploaded_images array (new source of truth)
@@ -414,257 +415,65 @@ function BusinessCard({
   return (
     <motion.li
       id={idForSnap}
-      className={`snap-start snap-always flex-shrink-0 ${compact ? 'w-auto' : 'w-[240px] sm:w-[260px] md:w-[340px]'
-        }`}
-      style={{
-        fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-        fontWeight: 600,
-      }}
+      className={`snap-start snap-always flex-shrink-0 ${compact ? 'w-auto' : 'w-[240px] sm:w-[260px] md:w-[340px]'}`}
+      style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
       initial={cardInitial}
       whileInView={cardAnimate}
       viewport={{ amount: isMobile ? 0.1 : 0.2, once: false }}
-      transition={{
-        duration: prefersReducedMotion ? 0.2 : isMobile ? 0.4 : 0.5,
-        ease: "easeOut",
-        delay: index * 0.05, // Stagger effect: 50ms delay per card
-      }}
+      transition={{ duration: prefersReducedMotion ? 0.2 : isMobile ? 0.4 : 0.5, ease: "easeOut", delay: index * 0.05 }}
     >
       <div
-        className={`px-1 pt-1 pb-0 rounded-[20px] ${compact ? "lg:py-1 lg:pb-1 lg:min-h-[200px]" : "flex-1"
-          } relative flex-shrink-0 flex flex-col justify-between bg-sage z-10 shadow-md group w-full sm:h-auto`}
-        style={{
-          maxWidth: compact ? "100%" : "540px",
-        } as React.CSSProperties}
+        className={`px-1 pt-1 pb-0 rounded-[20px] ${compact ? "lg:py-1 lg:pb-1 lg:min-h-[200px]" : "flex-1"} relative flex-shrink-0 flex flex-col justify-between bg-sage z-10 shadow-md group w-full sm:h-auto`}
+        style={{ maxWidth: compact ? "100%" : "540px" } as React.CSSProperties}
         role="link"
         tabIndex={0}
         onClick={handleCardClick}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            handleCardClick();
-          }
-        }}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleCardClick(); } }}
       >
-
-        <div
-          className={mediaClass}
-          onClick={handleCardClick}
-        >
-          <div 
-            className="relative w-full h-full"
-          >
-            {!imgError && displayImage ? (
-              isImagePng || displayImage.includes('/png/') || displayImage.endsWith('.png') || usingFallback ? (
-                <div className="relative w-full h-full rounded-t-[20px] flex items-center justify-center bg-gradient-to-br from-off-white/95 to-off-white/85 shadow-sm overflow-hidden">
-                  <OptimizedImage
-                    src={usingFallback ? getCategoryPng(categoryKey) : displayImage}
-                    alt={displayAlt}
-                    width={320}
-                    height={350}
-                    sizes="(max-width: 768px) 540px, 340px"
-                    className="w-32 h-32 md:w-36 md:h-36 object-contain"
-                    priority={false}
-                    quality={90}
-                    onError={handleImageError}
-                  />
-                </div>
-              ) : (
-                <div className="relative w-full h-full overflow-hidden">
-                  <Image
-                    src={displayImage}
-                    alt={displayAlt}
-                    fill
-                    sizes="(max-width: 768px) 540px, 340px"
-                    className="object-cover"
-                    quality={90}
-                    onError={handleImageError}
-                  />
-                </div>
-              )
-            ) : (
-              <div
-                className="relative w-full h-full flex items-center justify-center"
-                style={{ backgroundColor: '#E5E0E5' }}
-              >
-                <div className="w-32 h-32 md:w-36 md:h-36 flex items-center justify-center">
-                  <OptimizedImage
-                    src={getCategoryPng(categoryKey)}
-                    alt={displayAlt}
-                    width={144}
-                    height={144}
-                    sizes="144px"
-                    className="w-full h-full object-contain opacity-60"
-                    priority={false}
-                    quality={90}
-                    onError={() => setImgError(true)}
-                  />
-                </div>
-              </div>
-            )}
-            {imgError && (
-              <div
-                className="absolute inset-0 flex items-center justify-center"
-                style={{ backgroundColor: '#E5E0E5' }}
-              >
-                <ImageIcon className="w-16 h-16 text-charcoal/20" aria-hidden="true" />
-              </div>
-            )}
-          </div>
-
+        <div className={mediaClass} onClick={handleCardClick}>
+          <BusinessCardImage
+            displayImage={displayImage}
+            isImagePng={isImagePng}
+            displayAlt={displayAlt}
+            usingFallback={usingFallback}
+            imgError={imgError}
+            onImageError={handleImageError}
+            categoryKey={categoryKey}
+            businessName={business.name}
+            verified={business.verified}
+          />
           {/* Premium glass badges */}
           {business.verified && (
             <div className="absolute left-4 top-4 z-20">
               <VerifiedBadge />
             </div>
           )}
-
+          {/* Star/Rating badge */}
           {!hideStar && hasRating && displayRating !== undefined && (
             <div className="absolute right-4 top-4 z-20 inline-flex items-center gap-1 rounded-full bg-off-white/95 backdrop-blur-xl px-3 py-1.5 text-charcoal">
               <Star className="rounded-full p-1 w-6 h-6 text-charcoal fill-charcoal" strokeWidth={2.5} aria-hidden />
-              <span className="text-sm font-semibold text-charcoal" style={{
-                fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                fontWeight: 600
-              }}>
-                {Number(displayRating).toFixed(1)}
-              </span>
+              <span className="text-sm font-semibold text-charcoal" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>{Number(displayRating).toFixed(1)}</span>
             </div>
           )}
-
           {!hideStar && !hasRating && (
             <div className="absolute right-4 top-4 z-20 inline-flex items-center gap-1 rounded-full bg-off-white/95 backdrop-blur-xl px-3 py-1.5 text-charcoal border border-white/40 shadow-md">
-              <span className="text-sm font-semibold text-charcoal" style={{
-                fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                fontWeight: 600
-              }}>
-                New
-              </span>
+              <span className="text-sm font-semibold text-charcoal" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>New</span>
             </div>
           )}
-
-          {/* Mobile Info Icon - Shows popup with Share and Save */}
-          <div className="md:hidden absolute left-4 bottom-4 z-[50]">
-            <button
-              data-info-button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowInfoPopup(!showInfoPopup);
-              }}
-              className="w-10 h-10 bg-navbar-bg rounded-full flex items-center justify-center hover:bg-navbar-bg/90 active:scale-95 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40 shadow-md touch-manipulation relative z-[51]"
-              aria-label="More options"
-              aria-expanded={showInfoPopup}
-            >
-              <Info className="w-5 h-5 text-white" strokeWidth={2.5} />
-            </button>
-
-            {/* Popup with Share and Save options */}
-            {showInfoPopup && (
-              <div
-                ref={infoPopupRef}
-                className="absolute bottom-full left-0 mb-2 bg-off-white/95 backdrop-blur-xl rounded-2xl border border-white/40 p-2 z-[60] min-w-[140px] max-w-[calc(100vw-8rem)] whitespace-nowrap shadow-premiumElevated"
-                style={{
-                  animation: 'fadeInUp 0.2s ease-out forwards',
-                  transformOrigin: 'bottom left',
-                }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="flex flex-col gap-2 w-full">
-                  <button
-                    data-share-btn
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleShare();
-                    }}
-                    className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-sage/10 active:bg-sage/20 transition-colors duration-200 min-h-[44px] touch-manipulation w-full shadow-md"
-                    aria-label={`Share ${business.name}`}
-                  >
-                    <div className="w-10 h-10 bg-sage/10 rounded-full flex items-center justify-center flex-shrink-0">
-                      <Share2 className="w-5 h-5 text-navbar-bg/90" strokeWidth={2.5} />
-                    </div>
-                    <span className="text-sm font-semibold text-charcoal whitespace-nowrap" style={{
-                      fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                      fontWeight: 600
-                    }}>
-                      Share
-                    </span>
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleBookmark();
-                    }}
-                    className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-coral/10 active:bg-coral/20 transition-colors duration-200 min-h-[44px] touch-manipulation w-full shadow-md"
-                    aria-label={isItemSaved(business.id) ? `Remove ${business.name} from saved` : `Save ${business.name}`}
-                  >
-                    <div className="w-10 h-10 bg-coral/10 rounded-full flex items-center justify-center flex-shrink-0">
-                      <Bookmark
-                        className={`w-5 h-5 ${isItemSaved(business.id) ? 'text-coral fill-coral' : 'text-coral'}`}
-                        strokeWidth={2.5}
-                      />
-                    </div>
-                    <span className="text-sm font-semibold text-charcoal whitespace-nowrap" style={{
-                      fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                      fontWeight: 600
-                    }}>
-                      {isItemSaved(business.id) ? 'Saved' : 'Save'}
-                    </span>
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
           {/* Premium floating actions - desktop only */}
-          <div className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-20 flex-col items-center gap-2 transition-all duration-300 ease-out translate-x-12 opacity-0 md:group-hover:translate-x-0 md:group-hover:opacity-100">
-            <button
-              className={`w-12 h-10 bg-navbar-bg rounded-[20px] flex items-center justify-center transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40 shadow-md ${hasReviewed
-                ? 'opacity-50 cursor-not-allowed'
-                : 'hover:bg-navbar-bg/90 hover:scale-110'
-                }`}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleWriteReview();
-              }}
-              disabled={hasReviewed}
-              aria-label={hasReviewed ? `You have already reviewed ${business.name}` : `Write a review for ${business.name}`}
-              title={hasReviewed ? 'Already reviewed' : 'Write a review'}
-            >
-              <Edit className={`w-4 h-4 ${hasReviewed ? 'text-white/50' : 'text-white'}`} strokeWidth={2.5} />
-            </button>
-            <button
-              className="w-12 h-10 bg-navbar-bg rounded-[20px] flex items-center justify-center hover:bg-navbar-bg/90 hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40 shadow-md"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleBookmark();
-              }}
-              aria-label={`${isItemSaved(business.id) ? 'Remove from saved' : 'Save'} ${business.name}`}
-              title={isItemSaved(business.id) ? 'Remove from saved' : 'Save'}
-            >
-              <Bookmark
-                className={`w-4 h-4 ${isItemSaved(business.id) ? 'text-white fill-white' : 'text-white'}`}
-                strokeWidth={2.5}
-              />
-            </button>
-            <button
-              className="w-12 h-10 bg-navbar-bg rounded-[20px] flex items-center justify-center hover:bg-navbar-bg/90 hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40 shadow-md"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleShare();
-              }}
-              aria-label={`Share ${business.name}`}
-              title="Share"
-            >
-              <Share2 className="w-4 h-4 text-white" strokeWidth={2.5} />
-            </button>
-          </div>
+          <BusinessCardActions
+            hasReviewed={hasReviewed}
+            isItemSaved={isItemSaved(business.id)}
+            onWriteReview={(e) => { e.stopPropagation(); handleWriteReview(); }}
+            onBookmark={(e) => { e.stopPropagation(); handleBookmark(); }}
+            onShare={(e) => { e.stopPropagation(); handleShare(); }}
+            businessName={business.name}
+          />
         </div>
-
         {/* CONTENT - Minimal, premium spacing */}
-        <div
-          className={`px-4 py-3 sm:px-5 sm:pt-1 md:pt-2 lg:pt-3 pb-0 ${compact ? "lg:py-1 lg:pt-2 lg:pb-0 lg:min-h-[160px]" : "flex-1"
-            } relative flex-shrink-0 flex flex-col md:justify-start justify-between bg-sage/10 z-10 rounded-b-[20px]`}
-        >
+        <div className={`px-4 py-3 sm:px-5 sm:pt-1 md:pt-2 lg:pt-3 pb-0 ${compact ? "lg:py-1 lg:pt-2 lg:pb-0 lg:min-h-[160px]" : "flex-1"} relative flex-shrink-0 flex flex-col md:justify-start justify-between bg-sage/10 z-10 rounded-b-[20px]`}>
           <div className={`${compact ? "flex flex-col" : "flex-1 flex flex-col"}`}>
             {/* Info Wrapper */}
             <div className="relative overflow-hidden">
@@ -672,7 +481,6 @@ function BusinessCard({
               <div className="flex flex-col items-center text-center relative z-10 space-y-0.5">
                 {/* Business Name - Inside wrapper */}
                 <div className="flex items-center justify-center w-full min-w-0 h-[2rem] sm:h-[2.5rem] relative">
-
                   <Tooltip content={business.name} position="top">
                     <button
                       type="button"
@@ -680,19 +488,9 @@ function BusinessCard({
                       className="group w-full max-w-full min-w-0 text-charcoal transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-coral/40 rounded-lg px-2 py-1 flex items-center justify-center relative"
                       aria-label={`View ${business.name} details`}
                     >
-
                       <h3
                         className="text-h2 sm:text-h1 font-bold text-center leading-[1.3] truncate tracking-tight transition-all duration-300 group-hover:text-navbar-bg/90 group-hover:scale-[1.02] group-hover:translate-y-[-1px] w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap relative z-[1]"
-                        style={{
-                          fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                          fontWeight: 700,
-                          WebkitFontSmoothing: 'antialiased',
-                          MozOsxFontSmoothing: 'grayscale',
-                          textRendering: 'optimizeLegibility',
-                          letterSpacing: '0.03em',
-                          transform: 'translateY(0)',
-                          willChange: 'transform'
-                        }}
+                        style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 700, WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale', textRendering: 'optimizeLegibility', letterSpacing: '0.03em', transform: 'translateY(0)', willChange: 'transform' }}
                       >
                         {business.name}
                       </h3>
@@ -701,174 +499,40 @@ function BusinessCard({
                 </div>
                 {/* Category with icon - Stacked layout */}
                 <div className="flex flex-col items-center gap-1.5 w-full">
-                  {/* Category row with icon - Pill badge style */}
-                  <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5">
-                    {(() => {
-                      const CategoryIcon = getCategoryIcon(business.category, business.subInterestId, business.subInterestLabel);
-                      return (
-                        <>
-                          <div className="w-8 h-8 rounded-full bg-off-white/20 flex items-center justify-center flex-shrink-0">
-                            <CategoryIcon className="w-4 h-4 text-charcoal/70" strokeWidth={2.5} />
-                          </div>
-                          <span 
-                            className="truncate text-caption sm:text-xs text-charcoal/80 font-semibold"
-                            style={{
-                              fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                              fontWeight: 600,
-                              WebkitFontSmoothing: 'antialiased',
-                              MozOsxFontSmoothing: 'grayscale',
-                              textRendering: 'optimizeLegibility',
-                              letterSpacing: '0.01em'
-                            }}
-                          >
-                            {displayCategoryLabel}
-                          </span>
-                        </>
-                      );
-                    })()}
-                  </div>
-
+                  <BusinessCardCategory
+                    category={business.category}
+                    subInterestId={business.subInterestId}
+                    subInterestLabel={business.subInterestLabel}
+                    displayCategoryLabel={displayCategoryLabel}
+                  />
                   {/* Description - Stacked below category */}
                   {business.description && (
-                    <p
-                      className="text-caption sm:text-xs text-charcoal/70 line-clamp-2 max-w-full text-center px-1"
-                      style={{
-                        fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                        fontWeight: 400,
-                        WebkitFontSmoothing: 'antialiased',
-                        MozOsxFontSmoothing: 'grayscale',
-                        textRendering: 'optimizeLegibility',
-                      }}
-                    >
-                      {business.description}
-                    </p>
+                    <p className="text-caption sm:text-xs text-charcoal/70 line-clamp-2 max-w-full text-center px-1" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 400, WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale', textRendering: 'optimizeLegibility' }}>{business.description}</p>
                   )}
                 </div>
-
                 {/* Reviews - Refined */}
-                <div className="flex flex-col items-center gap-2 mb-2">
-                  <div className="inline-flex items-center justify-center gap-1 min-h-[20px]">
-                    {hasRating && displayRating !== undefined ? (
-                      <>
-                        <span
-                          role="link"
-                          tabIndex={0}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCardClick();
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                              e.preventDefault();
-                              handleCardClick();
-                            }
-                          }}
-                          className="inline-flex items-center justify-center text-body-sm sm:text-base font-bold leading-none text-navbar-bg underline-offset-2 cursor-pointer transition-colors duration-200 hover:text-coral"
-                          style={{
-                            fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                            fontWeight: 700
-                          }}
-                        >
-                          {business.reviews}
-                        </span>
-                        <span
-                          role="link"
-                          tabIndex={0}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCardClick();
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                              e.preventDefault();
-                              handleCardClick();
-                            }
-                          }}
-                          className="inline-flex items-center justify-center text-sm leading-none text-navbar-bg underline-offset-2 cursor-pointer transition-colors duration-200 hover:text-coral"
-                          style={{
-                            fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                            fontWeight: 400
-                          }}
-                        >
-                          Reviews
-                        </span>
-                      </>
-                    ) : (
-                      <span
-                        role="button"
-                        tabIndex={hasReviewed ? -1 : 0}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (!hasReviewed) {
-                            handleWriteReview();
-                          }
-                        }}
-                        onKeyDown={(e) => {
-                          if (!hasReviewed && (e.key === 'Enter' || e.key === ' ')) {
-                            e.preventDefault();
-                            handleWriteReview();
-                          }
-                        }}
-                        className={`inline-flex items-center justify-center text-sm font-normal underline-offset-2 min-w-[92px] text-center transition-colors duration-200 ${hasReviewed
-                          ? 'text-charcoal/70 cursor-not-allowed'
-                          : 'text-charcoal cursor-pointer hover:text-coral'
-                          } ${compact ? 'lg:order-1 lg:mb-1' : ''}`}
-                        style={{
-                          fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                          fontWeight: 400
-                        }}
-                        aria-disabled={hasReviewed}
-                        title={hasReviewed ? 'You have already reviewed this business' : 'Be the first to review'}
-                      >
-                        {hasReviewed ? 'Already reviewed' : 'Be the first to review'}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
+                <BusinessCardReviews
+                  hasRating={hasRating}
+                  displayRating={displayRating}
+                  reviews={business.reviews}
+                  hasReviewed={hasReviewed}
+                  onCardClick={(e) => { e.stopPropagation(); handleCardClick(); }}
+                  onWriteReview={(e) => { e.stopPropagation(); if (!hasReviewed) handleWriteReview(); }}
+                  compact={compact}
+                />
                 {/* Percentile chips - Inside wrapper */}
-                <div className="flex items-center justify-between sm:justify-center gap-4 sm:gap-3 flex-nowrap min-h-[28px] sm:min-h-[28px] py-1 md:bg-off-white/50 md:backdrop-blur-sm md:rounded-[20px] overflow-hidden w-[90%] mx-auto md:mb-2 shadow-sm">
-                  <PercentileChip
-                    label="punctuality"
-                    value={business.percentiles?.punctuality || 0}
-                  />
-                  <PercentileChip
-                    label="cost-effectiveness"
-                    value={business.percentiles?.['cost-effectiveness'] || 0}
-                  />
-                  <PercentileChip
-                    label="friendliness"
-                    value={business.percentiles?.friendliness || 0}
-                  />
-                  <PercentileChip
-                    label="trustworthiness"
-                    value={business.percentiles?.trustworthiness || 0}
-                  />
-                </div>
-
+                <BusinessCardPercentiles percentiles={business.percentiles} />
               </div>
             </div>
           </div>
-
           {/* Mobile actions - Minimal */}
           <div className="flex md:hidden items-center justify-center pt-2 pb-2">
             <button
-              className={`flex-1 flex items-center justify-center gap-1.5 px-4 py-3 rounded-full text-caption sm:text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-sage/40 border transition-all min-h-[48px] shadow-md ${hasReviewed
-                ? 'bg-charcoal/20 text-charcoal/70 cursor-not-allowed border-charcoal/20'
-                : 'bg-gradient-to-br from-navbar-bg to-navbar-bg/90 text-white border-sage/50 active:scale-95'
-                }`}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (!hasReviewed) {
-                  handleWriteReview();
-                }
-              }}
+              className={`flex-1 flex items-center justify-center gap-1.5 px-4 py-3 rounded-full text-caption sm:text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-sage/40 border transition-all min-h-[48px] shadow-md ${hasReviewed ? 'bg-charcoal/20 text-charcoal/70 cursor-not-allowed border-charcoal/20' : 'bg-gradient-to-br from-navbar-bg to-navbar-bg/90 text-white border-sage/50 active:scale-95'}`}
+              onClick={(e) => { e.stopPropagation(); if (!hasReviewed) handleWriteReview(); }}
               disabled={hasReviewed}
               aria-label={hasReviewed ? `You have already reviewed ${business.name}` : `Write a review for ${business.name}`}
-              style={{
-                fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                fontWeight: 600,
-              }}
+              style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
             >
               <Edit className="w-3.5 h-3.5" strokeWidth={2.5} />
               <span>{hasReviewed ? 'Already Reviewed' : 'Review'}</span>

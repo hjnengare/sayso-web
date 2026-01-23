@@ -1,0 +1,50 @@
+import React from "react";
+import { Edit, Bookmark, Share2 } from "lucide-react";
+
+interface BusinessCardActionsProps {
+  hasReviewed: boolean;
+  isItemSaved: boolean;
+  onWriteReview: (e: React.MouseEvent) => void;
+  onBookmark: (e: React.MouseEvent) => void;
+  onShare: (e: React.MouseEvent) => void;
+  businessName: string;
+}
+
+const BusinessCardActions: React.FC<BusinessCardActionsProps> = ({
+  hasReviewed,
+  isItemSaved,
+  onWriteReview,
+  onBookmark,
+  onShare,
+  businessName,
+}) => (
+  <div className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-20 flex-col items-center gap-2 transition-all duration-300 ease-out translate-x-12 opacity-0 md:group-hover:translate-x-0 md:group-hover:opacity-100">
+    <button
+      className={`w-12 h-10 bg-navbar-bg rounded-[20px] flex items-center justify-center transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40 shadow-md ${hasReviewed ? 'opacity-50 cursor-not-allowed' : 'hover:bg-navbar-bg/90 hover:scale-110'}`}
+      onClick={onWriteReview}
+      disabled={hasReviewed}
+      aria-label={hasReviewed ? `You have already reviewed ${businessName}` : `Write a review for ${businessName}`}
+      title={hasReviewed ? 'Already reviewed' : 'Write a review'}
+    >
+      <Edit className={`w-4 h-4 ${hasReviewed ? 'text-white/50' : 'text-white'}`} strokeWidth={2.5} />
+    </button>
+    <button
+      className="w-12 h-10 bg-navbar-bg rounded-[20px] flex items-center justify-center hover:bg-navbar-bg/90 hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40 shadow-md"
+      onClick={onBookmark}
+      aria-label={isItemSaved ? `Remove from saved ${businessName}` : `Save ${businessName}`}
+      title={isItemSaved ? 'Remove from saved' : 'Save'}
+    >
+      <Bookmark className={`w-4 h-4 ${isItemSaved ? 'text-white fill-white' : 'text-white'}`} strokeWidth={2.5} />
+    </button>
+    <button
+      className="w-12 h-10 bg-navbar-bg rounded-[20px] flex items-center justify-center hover:bg-navbar-bg/90 hover:scale-110 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40 shadow-md"
+      onClick={onShare}
+      aria-label={`Share ${businessName}`}
+      title="Share"
+    >
+      <Share2 className="w-4 h-4 text-white" strokeWidth={2.5} />
+    </button>
+  </div>
+);
+
+export default BusinessCardActions;

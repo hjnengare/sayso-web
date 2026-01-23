@@ -49,81 +49,29 @@ const getUniqueBusinessColor = (businessId: string): string => {
   return colorPalette[index];
 };
 
-// Map categories to lucide-react icons
+// Map categories to lucide-react icons (normalize only for icon selection)
 const getCategoryIcon = (category: string): React.ComponentType<React.SVGProps<SVGSVGElement>> => {
-  // Normalize category for matching
   const normalizedCategory = (category || '').toLowerCase();
   const searchTerm = normalizedCategory;
-  
-  // Food & Drink
-  if (searchTerm.includes('salon') || searchTerm.includes('hairdresser') || searchTerm.includes('nail')) {
-    return Scissors;
-  }
-  if (searchTerm.includes('cafe') || searchTerm.includes('coffee')) {
-    return Coffee;
-  }
-  if (searchTerm.includes('restaurant') || searchTerm.includes('dining') || searchTerm.includes('food') || searchTerm.includes('drink')) {
-    return UtensilsCrossed;
-  }
-  if (searchTerm.includes('bar') || searchTerm.includes('pub')) {
-    return Wine;
-  }
-  
-  // Beauty & Wellness
-  if (searchTerm.includes('gym') || searchTerm.includes('fitness') || searchTerm.includes('workout')) {
-    return Dumbbell;
-  }
-  if (searchTerm.includes('spa') || searchTerm.includes('wellness') || searchTerm.includes('massage')) {
-    return Activity;
-  }
-  if (searchTerm.includes('health') || searchTerm.includes('medical')) {
-    return Heart;
-  }
-  
-  // Shopping
-  if (searchTerm.includes('shop') || searchTerm.includes('store') || searchTerm.includes('retail') || searchTerm.includes('fashion') || searchTerm.includes('clothing')) {
-    return ShoppingBag;
-  }
-  if (searchTerm.includes('book') || searchTerm.includes('library')) {
-    return Book;
-  }
-  
-  // Professional Services
-  if (searchTerm.includes('education') || searchTerm.includes('school') || searchTerm.includes('learn')) {
-    return GraduationCap;
-  }
-  if (searchTerm.includes('finance') || searchTerm.includes('bank') || searchTerm.includes('insurance')) {
-    return CreditCard;
-  }
-  if (searchTerm.includes('business') || searchTerm.includes('office') || searchTerm.includes('professional')) {
-    return Briefcase;
-  }
-  
-  // Entertainment
-  if (searchTerm.includes('music') || searchTerm.includes('concert') || searchTerm.includes('venue')) {
-    return Music;
-  }
-  if (searchTerm.includes('movie') || searchTerm.includes('cinema') || searchTerm.includes('theater') || searchTerm.includes('theatre')) {
-    return Film;
-  }
-  if (searchTerm.includes('art') || searchTerm.includes('gallery') || searchTerm.includes('museum')) {
-    return Camera;
-  }
-  
-  // Travel & Transport
-  if (searchTerm.includes('travel') || searchTerm.includes('transport') || searchTerm.includes('hotel')) {
-    return MapPin;
-  }
-  if (searchTerm.includes('car') || searchTerm.includes('auto') || searchTerm.includes('vehicle')) {
-    return Car;
-  }
-  
-  // Home & Living
-  if (searchTerm.includes('home') || searchTerm.includes('decor') || searchTerm.includes('furniture')) {
-    return Home;
-  }
-  
-  // Default fallback
+  // ...existing icon logic...
+  if (searchTerm.includes('salon') || searchTerm.includes('hairdresser') || searchTerm.includes('nail')) return Scissors;
+  if (searchTerm.includes('cafe') || searchTerm.includes('coffee')) return Coffee;
+  if (searchTerm.includes('restaurant') || searchTerm.includes('dining') || searchTerm.includes('food') || searchTerm.includes('drink')) return UtensilsCrossed;
+  if (searchTerm.includes('bar') || searchTerm.includes('pub')) return Wine;
+  if (searchTerm.includes('gym') || searchTerm.includes('fitness') || searchTerm.includes('workout')) return Dumbbell;
+  if (searchTerm.includes('spa') || searchTerm.includes('wellness') || searchTerm.includes('massage')) return Activity;
+  if (searchTerm.includes('health') || searchTerm.includes('medical')) return Heart;
+  if (searchTerm.includes('shop') || searchTerm.includes('store') || searchTerm.includes('retail') || searchTerm.includes('fashion') || searchTerm.includes('clothing')) return ShoppingBag;
+  if (searchTerm.includes('book') || searchTerm.includes('library')) return Book;
+  if (searchTerm.includes('education') || searchTerm.includes('school') || searchTerm.includes('learn')) return GraduationCap;
+  if (searchTerm.includes('finance') || searchTerm.includes('bank') || searchTerm.includes('insurance')) return CreditCard;
+  if (searchTerm.includes('business') || searchTerm.includes('office') || searchTerm.includes('professional')) return Briefcase;
+  if (searchTerm.includes('music') || searchTerm.includes('concert') || searchTerm.includes('venue')) return Music;
+  if (searchTerm.includes('movie') || searchTerm.includes('cinema') || searchTerm.includes('theater') || searchTerm.includes('theatre')) return Film;
+  if (searchTerm.includes('art') || searchTerm.includes('gallery') || searchTerm.includes('museum')) return Camera;
+  if (searchTerm.includes('travel') || searchTerm.includes('transport') || searchTerm.includes('hotel')) return MapPin;
+  if (searchTerm.includes('car') || searchTerm.includes('auto') || searchTerm.includes('vehicle')) return Car;
+  if (searchTerm.includes('home') || searchTerm.includes('decor') || searchTerm.includes('furniture')) return Home;
   return Tag;
 };
 
@@ -292,7 +240,7 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
   return (
     <motion.li
       id={idForSnap}
-      className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto sm:min-w-[25%] md:min-w-[25%] xl:min-w-[25%] list-none"
+      className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto sm:w-[260px] md:w-[340px] list-none"
       style={{
         fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
         fontWeight: 600,
@@ -307,7 +255,7 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
       }}
     >
       <div
-        className="relative px-1 pt-1 pb-0 bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[20px] overflow-visible group cursor-pointer w-full flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-md h-[600px] sm:h-auto"
+        className="relative px-1 pt-1 pb-0 bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[20px] overflow-visible group cursor-pointer w-full flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-md sm:h-auto"
         style={{
           maxWidth: "540px",
         } as React.CSSProperties}
@@ -476,7 +424,7 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
 
         {/* CONTENT - Minimal, premium spacing */}
         <div
-          className="px-4 sm:px-5 pt-2 pb-2 flex-1 relative flex-shrink-0 flex flex-col justify-between bg-sage/10 z-10 rounded-b-[20px]"
+          className="px-4 py-3 sm:px-5 sm:pt-1 md:pt-2 lg:pt-3 pb-0 flex-1 relative flex-shrink-0 flex flex-col md:justify-start justify-between bg-sage/10 z-10 rounded-b-[20px]"
         >
           <div className="flex-1 flex flex-col">
             {/* Info Wrapper */}
@@ -515,6 +463,8 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
                     {(() => {
                       const CategoryIcon = getCategoryIcon(business.category);
                       const uniqueColor = getUniqueBusinessColor(business.id);
+                      // Log for validation
+                      console.log("BusinessOfTheMonthCard category:", business.category);
                       return (
                         <>
                           <div className="w-8 h-8 rounded-full bg-off-white/20 flex items-center justify-center flex-shrink-0">

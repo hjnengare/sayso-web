@@ -208,7 +208,7 @@ export default function DesktopNav({
         );
       })}
 
-      {isGuest && (
+      {!isGuest && (
         <OptimizedLink
           href="/claim-business"
           className={`group capitalize px-2.5 lg:px-3.5 py-1.5 rounded-lg text-sm sm:text-xs sm:text-sm md:text-sm sm:text-xs lg:text-sm sm:text-xs font-semibold transition-all duration-200 relative ${
