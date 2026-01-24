@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from "react";
+import { Menu, Bell, User, Settings, Bookmark } from "lucide-react";
 import FilterModal from "../FilterModal/FilterModal";
 import SearchInput from "../SearchInput/SearchInput";
 import Logo from "../Logo/Logo";
@@ -122,36 +123,119 @@ export default function Header({
                 <Logo variant="default" className="relative drop-shadow-[0_4px_16px_rgba(0,0,0,0.12)] transition-all duration-300 group-hover:drop-shadow-[0_6px_20px_rgba(0,0,0,0.15)]" color={whiteText ? "sage" : "gradient"} />
               </div>
             </OptimizedLink>
-            <DesktopNav
-              whiteText={whiteText}
-              isGuest={isGuest}
-              isBusinessAccountUser={isBusinessAccountUser}
-              isClaimBusinessActive={isClaimBusinessActive}
-              isDiscoverActive={isDiscoverActive}
-              primaryLinks={navLinks.primaryLinks}
-              discoverLinks={DISCOVER_LINKS}
-              businessLinks={navLinks.businessLinks}
-              isNotificationsActive={isNotificationsActive}
-              isMessagesActive={isMessagesActive}
-              isProfileActive={isProfileActive}
-              isSettingsActive={isSettingsActive}
-              savedCount={savedCount}
-              unreadCount={unreadCount}
-              unreadMessagesCount={unreadMessagesCount}
-              handleNavClick={handleNavClick}
-              discoverDropdownRef={discoverDropdownRef}
-              discoverMenuPortalRef={discoverMenuPortalRef}
-              discoverBtnRef={discoverBtnRef}
-              discoverMenuPos={discoverMenuPos}
-              isDiscoverDropdownOpen={isDiscoverDropdownOpen}
-              isDiscoverDropdownClosing={isDiscoverDropdownClosing}
-              clearDiscoverHoverTimeout={clearDiscoverHoverTimeout}
-              openDiscoverDropdown={openDiscoverDropdown}
-              closeDiscoverDropdown={closeDiscoverDropdown}
-              scheduleDiscoverDropdownClose={scheduleDiscoverDropdownClose}
-              onNotificationsClick={() => setShowSearchBar(true)}
-              sf={sf}
-            />
+
+            {/* Desktop Navigation - Hidden on mobile */}
+            <div className="hidden md:flex flex-1">
+              <DesktopNav
+                whiteText={whiteText}
+                isGuest={isGuest}
+                isBusinessAccountUser={isBusinessAccountUser}
+                isClaimBusinessActive={isClaimBusinessActive}
+                isDiscoverActive={isDiscoverActive}
+                primaryLinks={navLinks.primaryLinks}
+                discoverLinks={DISCOVER_LINKS}
+                businessLinks={navLinks.businessLinks}
+                isNotificationsActive={isNotificationsActive}
+                isMessagesActive={isMessagesActive}
+                isProfileActive={isProfileActive}
+                isSettingsActive={isSettingsActive}
+                savedCount={savedCount}
+                unreadCount={unreadCount}
+                unreadMessagesCount={unreadMessagesCount}
+                handleNavClick={handleNavClick}
+                discoverDropdownRef={discoverDropdownRef}
+                discoverMenuPortalRef={discoverMenuPortalRef}
+                discoverBtnRef={discoverBtnRef}
+                discoverMenuPos={discoverMenuPos}
+                isDiscoverDropdownOpen={isDiscoverDropdownOpen}
+                isDiscoverDropdownClosing={isDiscoverDropdownClosing}
+                clearDiscoverHoverTimeout={clearDiscoverHoverTimeout}
+                openDiscoverDropdown={openDiscoverDropdown}
+                closeDiscoverDropdown={closeDiscoverDropdown}
+                scheduleDiscoverDropdownClose={scheduleDiscoverDropdownClose}
+                onNotificationsClick={() => setShowSearchBar(true)}
+                sf={sf}
+              />
+            </div>
+
+            {/* Mobile Navigation - Visible only on mobile */}
+            <div className="flex md:hidden items-center gap-2 ml-auto">
+              {/* Notifications */}
+              <OptimizedLink
+                href="/notifications"
+                className={`relative w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
+                  isNotificationsActive
+                    ? "text-sage bg-sage/5"
+                    : whiteText
+                      ? "text-white hover:text-white/80 hover:bg-white/10"
+                      : "text-charcoal/80 hover:text-sage hover:bg-sage/5"
+                }`}
+                aria-label="Notifications"
+              >
+                <Bell className="w-5 h-5" fill={isNotificationsActive ? "currentColor" : "none"} />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-white text-[10px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </OptimizedLink>
+
+              {/* Saved (personal users only) */}
+              {!isBusinessAccountUser && !isGuest && (
+                <OptimizedLink
+                  href="/saved"
+                  className={`relative w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
+                    isSavedActive
+                      ? "text-sage bg-sage/5"
+                      : whiteText
+                        ? "text-white hover:text-white/80 hover:bg-white/10"
+                        : "text-charcoal/80 hover:text-sage hover:bg-sage/5"
+                  }`}
+                  aria-label="Saved"
+                >
+                  <Bookmark className="w-5 h-5" fill={isSavedActive ? "currentColor" : "none"} />
+                  {savedCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-white text-[10px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
+                      {savedCount > 99 ? "99+" : savedCount}
+                    </span>
+                  )}
+                </OptimizedLink>
+              )}
+
+              {/* Profile/Settings icon */}
+              <OptimizedLink
+                href={isGuest ? "/login" : isBusinessAccountUser ? "/settings" : "/profile"}
+                className={`relative w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
+                  isProfileActive || isSettingsActive
+                    ? "text-sage bg-sage/5"
+                    : whiteText
+                      ? "text-white hover:text-white/80 hover:bg-white/10"
+                      : "text-charcoal/80 hover:text-sage hover:bg-sage/5"
+                }`}
+                aria-label={isBusinessAccountUser ? "Settings" : "Profile"}
+              >
+                {isBusinessAccountUser ? (
+                  <Settings className="w-5 h-5" fill={(isSettingsActive) ? "currentColor" : "none"} />
+                ) : (
+                  <User className="w-5 h-5" fill={(isProfileActive) ? "currentColor" : "none"} />
+                )}
+              </OptimizedLink>
+
+              {/* Mobile Menu Hamburger Button */}
+              <button
+                type="button"
+                onClick={() => setIsMobileMenuOpen(true)}
+                className={`w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 shadow-sm ${
+                  whiteText
+                    ? "text-white hover:text-white/80 hover:bg-white/10"
+                    : "text-charcoal/80 hover:text-sage hover:bg-sage/5"
+                }`}
+                aria-label="Open menu"
+                aria-expanded={isMobileMenuOpen}
+              >
+                <Menu className="w-6 h-6" />
+              </button>
+            </div>
 
           </div>
         </div>
