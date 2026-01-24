@@ -67,6 +67,187 @@ export default function MobileMenu({
     );
   }
 
+  // Strict separation: Only one menu type is rendered at a time
+  let menuContent = null;
+
+  if (isBusinessAccountUser) {
+    // Business account: Only business tools
+    menuContent = (
+      <div className="space-y-1">
+        {businessLinks.map(({ key, label, href }, index) => {
+          const pathname = typeof window !== "undefined" ? window.location.pathname : "";
+          const targetHref = key === "add-business" ? "/add-business" : href;
+          const isActive = pathname ? pathname === targetHref || pathname.startsWith(targetHref) : false;
+          return (
+            <OptimizedLink
+              key={key}
+              href={targetHref}
+              onClick={(e) => {
+                handleNavClick(targetHref, e);
+                onClose();
+              }}
+              className={`px-3 py-2 rounded-[20px] text-base font-normal transition-all duration-200 relative min-h-[44px] flex items-center justify-start ${mobileRevealClass} ${isActive ? "text-sage bg-white/5" : "text-white hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5"}`}
+              style={{
+                ...sf,
+                transitionDelay: `${index * 60}ms`,
+              }}
+            >
+              <span className="text-left">{label}</span>
+            </OptimizedLink>
+          );
+        })}
+        {/* Business-only actions (e.g., settings) */}
+        <div className="h-px bg-charcoal/10 my-2 mx-3" />
+        {actionItems.map((item, idx) => {
+          const showLockIndicator = shouldShowLockIndicator(isGuest, item.requiresAuth);
+          return (
+            <OptimizedLink
+              key={item.href}
+              href={showLockIndicator ? "/login" : item.href}
+              onClick={() => onClose()}
+              className={`px-3 py-2 rounded-lg text-base font-normal text-white hover:text-white flex items-center justify-start transition-colors duration-200 min-h-[44px] ${mobileRevealClass}`}
+              style={{
+                ...sf,
+                transitionDelay: `${(businessLinks.length + (item.delay ?? idx)) * 60}ms`,
+              }}
+            >
+              <span className="text-left flex items-center gap-1.5">
+                {item.label}
+                {showLockIndicator && <Lock className="w-3 h-3 text-white/40" />}
+              </span>
+            </OptimizedLink>
+          );
+        })}
+      </div>
+    );
+  } else if (!isGuest) {
+    // Logged-in personal user: Only consumer features
+    menuContent = (
+      <>
+        <div className="space-y-1">
+          {primaryLinks.map(({ key, label, href, requiresAuth }, index) => {
+            const showLockIndicator = shouldShowLockIndicator(isGuest, requiresAuth);
+            return (
+              <OptimizedLink
+                key={key}
+                href={showLockIndicator ? "/login" : href}
+                onClick={(e) => {
+                  handleNavClick(href, e);
+                  onClose();
+                }}
+                className={`px-3 py-2 rounded-[20px] text-base font-normal text-white hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-200 relative min-h-[44px] flex items-center justify-start ${mobileRevealClass}`}
+                style={{
+                  ...sf,
+                  transitionDelay: `${index * 60}ms`,
+                }}
+              >
+                <span className="text-left flex items-center gap-1.5">
+                  {label}
+                  {showLockIndicator && <Lock className="w-3 h-3 text-white/40" />}
+                </span>
+              </OptimizedLink>
+            );
+          })}
+        </div>
+        <div className="h-px bg-charcoal/10 my-2 mx-3" />
+        <div className="space-y-1">
+          {discoverLinks.map(({ key, label, href, requiresAuth }, index) => {
+            const showLockIndicator = shouldShowLockIndicator(isGuest, requiresAuth);
+            return (
+              <OptimizedLink
+                key={key}
+                href={showLockIndicator ? "/login" : href}
+                onClick={(e) => {
+                  handleNavClick(href, e);
+                  onClose();
+                }}
+                className={`px-3 py-2 rounded-[20px] text-base font-normal text-white/90 hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-200 min-h-[44px] flex items-center justify-start ${mobileRevealClass}`}
+                style={{
+                  ...sf,
+                  transitionDelay: `${(primaryCount + index) * 60}ms`,
+                }}
+              >
+                <span className="text-left flex items-center gap-1.5">
+                  {label}
+                  {showLockIndicator && <Lock className="w-3 h-3 text-white/40" />}
+                </span>
+              </OptimizedLink>
+            );
+          })}
+        </div>
+        <div className="h-px bg-charcoal/10 my-2 mx-3" />
+        <div className="space-y-1">
+          {actionItems.map((item, idx) => {
+            const showLockIndicator = shouldShowLockIndicator(isGuest, item.requiresAuth);
+            return (
+              <OptimizedLink
+                key={item.href}
+                href={showLockIndicator ? "/login" : item.href}
+                onClick={() => onClose()}
+                className={`px-3 py-2 rounded-lg text-base font-normal text-white hover:text-white flex items-center justify-start transition-colors duration-200 min-h-[44px] ${mobileRevealClass}`}
+                style={{
+                  ...sf,
+                  transitionDelay: `${(primaryCount + discoverCount + (item.delay ?? idx)) * 60}ms`,
+                }}
+              >
+                <span className="text-left flex items-center gap-1.5">
+                  {item.label}
+                  {showLockIndicator && <Lock className="w-3 h-3 text-white/40" />}
+                </span>
+              </OptimizedLink>
+            );
+          })}
+        </div>
+      </>
+    );
+  } else {
+    // Unauthenticated visitor: Only public features
+    menuContent = (
+      <>
+        <div className="space-y-1">
+          {primaryLinks.map(({ key, label, href }) => (
+            <OptimizedLink
+              key={key}
+              href={href}
+              onClick={(e) => {
+                handleNavClick(href, e);
+                onClose();
+              }}
+              className={`px-3 py-2 rounded-[20px] text-base font-normal text-white hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-200 relative min-h-[44px] flex items-center justify-start ${mobileRevealClass}`}
+            >
+              <span className="text-left flex items-center gap-1.5">{label}</span>
+            </OptimizedLink>
+          ))}
+        </div>
+        <div className="h-px bg-charcoal/10 my-2 mx-3" />
+        <div className="space-y-1">
+          {discoverLinks.map(({ key, label, href }) => (
+            <OptimizedLink
+              key={key}
+              href={href}
+              onClick={(e) => {
+                handleNavClick(href, e);
+                onClose();
+              }}
+              className={`px-3 py-2 rounded-[20px] text-base font-normal text-white/90 hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-200 min-h-[44px] flex items-center justify-start ${mobileRevealClass}`}
+            >
+              <span className="text-left flex items-center gap-1.5">{label}</span>
+            </OptimizedLink>
+          ))}
+        </div>
+        <div className="h-px bg-charcoal/10 my-2 mx-3" />
+        <OptimizedLink
+          key="sign-in"
+          href="/login"
+          onClick={() => onClose()}
+          className={`px-3 py-2 rounded-lg text-base font-bold text-sage bg-white/10 hover:bg-sage/10 flex items-center justify-center transition-colors duration-200 min-h-[44px] ${mobileRevealClass}`}
+        >
+          <span className="text-center w-full">Sign In / Get Started</span>
+        </OptimizedLink>
+      </>
+    );
+  }
+
   return (
     <>
       {isOpen && (
@@ -75,7 +256,6 @@ export default function MobileMenu({
           onClick={onClose}
         />
       )}
-
       <div
         className={`fixed top-0 right-0 h-full w-full bg-navbar-bg z-[99999] shadow-[0_-4px_24px_rgba(0,0,0,0.15),0_-2px_8px_rgba(0,0,0,0.1)] transform md:hidden backdrop-blur-xl border-l border-white/20 ${
           isOpen ? "translate-x-0" : "translate-x-full"
@@ -92,117 +272,8 @@ export default function MobileMenu({
               <X className="w-6 h-6 sm:w-7 sm:h-7" strokeWidth={2.8} />
             </button>
           </div>
-
           <nav className="flex flex-col py-2 px-3 overflow-y-auto flex-1 min-h-0">
-            {isBusinessAccountUser && (
-              <div className="space-y-1">
-                {businessLinks.map(({ key, label, href }, index) => {
-                  const pathname = typeof window !== "undefined" ? window.location.pathname : "";
-                  const targetHref = key === "add-business" ? "/add-business" : href;
-                  const isActive = pathname ? pathname === targetHref || pathname.startsWith(targetHref) : false;
-                  return (
-                  <OptimizedLink
-                    key={key}
-                    href={targetHref}
-                    onClick={(e) => {
-                      handleNavClick(targetHref, e);
-                      onClose();
-                    }}
-                    className={`px-3 py-2 rounded-[20px] text-base font-normal transition-all duration-200 relative min-h-[44px] flex items-center justify-start ${mobileRevealClass} ${isActive ? "text-sage bg-white/5" : "text-white hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5"}`}
-                    style={{
-                      ...sf,
-                      transitionDelay: `${index * 60}ms`,
-                    }}
-                  >
-                    <span className="text-left">{label}</span>
-                  </OptimizedLink>
-                );
-                })}
-              </div>
-            )}
-
-            {!isBusinessAccountUser && (
-              <div className="space-y-1">
-                {primaryLinks.map(({ key, label, href, requiresAuth }, index) => {
-                  const showLockIndicator = shouldShowLockIndicator(isGuest, requiresAuth);
-                  return (
-                    <OptimizedLink
-                      key={key}
-                      href={showLockIndicator ? "/login" : href}
-                      onClick={(e) => {
-                        handleNavClick(href, e);
-                        onClose();
-                      }}
-                      className={`px-3 py-2 rounded-[20px] text-base font-normal text-white hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-200 relative min-h-[44px] flex items-center justify-start ${mobileRevealClass}`}
-                      style={{
-                        ...sf,
-                        transitionDelay: `${index * 60}ms`,
-                      }}
-                    >
-                      <span className="text-left flex items-center gap-1.5">
-                        {label}
-                        {showLockIndicator && <Lock className="w-3 h-3 text-white/40" />}
-                      </span>
-                    </OptimizedLink>
-                  );
-                })}
-              </div>
-            )}
-
-            {!isBusinessAccountUser && <div className="h-px bg-charcoal/10 my-2 mx-3" />}
-
-            {!isBusinessAccountUser && (
-              <div className="space-y-1">
-                {discoverLinks.map(({ key, label, href, requiresAuth }, index) => {
-                  const showLockIndicator = shouldShowLockIndicator(isGuest, requiresAuth);
-                  return (
-                    <OptimizedLink
-                      key={key}
-                      href={showLockIndicator ? "/login" : href}
-                      onClick={(e) => {
-                        handleNavClick(href, e);
-                        onClose();
-                      }}
-                      className={`px-3 py-2 rounded-[20px] text-base font-normal text-white/90 hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-200 min-h-[44px] flex items-center justify-start ${mobileRevealClass}`}
-                      style={{
-                        ...sf,
-                        transitionDelay: `${(primaryCount + index) * 60}ms`,
-                      }}
-                    >
-                      <span className="text-left flex items-center gap-1.5">
-                        {label}
-                        {showLockIndicator && <Lock className="w-3 h-3 text-white/40" />}
-                      </span>
-                    </OptimizedLink>
-                  );
-                })}
-              </div>
-            )}
-
-            <div className="h-px bg-charcoal/10 my-2 mx-3" />
-
-            <div className="space-y-1">
-              {actionItems.map((item, idx) => {
-                const showLockIndicator = shouldShowLockIndicator(isGuest, item.requiresAuth);
-                return (
-                  <OptimizedLink
-                    key={item.href}
-                    href={showLockIndicator ? "/login" : item.href}
-                    onClick={() => onClose()}
-                    className={`px-3 py-2 rounded-lg text-base font-normal text-white hover:text-white flex items-center justify-start transition-colors duration-200 min-h-[44px] ${mobileRevealClass}`}
-                    style={{
-                      ...sf,
-                      transitionDelay: `${(primaryCount + discoverCount + (item.delay ?? idx)) * 60}ms`,
-                    }}
-                  >
-                    <span className="text-left flex items-center gap-1.5">
-                      {item.label}
-                      {showLockIndicator && <Lock className="w-3 h-3 text-white/40" />}
-                    </span>
-                  </OptimizedLink>
-                );
-              })}
-            </div>
+            {menuContent}
           </nav>
         </div>
       </div>
