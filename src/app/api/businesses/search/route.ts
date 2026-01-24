@@ -18,19 +18,49 @@ interface BusinessSearchResult {
   claim_status: 'unclaimed' | 'claimed' | 'pending';
   pending_by_user?: boolean; // true if current user has pending claim
   claimed_by_user?: boolean; // true if current user owns this business
+  // Search relevance fields (from RPC)
+  search_rank?: number;
+  alias_boost?: number;
+  fuzzy_similarity?: number;
+  final_score?: number;
+  matched_alias?: string;
+}
+
+// Type for RPC result
+interface SearchBusinessesResult {
+  id: string;
+  name: string;
+  category: string;
+  location: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  image_url?: string;
+  verified: boolean;
+  search_rank?: number;
+  alias_boost?: number;
+  fuzzy_similarity?: number;
+  final_score?: number;
+  matched_alias?: string;
+  [key: string]: unknown;
 }
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const query = searchParams.get('query')?.trim();
+    const limit = parseInt(searchParams.get('limit') || '20', 10);
+    const offset = parseInt(searchParams.get('offset') || '0', 10);
+    const verifiedOnly = searchParams.get('verified') === 'true';
+    const location = searchParams.get('location') || null;
 
     if (!query || query.length < 2) {
       return NextResponse.json({ businesses: [] }, { status: 200 });
     }
 
     const supabase = await getServerSupabase();
-    
+
     // Get current user if authenticated
     let userId: string | null = null;
     try {
@@ -40,23 +70,59 @@ export async function GET(req: NextRequest) {
       // User not authenticated, continue without user context
     }
 
-    // Search businesses
-    const { data: businesses, error: businessesError } = await supabase
-      .from('businesses')
-      .select('id, name, category, location, address, phone, email, website, image_url, verified')
-      .or(`name.ilike.%${query}%, description.ilike.%${query}%, category.ilike.%${query}%`)
-      .limit(20);
+    // Try intelligent search_businesses RPC function first
+    // This combines: alias lookup → full-text search → fuzzy matching → ranking
+    let businesses: SearchBusinessesResult[] = [];
+    let usedFallback = false;
 
-    if (businessesError) {
-      console.error('Error searching businesses:', businessesError);
-      return NextResponse.json(
-        { error: 'Failed to search businesses' },
-        { status: 500 }
-      );
+    const { data: rpcData, error: rpcError } = await supabase
+      .rpc('search_businesses', {
+        q: query,
+        p_limit: Math.min(limit, 50), // Cap at 50
+        p_offset: offset,
+        p_verified_only: verifiedOnly,
+        p_location: location,
+      });
+
+    if (rpcError) {
+      console.warn('[SEARCH API] RPC search_businesses error:', rpcError.message);
+
+      // Fallback to simple ILIKE search if RPC doesn't exist
+      if (rpcError.code === 'PGRST202' || rpcError.message?.includes('function')) {
+        console.log('[SEARCH API] Falling back to ILIKE search (RPC not available)');
+        usedFallback = true;
+
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('businesses')
+          .select('id, name, category, location, address, phone, email, website, image_url, verified')
+          .eq('status', 'active')
+          .or(`name.ilike.%${query}%, description.ilike.%${query}%, category.ilike.%${query}%`)
+          .limit(limit);
+
+        if (fallbackError) {
+          console.error('[SEARCH API] Fallback search error:', fallbackError);
+          return NextResponse.json(
+            { error: 'Failed to search businesses' },
+            { status: 500 }
+          );
+        }
+
+        businesses = (fallbackData || []) as SearchBusinessesResult[];
+      } else {
+        return NextResponse.json(
+          { error: 'Failed to search businesses' },
+          { status: 500 }
+        );
+      }
+    } else {
+      businesses = (rpcData || []) as SearchBusinessesResult[];
     }
 
-    if (!businesses || businesses.length === 0) {
-      return NextResponse.json({ businesses: [] }, { status: 200 });
+    if (businesses.length === 0) {
+      return NextResponse.json({
+        businesses: [],
+        meta: { usedFallback, query }
+      }, { status: 200 });
     }
 
     const businessIds = businesses.map(b => b.id);
@@ -116,10 +182,25 @@ export async function GET(req: NextRequest) {
         }
 
         results.push({
-          ...business,
+          id: business.id,
+          name: business.name,
+          category: business.category,
+          location: business.location,
+          address: business.address,
+          phone: business.phone,
+          email: business.email,
+          website: business.website,
+          image_url: business.image_url,
+          verified: business.verified,
           claim_status,
           pending_by_user: hasPendingByUser,
           claimed_by_user: isOwnedByUser,
+          // Include search relevance fields if available (from RPC)
+          search_rank: business.search_rank,
+          alias_boost: business.alias_boost,
+          fuzzy_similarity: business.fuzzy_similarity,
+          final_score: business.final_score,
+          matched_alias: business.matched_alias,
         });
       }
     } else {
@@ -136,15 +217,38 @@ export async function GET(req: NextRequest) {
       // Build results without user-specific status
       for (const business of businesses) {
         results.push({
-          ...business,
+          id: business.id,
+          name: business.name,
+          category: business.category,
+          location: business.location,
+          address: business.address,
+          phone: business.phone,
+          email: business.email,
+          website: business.website,
+          image_url: business.image_url,
+          verified: business.verified,
           claim_status: claimedBusinessIds.has(business.id) ? 'claimed' : 'unclaimed',
           pending_by_user: false,
           claimed_by_user: false,
+          // Include search relevance fields if available (from RPC)
+          search_rank: business.search_rank,
+          alias_boost: business.alias_boost,
+          fuzzy_similarity: business.fuzzy_similarity,
+          final_score: business.final_score,
+          matched_alias: business.matched_alias,
         });
       }
     }
 
-    return NextResponse.json({ businesses: results }, { status: 200 });
+    return NextResponse.json({
+      businesses: results,
+      meta: {
+        usedFallback,
+        query,
+        // Include the best matched alias if available
+        matchedAlias: results[0]?.matched_alias || null,
+      }
+    }, { status: 200 });
   } catch (error) {
     console.error('Error in business search API:', error);
     return NextResponse.json(
@@ -153,4 +257,3 @@ export async function GET(req: NextRequest) {
     );
   }
 }
-
