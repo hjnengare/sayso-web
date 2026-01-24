@@ -24,10 +24,21 @@ import {
   Twitter,
   Percent,
 } from "lucide-react";
-import { EVENTS_AND_SPECIALS, Event } from "../../data/eventsData";
+import type { Event } from "../../lib/types/Event";
 import { useToast } from "../../contexts/ToastContext";
 import { PageLoader } from "../../components/Loader";
 import Header from "../../components/Header/Header";
+
+// Extended type for special with business info
+interface SpecialWithBusiness extends Event {
+  businessSlug?: string;
+  businessLogo?: string;
+  businessAddress?: string;
+  businessPhone?: string;
+  businessWebsite?: string;
+  businessEmail?: string;
+  isExpired?: boolean;
+}
 
 interface SpecialDetailPageProps {
   params: Promise<{
@@ -36,13 +47,57 @@ interface SpecialDetailPageProps {
 }
 
 export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
-  const [special, setSpecial] = useState<Event | null>(null);
+  const [special, setSpecial] = useState<SpecialWithBusiness | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const router = useRouter();
   const { showToast } = useToast();
   const { user } = useAuth();
+
+  // Unwrap the params Promise using React.use()
+  const resolvedParams = use(params);
+
+  // Fetch special from API
+  useEffect(() => {
+    const fetchSpecial = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await fetch(`/api/specials/${resolvedParams.id}`);
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            setError('Special not found');
+            setSpecial(null);
+            return;
+          }
+          throw new Error('Failed to fetch special');
+        }
+
+        const data = await response.json();
+
+        // Don't render expired specials
+        if (data.isExpired) {
+          setError('This special has expired');
+          setSpecial(null);
+          return;
+        }
+
+        setSpecial(data.special);
+      } catch (err) {
+        console.error('Error fetching special:', err);
+        setError('Failed to load special');
+        setSpecial(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSpecial();
+  }, [resolvedParams.id]);
 
   // Check if special is already saved on mount
   useEffect(() => {
@@ -63,18 +118,6 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
 
     checkSavedStatus();
   }, [special]);
-
-  // Unwrap the params Promise using React.use()
-  const resolvedParams = use(params);
-
-  useEffect(() => {
-    // Find the special by ID
-    const foundSpecial = EVENTS_AND_SPECIALS.find(e => e.id === resolvedParams.id);
-    if (foundSpecial) {
-      setSpecial(foundSpecial);
-    }
-    setLoading(false);
-  }, [resolvedParams.id]);
 
   const handleBookmark = () => {
     setIsBookmarked(!isBookmarked);
@@ -174,11 +217,18 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
     return <PageLoader size="xl" variant="wavy" color="sage" />;
   }
 
-  if (!special) {
+  if (error || !special) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-white via-coral/[0.02] to-white flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-charcoal mb-4" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>Special Not Found</h1>
+          <h1 className="text-2xl font-bold text-charcoal mb-4" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+            {error === 'This special has expired' ? 'Special Expired' : 'Special Not Found'}
+          </h1>
+          <p className="text-charcoal/60 mb-4" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+            {error === 'This special has expired'
+              ? 'This special offer is no longer available.'
+              : 'The special you\'re looking for doesn\'t exist.'}
+          </p>
           <Link href="/events-specials" className="text-coral hover:underline" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
             Back to Events & Specials
           </Link>
@@ -320,17 +370,29 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
                       <Calendar className="text-coral" size={18} />
                     </div>
                     <div>
-                      <p className="text-xs text-charcoal/60" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>Valid</p>
+                      <p className="text-xs text-charcoal/60" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>Valid From</p>
                       <p className="text-sm font-semibold text-charcoal" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>{special.startDate}</p>
                     </div>
                   </div>
+
+                  {special.endDate && (
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-10 h-10 bg-coral/10 rounded-full flex items-center justify-center">
+                        <Calendar className="text-coral" size={18} />
+                      </div>
+                      <div>
+                        <p className="text-xs text-charcoal/60" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>Valid Until</p>
+                        <p className="text-sm font-semibold text-charcoal" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>{special.endDate}</p>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="flex items-center gap-2.5">
                     <div className="w-10 h-10 bg-sage/10 rounded-full flex items-center justify-center">
                       <Percent className="text-sage" size={18} />
                     </div>
                     <div>
-                      <p className="text-xs text-charcoal/60" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>Discount</p>
+                      <p className="text-xs text-charcoal/60" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>Price</p>
                       <p className="text-sm font-semibold text-charcoal" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>{special.price || "Special Price"}</p>
                     </div>
                   </div>
@@ -345,15 +407,17 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-10 h-10 bg-sage/10 rounded-full flex items-center justify-center">
-                      <Users className="text-sage" size={18} />
+                  {special.businessName && (
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-10 h-10 bg-sage/10 rounded-full flex items-center justify-center">
+                        <Users className="text-sage" size={18} />
+                      </div>
+                      <div>
+                        <p className="text-xs text-charcoal/60" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>Offered By</p>
+                        <p className="text-sm font-semibold text-charcoal" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>{special.businessName}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs text-charcoal/60" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>Terms</p>
-                      <p className="text-sm font-semibold text-charcoal" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>See venue for details</p>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </motion.div>
 
@@ -383,13 +447,45 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
                 <h3 className="text-lg font-bold text-charcoal mb-3" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>Claim This Special</h3>
 
                 <div className="space-y-3">
-                  <button className="w-full bg-gradient-to-r from-sage to-sage/90 hover:from-sage/90 hover:to-sage/80 text-white font-semibold py-3 px-5 rounded-full transition-all duration-300 hover:scale-105 border border-white/30 text-sm" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                    Visit Venue
-                  </button>
+                  {special.bookingUrl ? (
+                    <a
+                      href={special.bookingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block w-full bg-gradient-to-r from-sage to-sage/90 hover:from-sage/90 hover:to-sage/80 text-white font-semibold py-3 px-5 rounded-full transition-all duration-300 hover:scale-105 border border-white/30 text-sm text-center"
+                      style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                    >
+                      Book Now
+                    </a>
+                  ) : special.businessWebsite ? (
+                    <a
+                      href={special.businessWebsite.startsWith('http') ? special.businessWebsite : `https://${special.businessWebsite}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block w-full bg-gradient-to-r from-sage to-sage/90 hover:from-sage/90 hover:to-sage/80 text-white font-semibold py-3 px-5 rounded-full transition-all duration-300 hover:scale-105 border border-white/30 text-sm text-center"
+                      style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                    >
+                      Visit Website
+                    </a>
+                  ) : (
+                    <button className="w-full bg-gradient-to-r from-sage to-sage/90 hover:from-sage/90 hover:to-sage/80 text-white font-semibold py-3 px-5 rounded-full transition-all duration-300 hover:scale-105 border border-white/30 text-sm" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                      Visit Venue
+                    </button>
+                  )}
 
-                  <button className="w-full bg-gradient-to-r from-coral to-coral/90 hover:from-coral/90 hover:to-coral/80 text-white font-semibold py-3 px-5 rounded-full transition-all duration-300 hover:scale-105 border border-white/30 text-sm" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                    Call for Details
-                  </button>
+                  {(special.businessPhone || special.bookingContact) ? (
+                    <a
+                      href={`tel:${special.bookingContact || special.businessPhone}`}
+                      className="block w-full bg-gradient-to-r from-coral to-coral/90 hover:from-coral/90 hover:to-coral/80 text-white font-semibold py-3 px-5 rounded-full transition-all duration-300 hover:scale-105 border border-white/30 text-sm text-center"
+                      style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                    >
+                      Call for Details
+                    </a>
+                  ) : (
+                    <button className="w-full bg-gradient-to-r from-coral to-coral/90 hover:from-coral/90 hover:to-coral/80 text-white font-semibold py-3 px-5 rounded-full transition-all duration-300 hover:scale-105 border border-white/30 text-sm" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                      Call for Details
+                    </button>
+                  )}
                 </div>
 
                 <div className="mt-4 pt-4 border-t border-charcoal/10">
@@ -415,21 +511,64 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
                 transition={{ delay: 0.6, duration: 0.6 }}
                 className="bg-gradient-to-br from-white/50 via-white/40 to-white/30 backdrop-blur-xl border border-white/60 rounded-[20px] ring-1 ring-white/30 p-4"
               >
-                <h3 className="text-lg font-bold text-charcoal mb-3" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>Venue Information</h3>
+                <h3 className="text-lg font-bold text-charcoal mb-3" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                  {special.businessName || 'Venue Information'}
+                </h3>
 
                 <div className="space-y-2.5">
-                  <div className="flex items-center gap-2.5">
-                    <Phone className="text-coral" size={16} />
-                    <span className="text-sm text-charcoal/80" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>+44 20 1234 5678</span>
-                  </div>
-                  <div className="flex items-center gap-2.5">
-                    <Globe className="text-sage" size={16} />
-                    <span className="text-sm text-charcoal/80" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>www.example.com</span>
-                  </div>
-                  <div className="flex items-center gap-2.5">
-                    <MapPin className="text-coral" size={16} />
-                    <span className="text-sm text-charcoal/80" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>{special.location}</span>
-                  </div>
+                  {special.businessPhone && (
+                    <div className="flex items-center gap-2.5">
+                      <Phone className="text-coral flex-shrink-0" size={16} />
+                      <a
+                        href={`tel:${special.businessPhone}`}
+                        className="text-sm text-charcoal/80 hover:text-coral transition-colors"
+                        style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                      >
+                        {special.businessPhone}
+                      </a>
+                    </div>
+                  )}
+                  {special.businessWebsite && (
+                    <div className="flex items-center gap-2.5">
+                      <Globe className="text-sage flex-shrink-0" size={16} />
+                      <a
+                        href={special.businessWebsite.startsWith('http') ? special.businessWebsite : `https://${special.businessWebsite}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-charcoal/80 hover:text-sage transition-colors truncate"
+                        style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                      >
+                        {special.businessWebsite.replace(/^https?:\/\//, '')}
+                      </a>
+                    </div>
+                  )}
+                  {(special.businessAddress || special.location) && (
+                    <div className="flex items-start gap-2.5">
+                      <MapPin className="text-coral flex-shrink-0 mt-0.5" size={16} />
+                      <span className="text-sm text-charcoal/80" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                        {special.businessAddress || special.location}
+                      </span>
+                    </div>
+                  )}
+                  {special.bookingContact && (
+                    <div className="flex items-center gap-2.5">
+                      <Phone className="text-sage flex-shrink-0" size={16} />
+                      <span className="text-sm text-charcoal/80" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                        {special.bookingContact}
+                      </span>
+                    </div>
+                  )}
+                  {/* Link to business profile if available */}
+                  {special.businessSlug && (
+                    <Link
+                      href={`/business/${special.businessSlug}`}
+                      className="inline-flex items-center gap-1 text-sm text-coral hover:text-coral/80 font-medium mt-2 transition-colors"
+                      style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                    >
+                      View Business Profile
+                      <ChevronRight className="w-4 h-4" />
+                    </Link>
+                  )}
                 </div>
               </motion.div>
             </div>

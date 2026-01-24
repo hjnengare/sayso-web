@@ -2,18 +2,21 @@
 
 import nextDynamic from "next/dynamic";
 import Link from "next/link";
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronRight, ChevronUp } from "lucide-react";
+import { ChevronRight, ChevronUp, Store, Calendar } from "lucide-react";
 import Pagination from "../components/EventsPage/Pagination";
 import EmailVerificationGuard from "../components/Auth/EmailVerificationGuard";
 import { useSavedItems } from "../contexts/SavedItemsContext";
+import { useSavedEvents } from "../contexts/SavedEventsContext";
 import Header from "../components/Header/Header";
 import BusinessCard from "../components/BusinessCard/BusinessCard";
+import EventCard from "../components/EventCard/EventCard";
 import EmptySavedState from "../components/Saved/EmptySavedState";
 import { PageLoader, Loader } from "../components/Loader";
 import { usePredefinedPageTitle } from "../hooks/usePageTitle";
 import { Business } from "../components/BusinessCard/BusinessCard";
+import type { Event } from "../lib/types/Event";
 
 const ITEMS_PER_PAGE = 12;
 
@@ -22,11 +25,18 @@ const Footer = nextDynamic(() => import("../components/Footer/Footer"), {
   ssr: false,
 });
 
+type TabType = "businesses" | "events";
+
 export default function SavedPage() {
   usePredefinedPageTitle("saved");
-  const { savedItems, isLoading: savedItemsLoading, refetch } = useSavedItems();
+  const { savedItems, isLoading: savedItemsLoading, refetch: refetchBusinesses } = useSavedItems();
+  const { savedEventIds, isLoading: savedEventsLoading, refetch: refetchEvents, removeSavedEvent } = useSavedEvents();
+
+  const [activeTab, setActiveTab] = useState<TabType>("businesses");
   const [savedBusinesses, setSavedBusinesses] = useState<Business[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [savedEvents, setSavedEvents] = useState<Event[]>([]);
+  const [isLoadingBusinesses, setIsLoadingBusinesses] = useState(true);
+  const [isLoadingEvents, setIsLoadingEvents] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -50,40 +60,46 @@ export default function SavedPage() {
     return savedBusinesses.filter(b => b.category === selectedCategory);
   }, [savedBusinesses, selectedCategory]);
 
-  // Calculate pagination based on filtered businesses
+  // Calculate pagination based on active tab
+  const currentItems = useMemo(() => {
+    if (activeTab === "businesses") {
+      return filteredBusinesses;
+    }
+    return savedEvents;
+  }, [activeTab, filteredBusinesses, savedEvents]);
+
   const totalPages = useMemo(
-    () => Math.ceil(filteredBusinesses.length / ITEMS_PER_PAGE),
-    [filteredBusinesses.length]
+    () => Math.ceil(currentItems.length / ITEMS_PER_PAGE),
+    [currentItems.length]
   );
-  const currentBusinesses = useMemo(() => {
+
+  const paginatedItems = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     const endIndex = startIndex + ITEMS_PER_PAGE;
-    return filteredBusinesses.slice(startIndex, endIndex);
-  }, [filteredBusinesses, currentPage]);
+    return currentItems.slice(startIndex, endIndex);
+  }, [currentItems, currentPage]);
 
-  // Reset to page 1 when category changes
+  // Reset to page 1 when category or tab changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCategory]);
+  }, [selectedCategory, activeTab]);
 
+  // Fetch saved businesses
   useEffect(() => {
     const fetchSavedBusinesses = async () => {
-      // Wait until SavedItemsContext has finished its initial load
       if (savedItemsLoading) return;
 
       try {
-        setIsLoading(true);
+        setIsLoadingBusinesses(true);
         setError(null);
 
-        // Use the endpoint that already returns BusinessCard-shaped data
         const response = await fetch("/api/user/saved");
 
         if (!response.ok) {
           if (response.status === 401) {
-            // Not logged in => show empty state, no error
             setError(null);
             setSavedBusinesses([]);
-            setIsLoading(false);
+            setIsLoadingBusinesses(false);
             return;
           }
 
@@ -100,118 +116,161 @@ export default function SavedPage() {
 
           const isTableError =
             response.status === 500 &&
-            (errorCode === "42P01" || // relation does not exist
-              errorCode === "42501" || // insufficient privilege
+            (errorCode === "42P01" ||
+              errorCode === "42501" ||
               errorMessage.toLowerCase().includes("relation") ||
               errorMessage.toLowerCase().includes("does not exist") ||
               errorMessage.toLowerCase().includes("permission denied"));
 
           if (isTableError) {
-            console.warn(
-              "Saved businesses table not accessible, feature disabled"
-            );
+            console.warn("Saved businesses table not accessible, feature disabled");
             setError(null);
             setSavedBusinesses([]);
-            setIsLoading(false);
+            setIsLoadingBusinesses(false);
             return;
           }
 
           if (response.status >= 500) {
-            console.warn(
-              "Error fetching saved businesses (non-critical):",
-              errorMessage
-            );
-            setError(
-              "Unable to load saved businesses at the moment. Please try again later."
-            );
+            console.warn("Error fetching saved businesses (non-critical):", errorMessage);
+            setError("Unable to load saved items at the moment. Please try again later.");
           } else {
             setError(null);
           }
 
           setSavedBusinesses([]);
-          setIsLoading(false);
+          setIsLoadingBusinesses(false);
           return;
         }
 
         const data = await response.json();
-
-        console.log("SavedPage - Fetched saved businesses (raw):", {
-          totalBusinesses: data.businesses?.length || 0,
-          businessIds: (data.businesses || []).map((b: any) => b.id),
-          raw: data.businesses,
-        });
-
-        // No need to transform – this is already Business[]
         const businesses: Business[] = data.businesses || [];
 
-        // Safety filter: make sure we only keep valid ones
         const filtered = businesses.filter((b) => {
-          if (!b || !b.id) {
-            console.warn("Saved business missing id:", b);
-            return false;
-          }
-          if (!b.name || b.name.trim() === "") {
-            console.warn("Saved business missing name:", b.id);
-            return false;
-          }
+          if (!b || !b.id) return false;
+          if (!b.name || b.name.trim() === "") return false;
           return true;
-        });
-
-        console.log("SavedPage - Final businesses after filter:", {
-          total: filtered.length,
-          ids: filtered.map((b) => b.id),
         });
 
         setSavedBusinesses(filtered);
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : String(err);
+        const errorMessage = err instanceof Error ? err.message : String(err);
         const isNetworkError =
           errorMessage.includes("fetch") ||
           errorMessage.includes("network") ||
           errorMessage.includes("Failed to fetch");
 
         if (isNetworkError) {
-          console.warn(
-            "Network error fetching saved businesses (non-critical):",
-            errorMessage
-          );
-          setError(
-            "Unable to load saved businesses. Please check your connection and try again."
-          );
+          console.warn("Network error fetching saved businesses:", errorMessage);
+          setError("Unable to load saved items. Please check your connection and try again.");
         } else {
-          console.warn(
-            "Error fetching saved businesses (non-critical):",
-            err
-          );
-          setError("Failed to load saved businesses. Please try again.");
+          console.warn("Error fetching saved businesses:", err);
+          setError("Failed to load saved items. Please try again.");
         }
 
         setSavedBusinesses([]);
       } finally {
-        setIsLoading(false);
+        setIsLoadingBusinesses(false);
       }
     };
 
     fetchSavedBusinesses();
   }, [savedItemsLoading, savedItems.length]);
 
+  // Fetch saved events
+  useEffect(() => {
+    const fetchSavedEvents = async () => {
+      console.log('[SavedPage] fetchSavedEvents called, savedEventsLoading:', savedEventsLoading);
+      if (savedEventsLoading) return;
+
+      try {
+        setIsLoadingEvents(true);
+
+        console.log('[SavedPage] Fetching /api/saved/events...');
+        const response = await fetch("/api/saved/events");
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            setSavedEvents([]);
+            setIsLoadingEvents(false);
+            return;
+          }
+
+          let errorMessage = "Failed to fetch saved events";
+          let errorCode: string | undefined;
+
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.error || errorData.message || errorMessage;
+            errorCode = errorData.code;
+          } catch {
+            // ignore parse error
+          }
+
+          const isTableError =
+            response.status === 500 &&
+            (errorCode === "42P01" ||
+              errorCode === "42501" ||
+              errorMessage.toLowerCase().includes("relation") ||
+              errorMessage.toLowerCase().includes("does not exist") ||
+              errorMessage.toLowerCase().includes("permission denied"));
+
+          if (isTableError) {
+            console.warn("Saved events table not accessible");
+            setSavedEvents([]);
+            setIsLoadingEvents(false);
+            return;
+          }
+
+          console.warn("Error fetching saved events:", errorMessage);
+          setSavedEvents([]);
+          setIsLoadingEvents(false);
+          return;
+        }
+
+        const data = await response.json();
+        console.log('[SavedPage] API response:', data);
+        const events: Event[] = data.events || [];
+
+        // Filter out any invalid events
+        const filtered = events.filter((e) => {
+          if (!e || !e.id) return false;
+          if (!e.title || e.title.trim() === "") return false;
+          return true;
+        });
+
+        console.log('[SavedPage] Filtered events:', filtered.length, filtered);
+        setSavedEvents(filtered);
+      } catch (err) {
+        console.warn("Error fetching saved events:", err);
+        setSavedEvents([]);
+      } finally {
+        setIsLoadingEvents(false);
+      }
+    };
+
+    fetchSavedEvents();
+  }, [savedEventsLoading, savedEventIds.length]);
+
+  // Handle unsave event
+  const handleUnsaveEvent = useCallback(async (eventId: string) => {
+    const success = await removeSavedEvent(eventId);
+    if (success) {
+      // Remove from local state immediately
+      setSavedEvents(prev => prev.filter(e => e.id !== eventId));
+    }
+  }, [removeSavedEvent]);
+
   // Handle pagination with loader and transitions
   const handlePageChange = (newPage: number) => {
     if (newPage === currentPage) return;
 
-    // Show loader
     setIsPaginationLoading(true);
-
-    // Scroll to top
     window.scrollTo({ top: 0, behavior: "smooth" });
 
-    // Wait for scroll and show transition
     setTimeout(() => {
       previousPageRef.current = currentPage;
       setCurrentPage(newPage);
 
-      // Hide loader after brief delay for smooth transition
       setTimeout(() => {
         setIsPaginationLoading(false);
       }, 300);
@@ -233,13 +292,21 @@ export default function SavedPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const handleRefetch = () => {
+    refetchBusinesses();
+    refetchEvents();
+  };
+
+  const isLoading = isLoadingBusinesses || isLoadingEvents || savedItemsLoading || savedEventsLoading;
+  const hasAnyContent = savedBusinesses.length > 0 || savedEvents.length > 0;
+  const totalSavedCount = savedBusinesses.length + savedEvents.length;
+
   return (
     <EmailVerificationGuard>
       <div
-        className="min-h-dvh bg-off-white relative font-urbanist"
+        className="min-h-dvh flex flex-col bg-off-white relative font-urbanist"
         style={{
-          fontFamily:
-            '"Urbanist", -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+          fontFamily: '"Urbanist", -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
         }}
       >
         <Header
@@ -252,7 +319,7 @@ export default function SavedPage() {
           whiteText={true}
         />
 
-        <div className="relative">
+        <main className="flex-1 relative">
           <div className="pt-20 sm:pt-24 pb-12 sm:pb-16 md:pb-20">
             <motion.div
               className="mx-auto w-full max-w-[2000px] px-3 relative mb-4"
@@ -261,18 +328,14 @@ export default function SavedPage() {
               transition={{ duration: 0.3 }}
             >
               {/* Breadcrumb Navigation */}
-              <nav
-                className="mb-4 sm:mb-6 px-2"
-                aria-label="Breadcrumb"
-              >
+              <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
                 <ol className="flex items-center gap-2 text-sm sm:text-base">
                   <li>
                     <Link
                       href="/home"
                       className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium"
                       style={{
-                        fontFamily:
-                          "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                        fontFamily: "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
                       }}
                     >
                       Home
@@ -285,8 +348,7 @@ export default function SavedPage() {
                     <span
                       className="text-charcoal font-semibold"
                       style={{
-                        fontFamily:
-                          "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                        fontFamily: "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
                       }}
                     >
                       Saved
@@ -296,7 +358,7 @@ export default function SavedPage() {
               </nav>
             </motion.div>
 
-            {isLoading || savedItemsLoading ? (
+            {isLoading ? (
               <div className="flex items-center justify-center py-12">
                 <PageLoader size="md" variant="wavy" color="sage" />
               </div>
@@ -305,24 +367,20 @@ export default function SavedPage() {
                 <div className="text-center max-w-md mx-auto px-4">
                   <p
                     className="text-body text-charcoal/70 mb-4"
-                    style={{
-                      fontFamily: "Urbanist, system-ui, sans-serif",
-                    }}
+                    style={{ fontFamily: "Urbanist, system-ui, sans-serif" }}
                   >
                     {error}
                   </p>
                   <button
-                    onClick={() => refetch()}
+                    onClick={handleRefetch}
                     className="px-6 py-3 bg-sage text-white rounded-full text-body font-semibold hover:bg-sage/90 transition-colors"
-                    style={{
-                      fontFamily: "Urbanist, system-ui, sans-serif",
-                    }}
+                    style={{ fontFamily: "Urbanist, system-ui, sans-serif" }}
                   >
                     Try Again
                   </button>
                 </div>
               </div>
-            ) : savedBusinesses.length > 0 ? (
+            ) : hasAnyContent ? (
               <motion.div
                 className="relative z-10"
                 initial={{ opacity: 0, y: 20 }}
@@ -340,8 +398,7 @@ export default function SavedPage() {
                     <h1
                       className="text-h2 sm:text-h1 font-bold text-charcoal"
                       style={{
-                        fontFamily:
-                          "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                        fontFamily: "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
                       }}
                     >
                       Your Saved Gems
@@ -349,45 +406,83 @@ export default function SavedPage() {
                     <p
                       className="text-body-sm text-charcoal/60 mt-2"
                       style={{
-                        fontFamily:
-                          "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                        fontFamily: "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
                       }}
                     >
-                      {filteredBusinesses.length} {filteredBusinesses.length === 1 ? "business" : "businesses"} saved
-                      {selectedCategory && selectedCategory !== 'All' && ` in ${selectedCategory}`}
+                      {totalSavedCount} {totalSavedCount === 1 ? "item" : "items"} saved
                     </p>
                   </motion.div>
 
-                  {/* Category Filters */}
-                  {categories.length > 1 && (
+                  {/* Tab Switcher */}
+                  <div className="mb-6 px-2">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setActiveTab("businesses")}
+                        className={`flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-urbanist font-600 text-body-sm sm:text-body transition-all duration-200 active:scale-95 ${
+                          activeTab === "businesses"
+                            ? "bg-coral text-white shadow-lg"
+                            : "bg-sage/10 text-charcoal/70 hover:bg-sage/20 hover:text-sage border border-sage/30"
+                        }`}
+                        style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                      >
+                        <Store className="w-4 h-4" />
+                        Businesses
+                        {savedBusinesses.length > 0 && (
+                          <span className="ml-1 text-xs sm:text-sm opacity-80">
+                            ({savedBusinesses.length})
+                          </span>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => setActiveTab("events")}
+                        className={`flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-urbanist font-600 text-body-sm sm:text-body transition-all duration-200 active:scale-95 ${
+                          activeTab === "events"
+                            ? "bg-coral text-white shadow-lg"
+                            : "bg-sage/10 text-charcoal/70 hover:bg-sage/20 hover:text-sage border border-sage/30"
+                        }`}
+                        style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                      >
+                        <Calendar className="w-4 h-4" />
+                        Events
+                        {savedEvents.length > 0 && (
+                          <span className="ml-1 text-xs sm:text-sm opacity-80">
+                            ({savedEvents.length})
+                          </span>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Category Filters (only for businesses tab) */}
+                  {activeTab === "businesses" && categories.length > 1 && (
                     <div className="mb-6 px-2">
-                      <div 
+                      <div
                         className="flex items-center gap-2 overflow-x-auto scrollbar-hide -mx-2 px-2"
-                        style={{ 
+                        style={{
                           WebkitOverflowScrolling: 'touch',
                           scrollBehavior: 'smooth',
                         }}
                       >
                         {categories.map((category) => {
                           const isSelected = selectedCategory === category || (!selectedCategory && category === 'All');
-                          const count = category === 'All' 
-                            ? savedBusinesses.length 
+                          const count = category === 'All'
+                            ? savedBusinesses.length
                             : savedBusinesses.filter(b => b.category === category).length;
-                          
+
                           return (
                             <button
                               key={category}
                               onClick={() => setSelectedCategory(category === 'All' ? null : category)}
-                              className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-urbanist font-600 text-body-sm sm:text-body transition-all duration-200 active:scale-95 flex-shrink-0 whitespace-nowrap ${
+                              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-urbanist font-500 text-xs sm:text-sm transition-all duration-200 active:scale-95 flex-shrink-0 whitespace-nowrap ${
                                 isSelected
-                                  ? "bg-coral text-white shadow-lg"
-                                  : "bg-sage/10 text-charcoal/70 hover:bg-sage/20 hover:text-sage border border-sage/30"
+                                  ? "bg-sage text-white"
+                                  : "bg-white/50 text-charcoal/60 hover:bg-sage/10 hover:text-charcoal border border-charcoal/10"
                               }`}
                               style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                             >
                               {category}
                               {count > 0 && (
-                                <span className="ml-2 text-xs sm:text-sm opacity-80">
+                                <span className="ml-1 opacity-80">
                                   ({count})
                                 </span>
                               )}
@@ -405,27 +500,74 @@ export default function SavedPage() {
                     </div>
                   )}
 
-                  {/* Paginated Content with Smooth Transition */}
+                  {/* Content Grid */}
                   <AnimatePresence mode="wait" initial={false}>
-                    <div
-                      key={currentPage}
-                      className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-3"
-                    >
-                      {currentBusinesses.map((business) => (
-                        <div key={business.id} className="list-none">
-                          <BusinessCard business={business} compact inGrid={true} />
+                    {activeTab === "businesses" ? (
+                      filteredBusinesses.length > 0 ? (
+                        <div
+                          key={`businesses-${currentPage}`}
+                          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-3"
+                        >
+                          {(paginatedItems as Business[]).map((business) => (
+                            <div key={business.id} className="list-none">
+                              <BusinessCard business={business} compact inGrid={true} />
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      ) : (
+                        <div className="text-center py-12">
+                          <Store className="w-12 h-12 mx-auto mb-4 text-charcoal/30" />
+                          <p className="text-charcoal/60 text-body" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                            No saved businesses yet
+                          </p>
+                          <Link
+                            href="/home"
+                            className="inline-block mt-4 px-6 py-2 bg-sage text-white rounded-full text-sm font-medium hover:bg-sage/90 transition-colors"
+                          >
+                            Explore Businesses
+                          </Link>
+                        </div>
+                      )
+                    ) : (
+                      savedEvents.length > 0 ? (
+                        <ul
+                          key={`events-${currentPage}`}
+                          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+                        >
+                          {(paginatedItems as Event[]).map((event, index) => (
+                            <EventCard
+                              key={event.id}
+                              event={event}
+                              index={index}
+                            />
+                          ))}
+                        </ul>
+                      ) : (
+                        <div className="text-center py-12">
+                          <Calendar className="w-12 h-12 mx-auto mb-4 text-charcoal/30" />
+                          <p className="text-charcoal/60 text-body" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                            No saved events yet
+                          </p>
+                          <Link
+                            href="/events-specials"
+                            className="inline-block mt-4 px-6 py-2 bg-sage text-white rounded-full text-sm font-medium hover:bg-sage/90 transition-colors"
+                          >
+                            Explore Events
+                          </Link>
+                        </div>
+                      )
+                    )}
                   </AnimatePresence>
 
                   {/* Pagination */}
-                  <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={handlePageChange}
-                    disabled={isPaginationLoading}
-                  />
+                  {currentItems.length > ITEMS_PER_PAGE && (
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      onPageChange={handlePageChange}
+                      disabled={isPaginationLoading}
+                    />
+                  )}
                 </div>
               </motion.div>
             ) : (
@@ -434,9 +576,9 @@ export default function SavedPage() {
               </div>
             )}
           </div>
+        </main>
 
-          <Footer />
-        </div>
+        <Footer />
 
         {/* Scroll to Top Button */}
         {showScrollTop && (

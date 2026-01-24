@@ -19,6 +19,8 @@ import { SocialLoginButtons } from "../components/Auth/Shared/SocialLoginButtons
 
 export default function LoginPage() {
   usePredefinedPageTitle('login');
+  const { showToast } = useToast();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -96,7 +98,7 @@ export default function LoginPage() {
         showToast("Welcome back", 'sage', 2000);
       } else {
         // Rate limit already incremented by checkRateLimit, no need to record failure
-        const errorMsg = authError || "Email or password is incorrect";
+        const errorMsg = "Email or password is incorrect";
         setError(errorMsg);
         showToast(errorMsg, 'sage', 3000);
       }

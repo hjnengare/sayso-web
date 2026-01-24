@@ -7,6 +7,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { OnboardingProvider } from "./contexts/OnboardingContext";
 import { ToastProvider } from "./contexts/ToastContext";
 import { SavedItemsProvider } from "./contexts/SavedItemsContext";
+import { SavedEventsProvider } from "./contexts/SavedEventsContext";
 import { NotificationsProvider } from "./contexts/NotificationsContext";
 import { MessagesProvider } from "./contexts/MessagesContext";
 import PageTransitionProvider from "./components/Providers/PageTransitionProvider";
@@ -135,14 +136,16 @@ export default function RootLayout({
           <AuthProvider>
             <OnboardingProvider>
               <SavedItemsProvider>
-                <NotificationsProvider>
-                  <MessagesProvider>
-                    <PageTransitionProvider>
-                      <BusinessNotifications />
-                      {children}
-                    </PageTransitionProvider>
-                  </MessagesProvider>
-                </NotificationsProvider>
+                <SavedEventsProvider>
+                  <NotificationsProvider>
+                    <MessagesProvider>
+                      <PageTransitionProvider>
+                        <BusinessNotifications />
+                        {children}
+                      </PageTransitionProvider>
+                    </MessagesProvider>
+                  </NotificationsProvider>
+                </SavedEventsProvider>
               </SavedItemsProvider>
             </OnboardingProvider>
           </AuthProvider>

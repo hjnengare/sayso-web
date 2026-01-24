@@ -40,21 +40,11 @@ export async function POST(request: Request) {
       }
     );
 
-    /**
-     * [OBSOLETE] This endpoint is deprecated. Account type toggling is no longer supported.
-     */
-    export async function POST() {
-      return NextResponse.json({ error: 'This endpoint is deprecated. Account type toggling is no longer supported.' }, { status: 410 });
-    }
-        { status: 500 }
-      );
-    }
-
+    // [OBSOLETE] This endpoint is deprecated. Account type toggling is no longer supported.
     return NextResponse.json({
-      success: true,
-      profile: updatedProfile,
-      message: `${accountType === 'user' ? 'Personal' : 'Business'} account added successfully`,
-    });
+      success: false,
+      error: 'This endpoint is deprecated. Account type toggling is no longer supported.',
+    }, { status: 410 });
   } catch (error) {
     console.error('Error in register-second-account-type endpoint:', error);
     return NextResponse.json(

@@ -196,25 +196,25 @@ export const authEdgeCases = {
   },
   passwords: {
     valid: [
-      'Password123!',
-      'MyStr0ng@Pass',
-      'C0mplex#P@ssw0rd',
-      'Secure123$'
+      'password', // letters only (6+ chars)
+      '123456', // numbers only (6 chars)
+      'onlylowercase', // lowercase only
+      'ONLYUPPERCASE', // uppercase only
+      '1234567890', // numbers only (10 chars)
+      'Password123!', // mixed with symbols
+      'MyStr0ng@Pass' // complex
     ],
     invalid: [
-      '',
-      'short',
-      'password',
-      '123456',
-      'onlylowercase',
-      'ONLYUPPERCASE',
-      '1234567890'
+      '', // empty
+      'short', // too short (5 chars)
+      '12345', // too short (5 chars)
+      'abc' // too short (3 chars)
     ],
     edge: [
-      'a'.repeat(129), // too long
-      'aA1!', // minimum complexity
-      'P@ssw0rd123', // common pattern
-      'abcdefg123' // sequential
+      'a'.repeat(129), // too long (max 128)
+      '123456', // minimum valid (6 chars)
+      'abcdef', // minimum valid letters
+      'a'.repeat(128) // maximum valid length
     ]
   }
 };

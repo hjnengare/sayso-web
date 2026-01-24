@@ -4,7 +4,7 @@ import { useState, useEffect, use, useRef } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight } from "lucide-react";
-import { Event } from "../../data/eventsData";
+import type { Event } from "../../lib/types/Event";
 import { useToast } from "../../contexts/ToastContext";
 import { useAuth } from "../../contexts/AuthContext";
 import nextDynamic from "next/dynamic";

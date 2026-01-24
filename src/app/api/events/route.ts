@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSupabase } from '@/app/lib/supabase/server';
+import { getTodayUTC } from '@/app/lib/services/eventLifecycle';
 
 // Cache configuration - 30 seconds for events data
 export const revalidate = 30;
@@ -88,10 +89,13 @@ export async function GET(req: NextRequest) {
       query = query.eq('segment', segment);
     }
 
-    // Filter for upcoming events only
+    // Filter for upcoming events only (events that haven't fully ended)
+    // An event is considered upcoming if its end_date (or start_date if no end_date) is today or later
     if (upcoming) {
-      const now = new Date().toISOString();
-      query = query.gte('start_date', now);
+      const todayStart = getTodayUTC().toISOString();
+      // Use OR filter: end_date >= today OR (end_date is null AND start_date >= today)
+      // This ensures multi-day events still show until their end date passes
+      query = query.or(`end_date.gte.${todayStart},and(end_date.is.null,start_date.gte.${todayStart})`);
     }
 
     // Search across multiple fields (title, description, venue, city)

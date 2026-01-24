@@ -2,9 +2,20 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from "react";
 import { useAuth } from "./AuthContext";
-import type { ToastNotificationData } from "../data/notificationData";
 import { formatTimeAgo } from "../utils/formatTimeAgo";
 import { apiClient } from "../lib/api/apiClient";
+
+// Type for notification data displayed in toast/UI
+export interface ToastNotificationData {
+  id: string;
+  type: 'review' | 'business' | 'user' | 'highlyRated';
+  message: string;
+  title: string;
+  timeAgo: string;
+  image: string;
+  imageAlt: string;
+  link?: string;
+}
 
 interface NotificationsContextType {
   notifications: ToastNotificationData[];

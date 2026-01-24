@@ -5,14 +5,21 @@ interface PasswordStrength {
   feedback: string;
   checks: {
     length: boolean;
+    uppercase: boolean;
+    lowercase: boolean;
+    number: boolean;
   };
   color?: string;
 }
 
 export function usePasswordStrength(password: string, email: string = ""): PasswordStrength {
   return useMemo(() => {
+    // Only length is required (6 chars minimum), other checks are always true for UI compatibility
     const checks = {
-      length: password.length >= 6
+      length: password.length >= 6,
+      uppercase: true, // Not required for validation
+      lowercase: true, // Not required for validation
+      number: true,    // Not required for validation
     };
 
     let score = 0;

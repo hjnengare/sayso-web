@@ -41,6 +41,13 @@ export function PasswordInput({
   const isStrong = showStrength && strength && strength.score >= 3 && touched && !hasError;
   const isWeak = showStrength && strength && strength.score > 0 && strength.score < 3 && !hasError;
 
+  // Adapt checks to support only 'length' property
+  const checks = strength?.checks || { length: false };
+  const lengthCheck = checks.length;
+  const uppercaseCheck = 'uppercase' in checks ? checks.uppercase : false;
+  const lowercaseCheck = 'lowercase' in checks ? checks.lowercase : false;
+  const numberCheck = 'number' in checks ? checks.number : false;
+
   return (
     <div>
       <label className="block text-sm font-semibold text-white mb-2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>

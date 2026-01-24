@@ -1,0 +1,41 @@
+// Event type for use throughout the app
+export interface Event {
+  id: string;
+  title: string;
+  type: "event" | "special";
+  image?: string | null;
+  alt?: string;
+  icon?: string;
+  location: string;
+  rating?: number | null;
+  startDate: string;
+  endDate?: string;
+  price?: string | null;
+  description?: string;
+  bookingUrl?: string;
+  bookingContact?: string;
+  source?: string;
+  ticketmasterAttractionId?: string | null;
+  ticketmaster_url?: string;
+  venueId?: string | null;
+  venueName?: string;
+  venueAddress?: string;
+  city?: string;
+  country?: string;
+  url?: string;
+  purchaseUrl?: string;
+  segment?: string;
+  genre?: string;
+  subGenre?: string;
+  href?: string;
+  startDateISO?: string;
+  endDateISO?: string;
+  occurrences?: Array<{ startDate: string; endDate?: string; bookingUrl?: string }>;
+  allDates?: string[];
+  canonicalKey?: string;
+  businessId?: string;
+  businessName?: string;
+  createdBy?: string;
+  createdAt?: string;
+  isBusinessOwned?: boolean;
+}

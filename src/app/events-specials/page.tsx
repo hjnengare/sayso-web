@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "../components/Header/Header";
@@ -9,68 +9,80 @@ import FilterTabs from "../components/EventsPage/FilterTabs";
 import ResultsCount from "../components/EventsPage/ResultsCount";
 import EventsGrid from "../components/EventsPage/EventsGrid";
 import EventsGridSkeleton from "../components/EventsPage/EventsGridSkeleton";
-import Pagination from "../components/EventsPage/Pagination";
 import EmptyState from "../components/EventsPage/EmptyState";
 import SearchInput from "../components/SearchInput/SearchInput";
-import { Event } from "../data/eventsData";
+import type { Event } from "../lib/types/Event";
 import { useToast } from "../contexts/ToastContext";
 import { useDebounce } from "../hooks/useDebounce";
-import { useEvents } from "../hooks/useEvents";
-import { ChevronUp, ChevronRight } from "lucide-react";
+import { useEventsWithGlobalConsolidation } from "../hooks/useEvents";
+import { useSpecials } from "../hooks/useSpecials";
+import { ChevronUp, ChevronRight, ChevronDown } from "lucide-react";
 import { Loader } from "../components/Loader/Loader";
 import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
 
-const ITEMS_PER_PAGE = 12;
+const ITEMS_PER_PAGE = 20;
 
 export default function EventsSpecialsPage() {
-  const [currentPage, setCurrentPage] = useState(1);
   const [selectedFilter, setSelectedFilter] = useState<"all" | "event" | "special">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
-  const [isPaginationLoading, setIsPaginationLoading] = useState(false);
   const { showToast } = useToast();
-  const previousPageRef = useRef(currentPage);
 
   // Debounce search query for smoother real-time filtering (300ms delay)
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
-  // Calculate offset for server-side pagination
-  const offset = (currentPage - 1) * ITEMS_PER_PAGE;
-
-  // Fetch events from ticketmaster_events table via /api/events with server-side pagination and search
-  // The useEvents hook calls /api/events which queries the ticketmaster_events table in Supabase
-  const { events: allEvents, loading: eventsLoading, error: eventsError, count: totalCount } = useEvents({
-    limit: ITEMS_PER_PAGE,
-    offset: offset,
+  // Fetch events with global consolidation
+  const {
+    events: allEvents,
+    loading: eventsLoading,
+    loadingMore,
+    error: eventsError,
+    hasMore,
+    loadMore,
+  } = useEventsWithGlobalConsolidation({
+    pageSize: ITEMS_PER_PAGE,
     search: debouncedSearchQuery.trim() || undefined,
     upcoming: true,
   });
 
-  // Client-side filtering for type (event/special) only
-  // Search is handled server-side for better performance
+  // Fetch business specials (merged into the same grid)
+  const {
+    specials: allSpecials,
+    loading: specialsLoading,
+    error: specialsError,
+    hasMore: specialsHasMore,
+    loadMore: loadMoreSpecials,
+  } = useSpecials({
+    limit: ITEMS_PER_PAGE,
+    search: debouncedSearchQuery.trim() || undefined,
+  });
+
+  // Merge events and specials for unified display
+  const mergedEvents = useMemo(() => {
+    // Merge and sort by startDate (descending)
+    const merged = [...allEvents, ...allSpecials];
+    return merged.sort((a, b) => {
+      const aDate = new Date(a.startDateISO || a.startDate).getTime();
+      const bDate = new Date(b.startDateISO || b.startDate).getTime();
+      return bDate - aDate;
+    });
+  }, [allEvents, allSpecials]);
+
+  // Client-side filtering for type (all/event/special)
   const filteredEvents = useMemo(() => {
-    // Filter by type (all Ticketmaster events are type 'event', but we keep the filter for future specials)
-    return allEvents.filter((event) => 
+    return mergedEvents.filter((event) =>
       selectedFilter === "all" || event.type === selectedFilter
     );
-  }, [allEvents, selectedFilter]);
-
-  // Use server-side count for pagination
-  const totalPages = Math.max(1, Math.ceil(totalCount / ITEMS_PER_PAGE));
+  }, [mergedEvents, selectedFilter]);
 
   const currentEvents = filteredEvents;
 
+  // Reset when filter changes
   useEffect(() => {
-    if (currentPage > totalPages && totalPages > 0) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
-
-  // Reset to page 1 when search or filter changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [debouncedSearchQuery, selectedFilter]);
+    // Reset is handled by the hook when search changes
+    // This effect is for filter type changes only
+  }, [selectedFilter]);
 
   useEffect(() => {
     const updateIsDesktop = () => setIsDesktop(typeof window !== "undefined" && window.innerWidth >= 1024);
@@ -90,20 +102,14 @@ export default function EventsSpecialsPage() {
 
   const handleFilterChange = (filter: "all" | "event" | "special") => {
     setSelectedFilter(filter);
-    setCurrentPage(1);
   };
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    // Reset to first page when search changes
-    if (query !== debouncedSearchQuery) {
-      setCurrentPage(1);
-    }
   };
 
   const handleSubmitQuery = (query: string) => {
     setSearchQuery(query);
-    setCurrentPage(1);
   };
 
   const handleBookmark = (event: Event) => {
@@ -114,26 +120,9 @@ export default function EventsSpecialsPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Handle pagination with loader and transitions
-  const handlePageChange = (newPage: number) => {
-    if (newPage === currentPage) return;
-    
-    // Show loader
-    setIsPaginationLoading(true);
-    
-    // Scroll to top
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    
-    // Wait for scroll and show transition
-    setTimeout(() => {
-      previousPageRef.current = currentPage;
-      setCurrentPage(newPage);
-      
-      // Hide loader after brief delay for smooth transition
-      setTimeout(() => {
-        setIsPaginationLoading(false);
-      }, 300);
-    }, 150);
+  // Handle load more button click
+  const handleLoadMore = async () => {
+    await loadMore();
   };
 
   return (
@@ -249,8 +238,8 @@ export default function EventsSpecialsPage() {
             {/* Show search status indicator */}
             {debouncedSearchQuery.trim().length > 0 && (
               <div className="mt-2 px-2 text-sm text-charcoal/60" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                {filteredEvents.length > 0 
-                  ? `Found ${filteredEvents.length} ${filteredEvents.length === 1 ? 'result' : 'results'} for "${debouncedSearchQuery}"`
+                {filteredEvents.length > 0
+                  ? `Found ${filteredEvents.length} result${filteredEvents.length === 1 ? '' : 's'} for "${debouncedSearchQuery}"`
                   : `No results found for "${debouncedSearchQuery}"`
                 }
               </div>
@@ -263,23 +252,16 @@ export default function EventsSpecialsPage() {
           </div>
 
           <div className="py-4">
-            {eventsLoading ? (
+            {(eventsLoading || specialsLoading) ? (
               <EventsGridSkeleton count={ITEMS_PER_PAGE} />
-            ) : eventsError ? (
+            ) : (eventsError || specialsError) ? (
               <div className="text-center py-20">
-                <p className="text-coral mb-4">Failed to load events</p>
-                <p className="text-charcoal/60 text-sm">{eventsError}</p>
+                <p className="text-coral mb-4">Failed to load {eventsError ? 'events' : 'specials'}</p>
+                <p className="text-charcoal/60 text-sm">{eventsError || specialsError}</p>
               </div>
             ) : currentEvents.length > 0 ? (
               <>
-                {/* Loading Spinner Overlay for Pagination */}
-                {isPaginationLoading && (
-                  <div className="fixed inset-0 z-[9998] bg-off-white/95 backdrop-blur-sm flex items-center justify-center min-h-screen">
-                    <Loader size="lg" variant="wavy" color="sage" />
-                  </div>
-                )}
-
-                {/* Paginated Content with Smooth Transition */}
+                {/* Events & Specials Grid with Smooth Entry Animation */}
                 <AnimatePresence mode="wait" initial={false}>
                   {isDesktop ? (
                     <div className="relative">
@@ -293,9 +275,8 @@ export default function EventsSpecialsPage() {
                     </div>
                   ) : (
                     <motion.div
-                      key={currentPage}
                       initial={{ opacity: 0, y: 20, scale: 0.98, filter: "blur(8px)" }}
-                      animate={{ opacity: isPaginationLoading ? 0 : 1, y: 0, scale: 1, filter: "blur(0px)" }}
+                      animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
                       exit={{ opacity: 0, y: -20, scale: 0.98, filter: "blur(8px)" }}
                       transition={{
                         duration: 0.4,
@@ -307,12 +288,32 @@ export default function EventsSpecialsPage() {
                   )}
                 </AnimatePresence>
 
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={handlePageChange}
-                  disabled={isPaginationLoading}
-                />
+                {/* Load More Button (shows if either has more) */}
+                {(hasMore || specialsHasMore) && (
+                  <div className="flex items-center justify-center py-8">
+                    <button
+                      onClick={async () => {
+                        if (hasMore) await handleLoadMore();
+                        if (specialsHasMore) await loadMoreSpecials();
+                      }}
+                      disabled={loadingMore || specialsLoading}
+                      className="flex items-center gap-2 px-6 py-3 bg-navbar-bg text-white rounded-full font-medium hover:bg-navbar-bg/90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                      style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                    >
+                      {(loadingMore || specialsLoading) ? (
+                        <>
+                          <Loader size="sm" variant="spinner" color="white" />
+                          <span>Loading more...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Load More Results</span>
+                          <ChevronDown className="w-5 h-5" />
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
               </>
             ) : (
               <EmptyState filterType={selectedFilter} />
