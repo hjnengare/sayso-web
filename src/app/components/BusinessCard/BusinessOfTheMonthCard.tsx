@@ -272,7 +272,7 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
        
         {/* MEDIA - Full bleed with premium overlay */}
         <div
-          className="relative overflow-hidden z-10 cursor-pointer backdrop-blur-xl h-[490px] sm:h-[320px] md:h-[240px]"
+          className="relative overflow-hidden z-10 cursor-pointer backdrop-blur-xl h-[240px] sm:h-[320px] md:h-[240px]"
           onClick={handleCardClick}
         >
           <div 
