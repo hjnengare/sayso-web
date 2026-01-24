@@ -76,56 +76,101 @@ const normalize = (value: string | undefined | null) =>
     .toLowerCase()
     .replace(/\s+/g, '-');
 
-const toTime = (value?: string) => {
-  const d = value ? new Date(value) : null;
-  const t = d && !isNaN(d.getTime()) ? d.getTime() : null;
-  return t;
-};
-
-const withinDays = (a?: string, b?: string, days = 7) => {
-  const ta = toTime(a);
-  const tb = toTime(b);
-  if (ta == null || tb == null) return false;
-  const diff = Math.abs(ta - tb);
-  return diff <= days * 24 * 60 * 60 * 1000;
-};
-
-const isRangeConnected = (aStart?: string, aEnd?: string, bStart?: string, bEnd?: string) => {
-  const dayMs = 24 * 60 * 60 * 1000;
-  const aS = toTime(aStart);
-  const aE = toTime(aEnd || aStart);
-  const bS = toTime(bStart);
-  const bE = toTime(bEnd || bStart);
-  if (aS == null || aE == null || bS == null || bE == null) return false;
-  const overlap = (bS <= aE) && (bE >= aS);
-  const adjacentForward = bS >= aE && (bS - aE) <= dayMs;
-  const adjacentBackward = aS >= bE && (aS - bE) <= dayMs;
-  return overlap || adjacentForward || adjacentBackward;
-};
-
-const buildCanonicalKey = (event: Partial<Event> & { id?: string; ticketmasterAttractionId?: string; venueId?: string; title?: string; location?: string; source?: string }) => {
-  if (event.source === 'ticketmaster') {
-    if (event.ticketmasterAttractionId && event.venueId) {
-      return `ticketmaster:attr:${event.ticketmasterAttractionId}:venue:${event.venueId}`;
-    }
-    if (event.id) return `ticketmaster:${event.id}`;
+/**
+ * Extract attraction ID from Ticketmaster raw_data
+ * The attraction represents the event series (e.g., "Pretty Woman The Musical")
+ */
+const extractAttractionId = (rawData: any): string | null => {
+  if (!rawData) return null;
+  // Ticketmaster API structure: _embedded.attractions[0].id
+  const attractions = rawData._embedded?.attractions;
+  if (attractions && Array.isArray(attractions) && attractions.length > 0) {
+    return attractions[0].id || null;
   }
-  if (event.id) return event.id;
-  return `${normalize(event.title)}|${normalize(event.location)}`;
+  return null;
 };
 
-const isFallbackMatch = (a: Event, b: Event) => {
+/**
+ * Extract venue ID from Ticketmaster raw_data
+ */
+const extractVenueId = (rawData: any): string | null => {
+  if (!rawData) return null;
+  // Ticketmaster API structure: _embedded.venues[0].id
+  const venues = rawData._embedded?.venues;
+  if (venues && Array.isArray(venues) && venues.length > 0) {
+    return venues[0].id || null;
+  }
+  return null;
+};
+
+/**
+ * Build a canonical key for event consolidation
+ * Priority:
+ * 1. Ticketmaster attraction ID + venue (most reliable for grouping same shows)
+ * 2. Normalized title + venue name + city (fallback for all events)
+ */
+const buildCanonicalKey = (event: {
+  title?: string;
+  location?: string;
+  venueName?: string;
+  city?: string;
+  ticketmasterAttractionId?: string | null;
+  venueId?: string | null;
+  source?: string;
+}) => {
+  // For Ticketmaster events with attraction ID, use that as the primary key
+  // This groups all dates of the same show together
+  if (event.ticketmasterAttractionId) {
+    const venueKey = event.venueId || normalize(event.venueName) || normalize(event.location);
+    return `attraction:${event.ticketmasterAttractionId}:${venueKey}`;
+  }
+
+  // Fallback: use normalized title + venue + city
+  // This handles non-Ticketmaster events and TM events without attraction ID
+  const titleKey = normalize(event.title);
+  const venueKey = normalize(event.venueName) || normalize(event.location);
+  const cityKey = normalize(event.city);
+
+  return `event:${titleKey}:${venueKey}:${cityKey}`;
+};
+
+/**
+ * Check if two events should be considered the same event series
+ * Used as fallback when canonical keys don't match
+ */
+const isSameEventSeries = (a: Event, b: Event): boolean => {
+  // Must have matching titles (case-insensitive, normalized)
   const titleMatch = normalize(a.title) === normalize(b.title);
-  const venueMatch = (a.venueId && b.venueId && a.venueId === b.venueId) || normalize(a.location) === normalize(b.location) || normalize(a.venueName) === normalize(b.venueName);
-  const cityMatch = normalize(a.city) === normalize(b.city);
-  const connected = isRangeConnected(a.startDateISO || a.startDate, a.endDateISO || a.endDate, b.startDateISO || b.startDate, b.endDateISO || b.endDate);
-  // Also allow a looser 14-day window as a safety net
-  const dateWindow = withinDays(a.startDateISO || a.startDate, b.startDateISO || b.startDate, 14);
-  return titleMatch && venueMatch && cityMatch && (connected || dateWindow);
+  if (!titleMatch) return false;
+
+  // Must have matching venue (by ID, name, or location)
+  const venueMatch =
+    (a.venueId && b.venueId && a.venueId === b.venueId) ||
+    (normalize(a.venueName) && normalize(a.venueName) === normalize(b.venueName)) ||
+    (normalize(a.location) === normalize(b.location));
+  if (!venueMatch) return false;
+
+  // Must have matching city (if both have city info)
+  if (a.city && b.city && normalize(a.city) !== normalize(b.city)) {
+    return false;
+  }
+
+  // All checks passed - these are the same event series
+  return true;
 };
 
+/**
+ * Aggregate events by consolidating duplicate event series into single entries
+ * with date ranges. This transforms multiple rows for "Pretty Woman Mar 21",
+ * "Pretty Woman Mar 22", etc. into a single "Pretty Woman Mar 21-28" entry.
+ */
 const aggregateEvents = (events: Event[]): Event[] => {
-  const map = new Map<string, Event & { occurrences: Array<{ startDate: string; endDate?: string; bookingUrl?: string }>; startDateISO?: string; endDateISO?: string }>();
+  const map = new Map<string, Event & {
+    occurrences: Array<{ startDate: string; endDate?: string; bookingUrl?: string }>;
+    startDateISO?: string;
+    endDateISO?: string;
+    allDates: string[];
+  }>();
 
   for (const evt of events) {
     const primaryKey = evt.canonicalKey || buildCanonicalKey(evt);
@@ -134,10 +179,14 @@ const aggregateEvents = (events: Event[]): Event[] => {
 
     let keyToUse = primaryKey;
 
+    // First check if canonical key matches an existing entry
     if (!map.has(primaryKey)) {
-      // try fallback matching against existing entries
-      for (const [existingKey, existing] of map.entries()) {
-        if (isFallbackMatch(existing, evt)) {
+      // Try fallback matching against existing entries
+      // This catches events that should be grouped but have different canonical keys
+      const entries = Array.from(map.entries());
+      for (let i = 0; i < entries.length; i++) {
+        const [existingKey, existing] = entries[i];
+        if (isSameEventSeries(existing, evt)) {
           keyToUse = existingKey;
           break;
         }
@@ -146,38 +195,59 @@ const aggregateEvents = (events: Event[]): Event[] => {
 
     const existing = map.get(keyToUse);
     if (!existing) {
+      // First occurrence of this event series
       map.set(keyToUse, {
         ...evt,
         canonicalKey: keyToUse,
         startDateISO: startISO,
         endDateISO: endISO,
         occurrences: [{ startDate: startISO, endDate: endISO, bookingUrl: evt.bookingUrl || evt.purchaseUrl }],
+        allDates: startISO ? [startISO] : [],
       });
       continue;
     }
 
+    // Add this occurrence to the existing event series
     const occurrences = existing.occurrences ? [...existing.occurrences] : [];
     occurrences.push({ startDate: startISO, endDate: endISO, bookingUrl: evt.bookingUrl || evt.purchaseUrl });
 
-    const allStarts = occurrences.map((o) => o.startDate).filter(Boolean);
-    const allEnds = occurrences.map((o) => o.endDate).filter(Boolean);
+    // Track all dates for this event series
+    const allDates = existing.allDates ? [...existing.allDates] : [];
+    if (startISO && !allDates.includes(startISO)) {
+      allDates.push(startISO);
+    }
 
-    const minStart = allStarts.length ? allStarts.slice().sort()[0] : existing.startDateISO;
-    const maxEnd = allEnds.length ? allEnds.slice().sort()[allEnds.length - 1] : existing.endDateISO;
+    // Calculate the date range (earliest start to latest end)
+    const allStarts = occurrences.map((o) => o.startDate).filter(Boolean);
+    const allEnds = occurrences
+      .map((o) => o.endDate || o.startDate)
+      .filter(Boolean);
+
+    // Sort to find min/max dates
+    allStarts.sort();
+    allEnds.sort();
+
+    const minStart = allStarts[0] || existing.startDateISO;
+    const maxEnd = allEnds[allEnds.length - 1] || existing.endDateISO;
 
     map.set(keyToUse, {
       ...existing,
       occurrences,
+      allDates,
       startDateISO: minStart,
       endDateISO: maxEnd,
       startDate: minStart ? formatDate(minStart) : existing.startDate,
       endDate: maxEnd ? formatDate(maxEnd) : existing.endDate,
+      // Keep the best available booking URL and href
       href: existing.href || evt.href,
       bookingUrl: existing.bookingUrl || evt.bookingUrl,
       purchaseUrl: existing.purchaseUrl || evt.purchaseUrl,
+      // Keep the best image (prefer existing to avoid flicker)
+      image: existing.image || evt.image,
     });
   }
 
+  // Sort by earliest start date
   return Array.from(map.values()).sort((a, b) => {
     const aDate = a.startDateISO ? new Date(a.startDateISO).getTime() : new Date(a.startDate).getTime();
     const bDate = b.startDateISO ? new Date(b.startDateISO).getTime() : new Date(b.startDate).getTime();
@@ -250,12 +320,22 @@ export function useEvents(options: UseEventsOptions = {}): UseEventsResult {
         const endISO = dbEvent.end_date || null;
         const id = dbEvent.ticketmaster_id || dbEvent.id;
         const source = dbEvent.source || (dbEvent.ticketmaster_id ? 'ticketmaster' : 'internal');
-        const venueId = dbEvent.venue_id || dbEvent.venueId;
         const city = dbEvent.city;
-        const attractionId = dbEvent.ticketmaster_attraction_id || dbEvent.attraction_id;
-        const bookingUrl = dbEvent.ticket_url || dbEvent.booking_url || undefined;
+        const bookingUrl = dbEvent.ticket_url || dbEvent.booking_url || dbEvent.url || undefined;
 
-        return {
+        // Extract attraction ID and venue ID from raw_data (Ticketmaster API response)
+        // This is critical for proper event consolidation
+        const rawData = dbEvent.raw_data;
+        const attractionId = extractAttractionId(rawData) ||
+          dbEvent.ticketmaster_attraction_id ||
+          dbEvent.attraction_id ||
+          null;
+        const venueId = extractVenueId(rawData) ||
+          dbEvent.venue_id ||
+          dbEvent.venueId ||
+          null;
+
+        const eventData = {
           id,
           title: dbEvent.title || 'Untitled Event',
           type: 'event' as const,
@@ -278,8 +358,23 @@ export function useEvents(options: UseEventsOptions = {}): UseEventsResult {
           city,
           purchaseUrl: bookingUrl,
           bookingUrl,
-          canonicalKey: buildCanonicalKey({ id, title: dbEvent.title, location: dbEvent.venue_name || dbEvent.city, source, ticketmasterAttractionId: attractionId, venueId }),
           occurrences: [{ startDate: startISO, endDate: endISO, bookingUrl }],
+        };
+
+        // Build canonical key for consolidation
+        const canonicalKey = buildCanonicalKey({
+          title: eventData.title,
+          location: eventData.location,
+          venueName: eventData.venueName,
+          city: eventData.city,
+          ticketmasterAttractionId: attractionId,
+          venueId: venueId,
+          source,
+        });
+
+        return {
+          ...eventData,
+          canonicalKey,
         };
       });
 

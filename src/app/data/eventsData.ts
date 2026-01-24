@@ -2,35 +2,36 @@ export type Event = {
   id: string;
   title: string;
   type: "event" | "special";
-  image?: string;
+  image?: string | null;
   alt?: string;
   icon?: string; // SVG icon identifier
   location: string;
   rating?: number | null;
   startDate: string; // Running date (formatted)
   endDate?: string; // Optional end date for multi-day events (formatted)
-  price?: string;
+  price?: string | null;
   description?: string;
-    bookingUrl?: string;
-    bookingContact?: string;
-    source?: string; // e.g., ticketmaster, internal
-    ticketmasterAttractionId?: string;
-    ticketmaster_url?: string;
-    venueId?: string;
-    venueName?: string;
-    venueAddress?: string;
-    city?: string;
-    country?: string;
-    url?: string;
-    purchaseUrl?: string;
-    segment?: string;
-    genre?: string;
-    subGenre?: string;
+  bookingUrl?: string;
+  bookingContact?: string;
+  source?: string; // e.g., ticketmaster, internal
+  ticketmasterAttractionId?: string | null; // Ticketmaster attraction ID for event series grouping
+  ticketmaster_url?: string;
+  venueId?: string | null; // Venue ID for consolidation
+  venueName?: string;
+  venueAddress?: string;
+  city?: string;
+  country?: string;
+  url?: string;
+  purchaseUrl?: string;
+  segment?: string;
+  genre?: string;
+  subGenre?: string;
   href?: string;
   // Date metadata to support consolidation/sorting
   startDateISO?: string; // Raw ISO start date if available
   endDateISO?: string;   // Raw ISO end date if available
   occurrences?: Array<{ startDate: string; endDate?: string; bookingUrl?: string }>; // All occurrences for detail view
+  allDates?: string[]; // All individual dates for this event series (ISO strings)
   canonicalKey?: string; // Stable key used for consolidation
   // Business ownership fields
   businessId?: string; // Links event to business

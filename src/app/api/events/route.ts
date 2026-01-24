@@ -72,9 +72,10 @@ export async function GET(req: NextRequest) {
     const upcoming = searchParams.get('upcoming') !== 'false'; // Default to true
 
     // Optimize query - select all fields from ticketmaster_events table
+    // Include raw_data for attraction/venue ID extraction (needed for event consolidation)
     let query = supabase
       .from('ticketmaster_events')
-      .select('id, ticketmaster_id, title, description, type, start_date, end_date, location, city, country, venue_name, venue_address, image_url, url, price_range, classification, segment, genre, sub_genre', { count: 'exact' })
+      .select('id, ticketmaster_id, title, description, type, start_date, end_date, location, city, country, venue_name, venue_address, image_url, url, price_range, classification, segment, genre, sub_genre, raw_data', { count: 'exact' })
       .order('start_date', { ascending: true });
 
     // Filter by city if provided
