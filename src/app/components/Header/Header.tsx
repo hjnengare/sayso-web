@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { Menu, Bell, User, Settings, Bookmark } from "lucide-react";
+import { Menu, Bell, User, Settings, Bookmark, MessageCircle } from "lucide-react";
 import FilterModal from "../FilterModal/FilterModal";
 import SearchInput from "../SearchInput/SearchInput";
 import Logo from "../Logo/Logo";
@@ -202,24 +202,48 @@ export default function Header({
                 </OptimizedLink>
               )}
 
+              {/* DM (personal users only) */}
+              {!isBusinessAccountUser && !isGuest && (
+                <OptimizedLink
+                  href="/messages"
+                  className={`relative w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
+                    isMessagesActive
+                      ? "text-sage bg-sage/5"
+                      : whiteText
+                        ? "text-white hover:text-white/80 hover:bg-white/10"
+                        : "text-charcoal/80 hover:text-sage hover:bg-sage/5"
+                  }`}
+                  aria-label="Messages"
+                >
+                  <MessageCircle className="w-5 h-5" fill={isMessagesActive ? "currentColor" : "none"} />
+                  {unreadMessagesCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-white text-[10px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
+                      {unreadMessagesCount > 99 ? "99+" : unreadMessagesCount}
+                    </span>
+                  )}
+                </OptimizedLink>
+              )}
+
               {/* Profile/Settings icon */}
-              <OptimizedLink
-                href={isGuest ? "/login" : isBusinessAccountUser ? "/settings" : "/profile"}
-                className={`relative w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
-                  isProfileActive || isSettingsActive
-                    ? "text-sage bg-sage/5"
-                    : whiteText
-                      ? "text-white hover:text-white/80 hover:bg-white/10"
-                      : "text-charcoal/80 hover:text-sage hover:bg-sage/5"
-                }`}
-                aria-label={isBusinessAccountUser ? "Settings" : "Profile"}
-              >
-                {isBusinessAccountUser ? (
-                  <Settings className="w-5 h-5" fill={(isSettingsActive) ? "currentColor" : "none"} />
-                ) : (
-                  <User className="w-5 h-5" fill={(isProfileActive) ? "currentColor" : "none"} />
-                )}
-              </OptimizedLink>
+              {(!isBusinessAccountUser && !isGuest) ? null : (
+                <OptimizedLink
+                  href={isGuest ? "/login" : isBusinessAccountUser ? "/settings" : "/profile"}
+                  className={`relative w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
+                    isProfileActive || isSettingsActive
+                      ? "text-sage bg-sage/5"
+                      : whiteText
+                        ? "text-white hover:text-white/80 hover:bg-white/10"
+                        : "text-charcoal/80 hover:text-sage hover:bg-sage/5"
+                  }`}
+                  aria-label={isBusinessAccountUser ? "Settings" : "Profile"}
+                >
+                  {isBusinessAccountUser ? (
+                    <Settings className="w-5 h-5" fill={(isSettingsActive) ? "currentColor" : "none"} />
+                  ) : (
+                    <User className="w-5 h-5" fill={(isProfileActive) ? "currentColor" : "none"} />
+                  )}
+                </OptimizedLink>
+              )}
 
               {/* Mobile Menu Hamburger Button */}
               <button
