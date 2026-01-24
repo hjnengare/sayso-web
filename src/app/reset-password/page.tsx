@@ -106,10 +106,7 @@ export default function ResetPasswordPage() {
   const getPasswordError = () => {
     if (!passwordTouched) return "";
     if (!password) return "Password is required";
-    if (password.length < 8) return "Password must be at least 8 characters";
-    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-      return "Password must contain uppercase, lowercase, and number";
-    }
+    if (password.length < 6) return "Password must be at least 6 characters";
     return "";
   };
 
@@ -411,7 +408,7 @@ export default function ResetPasswordPage() {
 
               <div className="mb-4 text-center">
                 <p className="text-body-sm text-white/90" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                  Create a strong password with at least 8 characters, including uppercase, lowercase, and numbers.
+                  Create a password with at least 6 characters.
                 </p>
               </div>
 

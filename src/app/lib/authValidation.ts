@@ -62,7 +62,7 @@ export class AuthValidator {
       return result;
     }
 
-    // Length validation
+    // Length validation - relaxed to minimum 6 characters
     if (password.length < 6) {
       result.errors.push('Password must be at least 6 characters long');
       result.isValid = false;
@@ -71,44 +71,6 @@ export class AuthValidator {
     if (password.length > 128) {
       result.errors.push('Password is too long (max 128 characters)');
       result.isValid = false;
-    }
-
-    // Strength validation
-    const hasLower = /[a-z]/.test(password);
-    const hasUpper = /[A-Z]/.test(password);
-    const hasNumber = /\d/.test(password);
-    const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
-
-    let strength = 0;
-    if (hasLower) strength++;
-    if (hasUpper) strength++;
-    if (hasNumber) strength++;
-    if (hasSpecial) strength++;
-
-    if (strength < 2) {
-      result.errors.push('Password must contain at least one number or special character');
-      result.isValid = false;
-    }
-
-    // Common password checks
-    const commonPasswords = [
-      'password', '123456', 'password123', 'admin', 'letmein',
-      'welcome', 'monkey', '1234567890', 'qwerty', 'abc123'
-    ];
-
-    if (commonPasswords.includes(password.toLowerCase())) {
-      result.errors.push('Password is too common. Please choose a stronger password');
-      result.isValid = false;
-    }
-
-    // Sequential characters check
-    if (this.hasSequentialChars(password)) {
-      result.warnings.push('Avoid sequential characters for better security');
-    }
-
-    // Repeated characters check
-    if (this.hasRepeatedChars(password)) {
-      result.warnings.push('Avoid repeated characters for better security');
     }
 
     return result;

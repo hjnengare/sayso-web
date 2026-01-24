@@ -83,10 +83,7 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
   }, []);
 
   const validatePassword = (password: string) => {
-    if (password.length < 8) return "🔐 Password must be at least 8 characters long";
-    if (!/(?=.*[a-z])/.test(password)) return "🔐 Password must contain at least one lowercase letter";
-    if (!/(?=.*[A-Z])/.test(password)) return "🔐 Password must contain at least one uppercase letter";
-    if (!/(?=.*\d)/.test(password)) return "🔐 Password must contain at least one number";
+    if (password.length < 6) return "🔐 Password must be at least 6 characters long";
     return null;
   };
 
@@ -97,56 +94,36 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
         score: 0,
         feedback: "",
         checks: {
-          length: false,
-          uppercase: false,
-          lowercase: false,
-          number: false
+          length: false
         },
         color: ""
       };
     }
 
     const checks = {
-      length: password.length >= 8,
-      uppercase: /(?=.*[A-Z])/.test(password),
-      lowercase: /(?=.*[a-z])/.test(password),
-      number: /(?=.*\d)/.test(password)
+      length: password.length >= 6
     };
 
-    // Additional security checks
-    const emailName = email.split('@')[0].toLowerCase();
-    const commonPasswords = ['password', '123456', 'qwerty', 'abc123', 'password123'];
-    const hasCommonWord = commonPasswords.some(common => password.toLowerCase().includes(common));
-    const usesEmailName = emailName.length > 2 && password.toLowerCase().includes(emailName);
-
-    let score = Object.values(checks).filter(Boolean).length;
+    let score = 0;
     let feedback = "";
     let color = "";
 
-    // Penalize common patterns
-    if (hasCommonWord) {
-      score = Math.max(0, score - 1);
-      feedback = "Avoid common passwords";
+    if (password.length < 6) {
+      score = 1;
+      feedback = "Too short";
       color = "text-error-500";
-    } else if (usesEmailName) {
-      score = Math.max(0, score - 1);
-      feedback = "Don't use your email name";
-      color = "text-orange-500";
-    } else if (score === 4) {
-      feedback = "Strong - Perfect! 🎉";
-      color = "text-blue-500";
-    } else if (score === 3) {
-      feedback = "Good - Almost there";
+    } else if (password.length < 8) {
+      score = 2;
+      feedback = "Good";
       color = "text-yellow-500";
-    } else if (score === 2) {
-      feedback = "Fair - Getting better";
-      color = "text-orange-500";
-    } else if (score === 1) {
-      feedback = "Weak - Add more requirements";
-      color = "text-error-500";
+    } else if (password.length < 12) {
+      score = 3;
+      feedback = "Strong";
+      color = "text-sage";
     } else {
-      feedback = "Very weak - Add more requirements";
-      color = "text-error-500";
+      score = 4;
+      feedback = "Very strong 🎉";
+      color = "text-sage";
     }
 
     return { score, feedback, checks, color };

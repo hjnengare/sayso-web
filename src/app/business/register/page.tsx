@@ -251,8 +251,8 @@ export default function BusinessRegisterPage() {
             setError('📧 The email address format is invalid. Please check and try again.');
             showToast('📧 The email address format is invalid. Please check and try again.', 'sage', 4000);
           } else if (authError.includes('password') && (authError.includes('weak') || authError.includes('requirements'))) {
-            setError('🔐 Password doesn\'t meet security requirements. Use 8+ characters with uppercase, lowercase, and numbers.');
-            showToast('🔐 Password doesn\'t meet security requirements', 'sage', 4000);
+            setError('🔐 Password must be at least 6 characters long.');
+            showToast('🔐 Password must be at least 6 characters long', 'sage', 4000);
           } else if (authError.includes('too many requests') || authError.includes('rate limit')) {
             setError('⏰ Too many attempts. Please wait a moment and try again.');
             showToast('⏰ Too many attempts. Please wait a moment and try again.', 'sage', 4000);

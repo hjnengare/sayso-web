@@ -59,19 +59,11 @@ export class AuthService {
         };
       }
 
-      if (password.length < 8) {
+      if (password.length < 6) {
         return {
           user: null,
           session: null,
-          error: { message: 'Password must be at least 8 characters long' }
-        };
-      }
-
-      if (!this.isStrongPassword(password)) {
-        return {
-          user: null,
-          session: null,
-          error: { message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number' }
+          error: { message: 'Password must be at least 6 characters long' }
         };
       }
 
@@ -551,9 +543,8 @@ export class AuthService {
   }
 
   private static isStrongPassword(password: string): boolean {
-    // At least 8 characters, 1 uppercase, 1 lowercase, 1 number
-    const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
-    return strongPasswordRegex.test(password);
+    // Relaxed validation: minimum 6 characters, allows letters only, numbers only, or mix
+    return password.length >= 6;
   }
 
   private static handleSupabaseError(error: { message: string; error_code?: string }): AuthError {
@@ -596,7 +587,7 @@ export class AuthService {
     }
 
     if (message.includes('password') && (message.includes('weak') || message.includes('requirements'))) {
-      return { message: '🔐 Password doesn\'t meet security requirements. Use 8+ characters with uppercase, lowercase, and numbers.', code: 'weak_password' };
+      return { message: '🔐 Password must be at least 6 characters long.', code: 'weak_password' };
     }
 
     if (message.includes('email') && (message.includes('invalid') || message.includes('format'))) {
@@ -736,15 +727,9 @@ export class AuthService {
         };
       }
 
-      if (newPassword.length < 8) {
+      if (newPassword.length < 6) {
         return {
-          error: { message: 'Password must be at least 8 characters long' }
-        };
-      }
-
-      if (!this.isStrongPassword(newPassword)) {
-        return {
-          error: { message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number' }
+          error: { message: 'Password must be at least 6 characters long' }
         };
       }
 

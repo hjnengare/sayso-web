@@ -11,9 +11,8 @@ interface PasswordStrengthIndicatorProps {
 export function PasswordStrengthIndicator({ strength, showChecks = true }: PasswordStrengthIndicatorProps) {
   const { score, feedback, checks, color } = strength;
 
-  // Only show green if all requirements are met and no warnings
-  const allRequirementsMet = checks.length && checks.uppercase && checks.lowercase && checks.number;
-  const isStrictSuccess = allRequirementsMet && (!color || color === 'text-sage');
+  // Show green if minimum length requirement is met
+  const isSuccess = checks.length && score >= 2;
 
   return (
     <div className="mt-2 space-y-2">
@@ -24,39 +23,27 @@ export function PasswordStrengthIndicator({ strength, showChecks = true }: Passw
             className={`h-full transition-all duration-300 ${
               score === 0 ? 'w-0 bg-transparent' :
               score === 1 ? 'w-1/4 bg-red-500' :
-              score === 2 ? 'w-1/2 bg-orange-500' :
-              score === 3 ? 'w-3/4 bg-yellow-500' :
-              isStrictSuccess ? 'w-full bg-sage' : 'w-full bg-yellow-500'
+              score === 2 ? 'w-1/2 bg-yellow-500' :
+              score === 3 ? 'w-3/4 bg-sage' :
+              'w-full bg-sage'
             }`}
           />
         </div>
         {feedback && (
           <span className={`text-sm sm:text-xs font-medium ${
-            isStrictSuccess ? 'text-sage' : color || 'text-charcoal/60'
+            isSuccess ? 'text-sage' : color || 'text-charcoal/60'
           }`}>
             {feedback}
           </span>
         )}
       </div>
 
-      {/* Password Requirements Checklist */}
+      {/* Password Requirements Checklist - simplified to just length */}
       {showChecks && (
-        <div className="grid grid-cols-2 gap-2 text-sm sm:text-xs">
+        <div className="text-sm sm:text-xs">
           <div className={`flex items-center gap-1.5 ${checks.length ? 'text-sage' : 'text-charcoal/60'}`}>
             <Circle className={`w-3 h-3 ${checks.length ? 'fill-sage' : ''}`} />
-            <span>8+ characters</span>
-          </div>
-          <div className={`flex items-center gap-1.5 ${checks.uppercase ? 'text-sage' : 'text-charcoal/60'}`}>
-            <Circle className={`w-3 h-3 ${checks.uppercase ? 'fill-sage' : ''}`} />
-            <span>Uppercase letter</span>
-          </div>
-          <div className={`flex items-center gap-1.5 ${checks.lowercase ? 'text-sage' : 'text-charcoal/60'}`}>
-            <Circle className={`w-3 h-3 ${checks.lowercase ? 'fill-sage' : ''}`} />
-            <span>Lowercase letter</span>
-          </div>
-          <div className={`flex items-center gap-1.5 ${checks.number ? 'text-sage' : 'text-charcoal/60'}`}>
-            <Circle className={`w-3 h-3 ${checks.number ? 'fill-sage' : ''}`} />
-            <span>Number</span>
+            <span>6+ characters</span>
           </div>
         </div>
       )}

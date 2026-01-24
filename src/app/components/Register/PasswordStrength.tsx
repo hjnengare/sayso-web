@@ -7,19 +7,16 @@ interface PasswordStrengthProps {
     feedback: string;
     checks: {
       length: boolean;
-      uppercase: boolean;
-      lowercase: boolean;
-      number: boolean;
     };
+    color?: string;
   };
 }
 
 export default function PasswordStrength({ password, strength }: PasswordStrengthProps) {
   if (password.length === 0) return null;
 
-  // Only show green if all requirements are met and no warnings
-  const allRequirementsMet = strength.checks.length && strength.checks.uppercase && strength.checks.lowercase && strength.checks.number;
-  const isStrictSuccess = allRequirementsMet && (!strength.color || strength.color === 'text-sage' || strength.color === 'text-blue-500');
+  // Show green if minimum length requirement is met
+  const isSuccess = strength.checks.length && strength.score >= 2;
 
   return (
     <div className="h-5 mt-1 flex items-center gap-2">
@@ -27,16 +24,10 @@ export default function PasswordStrength({ password, strength }: PasswordStrengt
         {[1, 2, 3, 4].map((level) => {
           let barColor = 'bg-gray-200';
           if (level <= strength.score) {
-            if (isStrictSuccess) {
-              barColor = 'bg-sage';
-            } else if (level === 1) {
-              barColor = 'bg-error-500';
-            } else if (level === 2) {
-              barColor = 'bg-orange-400';
-            } else if (level === 3) {
-              barColor = 'bg-yellow-400';
+            if (isSuccess) {
+              barColor = level <= 2 ? 'bg-yellow-400' : 'bg-sage';
             } else {
-              barColor = 'bg-yellow-400';
+              barColor = 'bg-error-500';
             }
           }
           return (
