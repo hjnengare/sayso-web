@@ -391,34 +391,36 @@ export default function DesktopNav(props: DesktopNavProps) {
           </div>
         )}
 
-        {/* Messages */}
-        <div
-          className="relative"
-          onMouseEnter={() => isGuest && setHoveredLockedItem("messages")}
-          onMouseLeave={() => setHoveredLockedItem(null)}
-        >
-          <OptimizedLink
-            href={isGuest ? "/login" : "/dm"}
-            className={iconWrapClass(isMessagesActive)}
-            aria-label={isGuest ? "Sign in to view messages" : "Messages"}
+        {/* Messages - Personal users only */}
+        {!isBusinessAccountUser && (
+          <div
+            className="relative"
+            onMouseEnter={() => isGuest && setHoveredLockedItem("messages")}
+            onMouseLeave={() => setHoveredLockedItem(null)}
           >
-            <MessageCircle
-              className={iconClass(isMessagesActive)}
-              fill={isMessagesActive ? "currentColor" : "none"}
-              style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
-            />
-            {isGuest ? (
-              <span className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center w-4 h-4 text-white">
-                <Lock className="w-2 h-2" />
-              </span>
-            ) : unreadMessagesCount > 0 ? (
-              <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-5 px-1.5 text-white text-[11px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
-                {unreadMessagesCount > 99 ? "99+" : unreadMessagesCount}
-              </span>
-            ) : null}
-          </OptimizedLink>
-          <LockedTooltip show={hoveredLockedItem === "messages"} label="view messages" />
-        </div>
+            <OptimizedLink
+              href={isGuest ? "/login" : "/dm"}
+              className={iconWrapClass(isMessagesActive)}
+              aria-label={isGuest ? "Sign in to view messages" : "Messages"}
+            >
+              <MessageCircle
+                className={iconClass(isMessagesActive)}
+                fill={isMessagesActive ? "currentColor" : "none"}
+                style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
+              />
+              {isGuest ? (
+                <span className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center w-4 h-4 text-white">
+                  <Lock className="w-2 h-2" />
+                </span>
+              ) : unreadMessagesCount > 0 ? (
+                <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-5 px-1.5 text-white text-[11px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
+                  {unreadMessagesCount > 99 ? "99+" : unreadMessagesCount}
+                </span>
+              ) : null}
+            </OptimizedLink>
+            <LockedTooltip show={hoveredLockedItem === "messages"} label="view messages" />
+          </div>
+        )}
 
         {/* Settings (business only) */}
         {isBusinessAccountUser && (
