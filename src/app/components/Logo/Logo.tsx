@@ -2,48 +2,54 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 
 interface LogoProps {
   variant?: "default" | "mobile" | "footer" | "onboarding";
   className?: string;
-  showDomain?: boolean;
-  color?: "sage" | "gradient";
 }
 
 export default function Logo({
   variant = "default",
-  className = "",
-  showDomain = true,
-  color = "gradient"
+  className = ""
 }: LogoProps) {
-  // Size configurations for different variants
-  const sizeClasses = {
-    default: "text-2xl lg:text-4xl",
-    mobile: "text-2xl",
-    footer: "text-lg lg:text-base",
-    onboarding: "text-3xl md:text-3xl lg:text-4xl"
+  const containerClasses = {
+    default: "h-14 sm:h-16 md:h-18 lg:h-20",
+    mobile: "h-12",
+    footer: "h-10 sm:h-11 lg:h-12",
+    onboarding: "h-16 sm:h-18 md:h-20 lg:h-24"
   };
-
-  const domainSizeClasses = {
-    default: "text-sm lg:text-base",
-    mobile: "text-sm",
-    footer: "text-sm sm:text-xs lg:text-sm",
-    onboarding: "text-sm sm:text-xs md:text-sm"
-  };
-
-  const colorClass = color === "sage" 
-    ? "text-sage" 
-    : "text-transparent bg-clip-text bg-gradient-to-r from-sage via-coral to-sage";
 
   return (
-    <div className={`flex items-baseline gap-1 ${className}`}>
+    <div className={`flex items-center ${className}`}>
+      {/* Logo mark */}
+      <div className={`relative aspect-[3/2] ${containerClasses[variant]}`}>
+        <Image
+          src="/logos/new_logo.png"
+          alt="Sayso logo"
+          fill
+          className="object-contain object-center"
+          priority
+          sizes="(max-width: 640px) 100px, (max-width: 768px) 130px, (max-width: 1024px) 160px, 180px"
+        />
+      </div>
+
+      {/* Wordmark (pulled super close) */}
       <span
-        className={`font-bold py-2 px-1 ${colorClass} drop-shadow-sm ${sizeClasses[variant]}`}
-        style={{ fontFamily: '"Playfair Display", serif', fontWeight: 700, letterSpacing: '-0.02em' }}
+        className="
+          -ml-2 sm:-ml-4 md:-ml-4
+          text-white italic lowercase
+          text-xl sm:text-2xl md:text-3xl
+          font-semibold tracking-tight
+          leading-none
+          select-none
+        "
+        style={{
+          fontFamily: "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif"
+        }}
       >
         sayso
       </span>
-      
     </div>
   );
 }

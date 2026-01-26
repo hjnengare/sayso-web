@@ -286,7 +286,7 @@ export default function HeroCarousel() {
       </div>
 
       {/* Hero Container with padding */}
-      <div className="relative w-full px-2 py-4 md:p-4">
+      <div className="relative w-full px-2 py-2 md:px-2">
         {/* Hero Section with rounded corners - 75vh responsive height */}
         <section
           ref={containerRef as React.RefObject<HTMLElement>}
@@ -327,8 +327,8 @@ export default function HeroCarousel() {
            </div>
 
            {/* Left-aligned Text - Aligned with navbar left edge */}
-           <div className="absolute inset-0 z-20 flex items-center justify-start w-full" style={{ marginLeft: '5%' }}>
-             <div className="text-left">
+           <div className="absolute inset-0 z-20 flex items-center justify-center w-full">
+             <div className="w-full flex flex-col items-center justify-center text-center">
                <h2 
                  className="text-3xl sm:text-4xl lg:text-5xl font-bold text-off-white drop-shadow-lg mb-4"
                  style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}

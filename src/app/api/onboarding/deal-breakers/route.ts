@@ -53,14 +53,14 @@ export async function POST(req: Request) {
       throw new Error('Failed to save dealbreakers');
     }
 
-    // 2. Update onboarding_step to 'complete' and mark onboarding as complete
-    // For personal users just completing onboarding, set current_role to 'user'
+    // 2. Update onboarding_step to 'complete' (but do NOT set onboarding_complete)
+    // The atomic completion API (/api/onboarding/complete-atomic) handles final completion
+    // This prevents partial saves that leave users in inconsistent states
     const { error: updateError } = await supabase
       .from('profiles')
       .update({
         onboarding_step: 'complete',
-        onboarding_complete: true, // Mark onboarding as complete
-        current_role: 'user', // Ensure personal users have role set
+        // NOTE: onboarding_complete is set ONLY by the atomic completion API
         updated_at: new Date().toISOString()
       })
       .eq('user_id', user.id);

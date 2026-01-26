@@ -8,6 +8,7 @@ import { apiClient } from "../lib/api/apiClient";
 interface SavedEventsContextType {
   savedEventIds: string[];
   savedEventsCount: number;
+  savedCount: number;
   isLoading: boolean;
   addSavedEvent: (eventId: string) => Promise<boolean>;
   removeSavedEvent: (eventId: string) => Promise<boolean>;
@@ -221,6 +222,7 @@ export function SavedEventsProvider({ children }: SavedEventsProviderProps) {
   const value: SavedEventsContextType = useMemo(() => ({
     savedEventIds,
     savedEventsCount,
+    savedCount: savedEventIds.length,
     isLoading,
     addSavedEvent,
     removeSavedEvent,

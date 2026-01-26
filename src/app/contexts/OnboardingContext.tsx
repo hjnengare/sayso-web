@@ -4,6 +4,30 @@ import React, { createContext, useContext, useState, useCallback, useEffect, Rea
 import { useRouter } from 'next/navigation';
 import { useAuth } from './AuthContext';
 import { useToast } from './ToastContext';
+import { Profile } from '../lib/types/database';
+
+/**
+ * ONBOARDING CONTEXT
+ *
+ * IMPORTANT: localStorage is used ONLY for temporary UI state (selections in progress).
+ * It is NOT the source of truth for onboarding completion.
+ *
+ * Source of truth: profiles.onboarding_complete (boolean) in the database
+ *
+ * Flow:
+ * 1. User selects interests → stored in localStorage (UI state)
+ * 2. User selects subcategories → stored in localStorage (UI state)
+ * 3. User selects dealbreakers → stored in localStorage (UI state)
+ * 4. User clicks "Finish" → ALL data saved atomically to database
+ *    - interests, subcategories, dealbreakers, onboarding_complete = true
+ *    - If ANY step fails, the entire transaction is rolled back
+ * 5. localStorage is cleared after successful completion
+ *
+ * This ensures:
+ * - No partial saves that leave users in inconsistent states
+ * - Database state is always consistent
+ * - Tests can reset onboarding by just setting onboarding_complete = false
+ */
 
 // Utility: Debounce localStorage writes for mobile performance
 function debounce<T extends (...args: any[]) => void>(fn: T, delay: number): T {
@@ -371,6 +395,18 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     }
   }, [user, currentStep, selectedInterests, showToast, getStepCompletionMessage, router]);
 
+  /**
+   * Complete onboarding ATOMICALLY
+   *
+   * This function saves ALL onboarding data in a SINGLE database transaction:
+   * - interests
+   * - subcategories
+   * - dealbreakers
+   * - onboarding_complete = true
+   *
+   * If ANY step fails, the entire transaction is rolled back.
+   * This prevents partial saves that leave users in inconsistent states.
+   */
   const completeOnboarding = useCallback(async () => {
     if (!user) return;
 
@@ -378,17 +414,33 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       setIsLoading(true);
       setError(null);
 
-      // Mark onboarding as complete
-      // Note: Interests, subcategories, and dealbreakers were already saved in previous steps
-      const response = await fetch('/api/onboarding/complete', {
+      // Validate we have all required data
+      if (selectedInterests.length < 3 || selectedInterests.length > 6) {
+        throw new Error('Please select 3-6 interests');
+      }
+      if (selectedSubInterests.length < 1 || selectedSubInterests.length > 10) {
+        throw new Error('Please select 1-10 subcategories');
+      }
+      if (selectedDealbreakers.length < 1 || selectedDealbreakers.length > 3) {
+        throw new Error('Please select 1-3 dealbreakers');
+      }
+
+      // Call the ATOMIC completion API
+      // This saves everything in one database transaction
+      const response = await fetch('/api/onboarding/complete-atomic', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
+        body: JSON.stringify({
+          interests: selectedInterests,
+          subcategories: selectedSubInterests,
+          dealbreakers: selectedDealbreakers,
+        }),
       });
 
-      let payload: any = null;
+      let payload: Record<string, unknown> | null = null;
       try { payload = await response.json(); } catch {}
 
       if (response.status === 401) {
@@ -399,7 +451,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       }
 
       if (!response.ok) {
-        const errorMsg = payload?.error || payload?.message || 'Failed to complete onboarding';
+        const errorMsg = (payload?.error as string) || (payload?.message as string) || 'Failed to complete onboarding';
         setError(errorMsg);
         throw new Error(errorMsg);
       }
@@ -409,20 +461,20 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
         try {
           await updateUser({
             profile: {
-              onboarding_step: payload.onboarding_step,
-              onboarding_complete: payload.onboarding_complete,
+              onboarding_complete: true,
               interests_count: payload.interests_count,
               subcategories_count: payload.subcategories_count,
               dealbreakers_count: payload.dealbreakers_count,
-            } as any
+            } as Profile
           });
         } catch (updateError) {
-          console.warn('Failed to update user profile:', updateError);
-          // Continue anyway - the DB is updated
+          console.warn('Failed to update user profile locally:', updateError);
+          // Continue anyway - the DB is updated, that's what matters
         }
       }
 
       // Clear localStorage after successful completion
+      // This is just cleanup - the database is now the source of truth
       if (typeof window !== 'undefined') {
         localStorage.removeItem('onboarding_interests');
         localStorage.removeItem('onboarding_subcategories');
@@ -430,19 +482,19 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       }
 
       // Show completion toast
-      showToast('🎉 Welcome to sayso! Your profile is now complete.', 'success', 4000);
+      showToast('Welcome to sayso! Your profile is now complete.', 'success', 4000);
 
       // Navigate to home
       router.replace('/home');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error completing onboarding:', error);
-      const errorMsg = error?.message || 'Failed to complete onboarding';
+      const errorMsg = error instanceof Error ? error.message : 'Failed to complete onboarding';
       setError(errorMsg);
       showToast(errorMsg, 'error', 3000);
     } finally {
       setIsLoading(false);
     }
-  }, [user, selectedInterests, selectedSubInterests, selectedDealbreakers, getInterestIdForSubcategory, showToast, router, updateUser]);
+  }, [user, selectedInterests, selectedSubInterests, selectedDealbreakers, showToast, router, updateUser]);
 
   const resetOnboarding = useCallback(() => {
     setSelectedInterests([]);

@@ -159,18 +159,24 @@ export const getBusinessNavLinks = (
   hasOwnedBusinesses: boolean
 ): NavLink[] => {
   if (!isBusinessAccountUser) return [];
-  if (isCheckingBusinessOwner) return [];
 
-  // Only show Claim Business once, never duplicate
+  // Always show "My Businesses" for business accounts
+  const myBusinessesLink = BUSINESS_LINKS.find(link => link.key === "my-businesses")!;
+
+  if (isCheckingBusinessOwner) {
+    return [myBusinessesLink];
+  }
+
   if (hasOwnedBusinesses) {
+    // Has businesses: show My Businesses + Add a new Business (hide Claim)
     return BUSINESS_LINKS.filter((link) => link.key !== "claim-business");
   }
 
-  // Only show Claim Business and Add Business if not already claimed
+  // No businesses yet: show My Businesses + Claim a Business + Add a new Business
   return BUSINESS_LINKS.filter((link, idx, arr) => {
     // Only include each link once
     return arr.findIndex(l => l.key === link.key) === idx;
-  }).filter(link => link.key === "claim-business" || link.key === "add-business");
+  });
 };
 
 /**

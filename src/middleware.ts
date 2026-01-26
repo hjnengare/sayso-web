@@ -1,30 +1,56 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
-import { getOnboardingAccess } from './lib/onboarding/getOnboardingAccess';
+
+/**
+ * SIMPLIFIED ONBOARDING GUARD
+ *
+ * Single source of truth: profiles.onboarding_complete (boolean)
+ *
+ * Rules:
+ * 1. Not logged in → redirect to /auth/login (for protected routes)
+ * 2. Business account (current_role === 'business_owner') → NEVER see onboarding, redirect to /my-businesses
+ * 3. User account with onboarding_complete = false → force to /interests (or current onboarding route)
+ * 4. User account with onboarding_complete = true → block onboarding routes, redirect to /home
+ * 5. Missing profile → treat as onboarding_complete = false
+ *
+ * MOBILE HARD REFRESH FIX:
+ * Uses get_onboarding_status RPC with SECURITY DEFINER to bypass RLS issues
+ * that can occur when the Supabase client auth context isn't fully established
+ * on mobile hard refresh, even though getUser() succeeds.
+ */
+
+// Debug logging helper - enable in development or when debugging
+const DEBUG_MIDDLEWARE = process.env.NODE_ENV === 'development' || process.env.DEBUG_MIDDLEWARE === 'true';
+
+function debugLog(context: string, data: Record<string, unknown>) {
+  if (DEBUG_MIDDLEWARE) {
+    console.log(`[Middleware:${context}]`, JSON.stringify(data, null, 2));
+  }
+}
 
 export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+  const requestId = Math.random().toString(36).substring(7); // For tracing requests
+
+  debugLog('START', {
+    requestId,
+    pathname,
+    method: request.method,
+    userAgent: request.headers.get('user-agent')?.substring(0, 50),
+  });
+
   // CRITICAL: Disable caching for middleware to prevent stale profile data
-  // This is especially important in production (Vercel Edge) where responses can be cached
   let response = NextResponse.next({
     request: {
       headers: request.headers,
     },
   });
-  
+
   // Add cache control headers to prevent caching of middleware responses
   response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   response.headers.set('Pragma', 'no-cache');
   response.headers.set('Expires', '0');
 
-  // Note: We check /complete and /home routes below with proper onboarding completion checks
-  const pathname = request.nextUrl.pathname;
-
-  // CRITICAL: Using ANON KEY in middleware can break profile reads under RLS on Vercel Edge
-  // This relies on cookies/JWT being attached correctly at the edge
-  // If profile reads fail (profile comes back null), consider:
-  // 1. Using service role key (more secure but requires careful RLS setup)
-  // 2. Moving onboarding enforcement to server layouts/pages instead of middleware
-  // 3. Ensuring RLS policies allow authenticated users to read their own profiles
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -84,32 +110,40 @@ export async function middleware(request: NextRequest) {
     '/sitemap.xml',
     '/robots.txt',
   ];
-  const isPublicRoute = publicRoutes.some(route => 
-    request.nextUrl.pathname.startsWith(route) || 
+  const isPublicRoute = publicRoutes.some(route =>
+    request.nextUrl.pathname.startsWith(route) ||
     request.nextUrl.pathname === route
   );
 
   let user = null;
   let authError = null;
-  
+
   try {
     // Attempt to get user with timeout protection
     const getUserPromise = supabase.auth.getUser();
-    const timeoutPromise = new Promise((_, reject) => 
+    const timeoutPromise = new Promise((_, reject) =>
       setTimeout(() => reject(new Error('Auth check timeout')), 5000)
     );
-    
+
     const { data: { user: authUser }, error } = await Promise.race([
       getUserPromise,
       timeoutPromise
     ]) as { data: { user: any }, error: any };
-    
+
+    debugLog('AUTH', {
+      requestId,
+      hasUser: !!authUser,
+      userId: authUser?.id,
+      emailConfirmed: !!authUser?.email_confirmed_at,
+      error: error?.message,
+    });
+
     // Handle authentication errors with better categorization
     if (error) {
       authError = error;
       const errorMessage = error.message?.toLowerCase() || '';
       const errorCode = error.code?.toLowerCase() || '';
-      
+
       // Categorize errors
       const isFatalError = (
         errorMessage.includes('user from sub claim') ||
@@ -117,13 +151,13 @@ export async function middleware(request: NextRequest) {
         errorMessage.includes('user does not exist') ||
         errorCode === 'user_not_found'
       );
-      
+
       const isRefreshError = (
         errorMessage.includes('refresh token') ||
         errorMessage.includes('invalid refresh token') ||
         errorCode === 'refresh_token_not_found'
       );
-      
+
       const isNetworkError = (
         errorMessage.includes('fetch') ||
         errorMessage.includes('network') ||
@@ -141,30 +175,29 @@ export async function middleware(request: NextRequest) {
         } catch (clearError) {
           console.warn('Middleware: Error clearing cookies:', clearError);
         }
-        
+
         // Check if this is a guest mode request (guest=true query param)
         const isGuestMode = request.nextUrl.searchParams.get('guest') === 'true';
-        
+
         // Only redirect protected routes, allow public routes
-        // Special case: /home with guest=true is allowed even though /home is typically protected
         const protectedRoutes = ['/interests', '/subcategories', '/deal-breakers', '/complete', '/home', '/profile', '/reviews', '/write-review', '/leaderboard', '/saved', '/dm', '/reviewer'];
         const isProtectedRoute = protectedRoutes.some(route =>
           request.nextUrl.pathname.startsWith(route)
         );
-        
+
         // Allow /home if guest mode is enabled
         if (isProtectedRoute && request.nextUrl.pathname === '/home' && isGuestMode) {
           console.log('Middleware: Allowing guest mode access to /home');
           return response;
         }
-        
+
         if (isProtectedRoute) {
           return NextResponse.redirect(new URL('/onboarding', request.url));
         }
         // For public routes, allow access even with fatal error
         return response;
       }
-      
+
       // For refresh token errors, try to refresh session once
       if (isRefreshError && !isPublicRoute) {
         try {
@@ -178,21 +211,20 @@ export async function middleware(request: NextRequest) {
           console.warn('Middleware: Failed to refresh session:', refreshErr);
         }
       }
-      
+
       // For network errors on public routes, allow access
       if (isNetworkError && isPublicRoute) {
         console.warn('Middleware: Network error on public route, allowing access:', error.message);
         return response;
       }
-      
+
       // For other non-fatal errors, only log if it's unexpected
-      // "Auth session missing" is expected for unauthenticated users, don't log it
       const isExpectedError = (
         errorMessage.includes('session missing') ||
         errorMessage.includes('auth session missing') ||
         errorCode === 'session_not_found'
       );
-      
+
       if (!isExpectedError) {
         console.warn('Middleware: Non-fatal auth error:', error.message);
       }
@@ -203,19 +235,18 @@ export async function middleware(request: NextRequest) {
     // Handle timeout and unexpected errors
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error('Middleware: Unexpected error getting user:', errorMessage);
-    
+
     // For public routes, allow access even on errors
     if (isPublicRoute) {
       console.log('Middleware: Error on public route, allowing access');
       return response;
     }
-    
+
     // For protected routes, continue without user (will redirect below if needed)
     authError = error instanceof Error ? error : new Error(String(error));
   }
 
   // Protected routes - require authentication AND email verification
-  // These routes should NOT be accessible to unauthenticated users
   const protectedRoutes = [
     // Onboarding routes
     '/interests', '/subcategories', '/deal-breakers', '/complete',
@@ -227,75 +258,47 @@ export async function middleware(request: NextRequest) {
     '/write-review', '/reviews',
     // Leaderboard
     '/leaderboard',
-    // Business routes - note: /business/[id] viewing is public, but /business/[id]/review and /business/[id]/edit need auth
-    // We'll handle business routes more specifically below
     // Event and special routes
     '/event', '/special',
     // User action routes
     '/notifications', '/add-business', '/claim-business', '/settings',
   ];
-  
-  // Business routes that require authentication (review, edit, but NOT viewing)
+
+  // Business routes that require authentication
   const isBusinessReviewRoute = request.nextUrl.pathname.match(/^\/business\/[^\/]+\/review/);
   const isBusinessViewRoute = request.nextUrl.pathname.match(/^\/business\/[^\/]+$/);
-  
-  // Check if route is protected (excluding public business viewing)
+
+  // Check if route is protected
   const isProtectedRoute = protectedRoutes.some(route =>
     request.nextUrl.pathname.startsWith(route)
   ) || isBusinessReviewRoute;
 
-  // ============================================
-  // BUSINESS OWNER ROUTES - Professional Business Management
-  // ============================================
-  // Route Structure:
-  //   /claim-business     → Primary Business Dashboard (landing/overview for business owners)
-  //   /my-businesses      → Business Owner Hub (main management interface)
-  //   /my-businesses/businesses/[id] → Individual Business Management (specific business controls)
-  //   /my-businesses/businesses/[id]/reviews → Business Reviews Management (review responses & insights)
-  //   /owners* (legacy)   → Temporary redirect to /my-businesses*
-  //
-  // Access Requirements:
-  //   - All business routes require authentication
-  //   - /my-businesses/* routes verify business ownership at component level
-  //   - /business/[id]/edit verifies ownership at component level
-  // ============================================
-
-  // Business Owner Hub - requires authentication, email verification, and business ownership
-  // Ownership verification is done in components using useRequireBusinessOwner
+  // Business Owner Routes
   const ownersRoutes = ['/my-businesses', '/owners'];
   const isOwnersRoute = ownersRoutes.some(route =>
     request.nextUrl.pathname.startsWith(route)
   );
-  
-  // Business edit route - requires authentication and ownership (verified in component)
+
   const isBusinessEditRoute = request.nextUrl.pathname.match(/^\/business\/[^\/]+\/edit/);
-  
-  // Primary Business Dashboard (/claim-business) - requires authentication
-  // This is the main landing page for business owners
+
   const businessAuthRoutes = ['/claim-business'];
   const isBusinessAuthRoute = businessAuthRoutes.some(route =>
     request.nextUrl.pathname.startsWith(route)
   );
-  
-  // Business profile pages are public - no protection needed
-  // Only /business/[id]/edit and /my-businesses/* (legacy /owners/*) need protection
 
-  // Onboarding routes - users who completed onboarding should be redirected
+  // Onboarding routes
   const onboardingRoutes = ['/interests', '/subcategories', '/deal-breakers', '/complete', '/onboarding'];
   const isOnboardingRoute = onboardingRoutes.some(route =>
     request.nextUrl.pathname.startsWith(route)
   );
 
-  // Account type selection route - allow new OAuth users to access
-  // Removed: account type selection toggler is obsolete
-
-  // Auth routes - redirect authenticated users away
+  // Auth routes
   const authRoutes = ['/login', '/register', '/verify-email'];
   const isAuthRoute = authRoutes.some(route =>
     request.nextUrl.pathname.startsWith(route)
   );
 
-  // Password reset routes - allow access regardless of auth status
+  // Password reset routes
   const passwordResetRoutes = ['/forgot-password', '/reset-password'];
   const isPasswordResetRoute = passwordResetRoutes.some(route =>
     request.nextUrl.pathname.startsWith(route)
@@ -303,135 +306,194 @@ export async function middleware(request: NextRequest) {
 
   // Allow password reset routes regardless of auth status
   if (isPasswordResetRoute) {
-    console.log('Middleware: Allowing access to password reset route');
+    debugLog('ALLOW', { requestId, reason: 'password_reset_route', pathname });
     return response;
   }
 
-  // STRICT STATE MACHINE: Use onboarding_step as SINGLE source of truth
-  // OPTIMIZED: Single DB read for profile data (no duplicate queries)
-  let onboardingAccess = null;
-  let profileData: { onboarding_step: string | null; onboarding_complete: boolean | null; role?: string | null; current_role?: string | null } | null = null;
-  
+  // ============================================
+  // FETCH ONBOARDING STATUS USING RPC
+  // This uses SECURITY DEFINER to bypass RLS issues on mobile hard refresh
+  // ============================================
+
+  interface OnboardingStatus {
+    found: boolean;
+    onboarding_complete: boolean;
+    current_role: string;
+    role: string;
+    interests_count: number;
+    subcategories_count: number;
+    dealbreakers_count: number;
+    error?: string;
+  }
+
+  let onboardingStatus: OnboardingStatus | null = null;
+
   if (user && user.email_confirmed_at) {
     try {
-      // Single DB read - reuse this data throughout middleware
-      const { data, error: profileError } = await supabase
-        .from('profiles')
-        .select('onboarding_step, onboarding_complete, role, current_role')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      
-      profileData = data;
-      
-      if (profileError) {
-        console.error('[Middleware] Error reading profile:', profileError);
-        onboardingAccess = getOnboardingAccess(null);
-      } else if (profileData) {
-        onboardingAccess = getOnboardingAccess({
-          onboarding_step: profileData.onboarding_step as any,
-          onboarding_complete: profileData.onboarding_complete,
+      // Use RPC function instead of direct table query
+      // This bypasses RLS issues that can occur on mobile hard refresh
+      const { data, error: rpcError } = await supabase
+        .rpc('get_onboarding_status', { p_user_id: user.id });
+
+      debugLog('RPC_RESULT', {
+        requestId,
+        userId: user.id,
+        rpcData: data,
+        rpcError: rpcError?.message,
+      });
+
+      if (rpcError) {
+        console.error('[Middleware] RPC error fetching onboarding status:', rpcError);
+        // Fallback: try direct query (may fail on mobile, but worth a try)
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('onboarding_complete, role, current_role, interests_count, subcategories_count, dealbreakers_count')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        debugLog('FALLBACK_QUERY', {
+          requestId,
+          profileData,
+          profileError: profileError?.message,
         });
+
+        if (profileError || !profileData) {
+          // CRITICAL: If we can't determine status, DO NOT redirect to onboarding
+          // Instead, allow the request and let the page handle it
+          console.warn('[Middleware] Cannot determine onboarding status, allowing request to proceed');
+          onboardingStatus = null;
+        } else {
+          onboardingStatus = {
+            found: true,
+            onboarding_complete: profileData.onboarding_complete ?? false,
+            current_role: profileData.current_role ?? 'user',
+            role: profileData.role ?? 'user',
+            interests_count: profileData.interests_count ?? 0,
+            subcategories_count: profileData.subcategories_count ?? 0,
+            dealbreakers_count: profileData.dealbreakers_count ?? 0,
+          };
+        }
+      } else if (data) {
+        onboardingStatus = data as OnboardingStatus;
       } else {
-        onboardingAccess = getOnboardingAccess(null);
+        // No data returned - treat as no profile
+        onboardingStatus = {
+          found: false,
+          onboarding_complete: false,
+          current_role: 'user',
+          role: 'user',
+          interests_count: 0,
+          subcategories_count: 0,
+          dealbreakers_count: 0,
+        };
       }
     } catch (error) {
-      console.error('[Middleware] Error getting onboarding access:', error);
-      onboardingAccess = getOnboardingAccess(null);
+      console.error('[Middleware] Error fetching onboarding status:', error);
+      // CRITICAL: On error, DO NOT redirect to onboarding
+      // This prevents the mobile hard refresh bug
+      onboardingStatus = null;
     }
   }
 
-  // STRICT: Block access to /home and other protected routes unless onboarding is complete
-  if (isProtectedRoute && !isOnboardingRoute && user && user.email_confirmed_at) {
-    // Use cached profileData - no additional DB read
-    const userCurrentRole = profileData?.current_role || 'user';
-    
-    // Business owners have different access rules
-    if (userCurrentRole === 'business_owner') {
-      // Business routes: Always allow without onboarding
-      const isBusinessRoute = ['/claim-business', '/my-businesses', '/add-business', '/settings'].some(route =>
-        request.nextUrl.pathname.startsWith(route)
-      );
-      
-      if (isBusinessRoute) {
-        return response; // Allow access to business routes
+  // Helper: Check if user is a business account
+  const isBusinessAccount = onboardingStatus?.current_role === 'business_owner';
+
+  // Helper: Check if onboarding is complete
+  // CRITICAL: If we couldn't fetch status (onboardingStatus is null), assume complete
+  // to prevent incorrect redirects on mobile hard refresh
+  const isOnboardingComplete = onboardingStatus === null
+    ? true  // Assume complete if we couldn't fetch (prevents bad redirects)
+    : onboardingStatus.onboarding_complete === true;
+
+  debugLog('STATUS_COMPUTED', {
+    requestId,
+    userId: user?.id,
+    hasOnboardingStatus: !!onboardingStatus,
+    isBusinessAccount,
+    isOnboardingComplete,
+    rawOnboardingComplete: onboardingStatus?.onboarding_complete,
+  });
+
+  // ============================================
+  // SIMPLIFIED ONBOARDING GUARD LOGIC
+  // ============================================
+
+  // RULE 1: Business accounts NEVER see onboarding routes
+  if (isBusinessAccount && user && user.email_confirmed_at) {
+    // Block business accounts from all onboarding routes
+    if (isOnboardingRoute) {
+      debugLog('REDIRECT', { requestId, reason: 'business_on_onboarding_route', to: '/my-businesses' });
+      return NextResponse.redirect(new URL('/my-businesses', request.url));
+    }
+
+    // Business routes: Always allow
+    const isBusinessRoute = ['/claim-business', '/my-businesses', '/add-business', '/settings', '/dm'].some(route =>
+      pathname.startsWith(route)
+    );
+    if (isBusinessRoute) {
+      debugLog('ALLOW', { requestId, reason: 'business_on_business_route', pathname });
+      return response;
+    }
+
+    // Personal discovery routes: Block business owners
+    const isPersonalRoute = ['/home', '/for-you', '/trending', '/explore', '/leaderboard', '/events-specials', '/profile', '/saved', '/write-review', '/reviewer'].some(route =>
+      pathname === route || pathname.startsWith(route + '/')
+    );
+    if (isPersonalRoute) {
+      debugLog('REDIRECT', { requestId, reason: 'business_on_personal_route', to: '/my-businesses' });
+      return NextResponse.redirect(new URL('/my-businesses', request.url));
+    }
+
+    // Other protected routes: redirect to business home
+    if (isProtectedRoute) {
+      debugLog('REDIRECT', { requestId, reason: 'business_on_protected_route', to: '/my-businesses' });
+      return NextResponse.redirect(new URL('/my-businesses', request.url));
+    }
+  }
+
+  // RULE 2: User accounts - enforce onboarding completion
+  if (!isBusinessAccount && user && user.email_confirmed_at) {
+    // If on onboarding route
+    if (isOnboardingRoute) {
+      // User with complete onboarding should NOT see onboarding routes
+      if (isOnboardingComplete) {
+        debugLog('REDIRECT', { requestId, reason: 'completed_user_on_onboarding', to: '/home' });
+        return NextResponse.redirect(new URL('/home', request.url));
       }
-      
-      // Direct Messages: ALLOW (business-customer communication)
-      if (request.nextUrl.pathname.startsWith('/dm')) {
+      // User with incomplete onboarding CAN access onboarding routes
+      debugLog('ALLOW', { requestId, reason: 'incomplete_user_on_onboarding', pathname });
+      return response;
+    }
+
+    // If on protected route (non-onboarding)
+    if (isProtectedRoute) {
+      // User with complete onboarding can access protected routes
+      if (isOnboardingComplete) {
+        debugLog('ALLOW', { requestId, reason: 'completed_user_on_protected', pathname });
         return response;
       }
-      
-      // Personal discovery routes: BLOCK business owners
-      const isPersonalDiscoveryRoute = request.nextUrl.pathname === '/home' ||
-                                       request.nextUrl.pathname.startsWith('/for-you') ||
-                                       request.nextUrl.pathname.startsWith('/trending') ||
-                                       request.nextUrl.pathname.startsWith('/explore') ||
-                                       request.nextUrl.pathname.startsWith('/leaderboard') ||
-                                       request.nextUrl.pathname.startsWith('/events-specials');
-      
-      if (isPersonalDiscoveryRoute) {
-        console.log('Middleware: Blocking business owner from personal discovery route:', request.nextUrl.pathname);
-        const redirectUrl = new URL('/claim-business', request.url);
-        return NextResponse.redirect(redirectUrl);
+      // User with incomplete onboarding must complete onboarding first
+      // CRITICAL: Only redirect if we have confirmed incomplete status
+      if (onboardingStatus !== null && !isOnboardingComplete) {
+        debugLog('REDIRECT', {
+          requestId,
+          reason: 'incomplete_user_on_protected',
+          to: '/interests',
+          onboardingStatus,
+        });
+        console.log('[Middleware] Incomplete user redirected to onboarding from:', pathname, {
+          userId: user.id,
+          onboardingComplete: onboardingStatus.onboarding_complete,
+          interestsCount: onboardingStatus.interests_count,
+          subcategoriesCount: onboardingStatus.subcategories_count,
+          dealbreakersCount: onboardingStatus.dealbreakers_count,
+        });
+        return NextResponse.redirect(new URL('/interests', request.url));
       }
-      
-      // Personal-only features: BLOCK business owners
-      const isPersonalOnlyRoute = request.nextUrl.pathname.startsWith('/profile') ||
-                                  request.nextUrl.pathname.startsWith('/saved') ||
-                                  request.nextUrl.pathname.startsWith('/write-review') ||
-                                  request.nextUrl.pathname.startsWith('/reviewer');
-      
-      if (isPersonalOnlyRoute) {
-        console.log('Middleware: Blocking business owner from personal-only route:', request.nextUrl.pathname);
-        const redirectUrl = new URL('/my-businesses', request.url);
-        return NextResponse.redirect(redirectUrl);
-      }
-      
-      // All other routes: block by default (strict mode)
-      console.log('Middleware: Blocking business owner from unspecified route:', request.nextUrl.pathname);
-      const redirectUrl = new URL('/my-businesses', request.url);
-      return NextResponse.redirect(redirectUrl);
-    }
-    
-    // For personal users, check onboarding completion
-    if (profileData?.onboarding_complete === true) {
+      // If onboardingStatus is null (couldn't fetch), allow access
+      debugLog('ALLOW', { requestId, reason: 'status_unknown_allow_access', pathname });
       return response;
     }
-    
-    // Redirect to the REQUIRED onboarding step
-    const requiredRoute = onboardingAccess?.currentRoute || '/interests';
-    const redirectUrl = new URL(requiredRoute, request.url);
-    return NextResponse.redirect(redirectUrl);
-  }
-
-  // STRICT ONBOARDING ROUTE ENFORCEMENT
-  if (isOnboardingRoute && user && user.email_confirmed_at && onboardingAccess) {
-    const currentPath = request.nextUrl.pathname;
-
-    // RULE 1: If onboarding_complete=true, redirect onboarding routes based on role
-    // Use cached profileData - no additional DB read
-    if (profileData?.onboarding_complete === true) {
-      if (currentPath !== '/complete') {
-        const userCurrentRole = profileData?.current_role || 'user';
-        const destination = userCurrentRole === 'business_owner' ? '/claim-business' : '/home';
-        const redirectUrl = new URL(destination, request.url);
-        return NextResponse.redirect(redirectUrl);
-      }
-      // Allow /complete page for celebration
-      return response;
-    }
-
-    // RULE 2: Enforce step-by-step access
-    const canAccessRoute = onboardingAccess.canAccess(currentPath);
-    const redirectRoute = onboardingAccess.redirectFor(currentPath);
-
-    if (!canAccessRoute && redirectRoute) {
-      const redirectUrl = new URL(redirectRoute, request.url);
-      return NextResponse.redirect(redirectUrl);
-    }
-
-    // Allow access to current step or earlier steps
-    return response;
   }
 
   // Check for guest mode to allow /home access without authentication
@@ -440,151 +502,104 @@ export async function middleware(request: NextRequest) {
 
   // Redirect unauthenticated users from protected routes (except for guest mode /home)
   if (isProtectedRoute && !user && !isPublicRoute && !isGuestModeHome) {
-    const redirectUrl = new URL('/onboarding', request.url);
-    return NextResponse.redirect(redirectUrl);
+    debugLog('REDIRECT', { requestId, reason: 'unauthenticated_on_protected', to: '/onboarding' });
+    return NextResponse.redirect(new URL('/onboarding', request.url));
   }
-  
+
   // Allow public routes to proceed without authentication
   if (isPublicRoute) {
+    debugLog('ALLOW', { requestId, reason: 'public_route', pathname });
     return response;
   }
 
   // Redirect authenticated users without email verification from protected routes
   if (isProtectedRoute && user && !user.email_confirmed_at) {
-    console.log('Middleware: Redirecting unverified user to verify-email');
-    const redirectUrl = new URL('/verify-email', request.url);
-    return NextResponse.redirect(redirectUrl);
+    debugLog('REDIRECT', { requestId, reason: 'unverified_email', to: '/verify-email' });
+    return NextResponse.redirect(new URL('/verify-email', request.url));
   }
 
-  // Protect owners routes - require authentication and email verification
-  // Note: Ownership verification is done in the component using useRequireBusinessOwner
+  // Protect owners routes
   if (isOwnersRoute && !user) {
-    console.log('Middleware: Redirecting unauthenticated user from owner routes');
-    const redirectUrl = new URL('/login', request.url);
-    return NextResponse.redirect(redirectUrl);
+    debugLog('REDIRECT', { requestId, reason: 'unauthenticated_on_owners', to: '/login' });
+    return NextResponse.redirect(new URL('/login', request.url));
   }
 
   if (isOwnersRoute && user && !user.email_confirmed_at) {
-    console.log('Middleware: Redirecting unverified user from owner routes');
-    const redirectUrl = new URL('/verify-email', request.url);
-    return NextResponse.redirect(redirectUrl);
+    debugLog('REDIRECT', { requestId, reason: 'unverified_on_owners', to: '/verify-email' });
+    return NextResponse.redirect(new URL('/verify-email', request.url));
   }
 
-  // Protect business edit routes - require authentication and email verification
-  // Note: Ownership verification is done in the component using useRequireBusinessOwner
+  // Protect business edit routes
   if (isBusinessEditRoute && !user) {
-    console.log('Middleware: Redirecting unauthenticated user from business edit route');
-    const businessId = request.nextUrl.pathname.match(/^\/business\/([^\/]+)\/edit/)?.[1];
     const redirectUrl = new URL(`/login?redirect=${encodeURIComponent(request.nextUrl.pathname)}`, request.url);
+    debugLog('REDIRECT', { requestId, reason: 'unauthenticated_on_business_edit', to: redirectUrl.pathname });
     return NextResponse.redirect(redirectUrl);
   }
 
   if (isBusinessEditRoute && user && !user.email_confirmed_at) {
-    console.log('Middleware: Redirecting unverified user from business edit route');
-    const redirectUrl = new URL('/verify-email', request.url);
-    return NextResponse.redirect(redirectUrl);
+    debugLog('REDIRECT', { requestId, reason: 'unverified_on_business_edit', to: '/verify-email' });
+    return NextResponse.redirect(new URL('/verify-email', request.url));
   }
 
-  // Protect business review routes - require authentication and email verification
+  // Protect business review routes
   if (isBusinessReviewRoute && !user) {
-    console.log('Middleware: Redirecting unauthenticated user from business review route');
-    const redirectUrl = new URL('/onboarding', request.url);
-    return NextResponse.redirect(redirectUrl);
+    debugLog('REDIRECT', { requestId, reason: 'unauthenticated_on_review', to: '/onboarding' });
+    return NextResponse.redirect(new URL('/onboarding', request.url));
   }
 
   if (isBusinessReviewRoute && user && !user.email_confirmed_at) {
-    console.log('Middleware: Redirecting unverified user from business review route');
-    const redirectUrl = new URL('/verify-email', request.url);
-    return NextResponse.redirect(redirectUrl);
+    debugLog('REDIRECT', { requestId, reason: 'unverified_on_review', to: '/verify-email' });
+    return NextResponse.redirect(new URL('/verify-email', request.url));
   }
-  
 
-  // Protect business auth routes (claim-business) - require authentication
+  // Protect business auth routes (claim-business)
   if (isBusinessAuthRoute && !user) {
-    console.log('Middleware: Redirecting unauthenticated user from claim-business route');
-    const redirectUrl = new URL('/login?redirect=/claim-business', request.url);
-    return NextResponse.redirect(redirectUrl);
+    debugLog('REDIRECT', { requestId, reason: 'unauthenticated_on_claim', to: '/login' });
+    return NextResponse.redirect(new URL('/login?redirect=/claim-business', request.url));
   }
 
   if (isBusinessAuthRoute && user && !user.email_confirmed_at) {
-    console.log('Middleware: Redirecting unverified user from claim-business route');
-    const redirectUrl = new URL('/verify-email', request.url);
-    return NextResponse.redirect(redirectUrl);
+    debugLog('REDIRECT', { requestId, reason: 'unverified_on_claim', to: '/verify-email' });
+    return NextResponse.redirect(new URL('/verify-email', request.url));
   }
 
-  // ROLE-BASED ACCESS CONTROL: Enforce business routes to business accounts only
-  // ONLY restrict if trying to access business routes as a personal user
-  if (isBusinessAuthRoute && user && user.email_confirmed_at) {
-    const userCurrentRole = profileData?.current_role || 'user';
-    if (userCurrentRole !== 'business_owner') {
-      console.log('Middleware: Restricting non-business account from /claim-business');
-      const redirectUrl = new URL('/home', request.url);
-      return NextResponse.redirect(redirectUrl);
+  // ROLE-BASED ACCESS CONTROL: Restrict business routes to business accounts only
+  if (user && user.email_confirmed_at && !isBusinessAccount) {
+    // Personal users cannot access business-only routes
+    if (isBusinessAuthRoute || isOwnersRoute || isBusinessEditRoute) {
+      const redirectTarget = isOnboardingComplete ? '/home' : '/interests';
+      debugLog('REDIRECT', { requestId, reason: 'personal_user_on_business_route', to: redirectTarget });
+      return NextResponse.redirect(new URL(redirectTarget, request.url));
     }
   }
-
-  // ROLE-BASED ACCESS CONTROL: Restrict /my-businesses (and legacy /owners) routes to business accounts only
-  // ONLY restrict if trying to access business routes as a personal user
-  if (isOwnersRoute && user && user.email_confirmed_at) {
-    const userCurrentRole = profileData?.current_role || 'user';
-    if (userCurrentRole !== 'business_owner') {
-      console.log('Middleware: Restricting non-business account from /my-businesses routes');
-      const redirectUrl = new URL('/home', request.url);
-      return NextResponse.redirect(redirectUrl);
-    }
-  }
-
-  // ROLE-BASED ACCESS CONTROL: Restrict /business/[id]/edit to business owners
-  // ONLY restrict if trying to access edit as a personal user
-  if (isBusinessEditRoute && user && user.email_confirmed_at) {
-    const userCurrentRole = profileData?.current_role || 'user';
-    if (userCurrentRole !== 'business_owner') {
-      console.log('Middleware: Restricting non-business account from business edit route');
-      const redirectUrl = new URL('/home', request.url);
-      return NextResponse.redirect(redirectUrl);
-    }
-  }
-
-  // ROLE-BASED ACCESS CONTROL: Restrict personal-only onboarding routes from business accounts
-  // Business owners should NOT access personal onboarding (interests, deal-breakers, etc)
-  const isPersonalOnboardingRoute = request.nextUrl.pathname.startsWith('/interests') || 
-                                    request.nextUrl.pathname.startsWith('/subcategories') ||
-                                    request.nextUrl.pathname.startsWith('/deal-breakers') ||
-                                    request.nextUrl.pathname.startsWith('/complete');
-
-  if (isPersonalOnboardingRoute && user && user.email_confirmed_at) {
-    const userCurrentRole = profileData?.current_role || 'user';
-    if (userCurrentRole === 'business_owner') {
-      console.log('Middleware: Restricting business account from personal onboarding');
-      const redirectUrl = new URL('/claim-business', request.url);
-      return NextResponse.redirect(redirectUrl);
-    }
-  }
-
-  // Allow account type selection for new OAuth users (even if authenticated)
-  // ...existing code...
 
   // Redirect authenticated users from auth pages
   if (isAuthRoute && user) {
     // Allow access to verify-email page regardless of verification status
-    if (request.nextUrl.pathname.startsWith('/verify-email')) {
-      console.log('Middleware: Allowing access to verify-email page');
+    if (pathname.startsWith('/verify-email')) {
+      debugLog('ALLOW', { requestId, reason: 'verify_email_page', pathname });
       return response;
     }
 
     if (user.email_confirmed_at) {
-      const userCurrentRole = profileData?.current_role || 'user';
-      const redirectTarget = userCurrentRole === 'business_owner' ? '/claim-business' : '/interests';
-      console.log('Middleware: Redirecting verified user from auth page to', redirectTarget, 'for role', userCurrentRole);
-      const redirectUrl = new URL(redirectTarget, request.url);
-      return NextResponse.redirect(redirectUrl);
+      // Determine correct redirect based on account type and onboarding status
+      let redirectTarget: string;
+      if (isBusinessAccount) {
+        redirectTarget = '/my-businesses';
+      } else if (isOnboardingComplete) {
+        redirectTarget = '/home';
+      } else {
+        redirectTarget = '/interests';
+      }
+      debugLog('REDIRECT', { requestId, reason: 'authenticated_on_auth_route', to: redirectTarget });
+      return NextResponse.redirect(new URL(redirectTarget, request.url));
     } else {
-      console.log('Middleware: Redirecting unverified user to verify-email');
-      const redirectUrl = new URL('/verify-email', request.url);
-      return NextResponse.redirect(redirectUrl);
+      debugLog('REDIRECT', { requestId, reason: 'unverified_on_auth_route', to: '/verify-email' });
+      return NextResponse.redirect(new URL('/verify-email', request.url));
     }
   }
 
+  debugLog('ALLOW', { requestId, reason: 'default_allow', pathname });
   return response;
 }
 

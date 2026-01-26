@@ -1,12 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect } from "react";
 import { useMounted } from "../hooks/useMounted";
 import { useScrollReveal } from "../hooks/useScrollReveal";
-import Logo from "../components/Logo/Logo";
 import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
-import { OnboardingCard, OnboardingActionBar } from "../components/Onboarding";
 
 const styles = `
   @keyframes fadeInUp {
@@ -63,24 +62,11 @@ const styles = `
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
   }
-  .ios-inertia { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
-  .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-  .hide-scrollbar::-webkit-scrollbar { display: none; }
 
   .btn-press:active { transform: scale(0.98); transition: transform 0.1s ease; }
 
-  :focus-visible {
-    outline: none;
-    ring: 2px solid rgba(104,163,130,0.40);
-    ring-offset: 2px;
-    ring-offset-color: #ffffff;
-  }
-
   .no-hyphens {
     hyphens: none;
-    -webkit-hyphens: none;
-    -moz-hyphens: none;
-    -ms-hyphens: none;
     word-break: normal;
     overflow-wrap: break-word;
   }
@@ -91,28 +77,11 @@ const styles = `
     white-space: normal;
     hyphens: none;
   }
-
-  @media (max-width: 768px) {
-    .title-no-break {
-      word-break: keep-all;
-      overflow-wrap: break-word;
-      white-space: normal;
-      max-width: 100%;
-    }
-    
-    .title-no-break h2 {
-      white-space: normal;
-      word-break: keep-all;
-      overflow-wrap: break-word;
-      hyphens: none;
-    }
-  }
 `;
 
 export default function OnboardingPage() {
   const mounted = useMounted();
 
-  // Initialize scroll reveal (runs once per page load)
   useScrollReveal({ threshold: 0.1, rootMargin: "0px 0px -50px 0px", once: true });
 
   useEffect(() => {
@@ -122,20 +91,30 @@ export default function OnboardingPage() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: styles }} />
-      <div className="min-h-[100svh] md:min-h-[100dvh] bg-off-white flex flex-col items-center justify-center px-6 py-8 relative overflow-hidden safe-area-padding no-overflow">
 
-        {/* Content */}
+      <div className="min-h-[100svh] md:min-h-[100dvh] bg-off-white flex flex-col items-center justify-center px-6 py-8 relative overflow-hidden safe-area-padding">
+
         <div className="w-full mx-auto max-w-xl relative z-10 flex flex-col items-center">
-          {/* Logo */}
-          <div className="mb-10" data-reveal>
-            <Logo variant="onboarding" />
+          
+          {/* LOGO */}
+          <div className="mb-4" data-reveal>
+            <div className="flex justify-center">
+              <Image
+                src="/logos/logo.png"
+                alt="Sayso logo"
+                width={200}
+                height={100}
+                priority
+                className="object-contain w-auto h-[70px] sm:h-[76px] md:h-[84px]"
+              />
+            </div>
           </div>
 
-          {/* Main content */}
+          {/* MAIN CONTENT */}
           <div className="text-center flex flex-col items-center gap-6">
-            {/* Hero Title */}
+            
             <div data-reveal className="title-no-break">
-              <h2 className="font-urbanist text-2xl sm:text-3xl md:text-5xl font-700 leading-[1.2] tracking-tight text-charcoal no-hyphens" style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif", fontWeight: 700 }}>
+              <h2 className="font-urbanist text-2xl sm:text-3xl md:text-5xl font-700 leading-[1.2] tracking-tight text-charcoal no-hyphens">
                 <div className="block whitespace-nowrap">
                   <WavyTypedTitle
                     text="Discover gems near you!"
@@ -147,54 +126,29 @@ export default function OnboardingPage() {
                     loopWave={false}
                     triggerOnTypingComplete={true}
                     enableScrollTrigger={false}
-                    style={{
-                      fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                      fontWeight: 700,
-                      wordBreak: 'keep-all',
-                      overflowWrap: 'normal',
-                      whiteSpace: 'nowrap',
-                      hyphens: 'none',
-                      WebkitHyphens: 'none',
-                      msHyphens: 'none',
-                    }}
                   />
                 </div>
               </h2>
             </div>
 
-            {/* Description */}
             <p
               data-reveal
               className="text-body font-normal text-charcoal/70 leading-[1.55] max-w-[50ch] no-hyphens"
-              style={{
-                fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                fontWeight: 400,
-              }}
             >
               Explore trusted businesses, leave reviews and see what&apos;s trending around you
             </p>
 
-            {/* CTA Buttons */}
             <div className="flex flex-col items-center gap-4 mt-4">
               <div data-reveal>
                 <Link
                   href="/home?guest=true"
-                  className="group relative block w-[200px] rounded-full py-4 px-6 text-body font-semibold text-white text-center bg-gradient-to-r from-coral to-coral/80 hover:from-sage hover:to-sage transition-all duration-300 btn-target btn-press shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-sage/30 focus-visible:ring-offset-2"
-                  style={{
-                    fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                    fontWeight: 600,
-                  }}
+                  className="group relative block w-[200px] rounded-full py-4 px-6 text-body font-semibold text-white text-center bg-gradient-to-r from-coral to-coral/80 hover:from-sage hover:to-sage transition-all duration-300 btn-press shadow-md focus-visible:ring-4 focus-visible:ring-sage/30 focus-visible:ring-offset-2"
                 >
                   <span className="relative z-10">Get Started</span>
                 </Link>
               </div>
 
-              {/* Signup / Login Link */}
-              <div data-reveal className="text-center text-charcoal/70 hover:text-charcoal transition-colors duration-300 text-sm font-medium"
-                  style={{
-                    fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                    fontWeight: 500,
-                  }}>
+              <div data-reveal className="text-center text-charcoal/70 hover:text-charcoal transition-colors duration-300 text-sm font-medium">
                 <Link href="/register" className="font-semibold text-charcoal hover:underline">
                   Sign Up
                 </Link>
@@ -204,10 +158,10 @@ export default function OnboardingPage() {
                 </Link>
               </div>
             </div>
+
           </div>
         </div>
       </div>
     </>
   );
 }
-

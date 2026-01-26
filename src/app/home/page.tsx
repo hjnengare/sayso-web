@@ -22,10 +22,12 @@ import { List, Map as MapIcon } from "lucide-react";
 import BusinessRow from "../components/BusinessRow/BusinessRow";
 import BusinessRowSkeleton from "../components/BusinessRow/BusinessRowSkeleton";
 import FeaturedBusinessesSkeleton from "../components/CommunityHighlights/FeaturedBusinessesSkeleton";
+import CommunityHighlightsSkeleton from "../components/CommunityHighlights/CommunityHighlightsSkeleton";
 import BusinessCard from "../components/BusinessCard/BusinessCard";
 import { Loader } from "../components/Loader/Loader";
 import ScrollHint from "../components/ScrollHint/ScrollHint";
 import { useBusinesses, useForYouBusinesses, useTrendingBusinesses } from "../hooks/useBusinesses";
+import { useFeaturedBusinesses } from "../hooks/useFeaturedBusinesses";
 import { useSimpleBusinessSearch } from "../hooks/useSimpleBusinessSearch";
 import { useEvents } from "../hooks/useEvents";
 import { useRoutePrefetch } from "../hooks/useRoutePrefetch";
@@ -60,6 +62,8 @@ const Footer = nextDynamic(() => import("../components/Footer/Footer"), {
 const MemoizedBusinessRow = memo(BusinessRow);
 
 export default function Home() {
+    // Events and Specials
+    const { events, loading: eventsLoading } = useEvents();
   usePredefinedPageTitle('home');
   
   const searchParams = useSearchParams();
@@ -81,6 +85,30 @@ export default function Home() {
   // ✅ USER PREFERENCES: From onboarding, persistent, used for personalization
   const { interests, subcategories, loading: prefsLoading } = useUserPreferences();
   const { isLoading: authLoading } = useAuth(); // Get auth loading state
+
+  // Destructure and alias refetch functions from business hooks
+  const {
+    businesses: allBusinesses,
+    loading: allBusinessesLoading,
+    error: allBusinessesError,
+    refetch: refetchAllBusinesses,
+  } = useBusinesses({
+    // Add any required options here, e.g., filters, location, etc.
+  });
+
+  const {
+    businesses: forYouBusinesses,
+    loading: forYouLoading,
+    error: forYouError,
+    refetch: refetchForYou,
+  } = useForYouBusinesses();
+
+  const {
+    businesses: trendingBusinesses,
+    loading: trendingLoading,
+    error: trendingError,
+    refetch: refetchTrending,
+  } = useTrendingBusinesses();
 
   // Debounce search query for real-time filtering (300ms delay)
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
@@ -110,72 +138,14 @@ export default function Home() {
   // This is the single source of truth for whether we're in filtered mode
   const isFiltered = useMemo(() => {
     // MUST have user-initiated flag AND at least one filter active
-    const hasActiveFilters = (
-      selectedInterestIds.length > 0 ||
-      filters.minRating !== null ||
-      filters.distance !== null
-    );
-    
-    const result = hasUserInitiatedFilters && hasActiveFilters;
-    
-    // Debug logging to track state changes
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[Home] isFiltered check:', {
-        hasUserInitiatedFilters,
-        selectedInterestIdsLength: selectedInterestIds.length,
-        selectedInterestIds,
-        minRating: filters.minRating,
-        distance: filters.distance,
-        hasActiveFilters,
-        isFiltered: result,
-      });
-    }
-    
-    return result;
-  }, [hasUserInitiatedFilters, selectedInterestIds, filters.minRating, filters.distance]);
+    return hasUserInitiatedFilters && (selectedInterestIds.length > 0 || filters.minRating !== null || filters.distance !== null);
+  }, [hasUserInitiatedFilters, selectedInterestIds, filters]);
 
-  // ✅ ACTIVE FILTERS: Only used when user explicitly filters
-  const activeInterestIds = useMemo(() => {
-    // Only use selectedInterestIds if user has explicitly initiated filtering
-    if (hasUserInitiatedFilters && selectedInterestIds.length > 0) {
-      return selectedInterestIds;
-    }
-    // Otherwise, don't filter by interests (show all or use preferences for personalization)
-    return undefined;
-  }, [hasUserInitiatedFilters, selectedInterestIds]);
-
-  // ✅ PREFERENCES: Used for For You personalization (separate from filters)
-  const preferenceInterestIds = useMemo(() => {
-    const userInterestIds = interests.map((i) => i.id).concat(
-      subcategories.map((s) => s.id)
-    );
-    return userInterestIds.length > 0 ? userInterestIds : undefined;
-  }, [interests, subcategories]);
-
-  // ✅ CRITICAL: Skip fetching until auth is ready
-  // This prevents fetching as anon user before session is established
-  // ✅ For You uses PREFERENCES, not active filters
-  const { businesses: forYouBusinesses, loading: forYouLoading, error: forYouError, refetch: refetchForYou } = useForYouBusinesses(10, preferenceInterestIds, {
-    skip: authLoading, // ✅ Wait for auth to be ready
-  });
-  const { businesses: trendingBusinesses, loading: trendingLoading, error: trendingError } = useTrendingBusinesses(10, { 
-    interestIds: activeInterestIds,
-    skip: authLoading, // ✅ Wait for auth to be ready
-  });
-  const { events, loading: eventsLoading } = useEvents({ limit: 5, upcoming: true });
-  const { businesses: allBusinesses, loading: allBusinessesLoading, refetch: refetchAllBusinesses } = useBusinesses({ 
-    limit: 500, // Increased to ensure we get businesses from more subcategories
-    sortBy: "total_rating", 
-    sortOrder: "desc", 
-    feedStrategy: debouncedSearchQuery.trim().length > 0 ? "standard" : "mixed",
-    searchQuery: debouncedSearchQuery.trim().length > 0 ? debouncedSearchQuery : null,
-    sort: sortStrategy,
-    interestIds: activeInterestIds,
-    minRating: filters.minRating,
-    radiusKm: radiusKm,
-    latitude: userLocation?.lat ?? null,
-    longitude: userLocation?.lng ?? null,
-    skip: authLoading, // ✅ Wait for auth to be ready
+  // Fetch featured businesses from API
+  const { featuredBusinesses, loading: featuredLoading } = useFeaturedBusinesses({
+    limit: 12,
+    region: userLocation ? 'Cape Town' : null, // TODO: Get actual region from user location
+    skip: authLoading,
   });
 
   // Check if search is active (2+ characters)
@@ -365,72 +335,8 @@ export default function Home() {
     });
   };
 
-  const featuredByCategory = (() => {
-    if (!allBusinesses || !Array.isArray(allBusinesses) || allBusinesses.length === 0) return [];
-
-    const bySubCategory = new Map<string, any>();
-
-    const normalizeCategory = (value?: string | null) => {
-      if (!value || value === "uncategorized") return "Miscellaneous";
-      return value;
-    };
-
-    const getDisplayRating = (b: any) =>
-      (typeof b.totalRating === "number" && b.totalRating) ||
-      (typeof b.rating === "number" && b.rating) ||
-      (typeof b?.stats?.average_rating === "number" && b.stats.average_rating) ||
-      0;
-
-    const getReviews = (b: any) =>
-      (typeof b.reviews === "number" && b.reviews) ||
-      (typeof b.total_reviews === "number" && b.total_reviews) ||
-      0;
-
-    const toTitle = (value?: string) =>
-      (value || "Miscellaneous")
-        .toString()
-        .split(/[-_]/)
-        .filter(Boolean)
-        .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
-        .join(" ");
-
-    // Group by subInterestLabel or subInterestId first (more specific), fallback to category
-    for (const b of allBusinesses) {
-      // Use subInterestLabel or subInterestId for more granular grouping
-      const subCat = normalizeCategory((b.subInterestLabel || b.subInterestId || b.category || "Miscellaneous") as string);
-      const existing = bySubCategory.get(subCat);
-      if (!existing || getDisplayRating(b) > getDisplayRating(existing)) {
-        bySubCategory.set(subCat, b);
-      }
-    }
-
-    const results = Array.from(bySubCategory.entries()).map(([subCat, b], index) => {
-      const rating = getDisplayRating(b);
-      const reviews = getReviews(b);
-      const categoryLabel = toTitle(subCat);
-      return {
-        id: b.id,
-        name: b.name,
-        image: b.image || b.image_url || (b.uploaded_images && b.uploaded_images.length > 0 ? b.uploaded_images[0] : null) || "",
-        alt: b.alt || b.name,
-        category: normalizeCategory(b.category) || categoryLabel,
-        description: b.description || `Featured in ${categoryLabel}`,
-        location: b.location || b.address || "Cape Town",
-        rating: rating > 0 ? 5 : 0,
-        reviewCount: reviews,
-        totalRating: rating,
-        reviews,
-        badge: "featured" as const,
-        rank: index + 1,
-        href: `/business/${b.slug || b.id}`,
-        monthAchievement: `Featured ${categoryLabel}`,
-        verified: Boolean(b.verified),
-      };
-    });
-
-    results.sort((a, b) => b.totalRating - a.totalRating || b.reviews - a.reviews);
-    return results;
-  })();
+  // Use featured businesses from API instead of client-side computation
+  const featuredByCategory = featuredBusinesses;
 
   // Debug logging for business counts (placed after featuredByCategory is defined)
   useEffect(() => {
@@ -458,10 +364,11 @@ export default function Home() {
     });
     console.log('[Home Page] Featured by Category:', {
       count: featuredByCategory.length,
+      loading: featuredLoading,
       categories: featuredByCategory.map(f => f.category),
     });
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  }, [forYouBusinesses, trendingBusinesses, allBusinesses, forYouLoading, trendingLoading, allBusinessesLoading, featuredByCategory]);
+  }, [forYouBusinesses, trendingBusinesses, allBusinesses, forYouLoading, trendingLoading, allBusinessesLoading, featuredByCategory, featuredLoading]);
 
   useRoutePrefetch([
     "/for-you",
@@ -732,7 +639,7 @@ export default function Home() {
               {/* Community Highlights */}
               <div className="relative z-10 snap-start">
                 {allBusinessesLoading ? (
-                  <FeaturedBusinessesSkeleton count={4} />
+                  <CommunityHighlightsSkeleton reviewerCount={4} businessCount={4} />
                 ) : (
                   <CommunityHighlights
                     businessesOfTheMonth={featuredByCategory}

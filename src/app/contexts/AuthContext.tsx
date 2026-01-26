@@ -307,45 +307,34 @@ export function AuthProvider({ children }: AuthProviderProps) {
           }
         }
 
-        // Redirect based on role, onboarding status and email verification
+        // ============================================
+        // SIMPLIFIED LOGIN ROUTING
+        // Single source of truth: profiles.onboarding_complete
+        // ============================================
+
+        // Step 1: Check email verification
         if (!authUser.email_verified) {
-          // Redirect to email verification if not verified
           router.push('/verify-email');
-        } else if (activeUser.profile?.onboarding_complete) {
-          // User has completed onboarding, redirect based on current_role
-          const userCurrentRole = activeUser.profile?.current_role || 'user';
-          if (userCurrentRole === 'business_owner') {
-            router.push('/claim-business');
-          } else {
-            router.push('/home');
-          }
+          setIsLoading(false);
+          return activeUser;
+        }
+
+        // Step 2: Determine account type
+        const userCurrentRole = activeUser.profile?.current_role || 'user';
+        const isBusinessAccount = userCurrentRole === 'business_owner';
+
+        // Step 3: Route based on account type and onboarding status
+        if (isBusinessAccount) {
+          // Business accounts NEVER need personal onboarding
+          router.push('/my-businesses');
+        } else if (activeUser.profile?.onboarding_complete === true) {
+          // Personal user with completed onboarding → home
+          router.push('/home');
         } else {
-          // User is verified but onboarding incomplete - redirect to next step
-          // For business owners, skip personal onboarding and go to claim-business
-          const userCurrentRole = activeUser.profile?.current_role || 'user';
-          if (userCurrentRole === 'business_owner') {
-            router.push('/claim-business');
-            return authUser;
-          }
-
-          // Personal users proceed with normal onboarding
-          // Determine next step based on what's been completed
-          const interestsCount = activeUser.profile?.interests_count || 0;
-          const subcategoriesCount = activeUser.profile?.subcategories_count || 0;
-          const dealbreakersCount = activeUser.profile?.dealbreakers_count || 0;
-
-          let nextStep = 'interests';
-          if (interestsCount === 0) {
-            nextStep = 'interests';
-          } else if (subcategoriesCount === 0) {
-            nextStep = 'subcategories';
-          } else if (dealbreakersCount === 0) {
-            nextStep = 'deal-breakers';
-          } else {
-            nextStep = 'complete';
-          }
-
-          router.push(`/${nextStep}`);
+          // Personal user with incomplete onboarding → start onboarding
+          // Note: We always redirect to /interests (the start)
+          // The onboarding flow handles progression internally
+          router.push('/interests');
         }
 
         setIsLoading(false);

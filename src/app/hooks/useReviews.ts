@@ -269,8 +269,10 @@ export function useReviewSubmission() {
       }
       formData.append('content', reviewData.content);
       reviewData.tags.forEach(tag => formData.append('tags', tag));
-      reviewData.images?.forEach(image => {
-        formData.append('images', image, image.name);
+      reviewData.images?.forEach((image, index) => {
+        // On mobile, file.name might be empty when taken directly from camera
+        const fileName = image.name && image.name.trim() ? image.name : `photo_${Date.now()}_${index}.jpg`;
+        formData.append('images', image, fileName);
       });
 
       const response = await fetch('/api/reviews', {

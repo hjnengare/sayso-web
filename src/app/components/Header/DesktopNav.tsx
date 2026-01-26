@@ -145,9 +145,10 @@ export default function DesktopNav(props: DesktopNavProps) {
 
   return (
     // ✅ 3-zone layout so Home / Discover / Leaderboard sit centered
-    <nav className="w-full grid grid-cols-3 items-center gap-4">
-      {/* Left spacer (keeps center truly centered vs right icon width) */}
-      <div />
+    // Equal gap-2 lg:gap-4 matches Header for visual symmetry
+    <nav className="w-full grid grid-cols-[1fr_auto_1fr] items-center gap-2 lg:gap-4">
+      {/* Left spacer (matches right icons section width for symmetry) */}
+      <div className="min-w-0" />
 
       {/* Centered main nav links */}
       <div className="flex items-center justify-center gap-2 lg:gap-3 min-w-0">
@@ -336,8 +337,8 @@ export default function DesktopNav(props: DesktopNavProps) {
           })}
       </div>
 
-      {/* Right: Icons (aligned right) */}
-      <div className="flex items-center justify-end gap-2 lg:gap-3 flex-shrink-0">
+      {/* Right: Icons (aligned right, gap matches center nav for symmetry) */}
+      <div className="flex items-center justify-end gap-2 lg:gap-3 min-w-0">
         {/* Notifications */}
         <button
           onClick={onNotificationsClick}

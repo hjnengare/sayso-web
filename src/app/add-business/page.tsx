@@ -468,6 +468,9 @@ export default function AddBusinessPage() {
             const businessId = data.business.id;
             console.log(`[Add Business] Business created successfully with ID: ${businessId}`);
 
+            // Note: business_owners entry is already created by the API
+            // No need to insert again here
+
             if (data.uploadWarnings && data.uploadWarnings.length > 0) {
                 console.warn('[Add Business] Image upload warnings:', data.uploadWarnings);
                 showToast('Business created successfully, but some images had issues. You can add images later from the edit page.', 'sage', 5000);
@@ -480,9 +483,9 @@ export default function AddBusinessPage() {
             }
 
             showToast('Your business has been created successfully! Redirecting to your business page...', 'success', 4000);
-
             setTimeout(() => {
-                router.push(`/business/${businessId}`);
+                router.push(`/business/my-businesses`);
+                router.refresh && router.refresh();
             }, 1000);
         } catch (error: unknown) {
             console.error('Error creating business:', error);

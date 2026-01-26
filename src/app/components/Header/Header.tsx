@@ -106,7 +106,7 @@ export default function Header({
   );
 
   // Padding classes
-  const currentPaddingClass = heroMode ? "py-0" : reducedPadding ? "py-3.5 md:py-4" : "py-3.5 md:py-6";
+  const currentPaddingClass = heroMode ? "py-0" : reducedPadding ? "py-2." : "py-2.";
   
   // Always render the real header, even if navigation state is not ready
   
@@ -115,12 +115,12 @@ export default function Header({
       <header ref={headerRef} className={headerClassName} style={sf}>
         <div className={`relative z-[1] mx-auto w-full max-w-[1700px] ${heroMode ? "px-4 sm:px-6 md:px-8 lg:px-10" : `px-4 sm:px-6 md:px-8 lg:px-10 ${currentPaddingClass}`} flex items-center h-full`}>
           {/* Top row */}
-          <div className="flex items-center justify-between gap-6 w-full h-full">
+          <div className="flex items-center justify-between gap-2 lg:gap-4 w-full h-full">
             {/* Logo */}
-            <OptimizedLink href={isBusinessAccountUser ? "/my-businesses" : "/home"} className="group flex-shrink-0 relative" aria-label="sayso Home">
+            <OptimizedLink href="/" className="group flex-shrink-0 relative" aria-label="sayso Home">
               <div className="absolute inset-0 bg-gradient-to-r from-sage/40 via-coral/30 to-sage/40 rounded-[20px] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10" />
-              <div className="relative scale-90 sm:scale-[0.72] origin-left">
-                <Logo variant="default" className="relative drop-shadow-[0_4px_16px_rgba(0,0,0,0.12)] transition-all duration-300 group-hover:drop-shadow-[0_6px_20px_rgba(0,0,0,0.15)]" color={whiteText ? "sage" : "gradient"} />
+              <div className="relative">
+                <Logo variant="default" className="relative drop-shadow-[0_4px_16px_rgba(0,0,0,0.12)] transition-all duration-300 group-hover:drop-shadow-[0_6px_20px_rgba(0,0,0,0.15)]" />
               </div>
             </OptimizedLink>
 

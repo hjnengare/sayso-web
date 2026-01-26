@@ -25,6 +25,7 @@ const BusinessOfMonthLeaderboard = nextDynamic(
   }
 );
 import { useBusinesses } from "../hooks/useBusinesses";
+import { useFeaturedBusinesses } from "../hooks/useFeaturedBusinesses";
 
 // Note: dynamic and revalidate cannot be exported from client components
 // Client components are automatically dynamic
@@ -107,6 +108,12 @@ function LeaderboardPage() {
     skip: !shouldFetchBusinesses,
   });
 
+  // Fetch featured businesses from API
+  const { featuredBusinesses } = useFeaturedBusinesses({
+    limit: 50, // More for leaderboard
+    skip: !shouldFetchBusinesses,
+  });
+
   // Trigger business fetch when switching to businesses tab
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
@@ -115,72 +122,8 @@ function LeaderboardPage() {
     }
   };
 
-  const featuredBusinesses = useMemo(() => {
-    if (!allBusinesses || allBusinesses.length === 0) return [];
-
-    const byInterest = new Map<string, any>();
-
-    const normalizeInterestId = (value?: string | null) => {
-      if (!value || value === "uncategorized") return "miscellaneous";
-      return value;
-    };
-
-    const getDisplayRating = (b: any) =>
-      (typeof b.totalRating === "number" && b.totalRating) ||
-      (typeof b.rating === "number" && b.rating) ||
-      (typeof b?.stats?.average_rating === "number" && b.stats.average_rating) ||
-      0;
-
-    const getReviews = (b: any) =>
-      (typeof b.reviews === "number" && b.reviews) ||
-      (typeof b.total_reviews === "number" && b.total_reviews) ||
-      0;
-
-    const toTitle = (value?: string) =>
-      (value || "Miscellaneous")
-        .toString()
-        .split(/[-_]/)
-        .filter(Boolean)
-        .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
-        .join(" ");
-
-    for (const b of allBusinesses) {
-      // Group by interestId instead of category
-      const interestId = normalizeInterestId(b.interestId as string | undefined);
-      const existing = byInterest.get(interestId);
-      if (!existing || getDisplayRating(b) > getDisplayRating(existing)) {
-        byInterest.set(interestId, b);
-      }
-    }
-
-    const results = Array.from(byInterest.entries()).map(([interestId, b], index) => {
-      const rating = getDisplayRating(b);
-      const reviews = getReviews(b);
-      const interestLabel = toTitle(interestId);
-      return {
-        id: b.id,
-        name: b.name,
-        image: b.image || b.image_url || (b.uploaded_images && b.uploaded_images.length > 0 ? b.uploaded_images[0] : null) || "",
-        alt: b.alt || b.name,
-        category: b.category || interestLabel || "Miscellaneous",
-        description: b.description || `Featured in ${interestLabel}`,
-        interestId: interestId,
-        location: b.location || b.address || "Cape Town",
-        rating: rating > 0 ? 5 : 0,
-        reviewCount: reviews,
-        totalRating: rating,
-        reviews,
-        badge: "featured" as const,
-        rank: index + 1,
-        href: `/business/${b.slug || b.id}`,
-        monthAchievement: `Featured ${interestLabel}`,
-        verified: Boolean(b.verified),
-      };
-    });
-
-    results.sort((a, b) => b.totalRating - a.totalRating || b.reviews - a.reviews);
-    return results;
-  }, [allBusinesses]);
+  // Use featured businesses from API instead of client-side computation
+  const featuredBusinessesFromAPI = featuredBusinesses;
 
   // Memoize the toggle functions to prevent unnecessary re-renders
   const handleToggleFullLeaderboard = useMemo(() =>
@@ -417,7 +360,7 @@ function LeaderboardPage() {
                               </>
                             ) : (
                               <BusinessOfMonthLeaderboard
-                                businesses={featuredBusinesses}
+                                businesses={featuredBusinessesFromAPI}
                                 showFullLeaderboard={showFullBusinessLeaderboard}
                                 onToggleFullLeaderboard={handleToggleFullBusinessLeaderboard}
                               />

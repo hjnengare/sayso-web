@@ -1,193 +1,109 @@
 /**
- * STRICT ONBOARDING STATE MACHINE
- * 
- * Single source of truth for onboarding routing logic.
- * Uses ONLY profiles.onboarding_step (never counts) for routing decisions.
- * 
- * State machine:
- * - 'interests' -> user must complete interests
- * - 'subcategories' -> user must complete subcategories
- * - 'deal-breakers' -> user must complete deal-breakers
- * - 'complete' -> user can access /complete page
- * 
- * Transition rules (only in API routes after successful save):
- * - Save interests => set onboarding_step = 'subcategories'
- * - Save subcategories => set onboarding_step = 'deal-breakers'
- * - Save deal-breakers => set onboarding_step = 'complete'
- * - Finish complete screen => set onboarding_complete=true
+ * SIMPLIFIED ONBOARDING ACCESS
+ *
+ * Single source of truth: profiles.onboarding_complete (boolean)
+ *
+ * This utility is now simplified. The middleware handles all guard logic.
+ * This file provides helper functions for components that need to check
+ * onboarding state client-side.
+ *
+ * Rules:
+ * 1. onboarding_complete = true → user has finished, block onboarding routes
+ * 2. onboarding_complete = false → user must complete onboarding
+ * 3. Business accounts never use personal onboarding (handled in middleware)
  */
 
 export type OnboardingStep = 'interests' | 'subcategories' | 'deal-breakers' | 'complete';
 export type OnboardingRoute = '/interests' | '/subcategories' | '/deal-breakers' | '/complete';
 
 interface Profile {
-  onboarding_step: OnboardingStep | null;
   onboarding_complete: boolean | null;
+  onboarding_step?: OnboardingStep | null;
 }
 
 interface OnboardingAccess {
-  step: OnboardingStep;
-  currentRoute: OnboardingRoute;
-  canAccess(pathname: string): boolean;
-  redirectFor(pathname: string): OnboardingRoute | null;
+  isComplete: boolean;
+  canAccessOnboardingRoutes: boolean;
+  shouldRedirectTo: string | null;
 }
 
 /**
- * Step order for comparison (earlier = lower index)
+ * Onboarding routes that require incomplete onboarding to access
  */
-const STEP_ORDER: OnboardingStep[] = ['interests', 'subcategories', 'deal-breakers', 'complete'];
-
-/**
- * Route to step mapping
- */
-const ROUTE_TO_STEP: Record<string, OnboardingStep> = {
-  '/interests': 'interests',
-  '/subcategories': 'subcategories',
-  '/deal-breakers': 'deal-breakers',
-  '/complete': 'complete',
-};
-
-/**
- * Step to route mapping
- */
-const STEP_TO_ROUTE: Record<OnboardingStep, OnboardingRoute> = {
-  'interests': '/interests',
-  'subcategories': '/subcategories',
-  'deal-breakers': '/deal-breakers',
-  'complete': '/complete',
-};
-
-/**
- * Get the required onboarding step from profile
- * Defaults to 'interests' if step is null/missing
- */
-function getRequiredStep(profile: Profile | null): OnboardingStep {
-  if (!profile) {
-    return 'interests';
-  }
-  
-  const step = profile.onboarding_step;
-  
-  // Default to 'interests' if step is null, undefined, or invalid
-  if (!step || !STEP_ORDER.includes(step as OnboardingStep)) {
-    return 'interests';
-  }
-  
-  return step as OnboardingStep;
-}
-
-/**
- * Compare two steps - returns:
- * - negative if step1 is earlier than step2
- * - 0 if equal
- * - positive if step1 is later than step2
- */
-function compareSteps(step1: OnboardingStep, step2: OnboardingStep): number {
-  const index1 = STEP_ORDER.indexOf(step1);
-  const index2 = STEP_ORDER.indexOf(step2);
-  return index1 - index2;
-}
+const ONBOARDING_ROUTES = ['/interests', '/subcategories', '/deal-breakers', '/complete'];
 
 /**
  * Check if a pathname is an onboarding route
  */
-function isOnboardingRoute(pathname: string): boolean {
-  return pathname in ROUTE_TO_STEP;
+export function isOnboardingRoute(pathname: string): boolean {
+  return ONBOARDING_ROUTES.some(route => pathname.startsWith(route));
 }
 
 /**
- * Get the step for a given pathname
- */
-function getStepForRoute(pathname: string): OnboardingStep | null {
-  return ROUTE_TO_STEP[pathname] || null;
-}
-
-/**
- * Main function: Get onboarding access control
- * 
- * Rules:
- * 1. If onboarding_complete=true: block all onboarding routes, redirect to /home
- * 2. If onboarding_complete=false:
- *    - Determine requiredStep from onboarding_step (default: 'interests')
- *    - If pathname is a later step than requiredStep -> redirect to requiredStep (NO SKIP)
- *    - If pathname is earlier step -> allow (back navigation)
- *    - If pathname is requiredStep -> allow
- *    - If pathname is unrelated (like /home) while incomplete -> redirect to requiredStep
+ * Get onboarding access for a user
+ *
+ * @param profile - User's profile (can be null if not loaded)
+ * @returns Object with access information
  */
 export function getOnboardingAccess(profile: Profile | null): OnboardingAccess {
-  const requiredStep = getRequiredStep(profile);
-  const currentRoute = STEP_TO_ROUTE[requiredStep];
+  // If no profile, treat as incomplete
   const isComplete = profile?.onboarding_complete === true;
 
-  /**
-   * Check if user can access a given pathname
-   */
-  function canAccess(pathname: string): boolean {
-    // If onboarding is complete, block all onboarding routes
-    if (isComplete) {
-      return !isOnboardingRoute(pathname);
-    }
-
-    // If not an onboarding route, allow (let other middleware handle it)
-    if (!isOnboardingRoute(pathname)) {
-      return true;
-    }
-
-    const requestedStep = getStepForRoute(pathname);
-    if (!requestedStep) {
-      return true; // Not an onboarding route we know about
-    }
-
-    // Allow if:
-    // 1. User is on their required step (currentStep === requiredStep)
-    // 2. User is going backward (requestedStep is earlier than requiredStep)
-    const stepComparison = compareSteps(requestedStep, requiredStep);
-    
-    return stepComparison <= 0; // Allow current step or earlier steps
-  }
-
-  /**
-   * Get redirect route for a given pathname (or null if no redirect needed)
-   */
-  function redirectFor(pathname: string): OnboardingRoute | null {
-    // If onboarding is complete, redirect onboarding routes to /home (handled elsewhere)
-    if (isComplete && isOnboardingRoute(pathname)) {
-      return null; // Let middleware redirect to /home
-    }
-
-    // If not an onboarding route, no redirect needed
-    if (!isOnboardingRoute(pathname)) {
-      return null;
-    }
-
-    const requestedStep = getStepForRoute(pathname);
-    if (!requestedStep) {
-      return null; // Not an onboarding route we know about
-    }
-
-    // If user is trying to skip ahead, redirect to required step
-    const stepComparison = compareSteps(requestedStep, requiredStep);
-    if (stepComparison > 0) {
-      // User is trying to access a later step - redirect to required step
-      return currentRoute;
-    }
-
-    // Allow access (current step or earlier)
-    return null;
-  }
-
   return {
-    step: requiredStep,
-    currentRoute,
-    canAccess,
-    redirectFor,
+    isComplete,
+    // Users with incomplete onboarding CAN access onboarding routes
+    // Users with complete onboarding CANNOT access onboarding routes
+    canAccessOnboardingRoutes: !isComplete,
+    // Redirect destination for completed users trying to access onboarding
+    shouldRedirectTo: isComplete ? '/home' : null,
   };
 }
 
 /**
- * Helper: Get the route for a given step
+ * Check if user should be redirected from current route
+ *
+ * @param profile - User's profile
+ * @param pathname - Current pathname
+ * @param isBusinessAccount - Whether user is a business account
+ * @returns Redirect destination or null if no redirect needed
+ */
+export function getOnboardingRedirect(
+  profile: Profile | null,
+  pathname: string,
+  isBusinessAccount: boolean = false
+): string | null {
+  // Business accounts never see onboarding
+  if (isBusinessAccount && isOnboardingRoute(pathname)) {
+    return '/my-businesses';
+  }
+
+  const isComplete = profile?.onboarding_complete === true;
+  const isOnboarding = isOnboardingRoute(pathname);
+
+  // Completed user on onboarding route → redirect to home
+  if (isComplete && isOnboarding) {
+    return '/home';
+  }
+
+  // Incomplete user on protected (non-onboarding) route → redirect to interests
+  // Note: This is primarily handled by middleware, but useful for client-side checks
+  if (!isComplete && !isOnboarding && pathname !== '/') {
+    return '/interests';
+  }
+
+  return null;
+}
+
+/**
+ * Helper: Get the route for a given step (for backward compatibility)
  */
 export function getRouteForStep(step: OnboardingStep): OnboardingRoute {
+  const STEP_TO_ROUTE: Record<OnboardingStep, OnboardingRoute> = {
+    'interests': '/interests',
+    'subcategories': '/subcategories',
+    'deal-breakers': '/deal-breakers',
+    'complete': '/complete',
+  };
   return STEP_TO_ROUTE[step];
 }
 
@@ -195,6 +111,12 @@ export function getRouteForStep(step: OnboardingStep): OnboardingRoute {
  * Helper: Get the step for a given route
  */
 export function getStepForRouteHelper(pathname: string): OnboardingStep | null {
-  return getStepForRoute(pathname);
+  const ROUTE_TO_STEP: Record<string, OnboardingStep> = {
+    '/interests': 'interests',
+    '/subcategories': 'subcategories',
+    '/deal-breakers': 'deal-breakers',
+    '/complete': 'complete',
+  };
+  return ROUTE_TO_STEP[pathname] || null;
 }
 

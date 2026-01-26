@@ -439,7 +439,8 @@ export async function GET(req: Request) {
     const radius = searchParams.get('radius') ? parseFloat(searchParams.get('radius')!) : (radiusKm || 10);
 
     if (feedStrategy === 'mixed') {
-      return await handleMixedFeed({
+      // Use the Netflix-style two-stage recommender (V2)
+      return await handleMixedFeedV2({
         supabase,
         limit,
         category,
@@ -450,12 +451,13 @@ export async function GET(req: Request) {
         location,
         minRating,
         interestIds,
-        subInterestIds: subcategoriesToFilter,
+        subInterestIds: subInterestIds.length > 0 ? subInterestIds : subcategoriesToFilter,
         dealbreakerIds,
         sortBy,
         sortOrder,
         latitude: lat,
         longitude: lng,
+        userId, // Pass userId for impression tracking and repetition suppression
       });
     }
 
@@ -1106,9 +1108,198 @@ type MixedFeedOptions = {
   sortOrder: string;
   latitude: number | null;
   longitude: number | null;
+  userId?: string | null;
 };
 
-async function handleMixedFeed(options: MixedFeedOptions) {
+// =============================================
+// NETFLIX-STYLE TWO-STAGE RECOMMENDER (V2)
+// Stage A: Candidate Generation (fast, broad)
+// Stage B: Ranking (sophisticated scoring)
+// =============================================
+
+async function handleMixedFeedV2(options: MixedFeedOptions) {
+  const {
+    supabase,
+    limit,
+    priceRange,
+    preferredPriceRanges,
+    interestIds,
+    subInterestIds,
+    dealbreakerIds,
+    latitude,
+    longitude,
+    userId,
+  } = options;
+
+  console.log('[BUSINESSES API] handleMixedFeedV2 (Netflix-style) called with:', {
+    limit,
+    interestIds: interestIds?.length || 0,
+    subInterestIds: subInterestIds?.length || 0,
+    dealbreakerIds: dealbreakerIds?.length || 0,
+    hasUserId: !!userId,
+    hasLocation: !!(latitude && longitude),
+  });
+
+  // Derive price filters
+  const priceFilters = derivePriceFilters(priceRange, preferredPriceRanges);
+
+  try {
+    // Call the V2 recommender RPC
+    const rpcPayload = {
+      p_user_id: userId || null,
+      p_interest_ids: interestIds || [],
+      p_sub_interest_ids: subInterestIds || [],
+      p_latitude: latitude,
+      p_longitude: longitude,
+      p_limit: Math.min(limit, 100),
+      p_price_ranges: priceFilters && priceFilters.length > 0 ? priceFilters : null,
+      p_suppress_recent_hours: userId ? 48 : 0, // Only suppress for logged-in users
+    };
+
+    console.log('[BUSINESSES API] Calling recommend_for_you_v2 RPC with:', {
+      ...rpcPayload,
+      p_interest_ids_count: rpcPayload.p_interest_ids.length,
+      p_sub_interest_ids_count: rpcPayload.p_sub_interest_ids.length,
+    });
+
+    // Try V2 RPC with explicit error handling
+    let rpcData: any[] | null = null;
+    let rpcError: any = null;
+
+    try {
+      const result = await supabase.rpc('recommend_for_you_v2', rpcPayload);
+      rpcData = result.data;
+      rpcError = result.error;
+    } catch (rpcCallError: any) {
+      // RPC function might not exist yet (migrations not run)
+      console.warn('[BUSINESSES API] recommend_for_you_v2 RPC call failed:', rpcCallError?.message || rpcCallError);
+      console.log('[BUSINESSES API] Falling back to legacy handleMixedFeed (V2 not available)');
+      return handleMixedFeedLegacy(options);
+    }
+
+    if (rpcError) {
+      console.error('[BUSINESSES API] recommend_for_you_v2 RPC error:', rpcError);
+      // Check if it's a "function does not exist" error
+      if (rpcError.code === '42883' || rpcError.message?.includes('does not exist')) {
+        console.log('[BUSINESSES API] V2 RPC function not found, using legacy handler');
+      } else {
+        console.log('[BUSINESSES API] Falling back to legacy handleMixedFeed due to RPC error');
+      }
+      return handleMixedFeedLegacy(options);
+    }
+
+    if (!rpcData || rpcData.length === 0) {
+      console.log('[BUSINESSES API] V2 RPC returned 0 results, trying legacy fallback');
+      return handleMixedFeedLegacy(options);
+    }
+
+    console.log('[BUSINESSES API] V2 RPC returned', rpcData.length, 'businesses');
+
+    // Normalize RPC results to BusinessRPCResult format
+    const businesses: BusinessRPCResult[] = rpcData.map((row: any) => ({
+      id: row.id,
+      name: row.name,
+      description: row.description,
+      category: row.category,
+      interest_id: row.interest_id,
+      sub_interest_id: row.sub_interest_id,
+      location: row.location,
+      address: row.address,
+      phone: row.phone,
+      email: row.email,
+      website: row.website,
+      image_url: row.image_url,
+      uploaded_images: [], // Images fetched separately from business_images table
+      verified: row.verified,
+      price_range: row.price_range,
+      badge: row.badge,
+      slug: row.slug,
+      latitude: row.latitude,
+      longitude: row.longitude,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+      total_reviews: row.total_reviews || 0,
+      average_rating: Number(row.average_rating || 0),
+      percentiles: row.percentiles,
+      distance_km: null,
+      cursor_id: row.id,
+      cursor_created_at: row.created_at,
+      personalization_score: row.personalization_score,
+      diversity_rank: row.diversity_rank,
+    }));
+
+    // Apply dealbreaker filtering (client-side for additional safety)
+    const filteredBusinesses = filterByDealbreakers(businesses, dealbreakerIds);
+
+    // Fetch business_images for the filtered results
+    const businessIds = filteredBusinesses.map(b => b.id);
+    if (businessIds.length > 0) {
+      const { data: imagesData } = await supabase
+        .from('business_images')
+        .select('business_id, url, type, sort_order, is_primary')
+        .in('business_id', businessIds)
+        .order('sort_order', { ascending: true });
+
+      if (imagesData) {
+        const imagesByBusiness = new Map<string, string[]>();
+        for (const img of imagesData) {
+          const existing = imagesByBusiness.get(img.business_id) || [];
+          existing.push(img.url);
+          imagesByBusiness.set(img.business_id, existing);
+        }
+
+        // Attach images to businesses
+        for (const business of filteredBusinesses) {
+          const images = imagesByBusiness.get(business.id);
+          if (images && images.length > 0) {
+            business.uploaded_images = images;
+          }
+        }
+      }
+    }
+
+    // Transform for card display
+    const transformedBusinesses = filteredBusinesses.map(transformBusinessForCard);
+
+    console.log('[BUSINESSES API] V2 final transformed businesses:', {
+      count: transformedBusinesses.length,
+      beforeFilter: businesses.length,
+      afterFilter: filteredBusinesses.length,
+    });
+
+    // Record impressions for logged-in users (non-blocking)
+    if (userId && transformedBusinesses.length > 0) {
+      const impressionIds = transformedBusinesses.map(b => b.id);
+      // Fire and forget - don't wait for completion
+      (async () => {
+        try {
+          await supabase.rpc('record_reco_impressions', {
+            p_user_id: userId,
+            p_business_ids: impressionIds,
+          });
+          console.log('[BUSINESSES API] Recorded', impressionIds.length, 'impressions for user');
+        } catch (err: any) {
+          console.warn('[BUSINESSES API] Failed to record impressions:', err);
+        }
+      })();
+    }
+
+    const response = NextResponse.json({
+      businesses: transformedBusinesses,
+      cursorId: null,
+    });
+
+    return applySharedResponseHeaders(response);
+
+  } catch (error) {
+    console.error('[BUSINESSES API] Error in handleMixedFeedV2:', error);
+    // Fallback to legacy handler
+    return handleMixedFeedLegacy(options);
+  }
+}
+
+// Legacy mixed feed handler (kept for fallback)
+async function handleMixedFeedLegacy(options: MixedFeedOptions) {
   const {
     supabase,
     limit,
@@ -2216,14 +2407,16 @@ export async function POST(req: Request) {
 
     // Create business_owners entry
 
-    // Create business_owners entry
+    // Create business_owners entry (use upsert to prevent duplicates)
     const { error: ownerError } = await supabase
       .from('business_owners')
-      .insert({
+      .upsert({
         business_id: newBusiness.id,
         user_id: user.id,
         role: 'owner',
         verified_at: new Date().toISOString(),
+      }, {
+        onConflict: 'business_id,user_id'
       });
 
     if (ownerError) {

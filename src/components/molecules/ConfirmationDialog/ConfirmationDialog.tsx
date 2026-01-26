@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { AlertTriangle } from 'lucide-react';
 
@@ -32,6 +33,13 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   error,
 }) => {
   const [confirmInput, setConfirmInput] = React.useState('');
+  const [mounted, setMounted] = React.useState(false);
+
+  // Ensure we're mounted before rendering portal (SSR safety)
+  React.useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
 
   // Lock body scroll when modal is open
   React.useEffect(() => {
@@ -63,6 +71,20 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
       setConfirmInput('');
     }
   }, [isOpen]);
+
+  // Handle ESC key to close modal
+  React.useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isLoading) {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, isLoading, onClose]);
 
   const handleConfirm = () => {
     if (requireConfirmText && confirmInput !== requireConfirmText) {
@@ -99,10 +121,12 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
 
   const styles = variantStyles[variant];
 
-  if (!isOpen) return null;
+  // Don't render if not open or not mounted (SSR safety)
+  if (!isOpen || !mounted) return null;
 
-  return (
-    <div className="fixed inset-0 z-[9999] overflow-hidden">
+  // Render in a portal to escape any parent stacking contexts
+  const modalContent = (
+    <div className="fixed inset-0 z-[9999]" style={{ isolation: 'isolate' }}>
       {/* Backdrop with blur */}
       <motion.div
         initial={{ opacity: 0 }}
@@ -228,5 +252,8 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
       </div>
     </div>
   );
+
+  // Render in a portal to document.body to escape any stacking context issues
+  return createPortal(modalContent, document.body);
 };
 

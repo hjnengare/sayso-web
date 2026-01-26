@@ -53,7 +53,7 @@ const ContactSection: React.FC<ContactSectionProps> = ({
                                 onChange={(e) => onInputChange('phone', e.target.value)}
                                 onBlur={() => onBlur('phone')}
                                 style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 600 }}
-                                className={`w-full bg-white/95 backdrop-blur-sm border pl-4 pr-4 py-3 sm:py-4 text-sm font-semibold text-white placeholder-white/70 placeholder:font-normal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 rounded-full ${
+                                className={`w-full bg-white/95 backdrop-blur-sm border pl-4 pr-4 py-3 sm:py-4 text-sm font-semibold text-charcoal placeholder-charcoal/50 placeholder:font-normal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 rounded-full ${
                                     errors.phone
                                         ? 'border-coral focus:border-coral focus:ring-coral/20'
                                         : 'border-white/60 focus:ring-sage/30 focus:border-sage'
@@ -76,7 +76,7 @@ const ContactSection: React.FC<ContactSectionProps> = ({
                                 onChange={(e) => onInputChange('email', e.target.value)}
                                 onBlur={() => onBlur('email')}
                                 style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 600 }}
-                                className={`w-full bg-white/95 backdrop-blur-sm border pl-4 pr-4 py-3 sm:py-4 text-sm font-semibold text-white placeholder-white/70 placeholder:font-normal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 rounded-full ${
+                                className={`w-full bg-white/95 backdrop-blur-sm border pl-4 pr-4 py-3 sm:py-4 text-sm font-semibold text-charcoal placeholder-charcoal/50 placeholder:font-normal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 rounded-full ${
                                     errors.email
                                         ? 'border-coral focus:border-coral focus:ring-coral/20'
                                         : 'border-white/60 focus:ring-sage/30 focus:border-sage'
@@ -100,7 +100,7 @@ const ContactSection: React.FC<ContactSectionProps> = ({
                             onChange={(e) => onInputChange('website', e.target.value)}
                             onBlur={() => onBlur('website')}
                             style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 600 }}
-                            className={`w-full bg-white/95 backdrop-blur-sm border pl-4 pr-4 py-3 sm:py-4 text-sm font-semibold text-white placeholder-white/70 placeholder:font-normal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 rounded-full ${
+                            className={`w-full bg-white/95 backdrop-blur-sm border pl-4 pr-4 py-3 sm:py-4 text-sm font-semibold text-charcoal placeholder-charcoal/50 placeholder:font-normal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 rounded-full ${
                                 errors.website
                                     ? 'border-coral focus:border-coral focus:ring-coral/20'
                                     : 'border-white/60 focus:ring-sage/30 focus:border-sage'

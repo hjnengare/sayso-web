@@ -7,6 +7,8 @@ import { useRef, useState, useEffect, useLayoutEffect, useCallback } from "react
 import { useRouter, usePathname } from "next/navigation";
 import { FilterState } from "../FilterModal/FilterModal";
 import { useSavedItems } from "../../contexts/SavedItemsContext";
+import { useSavedEvents } from "../../contexts/SavedEventsContext";
+import { useSavedSpecials } from "../../contexts/SavedSpecialsContext";
 import { useNotifications } from "../../contexts/NotificationsContext";
 import { useMessages } from "../../contexts/MessagesContext";
 import { useRequireBusinessOwner } from "../../hooks/useBusinessAccess";
@@ -93,7 +95,10 @@ export const useHeaderState = ({
   // CONTEXT DATA
   // ============================================================================
 
-  const { savedCount } = useSavedItems();
+  const { savedCount: businessesCount } = useSavedItems();
+  const { savedCount: eventsCount } = useSavedEvents();
+  const { savedCount: specialsCount } = useSavedSpecials();
+  const savedCount = businessesCount + eventsCount + specialsCount;
   const { unreadCount } = useNotifications();
   const { unreadCount: unreadMessagesCount } = useMessages();
   const { user, isLoading: authLoading } = useAuth();

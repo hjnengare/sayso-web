@@ -4,11 +4,12 @@ import nextDynamic from "next/dynamic";
 import Link from "next/link";
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronRight, ChevronUp, Store, Calendar } from "lucide-react";
+import { ChevronRight, ChevronUp, Store, Calendar, Star } from "lucide-react";
 import Pagination from "../components/EventsPage/Pagination";
 import EmailVerificationGuard from "../components/Auth/EmailVerificationGuard";
 import { useSavedItems } from "../contexts/SavedItemsContext";
 import { useSavedEvents } from "../contexts/SavedEventsContext";
+import { useSavedSpecials } from "../contexts/SavedSpecialsContext";
 import Header from "../components/Header/Header";
 import BusinessCard from "../components/BusinessCard/BusinessCard";
 import EventCard from "../components/EventCard/EventCard";
@@ -25,18 +26,21 @@ const Footer = nextDynamic(() => import("../components/Footer/Footer"), {
   ssr: false,
 });
 
-type TabType = "businesses" | "events";
+type TabType = "businesses" | "events" | "specials";
 
 export default function SavedPage() {
   usePredefinedPageTitle("saved");
   const { savedItems, isLoading: savedItemsLoading, refetch: refetchBusinesses } = useSavedItems();
   const { savedEventIds, isLoading: savedEventsLoading, refetch: refetchEvents, removeSavedEvent } = useSavedEvents();
+  const { savedSpecialIds, isLoading: savedSpecialsLoading, refetch: refetchSpecials, removeSavedSpecial } = useSavedSpecials();
 
   const [activeTab, setActiveTab] = useState<TabType>("businesses");
   const [savedBusinesses, setSavedBusinesses] = useState<Business[]>([]);
   const [savedEvents, setSavedEvents] = useState<Event[]>([]);
+  const [savedSpecials, setSavedSpecials] = useState<any[]>([]);
   const [isLoadingBusinesses, setIsLoadingBusinesses] = useState(true);
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
+  const [isLoadingSpecials, setIsLoadingSpecials] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -251,6 +255,81 @@ export default function SavedPage() {
     fetchSavedEvents();
   }, [savedEventsLoading, savedEventIds.length]);
 
+  // Fetch saved specials
+  useEffect(() => {
+    const fetchSavedSpecials = async () => {
+      console.log('[SavedPage] fetchSavedSpecials called, savedSpecialsLoading:', savedSpecialsLoading);
+      if (savedSpecialsLoading) return;
+
+      try {
+        setIsLoadingSpecials(true);
+
+        console.log('[SavedPage] Fetching /api/saved/specials...');
+        const response = await fetch("/api/saved/specials");
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            setSavedSpecials([]);
+            setIsLoadingSpecials(false);
+            return;
+          }
+
+          let errorMessage = "Failed to fetch saved specials";
+          let errorCode: string | undefined;
+
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.error || errorData.message || errorMessage;
+            errorCode = errorData.code;
+          } catch {
+            // ignore parse error
+          }
+
+          const isTableError =
+            response.status === 500 &&
+            (errorCode === "42P01" ||
+              errorCode === "42501" ||
+              errorMessage.toLowerCase().includes("relation") ||
+              errorMessage.toLowerCase().includes("does not exist") ||
+              errorMessage.toLowerCase().includes("permission denied"));
+
+          if (isTableError) {
+            console.warn("Saved specials table not accessible");
+            setSavedSpecials([]);
+            setIsLoadingSpecials(false);
+            return;
+          }
+
+          console.warn("Error fetching saved specials:", errorMessage);
+          setSavedSpecials([]);
+          setIsLoadingSpecials(false);
+          return;
+        }
+
+        const data = await response.json();
+        console.log('[SavedPage] Specials API response:', data);
+        const specials: any[] = data.specials || [];
+
+        // Filter out any invalid specials
+        const filtered = specials.filter((s) => {
+          if (!s || !s.id) return false;
+          if (!s.title || s.title.trim() === "") return false;
+          return true;
+        });
+
+        console.log('[SavedPage] Filtered specials:', filtered.length, filtered);
+        setSavedSpecials(filtered);
+      } catch (err) {
+        console.warn("Error fetching saved specials:", err);
+        setSavedSpecials([]);
+      } finally {
+        setIsLoadingSpecials(false);
+      }
+    };
+
+    fetchSavedSpecials();
+  }, [savedSpecialsLoading, savedSpecialIds.length]);
+
   // Handle unsave event
   const handleUnsaveEvent = useCallback(async (eventId: string) => {
     const success = await removeSavedEvent(eventId);
@@ -259,6 +338,15 @@ export default function SavedPage() {
       setSavedEvents(prev => prev.filter(e => e.id !== eventId));
     }
   }, [removeSavedEvent]);
+
+  // Handle unsave special
+  const handleUnsaveSpecial = useCallback(async (specialId: string) => {
+    const success = await removeSavedSpecial(specialId);
+    if (success) {
+      // Remove from local state immediately
+      setSavedSpecials(prev => prev.filter(s => s.id !== specialId));
+    }
+  }, [removeSavedSpecial]);
 
   // Handle pagination with loader and transitions
   const handlePageChange = (newPage: number) => {
@@ -299,7 +387,7 @@ export default function SavedPage() {
 
   const isLoading = isLoadingBusinesses || isLoadingEvents || savedItemsLoading || savedEventsLoading;
   const hasAnyContent = savedBusinesses.length > 0 || savedEvents.length > 0;
-  const totalSavedCount = savedBusinesses.length + savedEvents.length;
+  const totalSavedCount = savedBusinesses.length + savedEvents.length + savedSpecials.length;
 
   return (
     <EmailVerificationGuard>
@@ -450,6 +538,23 @@ export default function SavedPage() {
                           </span>
                         )}
                       </button>
+                      <button
+                        onClick={() => setActiveTab("specials")}
+                        className={`flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-urbanist font-600 text-body-sm sm:text-body transition-all duration-200 active:scale-95 ${
+                          activeTab === "specials"
+                            ? "bg-coral text-white shadow-lg"
+                            : "bg-sage/10 text-charcoal/70 hover:bg-sage/20 hover:text-sage border border-sage/30"
+                        }`}
+                        style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                      >
+                        <Star className="w-4 h-4" />
+                        Specials
+                        {savedSpecials.length > 0 && (
+                          <span className="ml-1 text-xs sm:text-sm opacity-80">
+                            ({savedSpecials.length})
+                          </span>
+                        )}
+                      </button>
                     </div>
                   </div>
 
@@ -528,7 +633,7 @@ export default function SavedPage() {
                           </Link>
                         </div>
                       )
-                    ) : (
+                    ) : activeTab === "events" ? (
                       savedEvents.length > 0 ? (
                         <ul
                           key={`events-${currentPage}`}
@@ -553,6 +658,53 @@ export default function SavedPage() {
                             className="inline-block mt-4 px-6 py-2 bg-sage text-white rounded-full text-sm font-medium hover:bg-sage/90 transition-colors"
                           >
                             Explore Events
+                          </Link>
+                        </div>
+                      )
+                    ) : (
+                      savedSpecials.length > 0 ? (
+                        <ul
+                          key={`specials-${currentPage}`}
+                          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+                        >
+                          {(paginatedItems as any[]).map((special, index) => (
+                            <div key={special.id} className="list-none">
+                              {/* Special card component will be added here */}
+                              <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <h3 className="font-semibold text-charcoal mb-1">{special.title}</h3>
+                                    <p className="text-sm text-charcoal/70 mb-2">{special.businessName}</p>
+                                    <p className="text-xs text-charcoal/50">{special.description}</p>
+                                    {special.startDate && (
+                                      <p className="text-xs text-charcoal/60 mt-1">
+                                        {special.startDate}{special.endDate && ` - ${special.endDate}`}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <button
+                                    onClick={() => handleUnsaveSpecial(special.id)}
+                                    className="ml-2 p-1 text-red-500 hover:text-red-700 transition-colors"
+                                    aria-label="Unsave special"
+                                  >
+                                    <Star className="w-4 h-4 fill-current" />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </ul>
+                      ) : (
+                        <div className="text-center py-12">
+                          <Star className="w-12 h-12 mx-auto mb-4 text-charcoal/30" />
+                          <p className="text-charcoal/60 text-body" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                            No saved specials yet
+                          </p>
+                          <Link
+                            href="/events-specials"
+                            className="inline-block mt-4 px-6 py-2 bg-sage text-white rounded-full text-sm font-medium hover:bg-sage/90 transition-colors"
+                          >
+                            Explore Specials
                           </Link>
                         </div>
                       )

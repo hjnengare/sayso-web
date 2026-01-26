@@ -7,8 +7,8 @@ export interface BusinessOwnershipRequest {
   id: string;
   business_id: string;
   user_id: string;
-  status: 'pending' | 'approved' | 'rejected' | 'cancelled';
-  verification_method: 'email' | 'phone' | 'document' | 'manual';
+  status: "pending" | "approved" | "rejected" | "cancelled";
+  verification_method: "email" | "phone" | "document" | "manual";
   verification_data?: Record<string, any>;
   requested_at: string;
   reviewed_at?: string;
@@ -20,7 +20,7 @@ export interface BusinessOwner {
   id: string;
   business_id: string;
   user_id: string;
-  role: 'owner' | 'manager' | 'admin';
+  role: "owner" | "manager" | "admin";
   verified_at: string;
   verified_by?: string;
 }
@@ -43,35 +43,36 @@ export class BusinessOwnershipService {
 
     try {
       const supabase = this.getSupabase();
-      
+
       // Resolve business identifier (slug or UUID) to actual UUID
       let businessId: string | null = null;
-      
+
       // Validate UUID format
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const uuidRegex =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       const isUUID = uuidRegex.test(businessIdentifier);
-      
+
       if (isUUID) {
         // It's already a UUID, use it directly
         businessId = businessIdentifier;
       } else {
         // Try to resolve slug to UUID
         const { data: slugData, error: slugError } = await supabase
-          .from('businesses')
-          .select('id')
-          .eq('slug', businessIdentifier)
-          .eq('status', 'active')
+          .from("businesses")
+          .select("id")
+          .eq("slug", businessIdentifier)
+          .eq("status", "active")
           .maybeSingle();
 
         if (slugError) {
-          console.error('Error resolving business slug to ID:', {
+          console.error("Error resolving business slug to ID:", {
             slug: businessIdentifier,
             error: slugError,
           });
           return false;
         }
 
-        if (slugData?.id && typeof slugData.id === 'string') {
+        if (slugData?.id && typeof slugData.id === "string") {
           businessId = slugData.id;
         } else {
           // Slug not found
@@ -80,21 +81,21 @@ export class BusinessOwnershipService {
       }
 
       // Verify businessId is a valid UUID before using it in queries
-      if (!businessId || typeof businessId !== 'string' || !uuidRegex.test(businessId)) {
-        console.error('Invalid business ID format:', businessId);
+      if (!businessId || typeof businessId !== "string" || !uuidRegex.test(businessId)) {
+        console.error("Invalid business ID format:", businessId);
         return false;
       }
 
       // First check: business_owners table (using maybeSingle to avoid PGRST116)
       const { data: ownerData, error: ownerError } = await supabase
-        .from('business_owners')
-        .select('id')
-        .eq('business_id', businessId)
-        .eq('user_id', userId)
+        .from("business_owners")
+        .select("id")
+        .eq("business_id", businessId)
+        .eq("user_id", userId)
         .maybeSingle();
 
       if (ownerError) {
-        console.error('Error checking business ownership (business_owners table):', {
+        console.error("Error checking business ownership (business_owners table):", {
           name: (ownerError as any)?.name,
           message: (ownerError as any)?.message,
           code: (ownerError as any)?.code,
@@ -111,13 +112,13 @@ export class BusinessOwnershipService {
 
       // Second check: direct owner_id on businesses table
       const { data: businessData, error: businessError } = await supabase
-        .from('businesses')
-        .select('owner_id')
-        .eq('id', businessId)
+        .from("businesses")
+        .select("owner_id")
+        .eq("id", businessId)
         .maybeSingle();
 
       if (businessError) {
-        console.error('Error checking business ownership (businesses table):', {
+        console.error("Error checking business ownership (businesses table):", {
           name: (businessError as any)?.name,
           message: (businessError as any)?.message,
           code: (businessError as any)?.code,
@@ -132,7 +133,7 @@ export class BusinessOwnershipService {
       // Check if user is the direct owner
       return businessData?.owner_id === userId;
     } catch (error) {
-      console.error('Error checking business ownership (catch):', {
+      console.error("Error checking business ownership (catch):", {
         name: (error as any)?.name,
         message: error instanceof Error ? error.message : String(error),
         raw: error,
@@ -142,54 +143,171 @@ export class BusinessOwnershipService {
   }
 
   /**
-   * Get all businesses owned by a user
+   * Get all businesses owned by a user (optimized single query)
+   *
+   * IMPORTANT:
+   * Supabase join typing can return `businesses` as:
+   * - Business
+   * - Business[]
+   * - null
+   *
+   * We normalize to a flat, unique Business[] by business.id.
    */
   static async getBusinessesForOwner(userId: string): Promise<Business[]> {
     try {
       const supabase = this.getSupabase();
-      const { data: owners, error: ownersError } = await supabase
-        .from('business_owners')
-        .select('business_id')
-        .eq('user_id', userId);
 
-      if (ownersError) {
-        console.error('Error fetching business owners:', ownersError);
+      type OwnerJoinRow = {
+        business_id: string;
+        businesses: Business | Business[] | null;
+      };
+
+      const { data, error } = await supabase
+        .from("business_owners")
+        .select(
+          `
+          business_id,
+          businesses!inner (
+            id,
+            name,
+            slug,
+            description,
+            category,
+            location,
+            address,
+            phone,
+            email,
+            website,
+            image_url,
+            verified,
+            price_range,
+            created_at,
+            updated_at,
+            status,
+            owner_id,
+            owner_verified,
+            lat,
+            lng,
+            source,
+            source_id
+          )
+        `
+        )
+        .eq("user_id", userId)
+        .eq("businesses.status", "active");
+
+      if (error) {
+        console.error("Error fetching businesses for owner:", error);
+
         // Handle network errors
-        if (ownersError.message?.includes('fetch') || ownersError.message?.includes('network')) {
-          throw new Error('Network error: Unable to fetch business data. Please check your connection.');
+        if (error.message?.includes("fetch") || error.message?.includes("network")) {
+          throw new Error(
+            "Network error: Unable to fetch business data. Please check your connection."
+          );
         }
+
         return [];
       }
 
-      if (!owners || owners.length === 0) {
-        return [];
-      }
+      const rows = (data ?? []) as unknown as OwnerJoinRow[];
 
-      const businessIds = owners.map(o => o.business_id);
+      // Normalize to flat list
+      const flattened: Business[] = [];
+      for (const row of rows) {
+        const joined = row.businesses;
 
-      const { data: businesses, error: businessesError } = await supabase
-        .from('businesses')
-        .select('*')
-        .in('id', businessIds)
-        .eq('status', 'active');
+        if (!joined) continue;
 
-      if (businessesError) {
-        console.error('Error fetching businesses:', businessesError);
-        // Handle network errors
-        if (businessesError.message?.includes('fetch') || businessesError.message?.includes('network')) {
-          throw new Error('Network error: Unable to fetch business data. Please check your connection.');
+        if (Array.isArray(joined)) {
+          for (const b of joined) {
+            if (b && typeof (b as any).id === "string") flattened.push(b);
+          }
+        } else {
+          if (joined && typeof (joined as any).id === "string") flattened.push(joined);
         }
-        return [];
       }
 
-      return (businesses || []) as Business[];
+      // Dedupe by business.id (prevents duplicates from joins or accidental double ownership rows)
+      const seen = new Set<string>();
+      const unique = flattened.filter((b) => {
+        if (!b?.id) return false;
+        if (seen.has(b.id)) return false;
+        seen.add(b.id);
+        return true;
+      });
+
+      return unique;
     } catch (error) {
-      console.error('Error getting businesses for owner:', error);
+      console.error("Error getting businesses for owner:", error);
+
       // Re-throw network errors so they can be handled upstream
-      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+      if (error instanceof TypeError && error.message === "Failed to fetch") {
         throw error;
       }
+
       return [];
+    }
+  }
+
+  /**
+   * Get a single business owned by the user
+   * Returns null if user doesn't own the business or business doesn't exist
+   * Supports both UUID and slug identifiers
+   */
+  static async getOwnedBusinessById(
+    userId: string,
+    businessIdentifier: string
+  ): Promise<Business | null> {
+    try {
+      const supabase = this.getSupabase();
+
+      // Resolve business identifier (slug or UUID) to actual UUID
+      const uuidRegex =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const isUUID = uuidRegex.test(businessIdentifier);
+
+      let businessId: string | null = null;
+
+      if (isUUID) {
+        businessId = businessIdentifier;
+      } else {
+        // Resolve slug to UUID
+        const { data: slugData, error: slugError } = await supabase
+          .from("businesses")
+          .select("id")
+          .eq("slug", businessIdentifier)
+          .eq("status", "active")
+          .maybeSingle();
+
+        if (slugError || !slugData?.id) {
+          console.error("Error resolving business slug:", slugError);
+          return null;
+        }
+        businessId = slugData.id;
+      }
+
+      // Check ownership using the resolved UUID
+      const isOwner = await this.isBusinessOwner(userId, businessId);
+      if (!isOwner) {
+        return null;
+      }
+
+      // Get business details using the resolved UUID
+      const { data: business, error } = await supabase
+        .from("businesses")
+        .select("*")
+        .eq("id", businessId)
+        .single();
+
+      if (error || !business) {
+        console.error("Error fetching owned business:", error);
+        return null;
+      }
+
+      return business as Business;
+    } catch (error) {
+      console.error("Error getting owned business by ID:", error);
+      return null;
     }
   }
 
@@ -199,22 +317,23 @@ export class BusinessOwnershipService {
   static async createOwnershipRequest(
     businessId: string,
     userId: string,
-    verificationMethod: 'email' | 'phone' | 'document' | 'manual',
+    verificationMethod: "email" | "phone" | "document" | "manual",
     verificationData?: Record<string, any>
   ): Promise<{ success: boolean; request?: BusinessOwnershipRequest; error?: string }> {
     try {
       const supabase = this.getSupabase();
+
       // Check if there's already a pending request
       const { data: existingRequest, error: existingRequestError } = await supabase
-        .from('business_ownership_requests')
-        .select('*')
-        .eq('business_id', businessId)
-        .eq('user_id', userId)
-        .eq('status', 'pending')
+        .from("business_ownership_requests")
+        .select("*")
+        .eq("business_id", businessId)
+        .eq("user_id", userId)
+        .eq("status", "pending")
         .maybeSingle();
 
       if (existingRequestError) {
-        console.error('Error checking for existing ownership request:', {
+        console.error("Error checking for existing ownership request:", {
           name: (existingRequestError as any)?.name,
           message: (existingRequestError as any)?.message,
           code: (existingRequestError as any)?.code,
@@ -227,7 +346,7 @@ export class BusinessOwnershipService {
       } else if (existingRequest) {
         return {
           success: false,
-          error: 'You already have a pending ownership request for this business.'
+          error: "You already have a pending ownership request for this business.",
         };
       }
 
@@ -236,48 +355,48 @@ export class BusinessOwnershipService {
       if (isOwner) {
         return {
           success: false,
-          error: 'You already own this business.'
+          error: "You already own this business.",
         };
       }
 
       // Create the request
       const { data, error } = await supabase
-        .from('business_ownership_requests')
+        .from("business_ownership_requests")
         .insert({
           business_id: businessId,
           user_id: userId,
-          status: 'pending',
+          status: "pending",
           verification_method: verificationMethod,
-          verification_data: verificationData || {}
+          verification_data: verificationData || {},
         })
         .select()
         .single();
 
       if (error) {
-        console.error('Error creating ownership request:', error);
+        console.error("Error creating ownership request:", error);
         return {
           success: false,
-          error: error.message || 'Failed to create ownership request.'
+          error: error.message || "Failed to create ownership request.",
         };
       }
 
       // Update business to mark verification as requested
       await supabase
-        .from('businesses')
+        .from("businesses")
         .update({
-          owner_verification_requested_at: new Date().toISOString()
+          owner_verification_requested_at: new Date().toISOString(),
         })
-        .eq('id', businessId);
+        .eq("id", businessId);
 
       return {
         success: true,
-        request: data as BusinessOwnershipRequest
+        request: data as BusinessOwnershipRequest,
       };
     } catch (error) {
-      console.error('Error creating ownership request:', error);
+      console.error("Error creating ownership request:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'An unexpected error occurred.'
+        error: error instanceof Error ? error.message : "An unexpected error occurred.",
       };
     }
   }
@@ -289,19 +408,19 @@ export class BusinessOwnershipService {
     try {
       const supabase = this.getSupabase();
       const { data, error } = await supabase
-        .from('business_ownership_requests')
-        .select('*')
-        .eq('user_id', userId)
-        .order('requested_at', { ascending: false });
+        .from("business_ownership_requests")
+        .select("*")
+        .eq("user_id", userId)
+        .order("requested_at", { ascending: false });
 
       if (error) {
-        console.error('Error fetching ownership requests:', error);
+        console.error("Error fetching ownership requests:", error);
         return [];
       }
 
       return (data || []) as BusinessOwnershipRequest[];
     } catch (error) {
-      console.error('Error getting user ownership requests:', error);
+      console.error("Error getting user ownership requests:", error);
       return [];
     }
   }
@@ -317,13 +436,13 @@ export class BusinessOwnershipService {
     try {
       const supabase = this.getSupabase();
       const { data, error } = await supabase
-        .from('business_ownership_requests')
-        .select('*')
-        .eq('id', requestId)
+        .from("business_ownership_requests")
+        .select("*")
+        .eq("id", requestId)
         .maybeSingle();
 
       if (error) {
-        console.error('Error fetching ownership request:', {
+        console.error("Error fetching ownership request:", {
           name: (error as any)?.name,
           message: (error as any)?.message,
           code: (error as any)?.code,
@@ -337,7 +456,7 @@ export class BusinessOwnershipService {
 
       return data as BusinessOwnershipRequest | null;
     } catch (error) {
-      console.error('Error getting ownership request:', {
+      console.error("Error getting ownership request:", {
         name: (error as any)?.name,
         message: error instanceof Error ? error.message : String(error),
         raw: error,
@@ -349,30 +468,33 @@ export class BusinessOwnershipService {
   /**
    * Cancel a pending ownership request
    */
-  static async cancelOwnershipRequest(requestId: string, userId: string): Promise<{ success: boolean; error?: string }> {
+  static async cancelOwnershipRequest(
+    requestId: string,
+    userId: string
+  ): Promise<{ success: boolean; error?: string }> {
     try {
       const supabase = this.getSupabase();
       const { error } = await supabase
-        .from('business_ownership_requests')
-        .update({ status: 'cancelled' })
-        .eq('id', requestId)
-        .eq('user_id', userId)
-        .eq('status', 'pending');
+        .from("business_ownership_requests")
+        .update({ status: "cancelled" })
+        .eq("id", requestId)
+        .eq("user_id", userId)
+        .eq("status", "pending");
 
       if (error) {
-        console.error('Error cancelling ownership request:', error);
+        console.error("Error cancelling ownership request:", error);
         return {
           success: false,
-          error: error.message || 'Failed to cancel ownership request.'
+          error: error.message || "Failed to cancel ownership request.",
         };
       }
 
       return { success: true };
     } catch (error) {
-      console.error('Error cancelling ownership request:', error);
+      console.error("Error cancelling ownership request:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'An unexpected error occurred.'
+        error: error instanceof Error ? error.message : "An unexpected error occurred.",
       };
     }
   }
@@ -388,14 +510,14 @@ export class BusinessOwnershipService {
     try {
       const supabase = this.getSupabase();
       const { data, error } = await supabase
-        .from('business_owners')
-        .select('*')
-        .eq('business_id', businessId)
-        .eq('role', 'owner')
+        .from("business_owners")
+        .select("*")
+        .eq("business_id", businessId)
+        .eq("role", "owner")
         .maybeSingle();
 
       if (error) {
-        console.error('Error fetching business owner:', {
+        console.error("Error fetching business owner:", {
           name: (error as any)?.name,
           message: (error as any)?.message,
           code: (error as any)?.code,
@@ -409,7 +531,7 @@ export class BusinessOwnershipService {
 
       return data as BusinessOwner | null;
     } catch (error) {
-      console.error('Error getting business owner:', {
+      console.error("Error getting business owner:", {
         name: (error as any)?.name,
         message: error instanceof Error ? error.message : String(error),
         raw: error,
@@ -429,13 +551,13 @@ export class BusinessOwnershipService {
     try {
       const supabase = this.getSupabase();
       const { data, error } = await supabase
-        .from('businesses')
-        .select('owner_verified')
-        .eq('id', businessId)
+        .from("businesses")
+        .select("owner_verified")
+        .eq("id", businessId)
         .maybeSingle();
 
       if (error) {
-        console.error('Error checking ownership verification:', {
+        console.error("Error checking ownership verification:", {
           name: (error as any)?.name,
           message: (error as any)?.message,
           code: (error as any)?.code,
@@ -449,7 +571,7 @@ export class BusinessOwnershipService {
 
       return data?.owner_verified || false;
     } catch (error) {
-      console.error('Error checking ownership verification:', {
+      console.error("Error checking ownership verification:", {
         name: (error as any)?.name,
         message: error instanceof Error ? error.message : String(error),
         raw: error,
@@ -458,4 +580,3 @@ export class BusinessOwnershipService {
     }
   }
 }
-

@@ -283,16 +283,15 @@ const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({
                                                             type="time"
                                                             value={hours.open}
                                                             onChange={(e) => updateTime(day.key, 'open', e.target.value)}
-                                                            className="bg-white border border-charcoal/20 rounded-full px-3 py-1.5 text-sm text-white font-semibold focus:outline-none focus:border-coral/50 focus:ring-2 focus:ring-coral/30 w-[100px] hover:border-sage/50 transition-all duration-200"
+                                                            className="bg-white border border-charcoal/20 rounded-full px-3 py-1.5 text-sm text-charcoal font-semibold focus:outline-none focus:border-coral/50 focus:ring-2 focus:ring-coral/30 w-[100px] hover:border-sage/50 transition-all duration-200"
                                                             style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 600 }}
                                                         />
                                                         <span className="text-charcoal/40">–</span>
-                                                                                                                <span className="text-white/40">–</span>
                                                         <input
                                                             type="time"
                                                             value={hours.close}
                                                             onChange={(e) => updateTime(day.key, 'close', e.target.value)}
-                                                            className="bg-white border border-charcoal/20 rounded-full px-3 py-1.5 text-sm text-white font-semibold focus:outline-none focus:border-coral/50 focus:ring-2 focus:ring-coral/30 w-[100px] hover:border-sage/50 transition-all duration-200"
+                                                            className="bg-white border border-charcoal/20 rounded-full px-3 py-1.5 text-sm text-charcoal font-semibold focus:outline-none focus:border-coral/50 focus:ring-2 focus:ring-coral/30 w-[100px] hover:border-sage/50 transition-all duration-200"
                                                             style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 600 }}
                                                         />
                                                     </motion.div>

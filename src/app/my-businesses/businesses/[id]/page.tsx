@@ -39,55 +39,37 @@ export default function OwnerBusinessDashboard() {
 
   useEffect(() => {
     const fetchData = async () => {
-      // TEMPORARY: Bypass auth for UI development
-      // if (authLoading || !user || !businessId) return;
+      // If auth is still loading, wait
+      if (authLoading) return;
+
+      // If auth resolved but no user, stop loading (will redirect below)
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      // If no business ID, stop loading
+      if (!businessId) {
+        setIsLoading(false);
+        setError('No business ID provided');
+        return;
+      }
 
       setIsLoading(true);
       try {
-        // TEMPORARY: Bypass ownership check for UI development
-        // // Check ownership
-        // const ownedBusinesses = await BusinessOwnershipService.getBusinessesForOwner(user.id);
-        // const ownsThisBusiness = ownedBusinesses.some(b => b.id === businessId);
-        // 
-        // if (!ownsThisBusiness) {
-        //   setError('You do not have access to this business');
-        //   setIsLoading(false);
-        //   return;
-        // }
+        const supabase = getBrowserSupabase();
+
+        // Check ownership and fetch business in one call
+        const businessData = await BusinessOwnershipService.getOwnedBusinessById(user.id, businessId);
+
+        if (!businessData) {
+          setError('You do not have access to this business or it does not exist');
+          setIsLoading(false);
+          return;
+        }
 
         setHasAccess(true);
-
-        // Fetch business details
-        const supabase = getBrowserSupabase();
-        const { data: businessData, error: businessError } = await supabase
-          .from('businesses')
-          .select('*')
-          .eq('id', businessId)
-          .single();
-
-        // TEMPORARY: Use mock data if business not found (for UI development)
-        if (businessError || !businessData) {
-          // Use mock data for UI development
-          const mockBusiness: Business = {
-            id: businessId,
-            name: 'Sample Business',
-            description: 'This is a sample business description for UI development purposes.',
-            category: 'Restaurant',
-            location: 'Cape Town, South Africa',
-            address: '123 Main Street',
-            phone: '+27 21 123 4567',
-            email: 'info@samplebusiness.com',
-            website: 'https://samplebusiness.com',
-            image_url: null,
-            verified: true,
-            price_range: '$$' as const,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          };
-          setBusiness(mockBusiness);
-        } else {
-          setBusiness(businessData as Business);
-        }
+        setBusiness(businessData);
 
         // Fetch stats
         const { data: statsData, error: statsError } = await supabase
@@ -144,7 +126,7 @@ export default function OwnerBusinessDashboard() {
     };
 
     fetchData();
-  }, [businessId]); // TEMPORARY: Removed user and authLoading dependencies for UI development
+  }, [user?.id, authLoading, businessId]);
 
   // Refetch when page becomes visible (e.g., returning from edit page)
   useEffect(() => {
@@ -343,17 +325,16 @@ export default function OwnerBusinessDashboard() {
     }
   };
 
-  // TEMPORARY: Bypass auth loading check for UI development
-  // if (authLoading || isLoading) {
-  if (isLoading) {
+  // Show loader while auth or data is loading
+  if (authLoading || isLoading) {
     return <PageLoader size="lg" variant="wavy" color="sage" />;
   }
 
-  // TEMPORARY: Bypass user check for UI development
-  // if (!user) {
-  //   router.push('/business/login');
-  //   return null;
-  // }
+  // Redirect to login if no user
+  if (!user) {
+    router.push('/login');
+    return null;
+  }
 
   if (error || !business) {
     return (

@@ -22,14 +22,11 @@ export async function GET(
       .single();
 
     if (error) {
+      console.error('[Event API] Supabase error:', error);
       if (error.code === 'PGRST116') {
-        // No rows returned
-        return NextResponse.json(
-          { error: 'Event not found' },
-          { status: 404 }
-        );
+        // Not found
+        return NextResponse.json({ error: 'Event not found' }, { status: 404 });
       }
-      console.error('[Events API] Error fetching event:', error);
       return NextResponse.json(
         { error: 'Failed to fetch event', details: error.message },
         { status: 500 }
@@ -48,8 +45,7 @@ export async function GET(
          ticketmaster_url: event.url || event.ticketmaster_url,
          bookingUrl: event.url || event.ticketmaster_url,
        };
-    return NextResponse.json({ event });
-       return NextResponse.json({ event: transformedEvent });
+    return NextResponse.json({ event: transformedEvent });
   } catch (error: any) {
     console.error('[Events API] Unexpected error:', error);
     return NextResponse.json(

@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState, useEffect, useRef, memo } from "react";
 import { useRouter } from "next/navigation";
-import { Image as ImageIcon, Star, Edit, Share2, Bookmark, Info, ChevronLeft, ChevronRight, TrendingUp, Zap, Scissors, Coffee, UtensilsCrossed, Wine, Dumbbell, Activity, Heart, Book, ShoppingBag, Home, Briefcase, MapPin, Music, Film, Camera, Car, GraduationCap, CreditCard, Tag, Flame } from "lucide-react";
+import { Image as ImageIcon, Star, Edit, Share2, Bookmark, Info, ChevronLeft, ChevronRight, TrendingUp, Zap, Scissors, Coffee, UtensilsCrossed, Wine, Dumbbell, Activity, Heart, Book, ShoppingBag, Home, Briefcase, MapPin, Music, Film, Camera, Car, GraduationCap, CreditCard, Tag, Flame, Store, Eye } from "lucide-react";
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 import PercentileChip from "../PercentileChip/PercentileChip";
@@ -11,6 +11,7 @@ import OptimizedImage from "../Performance/OptimizedImage";
 import Tooltip from "../Tooltip/Tooltip";
 import { useSavedItems } from "../../contexts/SavedItemsContext";
 import { useToast } from "../../contexts/ToastContext";
+import { useAuth } from "../../contexts/AuthContext";
 import { getCategoryPng, getCategoryPngFromLabels, isPngIcon } from "../../utils/categoryToPngMapping";
 import BusinessCardImage from "./parts/BusinessCardImage";
 import BusinessCardCategory from "./parts/BusinessCardCategory";
@@ -148,20 +149,47 @@ function BusinessCard({
   compact = false,
   inGrid = false,
   index = 0,
+  ownerView = false,
+  showActions: showActionsProp,
 }: {
   business: Business;
   hideStar?: boolean;
   compact?: boolean;
   inGrid?: boolean;
   index?: number;
+  ownerView?: boolean;
+  showActions?: boolean;
 }) {
   const router = useRouter();
   const { toggleSavedItem, isItemSaved } = useSavedItems();
   const { showToast } = useToast();
+  const { user } = useAuth();
   const hasReviewed = false;
   const idForSnap = useMemo(() => `business-${business.id}`, [business.id]);
   const prefersReducedMotion = useReducedMotion();
   const [isMobile, setIsMobile] = useState(true);
+
+  // Check if user is a business account
+  const isBusinessAccount = useMemo(() => {
+    return user?.profile?.role === 'business_owner' || user?.profile?.role === 'both';
+  }, [user?.profile?.role]);
+
+  // Determine if actions should be shown
+  const showActions = useMemo(() => {
+    // If explicitly set via prop, use that
+    if (showActionsProp !== undefined) {
+      return showActionsProp;
+    }
+
+    // Hide actions for business accounts on my-businesses page
+    const isMyBusinessesPage = typeof window !== 'undefined' && window.location.pathname === '/my-businesses';
+
+    if (isBusinessAccount && isMyBusinessesPage) {
+      return false;
+    }
+
+    return true;
+  }, [showActionsProp, isBusinessAccount]);
 
   const [imgError, setImgError] = useState(false);
   const [usingFallback, setUsingFallback] = useState(false);
@@ -181,7 +209,10 @@ function BusinessCard({
   // Use slug for SEO-friendly URLs, fallback to ID
   const businessIdentifier = business.slug || business.id;
   const reviewRoute = useMemo(() => `/business/${businessIdentifier}/review`, [businessIdentifier]);
-  const businessProfileRoute = useMemo(() => `/business/${businessIdentifier}`, [businessIdentifier]);
+  const businessProfileRoute = useMemo(() => 
+    ownerView ? `/my-businesses/businesses/${businessIdentifier}` : `/business/${businessIdentifier}`, 
+    [businessIdentifier, ownerView]
+  );
 
   // Prefetch routes on mount
   useEffect(() => {
@@ -399,18 +430,18 @@ function BusinessCard({
     ? `${mediaBaseClass} h-[300px] sm:h-[320px] md:h-[240px]`
     : `${mediaBaseClass} h-[300px] sm:h-[320px] md:h-[240px]`;
 
-  // Animation variants - mobile gets fade, desktop gets slide
+  // Animation variants - fade-in for all devices
   const cardInitial = prefersReducedMotion
     ? { opacity: 0 }
     : isMobile
     ? { opacity: 0 }
-    : { opacity: 0, y: 40, x: index % 2 === 0 ? -20 : 20 };
+    : { opacity: 0 };
 
   const cardAnimate = prefersReducedMotion
     ? { opacity: 1 }
     : isMobile
     ? { opacity: 1 }
-    : { opacity: 1, y: 0, x: 0 };
+    : { opacity: 1 };
 
   return (
     <motion.li
@@ -463,14 +494,18 @@ function BusinessCard({
             </div>
           )}
           {/* Premium floating actions - desktop only */}
-          <BusinessCardActions
-            hasReviewed={hasReviewed}
-            isItemSaved={isItemSaved(business.id)}
-            onWriteReview={(e) => { e.stopPropagation(); handleWriteReview(); }}
-            onBookmark={(e) => { e.stopPropagation(); handleBookmark(); }}
-            onShare={(e) => { e.stopPropagation(); handleShare(); }}
-            businessName={business.name}
-          />
+          {showActions && (
+            <BusinessCardActions
+              hasReviewed={hasReviewed}
+              isItemSaved={isItemSaved(business.id)}
+              isBusinessAccount={isBusinessAccount}
+              onWriteReview={(e) => { e.stopPropagation(); handleWriteReview(); }}
+              onViewProfile={(e) => { e.stopPropagation(); handleCardClick(); }}
+              onBookmark={(e) => { e.stopPropagation(); handleBookmark(); }}
+              onShare={(e) => { e.stopPropagation(); handleShare(); }}
+              businessName={business.name}
+            />
+          )}
         </div>
         {/* CONTENT - Minimal, premium spacing */}
         <div className={`px-4 py-3 sm:px-5 sm:pt-1 md:pt-2 lg:pt-3 pb-0 ${compact ? "lg:py-1 lg:pt-2 lg:pb-0 lg:min-h-[160px]" : "flex-1"} relative flex-shrink-0 flex flex-col md:justify-start justify-between bg-sage/10 z-10 rounded-b-[20px]`}>
@@ -527,16 +562,30 @@ function BusinessCard({
           </div>
           {/* Mobile actions - Minimal */}
           <div className="flex md:hidden items-center justify-center pt-2 pb-2">
-            <button
-              className={`flex-1 flex items-center justify-center gap-1.5 px-4 py-3 rounded-full text-caption sm:text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-sage/40 border transition-all min-h-[48px] shadow-md ${hasReviewed ? 'bg-charcoal/20 text-charcoal/70 cursor-not-allowed border-charcoal/20' : 'bg-gradient-to-br from-navbar-bg to-navbar-bg/90 text-white border-sage/50 active:scale-95'}`}
-              onClick={(e) => { e.stopPropagation(); if (!hasReviewed) handleWriteReview(); }}
-              disabled={hasReviewed}
-              aria-label={hasReviewed ? `You have already reviewed ${business.name}` : `Write a review for ${business.name}`}
-              style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
-            >
-              <Edit className="w-3.5 h-3.5" strokeWidth={2.5} />
-              <span>{hasReviewed ? 'Already Reviewed' : 'Review'}</span>
-            </button>
+            {isBusinessAccount ? (
+              // Business account: Show "View Business Profile" button
+              <button
+                className="flex-1 flex items-center justify-center gap-1.5 px-4 py-3 rounded-full text-caption sm:text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-sage/40 border transition-all min-h-[48px] shadow-md bg-gradient-to-br from-navbar-bg to-navbar-bg/90 text-white border-sage/50 active:scale-95"
+                onClick={(e) => { e.stopPropagation(); handleCardClick(); }}
+                aria-label={`View ${business.name} profile`}
+                style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
+              >
+                <Eye className="w-3.5 h-3.5" strokeWidth={2.5} />
+                <span>View Business Profile</span>
+              </button>
+            ) : (
+              // Consumer account: Show "Review" button
+              <button
+                className={`flex-1 flex items-center justify-center gap-1.5 px-4 py-3 rounded-full text-caption sm:text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-sage/40 border transition-all min-h-[48px] shadow-md ${hasReviewed ? 'bg-charcoal/20 text-charcoal/70 cursor-not-allowed border-charcoal/20' : 'bg-gradient-to-br from-navbar-bg to-navbar-bg/90 text-white border-sage/50 active:scale-95'}`}
+                onClick={(e) => { e.stopPropagation(); if (!hasReviewed) handleWriteReview(); }}
+                disabled={hasReviewed}
+                aria-label={hasReviewed ? `You have already reviewed ${business.name}` : `Write a review for ${business.name}`}
+                style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
+              >
+                <Edit className="w-3.5 h-3.5" strokeWidth={2.5} />
+                <span>{hasReviewed ? 'Already Reviewed' : 'Review'}</span>
+              </button>
+            )}
           </div>
         </div>
       </div>

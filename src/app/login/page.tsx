@@ -10,6 +10,7 @@ import { useScrollReveal } from "../hooks/useScrollReveal";
 import { RateLimiter } from "../lib/rateLimiting";
 import { usePredefinedPageTitle } from "../hooks/usePageTitle";
 import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
+import Logo from "../components/Logo/Logo";
 
 // Import shared components
 import { authStyles } from "../components/Auth/Shared/authStyles";
@@ -121,6 +122,11 @@ export default function LoginPage() {
           <Link href="/onboarding" className="text-charcoal hover:text-charcoal/80 transition-colors duration-300 p-2 hover:bg-off-white/50 rounded-lg block backdrop-blur-sm">
             <ArrowLeft className="w-6 h-6" strokeWidth={2.5} />
           </Link>
+        </div>
+
+        {/* Logo */}
+        <div className="text-center pt-8 pb-4">
+          <Logo variant="onboarding" className="mx-auto" />
         </div>
 
         {/* Header with premium styling and animations */}

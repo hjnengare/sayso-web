@@ -1,9 +1,15 @@
 /**
- * useDealBreakersPage Hook (Simplified - localStorage only)
- * Encapsulates all logic for the deal-breakers page without DB calls
+ * useDealBreakersPage Hook
+ *
+ * This hook handles the final step of onboarding.
+ * When user clicks "Continue", it calls the ATOMIC completion API
+ * which saves ALL onboarding data (interests, subcategories, dealbreakers)
+ * in a SINGLE database transaction.
+ *
+ * This ensures no partial saves that can leave users in inconsistent states.
  */
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useOnboarding } from '../contexts/OnboardingContext';
 import { useToast } from '../contexts/ToastContext';
@@ -37,11 +43,20 @@ export interface UseDealBreakersPageReturn {
 export function useDealBreakersPage(): UseDealBreakersPageReturn {
   const router = useRouter();
   const { showToast } = useToast();
+  const onboarding = useOnboarding();
   const {
     selectedDealbreakers,
     setSelectedDealbreakers,
+    selectedInterests,
+    selectedSubInterests,
     error: contextError
-  } = useOnboarding();
+  } = onboarding;
+
+  // Keep a ref to access latest values in callbacks
+  const onboardingRef = useRef({ selectedInterests, selectedSubInterests });
+  useEffect(() => {
+    onboardingRef.current = { selectedInterests, selectedSubInterests };
+  }, [selectedInterests, selectedSubInterests]);
 
   const [isNavigating, setIsNavigating] = useState(false);
 
@@ -71,7 +86,7 @@ export function useDealBreakersPage(): UseDealBreakersPageReturn {
     [selectedDealbreakers, setSelectedDealbreakers, showToast]
   );
 
-  // Handle next navigation - save to DB and navigate
+  // Handle next navigation - ATOMIC completion of ALL onboarding data
   const handleNext = useCallback(async () => {
     if (selectedDealbreakers.length === 0) {
       showToast('Select at least one', 'sage', 2000);
@@ -81,24 +96,47 @@ export function useDealBreakersPage(): UseDealBreakersPageReturn {
     setIsNavigating(true);
 
     try {
-      // Save dealbreakers to database
-      const response = await fetch('/api/onboarding/deal-breakers', {
+      // Get all onboarding data from context (localStorage)
+      const { selectedInterests, selectedSubInterests } = onboardingRef.current;
+
+      // Validate we have all required data
+      if (!selectedInterests || selectedInterests.length < 3) {
+        throw new Error('Please complete your interests selection first');
+      }
+      if (!selectedSubInterests || selectedSubInterests.length < 1) {
+        throw new Error('Please complete your subcategories selection first');
+      }
+
+      // Call the ATOMIC completion API
+      // This saves ALL data in a single database transaction
+      const response = await fetch('/api/onboarding/complete-atomic', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dealbreakers: selectedDealbreakers }),
+        credentials: 'include',
+        body: JSON.stringify({
+          interests: selectedInterests,
+          subcategories: selectedSubInterests,
+          dealbreakers: selectedDealbreakers,
+        }),
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to save deal-breakers');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.error || 'Failed to complete onboarding');
       }
 
-      // Navigate immediately - no toast needed since navigation is the success indicator
-      // The toast was appearing on the next page due to timing issues
+      // Clear localStorage after successful atomic completion
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('onboarding_interests');
+        localStorage.removeItem('onboarding_subcategories');
+        localStorage.removeItem('onboarding_dealbreakers');
+      }
+
+      // Navigate to celebration page
       router.replace('/complete');
     } catch (error) {
-      console.error('[Deal-breakers] Error saving:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to save deal-breakers';
+      console.error('[Deal-breakers] Error completing onboarding:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to complete onboarding';
       showToast(errorMessage, 'sage', 4000);
       setIsNavigating(false);
     }

@@ -8,6 +8,7 @@ import { OnboardingProvider } from "./contexts/OnboardingContext";
 import { ToastProvider } from "./contexts/ToastContext";
 import { SavedItemsProvider } from "./contexts/SavedItemsContext";
 import { SavedEventsProvider } from "./contexts/SavedEventsContext";
+import { SavedSpecialsProvider } from "./contexts/SavedSpecialsContext";
 import { NotificationsProvider } from "./contexts/NotificationsContext";
 import { MessagesProvider } from "./contexts/MessagesContext";
 import PageTransitionProvider from "./components/Providers/PageTransitionProvider";
@@ -25,12 +26,19 @@ const urbanist = Urbanist({
   variable: "--font-urbanist",
 });
 
-export const metadata: Metadata = generateSEOMetadata({
-  title: "SAYSO (Home) | Discover trusted local gems near you",
-  description: "Find amazing local businesses, restaurants, and experiences in your area with personalized recommendations and trusted reviews.",
-  keywords: ["local business", "restaurants", "reviews", "recommendations", "sayso"],
-  url: "/",
-});
+export const metadata: Metadata = {
+  ...generateSEOMetadata({
+    title: "SAYSO (Home) | Discover trusted local gems near you",
+    description: "Find amazing local businesses, restaurants, and experiences in your area with personalized recommendations and trusted reviews.",
+    keywords: ["local business", "restaurants", "reviews", "recommendations", "sayso"],
+    url: "/",
+  }),
+  icons: {
+    icon: "/logos/logo.png",
+    shortcut: "/logos/logo.png",
+    apple: "/logos/logo.png",
+  },
+};
 
 export const runtime = "nodejs";
 // Force dynamic rendering at layout level to prevent static generation issues
@@ -137,14 +145,16 @@ export default function RootLayout({
             <OnboardingProvider>
               <SavedItemsProvider>
                 <SavedEventsProvider>
-                  <NotificationsProvider>
-                    <MessagesProvider>
-                      <PageTransitionProvider>
-                        <BusinessNotifications />
-                        {children}
-                      </PageTransitionProvider>
-                    </MessagesProvider>
-                  </NotificationsProvider>
+                  <SavedSpecialsProvider>
+                    <NotificationsProvider>
+                      <MessagesProvider>
+                        <PageTransitionProvider>
+                          <BusinessNotifications />
+                          {children}
+                        </PageTransitionProvider>
+                      </MessagesProvider>
+                    </NotificationsProvider>
+                  </SavedSpecialsProvider>
                 </SavedEventsProvider>
               </SavedItemsProvider>
             </OnboardingProvider>

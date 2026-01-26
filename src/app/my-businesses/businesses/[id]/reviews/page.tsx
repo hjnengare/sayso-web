@@ -13,51 +13,6 @@ import type { Business } from "../../../../lib/types/database";
 import ReviewsList from "../../../../components/Reviews/ReviewsList";
 import type { ReviewWithUser } from "../../../../lib/types/database";
 
-// TEMPORARY: Dummy data for UI development
-const generateDummyReviews = (businessId: string): ReviewWithUser[] => {
-  const dummyNames = ['Sarah Johnson', 'Michael Chen', 'Emily Rodriguez', 'David Thompson', 'Jessica Martinez'];
-  const dummyAvatars = [
-    'https://i.pravatar.cc/150?img=1',
-    'https://i.pravatar.cc/150?img=2',
-    'https://i.pravatar.cc/150?img=3',
-    'https://i.pravatar.cc/150?img=4',
-    'https://i.pravatar.cc/150?img=5',
-  ];
-  const dummyTitles = [
-    'Great experience!',
-    'Highly recommend',
-    'Amazing service',
-    'Will come back',
-    'Excellent quality',
-  ];
-  const dummyContent = [
-    'I had a wonderful experience here. The staff was friendly and the service was excellent. I would definitely recommend this place to others.',
-    'This is one of my favorite places in town. The atmosphere is great and the quality is top-notch. Can\'t wait to visit again!',
-    'Outstanding service from start to finish. The team really knows what they\'re doing and it shows in every detail.',
-    'I\'ve been coming here for years and it never disappoints. Consistent quality and great customer service.',
-    'What a fantastic place! The attention to detail is impressive and the overall experience exceeded my expectations.',
-  ];
-
-  return dummyNames.map((name, index) => ({
-    id: `dummy-review-${index}`,
-    user_id: `dummy-user-${index}`,
-    business_id: businessId,
-    rating: Math.floor(Math.random() * 2) + 4, // 4 or 5 stars
-    title: dummyTitles[index],
-    content: dummyContent[index],
-    tags: [],
-    helpful_count: Math.floor(Math.random() * 20),
-    created_at: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-    updated_at: new Date().toISOString(),
-    user: {
-      id: `dummy-user-${index}`,
-      name: name,
-      avatar_url: dummyAvatars[index],
-    },
-    review_images: [],
-  }));
-};
-
 export default function OwnerReviewsPage() {
   const router = useRouter();
   const params = useParams();
@@ -71,56 +26,38 @@ export default function OwnerReviewsPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      // TEMPORARY: Bypass auth for UI development
-      // if (authLoading || !user || !businessId) return;
+      // If auth is still loading, wait
+      if (authLoading) return;
+
+      // If auth resolved but no user, stop loading (will redirect below)
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      // If no business ID, stop loading
+      if (!businessId) {
+        setIsLoading(false);
+        setError('No business ID provided');
+        return;
+      }
 
       setIsLoading(true);
       try {
-        // TEMPORARY: Bypass ownership check for UI development
-        // const ownedBusinesses = await BusinessOwnershipService.getBusinessesForOwner(user.id);
-        // const ownsThisBusiness = ownedBusinesses.some(b => b.id === businessId);
-        // 
-        // if (!ownsThisBusiness) {
-        //   setError('You do not have access to this business');
-        //   setIsLoading(false);
-        //   return;
-        // }
+        // Check ownership
+        const businessData = await BusinessOwnershipService.getOwnedBusinessById(user.id, businessId);
 
-        setHasAccess(true);
-
-        // Fetch business details
-        const supabase = getBrowserSupabase();
-        const { data: businessData, error: businessError } = await supabase
-          .from('businesses')
-          .select('*')
-          .eq('id', businessId)
-          .single();
-
-        // TEMPORARY: Use mock data if business not found (for UI development)
-        if (businessError || !businessData) {
-          const mockBusiness: Business = {
-            id: businessId,
-            name: 'Sample Business',
-            description: 'This is a sample business description for UI development purposes.',
-            category: 'Restaurant',
-            location: 'Cape Town, South Africa',
-            address: '123 Main Street',
-            phone: '+27 21 123 4567',
-            email: 'info@samplebusiness.com',
-            website: 'https://samplebusiness.com',
-            image_url: null,
-            verified: true,
-            price_range: '$$' as const,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          };
-          setBusiness(mockBusiness);
-        } else {
-          setBusiness(businessData as Business);
+        if (!businessData) {
+          setError('You do not have access to this business or it does not exist');
+          setIsLoading(false);
+          return;
         }
 
-        // TEMPORARY: Use dummy data for reviews (for UI development)
-        // Fetch real reviews if available, otherwise use dummy data
+        setHasAccess(true);
+        setBusiness(businessData);
+
+        // Fetch reviews for the business
+        const supabase = getBrowserSupabase();
         const { data: reviewsData, error: reviewsError } = await supabase
           .from('reviews')
           .select(`
@@ -149,7 +86,7 @@ export default function OwnerReviewsPage() {
           .order('created_at', { ascending: false })
           .limit(20);
 
-        if (!reviewsError && reviewsData && reviewsData.length > 0) {
+        if (!reviewsError && reviewsData) {
           // Transform real reviews
           const transformedReviews: ReviewWithUser[] = reviewsData.map((review: any) => {
             const profile = Array.isArray(review.profile) ? review.profile[0] : review.profile;
@@ -165,54 +102,30 @@ export default function OwnerReviewsPage() {
           });
           setReviews(transformedReviews);
         } else {
-          // Use dummy data
-          const dummyReviews = generateDummyReviews(businessId);
-          setReviews(dummyReviews);
+          // No reviews yet
+          setReviews([]);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
-        // Use dummy data on error
-        const dummyReviews = generateDummyReviews(businessId);
-        setReviews(dummyReviews);
-        // Set mock business if error
-        if (!business) {
-          const mockBusiness: Business = {
-            id: businessId,
-            name: 'Sample Business',
-            description: 'This is a sample business description for UI development purposes.',
-            category: 'Restaurant',
-            location: 'Cape Town, South Africa',
-            address: '123 Main Street',
-            phone: '+27 21 123 4567',
-            email: 'info@samplebusiness.com',
-            website: 'https://samplebusiness.com',
-            image_url: null,
-            verified: true,
-            price_range: '$$' as const,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          };
-          setBusiness(mockBusiness);
-        }
+        setError('Failed to load reviews');
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchData();
-  }, [businessId]); // TEMPORARY: Removed user and authLoading dependencies
+  }, [businessId, user?.id, authLoading]);
 
-  // TEMPORARY: Bypass auth loading check for UI development
-  // if (authLoading || isLoading) {
-  if (isLoading) {
+  // Show loader while auth or data is loading
+  if (authLoading || isLoading) {
     return <PageLoader size="lg" variant="wavy" color="sage" />;
   }
 
-  // TEMPORARY: Bypass user check for UI development
-  // if (!user) {
-  //   router.push('/business/login');
-  //   return null;
-  // }
+  // Redirect to login if no user
+  if (!user) {
+    router.push('/login');
+    return null;
+  }
 
   if (error || !business) {
     return (
