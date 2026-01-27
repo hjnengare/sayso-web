@@ -438,7 +438,7 @@ export async function middleware(request: NextRequest) {
   // If we couldn't fetch status (onboardingStatus is null), default to incomplete
   const isOnboardingComplete = onboardingStatus === null
     ? false
-    : !!onboardingStatus.onboarding_completed_at;
+    : onboardingStatus.onboarding_complete === true;
 
   debugLog('STATUS_COMPUTED', {
     requestId,
