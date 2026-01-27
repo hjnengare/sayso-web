@@ -6,10 +6,10 @@ import { useEffect, useState } from "react";
 
 /**
  * ScrollHint - Floating chevron that bounces to indicate scrollability
- * Hides after user scrolls once
+ * Visible only at top of page. Fades out on scroll and reappears at top.
  */
 export default function ScrollHint() {
-  const [hasScrolled, setHasScrolled] = useState(false);
+  const [showArrow, setShowArrow] = useState(true);
   const y = useMotionValue(0);
   const springY = useSpring(y, { stiffness: 100, damping: 20 });
   const opacity = useTransform(springY, [0, 10], [1, 0.3]);
@@ -21,14 +21,13 @@ export default function ScrollHint() {
       setTimeout(() => y.set(0), 300);
     }, 2000);
 
-    // Hide after first scroll
+    // Toggle based on scroll position
     const handleScroll = () => {
-      if (window.scrollY > 50) {
-        setHasScrolled(true);
-      }
+      setShowArrow(window.scrollY === 0);
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
 
     return () => {
       clearInterval(interval);
@@ -36,15 +35,14 @@ export default function ScrollHint() {
     };
   }, [y]);
 
-  if (hasScrolled) return null;
-
   return (
     <motion.div
-      className="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 hidden lg:flex items-center justify-center"
+      className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-30 hidden lg:flex items-center justify-center ${
+        showArrow ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
+      }`}
       initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0 }}
-      transition={{ delay: 1, duration: 0.5 }}
+      animate={{ opacity: showArrow ? 1 : 0, y: showArrow ? 0 : 10 }}
+      transition={{ delay: 0.2, duration: 0.4, ease: "easeOut" }}
     >
       <motion.div
         style={{ y: springY, opacity }}
