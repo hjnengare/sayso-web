@@ -9,7 +9,7 @@ import { NextResponse, type NextRequest } from 'next/server';
  * Rules:
  * 1. Not logged in → redirect to /auth/login (for protected routes)
  * 2. Business account (account_role === 'business_owner') → NEVER see onboarding, redirect to /my-businesses
- * 3. User account with onboarding_completed_at = null → force to /onboarding
+ * 3. User account with onboarding_completed_at = null → force to /interests
  * 4. User account with onboarding_completed_at != null → block onboarding routes, redirect to /complete
  * 5. Missing profile → treat as onboarding_completed_at = null
  *
@@ -522,7 +522,7 @@ export async function middleware(request: NextRequest) {
         debugLog('REDIRECT', {
           requestId,
           reason: 'incomplete_user_on_protected',
-          to: '/onboarding',
+          to: '/interests',
           onboardingStatus,
         });
         console.log('[Middleware] Incomplete user redirected to onboarding from:', pathname, {
@@ -532,7 +532,7 @@ export async function middleware(request: NextRequest) {
           subcategoriesCount: onboardingStatus.subcategories_count,
           dealbreakersCount: onboardingStatus.dealbreakers_count,
         });
-        return NextResponse.redirect(new URL('/onboarding', request.url));
+        return NextResponse.redirect(new URL('/interests', request.url));
       }
       // If onboardingStatus is null (couldn't fetch), allow access
       debugLog('ALLOW', { requestId, reason: 'status_unknown_allow_access', pathname });
@@ -611,7 +611,7 @@ export async function middleware(request: NextRequest) {
   if (user && user.email_confirmed_at && !isBusinessAccount) {
     // Personal users cannot access business-only routes
     if (isBusinessAuthRoute || isOwnersRoute || isBusinessEditRoute) {
-      const redirectTarget = isOnboardingComplete ? '/complete' : '/onboarding';
+      const redirectTarget = isOnboardingComplete ? '/complete' : '/interests';
       debugLog('REDIRECT', { requestId, reason: 'personal_user_on_business_route', to: redirectTarget });
       return NextResponse.redirect(new URL(redirectTarget, request.url));
     }
@@ -633,7 +633,7 @@ export async function middleware(request: NextRequest) {
       } else if (isOnboardingComplete) {
         redirectTarget = '/complete';
       } else {
-        redirectTarget = '/onboarding';
+        redirectTarget = '/interests';
       }
       debugLog('REDIRECT', { requestId, reason: 'authenticated_on_auth_route', to: redirectTarget });
       return NextResponse.redirect(new URL(redirectTarget, request.url));

@@ -119,8 +119,8 @@ export default function ProtectedRoute({
         }
 
         // Only personal users get routed to onboarding steps
-        console.log('ProtectedRoute: Personal user onboarding incomplete, redirecting to /onboarding');
-        router.replace('/onboarding');
+        console.log('ProtectedRoute: Personal user onboarding incomplete, redirecting to /interests');
+        router.replace('/interests');
         return;
       }
     }
@@ -164,9 +164,9 @@ export default function ProtectedRoute({
           router.replace('/verify-email');
         }
       } else {
-        console.log('ProtectedRoute: Personal user email verified, redirecting to /onboarding');
-        if (pathname !== '/onboarding') {
-          router.replace('/onboarding');
+        console.log('ProtectedRoute: Personal user email verified, redirecting to /interests');
+        if (pathname !== '/interests') {
+          router.replace('/interests');
         }
       }
       return;

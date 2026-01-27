@@ -145,9 +145,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // RULE 3: If accessing protected route but onboarding incomplete, redirect to /onboarding
+  // RULE 3: If accessing protected route but onboarding incomplete, redirect to /interests
   const url = request.nextUrl.clone();
-  url.pathname = '/onboarding';
+  url.pathname = '/interests';
   return NextResponse.redirect(url);
 }
 

@@ -337,7 +337,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           router.push('/complete');
         } else {
           // Personal user with incomplete onboarding → start onboarding
-          router.push('/onboarding');
+          router.push('/interests');
         }
 
         setIsLoading(false);

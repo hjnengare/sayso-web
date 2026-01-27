@@ -337,7 +337,7 @@ export async function GET(request: NextRequest) {
                 onboarding_completed_at: profile?.onboarding_completed_at
               });
 
-              const dest = new URL('/onboarding', request.url);
+              const dest = new URL('/interests', request.url);
               // Copy cookies to redirect response
               const redirectResponse = NextResponse.redirect(dest);
               response.cookies.getAll().forEach(cookie => {
