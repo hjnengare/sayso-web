@@ -120,9 +120,7 @@ export default function ProtectedRoute({
 
         // Only personal users get routed to onboarding steps
         console.log('ProtectedRoute: Personal user onboarding incomplete, redirecting to /onboarding');
-        if (pathname !== '/onboarding') {
-          router.replace('/onboarding');
-        }
+        router.replace('/onboarding');
         return;
       }
     }
