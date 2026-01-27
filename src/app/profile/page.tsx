@@ -31,7 +31,6 @@ import { DangerAction } from "@/components/molecules/DangerAction";
 import { ConfirmationDialog } from "@/components/molecules/ConfirmationDialog";
 import SavedBusinessRow from "@/app/components/Saved/SavedBusinessRow";
 import { useSavedItems } from "@/app/contexts/SavedItemsContext";
-import { useSavedEvents } from "@/app/contexts/SavedEventsContext";
 import { EditProfileModal } from "@/app/components/EditProfile/EditProfileModal";
 // Removed mock data import - use API calls instead
 import { useMemo } from "react";
@@ -204,7 +203,6 @@ interface UserAchievement {
 function ProfileContent() {
   const { user, updateUser, isLoading, logout } = useAuth();
   const { savedItems } = useSavedItems();
-  const { savedEventIds } = useSavedEvents();
   const { deleteReview } = useReviewSubmission();
   const router = useRouter();
 
@@ -826,10 +824,9 @@ function ProfileContent() {
   const interestsCount = profile.interests_count ?? 0;
   // Use actual helpful votes from userStats, fallback to 0
   const helpfulVotesCount = userStats?.helpfulVotesReceived ?? 0;
-  // Use actual saved items count as primary source (businesses + events)
+  // Use actual saved items count as primary source (businesses only)
   const savedBusinessesCount = savedItems.length > 0 ? savedItems.length : (userStats?.totalBusinessesSaved ?? 0);
-  const savedEventsCount = savedEventIds.length;
-  const totalSavedCount = savedBusinessesCount + savedEventsCount;
+  const totalSavedCount = savedBusinessesCount;
   const memberSinceLabel = userStats?.accountCreationDate
     ? formatMemberSince(userStats.accountCreationDate)
     : profile.created_at
@@ -1194,11 +1191,7 @@ function ProfileContent() {
                             {totalSavedCount}
                           </p>
                           <p className="text-xs text-charcoal/60">
-                            {savedBusinessesCount > 0 && savedEventsCount > 0
-                              ? `${savedBusinessesCount} businesses, ${savedEventsCount} events`
-                              : savedEventsCount > 0
-                                ? `${savedEventsCount} events`
-                                : 'Your saved gems'}
+                            {savedBusinessesCount > 0 ? `${savedBusinessesCount} businesses` : 'Your saved gems'}
                           </p>
                           <Link
                             href="/saved"

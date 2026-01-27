@@ -115,7 +115,7 @@ export function useCompletePage(): UseCompletePageReturn {
   const handleContinue = useCallback(() => {
     try {
       // Get user's current role from profile
-      const currentRole = user?.profile?.current_role || 'user';
+      const currentRole = user?.profile?.account_role || 'user';
       
       console.log('[useCompletePage] Navigating with role:', currentRole);
       
@@ -146,4 +146,5 @@ export function useCompletePage(): UseCompletePageReturn {
     dealbreakers,
   };
 }
+
 

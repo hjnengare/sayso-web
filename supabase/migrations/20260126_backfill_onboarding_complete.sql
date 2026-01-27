@@ -22,7 +22,7 @@ BEGIN
   INTO v_count
   FROM profiles p
   WHERE p.onboarding_complete IS NOT TRUE
-    AND p.current_role = 'user'  -- Only personal users, not business accounts
+    AND p.account_role = 'user'  -- Only personal users, not business accounts
     AND (
       -- Check if they have actual preference data
       EXISTS (SELECT 1 FROM user_interests ui WHERE ui.user_id = p.user_id LIMIT 3)
@@ -40,7 +40,7 @@ SET
   onboarding_step = 'complete',
   updated_at = NOW()
 WHERE p.onboarding_complete IS NOT TRUE
-  AND p.current_role = 'user'  -- Only personal users
+  AND p.account_role = 'user'  -- Only personal users
   AND (
     -- Verify they have the minimum required preferences
     SELECT COUNT(*) FROM user_interests ui WHERE ui.user_id = p.user_id
@@ -82,10 +82,11 @@ DECLARE
   v_incomplete INTEGER;
 BEGIN
   SELECT COUNT(*) INTO v_complete
-  FROM profiles WHERE onboarding_complete = TRUE AND current_role = 'user';
+  FROM profiles WHERE onboarding_complete = TRUE AND account_role = 'user';
 
   SELECT COUNT(*) INTO v_incomplete
-  FROM profiles WHERE (onboarding_complete IS NOT TRUE OR onboarding_complete = FALSE) AND current_role = 'user';
+  FROM profiles WHERE (onboarding_complete IS NOT TRUE OR onboarding_complete = FALSE) AND account_role = 'user';
 
   RAISE NOTICE 'Backfill complete. Users with onboarding_complete=true: %, incomplete: %', v_complete, v_incomplete;
 END $$;
+

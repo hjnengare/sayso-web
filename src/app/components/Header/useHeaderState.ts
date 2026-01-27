@@ -7,8 +7,6 @@ import { useRef, useState, useEffect, useLayoutEffect, useCallback } from "react
 import { useRouter, usePathname } from "next/navigation";
 import { FilterState } from "../FilterModal/FilterModal";
 import { useSavedItems } from "../../contexts/SavedItemsContext";
-import { useSavedEvents } from "../../contexts/SavedEventsContext";
-import { useSavedSpecials } from "../../contexts/SavedSpecialsContext";
 import { useNotifications } from "../../contexts/NotificationsContext";
 import { useMessages } from "../../contexts/MessagesContext";
 import { useRequireBusinessOwner } from "../../hooks/useBusinessAccess";
@@ -95,10 +93,7 @@ export const useHeaderState = ({
   // CONTEXT DATA
   // ============================================================================
 
-  const { savedCount: businessesCount } = useSavedItems();
-  const { savedCount: eventsCount } = useSavedEvents();
-  const { savedCount: specialsCount } = useSavedSpecials();
-  const savedCount = businessesCount + eventsCount + specialsCount;
+  const { savedCount } = useSavedItems();
   const { unreadCount } = useNotifications();
   const { unreadCount: unreadMessagesCount } = useMessages();
   const { user, isLoading: authLoading } = useAuth();
@@ -107,7 +102,7 @@ export const useHeaderState = ({
   // USER ROLE & AUTH STATE
   // ============================================================================
 
-  const userCurrentRole = user?.profile?.current_role || "user";
+  const userCurrentRole = user?.profile?.account_role || "user";
   const isBusinessAccountUser = userCurrentRole === "business_owner";
   const hasMultipleRoles = user?.profile?.role === "both";
   const isGuest = !authLoading && !user;
@@ -473,3 +468,4 @@ export const useHeaderState = ({
     fontStyle: HEADER_FONT_STYLE,
   };
 };
+

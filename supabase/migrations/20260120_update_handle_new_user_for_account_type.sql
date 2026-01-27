@@ -1,6 +1,6 @@
 -- Update handle_new_user trigger to set initial role based on accountType from auth metadata
 -- This allows one email to have both personal ('user') and business ('business_owner') roles
--- Add current_role field to track which mode the user is actively using
+-- Add account_role field to track which mode the user is actively using
 
 -- Drop trigger first (depends on function)
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
@@ -8,8 +8,8 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 -- Now drop the function
 DROP FUNCTION IF EXISTS public.handle_new_user();
 
--- Add current_role column to profiles if it doesn't exist
-ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS current_role TEXT DEFAULT 'user';
+-- Add account_role column to profiles if it doesn't exist
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS account_role TEXT DEFAULT 'user';
 
 -- Recreate function with role support
 CREATE OR REPLACE FUNCTION public.handle_new_user()
@@ -32,7 +32,7 @@ BEGIN
   INSERT INTO public.profiles (
     user_id,
     role,
-    current_role,
+    account_role,
     onboarding_step,
     onboarding_complete,
     created_at,
@@ -64,3 +64,4 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_new_user();
+

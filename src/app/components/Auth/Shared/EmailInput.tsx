@@ -10,6 +10,7 @@ interface EmailInputProps {
   touched: boolean;
   disabled?: boolean;
   placeholder?: string;
+  label?: string;
 }
 
 export function EmailInput({
@@ -19,7 +20,8 @@ export function EmailInput({
   error,
   touched,
   disabled = false,
-  placeholder = "you@example.com"
+  placeholder = "you@example.com",
+  label = "Email"
 }: EmailInputProps) {
   const hasError = touched && !!error;
   const isValid = touched && value && !error;
@@ -27,7 +29,7 @@ export function EmailInput({
   return (
     <div>
       <label className="block text-sm font-semibold text-white mb-2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
-        Email
+        {label}
       </label>
       <div className="relative group">
         <div className={`absolute left-4 sm:left-5 top-1/2 transform -translate-y-1/2 transition-colors duration-300 z-10 ${

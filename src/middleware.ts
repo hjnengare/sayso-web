@@ -8,7 +8,7 @@ import { NextResponse, type NextRequest } from 'next/server';
  *
  * Rules:
  * 1. Not logged in → redirect to /auth/login (for protected routes)
- * 2. Business account (current_role === 'business_owner') → NEVER see onboarding, redirect to /my-businesses
+ * 2. Business account (account_role === 'business_owner') → NEVER see onboarding, redirect to /my-businesses
  * 3. User account with onboarding_complete = false → force to /interests (or current onboarding route)
  * 4. User account with onboarding_complete = true → block onboarding routes, redirect to /home
  * 5. Missing profile → treat as onboarding_complete = false
@@ -31,6 +31,23 @@ function debugLog(context: string, data: Record<string, unknown>) {
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const requestId = Math.random().toString(36).substring(7); // For tracing requests
+
+  const PUBLIC_AUTH_ROUTES = [
+    '/login',
+    '/register',
+    '/business/login',
+    '/business/register',
+    '/verify-email',
+    '/auth/callback',
+  ];
+
+  const isPublicAuthRoute = PUBLIC_AUTH_ROUTES.some(route =>
+    pathname.startsWith(route)
+  );
+
+  if (isPublicAuthRoute) {
+    return NextResponse.next();
+  }
 
   debugLog('START', {
     requestId,
@@ -192,7 +209,7 @@ export async function middleware(request: NextRequest) {
         }
 
         if (isProtectedRoute) {
-          return NextResponse.redirect(new URL('/onboarding', request.url));
+          return NextResponse.redirect(new URL('/login', request.url));
         }
         // For public routes, allow access even with fatal error
         return response;
@@ -251,7 +268,7 @@ export async function middleware(request: NextRequest) {
     // Onboarding routes
     '/interests', '/subcategories', '/deal-breakers', '/complete',
     // Main app routes
-    '/home', '/profile', '/saved', '/dm', '/reviewer',
+    '/home', '/dashboard', '/profile', '/saved', '/dm', '/reviewer',
     // Content discovery routes
     '/explore', '/for-you', '/trending', '/events-specials',
     // Review routes
@@ -318,7 +335,7 @@ export async function middleware(request: NextRequest) {
   interface OnboardingStatus {
     found: boolean;
     onboarding_complete: boolean;
-    current_role: string;
+    account_role: string;
     role: string;
     interests_count: number;
     subcategories_count: number;
@@ -347,7 +364,7 @@ export async function middleware(request: NextRequest) {
         // Fallback: try direct query (may fail on mobile, but worth a try)
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
-          .select('onboarding_complete, role, current_role, interests_count, subcategories_count, dealbreakers_count')
+          .select('onboarding_complete, role, account_role, interests_count, subcategories_count, dealbreakers_count')
           .eq('user_id', user.id)
           .maybeSingle();
 
@@ -366,7 +383,7 @@ export async function middleware(request: NextRequest) {
           onboardingStatus = {
             found: true,
             onboarding_complete: profileData.onboarding_complete ?? false,
-            current_role: profileData.current_role ?? 'user',
+            account_role: profileData.account_role ?? 'user',
             role: profileData.role ?? 'user',
             interests_count: profileData.interests_count ?? 0,
             subcategories_count: profileData.subcategories_count ?? 0,
@@ -380,7 +397,7 @@ export async function middleware(request: NextRequest) {
         onboardingStatus = {
           found: false,
           onboarding_complete: false,
-          current_role: 'user',
+          account_role: 'user',
           role: 'user',
           interests_count: 0,
           subcategories_count: 0,
@@ -396,13 +413,14 @@ export async function middleware(request: NextRequest) {
   }
 
   // Helper: Check if user is a business account
-  const isBusinessAccount = onboardingStatus?.current_role === 'business_owner';
+  const isBusinessAccount =
+    onboardingStatus?.role === 'business_owner' ||
+    onboardingStatus?.account_role === 'business_owner';
 
   // Helper: Check if onboarding is complete
-  // CRITICAL: If we couldn't fetch status (onboardingStatus is null), assume complete
-  // to prevent incorrect redirects on mobile hard refresh
+  // If we couldn't fetch status (onboardingStatus is null), default to incomplete
   const isOnboardingComplete = onboardingStatus === null
-    ? true  // Assume complete if we couldn't fetch (prevents bad redirects)
+    ? false
     : onboardingStatus.onboarding_complete === true;
 
   debugLog('STATUS_COMPUTED', {
@@ -496,14 +514,14 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Check for guest mode to allow /home access without authentication
-  const isGuestMode = request.nextUrl.searchParams.get('guest') === 'true';
-  const isGuestModeHome = isGuestMode && request.nextUrl.pathname === '/home';
-
-  // Redirect unauthenticated users from protected routes (except for guest mode /home)
-  if (isProtectedRoute && !user && !isPublicRoute && !isGuestModeHome) {
-    debugLog('REDIRECT', { requestId, reason: 'unauthenticated_on_protected', to: '/onboarding' });
-    return NextResponse.redirect(new URL('/onboarding', request.url));
+  // Redirect unauthenticated users from protected routes
+  if (isProtectedRoute && !user && !isPublicRoute) {
+    const referer = request.headers.get('referer') || '';
+    const cameFromVerifyEmail =
+      referer.includes('/verify-email') || referer.includes('/auth/callback');
+    const redirectTarget = cameFromVerifyEmail ? '/verify-email' : '/login';
+    debugLog('REDIRECT', { requestId, reason: 'unauthenticated_on_protected', to: redirectTarget });
+    return NextResponse.redirect(new URL(redirectTarget, request.url));
   }
 
   // Allow public routes to proceed without authentication
@@ -543,8 +561,8 @@ export async function middleware(request: NextRequest) {
 
   // Protect business review routes
   if (isBusinessReviewRoute && !user) {
-    debugLog('REDIRECT', { requestId, reason: 'unauthenticated_on_review', to: '/onboarding' });
-    return NextResponse.redirect(new URL('/onboarding', request.url));
+    debugLog('REDIRECT', { requestId, reason: 'unauthenticated_on_review', to: '/login' });
+    return NextResponse.redirect(new URL('/login', request.url));
   }
 
   if (isBusinessReviewRoute && user && !user.email_confirmed_at) {
@@ -616,3 +634,4 @@ export const config = {
     '/((?!_next/static|_next/image|favicon.ico|api|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };
+

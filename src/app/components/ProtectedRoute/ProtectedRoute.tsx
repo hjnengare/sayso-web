@@ -40,9 +40,9 @@ export default function ProtectedRoute({
   const dealbreakersCount = user?.profile?.dealbreakers_count ?? 0;
 
   // CRITICAL: Extract user role for business vs personal routing
-  // Check current_role FIRST (this is what gets updated by sync logic)
+  // Check account_role FIRST (this is what gets updated by sync logic)
   // Then check role as fallback. If EITHER is business_owner, treat as business owner.
-  const currentRole = user?.profile?.current_role;
+  const currentRole = user?.profile?.account_role;
   const role = user?.profile?.role;
   const isBusinessOwner = currentRole === 'business_owner' || role === 'business_owner';
   const userRole = isBusinessOwner ? 'business_owner' : (currentRole ?? role ?? null);
@@ -289,3 +289,4 @@ export function OnboardingRoute({
     </ProtectedRoute>
   );
 }
+

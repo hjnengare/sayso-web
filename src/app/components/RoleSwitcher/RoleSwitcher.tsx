@@ -10,7 +10,7 @@ export function RoleSwitcher() {
   // Check if user has multiple roles
   const userRole = user?.profile?.role;
   const hasMultipleRoles = userRole === 'both';
-  const currentRole = user?.profile?.current_role;
+  const currentRole = user?.profile?.account_role;
   
   if (!hasMultipleRoles || !user) return null;
 
@@ -74,3 +74,4 @@ export function RoleSwitcher() {
     </div>
   );
 }
+

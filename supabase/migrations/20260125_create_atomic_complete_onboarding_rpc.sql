@@ -32,7 +32,7 @@ DECLARE
   v_subcategories_count INTEGER;
   v_dealbreakers_count INTEGER;
   v_profile_exists BOOLEAN;
-  v_current_role TEXT;
+  v_account_role TEXT;
 BEGIN
   -- Validate input arrays
   v_interests_count := COALESCE(array_length(p_interest_ids, 1), 0);
@@ -54,9 +54,9 @@ BEGIN
     RAISE EXCEPTION 'Dealbreakers must be between 1 and 3 (got %)', v_dealbreakers_count;
   END IF;
 
-  -- Check if profile exists and get current_role
-  SELECT EXISTS(SELECT 1 FROM profiles WHERE user_id = p_user_id), "current_role"
-  INTO v_profile_exists, v_current_role
+  -- Check if profile exists and get account_role
+  SELECT EXISTS(SELECT 1 FROM profiles WHERE user_id = p_user_id), "account_role"
+  INTO v_profile_exists, v_account_role
   FROM profiles WHERE user_id = p_user_id;
 
   IF NOT v_profile_exists THEN
@@ -64,7 +64,7 @@ BEGIN
   END IF;
 
   -- Business owners should not complete personal onboarding
-  IF v_current_role = 'business_owner' THEN
+  IF v_account_role = 'business_owner' THEN
     RAISE EXCEPTION 'Business accounts do not complete personal onboarding';
   END IF;
 
@@ -100,7 +100,7 @@ BEGIN
     interests_count = v_interests_count,
     subcategories_count = v_subcategories_count,
     dealbreakers_count = v_dealbreakers_count,
-    "current_role" = 'user',
+    "account_role" = 'user',
     updated_at = NOW()
   WHERE user_id = p_user_id;
 
@@ -130,3 +130,4 @@ GRANT EXECUTE ON FUNCTION complete_onboarding(UUID, UUID[], UUID[], TEXT[]) TO a
 -- Add comment for documentation
 COMMENT ON FUNCTION complete_onboarding IS
 'Atomic onboarding completion for personal users. Saves interests, subcategories, dealbreakers and marks onboarding_complete=true in a single transaction.';
+

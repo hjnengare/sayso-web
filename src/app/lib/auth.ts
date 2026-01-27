@@ -67,38 +67,38 @@ export class AuthService {
         };
       }
 
-      // Check if email already has THIS specific account type
-      // Allow same email to register for different account types (Personal + Business)
+      // Check if email already exists in profiles
+      // Shared emails across account types are NOT allowed.
       const { data: existingProfiles, error: profileCheckError } = await supabase
         .from('profiles')
         .select('role, user_id')
         .eq('email', email.trim().toLowerCase());
 
       if (profileCheckError) {
-        console.warn('Profile check error (non-blocking):', profileCheckError);
+        console.warn('Profile check error (blocking signup to avoid duplicates):', profileCheckError);
+        return {
+          user: null,
+          session: null,
+          error: {
+            message: 'Unable to verify email availability. Please log in or try again later.',
+            code: 'email_check_failed'
+          }
+        };
       }
 
       if (!profileCheckError && existingProfiles && existingProfiles.length > 0) {
-        const existingProfile = existingProfiles[0];
-        const existingRole = existingProfile.role;
-
-        // Check if trying to register with the SAME account type
-        if (existingRole === accountType) {
-          const accountTypeName = accountType === 'user' ? 'Personal' : 'Business';
-          console.log(`Email already has ${accountTypeName} account, blocking duplicate registration`);
-          return {
-            user: null,
-            session: null,
-            error: { 
-              message: `This email already has a ${accountTypeName} account. Please log in to your existing account instead.`,
-              code: 'duplicate_account_type'
-            }
-          };
-        }
-
-        // If trying to register DIFFERENT account type on same email, allow it
-        // User will need to log in after email verification
-        console.log(`Email can register for different account type (existing: ${existingRole}, new: ${accountType})`);
+        const existingRole = existingProfiles[0].role;
+        const accountTypeName = accountType === 'user' ? 'Personal' : 'Business';
+        const existingLabel = existingRole === 'business_owner' ? 'Business' : 'Personal';
+        console.log(`Email already has an account, blocking ${accountTypeName} registration`);
+        return {
+          user: null,
+          session: null,
+          error: {
+            message: `Email already registered for a ${existingLabel} account. Log in or use a different email.`,
+            code: 'user_exists'
+          }
+        };
       }
 
       const baseUrl = this.getBaseUrl();
@@ -115,7 +115,12 @@ export class AuthService {
       });
 
       if (error) {
-        console.error('Supabase signup error:', error);
+        const lowerMessage = error.message?.toLowerCase() || '';
+        if (lowerMessage.includes('email address') && lowerMessage.includes('invalid')) {
+          console.warn('Supabase signup validation error:', error.message);
+        } else {
+          console.error('Supabase signup error:', error);
+        }
         
         // Check if error is because email already exists in auth.users
         const errorMessage = error.message?.toLowerCase() || '';
@@ -391,7 +396,7 @@ export class AuthService {
             has_profile: true,
             onboarding_step: profile.onboarding_step,
             role: profile.role,
-            current_role: profile.current_role,
+            account_role: profile.account_role,
             account_type: profile.account_type,
             email_verified: user.email_confirmed_at !== null
           });
@@ -406,7 +411,7 @@ export class AuthService {
       console.log('[AuthService.getCurrentUser] Returning user with profile:', {
         id: user.id,
         role: profile?.role,
-        current_role: profile?.current_role,
+        account_role: profile?.account_role,
         account_type: profile?.account_type,
         onboarding_step: profile?.onboarding_step
       });
@@ -471,7 +476,7 @@ export class AuthService {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('user_id, onboarding_step, interests_count, last_interests_updated, created_at, updated_at, avatar_url, username, display_name, is_top_reviewer, reviews_count, badges_count, subcategories_count, dealbreakers_count, is_active, deactivated_at, role, current_role, email')
+        .select('user_id, onboarding_step, interests_count, last_interests_updated, created_at, updated_at, avatar_url, username, display_name, is_top_reviewer, reviews_count, badges_count, subcategories_count, dealbreakers_count, is_active, deactivated_at, role, account_role, email')
         .eq('user_id', userId)
         .single();
 
@@ -523,7 +528,7 @@ export class AuthService {
         is_active: data.is_active !== undefined ? data.is_active : true,
         deactivated_at: data.deactivated_at || undefined,
         role: data.role || 'user',
-        current_role: data.current_role || 'user',
+        account_role: data.account_role || 'user',
         email: data.email || undefined
       };
 
@@ -591,11 +596,11 @@ export class AuthService {
     }
 
     if (message.includes('email') && (message.includes('invalid') || message.includes('format'))) {
-      return { message: '📧 Please enter a valid email address (e.g., user@example.com).', code: 'invalid_email' };
+      return { message: 'Please enter a valid email address (for example, name@example.com).', code: 'invalid_email' };
     }
 
     if (message.includes('email address') && message.includes('invalid')) {
-      return { message: '📧 The email address format is invalid. Please check and try again.', code: 'invalid_email_format' };
+      return { message: 'Email address is invalid. Please use a valid address like name@example.com.', code: 'invalid_email' };
     }
 
     if (message.includes('fetch') || message.includes('network') || message.includes('connection')) {
@@ -797,3 +802,4 @@ export class AuthService {
   }
 
 }
+

@@ -1,9 +1,11 @@
 import { createServerClient } from '@supabase/ssr';
-import { NextResponse } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
+  const token = requestUrl.searchParams.get('token') || requestUrl.searchParams.get('token_hash');
+  const type = requestUrl.searchParams.get('type');
   const next = requestUrl.searchParams.get('next') ?? '/';
   const error = requestUrl.searchParams.get('error');
   const error_description = requestUrl.searchParams.get('error_description');
@@ -28,33 +30,19 @@ export async function GET(request: Request) {
     );
   }
 
-  if (code) {
+  if (code || token) {
     // Create response first so we can set cookies on it
     let response = NextResponse.next();
-    
+
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
           get(name: string) {
-            // Read from request cookies first (browser-sent cookies)
-            const requestCookie = request.headers.get('cookie');
-            if (requestCookie) {
-              const cookieMap = requestCookie.split(';').reduce((acc, cookie) => {
-                const [key, value] = cookie.trim().split('=');
-                if (key && value) acc[key] = decodeURIComponent(value);
-                return acc;
-              }, {} as Record<string, string>);
-              if (cookieMap[name]) return cookieMap[name];
-            }
-            // Fallback: try to get from cookieStore (server-set cookies)
-            // Note: cookies() is async, but get() is sync, so we can't await here
-            // This is okay because request cookies should have the session
-            return undefined;
+            return request.cookies.get(name)?.value;
           },
           set(name: string, value: string, options: Record<string, unknown>) {
-            // Set cookie with proper flags for security
             response.cookies.set(name, value, {
               ...options,
               httpOnly: (options?.httpOnly as boolean | undefined) ?? true,
@@ -77,7 +65,13 @@ export async function GET(request: Request) {
       }
     );
 
-    const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+    const { error: exchangeError } = code
+      ? await supabase.auth.exchangeCodeForSession(code)
+      : await supabase.auth.verifyOtp({
+          token: token as string,
+          type: (type || 'signup') as any,
+          email: requestUrl.searchParams.get('email') || undefined,
+        });
 
     if (!exchangeError) {
       // Check if profile exists and get onboarding status
@@ -86,7 +80,7 @@ export async function GET(request: Request) {
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('onboarding_step, onboarding_complete, interests_count, subcategories_count, dealbreakers_count, role, current_role')
+          .select('onboarding_step, onboarding_complete, interests_count, subcategories_count, dealbreakers_count, role, account_role')
           .eq('user_id', user.id)
           .single();
 
@@ -140,12 +134,12 @@ export async function GET(request: Request) {
               userRole = 'user';
             } else {
               // No metadata, fall back to profile
-              userRole = profile?.role || profile?.current_role || 'user';
+              userRole = profile?.role || profile?.account_role || 'user';
             }
 
             console.log('Email verified - determining redirect:', {
               profileRole: profile?.role,
-              currentRole: profile?.current_role,
+              currentRole: profile?.account_role,
               metadataAccountType: userMetadataAccountType,
               resolvedRole: userRole
             });
@@ -164,7 +158,7 @@ export async function GET(request: Request) {
                   .from('profiles')
                   .update({
                     role: userMetadataAccountType,
-                    current_role: userMetadataAccountType,
+                    account_role: userMetadataAccountType,
                     updated_at: new Date().toISOString()
                   })
                   .eq('user_id', user.id);
@@ -279,7 +273,7 @@ export async function GET(request: Request) {
           }
         } else {
           // Existing user - check if business owner for proper redirect
-          const userRole = profile.role || profile.current_role;
+          const userRole = profile.role || profile.account_role;
 
           // OAuth guard: If email already owns a business, require explicit role selection
           if (type === 'oauth' && (userRole === 'business_owner' || profile.role === 'both')) {
@@ -372,3 +366,4 @@ export async function GET(request: Request) {
   // Return the user to an error page with instructions
   return NextResponse.redirect(new URL('/auth/auth-code-error', request.url));
 }
+

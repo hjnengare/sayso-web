@@ -53,7 +53,7 @@ export async function POST() {
     // Get current profile
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('role, current_role')
+      .select('role, account_role')
       .eq('user_id', user.id)
       .single();
 
@@ -86,7 +86,7 @@ export async function POST() {
       .from('profiles')
       .update({
         role: userMetadataAccountType,
-        current_role: userMetadataAccountType,
+        account_role: userMetadataAccountType,
         updated_at: new Date().toISOString()
       })
       .eq('user_id', user.id);
@@ -114,3 +114,4 @@ export async function POST() {
     );
   }
 }
+

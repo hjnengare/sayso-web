@@ -229,7 +229,7 @@ BEGIN
     account_identity_id,
     email,
     account_type,
-    current_role,
+    account_role,
     onboarding_step,
     onboarding_complete,
     created_at,
@@ -342,3 +342,4 @@ MIGRATION NEEDED:
 - Update profiles with account_identity_id references
 - (See separate migration file: 20260128_migrate_existing_profiles_to_identities.sql)
 */
+

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../contexts/ToastContext";
@@ -31,6 +31,19 @@ export default function BusinessLoginPage() {
 
   // Initialize scroll reveal (runs once per page load)
   useScrollReveal({ threshold: 0.1, rootMargin: "0px 0px -50px 0px", once: true });
+
+  // Ensure the document can scroll (clears any stale scroll locks from menus/modals).
+  // This runs client-side only and doesn't change markup, preventing hydration mismatch.
+  useEffect(() => {
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = "";
+    document.documentElement.style.overflow = "";
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousHtmlOverflow;
+    };
+  }, []);
 
   // Validation functions
   const validateEmail = (email: string) => {
@@ -114,7 +127,8 @@ export default function BusinessLoginPage() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: authStyles }} />
-      <div ref={containerRef} className="min-h-screen bg-off-white flex flex-col relative overflow-y-auto ios-inertia safe-area-full" style={{ paddingBottom: 'max(0px, env(safe-area-inset-bottom))' }}>
+      {/* Let the document handle scrolling to avoid nested scroll containers on mobile. */}
+      <div ref={containerRef} className="min-h-[100dvh] bg-off-white flex flex-col relative safe-area-full" style={{ paddingBottom: 'max(0px, env(safe-area-inset-bottom))' }}>
 
         {/* Back button with entrance animation */}
         <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-20 animate-slide-in-left animate-delay-200">

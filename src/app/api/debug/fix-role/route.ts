@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 
 /**
  * ADMIN ONLY: Fix user profile role data
- * Sets current_role based on what's detected
+ * Sets account_role based on what's detected
  */
 export async function POST(request: NextRequest) {
   try {
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     const { error: updateError } = await supabase
       .from('profiles')
       .update({
-        current_role: newRole,
+        account_role: newRole,
         role: profile.role || newRole, // Ensure role is set
         email: user.email // Ensure email is populated
       })
@@ -65,10 +65,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Profile updated: current_role = ${newRole}`,
+      message: `Profile updated: account_role = ${newRole}`,
       profile: {
         user_id: user.id,
-        current_role: newRole,
+        account_role: newRole,
         role: profile.role || newRole
       }
     });
@@ -80,3 +80,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+

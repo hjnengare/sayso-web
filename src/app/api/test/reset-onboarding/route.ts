@@ -71,7 +71,7 @@ export async function POST(req: Request) {
         .update({
           onboarding_complete: true,
           onboarding_step: 'complete',
-          current_role: 'user',
+          account_role: 'user',
           updated_at: new Date().toISOString()
         })
         .eq('user_id', userId);
@@ -132,3 +132,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
+

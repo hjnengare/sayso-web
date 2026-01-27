@@ -1,17 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Share2, Bookmark } from "lucide-react";
+import { ArrowLeft, Share2 } from "lucide-react";
 
 interface EventDetailHeaderProps {
-  isBookmarked: boolean;
-  onBookmark: () => void;
   onShare: () => void;
 }
 
 export default function EventDetailHeader({
-  isBookmarked,
-  onBookmark,
   onShare,
 }: EventDetailHeaderProps) {
   return (
@@ -36,17 +32,6 @@ export default function EventDetailHeader({
               aria-label="Share event"
             >
               <Share2 className="text-white w-6 h-6 sm:w-5 sm:h-5" />
-            </button>
-            <button
-              onClick={onBookmark}
-              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 border ${
-                isBookmarked
-                  ? "bg-coral text-white border-coral"
-                  : "bg-gradient-to-br from-charcoal/10 to-charcoal/5 hover:from-coral/20 hover:to-coral/10 border-charcoal/5 hover:border-coral/20"
-              }`}
-              aria-label="Bookmark event"
-            >
-              <Bookmark className="text-white w-6 h-6 sm:w-5 sm:h-5" />
             </button>
           </div>
         </div>

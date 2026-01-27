@@ -10,12 +10,12 @@ BEGIN
   END IF;
 END $$;
 
--- Add current_role column if it doesn't exist
+-- Add account_role column if it doesn't exist
 DO $$ 
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
-                 WHERE table_name = 'profiles' AND column_name = 'current_role') THEN
-    ALTER TABLE public.profiles ADD COLUMN "current_role" TEXT DEFAULT 'user';
+                 WHERE table_name = 'profiles' AND column_name = 'account_role') THEN
+    ALTER TABLE public.profiles ADD COLUMN "account_role" TEXT DEFAULT 'user';
   END IF;
 END $$;
 
@@ -82,7 +82,7 @@ BEGIN
       user_id,
       email,
       "role",
-      "current_role",
+      "account_role",
       onboarding_step,
       onboarding_complete,
       created_at,
@@ -112,3 +112,4 @@ CREATE TRIGGER on_auth_user_created
 
 -- Add comment
 COMMENT ON COLUMN public.profiles.email IS 'User email address for duplicate account type checking. Allows same email to have both Personal and Business accounts.';
+

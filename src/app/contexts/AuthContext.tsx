@@ -281,7 +281,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (desiredRole && authUser.profile) {
           const hasDesiredRole =
             authUser.profile.role === 'both' || authUser.profile.role === desiredRole;
-          const needsSwitch = authUser.profile.current_role !== desiredRole;
+          const needsSwitch = authUser.profile.account_role !== desiredRole;
 
           if (hasDesiredRole && needsSwitch) {
             try {
@@ -296,7 +296,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
                   ...authUser,
                   profile: {
                     ...authUser.profile,
-                    current_role: desiredRole
+                    account_role: desiredRole
                   }
                 };
                 setUser(activeUser);
@@ -320,7 +320,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
 
         // Step 2: Determine account type
-        const userCurrentRole = activeUser.profile?.current_role || 'user';
+        const userCurrentRole = activeUser.profile?.account_role || 'user';
         const isBusinessAccount = userCurrentRole === 'business_owner';
 
         // Step 3: Route based on account type and onboarding status
@@ -358,21 +358,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
         console.log('AuthContext: Starting registration...', { email, accountType });
         const { user: authUser, session, error: authError } = await AuthService.signUp({ email, password, username, accountType });
         if (authError) {
-          console.error('AuthContext: Registration error details:', { 
-            message: authError?.message || 'Unknown error',
-            code: authError?.code || 'unknown',
-            fullError: authError
-          });
-          let errorMessage = authError.message;
+          const rawMessage = authError?.message || '';
+          const rawCode = authError?.code || 'unknown';
+          if (rawMessage || rawCode !== 'unknown') {
+            console.warn('AuthContext: Registration error details:', {
+              message: rawMessage || 'Unknown error',
+              code: rawCode,
+            });
+          }
+
+          let errorMessage = rawMessage || 'Email already registered. Please log in.';
           if (
             authError.code === 'user_exists' ||
             authError.code === 'duplicate_account_type' ||
-            authError.message.toLowerCase().includes('already in use') ||
-            authError.message.toLowerCase().includes('already registered') ||
-            authError.message.toLowerCase().includes('email already') ||
-            authError.message.toLowerCase().includes('already exists')
+            rawMessage.toLowerCase().includes('already in use') ||
+            rawMessage.toLowerCase().includes('already registered') ||
+            rawMessage.toLowerCase().includes('email already') ||
+            rawMessage.toLowerCase().includes('already exists')
           ) {
-            errorMessage = authError.message;
+            errorMessage = rawMessage || 'Email already registered. Please log in.';
           }
           setError(errorMessage);
           setIsLoading(false);
@@ -621,3 +625,4 @@ export function useAuth() {
   }
   return context;
 }
+

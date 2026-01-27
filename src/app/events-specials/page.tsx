@@ -12,7 +12,6 @@ import EventsGridSkeleton from "../components/EventsPage/EventsGridSkeleton";
 import EmptyState from "../components/EventsPage/EmptyState";
 import SearchInput from "../components/SearchInput/SearchInput";
 import type { Event } from "../lib/types/Event";
-import { useToast } from "../contexts/ToastContext";
 import { useDebounce } from "../hooks/useDebounce";
 import { useEventsWithGlobalConsolidation } from "../hooks/useEvents";
 import { useSpecials } from "../hooks/useSpecials";
@@ -27,7 +26,6 @@ export default function EventsSpecialsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
-  const { showToast } = useToast();
 
   // Debounce search query for smoother real-time filtering (300ms delay)
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
@@ -112,9 +110,6 @@ export default function EventsSpecialsPage() {
     setSearchQuery(query);
   };
 
-  const handleBookmark = (event: Event) => {
-    showToast(`${event.title} saved to your bookmarks!`, "success");
-  };
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -267,7 +262,6 @@ export default function EventsSpecialsPage() {
                     <div className="relative">
                       <EventsGrid
                         events={currentEvents}
-                        onBookmark={handleBookmark}
                         disableMotion={true}
                         cardWrapperClass="desktop-card-shimmer"
                         cardOverlayClass="desktop-shimmer-veil"
@@ -283,7 +277,7 @@ export default function EventsSpecialsPage() {
                         ease: [0.16, 1, 0.3, 1],
                       }}
                     >
-                      <EventsGrid events={currentEvents} onBookmark={handleBookmark} />
+                      <EventsGrid events={currentEvents} />
                     </motion.div>
                   )}
                 </AnimatePresence>

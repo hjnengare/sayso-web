@@ -2434,7 +2434,7 @@ export async function POST(req: Request) {
       .from('profiles')
       .update({
         role: 'business_owner',
-        current_role: 'business_owner',
+        account_role: 'business_owner',
         account_type: 'business',
         onboarding_step: 'business_setup', // never 'interests' for business owners
         updated_at: new Date().toISOString(),
@@ -2580,3 +2580,4 @@ function applySharedResponseHeaders(response: NextResponse) {
   response.headers.set('Vary', 'Accept-Encoding');
   return response;
 }
+

@@ -5,8 +5,6 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, Calendar } from "lucide-react";
 import type { Event } from "../../lib/types/Event";
-import { useToast } from "../../contexts/ToastContext";
-import { useAuth } from "../../contexts/AuthContext";
 import nextDynamic from "next/dynamic";
 import { PageLoader } from "../../components/Loader";
 import Header from "../../components/Header/Header";
@@ -42,47 +40,13 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
   const [event, setEvent] = useState<Event | null>(null);
   const [reviews, setReviews] = useState<EventReviewWithUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isLiked, setIsLiked] = useState(false);
   const hasReviewed = false;
-  const { showToast } = useToast();
-  const { user } = useAuth();
   const mapSectionRef = useRef<HTMLDivElement>(null);
 
   const scrollToMap = () => {
     mapSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  // Check if event is already saved on mount
-  useEffect(() => {
-    if (!event) return;
-
-    const checkSavedStatus = async () => {
-      try {
-        // Prefer saving businesses; fall back to events when no businessId is available
-        if (event.businessId) {
-          const response = await fetch(`/api/user/saved`);
-          if (response.ok) {
-            const data = await response.json();
-            const isSavedBusiness = Array.isArray(data.businesses)
-              ? data.businesses.some((b: any) => b.id === event.businessId)
-              : false;
-            setIsLiked(isSavedBusiness);
-          }
-        } else {
-          const response = await fetch(`/api/user/saved-events?event_id=${event.id}`);
-          if (response.ok) {
-            const data = await response.json();
-            setIsLiked(data.isSaved || false);
-          }
-        }
-      } catch (error) {
-        // Silently fail - user might not be logged in
-        console.log('Could not check saved status:', error);
-      }
-    };
-
-    checkSavedStatus();
-  }, [event]);
 
   // Unwrap the params Promise using React.use()
   const resolvedParams = use(params);
@@ -208,109 +172,6 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
     fetchEvent();
   }, [resolvedParams.id]);
 
-  const handleLike = async () => {
-    if (!event) return;
-
-    if (!user) {
-      showToast("Please log in to save items", "error");
-      return;
-    }
-
-    const newLikedState = !isLiked;
-    setIsLiked(newLikedState);
-    
-    try {
-      if (newLikedState) {
-        let response;
-        let saveType = 'event';
-        
-        // Try to save as business first if businessId exists
-        if (event.businessId) {
-          try {
-            response = await fetch('/api/user/saved', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ business_id: event.businessId }),
-            });
-            
-            if (response.ok) {
-              saveType = 'business';
-            } else if (response.status === 404 || response.status === 400) {
-              // Business not found or invalid, fall back to event save
-              console.warn('Business save failed, falling back to event save');
-              response = null;
-            } else {
-              // Other errors, throw
-              const errorData = await response.json().catch(() => ({}));
-              throw new Error(errorData.error || 'Failed to save as business');
-            }
-          } catch (err) {
-            console.warn('Business save error, falling back to event:', err);
-            response = null;
-          }
-        }
-        
-        // Fall back to event save if business save failed
-        if (!response || !response.ok) {
-          response = await fetch('/api/user/saved-events', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ event_id: event.id }),
-          });
-          saveType = 'event';
-        }
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          if (response.status === 401) {
-            showToast("Please log in to save items", "error");
-            setIsLiked(!newLikedState);
-            return;
-          }
-          throw new Error(errorData.error || 'Failed to save');
-        }
-        showToast(saveType === 'business' ? "Business saved to favorites" : "Event saved to favorites", "success");
-      } else {
-        // Try to delete as business first if businessId exists
-        let response;
-        
-        if (event.businessId) {
-          try {
-            response = await fetch(`/api/user/saved?business_id=${event.businessId}`, {
-              method: 'DELETE',
-            });
-            
-            if (response.ok) {
-              showToast("Business removed from favorites", "success");
-              return;
-            } else if (response.status === 404 || response.status === 400) {
-              // Business not found, fall back to event delete
-              console.warn('Business delete failed, falling back to event delete');
-            } else {
-              throw new Error('Failed to remove business');
-            }
-          } catch (err) {
-            console.warn('Business delete error, falling back to event:', err);
-          }
-        }
-        
-        // Fall back to event delete
-        response = await fetch(`/api/user/saved-events?event_id=${event.id}`, {
-          method: 'DELETE',
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to unsave');
-        }
-        showToast("Event removed from favorites", "success");
-      }
-    } catch (error) {
-      setIsLiked(!newLikedState);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update favorites';
-      showToast(errorMessage, "error");
-      console.error('Error saving/unsaving:', error);
-    }
-  };
 
   const refetchReviews = async () => {
     try {
@@ -414,7 +275,7 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8">
                     {/* Left Column - Main Content */}
                     <div className="lg:col-span-2 space-y-4 sm:space-y-6 lg:space-y-8">
-                      <EventHeroImage event={event} isLiked={isLiked} onLike={handleLike} />
+                      <EventHeroImage event={event} />
                       <EventInfo event={event} />
                       <EventDescription event={event} />
                       <EventDetailsCard event={event} />

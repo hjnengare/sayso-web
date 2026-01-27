@@ -11,7 +11,7 @@ export interface User {
 export interface Profile {
   id: string;
   role?: 'user' | 'business_owner' | 'both';
-  current_role?: 'user' | 'business_owner';
+  account_role?: 'user' | 'business_owner';
   email?: string;
   onboarding_step: string;
   onboarding_complete: boolean;

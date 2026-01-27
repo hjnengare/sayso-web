@@ -113,11 +113,10 @@ const getEventMediaImage = (event: Event) => {
 
 interface EventCardProps {
   event: Event;
-  onBookmark?: (event: Event) => void;
   index?: number;
 }
 
-export default function EventCard({ event, onBookmark, index = 0 }: EventCardProps) {
+export default function EventCard({ event, index = 0 }: EventCardProps) {
   const router = useRouter();
   const iconPng = getEventIconPng(event.icon);
   const mediaImage = getEventMediaImage(event);

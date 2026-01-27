@@ -7,20 +7,19 @@ import type { Event } from "../../lib/types/Event";
 
 interface EventsGridProps {
   events: Event[];
-  onBookmark: (event: Event) => void;
   disableMotion?: boolean;
   cardWrapperClass?: string;
   cardOverlayClass?: string;
 }
 
-export default function EventsGrid({ events, onBookmark, disableMotion = false, cardWrapperClass, cardOverlayClass }: EventsGridProps) {
+export default function EventsGrid({ events, disableMotion = false, cardWrapperClass, cardOverlayClass }: EventsGridProps) {
   if (disableMotion) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-5 lg:gap-6">
         {events.map((event, index) => (
           <div key={event.id} className={`list-none relative ${cardWrapperClass ?? ""}`}>
             {cardOverlayClass && <span aria-hidden className={cardOverlayClass} />}
-            <EventCard event={event} onBookmark={onBookmark} index={index} />
+            <EventCard event={event} index={index} />
           </div>
         ))}
       </div>
@@ -65,7 +64,7 @@ export default function EventsGrid({ events, onBookmark, disableMotion = false, 
             },
           }}
         >
-          <EventCard event={event} onBookmark={onBookmark} index={index} />
+          <EventCard event={event} index={index} />
         </motion.div>
       ))}
     </motion.div>

@@ -72,10 +72,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update current_role
+    // Update account_role
     const { error: updateError } = await supabase
       .from('profiles')
-      .update({ current_role: newRole })
+      .update({ account_role: newRole })
       .eq('user_id', user.id);
 
     if (updateError) {
@@ -98,3 +98,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+

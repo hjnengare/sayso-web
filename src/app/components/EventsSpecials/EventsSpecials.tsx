@@ -7,7 +7,6 @@ import EventCard from "../EventCard/EventCard";
 import EventCardSkeleton from "../EventCard/EventCardSkeleton";
 import type { Event } from "../../lib/types/Event";
 import ScrollableSection from "../ScrollableSection/ScrollableSection";
-import { useToast } from "../../contexts/ToastContext";
 import WavyTypedTitle from "../../../components/Animations/WavyTypedTitle";
 import { useState, useEffect } from "react";
 
@@ -77,7 +76,6 @@ export default function EventsSpecials({
   loading?: boolean;
 }) {
   const router = useRouter();
-  const { showToast } = useToast();
   const [businessEvents, setBusinessEvents] = useState<Event[]>([]);
   const [loadingBusinessEvents, setLoadingBusinessEvents] = useState(true);
 
@@ -116,15 +114,6 @@ export default function EventsSpecials({
     });
   }
 
-  const handleBookmark = (event: Event) => {
-    // In production, this would save to the backend
-    // For now, show a toast notification
-    showToast(
-      `${event.title} has been saved to your favorites`,
-      "success",
-      3000
-    );
-  };
 
   if (loading || loadingBusinessEvents) {
     return (
@@ -227,7 +216,7 @@ export default function EventsSpecials({
               <div className="flex gap-3 items-stretch">
                 {displayEvents.map((event, index) => (
                   <div key={event.id} className="snap-start snap-always flex-shrink-0 w-[100vw] list-none flex">
-                    <EventCard event={event} onBookmark={handleBookmark} index={index} />
+                    <EventCard event={event} index={index} />
                   </div>
                 ))}
               </div>
@@ -238,7 +227,7 @@ export default function EventsSpecials({
           <div className="hidden md:grid md:grid-cols-2 xl:grid-cols-4 gap-3">
             {displayEvents.map((event, index) => (
               <div key={event.id} className="list-none flex">
-                <EventCard event={event} onBookmark={handleBookmark} index={index} />
+                <EventCard event={event} index={index} />
               </div>
             ))}
           </div>

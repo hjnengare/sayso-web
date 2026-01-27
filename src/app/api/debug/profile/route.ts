@@ -36,7 +36,7 @@ export async function GET() {
       email: user.email,
       profile: profile ? {
         role: profile.role,
-        current_role: profile.current_role,
+        account_role: profile.account_role,
         onboarding_step: profile.onboarding_step,
         email_from_profile: profile.email,
         all_fields: Object.keys(profile)
@@ -50,3 +50,4 @@ export async function GET() {
     );
   }
 }
+

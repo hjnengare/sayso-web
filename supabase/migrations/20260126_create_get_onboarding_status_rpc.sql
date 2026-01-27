@@ -24,7 +24,7 @@ DROP FUNCTION IF EXISTS get_onboarding_status(UUID);
  * @returns JSON object with:
  *   - found: boolean (whether profile exists)
  *   - onboarding_complete: boolean | null
- *   - current_role: text | null
+ *   - account_role: text | null
  *   - role: text | null
  *   - interests_count: integer
  *   - subcategories_count: integer
@@ -50,7 +50,7 @@ BEGIN
   -- Fetch profile data
   SELECT
     onboarding_complete,
-    current_role,
+    account_role,
     role,
     COALESCE(interests_count, 0) as interests_count,
     COALESCE(subcategories_count, 0) as subcategories_count,
@@ -64,7 +64,7 @@ BEGIN
     RETURN json_build_object(
       'found', FALSE,
       'onboarding_complete', FALSE,
-      'current_role', 'user',
+      'account_role', 'user',
       'role', 'user',
       'interests_count', 0,
       'subcategories_count', 0,
@@ -76,7 +76,7 @@ BEGIN
   RETURN json_build_object(
     'found', TRUE,
     'onboarding_complete', COALESCE(v_profile.onboarding_complete, FALSE),
-    'current_role', COALESCE(v_profile.current_role, 'user'),
+    'account_role', COALESCE(v_profile.account_role, 'user'),
     'role', COALESCE(v_profile.role, 'user'),
     'interests_count', v_profile.interests_count,
     'subcategories_count', v_profile.subcategories_count,
@@ -91,7 +91,7 @@ EXCEPTION
       'found', FALSE,
       'error', SQLERRM,
       'onboarding_complete', FALSE,
-      'current_role', 'user',
+      'account_role', 'user',
       'role', 'user'
     );
 END;
@@ -107,3 +107,4 @@ GRANT EXECUTE ON FUNCTION get_onboarding_status(UUID) TO anon;
 COMMENT ON FUNCTION get_onboarding_status IS
 'Reliably fetch user onboarding status. Uses SECURITY DEFINER to bypass RLS,
 making it safe to call from Edge middleware where RLS context may not be established.';
+
