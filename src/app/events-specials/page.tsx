@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import Header from "../components/Header/Header";
 import Footer from "../components/Footer/Footer";
 import FilterTabs from "../components/EventsPage/FilterTabs";
 import ResultsCount from "../components/EventsPage/ResultsCount";
@@ -122,14 +121,6 @@ export default function EventsSpecialsPage() {
 
   return (
     <div className="min-h-dvh bg-off-white">
-      <Header
-        showSearch={true}
-        variant="white"
-        backgroundClassName="bg-navbar-bg"
-        topPosition="top-0"
-        reducedPadding={true}
-        whiteText={true}
-      />
 
       <main
         className="bg-off-white pt-20 sm:pt-24 pb-28"

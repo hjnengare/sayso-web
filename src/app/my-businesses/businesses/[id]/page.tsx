@@ -5,7 +5,6 @@ import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "../../../contexts/AuthContext";
 import { BusinessOwnershipService } from "../../../lib/services/businessOwnershipService";
 import { PageLoader, Loader } from "../../../components/Loader";
-import Header from "../../../components/Header/Header";
 import { Store, MapPin, Star, MessageSquare, Edit, BarChart3, ArrowLeft, Eye, TrendingUp, ChevronRight, Camera, Upload, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { getBrowserSupabase } from "../../../lib/supabase/client";
@@ -339,7 +338,6 @@ export default function OwnerBusinessDashboard() {
   if (error || !business) {
     return (
       <div className="min-h-dvh bg-off-white">
-        <Header />
         <main className="pt-20 sm:pt-24 pb-28">
           <div className="mx-auto w-full max-w-[2000px] px-4 sm:px-6 lg:px-8">
             <div className="max-w-4xl mx-auto text-center py-12">
@@ -361,14 +359,6 @@ export default function OwnerBusinessDashboard() {
 
   return (
     <div className="min-h-dvh bg-off-white">
-      <Header
-        showSearch={false}
-        variant="white"
-        backgroundClassName="bg-navbar-bg"
-        topPosition="top-0"
-        reducedPadding={true}
-        whiteText={true}
-      />
 
       <main className="pt-20 sm:pt-24 pb-8 font-urbanist">
         <div className="mx-auto w-full max-w-[2000px] px-3 sm:px-6 lg:px-10 2xl:px-16">

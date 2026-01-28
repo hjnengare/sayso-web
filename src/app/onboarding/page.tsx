@@ -98,13 +98,13 @@ export default function OnboardingPage() {
           
           {/* LOGO */}
           <div className="mb-4" data-reveal>
-            <div className="flex justify-center">
+            <div className="flex items-center justify-center">
               <Image
                 src="/logos/logo.png"
                 alt="Sayso logo"
                 width={100}
                 height={60}
-                className="object-contain w-auto h-[78px] sm:h-[84px] md:h-[92px]"
+                className="object-contain w-auto h-[96px] sm:h-[108px] md:h-[120px]"
               />
             </div>
           </div>

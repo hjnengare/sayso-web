@@ -27,8 +27,6 @@ import {
 import type { Event } from "../../lib/types/Event";
 import { useToast } from "../../contexts/ToastContext";
 import { PageLoader } from "../../components/Loader";
-import Header from "../../components/Header/Header";
-
 // Extended type for special with business info
 interface SpecialWithBusiness extends Event {
   businessSlug?: string;
@@ -250,14 +248,6 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
         </div>
 
         {/* Header */}
-        <Header
-          showSearch={false}
-          variant="white"
-          backgroundClassName="bg-navbar-bg"
-          topPosition="top-0"
-          reducedPadding={true}
-          whiteText={true}
-        />
 
         {/* Main Content */}
         <div className="relative z-10 mx-auto w-full max-w-[2000px] px-2 pt-20 sm:pt-24 py-4 sm:py-6 md:py-8 pb-12 sm:pb-16">

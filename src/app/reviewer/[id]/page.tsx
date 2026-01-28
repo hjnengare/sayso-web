@@ -22,7 +22,6 @@ import {
     ChevronRight,
 } from "lucide-react";
 import Footer from "../../components/Footer/Footer";
-import Header from "../../components/Header/Header";
 import { ReviewsList } from "@/components/organisms/ReviewsList";
 import { Reviewer } from "../../types/community";
 
@@ -161,7 +160,6 @@ export default function ReviewerProfilePage() {
     if (loading) {
         return (
             <div className="min-h-screen bg-off-white">
-                <Header />
                 <div className="container mx-auto px-4 py-20 text-center">
                     <div className="text-charcoal/60">Loading reviewer profile...</div>
                 </div>
@@ -173,7 +171,6 @@ export default function ReviewerProfilePage() {
     if (!reviewer) {
         return (
             <div className="min-h-screen bg-off-white">
-                <Header />
                 <div className="container mx-auto px-4 py-20 text-center">
                     <div className="text-charcoal">Reviewer not found</div>
                 </div>
@@ -200,14 +197,6 @@ export default function ReviewerProfilePage() {
                     fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
                 }}
             >
-                <Header
-                    showSearch={false}
-                    variant="white"
-                    backgroundClassName="bg-navbar-bg"
-                    topPosition="top-0"
-                    reducedPadding={true}
-                    whiteText={true}
-                />
 
                 <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
                     <div className="pt-20 sm:pt-24">

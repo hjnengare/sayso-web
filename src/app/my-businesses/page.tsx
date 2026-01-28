@@ -6,8 +6,6 @@ import Link from "next/link";
 
 import { useAuth } from "../contexts/AuthContext";
 import { BusinessOwnershipService } from "../lib/services/businessOwnershipService";
-import Header from "../components/Header/Header";
-import HeaderSkeleton from "../components/Header/HeaderSkeleton";
 import SkeletonHeader from "../components/shared/skeletons/SkeletonHeader";
 import SkeletonList from "../components/shared/skeletons/SkeletonList";
 
@@ -125,7 +123,6 @@ export default function MyBusinessesPage() {
   if (authLoading || isLoading) {
     return (
       <div className="min-h-dvh bg-off-white">
-        <HeaderSkeleton />
         <main className="pt-20 sm:pt-24 pb-28">
           <div className="mx-auto w-full max-w-[2000px] px-2">
             <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
@@ -153,7 +150,6 @@ export default function MyBusinessesPage() {
   if (error) {
     return (
       <div className="min-h-dvh bg-off-white">
-        <Header />
         <main className="pt-20 sm:pt-24 pb-28">
           <div className="mx-auto w-full max-w-[2000px] px-4 sm:px-6 lg:px-8">
             <div className="max-w-4xl mx-auto text-center py-12">
@@ -167,14 +163,6 @@ export default function MyBusinessesPage() {
 
   return (
     <div className="min-h-dvh bg-off-white">
-      <Header
-        showSearch={false}
-        variant="white"
-        backgroundClassName="bg-navbar-bg"
-        topPosition="top-0"
-        reducedPadding={true}
-        whiteText={true}
-      />
 
       <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
         <main className="pt-20 sm:pt-24 pb-28">

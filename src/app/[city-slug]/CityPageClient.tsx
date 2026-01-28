@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from 'framer-motion';
-import Header from '../components/Header/Header';
 import Footer from '../components/Footer/Footer';
 import BusinessCard from '../components/BusinessCard/BusinessCard';
 import { useState, useMemo } from 'react';
@@ -53,7 +52,6 @@ export default function CityPageClient({
 
   return (
     <div className="min-h-dvh bg-off-white">
-      <Header showSearch={true} variant="white" backgroundClassName="bg-navbar-bg" />
       
       <main className="pt-20 pb-16 px-4 sm:px-6 md:px-8">
         <motion.div

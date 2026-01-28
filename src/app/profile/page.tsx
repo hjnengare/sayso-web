@@ -36,7 +36,6 @@ import { EditProfileModal } from "@/app/components/EditProfile/EditProfileModal"
 import { useMemo } from "react";
 import { useReviewSubmission } from "@/app/hooks/useReviews";
 import { useRouter } from "next/navigation";
-import Header from "../components/Header/Header";
 import { getBadgePngPath } from "@/app/lib/badgeMappings";
 
 // Types
@@ -962,14 +961,6 @@ function ProfileContent() {
               "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
           }}
         >
-          <Header
-            showSearch={false}
-            variant="white"
-            backgroundClassName="bg-navbar-bg"
-            topPosition="top-0"
-            reducedPadding={true}
-            whiteText={true}
-          />
 
           <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
             <div className="pt-20 sm:pt-24">

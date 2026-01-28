@@ -9,7 +9,6 @@ import Link from "next/link";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useToast } from "../../../contexts/ToastContext";
 import { PageLoader } from "../../../components/Loader";
-import Header from "../../../components/Header/Header";
 import Footer from "../../../components/Footer/Footer";
 import RatingSelector from "../../../components/ReviewForm/RatingSelector";
 import ReviewTextForm from "../../../components/ReviewForm/ReviewTextForm";
@@ -167,7 +166,6 @@ function WriteReviewContent() {
   if (!target) {
     return (
       <div className="min-h-screen bg-off-white">
-        <Header />
         <main className="pt-20 pb-12">
           <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
@@ -195,7 +193,6 @@ function WriteReviewContent() {
 
   return (
     <div className="min-h-screen bg-off-white">
-      <Header />
       <main className="pt-20 pb-12">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Back Button */}

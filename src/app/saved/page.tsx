@@ -8,7 +8,6 @@ import { ChevronRight, ChevronUp, Store } from "lucide-react";
 import Pagination from "../components/EventsPage/Pagination";
 import EmailVerificationGuard from "../components/Auth/EmailVerificationGuard";
 import { useSavedItems } from "../contexts/SavedItemsContext";
-import Header from "../components/Header/Header";
 import BusinessCard from "../components/BusinessCard/BusinessCard";
 import EmptySavedState from "../components/Saved/EmptySavedState";
 import { PageLoader, Loader } from "../components/Loader";
@@ -214,15 +213,6 @@ export default function SavedPage() {
           fontFamily: '"Urbanist", -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
         }}
       >
-        <Header
-          showSearch={true}
-          variant="frosty"
-          backgroundClassName="bg-navbar-bg"
-          searchLayout="floating"
-          topPosition="top-0"
-          reducedPadding={true}
-          whiteText={true}
-        />
 
         <main className="flex-1 relative">
           <div className="pt-20 sm:pt-24 pb-12 sm:pb-16 md:pb-20">

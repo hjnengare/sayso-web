@@ -7,7 +7,6 @@ import { ChevronRight, Calendar } from "lucide-react";
 import type { Event } from "../../lib/types/Event";
 import nextDynamic from "next/dynamic";
 import { PageLoader } from "../../components/Loader";
-import Header from "../../components/Header/Header";
 import WavyTypedTitle from "../../../components/Animations/WavyTypedTitle";
 import ReviewsList from "../../components/Reviews/ReviewsList";
 import type { EventReviewWithUser } from "../../lib/types/database";
@@ -230,14 +229,6 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
         className="min-h-dvh bg-off-white font-urbanist"
         style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
       >
-        <Header
-          showSearch={false}
-          variant="white"
-          backgroundClassName="bg-navbar-bg"
-          topPosition="top-0"
-          reducedPadding={true}
-          whiteText={true}
-        />
 
         <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
           <div className="pt-20 sm:pt-24">

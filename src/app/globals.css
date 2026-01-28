@@ -937,6 +937,7 @@
   .fixed-compensate {
     /* For fixed positioned elements like headers */
     right: var(--scrollbar-width, 0) !important;
+    width: calc(100% - var(--scrollbar-width, 0)) !important;
   }
 
   /* Prevent horizontal layout shifts during modal transitions */

@@ -23,7 +23,7 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="relative overflow-hidden bg-charcoal text-off-white rounded-[20px] sm:rounded-[20px] mx-2 md:mb-4 md:mt-20">
+    <footer className="relative overflow-hidden bg-charcoal text-off-white mt-16 sm:mt-24 lg:mt-32">
       <div aria-hidden className="pointer-events-none absolute inset-0">
         <div className="absolute -top-24 left-1/2 h-48 w-[520px] -translate-x-1/2 rounded-full bg-sage/10 blur-3xl" />
         <div className="absolute bottom-0 left-0 h-32 w-64 bg-off-white/5 blur-2xl" />
@@ -34,7 +34,7 @@ export default function Footer() {
           <div className="flex flex-col items-start gap-6">
             {/* Brand */}
             <div className="flex flex-col items-start gap-4 text-left">
-              <Link href="/" className="flex-shrink-0 hover:opacity-80 transition-opacity">
+              <Link href="/" className="flex-shrink-0 flex items-center hover:opacity-80 transition-opacity">
                 <Logo variant="footer" />
               </Link>
               <p className="font-urbanist text-xs sm:text-sm text-off-white/70 text-left">
@@ -78,4 +78,3 @@ export default function Footer() {
     </footer>
   );
 }
-

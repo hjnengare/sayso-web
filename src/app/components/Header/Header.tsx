@@ -1,7 +1,7 @@
 // src/components/Header/Header.tsx
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
 import { Menu, Bell, Settings, Bookmark, MessageCircle } from "lucide-react";
 import FilterModal from "../FilterModal/FilterModal";
 import SearchInput from "../SearchInput/SearchInput";
@@ -9,7 +9,6 @@ import Logo from "../Logo/Logo";
 import OptimizedLink from "../Navigation/OptimizedLink";
 import DesktopNav from "./DesktopNav";
 import MobileMenu from "./MobileMenu";
-import HeaderSkeleton from "./HeaderSkeleton";
 import { useHeaderState } from "./useHeaderState";
 import { PRIMARY_LINKS, DISCOVER_LINKS } from "./headerActionsConfig";
 
@@ -88,9 +87,20 @@ export default function Header({
   const computedBackgroundClass = backgroundClassName ?? "bg-navbar-gradient";
   // Header is always fixed at top-0 - Enhanced with better shadows and borders
   const headerClassName = isHomeVariant
-    ? `fixed top-0 left-0 right-0 z-50 ${computedBackgroundClass} backdrop-blur-xl shadow-md border-b border-white/40 transition-all duration-300`
-    : `fixed top-0 left-0 right-0 z-50 ${computedBackgroundClass} backdrop-blur-xl shadow-md border-b border-sage/10 transition-all duration-300`;
+    ? `fixed top-0 left-0 right-0 z-50 fixed-compensate ${computedBackgroundClass} backdrop-blur-xl shadow-md border-b border-white/40 transition-all duration-300`
+    : `fixed top-0 left-0 right-0 z-50 fixed-compensate ${computedBackgroundClass} backdrop-blur-xl shadow-md border-b border-sage/10 transition-all duration-300`;
   const isSearchVisible = forceSearchOpen || isStackedLayout || showSearchBar;
+
+  useEffect(() => {
+    const setScrollbarWidth = () => {
+      const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.documentElement.style.setProperty("--scrollbar-width", `${scrollBarWidth}px`);
+    };
+
+    setScrollbarWidth();
+    window.addEventListener("resize", setScrollbarWidth);
+    return () => window.removeEventListener("resize", setScrollbarWidth);
+  }, []);
 
   const renderSearchInput = () => (
     <SearchInput
@@ -106,19 +116,18 @@ export default function Header({
   );
 
   // Padding classes
-  const currentPaddingClass = heroMode ? "py-0" : reducedPadding ? "py-2." : "py-2.";
+  const currentPaddingClass = heroMode ? "py-0" : reducedPadding ? "py-1" : "py-1";
   
   // Always render the real header, even if navigation state is not ready
   
   return (
     <>
       <header ref={headerRef} className={headerClassName} style={sf}>
-        <div className={`relative z-[1] mx-auto w-full max-w-[1700px] py-2 ${heroMode ? "px-4 sm:px-6 md:px-8 lg:px-10" : `px-4 sm:px-6 md:px-8 lg:px-10 ${currentPaddingClass}`} flex items-center h-full`}>
+        <div className={`relative z-[1] mx-auto w-full max-w-[1700px] ${heroMode ? "px-4 sm:px-6 md:px-8 lg:px-10" : `px-4 sm:px-6 md:px-8 lg:px-10 ${currentPaddingClass}`} flex items-center h-full`}>
           {/* Top row */}
           <div className="flex items-center justify-between gap-2 lg:gap-4 w-full h-full">
             {/* Logo */}
-            <OptimizedLink href="/" className="group flex-shrink-0 relative" aria-label="sayso Home">
-              <div className="absolute inset-0 bg-gradient-to-r from-sage/40 via-coral/30 to-sage/40 rounded-[20px] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10" />
+            <OptimizedLink href="/" className="group flex-shrink-0 relative flex items-center" aria-label="sayso Home">
               <div className="relative">
                 <Logo variant="default" className="relative drop-shadow-[0_4px_16px_rgba(0,0,0,0.12)] transition-all duration-300 group-hover:drop-shadow-[0_6px_20px_rgba(0,0,0,0.15)]" />
               </div>

@@ -11,7 +11,6 @@ import nextDynamic from "next/dynamic";
 import { ChevronUp, Lock } from "lucide-react";
 import Link from "next/link";
 import { usePredefinedPageTitle } from "../hooks/usePageTitle";
-import Header from "../components/Header/Header";
 import SearchInput from "../components/SearchInput/SearchInput";
 import { FilterState } from "../components/FilterModal/FilterModal";
 import ActiveFilterBadges from "../components/FilterActiveBadges/ActiveFilterBadges";
@@ -61,14 +60,14 @@ const Footer = nextDynamic(() => import("../components/Footer/Footer"), {
 const MemoizedBusinessRow = memo(BusinessRow);
 
 export default function Home() {
-    // Events and Specials
-    const { events, loading: eventsLoading } = useEvents();
+  // Events and Specials
+  const { events, loading: eventsLoading } = useEvents();
   usePredefinedPageTitle('home');
-  
+
   const searchParams = useSearchParams();
   const isGuestMode = searchParams.get('guest') === 'true';
   const { user } = useAuth();
-  
+
   // Scroll to top button state (mobile only)
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -316,20 +315,20 @@ export default function Home() {
     // This is the ONLY way hasUserInitiatedFilters should become true
     console.log('[Home] User toggled interest filter:', interestId);
     setHasUserInitiatedFilters(true);
-    
+
     setSelectedInterestIds(prev => {
       const newIds = prev.includes(interestId)
         ? prev.filter(id => id !== interestId)
         : [...prev, interestId];
-      
+
       console.log('[Home] Updated selectedInterestIds:', newIds);
-      
+
       // Immediately trigger refetch when category changes
       setTimeout(() => {
         refetchAllBusinesses();
         // Note: For You doesn't refetch here because it uses preferences, not filters
       }, 0);
-      
+
       return newIds;
     });
   };
@@ -381,27 +380,12 @@ export default function Home() {
   const hasTrendingBusinesses = trendingBusinesses.length > 0;
 
   return (
-    <>
-      <div className="min-h-dvh bg-off-white relative overflow-hidden" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+    <> {/* Header - positioned at top */}
 
-      {/* Header - positioned at top */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-navbar-bg">
-        <Header 
-          showSearch={true} 
-          variant="white"
-          backgroundClassName="bg-navbar-bg"
-          topPosition="top-0"
-          reducedPadding={true}
-          whiteText={true}
-        />
-      </div>
+      <HeroCarousel />
 
-      {/* Hero Carousel - Account for header height (est. 70px) + extra spacing */}
-      <div className="pt-[70px] sm:pt-[90px]">
-        <HeroCarousel />
-      </div>
 
-      <main className="bg-off-white relative pb-16 snap-y snap-proximity md:snap-mandatory">
+      <main className="bg-off-white relative pb-16 snap-y snap-proximity md:snap-mandatory min-h-dvh bg-off-white relative pt-20" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
         <div className="mx-auto w-full max-w-[2000px]">
           {/* Search functionality moved to hero carousel */}
 
@@ -428,226 +412,224 @@ export default function Home() {
           />
 
           <AnimatePresence mode="wait">
-          {isSearchActive ? (
-            /* Search Results View - Styled like Explore page */
-            <div
-              key="search-results"
-              className="py-3 sm:py-4"
-            >
-              <div className="pt-4 sm:pt-6 md:pt-10">
-                {allBusinessesLoading && (
-                  <div className="min-h-[60vh] bg-off-white flex items-center justify-center">
-                    <Loader size="lg" variant="wavy" color="sage" />
-                  </div>
-                )}
-                {!allBusinessesLoading && searchResults.length === 0 && (
-                  <div className="w-full sm:max-w-md lg:max-w-lg xl:max-w-xl sm:mx-auto relative z-10">
-                    <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[20px] overflow-hidden backdrop-blur-md shadow-md px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12 text-center space-y-4">
-                      <h2 className="text-h2 font-semibold text-white" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                        No results found
-                      </h2>
-                      <p className="text-body-sm text-white/80 max-w-[70ch] mx-auto leading-relaxed" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 400 }}>
-                        We couldn't find any businesses matching "{debouncedSearchQuery}". Try adjusting your search or check back soon.
-                      </p>
+            {isSearchActive ? (
+              /* Search Results View - Styled like Explore page */
+              <div
+                key="search-results"
+                className="py-3 sm:py-4"
+              >
+                <div className="pt-4 sm:pt-6 md:pt-10">
+                  {allBusinessesLoading && (
+                    <div className="min-h-[60vh] bg-off-white flex items-center justify-center">
+                      <Loader size="lg" variant="wavy" color="sage" />
                     </div>
-                  </div>
-                )}
-                {!allBusinessesLoading && searchResults.length > 0 && (
-                  <>
-                    {/* Show search status and List/Map toggle */}
-                    <div className="mb-4 px-2 flex items-center justify-between">
-                      <div className="text-sm text-charcoal/60" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                        Found {searchResults.length} {searchResults.length === 1 ? 'result' : 'results'} for "{debouncedSearchQuery}"
-                      </div>
-                      {/* List | Map Toggle */}
-                      <div className="flex items-center gap-1 bg-white/80 backdrop-blur-sm rounded-full p-1 border border-white/30 shadow-sm">
-                        <button
-                          onClick={() => setIsMapMode(false)}
-                          className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                            !isMapMode
-                              ? 'bg-sage text-white shadow-sm'
-                              : 'text-charcoal/70 hover:text-charcoal'
-                          }`}
-                          style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-                        >
-                          <List className="w-3.5 h-3.5" />
-                          List
-                        </button>
-                        <button
-                          onClick={() => setIsMapMode(true)}
-                          className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                            isMapMode
-                              ? 'bg-coral text-white shadow-sm'
-                              : 'text-charcoal/70 hover:text-charcoal'
-                          }`}
-                          style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-                        >
-                          <MapIcon className="w-3.5 h-3.5" />
-                          Map
-                        </button>
-                      </div>
-                    </div>
-                    {/* Map View or List View */}
-                    {isMapMode ? (
-                      <div className="w-full h-[calc(100vh-300px)] min-h-[500px] rounded-[20px] overflow-hidden border border-white/30 shadow-lg">
-                        <SearchResultsMap
-                          businesses={searchResults as any}
-                          userLocation={userLocation}
-                          onBusinessClick={(business) => {
-                            // Navigate to business page
-                            window.location.href = `/business/${business.slug || business.id}`;
-                          }}
-                        />
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-3 justify-items-center">
-                        {searchResults.map((business, index) => (
-                          <div key={business.id} className="list-none w-full flex justify-center">
-                            <BusinessCard business={business as any} compact inGrid={true} index={index} />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
-          ) : (
-            /* Default Home Page Content */
-            <div
-              key="curated-feed"
-              className="flex flex-col gap-8 sm:gap-10 md:gap-12 pt-8"
-            >
-              {/* ✅ For You Section - Only show when NOT filtered, NOT searching, AND prefs are ready */}
-              {!isFiltered && !isSearchActive && !prefsLoading && (
-                <div className="relative z-10 snap-start">
-                  {isGuestMode ? (
-                    /* Guest Mode: Show Locked For You Section */
-                    <div className="mx-auto w-full max-w-[2000px] px-2">
-                      <div className="relative border border-charcoal/10 rounded-[20px] p-6 sm:p-8 md:p-10 text-center space-y-3">
-                        <h3 className="text-lg sm:text-xl font-bold text-charcoal" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                          For You
-                        </h3>
-                        <p className="text-body sm:text-base text-charcoal/60 max-w-[60ch] mx-auto" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                          Sign up to unlock personalized recommendations tailored to your interests.
-                          <br />
-                          <Link
-                            href="/register"
-                            className="inline-block mt-2 font-semibold text-coral hover:underline"
-                            style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-                          >
-                            Create an account
-                          </Link>
-                          {' '}or{' '}
-                          <Link
-                            href="/login"
-                            className="inline-block font-semibold text-charcoal hover:underline"
-                            style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-                          >
-                            sign in
-                          </Link>
+                  )}
+                  {!allBusinessesLoading && searchResults.length === 0 && (
+                    <div className="w-full sm:max-w-md lg:max-w-lg xl:max-w-xl sm:mx-auto relative z-10">
+                      <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[20px] overflow-hidden backdrop-blur-md shadow-md px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12 text-center space-y-4">
+                        <h2 className="text-h2 font-semibold text-white" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                          No results found
+                        </h2>
+                        <p className="text-body-sm text-white/80 max-w-[70ch] mx-auto leading-relaxed" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 400 }}>
+                          We couldn't find any businesses matching "{debouncedSearchQuery}". Try adjusting your search or check back soon.
                         </p>
                       </div>
                     </div>
-                  ) : (
-                    /* Regular For You Section (Authenticated Users) */
+                  )}
+                  {!allBusinessesLoading && searchResults.length > 0 && (
                     <>
-                      {forYouLoading ? (
-                        <BusinessRowSkeleton title="For You Now" />
-                      ) : forYouError ? (
-                      <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral">
-                        Couldn't load personalized picks right now. We'll retry in the background.
+                      {/* Show search status and List/Map toggle */}
+                      <div className="mb-4 px-2 flex items-center justify-between">
+                        <div className="text-sm text-charcoal/60" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                          Found {searchResults.length} {searchResults.length === 1 ? 'result' : 'results'} for "{debouncedSearchQuery}"
+                        </div>
+                        {/* List | Map Toggle */}
+                        <div className="flex items-center gap-1 bg-white/80 backdrop-blur-sm rounded-full p-1 border border-white/30 shadow-sm">
+                          <button
+                            onClick={() => setIsMapMode(false)}
+                            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 ${!isMapMode
+                              ? 'bg-sage text-white shadow-sm'
+                              : 'text-charcoal/70 hover:text-charcoal'
+                              }`}
+                            style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                          >
+                            <List className="w-3.5 h-3.5" />
+                            List
+                          </button>
+                          <button
+                            onClick={() => setIsMapMode(true)}
+                            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 ${isMapMode
+                              ? 'bg-coral text-white shadow-sm'
+                              : 'text-charcoal/70 hover:text-charcoal'
+                              }`}
+                            style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                          >
+                            <MapIcon className="w-3.5 h-3.5" />
+                            Map
+                          </button>
+                        </div>
                       </div>
-                      ) : forYouBusinesses.length > 0 ? (
-                        <MemoizedBusinessRow 
-                          title="For You" 
-                          businesses={forYouBusinesses} 
-                          cta="See More" 
-                          href="/for-you" 
-                        />
+                      {/* Map View or List View */}
+                      {isMapMode ? (
+                        <div className="w-full h-[calc(100vh-300px)] min-h-[500px] rounded-[20px] overflow-hidden border border-white/30 shadow-lg">
+                          <SearchResultsMap
+                            businesses={searchResults as any}
+                            userLocation={userLocation}
+                            onBusinessClick={(business) => {
+                              // Navigate to business page
+                              window.location.href = `/business/${business.slug || business.id}`;
+                            }}
+                          />
+                        </div>
                       ) : (
-                        // ✅ Show helpful message when personalized query returns 0 (instead of hiding)
-                        <div className="mx-auto w-full max-w-[2000px] px-2 py-4">
-                          <div className="bg-sage/10 border border-sage/30 rounded-lg p-6 text-center">
-                            <p className="text-body text-charcoal/70 mb-2">
-                              We're still learning your taste
-                            </p>
-                            <p className="text-body-sm text-charcoal/70">
-                              Explore a bit and we'll personalize more recommendations for you.
-                            </p>
-                          </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-3 justify-items-center">
+                          {searchResults.map((business, index) => (
+                            <div key={business.id} className="list-none w-full flex justify-center">
+                              <BusinessCard business={business as any} compact inGrid={true} index={index} />
+                            </div>
+                          ))}
                         </div>
                       )}
                     </>
                   )}
                 </div>
-              )}
-              {/* Show skeleton while prefs are loading */}
-              {!isFiltered && !isSearchActive && prefsLoading && (
-                <div className="relative z-10 snap-start">
-                  <BusinessRowSkeleton title="For You Now" />
-                </div>
-              )}
+              </div>
+            ) : (
+              /* Default Home Page Content */
+              <div
+                key="curated-feed"
+                className="flex flex-col gap-8 sm:gap-10 md:gap-12 pt-8"
+              >
+                {/* ✅ For You Section - Only show when NOT filtered, NOT searching, AND prefs are ready */}
+                {!isFiltered && !isSearchActive && !prefsLoading && (
+                  <div className="relative z-10 snap-start">
+                    {isGuestMode ? (
+                      /* Guest Mode: Show Locked For You Section */
+                      <div className="mx-auto w-full max-w-[2000px] px-2">
+                        <div className="relative border border-charcoal/10 rounded-[20px] p-6 sm:p-8 md:p-10 text-center space-y-3">
+                          <h3 className="text-lg sm:text-xl font-bold text-charcoal" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                            For You
+                          </h3>
+                          <p className="text-body sm:text-base text-charcoal/60 max-w-[60ch] mx-auto" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                            Sign up to unlock personalized recommendations tailored to your interests.
+                            <br />
+                            <Link
+                              href="/register"
+                              className="inline-block mt-2 font-semibold text-coral hover:underline"
+                              style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                            >
+                              Create an account
+                            </Link>
+                            {' '}or{' '}
+                            <Link
+                              href="/login"
+                              className="inline-block font-semibold text-charcoal hover:underline"
+                              style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                            >
+                              sign in
+                            </Link>
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      /* Regular For You Section (Authenticated Users) */
+                      <>
+                        {forYouLoading ? (
+                          <BusinessRowSkeleton title="For You Now" />
+                        ) : forYouError ? (
+                          <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral">
+                            Couldn't load personalized picks right now. We'll retry in the background.
+                          </div>
+                        ) : forYouBusinesses.length > 0 ? (
+                          <MemoizedBusinessRow
+                            title="For You"
+                            businesses={forYouBusinesses}
+                            cta="See More"
+                            href="/for-you"
+                          />
+                        ) : (
+                          // ✅ Show helpful message when personalized query returns 0 (instead of hiding)
+                          <div className="mx-auto w-full max-w-[2000px] px-2 py-4">
+                            <div className="bg-sage/10 border border-sage/30 rounded-lg p-6 text-center">
+                              <p className="text-body text-charcoal/70 mb-2">
+                                We're still learning your taste
+                              </p>
+                              <p className="text-body-sm text-charcoal/70">
+                                Explore a bit and we'll personalize more recommendations for you.
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
+                {/* Show skeleton while prefs are loading */}
+                {!isFiltered && !isSearchActive && prefsLoading && (
+                  <div className="relative z-10 snap-start">
+                    <BusinessRowSkeleton title="For You Now" />
+                  </div>
+                )}
 
-              {/* ✅ Filtered Results Section - Show when filters are active */}
-              {isFiltered && (
+                {/* ✅ Filtered Results Section - Show when filters are active */}
+                {isFiltered && (
+                  <div className="relative z-10 snap-start">
+                    {allBusinessesLoading ? (
+                      <BusinessRowSkeleton title="Filtered Results" />
+                    ) : allBusinesses.length > 0 ? (
+                      <MemoizedBusinessRow
+                        title="Filtered Results"
+                        businesses={allBusinesses.slice(0, 10)}
+                        cta="See All"
+                        href="/for-you"
+                      />
+                    ) : (
+                      <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-charcoal/70">
+                        No businesses match your filters. Try adjusting your selections.
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Trending Section - Only show when not filtered */}
+                {!isFiltered && (
+                  <div className="relative z-10 snap-start">
+                    {trendingLoading && <BusinessRowSkeleton title="Trending Now" />}
+                    {!trendingLoading && hasTrendingBusinesses && (
+                      <MemoizedBusinessRow title="Trending Now" businesses={trendingBusinesses} cta="See More" href="/trending" />
+                    )}
+                    {!trendingLoading && !hasTrendingBusinesses && !trendingError && (
+                      <MemoizedBusinessRow title="Trending Now" businesses={[]} cta="See More" href="/trending" />
+                    )}
+                    {trendingError && !trendingLoading && (
+                      <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral">
+                        Trending businesses are still loading. Refresh to try again.
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Events & Specials */}
+                <div className="relative z-10 snap-start">
+                  <EventsSpecials
+                    events={events.length > 0 ? events : []}
+                    loading={eventsLoading}
+                  />
+                </div>
+
+                {/* Community Highlights */}
                 <div className="relative z-10 snap-start">
                   {allBusinessesLoading ? (
-                    <BusinessRowSkeleton title="Filtered Results" />
-                  ) : allBusinesses.length > 0 ? (
-                    <MemoizedBusinessRow 
-                      title="Filtered Results" 
-                      businesses={allBusinesses.slice(0, 10)} 
-                      cta="See All" 
-                      href="/for-you" 
-                    />
+                    <CommunityHighlightsSkeleton reviewerCount={4} businessCount={4} />
                   ) : (
-                    <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-charcoal/70">
-                      No businesses match your filters. Try adjusting your selections.
-                    </div>
+                    <CommunityHighlights
+                      businessesOfTheMonth={featuredByCategory}
+                      variant="reviews"
+                    />
                   )}
                 </div>
-              )}
-
-              {/* Trending Section - Only show when not filtered */}
-              {!isFiltered && (
-                <div className="relative z-10 snap-start">
-                  {trendingLoading && <BusinessRowSkeleton title="Trending Now" />}
-                  {!trendingLoading && hasTrendingBusinesses && (
-                    <MemoizedBusinessRow title="Trending Now" businesses={trendingBusinesses} cta="See More" href="/trending" />
-                  )}
-                  {!trendingLoading && !hasTrendingBusinesses && !trendingError && (
-                    <MemoizedBusinessRow title="Trending Now" businesses={[]} cta="See More" href="/trending" />
-                  )}
-                  {trendingError && !trendingLoading && (
-                    <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral">
-                      Trending businesses are still loading. Refresh to try again.
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Events & Specials */}
-              <div className="relative z-10 snap-start">
-                <EventsSpecials 
-                  events={events.length > 0 ? events : []} 
-                  loading={eventsLoading}
-                />
               </div>
-
-              {/* Community Highlights */}
-              <div className="relative z-10 snap-start">
-                {allBusinessesLoading ? (
-                  <CommunityHighlightsSkeleton reviewerCount={4} businessCount={4} />
-                ) : (
-                  <CommunityHighlights
-                    businessesOfTheMonth={featuredByCategory}
-                    variant="reviews"
-                  />
-                )}
-              </div>
-            </div>
-          )}
+            )}
           </AnimatePresence>
         </div>
       </main>
@@ -663,7 +645,6 @@ export default function Home() {
           <ChevronUp className="w-5 h-5 sm:w-6 sm:h-6" />
         </button>
       )}
-      </div>
     </>
   );
 }

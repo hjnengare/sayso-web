@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../contexts/AuthContext";
 import { LogOut, Trash2, ChevronRight } from "lucide-react";
-import Header from "../components/Header/Header";
 import Link from "next/link";
 
 export default function SettingsPage() {
@@ -74,14 +73,6 @@ export default function SettingsPage() {
 
   return (
     <>
-      <Header 
-        showSearch={false}
-        variant="white"
-        backgroundClassName="bg-navbar-bg"
-        topPosition="top-0"
-        reducedPadding={true}
-        whiteText={true}
-      />
       <div className="min-h-screen bg-off-white pt-20 sm:pt-24 pb-12 px-4 sm:px-6 md:px-8 lg:px-10">
         <div className="w-full max-w-md mx-auto">
           {/* Breadcrumb Navigation */}

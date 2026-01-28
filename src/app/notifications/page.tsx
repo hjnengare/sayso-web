@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bell, Check, X, MessageSquare, Star, Heart, TrendingUp, Clock, ChevronRight, ChevronUp } from "lucide-react";
-import Header from "../components/Header/Header";
 import Footer from "../components/Footer/Footer";
 import { PageLoader } from "../components/Loader";
 import { usePredefinedPageTitle } from "../hooks/usePageTitle";
@@ -82,15 +81,6 @@ export default function NotificationsPage() {
         fontFamily: '"Urbanist", -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
       }}
     >
-      <Header
-        showSearch={true}
-        variant="frosty"
-        backgroundClassName="bg-navbar-bg"
-        searchLayout="floating"
-        topPosition="top-0"
-        reducedPadding={true}
-        whiteText={true}
-      />
 
       <div className="relative">
         <div className="pt-20 sm:pt-24 pb-12 sm:pb-16 md:pb-20">

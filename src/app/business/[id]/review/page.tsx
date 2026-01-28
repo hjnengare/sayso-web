@@ -16,7 +16,6 @@ import BusinessInfoAside from "../../../components/BusinessInfo/BusinessInfoAsid
 import BusinessInfoModal, { BusinessInfo } from "../../../components/BusinessInfo/BusinessInfoModal";
 import { TestimonialCarousel } from "../../../components/Business/TestimonialCarousel";
 import Footer from "../../../components/Footer/Footer";
-import Header from "../../../components/Header/Header";
 import AnimatedElement from "../../../components/Animations/AnimatedElement";
 import WavyTypedTitle from "../../../../components/Animations/WavyTypedTitle";
 
@@ -468,14 +467,6 @@ function WriteReviewContent() {
         }}
       >
         {/* Main Header */}
-        <Header
-          showSearch={false}
-          variant="white"
-          backgroundClassName="bg-navbar-bg"
-          topPosition="top-0"
-          reducedPadding={true}
-          whiteText={true}
-        />
 
         <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
           <div className="pt-20 sm:pt-24">

@@ -24,7 +24,6 @@ import {
     Trash2,
 } from "lucide-react";
 import { PageLoader } from "../../../components/Loader";
-import Header from "../../../components/Header/Header";
 import { useRequireBusinessOwner } from "../../../hooks/useBusinessAccess";
 import { getBrowserSupabase } from "../../../lib/supabase/client";
 import { ConfirmationDialog } from "@/components/molecules/ConfirmationDialog";
@@ -705,14 +704,6 @@ export default function BusinessEditPage() {
                 }}
             >
                 {/* Main Header */}
-                <Header
-                  showSearch={false}
-                  variant="white"
-                  backgroundClassName="bg-navbar-bg"
-                  topPosition="top-0"
-                  reducedPadding={true}
-                  whiteText={true}
-                />
 
                 <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
                     <div className="pt-20 sm:pt-24">

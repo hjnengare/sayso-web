@@ -32,8 +32,6 @@ import {
 } from "../../components/BusinessDetail";
 import BusinessLocation from "../../components/BusinessDetail/BusinessLocation";
 import BusinessOwnedEventsSection from "../../components/BusinessDetail/BusinessOwnedEventsSection";
-import Header from "../../components/Header/Header";
-
 export default function BusinessProfilePage() {
     const params = useParams();
     const router = useRouter();
@@ -250,14 +248,6 @@ export default function BusinessProfilePage() {
     if (isLoading) {
         return (
             <div className="min-h-dvh bg-off-white">
-                <Header
-                    showSearch={false}
-                    variant="white"
-                    backgroundClassName="bg-navbar-bg"
-                    topPosition="top-0"
-                    reducedPadding={true}
-                    whiteText={true}
-                />
                 <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
                     <div className="pt-20 sm:pt-24">
                         <section className="relative" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
@@ -546,14 +536,6 @@ export default function BusinessProfilePage() {
             }}
         >
                 {/* Main Header */}
-                <Header
-                    showSearch={false}
-                    variant="white"
-                    backgroundClassName="bg-navbar-bg"
-                    topPosition="top-0"
-                    reducedPadding={true}
-                    whiteText={true}
-                />
 
                 <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
                     <div className="pt-20 sm:pt-24">

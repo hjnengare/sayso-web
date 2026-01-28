@@ -1,0 +1,43 @@
+"use client";
+
+import { useMemo } from "react";
+import { usePathname } from "next/navigation";
+import Header from "./Header";
+
+const EXCLUDED_ROUTES = [
+  "/login",
+  "/register",
+  "/onboarding",
+  "/interests",
+  "/subcategories",
+  "/deal-breakers",
+  "/complete",
+  "/forgot-password",
+  "/reset-password",
+  "/verify-email",
+  "/privacy/sayso%20privacy%20policy%20%26%20terms%20of%20use.pdf",
+  "/terms/sayso%20privacy%20policy%20%26%20terms%20of%20use.pdf",
+  "/verify-email",
+];
+
+export default function GlobalHeader() {
+  const pathname = usePathname();
+
+  const shouldHide = useMemo(() => {
+    if (!pathname) return false;
+    return EXCLUDED_ROUTES.some(route => pathname === route || pathname.startsWith(route + "/"));
+  }, [pathname]);
+
+  if (shouldHide) return null;
+
+  return (
+    <Header
+      showSearch={true}
+      variant="white"
+      backgroundClassName="bg-navbar-bg"
+      topPosition="top-0"
+      reducedPadding={true}
+      whiteText={true}
+    />
+  );
+}

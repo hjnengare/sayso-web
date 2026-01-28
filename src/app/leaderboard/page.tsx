@@ -8,7 +8,6 @@ import { useSearchParams } from "next/navigation";
 import nextDynamic from "next/dynamic";
 import { ChevronRight, Award } from "lucide-react";
 import EmailVerificationGuard from "../components/Auth/EmailVerificationGuard";
-import Header from "../components/Header/Header";
 import LeaderboardPodium from "../components/Leaderboard/LeaderboardPodium";
 import LeaderboardList from "../components/Leaderboard/LeaderboardList";
 import LeaderboardTitle from "../components/Leaderboard/LeaderboardTitle";
@@ -187,14 +186,6 @@ function LeaderboardPage() {
   return (
     <EmailVerificationGuard>
       <div className="min-h-dvh bg-off-white">
-        <Header
-          showSearch={true}
-          variant="white"
-          backgroundClassName="bg-navbar-bg"
-          topPosition="top-0"
-          reducedPadding={true}
-          whiteText={true}
-        />
 
         <motion.div 
           className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white"

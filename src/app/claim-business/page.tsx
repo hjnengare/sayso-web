@@ -17,7 +17,6 @@ import { ChevronRight } from "lucide-react";
 import { PageLoader, Loader } from "../components/Loader";
 import { ClaimModal } from "../components/BusinessClaim/ClaimModal";
 import Link from "next/link";
-import Header from "../components/Header/Header";
 import { Suspense } from "react";
 import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
 
@@ -194,14 +193,6 @@ function ClaimBusinessPageContent() {
   return (
     <div className="min-h-dvh bg-off-white">
       {/* Header */}
-      <Header
-        showSearch={false}
-        variant="white"
-        backgroundClassName="bg-navbar-bg"
-        topPosition="top-0"
-        reducedPadding={true}
-        whiteText={true}
-      />
 
       <main className="pt-20 sm:pt-24 pb-28">
         <div className="mx-auto w-full max-w-[2000px] px-2">

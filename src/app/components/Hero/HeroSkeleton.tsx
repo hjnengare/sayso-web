@@ -10,13 +10,13 @@ export default function HeroSkeleton() {
       </div>
 
       {/* Hero Section Skeleton */}
-      <div className="relative w-full px-0 sm:px-2 py-2 md:px-2">
-        <div className="relative h-[65vh] sm:h-[70vh] lg:h-[80vh] w-full overflow-hidden outline-none rounded-none sm:rounded-[20px] min-h-[400px] shadow-md">
+      <div className="relative w-full px-0 py-2">
+        <div className="relative h-[65vh] sm:h-[70vh] lg:h-[80vh] w-full overflow-hidden outline-none rounded-none min-h-[400px] shadow-md">
           {/* Background shimmer effect */}
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 rounded-none sm:rounded-[20px] animate-pulse" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 rounded-none animate-pulse" />
           
           {/* Overlay gradient */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-black/20 to-transparent rounded-none sm:rounded-[20px]" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-black/20 to-transparent rounded-none" />
 
           {/* Centered content skeleton */}
           <div className="absolute inset-0 z-20 flex items-center justify-center w-full">

@@ -3,7 +3,6 @@
 import { Suspense, useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import Header from "../../../components/Header/Header";
 import Footer from "../../../components/Footer/Footer";
 import BusinessCard from "../../../components/BusinessCard/BusinessCard";
 import { useBusinesses } from "../../../hooks/useBusinesses";
@@ -241,7 +240,6 @@ function CategoryDetailContent() {
   if (!category && interests.length > 0) {
     return (
       <div className="min-h-dvh bg-off-white">
-        <Header showSearch={true} variant="white" backgroundClassName="bg-navbar-bg" />
         <main className="pt-20 sm:pt-24 pb-28">
           <div className="mx-auto w-full max-w-[2000px] px-4 sm:px-6 text-center py-20">
             <h1 className="text-h2 font-semibold text-charcoal mb-4" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
@@ -263,14 +261,6 @@ function CategoryDetailContent() {
 
   return (
     <div className="min-h-dvh bg-off-white">
-      <Header
-        showSearch={true}
-        variant="white"
-        backgroundClassName="bg-navbar-bg"
-        topPosition="top-0"
-        reducedPadding={true}
-        whiteText={true}
-      />
 
       <main className="pt-20 sm:pt-24 pb-28">
         <div className="mx-auto w-full max-w-[2000px] px-4 sm:px-6">

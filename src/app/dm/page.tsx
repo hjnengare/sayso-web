@@ -13,7 +13,6 @@ import {
   Search,
   MoreVertical,
 } from "lucide-react";
-import Header from "../components/Header/Header";
 import Footer from "../components/Footer/Footer";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
@@ -303,14 +302,6 @@ export default function DMPage() {
   return (
     <div className="min-h-dvh bg-off-white flex flex-col overflow-hidden" style={{ fontFamily: "'Urbanist', system-ui, sans-serif" }}>
       <div className="flex-shrink-0">
-        <Header
-          showSearch={false}
-          variant="white"
-          backgroundClassName="bg-navbar-bg"
-          topPosition="top-0"
-          reducedPadding={true}
-          whiteText={true}
-        />
       </div>
 
       <div className="flex-1 flex overflow-hidden min-h-0 pt-16 sm:pt-20 md:pt-20">

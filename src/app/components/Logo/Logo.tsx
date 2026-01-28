@@ -14,10 +14,10 @@ export default function Logo({
   className = ""
 }: LogoProps) {
   const containerClasses = {
-    default: "h-14 sm:h-16 md:h-14 lg:h-18",
-    mobile: "h-12",
-    footer: "h-10 sm:h-11 lg:h-12",
-    onboarding: "h-16 sm:h-18 md:h-20 lg:h-24"
+    default: "h-24",
+    mobile: "h-14",
+    footer: "h-16",
+    onboarding: "h-20"
   };
 
   const containerGapClass =
@@ -35,7 +35,7 @@ export default function Logo({
           fill
           className="object-contain object-center"
           priority
-          sizes="(max-width: 640px) 100px, (max-width: 768px) 130px, (max-width: 1024px) 160px, 180px"
+          sizes="(max-width: 640px) 120px, (max-width: 768px) 150px, (max-width: 1024px) 180px, 220px"
         />
       </div>
 

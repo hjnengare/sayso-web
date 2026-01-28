@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ChevronRight } from 'lucide-react';
-import Header from '../../components/Header/Header';
 import Footer from '../../components/Footer/Footer';
 import BusinessCard from '../../components/BusinessCard/BusinessCard';
 import { useState, useMemo } from 'react';
@@ -50,7 +49,6 @@ export default function CategoryPageClient({
 
   return (
     <div className="min-h-dvh bg-off-white">
-      <Header showSearch={true} variant="white" backgroundClassName="bg-navbar-bg" />
       
       <main className="pt-20 sm:pt-24 pb-16 px-4 sm:px-6 md:px-8">
         <motion.div

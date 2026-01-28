@@ -10,6 +10,7 @@ import { SavedItemsProvider } from "./contexts/SavedItemsContext";
 import { NotificationsProvider } from "./contexts/NotificationsContext";
 import { MessagesProvider } from "./contexts/MessagesContext";
 import PageTransitionProvider from "./components/Providers/PageTransitionProvider";
+import GlobalHeader from "./components/Header/GlobalHeader";
 
 // Lazy load non-critical components for faster initial load
 const WebVitals = dynamicImport(() => import("./components/Performance/WebVitals"));
@@ -144,8 +145,9 @@ export default function RootLayout({
               <SavedItemsProvider>
                 <NotificationsProvider>
                   <MessagesProvider>
+                    <BusinessNotifications />
+                    <GlobalHeader />
                     <PageTransitionProvider>
-                      <BusinessNotifications />
                       {children}
                     </PageTransitionProvider>
                   </MessagesProvider>

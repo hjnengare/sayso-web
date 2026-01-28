@@ -8,7 +8,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "../contexts/ToastContext";
 import { useAuth } from "../contexts/AuthContext";
 import { PageLoader } from "../components/Loader";
-import Header from "../components/Header/Header";
 import dynamic from "next/dynamic";
 import { authStyles } from "../components/Auth/Shared/authStyles";
 import { Urbanist } from "next/font/google";
@@ -525,14 +524,6 @@ export default function AddBusinessPage() {
                     fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif',
                 }}
             >
-                <Header
-                    showSearch={false}
-                    variant="white"
-                    backgroundClassName="bg-navbar-bg"
-                    topPosition="top-0"
-                    reducedPadding={true}
-                    whiteText={true}
-                />
 
                 <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
                     <div className="pt-20 sm:pt-24 pb-28">
