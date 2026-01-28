@@ -138,7 +138,7 @@ export default function Header({
             </OptimizedLink>
 
             {/* Desktop Navigation - Hidden on mobile */}
-            <div className="hidden md:flex flex-1">
+            <div className="hidden lg:flex flex-1">
               <DesktopNav
                 whiteText={whiteText}
                 isGuest={isGuest}
@@ -172,7 +172,7 @@ export default function Header({
             </div>
 
             {/* Mobile Navigation - Visible only on mobile */}
-            <div className="flex md:hidden items-center gap-2 ml-auto">
+            <div className="flex lg:hidden items-center gap-2 ml-auto">
               {/* Notifications - Authenticated users only (guests use menu drawer) */}
               {!isGuest && (
                 <OptimizedLink

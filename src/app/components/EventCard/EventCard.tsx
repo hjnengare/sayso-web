@@ -179,23 +179,14 @@ export default function EventCard({ event, index = 0 }: EventCardProps) {
       }}
     >
       <article
-        className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-visible sm:h-auto flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-md w-full"
-        style={
-          {
-            width: "100%",
-            maxWidth: "540px",
-            "--width": "540",
-            "--height": "600",
-          } as CSSProperties
-        }
+        className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden group cursor-pointer w-full flex flex-col border border-white/60 backdrop-blur-xl shadow-md transition-all duration-300 hover:border-white/80 hover:-translate-y-1 hover:shadow-lg md:w-[340px] md:h-[416px]"
+        style={{ maxWidth: "540px" } as CSSProperties}
       >
          
           {/* MEDIA - Full bleed with premium overlay */}
-          <div className="relative px-1 pt-1 pb-0 overflow-hidden h-[300px] lg:h-[260px] z-10 flex-shrink-0">
-            <div 
-              className="relative w-full h-full"
-            >
-              <div className="relative w-full h-full overflow-hidden flex items-center justify-center bg-gradient-to-br from-off-white/95 to-off-white/85 rounded-[12px] shadow-sm">
+          <div className="relative w-full h-[260px] lg:h-[260px] overflow-hidden rounded-[12px] z-10 flex-shrink-0 p-1">
+            <div className="relative w-full h-full overflow-hidden">
+              <div className="relative w-full h-full overflow-hidden flex items-center justify-center bg-gradient-to-br from-off-white/95 to-off-white/85">
                 {showLoadingOverlay && (
                   <div className="absolute inset-0 bg-charcoal/5 animate-pulse z-10 flex items-center justify-center">
                     <span className="w-10 h-10 border-2 border-white/50 border-t-navbar-bg rounded-full animate-spin" aria-hidden />
@@ -228,14 +219,16 @@ export default function EventCard({ event, index = 0 }: EventCardProps) {
           </div>
 
           {/* CONTENT - Minimal, premium spacing */}
-          <div className="px-4 py-4 sm:pt-4 sm:pb-6 flex flex-col justify-between bg-gradient-to-br from-sage/12 via-sage/8 to-sage/10 gap-2 sm:gap-4 rounded-b-[12px]">
-            <div className="flex flex-col items-center text-center gap-3">
+          <div className="px-4 py-4 bg-gradient-to-b from-card-bg/95 to-card-bg flex flex-col gap-2 rounded-b-[12px]">
+            <div className="flex flex-col gap-2">
               <h3
-                className="text-h2 sm:text-h1 font-bold leading-tight text-charcoal text-center truncate"
+                className="text-base sm:text-lg font-bold text-charcoal leading-tight line-clamp-1 transition-colors duration-300 group-hover:text-navbar-bg/90"
                 style={{
                   fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
                   fontWeight: 700,
-                  letterSpacing: '-0.01em'
+                  WebkitFontSmoothing: 'antialiased',
+                  MozOsxFontSmoothing: 'grayscale',
+                  textRendering: 'optimizeLegibility',
                 }}
               >
                 {event.title}
@@ -243,14 +236,10 @@ export default function EventCard({ event, index = 0 }: EventCardProps) {
 
               <div className="w-full">
                 <p
-                  className="text-caption sm:text-xs text-charcoal/60 leading-relaxed text-center overflow-hidden text-ellipsis line-clamp-2"
+                  className="text-sm text-charcoal/70 line-clamp-2 leading-snug"
                   style={{
                     fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                    fontWeight: 600,
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                    wordBreak: 'break-word',
+                    fontWeight: 400,
                   }}
                   title={event.description || undefined}
                 >
@@ -261,14 +250,16 @@ export default function EventCard({ event, index = 0 }: EventCardProps) {
 
             <button
               onClick={handlePrimaryAction}
-              className="w-full min-h-[44px] py-3 px-4 rounded-full flex items-center justify-center gap-2 text-off-white bg-navbar-bg/90 border border-navbar-bg/70 shadow-sm hover:bg-navbar-bg transition-colors group"
+              className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-br from-navbar-bg to-navbar-bg/90 text-white rounded-full text-sm font-semibold hover:from-navbar-bg/90 hover:to-navbar-bg/80 active:scale-95 transition-all duration-200 shadow-md border border-sage/50 focus:outline-none focus:ring-2 focus:ring-sage/40"
               aria-label="Learn more about this event"
               title="View event details"
+              style={{
+                fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                fontWeight: 600,
+              }}
             >
-              <span className="text-sm font-semibold" style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}>
-                Learn More
-              </span>
-              <ArrowRight className="w-5 h-5 sm:w-[18px] sm:h-[18px] transition-transform duration-200 group-hover:translate-x-1 text-off-white" />
+              <span>Go to business</span>
+              <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </article>

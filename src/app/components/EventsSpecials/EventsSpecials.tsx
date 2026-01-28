@@ -131,27 +131,18 @@ export default function EventsSpecials({
           </div>
 
           <div className="pt-2">
-            {/* Mobile: Scrollable section with skeleton */}
-            <div className="md:hidden">
-              <ScrollableSection>
-                <div className="flex gap-3 items-stretch">
-                  {Array.from({ length: 4 }).map((_, index) => (
-                    <div key={index} className="snap-start snap-always flex-shrink-0 w-[100vw] list-none flex">
-                      <EventCardSkeleton />
-                    </div>
-                  ))}
-                </div>
-              </ScrollableSection>
-            </div>
-            
-            {/* Desktop: Grid layout with skeleton */}
-            <div className="hidden md:grid md:grid-cols-2 xl:grid-cols-4 gap-3">
-              {Array.from({ length: 4 }).map((_, index) => (
-                <div key={index} className="list-none flex">
-                  <EventCardSkeleton />
-                </div>
-              ))}
-            </div>
+            <ScrollableSection>
+              <div className="flex gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2 items-stretch py-2 overflow-y-hidden">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto min-w-[clamp(220px,18vw,320px)] list-none flex"
+                  >
+                    <EventCardSkeleton />
+                  </div>
+                ))}
+              </div>
+            </ScrollableSection>
           </div>
         </div>
       </section>
@@ -163,7 +154,7 @@ export default function EventsSpecials({
   const displayEvents = aggregateEvents([
     ...(businessEvents || []),
     ...(events || []),
-  ]).slice(0, 4); // Limit to first 4 events after consolidation
+  ]).slice(0, 10); // Limit to first 10 events after consolidation
 
   // Only show if we have real events
   if (!loadingBusinessEvents && displayEvents.length === 0) {
@@ -210,27 +201,18 @@ export default function EventsSpecials({
         </div>
 
         <div className="pt-2">
-          {/* Mobile: Scrollable section with one card at a time */}
-          <div className="md:hidden">
-            <ScrollableSection>
-              <div className="flex gap-3 items-stretch">
-                {displayEvents.map((event, index) => (
-                  <div key={event.id} className="snap-start snap-always flex-shrink-0 w-[100vw] list-none flex">
-                    <EventCard event={event} index={index} />
-                  </div>
-                ))}
-              </div>
-            </ScrollableSection>
-          </div>
-          
-          {/* Desktop: Grid layout */}
-          <div className="hidden md:grid md:grid-cols-2 xl:grid-cols-4 gap-3">
-            {displayEvents.map((event, index) => (
-              <div key={event.id} className="list-none flex">
-                <EventCard event={event} index={index} />
-              </div>
-            ))}
-          </div>
+          <ScrollableSection>
+            <div className="flex gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2 items-stretch py-2 overflow-y-hidden">
+              {displayEvents.map((event, index) => (
+                <div
+                  key={event.id}
+                  className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto min-w-[clamp(220px,18vw,320px)] list-none flex"
+                >
+                  <EventCard event={event} index={index} />
+                </div>
+              ))}
+            </div>
+          </ScrollableSection>
         </div>
       </div>
     </section>

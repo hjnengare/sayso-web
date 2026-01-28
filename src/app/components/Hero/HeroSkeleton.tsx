@@ -11,19 +11,19 @@ export default function HeroSkeleton() {
 
       {/* Hero Section Skeleton */}
       <div className="relative w-full px-0 sm:px-2 lg:px-0 py-2 md:px-2 pt-[70px] md:pt-[72px] lg:pt-[72px]">
-        <div className="relative h-[100vh] sm:h-[70vh] lg:h-[100vh] w-full overflow-hidden outline-none rounded-none sm:rounded-[12px] lg:rounded-none min-h-[400px] shadow-md">
+        <div className="relative h-[100vh] sm:h-[70vh] md:h-[100vh] lg:h-[100vh] w-full overflow-hidden outline-none rounded-none sm:rounded-[12px] md:rounded-none lg:rounded-none min-h-[400px] shadow-md">
           {/* Background shimmer effect */}
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 rounded-none sm:rounded-[12px] lg:rounded-none animate-pulse" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 rounded-none sm:rounded-[12px] md:rounded-none lg:rounded-none animate-pulse" />
           
           {/* Liquid Glass Ambient Lighting */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-sage/10 pointer-events-none rounded-none sm:rounded-[12px] lg:rounded-none" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(255,255,255,0.15)_0%,_transparent_70%)] pointer-events-none rounded-none sm:rounded-[12px] lg:rounded-none" />
-          <div className="absolute inset-0 backdrop-blur-[1px] bg-off-white/5 mix-blend-overlay pointer-events-none rounded-none sm:rounded-[12px] lg:rounded-none" />
+          <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-sage/10 pointer-events-none rounded-none sm:rounded-[12px] md:rounded-none lg:rounded-none" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(255,255,255,0.15)_0%,_transparent_70%)] pointer-events-none rounded-none sm:rounded-[12px] md:rounded-none lg:rounded-none" />
+          <div className="absolute inset-0 backdrop-blur-[1px] bg-off-white/5 mix-blend-overlay pointer-events-none rounded-none sm:rounded-[12px] md:rounded-none lg:rounded-none" />
 
           {/* Overlay gradient */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent rounded-none sm:rounded-[12px] lg:rounded-none" />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/40 rounded-none sm:rounded-[12px] lg:rounded-none" />
-          <div className="absolute inset-0 bg-black/20 rounded-none sm:rounded-[12px] lg:rounded-none" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent rounded-none sm:rounded-[12px] md:rounded-none lg:rounded-none" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/40 rounded-none sm:rounded-[12px] md:rounded-none lg:rounded-none" />
+          <div className="absolute inset-0 bg-black/20 rounded-none sm:rounded-[12px] md:rounded-none lg:rounded-none" />
 
           {/* Centered content skeleton */}
           <div className="absolute inset-0 z-20 flex items-center justify-center w-full">

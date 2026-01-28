@@ -14,12 +14,50 @@ export default function Footer() {
     setMounted(true);
   }, []);
 
-  const links = [
-    { name: "About", href: "/about" },
-    { name: "Privacy", href: "/privacy/sayso%20privacy%20policy%20%26%20terms%20of%20use.pdf" },
-    { name: "Terms", href: "/privacy/sayso%20privacy%20policy%20%26%20terms%20of%20use.pdf" },
-    { name: "Contact", href: "/contact" },
-    { name: "Support", href: "mailto:info@sayso.com" },
+  const linkSections = [
+    {
+      title: "Discover",
+      links: [
+        { name: "Home", href: "/home" },
+        { name: "Explore", href: "/explore" },
+        { name: "Trending", href: "/trending" },
+        { name: "Events & Specials", href: "/events-specials" },
+        { name: "Leaderboard", href: "/leaderboard" },
+      ],
+    },
+    {
+      title: "Community",
+      links: [
+        { name: "Reviews", href: "/discover/reviews" },
+        { name: "For You", href: "/for-you" },
+        { name: "Saved", href: "/saved" },
+        { name: "Messages", href: "/messages" },
+      ],
+    },
+    {
+      title: "Business",
+      links: [
+        { name: "Add Business", href: "/add-business" },
+        { name: "Claim Business", href: "/claim-business" },
+        { name: "Business Login", href: "/business/login" },
+        { name: "Business Register", href: "/business/register" },
+      ],
+    },
+    {
+      title: "Company",
+      links: [
+        { name: "About", href: "/about" },
+        { name: "Contact", href: "/contact" },
+        { name: "Support", href: "mailto:info@sayso.com" },
+      ],
+    },
+    {
+      title: "Legal",
+      links: [
+        { name: "Privacy", href: "/privacy/sayso%20privacy%20policy%20%26%20terms%20of%20use.pdf" },
+        { name: "Terms", href: "/privacy/sayso%20privacy%20policy%20%26%20terms%20of%20use.pdf" },
+      ],
+    },
   ];
 
   return (
@@ -33,33 +71,42 @@ export default function Footer() {
         <div className="border-t border-white/10 py-8 sm:py-10">
           <div className="flex flex-col items-start gap-6">
             {/* Brand */}
-            <div className="flex flex-col items-start gap-4 text-left">
+            <div className="flex flex-col items-start gap-3 text-left">
               <Link href="/" className="flex-shrink-0 flex items-center hover:opacity-80 transition-opacity">
                 <Logo variant="footer" />
               </Link>
-              <p className="font-urbanist text-xs sm:text-sm text-off-white/70 text-left">
+              <p className="font-urbanist text-sm sm:text-base text-off-white/80 font-semibold text-left max-w-[46ch]">
                 Discover trusted local businesses, events, and community favorites.
               </p>
             </div>
 
             {/* Bottom row */}
-            <div className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <nav aria-label="Footer" className="w-full sm:w-auto">
-                <ul className="flex flex-wrap items-center gap-x-6 gap-y-2 justify-center sm:justify-start">
-                  {links.map((link) => (
-                    <li key={link.name}>
-                      <Link
-                        href={link.href}
-                        className="font-urbanist text-xs sm:text-sm text-off-white/70 hover:text-off-white transition-colors"
-                      >
-                        {link.name}
-                      </Link>
-                    </li>
+            <div className="w-full flex flex-col gap-8">
+              <nav aria-label="Footer" className="w-full">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 sm:gap-8">
+                  {linkSections.map((section) => (
+                    <div key={section.title} className="flex flex-col gap-2">
+                      <p className="font-urbanist text-xs sm:text-sm uppercase tracking-[0.2em] text-off-white/60 font-bold">
+                        {section.title}
+                      </p>
+                      <ul className="flex flex-col gap-2">
+                        {section.links.map((link) => (
+                          <li key={link.name}>
+                            <Link
+                              href={link.href}
+                              className="font-urbanist text-sm sm:text-base text-off-white/80 hover:text-off-white transition-colors font-semibold"
+                            >
+                              {link.name}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </nav>
 
-              <p className="font-urbanist text-xs sm:text-sm text-off-white/80 font-semibold text-center sm:text-right">
+              <p className="font-urbanist text-xs sm:text-sm text-off-white/80 font-bold text-center sm:text-right">
                 &copy; {mounted ? currentYear : 2025} sayso
               </p>
             </div>

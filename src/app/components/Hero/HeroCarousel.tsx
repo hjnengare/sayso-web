@@ -465,30 +465,30 @@ export default function HeroCarousel() {
   return (
     <>
       {/* Hero Container with padding */}
-      <div className="relative w-full px-0 sm:px-2 lg:px-0 py-2 md:px-2 pt-[70px] md:pt-[72px] lg:pt-[72px]">
+      <div className="relative w-full px-0 lg:px-0 py-2 pt-[70px] md:pt-[72px] lg:pt-[72px]">
         {/* Hero Section with rounded corners - 75vh responsive height */}
         <section
           ref={containerRef as React.RefObject<HTMLElement>}
-          className="relative h-[100vh] sm:h-[70vh] lg:h-[100vh] w-full overflow-hidden outline-none rounded-none sm:rounded-[12px] lg:rounded-none min-h-[400px] shadow-md"
+          className="relative h-[100vh] md:h-[100vh] lg:h-[100vh] w-full overflow-hidden outline-none rounded-none md:rounded-none lg:rounded-none min-h-[400px] shadow-md"
           aria-label="Hero carousel"
           tabIndex={0}
           style={{ fontFamily: FONT_STACK }}
         >
           {/* Liquid Glass Ambient Lighting */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-sage/10 pointer-events-none rounded-none sm:rounded-[12px] lg:rounded-none" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(255,255,255,0.15)_0%,_transparent_70%)] pointer-events-none rounded-none sm:rounded-[12px] lg:rounded-none" />
-      <div className="absolute inset-0 backdrop-blur-[1px] bg-off-white/5 mix-blend-overlay pointer-events-none rounded-none sm:rounded-[12px] lg:rounded-none" />
+      <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-sage/10 pointer-events-none rounded-none md:rounded-none lg:rounded-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(255,255,255,0.15)_0%,_transparent_70%)] pointer-events-none rounded-none md:rounded-none lg:rounded-none" />
+      <div className="absolute inset-0 backdrop-blur-[1px] bg-off-white/5 mix-blend-overlay pointer-events-none rounded-none md:rounded-none lg:rounded-none" />
       {/* Slides */}
       {slides.map((slide, index) => (
         <div
           key={slide.id}
           aria-hidden={index !== currentIndex}
-          className={`absolute inset-0 w-auto h-auto overflow-hidden transition-opacity duration-1000 ease-in-out will-change-transform rounded-none sm:rounded-[12px] lg:rounded-none ${
+          className={`absolute inset-0 w-auto h-auto overflow-hidden transition-opacity duration-1000 ease-in-out will-change-transform rounded-none md:rounded-none lg:rounded-none ${
             index === currentIndex ? "opacity-100 z-10" : "opacity-0 z-0"
           }`}
         >
            {/* Full Background Image - All Screen Sizes */}
-           <div className="absolute inset-0 rounded-none sm:rounded-[12px] lg:rounded-none overflow-hidden">
+           <div className="absolute inset-0 rounded-none md:rounded-none lg:rounded-none overflow-hidden px-0 mx-0">
              <Image
                src={slide.image}
                alt={slide.title}
