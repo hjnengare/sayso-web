@@ -21,9 +21,9 @@ const BusinessRowSkeleton = () => (
             }
           }
         `}} />
-        <div className="flex gap-3 items-stretch pt-2">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto sm:min-w-[25%] md:min-w-[25%] xl:min-w-[25%] list-none flex business-card-skeleton-full-width">
+        <div className="flex gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2 items-stretch pt-2">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto sm:min-w-[25%] md:min-w-[25%] lg:min-w-[20%] xl:min-w-[18%] 2xl:min-w-[16%] list-none flex business-card-skeleton-full-width">
               <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[20px] overflow-visible w-full sm:w-[260px] md:w-[340px] h-[650px] sm:h-auto md:h-[416px] flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-md animate-pulse">
                 {/* Image Section Skeleton */}
                 <div className="relative overflow-hidden z-10 rounded-t-[20px] bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 border-b border-white/60 backdrop-blur-xl h-[490px] sm:h-[320px] md:h-[240px]" />

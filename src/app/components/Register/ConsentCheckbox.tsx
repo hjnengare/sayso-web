@@ -19,11 +19,11 @@ export default function ConsentCheckbox({ checked, onChange }: ConsentCheckboxPr
         />
         <span className="flex-1 leading-relaxed">
           I agree to the{" "}
-          <Link href="/terms" className="underline text-sage hover:text-coral transition-colors">
+          <Link href="/privacy/sayso%20privacy%20policy%20%26%20terms%20of%20use.pdf" className="underline text-sage hover:text-coral transition-colors">
             Terms of Use
           </Link>{" "}
           and{" "}
-          <Link href="/privacy" className="underline text-sage hover:text-coral transition-colors">
+          <Link href="/privacy/sayso%20privacy%20policy%20%26%20terms%20of%20use.pdf" className="underline text-sage hover:text-coral transition-colors">
             Privacy Policy
           </Link>
         </span>
@@ -31,3 +31,4 @@ export default function ConsentCheckbox({ checked, onChange }: ConsentCheckboxPr
     </div>
   );
 }
+

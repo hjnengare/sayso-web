@@ -113,7 +113,7 @@ export default function Header({
   return (
     <>
       <header ref={headerRef} className={headerClassName} style={sf}>
-        <div className={`relative z-[1] mx-auto w-full max-w-[1700px] ${heroMode ? "px-4 sm:px-6 md:px-8 lg:px-10" : `px-4 sm:px-6 md:px-8 lg:px-10 ${currentPaddingClass}`} flex items-center h-full`}>
+        <div className={`relative z-[1] mx-auto w-full max-w-[1700px] py-4 ${heroMode ? "px-4 sm:px-6 md:px-8 lg:px-10" : `px-4 sm:px-6 md:px-8 lg:px-10 ${currentPaddingClass}`} flex items-center h-full`}>
           {/* Top row */}
           <div className="flex items-center justify-between gap-2 lg:gap-4 w-full h-full">
             {/* Logo */}

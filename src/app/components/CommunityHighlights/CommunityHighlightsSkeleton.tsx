@@ -19,9 +19,9 @@ export default function CommunityHighlightsSkeleton({ reviewerCount = 4, busines
 
         {/* Top Reviewers Skeleton */}
         <ScrollableSection>
-          <div className="flex gap-3 items-stretch py-2">
+          <div className="flex gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2 items-stretch py-2">
             {Array.from({ length: reviewerCount }).map((_, idx) => (
-              <div key={idx} className="snap-start snap-always flex-shrink-0 w-full sm:w-[240px] list-none flex">
+              <div key={idx} className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto sm:min-w-[25%] md:min-w-[25%] lg:min-w-[20%] xl:min-w-[18%] 2xl:min-w-[16%] list-none flex justify-center">
                 <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl rounded-[20px] overflow-visible group h-[240px] w-full sm:w-[240px] border border-white/60 ring-1 ring-white/30 shadow-md animate-pulse flex flex-col p-2">
                   <div className="flex items-start gap-2 mb-2">
                     <div className="w-8 h-8 bg-charcoal/10 rounded-full" />
@@ -47,10 +47,10 @@ export default function CommunityHighlightsSkeleton({ reviewerCount = 4, busines
         {/* Featured Businesses Skeleton */}
         <div className="mt-3">
           <ScrollableSection>
-            <div className="flex gap-3 items-stretch pt-2 list-none">
+            <div className="flex gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2 items-stretch pt-2 list-none">
               {Array.from({ length: businessCount }).map((_, idx) => (
-                <div key={idx} className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto sm:min-w-[25%] md:min-w-[25%] xl:min-w-[25%] list-none flex justify-center">
-                  <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[20px] overflow-visible w-full sm:w-auto sm:min-w-[25%] md:min-w-[25%] xl:min-w-[25%] h-[650px] sm:h-auto md:w-[340px] md:h-[416px] flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-md animate-pulse">
+                <div key={idx} className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto sm:min-w-[25%] md:min-w-[25%] lg:min-w-[20%] xl:min-w-[18%] 2xl:min-w-[16%] list-none flex justify-center">
+                  <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[20px] overflow-visible w-full sm:w-[260px] md:w-[340px] h-[650px] sm:h-auto md:h-[416px] flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-md animate-pulse">
                     <div className="relative overflow-hidden z-10 rounded-t-[20px] bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 border-b border-white/60 backdrop-blur-xl h-[280px] sm:h-[220px] md:h-[240px]">
                       <div className="absolute inset-0 bg-gradient-to-br from-off-white/90 via-off-white/80 to-off-white/70" />
                     </div>

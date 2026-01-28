@@ -102,7 +102,8 @@ export const useHeaderState = ({
   // USER ROLE & AUTH STATE
   // ============================================================================
 
-  const userCurrentRole = user?.profile?.account_role || "user";
+  const userCurrentRole =
+    user?.profile?.account_role || user?.profile?.role || "user";
   const isBusinessAccountUser = userCurrentRole === "business_owner";
   const hasMultipleRoles = user?.profile?.role === "both";
   const isGuest = !authLoading && !user;

@@ -5,7 +5,7 @@ interface BusinessRowSkeletonProps {
   cards?: number;
 }
 
-const DEFAULT_CARD_COUNT = 4;
+const DEFAULT_CARD_COUNT = 5;
 
 export default function BusinessRowSkeleton({ title, cards = DEFAULT_CARD_COUNT }: BusinessRowSkeletonProps) {
   return (
@@ -32,9 +32,9 @@ export default function BusinessRowSkeleton({ title, cards = DEFAULT_CARD_COUNT 
               }
             }
           `}} />
-          <div className="flex gap-3 items-stretch pt-2">
+          <div className="flex gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2 items-stretch pt-2">
             {Array.from({ length: cards }).map((_, index) => (
-              <div key={index} className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto sm:min-w-[25%] md:min-w-[25%] xl:min-w-[25%] list-none flex business-card-skeleton-full-width">
+              <div key={index} className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto sm:min-w-[25%] md:min-w-[25%] lg:min-w-[20%] xl:min-w-[18%] 2xl:min-w-[16%] list-none flex business-card-skeleton-full-width">
                 <div className="px-1 pt-1 pb-0 rounded-[20px] relative flex-shrink-0 flex flex-col justify-between bg-sage z-10 shadow-md w-full sm:w-[260px] md:w-[340px] h-[650px] sm:h-auto">
                   {/* Image Section Skeleton - matches BusinessCard media heights */}
                   <div className="relative overflow-hidden z-10 rounded-t-[20px] bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl h-[490px] sm:h-[320px] md:h-[240px] animate-pulse">

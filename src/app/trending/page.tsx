@@ -570,7 +570,7 @@ export default function TrendingPage() {
                         </motion.div>
                       ) : (
                         isDesktop ? (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-5 lg:gap-6">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2">
                             {currentBusinesses.map((business) => (
                               <div
                                 key={business.id}
@@ -597,7 +597,7 @@ export default function TrendingPage() {
                               ease: [0.16, 1, 0.3, 1],
                             }}
                           >
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-5 lg:gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2">
                               {currentBusinesses.map((business, index) => (
                                 <motion.div
                                   key={business.id}

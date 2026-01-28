@@ -102,10 +102,9 @@ export default function OnboardingPage() {
               <Image
                 src="/logos/logo.png"
                 alt="Sayso logo"
-                width={200}
-                height={100}
-                priority
-                className="object-contain w-auto h-[70px] sm:h-[76px] md:h-[84px]"
+                width={100}
+                height={60}
+                className="object-contain w-auto h-[78px] sm:h-[84px] md:h-[92px]"
               />
             </div>
           </div>

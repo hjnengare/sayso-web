@@ -15,7 +15,7 @@ interface EventsGridProps {
 export default function EventsGrid({ events, disableMotion = false, cardWrapperClass, cardOverlayClass }: EventsGridProps) {
   if (disableMotion) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-5 lg:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2">
         {events.map((event, index) => (
           <div key={event.id} className={`list-none relative ${cardWrapperClass ?? ""}`}>
             {cardOverlayClass && <span aria-hidden className={cardOverlayClass} />}
@@ -28,7 +28,7 @@ export default function EventsGrid({ events, disableMotion = false, cardWrapperC
 
   return (
     <motion.div
-      className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-5 lg:gap-6"
+      className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2"
       initial="hidden"
       animate="visible"
       variants={{

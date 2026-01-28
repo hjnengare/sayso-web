@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
@@ -512,11 +512,11 @@ export default function BusinessRegisterPage() {
                     />
                     <span className="flex-1 leading-relaxed">
                       I agree to the{" "}
-                      <Link href="/terms" className="underline text-white hover:text-coral transition-colors font-semibold decoration-white/50">
+                      <Link href="/privacy/sayso%20privacy%20policy%20%26%20terms%20of%20use.pdf" className="underline text-white hover:text-coral transition-colors font-semibold decoration-white/50">
                         Terms of Use
                       </Link>{" "}
                       and{" "}
-                      <Link href="/privacy" className="underline text-white hover:text-coral transition-colors font-semibold decoration-white/50">
+                      <Link href="/privacy/sayso%20privacy%20policy%20%26%20terms%20of%20use.pdf" className="underline text-white hover:text-coral transition-colors font-semibold decoration-white/50">
                         Privacy Policy
                       </Link>
                     </span>
@@ -593,3 +593,4 @@ export default function BusinessRegisterPage() {
     </>
   );
 }
+

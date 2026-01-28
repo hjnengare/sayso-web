@@ -25,7 +25,6 @@ import FeaturedBusinessesSkeleton from "../components/CommunityHighlights/Featur
 import CommunityHighlightsSkeleton from "../components/CommunityHighlights/CommunityHighlightsSkeleton";
 import BusinessCard from "../components/BusinessCard/BusinessCard";
 import { Loader } from "../components/Loader/Loader";
-import ScrollHint from "../components/ScrollHint/ScrollHint";
 import { useBusinesses, useForYouBusinesses, useTrendingBusinesses } from "../hooks/useBusinesses";
 import { useFeaturedBusinesses } from "../hooks/useFeaturedBusinesses";
 import { useSimpleBusinessSearch } from "../hooks/useSimpleBusinessSearch";
@@ -398,7 +397,7 @@ export default function Home() {
       </div>
 
       {/* Hero Carousel - Account for header height (est. 70px) + extra spacing */}
-      <div className="pt-[90px]">
+      <div className="pt-[70px] sm:pt-[90px]">
         <HeroCarousel />
       </div>
 
@@ -652,7 +651,6 @@ export default function Home() {
           </AnimatePresence>
         </div>
       </main>
-      <ScrollHint />
       <Footer />
 
       {/* Scroll to Top Button - Mobile Only */}

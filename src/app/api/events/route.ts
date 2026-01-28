@@ -76,7 +76,7 @@ export async function GET(req: NextRequest) {
     // Include raw_data for attraction/venue ID extraction (needed for event consolidation)
     let query = supabase
       .from('ticketmaster_events')
-      .select('id, ticketmaster_id, title, description, type, start_date, end_date, location, city, country, venue_name, venue_address, image_url, url, price_range, classification, segment, genre, sub_genre, raw_data', { count: 'exact' })
+      .select('id, ticketmaster_id, title, description, type, start_date, end_date, location, city, country, venue_name, venue_address, image_url, url, price_range, classification, segment, genre, sub_genre, raw_data', { count: 'estimated' })
       .order('start_date', { ascending: true });
 
     // Filter by city if provided
@@ -105,8 +105,8 @@ export async function GET(req: NextRequest) {
 
     // Apply pagination directly in the query
     const queryPromise = query.range(offset, offset + limit - 1);
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Query timeout')), 1800)
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Query timeout')), 5000)
     );
 
     const { data: events, error, count } = await Promise.race([

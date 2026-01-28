@@ -255,7 +255,7 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
       }}
     >
       <div
-        className="relative px-1 pt-1 pb-0 bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[20px] overflow-visible group cursor-pointer w-full flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-md sm:h-auto"
+        className="relative px-1 pt-1 pb-2 sm:pb-0 bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[20px] overflow-visible group cursor-pointer w-full flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-md sm:h-auto"
         style={{
           maxWidth: "540px",
         } as React.CSSProperties}

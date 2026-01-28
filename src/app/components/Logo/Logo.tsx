@@ -14,18 +14,23 @@ export default function Logo({
   className = ""
 }: LogoProps) {
   const containerClasses = {
-    default: "h-14 sm:h-16 md:h-18 lg:h-20",
+    default: "h-14 sm:h-16 md:h-14 lg:h-18",
     mobile: "h-12",
     footer: "h-10 sm:h-11 lg:h-12",
     onboarding: "h-16 sm:h-18 md:h-20 lg:h-24"
   };
 
+  const containerGapClass =
+    variant === "footer" ? "gap-2" : variant === "default" ? "gap-4" : "gap-3";
+  const wordmarkSpacingClass =
+    variant === "footer" ? "" : "-ml-2 sm:-ml-4 md:-ml-4";
+
   return (
-    <div className={`flex items-center ${className}`}>
+    <div className={`inline-flex items-center ${containerGapClass} ${className}`}>
       {/* Logo mark */}
       <div className={`relative aspect-[3/2] ${containerClasses[variant]}`}>
         <Image
-          src="/logos/new_logo.png"
+          src="/logos/logo.png"
           alt="Sayso logo"
           fill
           className="object-contain object-center"
@@ -34,22 +39,16 @@ export default function Logo({
         />
       </div>
 
-      {/* Wordmark (pulled super close) */}
-      <span
-        className="
-          -ml-2 sm:-ml-4 md:-ml-4
-          text-white italic lowercase
-          text-xl sm:text-2xl md:text-3xl
-          font-semibold tracking-tight
-          leading-none
-          select-none
-        "
-        style={{
-          fontFamily: "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif"
-        }}
-      >
-        sayso
-      </span>
+      {variant !== "footer" && (
+        <span
+          className={`${wordmarkSpacingClass} text-white italic lowercase text-xl sm:text-2xl md:text-3xl font-semibold tracking-tight leading-none select-none`}
+          style={{
+            fontFamily: "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif"
+          }}
+        >
+          sayso
+        </span>
+      )}
     </div>
   );
 }

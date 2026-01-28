@@ -67,13 +67,13 @@ export default function BusinessRow({
 
   return (
     <section
-      className="relative m-0 p-0 w-full"
+      className="relative m-0 px-2 w-full"
       aria-label={title}
       style={{
         fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
       }}
     >
-      <div className="mx-auto w-full relative z-10 px-2">
+      <div className="mx-auto w-full relative z-10">
         <div className="pb-4 sm:pb-8 md:pb-10 flex flex-wrap items-center justify-between gap-2">
           <WavyTypedTitle
             text={title}
@@ -106,7 +106,7 @@ export default function BusinessRow({
           </button>
         </div>
 
-        <ScrollableSection className="-mx-2 px-2">
+        <ScrollableSection>
           {/* Gap harmonizes with card radius/shadows; list semantics preserved via <li> inside cards */}
           <style dangerouslySetInnerHTML={{ __html: `
             @media (max-width: 639px) {

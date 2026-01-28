@@ -127,6 +127,7 @@ export async function middleware(request: NextRequest) {
     '/category/',
     '/explore/',
     '/trending',
+    '/leaderboard',
     '/for-you',
     '/notifications',
     '/sitemap.xml',
@@ -202,7 +203,7 @@ export async function middleware(request: NextRequest) {
         const isGuestMode = request.nextUrl.searchParams.get('guest') === 'true';
 
         // Only redirect protected routes, allow public routes
-        const protectedRoutes = ['/interests', '/subcategories', '/deal-breakers', '/complete', '/home', '/profile', '/reviews', '/write-review', '/leaderboard', '/saved', '/dm', '/reviewer'];
+        const protectedRoutes = ['/interests', '/subcategories', '/deal-breakers', '/complete', '/home', '/profile', '/reviews', '/write-review', '/saved', '/dm', '/reviewer'];
         const isProtectedRoute = protectedRoutes.some(route =>
           request.nextUrl.pathname.startsWith(route)
         );
@@ -278,8 +279,6 @@ export async function middleware(request: NextRequest) {
     '/explore', '/for-you', '/trending', '/events-specials',
     // Review routes
     '/write-review', '/reviews',
-    // Leaderboard
-    '/leaderboard',
     // Event and special routes
     '/event', '/special',
     // User action routes
@@ -294,6 +293,10 @@ export async function middleware(request: NextRequest) {
   const isProtectedRoute = protectedRoutes.some(route =>
     request.nextUrl.pathname.startsWith(route)
   ) || isBusinessReviewRoute;
+
+  // Guest mode: allow unauthenticated access to /home when guest=true
+  const isGuestMode = request.nextUrl.searchParams.get('guest') === 'true';
+  const isGuestHome = pathname === '/home' && isGuestMode;
 
   // Business Owner Routes
   const ownersRoutes = ['/my-businesses', '/owners'];
@@ -538,6 +541,12 @@ export async function middleware(request: NextRequest) {
       debugLog('ALLOW', { requestId, reason: 'status_unknown_allow_access', pathname });
       return response;
     }
+  }
+
+  // Allow unauthenticated guest access to /home?guest=true
+  if (isGuestHome) {
+    debugLog('ALLOW', { requestId, reason: 'guest_home', pathname });
+    return response;
   }
 
   // Redirect unauthenticated users from protected routes

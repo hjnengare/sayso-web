@@ -10,32 +10,32 @@ export default function HeroSkeleton() {
       </div>
 
       {/* Hero Section Skeleton */}
-      <div className="relative w-full px-2 py-4 md:p-4">
-        <div className="relative h-[65vh] sm:h-[70vh] lg:h-[80vh] w-full overflow-hidden outline-none rounded-[20px] min-h-[400px] shadow-md">
+      <div className="relative w-full px-0 sm:px-2 py-2 md:px-2">
+        <div className="relative h-[65vh] sm:h-[70vh] lg:h-[80vh] w-full overflow-hidden outline-none rounded-none sm:rounded-[20px] min-h-[400px] shadow-md">
           {/* Background shimmer effect */}
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 rounded-[20px] animate-pulse" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 rounded-none sm:rounded-[20px] animate-pulse" />
           
           {/* Overlay gradient */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-black/20 to-transparent rounded-[20px]" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-black/20 to-transparent rounded-none sm:rounded-[20px]" />
 
-          {/* Left-aligned content skeleton */}
-          <div className="absolute inset-0 z-20 flex items-center justify-start w-full" style={{ marginLeft: '5%' }}>
-            <div className="text-left space-y-4 w-full max-w-2xl pr-4">
+          {/* Centered content skeleton */}
+          <div className="absolute inset-0 z-20 flex items-center justify-center w-full">
+            <div className="text-center space-y-4 w-full max-w-2xl px-4">
               {/* Title skeleton */}
               <div className="space-y-2">
-                <div className="h-12 bg-slate-300/60 rounded-lg w-96 animate-pulse" />
-                <div className="h-12 bg-slate-300/50 rounded-lg w-72 animate-pulse" />
+                <div className="h-12 bg-slate-300/60 rounded-lg w-80 sm:w-96 mx-auto animate-pulse" />
+                <div className="h-12 bg-slate-300/50 rounded-lg w-64 sm:w-72 mx-auto animate-pulse" />
               </div>
 
               {/* Description skeleton */}
               <div className="space-y-2 pt-2">
                 <div className="h-5 bg-slate-300/50 rounded w-full animate-pulse" />
-                <div className="h-5 bg-slate-300/50 rounded w-5/6 animate-pulse" />
+                <div className="h-5 bg-slate-300/50 rounded w-5/6 mx-auto animate-pulse" />
               </div>
 
               {/* CTA Button skeleton */}
               <div className="pt-4">
-                <div className="h-12 bg-slate-300/60 rounded-full w-40 animate-pulse" />
+                <div className="h-12 bg-slate-300/60 rounded-full w-40 mx-auto animate-pulse" />
               </div>
             </div>
           </div>

@@ -157,7 +157,7 @@ export default function CommunityHighlights({
               </div>
 
             <ScrollableSection>
-              <div className="flex gap-3 items-stretch py-2">
+              <div className="flex gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2 items-stretch py-2 mb-20">
                 {topReviewers.map((reviewer, index) => {
                 // Try to find an actual review first, otherwise use sample text
                 const actualReview = reviews.find(r => r.reviewer.id === reviewer.id);
@@ -167,7 +167,7 @@ export default function CommunityHighlights({
                 return (
                   <div
                     key={reviewer.id}
-                    className="snap-start snap-always flex-shrink-0 w-[calc(66.666vw-0.75rem)] sm:w-auto list-none flex"
+                    className=" snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto sm:min-w-[25%] md:min-w-[25%] lg:min-w-[20%] xl:min-w-[18%] 2xl:min-w-[16%] list-none flex justify-center"
                   >
                     <ReviewerCard
                       reviewer={reviewer}
@@ -257,9 +257,9 @@ export default function CommunityHighlights({
                     }
                   }
                 `}} />
-                <div className="flex gap-3 items-stretch pt-2 list-none">
+                <div className="flex gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2 items-stretch pt-2 list-none">
                   {businessesOfTheMonth.map((business, index) => (
-                    <div key={business.id} className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto sm:min-w-[25%] md:min-w-[25%] xl:min-w-[25%] list-none flex justify-center business-month-card-full-width">
+                    <div key={business.id} className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto sm:min-w-[25%] md:min-w-[25%] lg:min-w-[20%] xl:min-w-[18%] 2xl:min-w-[16%] list-none flex justify-center business-month-card-full-width">
                       <BusinessOfTheMonthCard
                         business={business}
                         index={index}
