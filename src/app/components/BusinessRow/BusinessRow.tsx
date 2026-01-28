@@ -73,7 +73,7 @@ export default function BusinessRow({
         fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
       }}
     >
-      <div className="mx-auto w-full max-w-[2000px] relative z-10 px-2">
+      <div className="mx-auto w-full relative z-10 px-2">
         <div className="pb-4 sm:pb-8 md:pb-10 flex flex-wrap items-center justify-between gap-2">
           <WavyTypedTitle
             text={title}
@@ -106,7 +106,7 @@ export default function BusinessRow({
           </button>
         </div>
 
-        <ScrollableSection>
+        <ScrollableSection className="-mx-2 px-2">
           {/* Gap harmonizes with card radius/shadows; list semantics preserved via <li> inside cards */}
           <style dangerouslySetInnerHTML={{ __html: `
             @media (max-width: 639px) {
@@ -116,9 +116,12 @@ export default function BusinessRow({
               }
             }
           `}} />
-          <div className="flex gap-3 items-stretch pt-2">
+          <div className="flex gap-2 sm:gap-2 md:gap-2 lg:gap-1.5 xl:gap-1.5 2xl:gap-1 items-stretch pt-2">
             {businesses.map((business, index) => (
-              <div key={business.id} className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto sm:min-w-[25%] md:min-w-[25%] xl:min-w-[25%] list-none flex justify-center business-card-full-width">
+              <div
+                key={business.id}
+                className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto min-w-[clamp(200px,16vw,300px)] list-none flex justify-center business-card-full-width"
+              >
                 <BusinessCard business={business} index={index} />
               </div>
             ))}
