@@ -494,6 +494,8 @@ export default function HeroCarousel() {
                alt={slide.title}
                fill
                priority={index === 0}
+               loading={index === 0 ? "eager" : "lazy"}
+               fetchPriority={index === 0 ? "high" : "auto"}
                quality={95}
                className="object-cover scale-[1.02]"
                style={{ filter: "brightness(0.95) contrast(1.05) saturate(1.1)" }}
@@ -507,15 +509,15 @@ export default function HeroCarousel() {
 
            {/* Left-aligned Text - Aligned with navbar left edge */}
            <div className="absolute inset-0 z-20 flex items-center justify-center w-full">
-             <div className="w-full flex flex-col items-center justify-center text-center">
+             <div className="w-full flex flex-col items-center justify-center text-center min-w-0 px-4">
                <h2 
-                 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-off-white drop-shadow-lg mb-4"
+                 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-off-white drop-shadow-lg mb-4 text-center whitespace-nowrap overflow-hidden text-ellipsis max-w-[90vw]"
                  style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                >
                  {slide.title}
                </h2>
                <p 
-                 className="text-base sm:text-lg lg:text-xl text-off-white/90 drop-shadow-md max-w-xl mb-6"
+                 className="text-base sm:text-lg lg:text-xl text-off-white/90 drop-shadow-md mb-6 text-center whitespace-nowrap overflow-hidden text-ellipsis max-w-[90vw]"
                  style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 500 }}
                >
                  {slide.description}

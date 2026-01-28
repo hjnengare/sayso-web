@@ -294,7 +294,7 @@ export default function MobileMenu({
           key="sign-in"
           href="/login"
           onClick={() => onClose()}
-          className={`px-3 py-2 rounded-lg text-base font-bold text-sage bg-white/10 hover:bg-sage/10 flex items-center justify-center transition-colors duration-200 min-h-[44px] ${mobileRevealClass}`}
+          className={`px-3 py-2 rounded-full text-base font-bold text-charcoal bg-sage hover:bg-sage/90 flex items-center justify-center transition-colors duration-200 min-h-[44px] ${mobileRevealClass}`}
           style={{
             ...sf,
             transitionDelay: `${(primaryCount + discoverCount + 2) * 60}ms`,

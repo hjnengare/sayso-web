@@ -16,7 +16,6 @@ import { FilterState } from "../components/FilterModal/FilterModal";
 import ActiveFilterBadges from "../components/FilterActiveBadges/ActiveFilterBadges";
 import InlineFilters from "../components/Home/InlineFilters";
 import SearchResultsMap from "../components/BusinessMap/SearchResultsMap";
-import { motion, AnimatePresence } from "framer-motion";
 import { List, Map as MapIcon } from "lucide-react";
 import BusinessRow from "../components/BusinessRow/BusinessRow";
 import BusinessRowSkeleton from "../components/BusinessRow/BusinessRowSkeleton";
@@ -411,8 +410,7 @@ export default function Home() {
             onClearAll={handleClearFilters}
           />
 
-          <AnimatePresence mode="wait">
-            {isSearchActive ? (
+          {isSearchActive ? (
               /* Search Results View - Styled like Explore page */
               <div
                 key="search-results"
@@ -630,7 +628,6 @@ export default function Home() {
                 </div>
               </div>
             )}
-          </AnimatePresence>
         </div>
       </main>
       <Footer />

@@ -2,6 +2,7 @@
 "use client";
 
 import Link from "next/link";
+import { Facebook, Instagram, Linkedin, Twitter, Youtube } from "lucide-react";
 import { useState, useEffect } from "react";
 import Logo from "../Logo/Logo";
 
@@ -60,6 +61,14 @@ export default function Footer() {
     },
   ];
 
+  const socialLinks = [
+    { name: "Instagram", href: "https://www.instagram.com", Icon: Instagram },
+    { name: "Facebook", href: "https://www.facebook.com", Icon: Facebook },
+    { name: "X", href: "https://x.com", Icon: Twitter },
+    { name: "LinkedIn", href: "https://www.linkedin.com", Icon: Linkedin },
+    { name: "YouTube", href: "https://www.youtube.com", Icon: Youtube },
+  ];
+
   return (
     <footer className="relative overflow-hidden bg-charcoal text-off-white mt-16 sm:mt-24 lg:mt-32">
       <div aria-hidden className="pointer-events-none absolute inset-0">
@@ -106,9 +115,23 @@ export default function Footer() {
                 </div>
               </nav>
 
-              <p className="font-urbanist text-xs sm:text-sm text-off-white/80 font-bold text-center sm:text-right">
-                &copy; {mounted ? currentYear : 2025} sayso
-              </p>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-center justify-center sm:justify-start gap-3">
+                  {socialLinks.map(({ name, href, Icon }) => (
+                    <Link
+                      key={name}
+                      href={href}
+                      aria-label={name}
+                      className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/15 text-off-white/80 hover:text-off-white flex items-center justify-center transition-colors"
+                    >
+                      <Icon className="w-4 h-4" strokeWidth={2} />
+                    </Link>
+                  ))}
+                </div>
+                <p className="font-urbanist text-xs sm:text-sm text-off-white/80 font-bold text-center sm:text-right">
+                  &copy; {mounted ? currentYear : 2025} sayso
+                </p>
+              </div>
             </div>
           </div>
         </div>

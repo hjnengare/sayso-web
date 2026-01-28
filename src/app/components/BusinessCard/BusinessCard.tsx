@@ -4,7 +4,6 @@ import React, { useMemo, useState, useEffect, useRef, memo } from "react";
 import { useRouter } from "next/navigation";
 import { Image as ImageIcon, Star, Edit, Share2, Bookmark, Info, ChevronLeft, ChevronRight, TrendingUp, Zap, Scissors, Coffee, UtensilsCrossed, Wine, Dumbbell, Activity, Heart, Book, ShoppingBag, Home, Briefcase, MapPin, Music, Film, Camera, Car, GraduationCap, CreditCard, Tag, Flame, Store, Eye } from "lucide-react";
 import Image from "next/image";
-import { motion, useReducedMotion } from "framer-motion";
 import PercentileChip from "../PercentileChip/PercentileChip";
 import VerifiedBadge from "../VerifiedBadge/VerifiedBadge";
 import OptimizedImage from "../Performance/OptimizedImage";
@@ -148,7 +147,7 @@ function BusinessCard({
   hideStar = false,
   compact = false,
   inGrid = false,
-  index = 0,
+  index: _index = 0,
   ownerView = false,
   showActions: showActionsProp,
 }: {
@@ -166,8 +165,6 @@ function BusinessCard({
   const { user } = useAuth();
   const hasReviewed = false;
   const idForSnap = useMemo(() => `business-${business.id}`, [business.id]);
-  const prefersReducedMotion = useReducedMotion();
-  const [isMobile, setIsMobile] = useState(true);
 
   // Check if user is a business account
   const isBusinessAccount = useMemo(() => {
@@ -196,15 +193,6 @@ function BusinessCard({
   const [showInfoPopup, setShowInfoPopup] = useState(false);
   const infoPopupRef = useRef<HTMLDivElement>(null);
 
-  // Check if mobile for animation
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
   // Use slug for SEO-friendly URLs, fallback to ID
   const businessIdentifier = business.slug || business.id;
@@ -430,28 +418,11 @@ function BusinessCard({
     ? `${mediaBaseClass} h-[280px] sm:h-[300px] md:h-[220px]`
     : `${mediaBaseClass} h-[280px] sm:h-[300px] md:h-[220px]`;
 
-  // Animation variants - fade-in for all devices
-  const cardInitial = prefersReducedMotion
-    ? { opacity: 0 }
-    : isMobile
-    ? { opacity: 0 }
-    : { opacity: 0 };
-
-  const cardAnimate = prefersReducedMotion
-    ? { opacity: 1 }
-    : isMobile
-    ? { opacity: 1 }
-    : { opacity: 1 };
-
   return (
-    <motion.li
+    <li
       id={idForSnap}
       className={`snap-start snap-always flex-shrink-0 ${compact ? 'w-auto' : 'w-[240px] sm:w-[260px] md:w-[340px]'}`}
       style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
-      initial={cardInitial}
-      whileInView={cardAnimate}
-      viewport={{ amount: isMobile ? 0.1 : 0.2, once: false }}
-      transition={{ duration: prefersReducedMotion ? 0.2 : isMobile ? 0.4 : 0.5, ease: "easeOut", delay: index * 0.05 }}
     >
       <div
         className={`px-1 pt-1 pb-0 rounded-[12px] ${compact ? "lg:py-1 lg:pb-1 lg:min-h-[200px]" : "flex-1"} relative flex-shrink-0 flex flex-col justify-between bg-sage z-10 shadow-md group w-full sm:h-auto`}
@@ -589,7 +560,7 @@ function BusinessCard({
           </div>
         </div>
       </div>
-    </motion.li>
+    </li>
   );
 }
 

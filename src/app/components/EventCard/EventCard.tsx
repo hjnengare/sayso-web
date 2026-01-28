@@ -7,8 +7,7 @@ import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { getEventIconPng } from "../../utils/eventIconToPngMapping";
 import EventBadge from "./EventBadge";
-import { motion, useReducedMotion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 const EVENT_IMAGE_BASE_PATH = "/png";
 
@@ -116,39 +115,14 @@ interface EventCardProps {
   index?: number;
 }
 
-export default function EventCard({ event, index = 0 }: EventCardProps) {
+export default function EventCard({ event, index: _index = 0 }: EventCardProps) {
   const router = useRouter();
   const iconPng = getEventIconPng(event.icon);
   const mediaImage = getEventMediaImage(event);
   const hasRealImage = Boolean(event.image?.trim() || (event as any).businessImages?.length);
-  const prefersReducedMotion = useReducedMotion();
-  const [isMobile, setIsMobile] = useState(true);
   // PNG fallback icons don't need loading state - only real images do
   const [imageLoaded, setImageLoaded] = useState(!hasRealImage);
   const showLoadingOverlay = hasRealImage && !imageLoaded;
-
-  // Check if mobile for animation
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation variants
-  const cardInitial = prefersReducedMotion
-    ? { opacity: 0 }
-    : isMobile
-    ? { opacity: 0 }
-    : { opacity: 0, y: 40, x: index % 2 === 0 ? -20 : 20 };
-
-  const cardAnimate = prefersReducedMotion
-    ? { opacity: 1 }
-    : isMobile
-    ? { opacity: 1 }
-    : { opacity: 1, y: 0, x: 0 };
   
   // Always show 'Learn More' and always route to detail page
   const handlePrimaryAction = (e: MouseEvent<HTMLButtonElement>) => {
@@ -163,19 +137,11 @@ export default function EventCard({ event, index = 0 }: EventCardProps) {
   };
 
   return (
-    <motion.li
+    <li
       className="flex w-full"
       style={{
         fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
         fontWeight: 600,
-      }}
-      initial={cardInitial}
-      whileInView={cardAnimate}
-      viewport={{ amount: isMobile ? 0.1 : 0.2, once: false }}
-      transition={{
-        duration: prefersReducedMotion ? 0.2 : isMobile ? 0.4 : 0.5,
-        delay: index * 0.05,
-        ease: "easeOut",
       }}
     >
       <article
@@ -263,6 +229,6 @@ export default function EventCard({ event, index = 0 }: EventCardProps) {
             </button>
           </div>
         </article>
-    </motion.li>
+    </li>
   );
 }
