@@ -11,27 +11,22 @@ import nextDynamic from "next/dynamic";
 import { ChevronUp, Lock } from "lucide-react";
 import Link from "next/link";
 import { usePredefinedPageTitle } from "../hooks/usePageTitle";
-import SearchInput from "../components/SearchInput/SearchInput";
 import { FilterState } from "../components/FilterModal/FilterModal";
 import ActiveFilterBadges from "../components/FilterActiveBadges/ActiveFilterBadges";
 import InlineFilters from "../components/Home/InlineFilters";
-import SearchResultsMap from "../components/BusinessMap/SearchResultsMap";
-import { List, Map as MapIcon } from "lucide-react";
 import BusinessRow from "../components/BusinessRow/BusinessRow";
 import BusinessRowSkeleton from "../components/BusinessRow/BusinessRowSkeleton";
 import FeaturedBusinessesSkeleton from "../components/CommunityHighlights/FeaturedBusinessesSkeleton";
 import CommunityHighlightsSkeleton from "../components/CommunityHighlights/CommunityHighlightsSkeleton";
-import BusinessCard from "../components/BusinessCard/BusinessCard";
-import { Loader } from "../components/Loader/Loader";
 import { useBusinesses, useForYouBusinesses, useTrendingBusinesses } from "../hooks/useBusinesses";
 import { useFeaturedBusinesses } from "../hooks/useFeaturedBusinesses";
-import { useSimpleBusinessSearch } from "../hooks/useSimpleBusinessSearch";
 import { useEvents } from "../hooks/useEvents";
 import { useRoutePrefetch } from "../hooks/useRoutePrefetch";
-import { useDebounce } from "../hooks/useDebounce";
 import { useUserPreferences } from "../hooks/useUserPreferences";
 import { useAuth } from "../contexts/AuthContext";
 import HeroCarousel from "../components/Hero/HeroCarousel";
+import SearchResultsPanel from "../components/SearchResultsPanel/SearchResultsPanel";
+import { useLiveSearch } from "../hooks/useLiveSearch";
 
 // Note: dynamic and revalidate cannot be exported from client components
 // Client components are automatically dynamic
@@ -65,20 +60,37 @@ export default function Home() {
 
   const searchParams = useSearchParams();
   const isGuestMode = searchParams.get('guest') === 'true';
+  const searchQueryParam = searchParams.get('search') || "";
   const { user } = useAuth();
+
+  const {
+    query: liveQuery,
+    setQuery,
+    loading: liveLoading,
+    results: liveResults,
+    error: liveError,
+    filters: liveFilters,
+    setDistanceKm,
+    setMinRating,
+    resetFilters,
+  } = useLiveSearch({
+    initialQuery: searchQueryParam,
+  });
+
+  useEffect(() => {
+    if (searchQueryParam === liveQuery) return;
+    setQuery(searchQueryParam);
+  }, [searchQueryParam, liveQuery, setQuery]);
 
   // Scroll to top button state (mobile only)
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [searchQuery, setSearchQuery] = useState<string>("");
   // ✅ ACTIVE FILTERS: User-initiated, ephemeral UI state (starts empty)
   const [selectedInterestIds, setSelectedInterestIds] = useState<string[]>([]);
   // ✅ Track if filters were user-initiated (prevents treating preferences as filters)
   const [hasUserInitiatedFilters, setHasUserInitiatedFilters] = useState(false);
   const [filters, setFilters] = useState<FilterState>({ minRating: null, distance: null });
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [isMapMode, setIsMapMode] = useState(false);
-  const searchWrapRef = useRef<HTMLDivElement | null>(null);
   // ✅ USER PREFERENCES: From onboarding, persistent, used for personalization
   const { interests, subcategories, loading: prefsLoading } = useUserPreferences();
   const { isLoading: authLoading } = useAuth(); // Get auth loading state
@@ -107,28 +119,10 @@ export default function Home() {
     refetch: refetchTrending,
   } = useTrendingBusinesses();
 
-  // Debounce search query for real-time filtering (300ms delay)
-  const debouncedSearchQuery = useDebounce(searchQuery, 300);
-
   // Debug logging for user preferences
   useEffect(() => {
     console.log("[Home] user prefs:", { interestsLen: interests.length, interests, subcategoriesLen: subcategories.length });
   }, [interests, subcategories]);
-
-  // Convert distance string to km number
-  const radiusKm = useMemo(() => {
-    if (!filters.distance) return null;
-    const match = filters.distance.match(/(\d+)\s*km/);
-    return match ? parseInt(match[1]) : null;
-  }, [filters.distance]);
-
-  // Determine sort strategy based on search query
-  const sortStrategy = useMemo((): 'relevance' | 'distance' | 'rating_desc' | 'price_asc' | 'combo' | undefined => {
-    if (debouncedSearchQuery.trim().length > 0) {
-      return 'relevance'; // Use relevance sorting when searching
-    }
-    return undefined; // Use default sorting
-  }, [debouncedSearchQuery]);
 
   // ✅ Determine if we're in "filtered mode" (user explicitly applied filters)
   // CRITICAL: Only true when user has EXPLICITLY initiated filtering
@@ -145,14 +139,25 @@ export default function Home() {
     skip: authLoading,
   });
 
-  // Check if search is active (2+ characters)
-  const isSearchActive = debouncedSearchQuery.trim().length > 1;
+  const isSearchActive = liveQuery.trim().length > 0;
+  const contentRef = useRef<HTMLDivElement | null>(null);
+  const lastScrollPosRef = useRef(0);
+  const prevSearchActiveRef = useRef(isSearchActive);
 
-  // Use simple search when query is 2+ characters
-  const { results: searchResults, isSearching: simpleSearchLoading } = useSimpleBusinessSearch(
-    debouncedSearchQuery,
-    300
-  );
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    if (isSearchActive && !prevSearchActiveRef.current) {
+      lastScrollPosRef.current = window.scrollY;
+      contentRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    if (!isSearchActive && prevSearchActiveRef.current) {
+      window.scrollTo({ top: lastScrollPosRef.current, behavior: 'smooth' });
+    }
+
+    prevSearchActiveRef.current = isSearchActive;
+  }, [isSearchActive]);
 
   // Note: Prioritization of recently reviewed businesses is now handled on the backend
   // The API automatically prioritizes businesses the user has reviewed within the last 24 hours
@@ -300,15 +305,6 @@ export default function Home() {
     refetchAllBusinesses();
   };
 
-  const handleSearchChange = (query: string) => {
-    setSearchQuery(query);
-  };
-
-  const handleSubmitQuery = (query: string) => {
-    setSearchQuery(query);
-    setIsMapMode(false); // Reset to list view when new search
-  };
-
   const handleToggleInterest = (interestId: string) => {
     // ✅ Mark that user has explicitly initiated filtering
     // This is the ONLY way hasUserInitiatedFilters should become true
@@ -384,89 +380,18 @@ export default function Home() {
         <HeroCarousel />
 
         <main className="bg-off-white relative pb-10 snap-y snap-proximity md:snap-mandatory min-h-dvh bg-off-white relative pt-[var(--header-height)]" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-          <div className="mx-auto w-full max-w-[2000px]">
-          {isSearchActive ? (
-              /* Search Results View - Styled like Explore page */
-              <div
-                key="search-results"
-                className="py-3 sm:py-4"
-              >
-                <div className="pt-4 sm:pt-6 md:pt-10">
-                  {allBusinessesLoading && (
-                    <div className="min-h-[60vh] bg-off-white flex items-center justify-center">
-                      <Loader size="lg" variant="wavy" color="sage" />
-                    </div>
-                  )}
-                  {!allBusinessesLoading && searchResults.length === 0 && (
-                    <div className="w-full sm:max-w-md lg:max-w-lg xl:max-w-xl sm:mx-auto relative z-10">
-                      <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden backdrop-blur-md shadow-md px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12 text-center space-y-4">
-                        <h2 className="text-h2 font-semibold text-white" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                          No results found
-                        </h2>
-                        <p className="text-body-sm text-white/80 max-w-[70ch] mx-auto leading-relaxed" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 400 }}>
-                          We couldn't find any businesses matching "{debouncedSearchQuery}". Try adjusting your search or check back soon.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                  {!allBusinessesLoading && searchResults.length > 0 && (
-                    <>
-                      {/* Show search status and List/Map toggle */}
-                      <div className="mb-4 px-2 flex items-center justify-between">
-                        <div className="text-sm text-charcoal/60" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                          Found {searchResults.length} {searchResults.length === 1 ? 'result' : 'results'} for "{debouncedSearchQuery}"
-                        </div>
-                        {/* List | Map Toggle */}
-                        <div className="flex items-center gap-1 bg-white/80 backdrop-blur-sm rounded-full p-1 border border-white/30 shadow-sm">
-                          <button
-                            onClick={() => setIsMapMode(false)}
-                            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 ${!isMapMode
-                              ? 'bg-sage text-white shadow-sm'
-                              : 'text-charcoal/70 hover:text-charcoal'
-                              }`}
-                            style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-                          >
-                            <List className="w-3.5 h-3.5" />
-                            List
-                          </button>
-                          <button
-                            onClick={() => setIsMapMode(true)}
-                            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 ${isMapMode
-                              ? 'bg-coral text-white shadow-sm'
-                              : 'text-charcoal/70 hover:text-charcoal'
-                              }`}
-                            style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-                          >
-                            <MapIcon className="w-3.5 h-3.5" />
-                            Map
-                          </button>
-                        </div>
-                      </div>
-                      {/* Map View or List View */}
-                      {isMapMode ? (
-                        <div className="w-full h-[calc(100vh-300px)] min-h-[500px] rounded-[12px] overflow-hidden border border-white/30 shadow-lg">
-                          <SearchResultsMap
-                            businesses={searchResults as any}
-                            userLocation={userLocation}
-                            onBusinessClick={(business) => {
-                              // Navigate to business page
-                              window.location.href = `/business/${business.slug || business.id}`;
-                            }}
-                          />
-                        </div>
-                      ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-3 justify-items-center">
-                          {searchResults.map((business, index) => (
-                            <div key={business.id} className="list-none w-full flex justify-center">
-                              <BusinessCard business={business as any} compact inGrid={true} index={index} />
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              </div>
+          <div ref={contentRef} className="mx-auto w-full max-w-[2000px]">
+            {isSearchActive ? (
+            <SearchResultsPanel
+                query={liveQuery.trim()}
+                loading={liveLoading}
+                error={liveError}
+                results={liveResults}
+                filters={liveFilters}
+                onDistanceChange={(value) => setDistanceKm(value)}
+                onRatingChange={(value) => setMinRating(value)}
+                onResetFilters={resetFilters}
+              />
             ) : (
               /* Default Home Page Content */
               <div

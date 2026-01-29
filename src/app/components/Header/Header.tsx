@@ -175,13 +175,18 @@ export default function Header({
 
   // Padding classes
   const currentPaddingClass = heroMode ? "py-0" : reducedPadding ? "py-1" : "py-4";
+  const horizontalPaddingClass = heroMode
+    ? "px-4 sm:px-6 md:px-8 lg:px-10"
+    : `px-4 sm:px-6 md:px-8 lg:px-10 ${currentPaddingClass}`;
   
   // Always render the real header, even if navigation state is not ready
   
   return (
     <>
       <header ref={headerRef} className={headerClassName} style={sf}>
-        <div className={`relative py-4 z-[1] mx-auto w-full max-w-[1700px] ${heroMode ? "px-4 sm:px-6 md:px-8 lg:px-10" : `px-4 sm:px-6 md:px-8 lg:px-10 ${currentPaddingClass}`} flex items-center h-full min-h-[96px]`}>
+        <div
+          className={`relative py-4 z-[1] mx-auto w-full max-w-[1700px] ${horizontalPaddingClass} flex items-center h-full min-h-[96px]`}
+        >
           {/* Top row */}
           {isPersonalLayout ? (
             <div className="w-full">

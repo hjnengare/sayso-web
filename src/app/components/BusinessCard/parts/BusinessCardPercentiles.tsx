@@ -11,7 +11,7 @@ interface BusinessCardPercentilesProps {
 }
 
 const BusinessCardPercentiles: React.FC<BusinessCardPercentilesProps> = ({ percentiles }) => (
-  <div className="flex items-center justify-between sm:justify-center gap-6 sm:gap-3 flex-nowrap min-h-[28px] sm:min-h-[28px] py-1 overflow-hidden w-[90%] mx-auto md:mb-2">
+  <div className="flex items-center justify-between sm:justify-center gap-6 sm:gap-3 bg-off-white rounded-full flex-nowrap min-h-[28px] sm:min-h-[28px] py-1 overflow-hidden w-[90%] mx-auto md:mb-2">
     <PercentileChip label="punctuality" value={percentiles?.punctuality || 0} />
     <PercentileChip label="cost-effectiveness" value={percentiles?.['cost-effectiveness'] || 0} />
     <PercentileChip label="friendliness" value={percentiles?.friendliness || 0} />
