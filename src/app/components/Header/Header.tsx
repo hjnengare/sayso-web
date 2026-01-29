@@ -230,17 +230,15 @@ export default function Header({
                   <DesktopNav {...desktopNavProps} mode="iconsOnly" />
                 </div>
 
-                {/* Mobile */}
-                <div className="flex lg:hidden items-center gap-2 w-full">
-                  {isHomePage && (
-                    <OptimizedLink href="/" className="group flex items-center" aria-label="sayso Home">
-                      <Logo
-                        variant="default"
-                        showMark={false}
-                        className="drop-shadow-[0_4px_16px_rgba(0,0,0,0.12)] transition-all duration-300 group-hover:drop-shadow-[0_6px_20px_rgba(0,0,0,0.15)]"
-                      />
-                    </OptimizedLink>
-                  )}
+                {/* Mobile: wordmark left-aligned on all pages (home unchanged; non-home gets logo on left) */}
+                <div className="flex lg:hidden items-center gap-2 w-full pl-4">
+                  <OptimizedLink href="/" className="group flex items-center flex-shrink-0" aria-label="sayso Home">
+                    <Logo
+                      variant="default"
+                      showMark={false}
+                      className="drop-shadow-[0_4px_16px_rgba(0,0,0,0.12)] transition-all duration-300 group-hover:drop-shadow-[0_6px_20px_rgba(0,0,0,0.15)]"
+                    />
+                  </OptimizedLink>
 
                   <div className="flex items-center gap-2 ml-auto">
                     {!isGuest && (
@@ -312,7 +310,7 @@ export default function Header({
             </div>
           ) : (
             <div className="flex items-center justify-between gap-3 lg:gap-6 w-full h-full">
-              <OptimizedLink href="/" className="group flex flex-shrink-0 relative items-center" aria-label="sayso Home">
+              <OptimizedLink href="/" className="group flex flex-shrink-0 relative items-center pl-4 lg:pl-0" aria-label="sayso Home">
                 <div className="relative">
                   <Logo
                     variant="default"
