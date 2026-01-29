@@ -8,7 +8,6 @@ import { useRouter, usePathname } from "next/navigation";
 import { FilterState } from "../FilterModal/FilterModal";
 import { useSavedItems } from "../../contexts/SavedItemsContext";
 import { useNotifications } from "../../contexts/NotificationsContext";
-import { useMessages } from "../../contexts/MessagesContext";
 import { useRequireBusinessOwner } from "../../hooks/useBusinessAccess";
 import { useAuth } from "../../contexts/AuthContext";
 import {
@@ -27,7 +26,6 @@ export interface HeaderActiveStates {
   isDiscoverActive: boolean;
   isNotificationsActive: boolean;
   isSavedActive: boolean;
-  isMessagesActive: boolean;
   isProfileActive: boolean;
   isSettingsActive: boolean;
   isClaimBusinessActive: boolean;
@@ -95,7 +93,6 @@ export const useHeaderState = ({
 
   const { savedCount } = useSavedItems();
   const { unreadCount } = useNotifications();
-  const { unreadCount: unreadMessagesCount } = useMessages();
   const { user, isLoading: authLoading } = useAuth();
 
   // ============================================================================
@@ -178,7 +175,6 @@ export const useHeaderState = ({
     isNotificationsActive:
       pathname === "/notifications" || pathname?.startsWith("/notifications"),
     isSavedActive: pathname === "/saved" || pathname?.startsWith("/saved"),
-    isMessagesActive: pathname === "/dm" || pathname?.startsWith("/dm"),
     isProfileActive: pathname === "/profile" || pathname?.startsWith("/profile"),
     isSettingsActive:
       pathname === "/settings" || pathname?.startsWith("/settings"),
@@ -441,7 +437,6 @@ export const useHeaderState = ({
     // Counts
     savedCount,
     unreadCount,
-    unreadMessagesCount,
 
     // Navigation
     pathname,

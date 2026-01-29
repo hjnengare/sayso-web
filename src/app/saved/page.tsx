@@ -223,7 +223,7 @@ export default function SavedPage() {
               transition={{ duration: 0.3 }}
             >
               {/* Breadcrumb Navigation */}
-              <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
+              <nav className="mb-4 sm:mb-6 pt-6" aria-label="Breadcrumb">
                 <ol className="flex items-center gap-2 text-sm sm:text-base">
                   <li>
                     <Link

@@ -8,7 +8,6 @@ import { OnboardingProvider } from "./contexts/OnboardingContext";
 import { ToastProvider } from "./contexts/ToastContext";
 import { SavedItemsProvider } from "./contexts/SavedItemsContext";
 import { NotificationsProvider } from "./contexts/NotificationsContext";
-import { MessagesProvider } from "./contexts/MessagesContext";
 import PageTransitionProvider from "./components/Providers/PageTransitionProvider";
 import GlobalHeader from "./components/Header/GlobalHeader";
 
@@ -146,13 +145,11 @@ export default function RootLayout({
             <OnboardingProvider>
               <SavedItemsProvider>
                 <NotificationsProvider>
-                  <MessagesProvider>
-                    <BusinessNotifications />
-                    <GlobalHeader />
-                    <PageTransitionProvider>
-                      {children}
-                    </PageTransitionProvider>
-                  </MessagesProvider>
+                  <BusinessNotifications />
+                  <GlobalHeader />
+                  <PageTransitionProvider>
+                    {children}
+                  </PageTransitionProvider>
                 </NotificationsProvider>
               </SavedItemsProvider>
             </OnboardingProvider>

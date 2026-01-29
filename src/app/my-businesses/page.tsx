@@ -125,7 +125,7 @@ export default function MyBusinessesPage() {
       <div className="min-h-dvh bg-off-white">
         <main className="pt-20 sm:pt-24 pb-28">
           <div className="mx-auto w-full max-w-[2000px] px-2">
-            <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
+            <nav className="mb-4 sm:mb-6 pt-6" aria-label="Breadcrumb">
               <SkeletonHeader width="w-1/3" height="h-6" className="mb-2" />
             </nav>
             <div className="mb-8 sm:mb-12 px-2">

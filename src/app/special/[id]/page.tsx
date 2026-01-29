@@ -252,7 +252,7 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
         {/* Main Content */}
         <div className="relative z-10 mx-auto w-full max-w-[2000px] px-2 pt-20 sm:pt-24 py-4 sm:py-6 md:py-8 pb-12 sm:pb-16">
           {/* Breadcrumb Navigation */}
-          <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
+          <nav className="mb-4 sm:mb-6 pt-6" aria-label="Breadcrumb">
             <ol className="flex items-center gap-2 text-sm sm:text-base">
               <li>
                 <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>

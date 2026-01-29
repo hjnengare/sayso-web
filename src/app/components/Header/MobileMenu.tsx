@@ -274,20 +274,6 @@ export default function MobileMenu({
               <Lock className="w-3 h-3 text-white/40" />
             </span>
           </OptimizedLink>
-          <OptimizedLink
-            href="/login"
-            onClick={() => onClose()}
-            className={`px-3 py-2 rounded-lg text-base font-normal text-white hover:text-white flex items-center justify-start transition-colors duration-200 min-h-[44px] ${mobileRevealClass}`}
-            style={{
-              ...sf,
-              transitionDelay: `${(primaryCount + discoverCount + 1) * 60}ms`,
-            }}
-          >
-            <span className="text-left flex items-center gap-1.5">
-              Messages
-              <Lock className="w-3 h-3 text-white/40" />
-            </span>
-          </OptimizedLink>
         </div>
         <div className="h-px bg-charcoal/10 my-2 mx-3" />
         <OptimizedLink
@@ -297,7 +283,7 @@ export default function MobileMenu({
           className={`px-3 py-2 rounded-full text-base font-bold text-charcoal bg-sage hover:bg-sage/90 flex items-center justify-center transition-colors duration-200 min-h-[44px] ${mobileRevealClass}`}
           style={{
             ...sf,
-            transitionDelay: `${(primaryCount + discoverCount + 2) * 60}ms`,
+            transitionDelay: `${(primaryCount + discoverCount + 1) * 60}ms`,
           }}
         >
           <span className="text-center w-full">Sign in</span>

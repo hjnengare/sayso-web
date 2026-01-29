@@ -3,14 +3,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Menu, Bell, Settings, Bookmark, MessageCircle, Search } from "lucide-react";
+import { Menu, Bell, Settings, Bookmark, Search } from "lucide-react";
 import Logo from "../Logo/Logo";
 import OptimizedLink from "../Navigation/OptimizedLink";
 import DesktopNav from "./DesktopNav";
 import MobileMenu from "./MobileMenu";
 import { useHeaderState } from "./useHeaderState";
 import { PRIMARY_LINKS, DISCOVER_LINKS } from "./headerActionsConfig";
-
 
 export default function Header({
   showSearch = true,
@@ -35,14 +34,12 @@ export default function Header({
   heroMode?: boolean;
   heroSearchButton?: boolean;
 }) {
-  // Use centralized header state hook
   const {
     isGuest,
     isBusinessAccountUser,
     isCheckingBusinessOwner,
     hasOwnedBusinesses,
     unreadCount,
-    unreadMessagesCount,
     savedCount,
     pathname,
     navLinks,
@@ -51,7 +48,6 @@ export default function Header({
     isDiscoverActive,
     isNotificationsActive,
     isSavedActive,
-    isMessagesActive,
     isProfileActive,
     isSettingsActive,
     isClaimBusinessActive,
@@ -72,19 +68,20 @@ export default function Header({
     setIsMobileMenuOpen,
     fontStyle: sf,
   } = useHeaderState({ searchLayout, forceSearchOpen });
+
   const router = useRouter();
   const [headerSearchQuery, setHeaderSearchQuery] = useState("");
   const [headerPlaceholder, setHeaderPlaceholder] = useState(
     "Discover local experiences, premium dining, and gems..."
   );
 
-  // Different styling for home page (frosty variant) vs other pages
   const isHomeVariant = variant === "frosty";
   const computedBackgroundClass = backgroundClassName ?? "bg-navbar-gradient";
-  // Header is always fixed at top-0 - Enhanced with better shadows and borders
+
   const headerClassName = isHomeVariant
     ? `fixed top-0 left-0 right-0 z-50 fixed-compensate ${computedBackgroundClass} backdrop-blur-xl shadow-md transition-all duration-300`
     : `fixed top-0 left-0 right-0 z-50 fixed-compensate ${computedBackgroundClass} backdrop-blur-xl shadow-md transition-all duration-300`;
+
   const isPersonalLayout = !isBusinessAccountUser;
   const isHomePage = pathname === "/" || pathname === "/home";
 
@@ -168,7 +165,6 @@ export default function Header({
     </form>
   );
 
-  // Padding classes
   const currentPaddingClass = heroMode ? "py-0" : reducedPadding ? "py-1" : "py-4";
   const horizontalPaddingClass = heroMode
     ? "px-4 sm:px-6 md:px-8 lg:px-10"
@@ -184,12 +180,10 @@ export default function Header({
     discoverLinks: DISCOVER_LINKS,
     businessLinks: navLinks.businessLinks,
     isNotificationsActive,
-    isMessagesActive,
     isProfileActive,
     isSettingsActive,
     savedCount,
     unreadCount,
-    unreadMessagesCount,
     handleNavClick,
     discoverDropdownRef,
     discoverMenuPortalRef,
@@ -204,18 +198,16 @@ export default function Header({
     onNotificationsClick: () => setShowSearchBar(true),
     sf,
   };
-  
-  // Always render the real header, even if navigation state is not ready
-  
+
   return (
     <>
       <header ref={headerRef} className={headerClassName} style={sf}>
         <div
           className={`relative py-4 z-[1] mx-auto w-full max-w-[1700px] ${horizontalPaddingClass} flex items-center h-full min-h-[96px]`}
         >
-          {/* Top row */}
           {isPersonalLayout ? (
             <div className="w-full">
+              {/* ✅ Top Row Grid */}
               <div
                 className={[
                   "flex items-center justify-between gap-3",
@@ -226,9 +218,7 @@ export default function Header({
                 {/* Left column */}
                 <div className="hidden lg:flex items-center">
                   {isHomePage ? (
-                    <div className="max-w-[360px] w-full">
-                      {showSearch && renderHomeSearchInput()}
-                    </div>
+                    <div className="max-w-[360px] w-full">{showSearch && renderHomeSearchInput()}</div>
                   ) : (
                     <OptimizedLink href="/" className="group flex items-center" aria-label="sayso Home">
                       <Logo
@@ -260,8 +250,8 @@ export default function Header({
                   <DesktopNav {...desktopNavProps} mode="iconsOnly" />
                 </div>
 
-                {/* Mobile Navigation - Visible only on mobile */}
-                <div className="flex lg:hidden items-center gap-2">
+                {/* Mobile */}
+                <div className="flex lg:hidden items-center gap-2 w-full">
                   {isHomePage && (
                     <OptimizedLink href="/" className="group flex items-center" aria-label="sayso Home">
                       <Logo
@@ -273,7 +263,6 @@ export default function Header({
                   )}
 
                   <div className="flex items-center gap-2 ml-auto">
-                    {/* Notifications - Authenticated users only (guests use menu drawer) */}
                     {!isGuest && (
                       <OptimizedLink
                         href="/notifications"
@@ -295,7 +284,6 @@ export default function Header({
                       </OptimizedLink>
                     )}
 
-                    {/* Saved - Personal users only (guests use menu drawer) */}
                     {!isBusinessAccountUser && !isGuest && (
                       <OptimizedLink
                         href="/saved"
@@ -317,29 +305,6 @@ export default function Header({
                       </OptimizedLink>
                     )}
 
-                    {/* Messages - Authenticated users only (guests use menu drawer) */}
-                    {!isGuest && (
-                      <OptimizedLink
-                        href="/messages"
-                        className={`relative w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
-                          isMessagesActive
-                            ? "text-sage bg-sage/5"
-                            : whiteText
-                              ? "text-white hover:text-white/80 hover:bg-white/10"
-                              : "text-charcoal/80 hover:text-sage hover:bg-sage/5"
-                        }`}
-                        aria-label="Messages"
-                      >
-                        <MessageCircle className="w-5 h-5" fill={isMessagesActive ? "currentColor" : "none"} />
-                        {unreadMessagesCount > 0 && (
-                          <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-white text-[10px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
-                            {unreadMessagesCount > 99 ? "99+" : unreadMessagesCount}
-                          </span>
-                        )}
-                      </OptimizedLink>
-                    )}
-
-                    {/* Mobile Menu Hamburger Button */}
                     <button
                       type="button"
                       onClick={() => setIsMobileMenuOpen(true)}
@@ -355,17 +320,18 @@ export default function Header({
                     </button>
                   </div>
                 </div>
+              </div>
+              {/* ✅ END Top Row Grid (this was missing) */}
 
+              {/* Desktop Nav Row (home only) */}
               {isHomePage && (
                 <div className="hidden lg:flex justify-center mt-3">
                   <DesktopNav {...desktopNavProps} mode="navOnly" />
                 </div>
               )}
-
             </div>
           ) : (
             <div className="flex items-center justify-between gap-3 lg:gap-6 w-full h-full">
-              {/* Logo */}
               <OptimizedLink href="/" className="group flex flex-shrink-0 relative items-center" aria-label="sayso Home">
                 <div className="relative">
                   <Logo
@@ -376,7 +342,6 @@ export default function Header({
                 </div>
               </OptimizedLink>
 
-              {/* Desktop Navigation - Hidden on mobile */}
               <div className="hidden lg:flex flex-1 justify-center">
                 <DesktopNav {...desktopNavProps} mode="navOnly" />
               </div>
@@ -385,9 +350,7 @@ export default function Header({
                 <DesktopNav {...desktopNavProps} mode="iconsOnly" />
               </div>
 
-              {/* Mobile Navigation - Visible only on mobile */}
               <div className="flex lg:hidden items-center gap-2 ml-auto">
-                {/* Notifications - Authenticated users only (guests use menu drawer) */}
                 {!isGuest && (
                   <OptimizedLink
                     href="/notifications"
@@ -409,7 +372,6 @@ export default function Header({
                   </OptimizedLink>
                 )}
 
-                {/* Saved - Personal users only (guests use menu drawer) */}
                 {!isBusinessAccountUser && !isGuest && (
                   <OptimizedLink
                     href="/saved"
@@ -431,29 +393,6 @@ export default function Header({
                   </OptimizedLink>
                 )}
 
-                {/* Messages - Authenticated users only (guests use menu drawer) */}
-                {!isGuest && (
-                  <OptimizedLink
-                    href="/messages"
-                    className={`relative w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
-                      isMessagesActive
-                        ? "text-sage bg-sage/5"
-                        : whiteText
-                          ? "text-white hover:text-white/80 hover:bg-white/10"
-                          : "text-charcoal/80 hover:text-sage hover:bg-sage/5"
-                    }`}
-                    aria-label="Messages"
-                  >
-                    <MessageCircle className="w-5 h-5" fill={isMessagesActive ? "currentColor" : "none"} />
-                    {unreadMessagesCount > 0 && (
-                      <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-white text-[10px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
-                        {unreadMessagesCount > 99 ? "99+" : unreadMessagesCount}
-                      </span>
-                    )}
-                  </OptimizedLink>
-                )}
-
-                {/* Settings icon - Business users only (guests and personal users use menu drawer) */}
                 {isBusinessAccountUser && (
                   <OptimizedLink
                     href="/settings"
@@ -470,7 +409,6 @@ export default function Header({
                   </OptimizedLink>
                 )}
 
-                {/* Mobile Menu Hamburger Button */}
                 <button
                   type="button"
                   onClick={() => setIsMobileMenuOpen(true)}
@@ -487,7 +425,6 @@ export default function Header({
               </div>
             </div>
           )}
-
         </div>
       </header>
 
@@ -502,7 +439,6 @@ export default function Header({
         handleNavClick={handleNavClick}
         sf={sf}
       />
-
     </>
   );
 }

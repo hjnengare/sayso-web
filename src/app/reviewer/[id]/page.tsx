@@ -203,7 +203,7 @@ export default function ReviewerProfilePage() {
                         <main className="relative font-urbanist" id="main-content" role="main" aria-label="Reviewer profile content">
                             <div className="mx-auto w-full max-w-[2000px] px-3 sm:px-6 lg:px-10 2xl:px-16 relative z-10">
                                 {/* Breadcrumb Navigation */}
-                                <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
+                                <nav className="mb-4 sm:mb-6 pt-6" aria-label="Breadcrumb">
                                     <ol className="flex items-center gap-2 text-sm sm:text-base">
                                         <li>
                                             <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>

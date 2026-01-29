@@ -113,7 +113,7 @@ export default function BusinessInfoAside({ businessInfo, className = "", stacke
   ];
 
   const sectionClasses =
-    "rounded-[12px] bg-gradient-to-br from-card-bg via-card-bg/98 to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[24px] p-6 sm:p-8 md:p-10 space-y-8 relative overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.08),0_4px_16px_rgba(0,0,0,0.04)]";
+    "rounded-[12px] bg-gradient-to-br from-card-bg via-card-bg/98 to-card-bg/95 backdrop-blur-xl border border-white/60 p-6 sm:p-8 md:p-10 space-y-8 relative overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.08),0_4px_16px_rgba(0,0,0,0.04)]";
 
   return (
     <section

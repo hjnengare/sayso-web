@@ -67,17 +67,6 @@ export const ACTION_BUTTONS: readonly ActionButtonDefinition[] = [
     hasCount: true,
   },
   {
-    key: 'messages',
-    href: '/dm',
-    label: 'Messages',
-    requiresAuth: true,
-    icon: 'message',
-    showOnMobile: true,
-    showOnDesktop: true,
-    hasNotifications: true,
-    hasCount: true,
-  },
-  {
     key: 'profile',
     href: '/profile',
     label: 'Profile',

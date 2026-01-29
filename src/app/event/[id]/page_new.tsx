@@ -280,7 +280,7 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
             <section className="relative" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
               <div className="mx-auto w-full max-w-[2000px] px-2 relative z-10">
                 {/* Breadcrumb Navigation */}
-                <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
+                <nav className="mb-4 sm:mb-6 pt-6" aria-label="Breadcrumb">
                   <ol className="flex items-center gap-2 text-sm sm:text-base">
                     <li className="hidden sm:block">
                       <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium">Home</Link>

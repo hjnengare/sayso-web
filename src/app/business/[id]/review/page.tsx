@@ -16,7 +16,6 @@ import BusinessInfoAside from "../../../components/BusinessInfo/BusinessInfoAsid
 import BusinessInfoModal, { BusinessInfo } from "../../../components/BusinessInfo/BusinessInfoModal";
 import { TestimonialCarousel } from "../../../components/Business/TestimonialCarousel";
 import Footer from "../../../components/Footer/Footer";
-import AnimatedElement from "../../../components/Animations/AnimatedElement";
 import WavyTypedTitle from "../../../../components/Animations/WavyTypedTitle";
 
 const urbanist = Urbanist({
@@ -473,7 +472,7 @@ function WriteReviewContent() {
             <main className="relative font-sf-pro" id="main-content" role="main" aria-label="Write review content">
               <div className="mx-auto w-full max-w-[2000px] px-3 relative z-10">
                 {/* Breadcrumb Navigation */}
-                <nav className="mb-4 sm:mb-6 px-2" aria-label="Breadcrumb">
+                <nav className="mb-4 sm:mb-6 pt-6" aria-label="Breadcrumb">
                   <ol className="flex items-center gap-2 text-sm sm:text-base">
                     <li>
                       <Link 
@@ -500,14 +499,11 @@ function WriteReviewContent() {
                       {/* Main Content Section */}
                       <div className="lg:col-span-2 space-y-6">
                         {/* Image Gallery Section - Matching Business Profile */}
-                        <AnimatedElement index={0} direction="bottom">
                           <BusinessCarousel businessName={businessName} businessImages={businessImages} />
-                        </AnimatedElement>
-
+                    
                         {/* Review Form Section - Separated from images */}
-                          <AnimatedElement index={1} direction="right">
                         <article className="w-full sm:mx-0 flex items-center justify-center" aria-labelledby="review-form-heading">
-                              <div className="bg-card-bg border-0 sm:border border-white/60 rounded-[12px] shadow-none sm:shadow-lg relative overflow-hidden mx-auto w-full">
+                          <div className="bg-card-bg border-0 sm:border border-white/60 rounded-[12px] shadow-none sm:shadow-lg relative overflow-hidden mx-auto w-full">
                             <div className="relative z-10">
                               {/* Review Form */}
                               <div className="p-4 md:p-6">
@@ -535,24 +531,20 @@ function WriteReviewContent() {
                             </div>
                           </div>
                         </article>
-                      </AnimatedElement>
                       </div>
 
                       {/* Sidebar - Business Info (Desktop Only) */}
-                        <AnimatedElement index={2} direction="right">
                       <div className="hidden lg:block space-y-6">
                         <BusinessInfoAside
                           businessInfo={businessInfo}
                           className="self-start lg:sticky lg:top-28"
                           stacked={true}
                         />
-                          </div>
-                        </AnimatedElement>
                       </div>
                     </div>
+                  </div>
 
-                    {/* What Others Are Saying Section */}
-                  <AnimatedElement index={3} direction="bottom">
+                  {/* What Others Are Saying Section */}
                     <div className="lg:col-span-3 space-y-6">
                       <section className="space-y-6 pt-12" aria-labelledby="what-others-saying-heading">
                         <div className="flex justify-center">
@@ -644,7 +636,6 @@ function WriteReviewContent() {
                         )}
                       </section>
                     </div>
-                  </AnimatedElement>
                 </div>
               </div>
             </main>
@@ -675,9 +666,7 @@ function WriteReviewContent() {
           )}
         </AnimatePresence>
 
-        <AnimatedElement index={4} direction="bottom">
         <Footer />
-        </AnimatedElement>
 
         {/* Business Info Modal - Mobile Only */}
         {businessInfo && (
