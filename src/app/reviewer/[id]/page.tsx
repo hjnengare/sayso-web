@@ -199,7 +199,7 @@ export default function ReviewerProfilePage() {
             >
 
                 <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
-                    <div className="pt-20 sm:pt-24">
+                  
                         <main className="relative font-urbanist" id="main-content" role="main" aria-label="Reviewer profile content">
                             <div className="mx-auto w-full max-w-[2000px] px-3 sm:px-6 lg:px-10 2xl:px-16 relative z-10">
                                 {/* Breadcrumb Navigation */}
@@ -465,7 +465,6 @@ export default function ReviewerProfilePage() {
                 )}
 
                 <Footer />
-            </div>
         </>
     );
 }

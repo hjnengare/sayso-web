@@ -119,7 +119,8 @@ export async function proxy(request: NextRequest) {
     }
   );
 
-  // Define public routes that should always be accessible
+  // Define public routes that should always be accessible (no auth required)
+  // Leaderboard: public discovery page — guests can view rankings/scores; write actions stay behind auth
   const publicRoutes = [
     '/business/',
     '/event/',
@@ -474,8 +475,8 @@ export async function proxy(request: NextRequest) {
       return response;
     }
 
-    // Personal discovery routes: Block business owners
-    const isPersonalRoute = ['/home', '/for-you', '/trending', '/explore', '/leaderboard', '/events-specials', '/profile', '/saved', '/write-review', '/reviewer'].some(route =>
+    // Personal discovery routes: Block business owners (leaderboard excluded — public view-only page)
+    const isPersonalRoute = ['/home', '/for-you', '/trending', '/explore', '/events-specials', '/profile', '/saved', '/write-review', '/reviewer'].some(route =>
       pathname === route || pathname.startsWith(route + '/')
     );
     if (isPersonalRoute) {
@@ -594,12 +595,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/verify-email', request.url));
   }
 
-  // Protect business review routes
-  if (isBusinessReviewRoute && !user) {
-    debugLog('REDIRECT', { requestId, reason: 'unauthenticated_on_review', to: '/login' });
-    return NextResponse.redirect(new URL('/login', request.url));
-  }
-
+  // Business review route: allow guests (they can submit as Anonymous); require email verification only when logged in
   if (isBusinessReviewRoute && user && !user.email_confirmed_at) {
     debugLog('REDIRECT', { requestId, reason: 'unverified_on_review', to: '/verify-email' });
     return NextResponse.redirect(new URL('/verify-email', request.url));

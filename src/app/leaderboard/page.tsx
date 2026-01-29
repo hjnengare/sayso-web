@@ -193,7 +193,6 @@ function LeaderboardPage() {
           initial="hidden"
           animate="visible"
         >
-            <div className="pt-20 sm:pt-24">
               {/* Hero Section */}
                 <section className="relative z-10 pb-6 sm:pb-8 md:pb-12">
                   <div className="mx-auto w-full max-w-[2000px] px-2">
@@ -362,7 +361,6 @@ function LeaderboardPage() {
                     </div>
                   </div>
                 </section>
-            </div>
         </motion.div>
 
         <Footer />

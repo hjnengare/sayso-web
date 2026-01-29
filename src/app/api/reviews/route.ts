@@ -24,14 +24,9 @@ export async function POST(req: Request) {
   try {
     const supabase = await getServerSupabase(req);
 
-    // Auth
+    // Auth: optional for legacy business reviews (anonymous allowed); required for event/special
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'You must be logged in to submit a review' },
-        { status: 401 }
-      );
-    }
+    const isAnonymous = !user || authError;
 
     const formData = await req.formData();
     const businessIdentifier = formData.get('business_id')?.toString();
@@ -73,10 +68,18 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Special ID is required' }, { status: 400 });
       }
     } else {
-      // legacy business review
+      // legacy business review — anonymous allowed
       if (!businessIdentifier) {
         return NextResponse.json({ error: 'Business ID is required' }, { status: 400 });
       }
+    }
+
+    // Event and special reviews require auth; business reviews allow anonymous
+    if ((isEventReview || isSpecialReview) && isAnonymous) {
+      return NextResponse.json(
+        { error: 'You must be logged in to submit this type of review' },
+        { status: 401 }
+      );
     }
 
     // Resolve target + validate existence
@@ -237,7 +240,7 @@ export async function POST(req: Request) {
     let review: any = null;
     try {
       reviewInsertData = {
-        user_id: user.id,
+        user_id: !isAnonymous && user ? user.id : null,
         rating: rating!,
         title: sanitizedTitle,
         content: finalContent,
@@ -412,23 +415,27 @@ export async function POST(req: Request) {
     }
 
     const profile = serializableReview.profile || {};
-    const user_id = profile.user_id || serializableReview.user_id || user.id;
+    const user_id = profile.user_id ?? serializableReview.user_id ?? (user?.id ?? null);
 
     let displayName: string;
-    try {
-      displayName = getDisplayUsername(profile.username, profile.display_name, null, user_id);
-    } catch (nameError) {
-      console.error('Error generating display name:', nameError);
-      displayName = profile.display_name || profile.username || `User ${user_id?.slice(0, 8)}` || 'User';
+    if (user_id == null) {
+      displayName = 'Anonymous';
+    } else {
+      try {
+        displayName = getDisplayUsername(profile.username, profile.display_name, null, user_id);
+      } catch (nameError) {
+        console.error('Error generating display name:', nameError);
+        displayName = profile.display_name || profile.username || `User ${user_id?.slice(0, 8)}` || 'User';
+      }
     }
 
     serializableReview.user = {
       id: user_id,
       name: displayName,
-      username: profile.username || null,
-      display_name: profile.display_name || null,
+      username: profile.username ?? null,
+      display_name: user_id == null ? 'Anonymous' : (profile.display_name ?? null),
       email: null,
-      avatar_url: profile.avatar_url || null,
+      avatar_url: profile.avatar_url ?? null,
     };
 
     // Images only exist on legacy reviews in this snippet
@@ -468,16 +475,18 @@ export async function POST(req: Request) {
       console.warn('Error invalidating business cache:', cacheError);
     }
 
-    // Fire and forget badge awarding
-    fetch(`${req.headers.get('origin') || 'http://localhost:3000'}/api/badges/check-and-award`, {
-      method: 'POST',
-      headers: {
-        Cookie: req.headers.get('cookie') || '',
-        'Content-Type': 'application/json',
-      },
-    }).catch(err => {
-      console.warn('[Review Create] Error triggering badge check:', err);
-    });
+    // Fire and forget badge awarding (skip for anonymous reviews)
+    if (!isAnonymous && user?.id) {
+      fetch(`${req.headers.get('origin') || 'http://localhost:3000'}/api/badges/check-and-award`, {
+        method: 'POST',
+        headers: {
+          Cookie: req.headers.get('cookie') || '',
+          'Content-Type': 'application/json',
+        },
+      }).catch(err => {
+        console.warn('[Review Create] Error triggering badge check:', err);
+      });
+    }
 
     const rateLimitResult = {
       remainingAttempts: 10,
@@ -691,14 +700,18 @@ export async function GET(req: Request) {
     const transformedReviews = (reviews || []).map((review: any) => {
       try {
         const profile = review.profile || {};
-        const user_id = profile.user_id || review.user_id;
+        const user_id = profile.user_id ?? review.user_id;
 
         let displayName: string;
-        try {
-          displayName = getDisplayUsername(profile.username, profile.display_name, null, user_id);
-        } catch (nameError) {
-          console.error('Error generating display name:', nameError);
-          displayName = profile.display_name || profile.username || `User ${user_id?.slice(0, 8)}` || 'User';
+        if (user_id == null) {
+          displayName = 'Anonymous';
+        } else {
+          try {
+            displayName = getDisplayUsername(profile.username, profile.display_name, null, user_id);
+          } catch (nameError) {
+            console.error('Error generating display name:', nameError);
+            displayName = profile.display_name || profile.username || `User ${user_id?.slice(0, 8)}` || 'User';
+          }
         }
 
         return {
@@ -706,10 +719,10 @@ export async function GET(req: Request) {
           user: {
             id: user_id,
             name: displayName,
-            username: profile.username || null,
-            display_name: profile.display_name || null,
+            username: profile.username ?? null,
+            display_name: user_id == null ? 'Anonymous' : (profile.display_name ?? null),
             email: null,
-            avatar_url: profile.avatar_url || null,
+            avatar_url: profile.avatar_url ?? null,
           },
           business: review.business || null,
           images: review.review_images || [],
@@ -719,10 +732,10 @@ export async function GET(req: Request) {
         return {
           ...review,
           user: {
-            id: review.user_id || 'unknown',
-            name: 'User',
+            id: review.user_id ?? null,
+            name: review.user_id == null ? 'Anonymous' : 'User',
             username: null,
-            display_name: null,
+            display_name: review.user_id == null ? 'Anonymous' : null,
             email: null,
             avatar_url: null,
           },

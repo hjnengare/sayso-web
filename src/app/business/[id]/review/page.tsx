@@ -8,6 +8,7 @@ import { Edit, Star, ChevronUp, Info, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import confetti from "canvas-confetti";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "../../../contexts/AuthContext";
 import { useReviewForm } from "../../../hooks/useReviewForm";
 import { useReviewSubmission, useReviews } from "../../../hooks/useReviews";
 import { PageLoader } from "../../../components/Loader";
@@ -55,9 +56,10 @@ function WriteReviewContent() {
     resetForm,
   } = useReviewForm();
 
+  const { user } = useAuth();
   const { submitReview, submitting } = useReviewSubmission();
-  
-  // State for edit mode
+
+  // State for edit mode (guests cannot edit — only when logged in)
   const [loadingReview, setLoadingReview] = useState(false);
   const [isEditMode, setIsEditMode] = useState(!!editReviewId);
   const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
@@ -81,10 +83,10 @@ function WriteReviewContent() {
   const actualBusinessId = business?.id || businessId;
   const { reviews, loading: reviewsLoading, refetch: refetchReviews } = useReviews(business?.id ? actualBusinessId : undefined);
 
-  // Fetch existing review data if in edit mode
+  // Fetch existing review data if in edit mode (guests cannot edit)
   useEffect(() => {
     async function fetchReviewForEdit() {
-      if (!editReviewId || !isEditMode) return;
+      if (!editReviewId || !isEditMode || !user) return;
 
       try {
         setLoadingReview(true);
@@ -138,7 +140,16 @@ function WriteReviewContent() {
     }
 
     fetchReviewForEdit();
-  }, [editReviewId, isEditMode, handleStarClick, setReviewTitle, setReviewText, setSelectedTags]);
+  }, [editReviewId, isEditMode, user, handleStarClick, setReviewTitle, setReviewText, setSelectedTags]);
+
+  // Guests cannot edit: clear edit mode when not logged in
+  useEffect(() => {
+    if (!user && editReviewId) {
+      setIsEditMode(false);
+    } else if (user && editReviewId) {
+      setIsEditMode(true);
+    }
+  }, [user, editReviewId]);
 
   // Fetch business data using optimized API route
   useEffect(() => {
@@ -468,7 +479,6 @@ function WriteReviewContent() {
         {/* Main Header */}
 
         <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
-          <div className="pt-20 sm:pt-24">
             <main className="relative font-sf-pro" id="main-content" role="main" aria-label="Write review content">
               <div className="mx-auto w-full max-w-[2000px] px-3 relative z-10">
                 {/* Breadcrumb Navigation */}
@@ -640,7 +650,6 @@ function WriteReviewContent() {
               </div>
             </main>
           </div>
-        </div>
 
         {/* Scroll to Top Button */}
         <AnimatePresence>

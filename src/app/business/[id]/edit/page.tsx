@@ -706,7 +706,6 @@ export default function BusinessEditPage() {
                 {/* Main Header */}
 
                 <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
-                    <div className="pt-20 sm:pt-24">
                         <section
                             className="relative"
                             style={{
@@ -1116,7 +1115,6 @@ export default function BusinessEditPage() {
                                 </div>
                             </div>
                         </section>
-                    </div>
                 </div>
             </div>
 

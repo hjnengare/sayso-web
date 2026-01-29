@@ -5,8 +5,10 @@ export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/leaderboard
- * Get top contributors leaderboard
- * 
+ * Get top contributors leaderboard (public read — no auth required).
+ * Used by the public Leaderboard page; guests can view rankings/scores/badges.
+ * Write actions (like, follow, claim rewards) are enforced elsewhere and require auth.
+ *
  * Query parameters:
  *   - limit: number - number of users to return (default: 50)
  *   - sortBy: 'reviews' | 'helpful_votes' | 'rating' - sort criteria (default: 'reviews')

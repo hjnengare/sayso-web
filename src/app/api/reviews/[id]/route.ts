@@ -71,20 +71,23 @@ export async function GET(req: Request, { params }: RouteParams) {
       });
     }
 
-    // Return public review data
+    // Return public review data (include user display for anonymous reviews)
+    const profile = Array.isArray(review.profile) ? review.profile[0] : review.profile;
+    const userId = profile?.user_id ?? review.user_id;
+    const displayName = userId == null
+      ? 'Anonymous'
+      : (profile?.display_name || profile?.username || `User ${userId?.slice(0, 8)}` || 'User');
+
     return NextResponse.json({
       review: {
-        id: review.id,
-        business_id: review.business_id,
-        rating: review.rating,
-        title: review.title,
-        content: review.content,
-        tags: review.tags,
-        helpful_count: review.helpful_count,
-        created_at: review.created_at,
-        updated_at: review.updated_at,
-        profile: review.profile,
-        review_images: review.review_images,
+        ...review,
+        user: {
+          id: userId,
+          name: displayName,
+          username: profile?.username ?? null,
+          display_name: userId == null ? 'Anonymous' : (profile?.display_name ?? null),
+          avatar_url: profile?.avatar_url ?? null,
+        },
       },
     });
 

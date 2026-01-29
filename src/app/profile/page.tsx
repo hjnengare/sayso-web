@@ -963,7 +963,6 @@ function ProfileContent() {
         >
 
           <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
-            <div className="pt-20 sm:pt-24">
               <main
                 className="relative font-urbanist"
                 id="main-content"
@@ -1324,7 +1323,6 @@ function ProfileContent() {
                   </div>
                 </div>
               </main>
-            </div>
           </div>
 
           <Footer />

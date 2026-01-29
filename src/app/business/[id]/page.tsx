@@ -249,7 +249,6 @@ export default function BusinessProfilePage() {
         return (
             <div className="min-h-dvh bg-off-white">
                 <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
-                    <div className="pt-20 sm:pt-24">
                         <section className="relative" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                             <div className="mx-auto w-full max-w-[2000px] px-2 relative z-10">
                                 {/* Breadcrumb Skeleton */}
@@ -409,7 +408,6 @@ export default function BusinessProfilePage() {
                         </section>
                     </div>
                 </div>
-            </div>
         );
     }
 
@@ -538,7 +536,6 @@ export default function BusinessProfilePage() {
                 {/* Main Header */}
 
                 <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
-                    <div className="pt-20 sm:pt-24">
 
                         {/* Main Content Section */}
                         <section
@@ -792,6 +789,5 @@ export default function BusinessProfilePage() {
                         <Footer />
                     </div>
                 </div>
-        </div>
     );
 }

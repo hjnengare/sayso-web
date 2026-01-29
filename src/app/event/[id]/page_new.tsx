@@ -276,7 +276,6 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
       >
 
         <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
-          <div className="pt-20 sm:pt-24">
             <section className="relative" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
               <div className="mx-auto w-full max-w-[2000px] px-2 relative z-10">
                 {/* Breadcrumb Navigation */}
@@ -382,7 +381,6 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
 
             <div className="border-t border-charcoal/10 mt-12"></div>
             <Footer />
-          </div>
         </div>
       </motion.div>
     </AnimatePresence>

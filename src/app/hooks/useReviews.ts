@@ -243,19 +243,14 @@ export function useReviewSubmission() {
       }
     }
 
-    // Check email verification if we have a user
+    // Check email verification if we have a user (guests can submit as Anonymous)
     if (currentUser && !currentUser.email_verified) {
       if (!checkEmailVerification('submit reviews')) {
         setError('You must verify your email to submit reviews');
         return false;
       }
-    } else if (!currentUser) {
-      // Only show error if we truly don't have a user
-      // The API will also check, but we check here for better UX
-      setError('You must be logged in to submit a review');
-      showToast('Log in to submit a review', 'sage');
-      return false;
     }
+    // When !currentUser, allow submission — API will accept as anonymous for business reviews
 
     try {
       setSubmitting(true);
@@ -269,11 +264,13 @@ export function useReviewSubmission() {
       }
       formData.append('content', reviewData.content);
       reviewData.tags.forEach(tag => formData.append('tags', tag));
-      reviewData.images?.forEach((image, index) => {
-        // On mobile, file.name might be empty when taken directly from camera
-        const fileName = image.name && image.name.trim() ? image.name : `photo_${Date.now()}_${index}.jpg`;
-        formData.append('images', image, fileName);
-      });
+      // Anonymous (guest) reviews: skip images (RLS requires own review to attach images)
+      if (currentUser && reviewData.images?.length) {
+        reviewData.images.forEach((image, index) => {
+          const fileName = image.name && image.name.trim() ? image.name : `photo_${Date.now()}_${index}.jpg`;
+          formData.append('images', image, fileName);
+        });
+      }
 
       const response = await fetch('/api/reviews', {
         method: 'POST',
