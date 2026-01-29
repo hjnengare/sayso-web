@@ -261,7 +261,18 @@ export default function Header({
                 </div>
 
                 {/* Mobile Navigation - Visible only on mobile */}
-                <div className="flex lg:hidden items-center gap-2 ml-auto">
+                <div className="flex lg:hidden items-center gap-2">
+                  {isHomePage && (
+                    <OptimizedLink href="/" className="group flex items-center" aria-label="sayso Home">
+                      <Logo
+                        variant="default"
+                        showMark={false}
+                        className="drop-shadow-[0_4px_16px_rgba(0,0,0,0.12)] transition-all duration-300 group-hover:drop-shadow-[0_6px_20px_rgba(0,0,0,0.15)]"
+                      />
+                    </OptimizedLink>
+                  )}
+
+                  <div className="flex items-center gap-2 ml-auto">
                   {/* Notifications - Authenticated users only (guests use menu drawer) */}
                   {!isGuest && (
                     <OptimizedLink
@@ -342,8 +353,8 @@ export default function Header({
                   >
                     <Menu className="w-6 h-6" />
                   </button>
+                  </div>
                 </div>
-              </div>
 
               {isHomePage && (
                 <div className="hidden lg:flex justify-center mt-3">
