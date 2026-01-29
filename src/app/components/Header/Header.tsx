@@ -1,7 +1,7 @@
 // src/components/Header/Header.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Menu, Bell, Settings, Bookmark, MessageCircle, Search } from "lucide-react";
 import Logo from "../Logo/Logo";
@@ -88,29 +88,24 @@ export default function Header({
   const isPersonalLayout = !isBusinessAccountUser;
   const isHomePage = pathname === "/" || pathname === "/home";
 
+  const updateLayoutMetrics = useCallback(() => {
+    if (typeof window === "undefined") return;
+    const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+    document.documentElement.style.setProperty("--scrollbar-width", `${scrollBarWidth}px`);
+    if (!headerRef.current) return;
+    document.documentElement.style.setProperty("--header-height", `${headerRef.current.offsetHeight}px`);
+  }, [headerRef]);
+
   useEffect(() => {
-    const setScrollbarWidth = () => {
-      const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
-      document.documentElement.style.setProperty("--scrollbar-width", `${scrollBarWidth}px`);
-    };
-
-    const setHeaderHeight = () => {
-      if (!headerRef.current) return;
-      document.documentElement.style.setProperty(
-        "--header-height",
-        `${headerRef.current.offsetHeight}px`
-      );
-    };
-
-    const updateLayoutMetrics = () => {
-      setScrollbarWidth();
-      setHeaderHeight();
-    };
-
     updateLayoutMetrics();
     window.addEventListener("resize", updateLayoutMetrics);
     return () => window.removeEventListener("resize", updateLayoutMetrics);
-  }, []);
+  }, [updateLayoutMetrics]);
+
+  useEffect(() => {
+    if (isHomePage) return;
+    updateLayoutMetrics();
+  }, [isHomePage, updateLayoutMetrics]);
 
   useEffect(() => {
     const setByViewport = () => {
@@ -178,6 +173,37 @@ export default function Header({
   const horizontalPaddingClass = heroMode
     ? "px-4 sm:px-6 md:px-8 lg:px-10"
     : `px-4 sm:px-6 md:px-8 lg:px-10 ${currentPaddingClass}`;
+
+  const desktopNavProps = {
+    whiteText,
+    isGuest,
+    isBusinessAccountUser,
+    isClaimBusinessActive,
+    isDiscoverActive,
+    primaryLinks: navLinks.primaryLinks,
+    discoverLinks: DISCOVER_LINKS,
+    businessLinks: navLinks.businessLinks,
+    isNotificationsActive,
+    isMessagesActive,
+    isProfileActive,
+    isSettingsActive,
+    savedCount,
+    unreadCount,
+    unreadMessagesCount,
+    handleNavClick,
+    discoverDropdownRef,
+    discoverMenuPortalRef,
+    discoverBtnRef,
+    discoverMenuPos,
+    isDiscoverDropdownOpen,
+    isDiscoverDropdownClosing,
+    clearDiscoverHoverTimeout,
+    openDiscoverDropdown,
+    closeDiscoverDropdown,
+    scheduleDiscoverDropdownClose,
+    onNotificationsClick: () => setShowSearchBar(true),
+    sf,
+  };
   
   // Always render the real header, even if navigation state is not ready
   
@@ -190,56 +216,48 @@ export default function Header({
           {/* Top row */}
           {isPersonalLayout ? (
             <div className="w-full">
-              <div className="flex items-center justify-between gap-3 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:items-center">
-                {/* Search (desktop only) */}
-                <div className="hidden lg:flex items-center max-w-[360px]">
-                  {showSearch && isHomePage && renderHomeSearchInput()}
+              <div
+                className={[
+                  "flex items-center justify-between gap-3",
+                  "lg:grid lg:items-center",
+                  isHomePage ? "lg:grid-cols-[1fr_auto_1fr]" : "lg:grid-cols-[auto_1fr_auto]",
+                ].join(" ")}
+              >
+                {/* Left column */}
+                <div className="hidden lg:flex items-center">
+                  {isHomePage ? (
+                    <div className="max-w-[360px] w-full">
+                      {showSearch && renderHomeSearchInput()}
+                    </div>
+                  ) : (
+                    <OptimizedLink href="/" className="group flex items-center" aria-label="sayso Home">
+                      <Logo
+                        variant="default"
+                        showMark={false}
+                        className="drop-shadow-[0_4px_16px_rgba(0,0,0,0.12)] transition-all duration-300 group-hover:drop-shadow-[0_6px_20px_rgba(0,0,0,0.15)]"
+                      />
+                    </OptimizedLink>
+                  )}
                 </div>
 
-                {/* Logo */}
-                <OptimizedLink href="/" className="group flex-shrink-0 relative flex items-center lg:justify-center" aria-label="sayso Home">
-                  <div className="relative">
-                    <Logo
-                      variant="default"
-                      showMark={false}
-                      className="relative drop-shadow-[0_4px_16px_rgba(0,0,0,0.12)] transition-all duration-300 group-hover:drop-shadow-[0_6px_20px_rgba(0,0,0,0.15)]"
-                    />
-                  </div>
-                </OptimizedLink>
+                {/* Center column */}
+                <div className="hidden lg:flex justify-center">
+                  {isHomePage ? (
+                    <OptimizedLink href="/" className="group flex items-center" aria-label="sayso Home">
+                      <Logo
+                        variant="default"
+                        showMark={false}
+                        className="drop-shadow-[0_4px_16px_rgba(0,0,0,0.12)] transition-all duration-300 group-hover:drop-shadow-[0_6px_20px_rgba(0,0,0,0.15)]"
+                      />
+                    </OptimizedLink>
+                  ) : (
+                    <DesktopNav {...desktopNavProps} mode="navOnly" />
+                  )}
+                </div>
 
-                {/* Desktop Actions */}
+                {/* Right column */}
                 <div className="hidden lg:flex items-center justify-end">
-                  <DesktopNav
-                    whiteText={whiteText}
-                    isGuest={isGuest}
-                    isBusinessAccountUser={isBusinessAccountUser}
-                    isClaimBusinessActive={isClaimBusinessActive}
-                    isDiscoverActive={isDiscoverActive}
-                    primaryLinks={navLinks.primaryLinks}
-                    discoverLinks={DISCOVER_LINKS}
-                    businessLinks={navLinks.businessLinks}
-                    isNotificationsActive={isNotificationsActive}
-                    isMessagesActive={isMessagesActive}
-                    isProfileActive={isProfileActive}
-                    isSettingsActive={isSettingsActive}
-                    savedCount={savedCount}
-                    unreadCount={unreadCount}
-                    unreadMessagesCount={unreadMessagesCount}
-                    handleNavClick={handleNavClick}
-                    discoverDropdownRef={discoverDropdownRef}
-                    discoverMenuPortalRef={discoverMenuPortalRef}
-                    discoverBtnRef={discoverBtnRef}
-                    discoverMenuPos={discoverMenuPos}
-                    isDiscoverDropdownOpen={isDiscoverDropdownOpen}
-                    isDiscoverDropdownClosing={isDiscoverDropdownClosing}
-                    clearDiscoverHoverTimeout={clearDiscoverHoverTimeout}
-                    openDiscoverDropdown={openDiscoverDropdown}
-                    closeDiscoverDropdown={closeDiscoverDropdown}
-                    scheduleDiscoverDropdownClose={scheduleDiscoverDropdownClose}
-                    onNotificationsClick={() => setShowSearchBar(true)}
-                    sf={sf}
-                    mode="iconsOnly"
-                  />
+                  <DesktopNav {...desktopNavProps} mode="iconsOnly" />
                 </div>
 
                 {/* Mobile Navigation - Visible only on mobile */}
@@ -327,45 +345,17 @@ export default function Header({
                 </div>
               </div>
 
-              {/* Desktop Nav Row */}
-              <div className="hidden lg:flex justify-center mt-3">
-                <DesktopNav
-                  whiteText={whiteText}
-                  isGuest={isGuest}
-                  isBusinessAccountUser={isBusinessAccountUser}
-                  isClaimBusinessActive={isClaimBusinessActive}
-                  isDiscoverActive={isDiscoverActive}
-                  primaryLinks={navLinks.primaryLinks}
-                  discoverLinks={DISCOVER_LINKS}
-                  businessLinks={navLinks.businessLinks}
-                  isNotificationsActive={isNotificationsActive}
-                  isMessagesActive={isMessagesActive}
-                  isProfileActive={isProfileActive}
-                  isSettingsActive={isSettingsActive}
-                  savedCount={savedCount}
-                  unreadCount={unreadCount}
-                  unreadMessagesCount={unreadMessagesCount}
-                  handleNavClick={handleNavClick}
-                  discoverDropdownRef={discoverDropdownRef}
-                  discoverMenuPortalRef={discoverMenuPortalRef}
-                  discoverBtnRef={discoverBtnRef}
-                  discoverMenuPos={discoverMenuPos}
-                  isDiscoverDropdownOpen={isDiscoverDropdownOpen}
-                  isDiscoverDropdownClosing={isDiscoverDropdownClosing}
-                  clearDiscoverHoverTimeout={clearDiscoverHoverTimeout}
-                  openDiscoverDropdown={openDiscoverDropdown}
-                  closeDiscoverDropdown={closeDiscoverDropdown}
-                  scheduleDiscoverDropdownClose={scheduleDiscoverDropdownClose}
-                  onNotificationsClick={() => setShowSearchBar(true)}
-                  sf={sf}
-                  mode="navOnly"
-                />
-              </div>
+              {isHomePage && (
+                <div className="hidden lg:flex justify-center mt-3">
+                  <DesktopNav {...desktopNavProps} mode="navOnly" />
+                </div>
+              )}
+
             </div>
           ) : (
-            <div className="flex items-center justify-between gap-2 lg:gap-4 w-full h-full">
+            <div className="flex items-center justify-between gap-3 lg:gap-6 w-full h-full">
               {/* Logo */}
-              <OptimizedLink href="/" className="group flex-shrink-0 relative flex items-center" aria-label="sayso Home">
+              <OptimizedLink href="/" className="group flex flex-shrink-0 relative items-center" aria-label="sayso Home">
                 <div className="relative">
                   <Logo
                     variant="default"
@@ -376,37 +366,12 @@ export default function Header({
               </OptimizedLink>
 
               {/* Desktop Navigation - Hidden on mobile */}
-              <div className="hidden lg:flex flex-1">
-                <DesktopNav
-                  whiteText={whiteText}
-                  isGuest={isGuest}
-                  isBusinessAccountUser={isBusinessAccountUser}
-                  isClaimBusinessActive={isClaimBusinessActive}
-                  isDiscoverActive={isDiscoverActive}
-                  primaryLinks={navLinks.primaryLinks}
-                  discoverLinks={DISCOVER_LINKS}
-                  businessLinks={navLinks.businessLinks}
-                  isNotificationsActive={isNotificationsActive}
-                  isMessagesActive={isMessagesActive}
-                  isProfileActive={isProfileActive}
-                  isSettingsActive={isSettingsActive}
-                  savedCount={savedCount}
-                  unreadCount={unreadCount}
-                  unreadMessagesCount={unreadMessagesCount}
-                  handleNavClick={handleNavClick}
-                  discoverDropdownRef={discoverDropdownRef}
-                  discoverMenuPortalRef={discoverMenuPortalRef}
-                  discoverBtnRef={discoverBtnRef}
-                  discoverMenuPos={discoverMenuPos}
-                  isDiscoverDropdownOpen={isDiscoverDropdownOpen}
-                  isDiscoverDropdownClosing={isDiscoverDropdownClosing}
-                  clearDiscoverHoverTimeout={clearDiscoverHoverTimeout}
-                  openDiscoverDropdown={openDiscoverDropdown}
-                  closeDiscoverDropdown={closeDiscoverDropdown}
-                  scheduleDiscoverDropdownClose={scheduleDiscoverDropdownClose}
-                  onNotificationsClick={() => setShowSearchBar(true)}
-                  sf={sf}
-                />
+              <div className="hidden lg:flex flex-1 justify-center">
+                <DesktopNav {...desktopNavProps} mode="navOnly" />
+              </div>
+
+              <div className="hidden lg:flex items-center justify-end">
+                <DesktopNav {...desktopNavProps} mode="iconsOnly" />
               </div>
 
               {/* Mobile Navigation - Visible only on mobile */}

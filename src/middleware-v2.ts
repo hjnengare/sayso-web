@@ -49,9 +49,27 @@ export async function middleware(request: NextRequest) {
   );
 
   // Get user
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user = null;
+  let authError: unknown = null;
+  try {
+    const {
+      data: { user: fetchedUser },
+      error,
+    } = await supabase.auth.getUser();
+    if (error) {
+      authError = error;
+    }
+    user = fetchedUser;
+  } catch (error) {
+    authError = error;
+  }
+
+  if (authError) {
+    console.warn("[Middleware:AUTH] supabase.auth.getUser error", {
+      requestId: request.headers.get("x-request-id"),
+      message: (authError as Error).message,
+    });
+  }
 
   // Public routes - allow without auth
   if (PUBLIC_ROUTES.includes(pathname)) {

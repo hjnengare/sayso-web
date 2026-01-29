@@ -105,7 +105,7 @@ export default function Footer() {
               >
                 {column.map((section) => (
                     <div key={section.title} className="flex flex-col gap-2">
-                    <p className="font-urbanist text-xs sm:text-sm text-off-white/60 font-bold">
+                    <p className="font-urbanist text-off-white font-700">
                       {section.title}
                     </p>
                     <ul className="flex flex-col gap-2">
@@ -141,8 +141,8 @@ export default function Footer() {
                 ))}
               </div>
               <div />
-              <p className="font-urbanist text-xs sm:text-sm text-off-white/80 font-bold text-center sm:text-right">
-                &copy; {mounted ? currentYear : 2025} sayso
+              <p className="font-urbanist text-xs sm:text-sm text-off-white/80 text-center sm:text-right">
+                &copy; {mounted ? currentYear : 2026} Sayso Reviews (Pty) Ltd 
               </p>
             </div>
           </div>
