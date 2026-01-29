@@ -376,7 +376,7 @@ export default function Home() {
 
   return (
     <> {/* Header - positioned at top */}
-      <div className="page-fixed">
+      <div className="min-h-dvh flex flex-col">
         <HeroCarousel />
 
         <main className="bg-off-white relative pb-10 snap-y snap-proximity md:snap-mandatory min-h-dvh bg-off-white relative pt-[var(--header-height)]" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>

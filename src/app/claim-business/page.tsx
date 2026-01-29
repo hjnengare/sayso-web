@@ -194,10 +194,10 @@ function ClaimBusinessPageContent() {
     <div className="min-h-dvh bg-off-white">
       {/* Header */}
 
-      <main className="pt-20 sm:pt-24 pb-28">
+      <main className="">
         <div className="mx-auto w-full max-w-[2000px] px-2">
           {/* Breadcrumb Navigation */}
-          <nav className="mb-4 sm:mb-6 pt-6" aria-label="Breadcrumb">
+          <nav className="py-1" aria-label="Breadcrumb">
             <ol className="flex items-center gap-2 text-sm sm:text-base">
               <li>
                 <Link href="/my-businesses" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
@@ -307,7 +307,7 @@ function ClaimBusinessPageContent() {
                       <h3 className="font-urbanist text-base sm:text-lg font-semibold text-charcoal mb-2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                         Business not found
                       </h3>
-                      <p className="font-urbanist text-sm sm:text-base text-charcoal/70 mb-4 sm:mb-6 max-w-md mx-auto" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                      <p className="font-urbanist text-sm sm:text-base text-charcoal/70 pt-2 max-w-md mx-auto" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                         Can't find your business? You can add it to our directory.
                       </p>
                       <button className="px-6 py-2.5 min-h-[44px] bg-gradient-to-br from-sage to-sage/90 text-white rounded-full text-sm font-semibold font-urbanist

@@ -253,7 +253,7 @@ export default function BusinessProfilePage() {
                         <section className="relative" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                             <div className="mx-auto w-full max-w-[2000px] px-2 relative z-10">
                                 {/* Breadcrumb Skeleton */}
-                                <nav className="mb-4 sm:mb-6 px-2">
+                                <nav className="pt-2 px-2">
                                     <div className="flex items-center gap-2">
                                         <div className="h-5 w-12 bg-charcoal/10 rounded animate-pulse" />
                                         <div className="h-4 w-4 bg-charcoal/5 rounded animate-pulse" />
@@ -549,7 +549,7 @@ export default function BusinessProfilePage() {
                         >
                             <div className="mx-auto w-full max-w-[2000px] px-2 relative z-10">
                                 {/* Breadcrumb Navigation */}
-                                <nav className="mb-4 sm:mb-6 pt-6" aria-label="Breadcrumb">
+                                <nav className="py-1" aria-label="Breadcrumb">
                                     <ol className="flex items-center gap-2 text-sm sm:text-base">
                                         <li>
                                             <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>

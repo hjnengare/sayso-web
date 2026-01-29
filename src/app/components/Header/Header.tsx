@@ -75,34 +75,14 @@ export default function Header({
     "Discover local experiences, premium dining, and gems..."
   );
 
-  const isHomeVariant = variant === "frosty";
-  const computedBackgroundClass = backgroundClassName ?? "bg-navbar-gradient";
 
-  const headerClassName = isHomeVariant
-    ? `fixed top-0 left-0 right-0 z-50 fixed-compensate ${computedBackgroundClass} backdrop-blur-xl shadow-md transition-all duration-300`
-    : `fixed top-0 left-0 right-0 z-50 fixed-compensate ${computedBackgroundClass} backdrop-blur-xl shadow-md transition-all duration-300`;
+  const headerClassName = "sticky top-0 left-0 right-0 w-full max-w-7xl mx-auto z-50 bg-navbar-bg shadow-md transition-all duration-300";
+    
 
   const isPersonalLayout = !isBusinessAccountUser;
   const isHomePage = pathname === "/" || pathname === "/home";
 
-  const updateLayoutMetrics = useCallback(() => {
-    if (typeof window === "undefined") return;
-    const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
-    document.documentElement.style.setProperty("--scrollbar-width", `${scrollBarWidth}px`);
-    if (!headerRef.current) return;
-    document.documentElement.style.setProperty("--header-height", `${headerRef.current.offsetHeight}px`);
-  }, [headerRef]);
 
-  useEffect(() => {
-    updateLayoutMetrics();
-    window.addEventListener("resize", updateLayoutMetrics);
-    return () => window.removeEventListener("resize", updateLayoutMetrics);
-  }, [updateLayoutMetrics]);
-
-  useEffect(() => {
-    if (isHomePage) return;
-    updateLayoutMetrics();
-  }, [isHomePage, updateLayoutMetrics]);
 
   useEffect(() => {
     const setByViewport = () => {
@@ -203,7 +183,7 @@ export default function Header({
     <>
       <header ref={headerRef} className={headerClassName} style={sf}>
         <div
-          className={`relative py-4 z-[1] mx-auto w-full max-w-[1700px] ${horizontalPaddingClass} flex items-center h-full min-h-[96px]`}
+          className={`relative py-4 z-[1] mx-auto w-full max-w-7xl ${horizontalPaddingClass} flex items-center h-full min-h-[96px]`}
         >
           {isPersonalLayout ? (
             <div className="w-full">

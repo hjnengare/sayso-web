@@ -76,7 +76,7 @@ export default function SettingsPage() {
       <div className="min-h-screen bg-off-white pt-20 sm:pt-24 pb-12 px-4 sm:px-6 md:px-8 lg:px-10">
         <div className="w-full max-w-md mx-auto">
           {/* Breadcrumb Navigation */}
-          <nav className="mb-4 sm:mb-6" aria-label="Breadcrumb">
+          <nav className="pt-2" aria-label="Breadcrumb">
             <ol className="flex items-center gap-2 text-sm sm:text-base">
               <li>
                 <Link href="/my-businesses" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>

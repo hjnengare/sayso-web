@@ -123,9 +123,9 @@ export default function MyBusinessesPage() {
   if (authLoading || isLoading) {
     return (
       <div className="min-h-dvh bg-off-white">
-        <main className="pt-20 sm:pt-24 pb-28">
+        <main className="">
           <div className="mx-auto w-full max-w-[2000px] px-2">
-            <nav className="mb-4 sm:mb-6 pt-6" aria-label="Breadcrumb">
+            <nav className="py-1" aria-label="Breadcrumb">
               <SkeletonHeader width="w-1/3" height="h-6" className="mb-2" />
             </nav>
             <div className="mb-8 sm:mb-12 px-2">
@@ -150,7 +150,7 @@ export default function MyBusinessesPage() {
   if (error) {
     return (
       <div className="min-h-dvh bg-off-white">
-        <main className="pt-20 sm:pt-24 pb-28">
+        <main className="">
           <div className="mx-auto w-full max-w-[2000px] px-4 sm:px-6 lg:px-8">
             <div className="max-w-4xl mx-auto text-center py-12">
               <p className="text-charcoal/70">{error}</p>
@@ -165,7 +165,7 @@ export default function MyBusinessesPage() {
     <div className="min-h-dvh bg-off-white">
 
       <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
-        <main className="pt-20 sm:pt-24 pb-28">
+        <main className="">
           <div className="mx-auto w-full max-w-[2000px] px-2">
             {/* Empty state (only when user is logged in + fetch completed + no businesses) */}
             {(!businesses || businesses.length === 0) && (
@@ -201,7 +201,7 @@ export default function MyBusinessesPage() {
               <>
                 {/* Breadcrumb Navigation */}
                 <motion.nav
-                  className="mb-4 sm:mb-6 px-2"
+                  className="pt-2 px-2"
                   aria-label="Breadcrumb"
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}

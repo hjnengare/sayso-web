@@ -231,8 +231,7 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
       >
 
         <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
-          <div className="pt-20 sm:pt-24">
-
+   
             {/* Main Content Section */}
             <section
               className="relative"
@@ -242,7 +241,7 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
             >
               <div className="mx-auto w-full max-w-[2000px] px-2 relative z-10">
                 {/* Breadcrumb Navigation */}
-                <nav className="pt-4 mb-6 sm:mb-8 px-2" aria-label="Breadcrumb">
+                <nav className="pt-2" aria-label="Breadcrumb">
                   <ol className="flex items-center gap-2 text-sm sm:text-base flex-nowrap overflow-x-auto scrollbar-hide">
                     <li className="hidden sm:block">
                       <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium">Home</Link>
@@ -336,10 +335,7 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
                 />
               </div>
             </section>
-
-            <div className="border-t border-charcoal/10 mt-12"></div>
           </div>
-        </div>
 
         <Footer />
       </motion.div>

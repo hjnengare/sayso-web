@@ -338,7 +338,7 @@ export default function OwnerBusinessDashboard() {
   if (error || !business) {
     return (
       <div className="min-h-dvh bg-off-white">
-        <main className="pt-20 sm:pt-24 pb-28">
+        <main className="">
           <div className="mx-auto w-full max-w-[2000px] px-4 sm:px-6 lg:px-8">
             <div className="max-w-4xl mx-auto text-center py-12">
               <p className="text-charcoal/70">{error || 'Business not found'}</p>
@@ -363,7 +363,7 @@ export default function OwnerBusinessDashboard() {
       <main className="pt-20 sm:pt-24 pb-8 font-urbanist">
         <div className="mx-auto w-full max-w-[2000px] px-3 sm:px-6 lg:px-10 2xl:px-16">
               {/* Breadcrumb Navigation */}
-              <nav className="mb-4 sm:mb-6 pt-6" aria-label="Breadcrumb">
+              <nav className="py-1" aria-label="Breadcrumb">
                 <ol className="flex items-center gap-2 text-sm sm:text-base">
                   <li>
                     <Link href="/my-businesses" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>

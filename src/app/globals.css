@@ -1338,3 +1338,45 @@ html, body {
 body {
   overflow-y: auto;
 }
+
+nav[aria-label="Breadcrumb"] {
+  padding-inline: clamp(1rem, 4vw, 1.5rem);
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+nav[aria-label="Breadcrumb"] ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  margin: 0;
+}
+
+nav[aria-label="Breadcrumb"] li {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+nav[aria-label="Breadcrumb"] li a,
+nav[aria-label="Breadcrumb"] li span {
+  min-width: 0;
+  white-space: normal;
+  word-break: break-word;
+}
+
+@media (min-width: 640px) {
+  nav[aria-label="Breadcrumb"] {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    margin-top: 0.75rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  nav[aria-label="Breadcrumb"] {
+    padding-inline: clamp(1.5rem, 3vw, 2rem);
+    margin-top: 1rem;
+  }
+}

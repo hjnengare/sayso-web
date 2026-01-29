@@ -87,7 +87,7 @@ export default function NotificationsPage() {
           <div className="mx-auto w-full max-w-[2000px] px-3 relative mb-4">
             {/* Breadcrumb Navigation */}
             <nav
-              className="mb-4 sm:mb-6 px-2"
+              className="pt-2 px-2"
               aria-label="Breadcrumb"
             >
               <ol className="flex items-center gap-2 text-sm sm:text-base">

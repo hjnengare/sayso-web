@@ -472,7 +472,7 @@ function WriteReviewContent() {
             <main className="relative font-sf-pro" id="main-content" role="main" aria-label="Write review content">
               <div className="mx-auto w-full max-w-[2000px] px-3 relative z-10">
                 {/* Breadcrumb Navigation */}
-                <nav className="mb-4 sm:mb-6 pt-6" aria-label="Breadcrumb">
+                <nav className="py-1" aria-label="Breadcrumb">
                   <ol className="flex items-center gap-2 text-sm sm:text-base">
                     <li>
                       <Link 

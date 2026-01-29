@@ -199,7 +199,7 @@ function LeaderboardPage() {
                   <div className="mx-auto w-full max-w-[2000px] px-2">
                     {/* Breadcrumb */}
                     <motion.nav 
-                      className="mb-4 sm:mb-6 px-2" 
+                      className="pt-2 px-2" 
                       aria-label="Breadcrumb"
                       variants={itemVariants}
                     >
@@ -278,7 +278,7 @@ function LeaderboardPage() {
 
                       {/* Tabs */}
                         <motion.div 
-                          className="flex justify-center mb-4 sm:mb-6 md:mb-8 px-2"
+                          className="flex justify-center pt-2 md:mb-8 px-2"
                           variants={itemVariants}
                         >
                           <Tabs tabs={tabs} activeTab={activeTab} onTabChange={handleTabChange} />

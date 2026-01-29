@@ -240,7 +240,7 @@ function CategoryDetailContent() {
   if (!category && interests.length > 0) {
     return (
       <div className="min-h-dvh bg-off-white">
-        <main className="pt-20 sm:pt-24 pb-28">
+        <main className="">
           <div className="mx-auto w-full max-w-[2000px] px-4 sm:px-6 text-center py-20">
             <h1 className="text-h2 font-semibold text-charcoal mb-4" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
               Category not found
@@ -262,10 +262,10 @@ function CategoryDetailContent() {
   return (
     <div className="min-h-dvh bg-off-white">
 
-      <main className="pt-20 sm:pt-24 pb-28">
+      <main className="">
         <div className="mx-auto w-full max-w-[2000px] px-4 sm:px-6">
           {/* Breadcrumb */}
-          <nav className="mb-4 sm:mb-6" aria-label="Breadcrumb">
+          <nav className="pt-2" aria-label="Breadcrumb">
             <ol className="flex items-center gap-2 text-sm sm:text-base">
               <li>
                 <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>

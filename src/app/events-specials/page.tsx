@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import Footer from "../components/Footer/Footer";
 import FilterTabs from "../components/EventsPage/FilterTabs";
 import ResultsCount from "../components/EventsPage/ResultsCount";
@@ -37,6 +37,7 @@ export default function EventsSpecialsPage() {
     error: eventsError,
     hasMore,
     loadMore,
+    reset: resetEvents,
   } = useEventsWithGlobalConsolidation({
     pageSize: ITEMS_PER_PAGE,
     search: debouncedSearchQuery.trim() || undefined,
@@ -50,6 +51,7 @@ export default function EventsSpecialsPage() {
     error: specialsError,
     hasMore: specialsHasMore,
     loadMore: loadMoreSpecials,
+    refetch: refetchSpecials,
   } = useSpecials({
     limit: ITEMS_PER_PAGE,
     search: debouncedSearchQuery.trim() || undefined,
@@ -73,7 +75,8 @@ export default function EventsSpecialsPage() {
     );
   }, [mergedEvents, selectedFilter]);
 
-  const currentEvents = filteredEvents;
+  const eventsSectionItems = filteredEvents.filter((event) => event.type === "event");
+  const specialsSectionItems = filteredEvents.filter((event) => event.type === "special");
 
   // Reset when filter changes
   useEffect(() => {
@@ -119,11 +122,59 @@ export default function EventsSpecialsPage() {
     await loadMore();
   };
 
+  const handleRetry = async () => {
+    if (eventsError && resetEvents) {
+      await resetEvents();
+    }
+    if (specialsError && refetchSpecials) {
+      await refetchSpecials();
+    }
+  };
+
+  const hasEventsData = Array.isArray(allEvents) && allEvents.length > 0;
+  const hasSpecialsData = Array.isArray(allSpecials) && allSpecials.length > 0;
+  const hasAnyData = hasEventsData || hasSpecialsData;
+  const isLoading = eventsLoading || specialsLoading;
+  const hasError = Boolean(eventsError || specialsError);
+  const shouldShowCta = !hasAnyData && !isLoading && !hasError;
+  const combinedErrorMessage = eventsError || specialsError;
+
+  const renderGridSection = (items: Event[], title: string) => (
+    <section key={title} className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-charcoal">{title}</h2>
+      </div>
+      {isDesktop ? (
+        <div className="relative">
+          <EventsGrid
+            events={items}
+            disableMotion
+            cardWrapperClass="desktop-card-shimmer"
+            cardOverlayClass="desktop-shimmer-veil"
+          />
+        </div>
+      ) : (
+        <motion.div
+          key={`${title}-${items.length}`}
+          initial={{ opacity: 0, y: 20, scale: 0.98, filter: "blur(8px)" }}
+          animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+          exit={{ opacity: 0, y: -20, scale: 0.98, filter: "blur(8px)" }}
+          transition={{
+            duration: 0.4,
+            ease: [0.16, 1, 0.3, 1],
+          }}
+        >
+          <EventsGrid events={items} />
+        </motion.div>
+      )}
+    </section>
+  );
+
   return (
     <div className="min-h-dvh bg-off-white">
 
       <main
-        className="bg-off-white pt-20 sm:pt-24 pb-28"
+        className="bg-off-white"
         style={{
           fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
         }}
@@ -149,7 +200,7 @@ export default function EventsSpecialsPage() {
             }
           `}</style>
 
-          <nav className="mb-4 sm:mb-6 pt-6" aria-label="Breadcrumb">
+          <nav aria-label="Breadcrumb">
             <ol className="flex items-center gap-2 text-sm sm:text-base">
               <li>
                 <Link
@@ -238,42 +289,49 @@ export default function EventsSpecialsPage() {
           </div>
 
           <div className="py-4">
-            {(eventsLoading || specialsLoading) ? (
+            {isLoading ? (
               <EventsGridSkeleton count={ITEMS_PER_PAGE} />
-            ) : (eventsError || specialsError) ? (
+            ) : hasError ? (
               <div className="text-center py-20">
-                <p className="text-coral mb-4">Failed to load {eventsError ? 'events' : 'specials'}</p>
-                <p className="text-charcoal/60 text-sm">{eventsError || specialsError}</p>
+                <p className="text-coral mb-4">Failed to load events & specials</p>
+                <p className="text-charcoal/60 text-sm">{combinedErrorMessage}</p>
+                <div className="mt-4">
+                  <button
+                    onClick={handleRetry}
+                    className="px-5 py-2 rounded-full bg-sage text-white font-semibold shadow-md hover:bg-sage/90 transition duration-150"
+                  >
+                    Retry
+                  </button>
+                </div>
               </div>
-            ) : currentEvents.length > 0 ? (
-              <>
-                {/* Events & Specials Grid with Smooth Entry Animation */}
-                <AnimatePresence mode="wait" initial={false}>
-                  {isDesktop ? (
-                    <div className="relative">
-                      <EventsGrid
-                        events={currentEvents}
-                        disableMotion={true}
-                        cardWrapperClass="desktop-card-shimmer"
-                        cardOverlayClass="desktop-shimmer-veil"
-                      />
-                    </div>
-                  ) : (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20, scale: 0.98, filter: "blur(8px)" }}
-                      animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-                      exit={{ opacity: 0, y: -20, scale: 0.98, filter: "blur(8px)" }}
-                      transition={{
-                        duration: 0.4,
-                        ease: [0.16, 1, 0.3, 1],
-                      }}
-                    >
-                      <EventsGrid events={currentEvents} />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Load More Button (shows if either has more) */}
+            ) : shouldShowCta ? (
+              <div className="rounded-[24px] border border-charcoal/10 bg-gradient-to-br from-sage/10 to-sage/20 p-6 text-center space-y-4">
+                <p className="text-lg font-semibold text-charcoal">
+                  We’re curating something special for you
+                </p>
+                <p className="text-sm text-charcoal/70">
+                  Business owners are manually adding curated events and specials. Check back soon for the latest experiences.
+                </p>
+                <ul className="list-none space-y-1 text-sm text-charcoal/70">
+                  <li>• Explore businesses</li>
+                  <li>• Follow businesses</li>
+                  <li>• Check back later</li>
+                </ul>
+                <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
+                  <Link
+                    href="/home"
+                    className="px-5 py-2 rounded-full bg-charcoal text-white font-semibold hover:bg-charcoal/90 transition"
+                  >
+                    Explore businesses
+                  </Link>
+                </div>
+              </div>
+            ) : filteredEvents.length === 0 ? (
+              <EmptyState filterType={selectedFilter} />
+            ) : (
+              <div className="space-y-10">
+                {eventsSectionItems.length > 0 && renderGridSection(eventsSectionItems, "Events")}
+                {specialsSectionItems.length > 0 && renderGridSection(specialsSectionItems, "Specials")}
                 {(hasMore || specialsHasMore) && (
                   <div className="flex items-center justify-center py-8">
                     <button
@@ -299,9 +357,7 @@ export default function EventsSpecialsPage() {
                     </button>
                   </div>
                 )}
-              </>
-            ) : (
-              <EmptyState filterType={selectedFilter} />
+              </div>
             )}
           </div>
         </div>

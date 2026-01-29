@@ -336,7 +336,12 @@ export function useEvents(options: UseEventsOptions = {}): UseEventsResult {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch events: ${response.statusText}`);
+        const message = `Failed to fetch events: ${response.statusText}`;
+        if (!abortController.signal.aborted) {
+          setError(message);
+          console.error('[useEvents] Error:', message);
+        }
+        return;
       }
 
       const data = await response.json();
@@ -615,7 +620,12 @@ export function useEventsWithGlobalConsolidation(
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch events: ${response.statusText}`);
+        const message = `Failed to fetch events: ${response.statusText}`;
+        if (!abortController.signal.aborted) {
+          setError(message);
+          console.error('[useEventsAccumulator] Error:', message);
+        }
+        return;
       }
 
       const data = await response.json();
