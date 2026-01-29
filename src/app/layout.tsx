@@ -150,7 +150,7 @@ export default function RootLayout({
                     <BusinessNotifications />
                     <GlobalHeader />
                     <PageTransitionProvider>
-                      {children}
+                      <div className="with-header-offset">{children}</div>
                     </PageTransitionProvider>
                   </MessagesProvider>
                 </NotificationsProvider>

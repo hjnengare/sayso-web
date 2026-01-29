@@ -953,6 +953,10 @@
     width: calc(100% - var(--scrollbar-width, 0)) !important;
   }
 
+  .with-header-offset {
+    padding-top: calc(var(--header-height, 96px) + 12px);
+  }
+
   .sayso-wordmark {
     font-family: "MonarchParadox", sans-serif;
     letter-spacing: 0.05em;
