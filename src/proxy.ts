@@ -7,25 +7,75 @@ import { NextResponse, type NextRequest } from 'next/server';
  * Single source of truth: profiles.onboarding_completed_at (timestamp)
  *
  * Rules:
- * 1. Not logged in → redirect to /auth/login (for protected routes)
- * 2. Business account (account_role === 'business_owner') → NEVER see onboarding, redirect to /my-businesses
- * 3. User account with onboarding_completed_at = null → force to /interests
- * 4. User account with onboarding_completed_at != null → block onboarding routes, redirect to /complete
- * 5. Missing profile → treat as onboarding_completed_at = null
+ * 1. NO user session → do NOT redirect to onboarding/complete; only redirect protected routes to /login.
+ * 2. Onboarding redirects ONLY after confirming user exists and email confirmed.
+ * 3. Never redirect FROM /verify-email or /login based on onboarding flags.
+ * 4. Business account → redirect to /my-businesses ONLY after email verification.
+ * 5. /complete only when onboarding complete; otherwise route to /interests.
  *
- * MOBILE HARD REFRESH FIX:
- * Uses get_onboarding_status RPC with SECURITY DEFINER to bypass RLS issues
- * that can occur when the Supabase client auth context isn't fully established
- * on mobile hard refresh, even though getUser() succeeds.
+ * iOS CRASH FIX: Redirect loop guard + never apply onboarding logic when !user.
  */
 
-// Debug logging helper - enable in development or when debugging
 const DEBUG_MIDDLEWARE = process.env.NODE_ENV === 'development' || process.env.DEBUG_MIDDLEWARE === 'true';
+const REDIRECT_GUARD_MAX_AGE_SEC = 5;
+const REDIRECT_GUARD_COOKIE = '_sg';
 
 function debugLog(context: string, data: Record<string, unknown>) {
   if (DEBUG_MIDDLEWARE) {
     console.log(`[Middleware:${context}]`, JSON.stringify(data, null, 2));
   }
+}
+
+/** Minimal always-on log for Vercel edge (one line). */
+function edgeLog(decision: string, pathname: string, meta: { hasUser?: boolean; emailConfirmed?: boolean; isBusiness?: boolean; onboardingComplete?: boolean; to?: string }) {
+  console.log(`[Edge] ${decision} pathname=${pathname} hasUser=${!!meta.hasUser} emailOk=${!!meta.emailConfirmed} business=${!!meta.isBusiness} onboardingOk=${!!meta.onboardingComplete}${meta.to ? ` to=${meta.to}` : ''}`);
+}
+
+/** Redirect loop guard: if we already redirected 2+ times within REDIRECT_GUARD_MAX_AGE_SEC, allow next() to break loop. */
+function checkRedirectLoop(request: NextRequest): boolean {
+  const raw = request.cookies.get(REDIRECT_GUARD_COOKIE)?.value;
+  if (!raw) return false;
+  try {
+    const { t, n } = JSON.parse(decodeURIComponent(raw)) as { t: number; n: number };
+    const ageSec = (Date.now() - t) / 1000;
+    if (ageSec <= REDIRECT_GUARD_MAX_AGE_SEC && n >= 2) return true;
+  } catch {
+    // ignore
+  }
+  return false;
+}
+
+function setRedirectGuard(req: NextRequest, response: NextResponse): NextResponse {
+  const raw = req.cookies.get(REDIRECT_GUARD_COOKIE)?.value;
+  let n = 1;
+  try {
+    if (raw) {
+      const parsed = JSON.parse(decodeURIComponent(raw)) as { t: number; n: number };
+      const ageSec = (Date.now() - parsed.t) / 1000;
+      if (ageSec <= REDIRECT_GUARD_MAX_AGE_SEC) n = parsed.n + 1;
+    }
+  } catch {
+    // ignore
+  }
+  response.cookies.set(REDIRECT_GUARD_COOKIE, encodeURIComponent(JSON.stringify({ t: Date.now(), n })), {
+    path: '/',
+    maxAge: REDIRECT_GUARD_MAX_AGE_SEC,
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+  });
+  return response;
+}
+
+function clearRedirectGuard(response: NextResponse): NextResponse {
+  response.cookies.set(REDIRECT_GUARD_COOKIE, '', { path: '/', maxAge: 0 });
+  return response;
+}
+
+/** Redirect with loop-guard cookie set (so we can detect 2+ redirects in 5s). */
+function redirectWithGuard(req: NextRequest, url: URL): NextResponse {
+  const res = NextResponse.redirect(url);
+  return setRedirectGuard(req, res);
 }
 
 function isSchemaCacheError(error: { message?: string } | null | undefined): boolean {
@@ -52,6 +102,14 @@ export async function proxy(request: NextRequest) {
 
   if (isPublicAuthRoute) {
     return NextResponse.next();
+  }
+
+  // Redirect loop guard: if we already redirected 2+ times in last 5s, allow through to prevent iOS tab crash
+  if (checkRedirectLoop(request)) {
+    console.warn('[Middleware] Redirect loop guard triggered, allowing request through', { pathname });
+    const allowResponse = NextResponse.next({ request: { headers: request.headers } });
+    clearRedirectGuard(allowResponse);
+    return allowResponse;
   }
 
   debugLog('START', {
@@ -216,7 +274,7 @@ export async function proxy(request: NextRequest) {
         }
 
         if (isProtectedRoute) {
-          return NextResponse.redirect(new URL('/login', request.url));
+          return redirectWithGuard(request, new URL('/login', request.url));
         }
         // For public routes, allow access even with fatal error
         return response;
@@ -336,8 +394,25 @@ export async function proxy(request: NextRequest) {
     return response;
   }
 
+  // CRITICAL (iOS crash fix): No user session — NEVER redirect to onboarding/complete. Only protect protected routes → /login; allow public.
+  if (!user) {
+    if (isPublicRoute) {
+      edgeLog('ALLOW', pathname, { hasUser: false });
+      return response;
+    }
+    if (isProtectedRoute) {
+      const referer = request.headers.get('referer') || '';
+      const cameFromVerifyEmail = referer.includes('/verify-email') || referer.includes('/auth/callback');
+      const to = cameFromVerifyEmail ? '/verify-email' : '/login';
+      edgeLog('REDIRECT', pathname, { hasUser: false, to });
+      return redirectWithGuard(request, new URL(to, request.url));
+    }
+    edgeLog('ALLOW', pathname, { hasUser: false });
+    return response;
+  }
+
   // ============================================
-  // FETCH ONBOARDING STATUS USING RPC
+  // FETCH ONBOARDING STATUS USING RPC (only when user exists)
   // This uses SECURITY DEFINER to bypass RLS issues on mobile hard refresh
   // ============================================
 
@@ -454,8 +529,15 @@ export async function proxy(request: NextRequest) {
     onboardingCompletedAt: onboardingStatus?.onboarding_completed_at,
   });
 
+  edgeLog('DECISION', pathname, {
+    hasUser: !!user,
+    emailConfirmed: !!user?.email_confirmed_at,
+    isBusiness: isBusinessAccount,
+    onboardingComplete: isOnboardingComplete,
+  });
+
   // ============================================
-  // SIMPLIFIED ONBOARDING GUARD LOGIC
+  // SIMPLIFIED ONBOARDING GUARD LOGIC (only runs when user exists)
   // ============================================
 
   // RULE 1: Business accounts NEVER see onboarding routes
@@ -463,7 +545,8 @@ export async function proxy(request: NextRequest) {
     // Block business accounts from all onboarding routes
     if (isOnboardingRoute) {
       debugLog('REDIRECT', { requestId, reason: 'business_on_onboarding_route', to: '/my-businesses' });
-      return NextResponse.redirect(new URL('/my-businesses', request.url));
+      edgeLog('REDIRECT', pathname, { hasUser: true, emailConfirmed: true, isBusiness: true, to: '/my-businesses' });
+      return redirectWithGuard(request, new URL('/my-businesses', request.url));
     }
 
     // Business routes: Always allow
@@ -481,13 +564,14 @@ export async function proxy(request: NextRequest) {
     );
     if (isPersonalRoute) {
       debugLog('REDIRECT', { requestId, reason: 'business_on_personal_route', to: '/my-businesses' });
-      return NextResponse.redirect(new URL('/my-businesses', request.url));
+      edgeLog('REDIRECT', pathname, { hasUser: true, emailConfirmed: true, isBusiness: true, to: '/my-businesses' });
+      return redirectWithGuard(request, new URL('/my-businesses', request.url));
     }
 
     // Other protected routes: redirect to business home
     if (isProtectedRoute) {
       debugLog('REDIRECT', { requestId, reason: 'business_on_protected_route', to: '/my-businesses' });
-      return NextResponse.redirect(new URL('/my-businesses', request.url));
+      return redirectWithGuard(request, new URL('/my-businesses', request.url));
     }
   }
 
@@ -502,11 +586,13 @@ export async function proxy(request: NextRequest) {
           return response;
         }
         debugLog('REDIRECT', { requestId, reason: 'completed_user_on_onboarding', to: '/complete' });
-        return NextResponse.redirect(new URL('/complete', request.url));
+        edgeLog('REDIRECT', pathname, { hasUser: true, emailConfirmed: true, onboardingComplete: true, to: '/complete' });
+        return redirectWithGuard(request, new URL('/complete', request.url));
       }
       if (pathname === '/complete') {
         debugLog('REDIRECT', { requestId, reason: 'incomplete_user_on_complete', to: '/onboarding' });
-        return NextResponse.redirect(new URL('/onboarding', request.url));
+        edgeLog('REDIRECT', pathname, { hasUser: true, emailConfirmed: true, onboardingComplete: false, to: '/onboarding' });
+        return redirectWithGuard(request, new URL('/onboarding', request.url));
       }
       // User with incomplete onboarding CAN access onboarding routes
       debugLog('ALLOW', { requestId, reason: 'incomplete_user_on_onboarding', pathname });
@@ -536,7 +622,8 @@ export async function proxy(request: NextRequest) {
           subcategoriesCount: onboardingStatus.subcategories_count,
           dealbreakersCount: onboardingStatus.dealbreakers_count,
         });
-        return NextResponse.redirect(new URL('/interests', request.url));
+        edgeLog('REDIRECT', pathname, { hasUser: true, emailConfirmed: true, onboardingComplete: false, to: '/interests' });
+        return redirectWithGuard(request, new URL('/interests', request.url));
       }
       // If onboardingStatus is null (couldn't fetch), allow access
       debugLog('ALLOW', { requestId, reason: 'status_unknown_allow_access', pathname });
@@ -550,88 +637,65 @@ export async function proxy(request: NextRequest) {
     return response;
   }
 
-  // Redirect unauthenticated users from protected routes
-  if (isProtectedRoute && !user && !isPublicRoute) {
-    const referer = request.headers.get('referer') || '';
-    const cameFromVerifyEmail =
-      referer.includes('/verify-email') || referer.includes('/auth/callback');
-    const redirectTarget = cameFromVerifyEmail ? '/verify-email' : '/login';
-    debugLog('REDIRECT', { requestId, reason: 'unauthenticated_on_protected', to: redirectTarget });
-    return NextResponse.redirect(new URL(redirectTarget, request.url));
-  }
-
-  // Allow public routes to proceed without authentication
+  // (Unauthenticated users already returned above; this is redundant but kept for clarity)
   if (isPublicRoute) {
-    debugLog('ALLOW', { requestId, reason: 'public_route', pathname });
+    edgeLog('ALLOW', pathname, { hasUser: !!user, emailConfirmed: !!user?.email_confirmed_at });
     return response;
   }
 
   // Redirect authenticated users without email verification from protected routes
   if (isProtectedRoute && user && !user.email_confirmed_at) {
-    debugLog('REDIRECT', { requestId, reason: 'unverified_email', to: '/verify-email' });
-    return NextResponse.redirect(new URL('/verify-email', request.url));
+    edgeLog('REDIRECT', pathname, { hasUser: true, emailConfirmed: false, to: '/verify-email' });
+    return redirectWithGuard(request, new URL('/verify-email', request.url));
   }
 
   // Protect owners routes
   if (isOwnersRoute && !user) {
-    debugLog('REDIRECT', { requestId, reason: 'unauthenticated_on_owners', to: '/login' });
-    return NextResponse.redirect(new URL('/login', request.url));
+    return redirectWithGuard(request, new URL('/login', request.url));
   }
 
   if (isOwnersRoute && user && !user.email_confirmed_at) {
-    debugLog('REDIRECT', { requestId, reason: 'unverified_on_owners', to: '/verify-email' });
-    return NextResponse.redirect(new URL('/verify-email', request.url));
+    return redirectWithGuard(request, new URL('/verify-email', request.url));
   }
 
   // Protect business edit routes
   if (isBusinessEditRoute && !user) {
     const redirectUrl = new URL(`/login?redirect=${encodeURIComponent(request.nextUrl.pathname)}`, request.url);
-    debugLog('REDIRECT', { requestId, reason: 'unauthenticated_on_business_edit', to: redirectUrl.pathname });
-    return NextResponse.redirect(redirectUrl);
+    return redirectWithGuard(request, redirectUrl);
   }
 
   if (isBusinessEditRoute && user && !user.email_confirmed_at) {
-    debugLog('REDIRECT', { requestId, reason: 'unverified_on_business_edit', to: '/verify-email' });
-    return NextResponse.redirect(new URL('/verify-email', request.url));
+    return redirectWithGuard(request, new URL('/verify-email', request.url));
   }
 
-  // Business review route: allow guests (they can submit as Anonymous); require email verification only when logged in
   if (isBusinessReviewRoute && user && !user.email_confirmed_at) {
-    debugLog('REDIRECT', { requestId, reason: 'unverified_on_review', to: '/verify-email' });
-    return NextResponse.redirect(new URL('/verify-email', request.url));
+    return redirectWithGuard(request, new URL('/verify-email', request.url));
   }
 
-  // Protect business auth routes (claim-business)
   if (isBusinessAuthRoute && !user) {
-    debugLog('REDIRECT', { requestId, reason: 'unauthenticated_on_claim', to: '/login' });
-    return NextResponse.redirect(new URL('/login?redirect=/claim-business', request.url));
+    return redirectWithGuard(request, new URL('/login?redirect=/claim-business', request.url));
   }
 
   if (isBusinessAuthRoute && user && !user.email_confirmed_at) {
-    debugLog('REDIRECT', { requestId, reason: 'unverified_on_claim', to: '/verify-email' });
-    return NextResponse.redirect(new URL('/verify-email', request.url));
+    return redirectWithGuard(request, new URL('/verify-email', request.url));
   }
 
   // ROLE-BASED ACCESS CONTROL: Restrict business routes to business accounts only
   if (user && user.email_confirmed_at && !isBusinessAccount) {
-    // Personal users cannot access business-only routes
     if (isBusinessAuthRoute || isOwnersRoute || isBusinessEditRoute) {
       const redirectTarget = isOnboardingComplete ? '/complete' : '/interests';
-      debugLog('REDIRECT', { requestId, reason: 'personal_user_on_business_route', to: redirectTarget });
-      return NextResponse.redirect(new URL(redirectTarget, request.url));
+      return redirectWithGuard(request, new URL(redirectTarget, request.url));
     }
   }
 
-  // Redirect authenticated users from auth pages
+  // Never redirect FROM /verify-email or /login based on onboarding (auth routes already returned at top)
   if (isAuthRoute && user) {
-    // Allow access to verify-email page regardless of verification status
     if (pathname.startsWith('/verify-email')) {
-      debugLog('ALLOW', { requestId, reason: 'verify_email_page', pathname });
+      edgeLog('ALLOW', pathname, { hasUser: true, emailConfirmed: !!user?.email_confirmed_at });
       return response;
     }
 
     if (user.email_confirmed_at) {
-      // Determine correct redirect based on account type and onboarding status
       let redirectTarget: string;
       if (isBusinessAccount) {
         redirectTarget = '/my-businesses';
@@ -640,15 +704,14 @@ export async function proxy(request: NextRequest) {
       } else {
         redirectTarget = '/interests';
       }
-      debugLog('REDIRECT', { requestId, reason: 'authenticated_on_auth_route', to: redirectTarget });
-      return NextResponse.redirect(new URL(redirectTarget, request.url));
+      edgeLog('REDIRECT', pathname, { hasUser: true, emailConfirmed: true, isBusiness: isBusinessAccount, onboardingComplete: isOnboardingComplete, to: redirectTarget });
+      return redirectWithGuard(request, new URL(redirectTarget, request.url));
     } else {
-      debugLog('REDIRECT', { requestId, reason: 'unverified_on_auth_route', to: '/verify-email' });
-      return NextResponse.redirect(new URL('/verify-email', request.url));
+      return redirectWithGuard(request, new URL('/verify-email', request.url));
     }
   }
 
-  debugLog('ALLOW', { requestId, reason: 'default_allow', pathname });
+  edgeLog('ALLOW', pathname, { hasUser: !!user, emailConfirmed: !!user?.email_confirmed_at });
   return response;
 }
 
@@ -656,13 +719,12 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
+     * - _next/static, _next/image (Next internals)
+     * - favicon.ico, sitemap.xml, robots.txt
      * - api routes
+     * - static assets (images)
      */
-    '/((?!_next/static|_next/image|favicon.ico|api|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon\\.ico|sitemap\\.xml|robots\\.txt|api|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };
 
