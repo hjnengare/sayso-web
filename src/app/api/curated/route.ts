@@ -130,7 +130,7 @@ async function getCuratedFallback(
  */
 function transformToUI(
   business: CuratedBusiness, 
-  businessImages: Record<string, any[]>
+  businessImages: { [key: string]: any[] }
 ): CuratedBusinessUI {
   const images = businessImages[business.id] || [];
   const primaryImage = images.find((img: any) => img.is_primary) || images[0];
@@ -237,7 +237,7 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false });
 
     // Normalize images by business ID
-    const normalizedImages = normalizeBusinessImages(imagesData || []);
+    const normalizedImages = normalizeBusinessImages(imagesData || []) as unknown as { [key: string]: any[] };
 
     // Transform to UI format and split into top3/next10
     const top3: CuratedBusinessUI[] = [];
