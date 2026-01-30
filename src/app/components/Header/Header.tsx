@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Menu, Bell, Settings, Bookmark, Search, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import Logo from "../Logo/Logo";
 import OptimizedLink from "../Navigation/OptimizedLink";
 import DesktopNav from "./DesktopNav";
@@ -72,6 +73,7 @@ export default function Header({
   const router = useRouter();
   const searchParams = useSearchParams();
   const inputRef = useRef<HTMLInputElement>(null);
+  const mobileInputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   
   // Get search query from URL params
@@ -79,12 +81,17 @@ export default function Header({
   
   const [headerSearchQuery, setHeaderSearchQuery] = useState(urlSearchQuery);
   const [headerPlaceholder, setHeaderPlaceholder] = useState(
-    "Discover local experiences, premium dining, and gems..."
+    "Search..."
   );
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
 
   // Sync local state with URL params
   useEffect(() => {
     setHeaderSearchQuery(urlSearchQuery);
+    // Open mobile search if there's a search query
+    if (urlSearchQuery) {
+      setIsMobileSearchOpen(true);
+    }
   }, [urlSearchQuery]);
 
   const isSearchActive = headerSearchQuery.trim().length > 0;
@@ -101,8 +108,8 @@ export default function Header({
     const setByViewport = () => {
       setHeaderPlaceholder(
         window.innerWidth >= 1024
-          ? "Discover exceptional local experiences, premium dining, and gems..."
-          : "Search places, coffee, yoga..."
+          ? "Search businesses..."
+          : "Search..."
       );
     };
     setByViewport();
@@ -171,6 +178,26 @@ export default function Header({
       updateSearchUrl("");
     }
     inputRef.current?.focus();
+    mobileInputRef.current?.focus();
+  };
+
+  // Handle mobile search toggle
+  const handleMobileSearchToggle = () => {
+    setIsMobileSearchOpen(!isMobileSearchOpen);
+    if (!isMobileSearchOpen) {
+      // Focus input after animation
+      setTimeout(() => {
+        mobileInputRef.current?.focus();
+      }, 100);
+    }
+  };
+
+  // Close mobile search when cleared and empty
+  const handleMobileSearchClear = () => {
+    handleClearSearch();
+    if (!headerSearchQuery) {
+      setIsMobileSearchOpen(false);
+    }
   };
 
   // Cleanup debounce on unmount
@@ -182,29 +209,31 @@ export default function Header({
     };
   }, []);
 
-  const renderHomeSearchInput = () => (
+  // Desktop search input (compact, for right side)
+  const renderDesktopSearchInput = () => (
     <form
       onSubmit={handleSearchSubmit}
-      className="w-full"
+      className="w-full max-w-[240px]"
     >
       <div className="relative">
-        {/* Right side icons - Clear button or Search icon */}
-        <div className="absolute inset-y-0 right-2 flex items-center gap-1 z-10">
-          {isSearchActive && headerSearchQuery ? (
+        {/* Search icon on left */}
+        <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none z-10">
+          <Search className="w-4 h-4 text-charcoal/50" strokeWidth={2} />
+        </div>
+
+        {/* Clear button on right */}
+        {isSearchActive && headerSearchQuery && (
+          <div className="absolute inset-y-0 right-2 flex items-center z-10">
             <button
               type="button"
               onClick={handleClearSearch}
-              className="flex items-center justify-center w-9 h-9 rounded-full text-charcoal/60 hover:text-charcoal hover:bg-charcoal/5 transition-all duration-200"
+              className="flex items-center justify-center w-6 h-6 rounded-full text-charcoal/60 hover:text-charcoal hover:bg-charcoal/5 transition-all duration-200"
               aria-label="Clear search"
             >
-              <X className="w-5 h-5" strokeWidth={2} />
+              <X className="w-4 h-4" strokeWidth={2} />
             </button>
-          ) : (
-            <div className="flex items-center justify-center w-9 h-9 rounded-full text-charcoal/50">
-              <Search className="w-5 h-5" strokeWidth={2} />
-            </div>
-          )}
-        </div>
+          </div>
+        )}
 
         <input
           ref={inputRef}
@@ -213,11 +242,11 @@ export default function Header({
           onChange={handleSearchInputChange}
           placeholder={headerPlaceholder}
           className={`w-full rounded-full bg-off-white text-charcoal placeholder:text-charcoal/50
-            border shadow-sm
-            focus:outline-none focus:bg-white focus:border-sage/50
+            border shadow-sm text-sm
+            focus:outline-none focus:bg-white focus:border-sage focus:ring-1 focus:ring-sage/30
             hover:bg-white/90 transition-all duration-200
-            pr-12 pl-5 py-3
-            ${isSearchActive ? 'border-sage/40 bg-white' : 'border-white/40'}
+            pl-9 pr-8 py-2
+            ${isSearchActive ? 'border-sage bg-white' : 'border-charcoal/10'}
           `}
           style={{
             fontFamily: "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
@@ -227,6 +256,63 @@ export default function Header({
         />
       </div>
     </form>
+  );
+
+  // Mobile search input (expandable)
+  const renderMobileSearchInput = () => (
+    <motion.form
+      initial={{ width: 0, opacity: 0 }}
+      animate={{ width: "100%", opacity: 1 }}
+      exit={{ width: 0, opacity: 0 }}
+      transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+      onSubmit={handleSearchSubmit}
+      className="flex-1 overflow-hidden"
+    >
+      <div className="relative">
+        {/* Search icon on left */}
+        <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none z-10">
+          <Search className="w-4 h-4 text-charcoal/50" strokeWidth={2} />
+        </div>
+
+        {/* Clear/Close button on right */}
+        <div className="absolute inset-y-0 right-2 flex items-center z-10">
+          <button
+            type="button"
+            onClick={() => {
+              if (headerSearchQuery) {
+                handleClearSearch();
+              } else {
+                setIsMobileSearchOpen(false);
+              }
+            }}
+            className="flex items-center justify-center w-7 h-7 rounded-full text-charcoal/60 hover:text-charcoal hover:bg-charcoal/5 transition-all duration-200"
+            aria-label={headerSearchQuery ? "Clear search" : "Close search"}
+          >
+            <X className="w-4 h-4" strokeWidth={2} />
+          </button>
+        </div>
+
+        <input
+          ref={mobileInputRef}
+          type="text"
+          value={headerSearchQuery}
+          onChange={handleSearchInputChange}
+          placeholder="Search..."
+          className={`w-full rounded-full bg-off-white text-charcoal placeholder:text-charcoal/50
+            border shadow-sm text-sm
+            focus:outline-none focus:bg-white focus:border-sage focus:ring-1 focus:ring-sage/30
+            transition-all duration-200
+            pl-9 pr-10 py-2
+            ${isSearchActive ? 'border-sage bg-white' : 'border-charcoal/10'}
+          `}
+          style={{
+            fontFamily: "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+          }}
+          aria-label="Search businesses"
+          autoComplete="off"
+        />
+      </div>
+    </motion.form>
   );
 
   const currentPaddingClass = heroMode ? "py-0" : reducedPadding ? "py-1" : "py-4";
@@ -267,106 +353,127 @@ export default function Header({
     <>
       <header ref={headerRef} className={headerClassName} style={sf}>
         <div
-          className={`relative py-4 z-[1] mx-auto w-full max-w-7xl ${horizontalPaddingClass} flex items-center h-full min-h-[96px]`}
+          className={`relative py-4 z-[1] mx-auto w-full max-w-7xl ${horizontalPaddingClass} flex items-center h-full min-h-[72px] lg:min-h-[80px]`}
         >
           {isPersonalLayout ? (
             <div className="w-full">
-              {/* ✅ Top Row Grid */}
-              <div
-                className={[
-                  "flex items-center justify-between gap-3",
-                  "lg:grid lg:items-center",
-                  isHomePage ? "lg:grid-cols-[1fr_auto_1fr]" : "lg:grid-cols-[auto_1fr_auto]",
-                ].join(" ")}
-              >
-                {/* Left column */}
-                <div className="hidden lg:flex items-center">
-                  {isHomePage ? (
-                    <div className="max-w-[360px] w-full">{showSearch && renderHomeSearchInput()}</div>
-                  ) : (
-                    <OptimizedLink href="/" className="group flex items-center" aria-label="sayso Home">
-                      <Logo
-                        variant="default"
-                        showMark={false}
-                        className="drop-shadow-[0_4px_16px_rgba(0,0,0,0.12)] transition-all duration-300 group-hover:drop-shadow-[0_6px_20px_rgba(0,0,0,0.15)]"
-                      />
-                    </OptimizedLink>
-                  )}
-                </div>
-
-                {/* Center column */}
-                <div className="hidden lg:flex justify-center">
-                  {isHomePage ? (
-                    <OptimizedLink href="/" className="group flex items-center" aria-label="sayso Home">
-                      <Logo
-                        variant="default"
-                        showMark={false}
-                        className="drop-shadow-[0_4px_16px_rgba(0,0,0,0.12)] transition-all duration-300 group-hover:drop-shadow-[0_6px_20px_rgba(0,0,0,0.15)]"
-                      />
-                    </OptimizedLink>
-                  ) : (
-                    <DesktopNav {...desktopNavProps} mode="navOnly" />
-                  )}
-                </div>
-
-                {/* Right column */}
-                <div className="hidden lg:flex items-center justify-end">
-                  <DesktopNav {...desktopNavProps} mode="iconsOnly" />
-                </div>
-
-                {/* Mobile: wordmark left-aligned on all pages (home unchanged; non-home gets logo on left) */}
-                <div className="flex lg:hidden items-center gap-2 w-full pl-4">
-                  <OptimizedLink href="/" className="group flex items-center flex-shrink-0" aria-label="sayso Home">
+              {/* Desktop Layout: Logo left, Nav center, Search+Icons right */}
+              <div className="hidden lg:grid lg:grid-cols-[auto_1fr_auto] lg:items-center lg:gap-4">
+                {/* Left: Logo */}
+                <div className="flex items-center">
+                  <OptimizedLink href="/" className="group flex items-center" aria-label="sayso Home">
                     <Logo
                       variant="default"
                       showMark={false}
                       className="drop-shadow-[0_4px_16px_rgba(0,0,0,0.12)] transition-all duration-300 group-hover:drop-shadow-[0_6px_20px_rgba(0,0,0,0.15)]"
                     />
                   </OptimizedLink>
+                </div>
 
-                  <div className="flex items-center gap-2 ml-auto">
-                    {!isGuest && (
-                      <OptimizedLink
-                        href="/notifications"
-                        className={`relative w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
-                          isNotificationsActive
-                            ? "text-sage bg-sage/5"
-                            : whiteText
-                              ? "text-white hover:text-white/80 hover:bg-white/10"
-                              : "text-charcoal/80 hover:text-sage hover:bg-sage/5"
-                        }`}
-                        aria-label="Notifications"
-                      >
-                        <Bell className="w-5 h-5" fill={isNotificationsActive ? "currentColor" : "none"} />
-                        {unreadCount > 0 && (
-                          <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-white text-[10px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
-                            {unreadCount > 99 ? "99+" : unreadCount}
-                          </span>
-                        )}
+                {/* Center: Navigation */}
+                <div className="flex justify-center">
+                  <DesktopNav {...desktopNavProps} mode="navOnly" />
+                </div>
+
+                {/* Right: Search + Icons */}
+                <div className="flex items-center justify-end gap-3">
+                  {showSearch && isHomePage && renderDesktopSearchInput()}
+                  <DesktopNav {...desktopNavProps} mode="iconsOnly" />
+                </div>
+              </div>
+
+              {/* Mobile Layout */}
+              <div className="flex lg:hidden items-center gap-2 w-full">
+                {/* Logo - always visible when search is closed */}
+                <AnimatePresence mode="wait">
+                  {!isMobileSearchOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{ duration: 0.15 }}
+                      className="pl-2"
+                    >
+                      <OptimizedLink href="/" className="group flex items-center flex-shrink-0" aria-label="sayso Home">
+                        <Logo
+                          variant="default"
+                          showMark={false}
+                          className="drop-shadow-[0_4px_16px_rgba(0,0,0,0.12)] transition-all duration-300 group-hover:drop-shadow-[0_6px_20px_rgba(0,0,0,0.15)]"
+                        />
                       </OptimizedLink>
-                    )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
-                    {!isBusinessAccountUser && !isGuest && (
-                      <OptimizedLink
-                        href="/saved"
-                        className={`relative w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
-                          isSavedActive
-                            ? "text-sage bg-sage/5"
-                            : whiteText
-                              ? "text-white hover:text-white/80 hover:bg-white/10"
-                              : "text-charcoal/80 hover:text-sage hover:bg-sage/5"
-                        }`}
-                        aria-label="Saved"
-                      >
-                        <Bookmark className="w-5 h-5" fill={isSavedActive ? "currentColor" : "none"} />
-                        {savedCount > 0 && (
-                          <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-white text-[10px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
-                            {savedCount > 99 ? "99+" : savedCount}
-                          </span>
-                        )}
-                      </OptimizedLink>
-                    )}
+                {/* Mobile Search (expandable) */}
+                <AnimatePresence>
+                  {isMobileSearchOpen && showSearch && isHomePage && renderMobileSearchInput()}
+                </AnimatePresence>
 
+                {/* Right side icons */}
+                <div className="flex items-center gap-1 ml-auto">
+                  {/* Search icon trigger (mobile only, when search is closed) */}
+                  {showSearch && isHomePage && !isMobileSearchOpen && (
+                    <button
+                      type="button"
+                      onClick={handleMobileSearchToggle}
+                      className={`w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
+                        whiteText
+                          ? "text-white hover:text-white/80 hover:bg-white/10"
+                          : "text-charcoal/80 hover:text-sage hover:bg-sage/5"
+                      }`}
+                      aria-label="Open search"
+                    >
+                      <Search className="w-5 h-5" strokeWidth={2} />
+                    </button>
+                  )}
+
+                  {/* Notifications */}
+                  {!isGuest && !isMobileSearchOpen && (
+                    <OptimizedLink
+                      href="/notifications"
+                      className={`relative w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
+                        isNotificationsActive
+                          ? "text-sage bg-sage/5"
+                          : whiteText
+                            ? "text-white hover:text-white/80 hover:bg-white/10"
+                            : "text-charcoal/80 hover:text-sage hover:bg-sage/5"
+                      }`}
+                      aria-label="Notifications"
+                    >
+                      <Bell className="w-5 h-5" fill={isNotificationsActive ? "currentColor" : "none"} />
+                      {unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-white text-[10px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
+                          {unreadCount > 99 ? "99+" : unreadCount}
+                        </span>
+                      )}
+                    </OptimizedLink>
+                  )}
+
+                  {/* Saved */}
+                  {!isBusinessAccountUser && !isGuest && !isMobileSearchOpen && (
+                    <OptimizedLink
+                      href="/saved"
+                      className={`relative w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
+                        isSavedActive
+                          ? "text-sage bg-sage/5"
+                          : whiteText
+                            ? "text-white hover:text-white/80 hover:bg-white/10"
+                            : "text-charcoal/80 hover:text-sage hover:bg-sage/5"
+                      }`}
+                      aria-label="Saved"
+                    >
+                      <Bookmark className="w-5 h-5" fill={isSavedActive ? "currentColor" : "none"} />
+                      {savedCount > 0 && (
+                        <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-white text-[10px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
+                          {savedCount > 99 ? "99+" : savedCount}
+                        </span>
+                      )}
+                    </OptimizedLink>
+                  )}
+
+                  {/* Menu button */}
+                  {!isMobileSearchOpen && (
                     <button
                       type="button"
                       onClick={() => setIsMobileMenuOpen(true)}
@@ -380,19 +487,12 @@ export default function Header({
                     >
                       <Menu className="w-6 h-6" />
                     </button>
-                  </div>
+                  )}
                 </div>
               </div>
-              {/* ✅ END Top Row Grid (this was missing) */}
-
-              {/* Desktop Nav Row (home only) */}
-              {isHomePage && (
-                <div className="hidden lg:flex justify-center mt-3">
-                  <DesktopNav {...desktopNavProps} mode="navOnly" />
-                </div>
-              )}
             </div>
           ) : (
+            /* Business Account Layout - unchanged */
             <div className="flex items-center justify-between gap-3 lg:gap-6 w-full h-full">
               <OptimizedLink href="/" className="group flex flex-shrink-0 relative items-center pl-4 lg:pl-0" aria-label="sayso Home">
                 <div className="relative">
