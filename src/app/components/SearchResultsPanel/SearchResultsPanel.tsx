@@ -123,14 +123,14 @@ export default function SearchResultsPanel({
         </div>
 
         {loading && (
-          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="list-none mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {skeletonItems.map((item) => (
-              <div
+              <li
                 key={item}
                 className="h-56 w-full animate-pulse rounded-2xl bg-slate-200/60"
               />
             ))}
-          </div>
+          </ul>
         )}
 
         {!loading && error && (
@@ -146,24 +146,25 @@ export default function SearchResultsPanel({
         )}
 
         {!loading && !error && results.length > 0 && (
-          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="list-none mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {results.map((business, index) => (
-              <BusinessCard
-                key={business.id}
-                business={{
-                  ...business,
-                  percentiles: undefined,
-                  reviews: 0,
-                  alt: business.name,
-                  rating: business.rating ?? business.stats?.average_rating ?? 0,
-                  hasRating: Boolean(business.stats?.average_rating),
-                }}
-                compact
-                inGrid
-                index={index}
-              />
+              <li key={business.id}>
+                <BusinessCard
+                  business={{
+                    ...business,
+                    percentiles: undefined,
+                    reviews: 0,
+                    alt: business.name,
+                    rating: business.rating ?? business.stats?.average_rating ?? 0,
+                    hasRating: Boolean(business.stats?.average_rating),
+                  }}
+                  compact
+                  inGrid
+                  index={index}
+                />
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </div>
     </div>
