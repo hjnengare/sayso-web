@@ -212,7 +212,7 @@ export default function Header({
           value={headerSearchQuery}
           onChange={handleSearchInputChange}
           placeholder={headerPlaceholder}
-          className={`w-full rounded-none bg-off-white text-charcoal placeholder:text-charcoal/50
+          className={`w-full rounded-full bg-off-white text-charcoal placeholder:text-charcoal/50
             border shadow-sm
             focus:outline-none focus:bg-white focus:border-sage/50
             hover:bg-white/90 transition-all duration-200
