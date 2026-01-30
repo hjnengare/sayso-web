@@ -116,7 +116,6 @@ BEGIN
       business_id,
       COUNT(*)::INTEGER as impression_count
     FROM user_reco_impressions
-    WHERE impression_type = 'shown'
     GROUP BY business_id
   ),
   
@@ -385,7 +384,7 @@ CREATE INDEX IF NOT EXISTS idx_saved_businesses_business_id
 ON saved_businesses(business_id);
 
 CREATE INDEX IF NOT EXISTS idx_user_reco_impressions_business 
-ON user_reco_impressions(business_id, impression_type);
+ON user_reco_impressions(business_id);
 
 -- Comments
 COMMENT ON FUNCTION get_curated_businesses IS
