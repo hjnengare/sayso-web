@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import nextDynamic from "next/dynamic";
-import { ChevronRight, Award } from "lucide-react";
+import { ChevronRight, Award, FileText, Download, ExternalLink } from "lucide-react";
 import EmailVerificationGuard from "../components/Auth/EmailVerificationGuard";
 import LeaderboardPodium from "../components/Leaderboard/LeaderboardPodium";
 import LeaderboardList from "../components/Leaderboard/LeaderboardList";
@@ -224,7 +224,7 @@ function LeaderboardPage() {
                       className="mb-6 sm:mb-8 px-4 sm:px-6 text-center pt-4"
                       variants={itemVariants}
                     >
-                      <div className="my-4">
+                      <div className="my-4 relative">
                         <h1 
                           className="text-2xl sm:text-3xl md:text-4xl font-semibold leading-[1.2] tracking-tight text-charcoal mx-auto font-urbanist"
                           style={{ 
@@ -261,6 +261,59 @@ function LeaderboardPage() {
                         Celebrate the top contributors and businesses in our community. 
                         See who's making a difference and discover the most loved local spots.
                       </motion.p>
+
+                      {/* Badge Definitions Link */}
+                      <motion.div 
+                        className="mt-4 flex items-center justify-center gap-2"
+                        variants={itemVariants}
+                      >
+                        {/* Mobile: Icon-only button */}
+                        <a
+                          href="/badges/Badge%20Defininitions.pdf"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="sm:hidden inline-flex items-center justify-center w-10 h-10 rounded-full bg-sage/10 border border-sage/30 text-sage hover:bg-sage/20 hover:border-sage/50 transition-all duration-200"
+                          aria-label="View badge definitions (opens PDF in new tab)"
+                          title="View badge definitions"
+                        >
+                          <FileText className="w-5 h-5" />
+                        </a>
+
+                        {/* Desktop: Text + icons with Open/Download options */}
+                        <div className="hidden sm:flex items-center gap-2">
+                          <a
+                            href="/badges/Badge%20Defininitions.pdf"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-sage/10 border border-sage/30 text-sage hover:bg-sage/20 hover:border-sage/50 transition-all duration-200 text-sm font-semibold"
+                            style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                          >
+                            <FileText className="w-4 h-4" />
+                            <span>Badge definitions</span>
+                            <ExternalLink className="w-3.5 h-3.5 opacity-70" />
+                          </a>
+                          <a
+                            href="/badges/Badge%20Defininitions.pdf"
+                            download="Badge Definitions.pdf"
+                            className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-charcoal/5 border border-charcoal/10 text-charcoal/60 hover:bg-charcoal/10 hover:text-charcoal hover:border-charcoal/20 transition-all duration-200"
+                            aria-label="Download badge definitions PDF"
+                            title="Download PDF"
+                          >
+                            <Download className="w-4 h-4" />
+                          </a>
+                        </div>
+
+                        {/* Mobile: Download button */}
+                        <a
+                          href="/badges/Badge%20Defininitions.pdf"
+                          download="Badge Definitions.pdf"
+                          className="sm:hidden inline-flex items-center justify-center w-10 h-10 rounded-full bg-charcoal/5 border border-charcoal/10 text-charcoal/60 hover:bg-charcoal/10 hover:text-charcoal hover:border-charcoal/20 transition-all duration-200"
+                          aria-label="Download badge definitions PDF"
+                          title="Download PDF"
+                        >
+                          <Download className="w-5 h-5" />
+                        </a>
+                      </motion.div>
                     </motion.div>
                   </div>
                 </section>
