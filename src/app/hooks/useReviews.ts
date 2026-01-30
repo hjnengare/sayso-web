@@ -22,6 +22,43 @@ interface ReviewFormData {
   images?: File[];
 }
 
+// ============================================================================
+// Error Code to Message Mapping (fallback if API doesn't provide message)
+// ============================================================================
+const REVIEW_ERROR_MESSAGES: Record<string, string> = {
+  NOT_AUTHENTICATED: "Please log in to submit your review.",
+  EMAIL_NOT_VERIFIED: "Please verify your email to submit reviews.",
+  MISSING_FIELDS: "Please fill in all required fields.",
+  INVALID_RATING: "Please select a rating (1-5 stars).",
+  CONTENT_TOO_SHORT: "Your review is too short. Please write at least 10 characters.",
+  CONTENT_TOO_LONG: "Your review is too long. Please keep it under 5000 characters.",
+  TITLE_TOO_LONG: "Review title is too long. Please keep it under 100 characters.",
+  VALIDATION_FAILED: "Please check your review and try again.",
+  CONTENT_MODERATION_FAILED: "Your review contains content that doesn't meet our guidelines. Please revise.",
+  BUSINESS_NOT_FOUND: "We couldn't find that business. Please try again.",
+  EVENT_NOT_FOUND: "We couldn't find that event. It may have been removed.",
+  SPECIAL_NOT_FOUND: "We couldn't find that special. It may have expired.",
+  DUPLICATE_REVIEW: "You've already reviewed this. You can edit your existing review instead.",
+  RLS_BLOCKED: "We couldn't save your review right now. Please try again.",
+  DB_ERROR: "We couldn't save your review. Please try again.",
+  IMAGE_UPLOAD_FAILED: "Some images couldn't be uploaded. Your review was saved.",
+  SERVER_ERROR: "Something went wrong on our side. Please try again.",
+};
+
+function getReviewErrorMessage(result: { message?: string; code?: string; error?: string; details?: string }): string {
+  // Prefer explicit message from API
+  if (result.message) return result.message;
+  // Fall back to code mapping
+  if (result.code && REVIEW_ERROR_MESSAGES[result.code]) {
+    return REVIEW_ERROR_MESSAGES[result.code];
+  }
+  // Legacy error/details fields
+  if (result.details && typeof result.details === 'string') return result.details;
+  if (result.error) return result.error;
+  // Ultimate fallback
+  return "An error occurred. Please try again.";
+}
+
 export function useReviews(businessId?: string) {
   const [reviews, setReviews] = useState<ReviewWithUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -277,29 +314,34 @@ export function useReviewSubmission() {
         body: formData,
       });
 
-      // Check if response is ok before trying to parse JSON
-      if (!response.ok) {
-        let errorMessage = 'Failed to submit review';
-        try {
-          const errorResult = await response.json();
-          // Prefer details (e.g. RLS/DB message) so user sees actual reason
-          errorMessage = errorResult.details || errorResult.error || errorMessage;
-        } catch (parseError) {
-          // If JSON parsing fails, use the status text
-          errorMessage = response.statusText || errorMessage;
-        }
-        throw new Error(errorMessage);
+      let result;
+      try {
+        result = await response.json();
+      } catch {
+        // JSON parsing failed
+        const errorMessage = 'Something went wrong. Please try again.';
+        setError(errorMessage);
+        showToast(errorMessage, 'sage');
+        return false;
       }
 
-      const result = await response.json();
+      // Check for error responses (structured or legacy)
+      if (!response.ok || result.success === false) {
+        const errorMessage = getReviewErrorMessage(result);
+        setError(errorMessage);
+        showToast(errorMessage, 'sage');
+        console.error('[Review Submit] Error:', result);
+        return false;
+      }
 
+      // Success!
       showToast('Review submitted', 'sage', 3000);
       return true;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to submit review';
       setError(errorMessage);
       showToast(errorMessage, 'sage');
-      console.error('Error submitting review:', err);
+      console.error('[Review Submit] Unexpected error:', err);
       return false;
     } finally {
       setSubmitting(false);

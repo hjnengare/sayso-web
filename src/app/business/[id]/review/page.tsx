@@ -57,7 +57,7 @@ function WriteReviewContent() {
   } = useReviewForm();
 
   const { user } = useAuth();
-  const { submitReview, submitting } = useReviewSubmission();
+  const { submitReview, submitting, error: submitError } = useReviewSubmission();
 
   // State for edit mode (guests cannot edit — only when logged in)
   const [loadingReview, setLoadingReview] = useState(false);
@@ -536,6 +536,8 @@ function WriteReviewContent() {
                                   onSubmit={handleSubmitReview}
                                   existingImages={existingImageUrls}
                                   onExistingImagesChange={setExistingImageUrls}
+                                  isSubmitting={submitting}
+                                  error={submitError}
                                 />
                               </div>
                             </div>

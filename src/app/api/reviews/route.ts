@@ -4,6 +4,48 @@ import { ReviewValidator } from '../../lib/utils/validation';
 import { ContentModerator } from '../../lib/utils/contentModeration';
 import { invalidateBusinessCache } from '../../lib/utils/optimizedQueries';
 
+// ============================================================================
+// Structured Error Response Helpers
+// ============================================================================
+
+type ReviewErrorCode =
+  | 'NOT_AUTHENTICATED'
+  | 'EMAIL_NOT_VERIFIED'
+  | 'MISSING_FIELDS'
+  | 'INVALID_RATING'
+  | 'CONTENT_TOO_SHORT'
+  | 'CONTENT_TOO_LONG'
+  | 'TITLE_TOO_LONG'
+  | 'VALIDATION_FAILED'
+  | 'CONTENT_MODERATION_FAILED'
+  | 'BUSINESS_NOT_FOUND'
+  | 'EVENT_NOT_FOUND'
+  | 'SPECIAL_NOT_FOUND'
+  | 'DUPLICATE_REVIEW'
+  | 'RLS_BLOCKED'
+  | 'DB_ERROR'
+  | 'IMAGE_UPLOAD_FAILED'
+  | 'SERVER_ERROR';
+
+interface ReviewErrorResponse {
+  success: false;
+  code: ReviewErrorCode;
+  message: string;
+  details?: Record<string, unknown>;
+}
+
+function errorResponse(
+  code: ReviewErrorCode,
+  message: string,
+  status: number,
+  details?: Record<string, unknown>
+): NextResponse<ReviewErrorResponse> {
+  return NextResponse.json(
+    { success: false, code, message, details },
+    { status }
+  );
+}
+
 // Simple text sanitization function (strips HTML tags and decodes basic entities)
 function sanitizeText(text: string): string {
   if (!text) return '';
@@ -58,27 +100,40 @@ export async function POST(req: Request) {
       targetTable = 'event_reviews';
       targetColumn = 'event_id';
       if (!targetId) {
-        return NextResponse.json({ error: 'Event ID is required' }, { status: 400 });
+        return errorResponse(
+          'MISSING_FIELDS',
+          'Please select an event to review.',
+          400
+        );
       }
     } else if (reviewType === 'special') {
       isSpecialReview = true;
       targetTable = 'special_reviews';
       targetColumn = 'special_id';
       if (!targetId) {
-        return NextResponse.json({ error: 'Special ID is required' }, { status: 400 });
+        return errorResponse(
+          'MISSING_FIELDS',
+          'Please select a special to review.',
+          400
+        );
       }
     } else {
       // legacy business review — anonymous allowed
       if (!businessIdentifier) {
-        return NextResponse.json({ error: 'Business ID is required' }, { status: 400 });
+        return errorResponse(
+          'MISSING_FIELDS',
+          'Please select a business to review.',
+          400
+        );
       }
     }
 
     // Event and special reviews require auth; business reviews allow anonymous
     if ((isEventReview || isSpecialReview) && isAnonymous) {
-      return NextResponse.json(
-        { error: 'You must be logged in to submit this type of review' },
-        { status: 401 }
+      return errorResponse(
+        'NOT_AUTHENTICATED',
+        'Please log in to submit this type of review.',
+        401
       );
     }
 
@@ -97,10 +152,18 @@ export async function POST(req: Request) {
 
       if (eventError) {
         console.error('[API] Error checking event:', eventError);
-        return NextResponse.json({ error: 'Failed to validate event' }, { status: 500 });
+        return errorResponse(
+          'DB_ERROR',
+          "We couldn't verify the event. Please try again.",
+          500
+        );
       }
       if (!eventData) {
-        return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+        return errorResponse(
+          'EVENT_NOT_FOUND',
+          "We couldn't find that event. It may have been removed.",
+          404
+        );
       }
 
       targetData = eventData;
@@ -114,10 +177,18 @@ export async function POST(req: Request) {
 
       if (specialError) {
         console.error('[API] Error checking special:', specialError);
-        return NextResponse.json({ error: 'Failed to validate special' }, { status: 500 });
+        return errorResponse(
+          'DB_ERROR',
+          "We couldn't verify the special. Please try again.",
+          500
+        );
       }
       if (!specialData) {
-        return NextResponse.json({ error: 'Special not found' }, { status: 404 });
+        return errorResponse(
+          'SPECIAL_NOT_FOUND',
+          "We couldn't find that special. It may have expired or been removed.",
+          404
+        );
       }
 
       const businessName = Array.isArray(specialData.businesses)
@@ -187,17 +258,19 @@ export async function POST(req: Request) {
       }
 
       if (!business_id || !resolvedBusiness) {
-        return NextResponse.json(
-          { error: 'Business not found', details: 'Invalid business identifier' },
-          { status: 404 }
+        return errorResponse(
+          'BUSINESS_NOT_FOUND',
+          "We couldn't find that business. Please try again.",
+          404
         );
       }
 
       if (!UUID_REGEX.test(business_id)) {
         console.error('[API] Invalid UUID format for business_id in POST:', business_id);
-        return NextResponse.json(
-          { error: 'Invalid business identifier format' },
-          { status: 400 }
+        return errorResponse(
+          'BUSINESS_NOT_FOUND',
+          "Invalid business. Please select a valid business to review.",
+          400
         );
       }
 
@@ -213,9 +286,27 @@ export async function POST(req: Request) {
     });
 
     if (!validationResult.isValid) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: validationResult.errors },
-        { status: 400 }
+      // Create user-friendly message from validation errors
+      const errors = validationResult.errors || [];
+      let userMessage = 'Please check your review and try again.';
+      
+      if (errors.some((e: string) => e.toLowerCase().includes('rating'))) {
+        userMessage = 'Please select a rating (1-5 stars).';
+      } else if (errors.some((e: string) => e.toLowerCase().includes('content') && e.toLowerCase().includes('short'))) {
+        userMessage = 'Your review is too short. Please write at least 10 characters.';
+      } else if (errors.some((e: string) => e.toLowerCase().includes('content') && e.toLowerCase().includes('long'))) {
+        userMessage = 'Your review is too long. Please keep it under 5000 characters.';
+      } else if (errors.some((e: string) => e.toLowerCase().includes('content'))) {
+        userMessage = 'Please write a review describing your experience.';
+      } else if (errors.some((e: string) => e.toLowerCase().includes('title'))) {
+        userMessage = 'Review title is too long. Please keep it under 100 characters.';
+      }
+
+      return errorResponse(
+        'VALIDATION_FAILED',
+        userMessage,
+        400,
+        { errors }
       );
     }
 
@@ -225,9 +316,11 @@ export async function POST(req: Request) {
 
     const moderationResult = ContentModerator.moderate(sanitizedContent);
     if (!moderationResult.isClean) {
-      return NextResponse.json(
-        { error: 'Content does not meet community guidelines', reasons: moderationResult.reasons },
-        { status: 400 }
+      return errorResponse(
+        'CONTENT_MODERATION_FAILED',
+        'Your review contains content that doesn\'t meet our community guidelines. Please revise and try again.',
+        400,
+        { reasons: moderationResult.reasons }
       );
     }
 
@@ -292,26 +385,48 @@ export async function POST(req: Request) {
         .single();
 
       if (reviewError) {
-        console.error('Error creating review:', reviewError);
-        return NextResponse.json(
-          { error: 'Failed to create review', details: reviewError.message },
-          { status: 500 }
+        console.error('[Review API] Error creating review:', reviewError);
+        
+        // Check for RLS/permission errors
+        if (reviewError.message?.includes('permission') || reviewError.code === '42501') {
+          return errorResponse(
+            'RLS_BLOCKED',
+            "We couldn't save your review right now. Please try again.",
+            403
+          );
+        }
+        
+        // Check for duplicate/unique constraint errors
+        if (reviewError.code === '23505' || reviewError.message?.includes('duplicate')) {
+          return errorResponse(
+            'DUPLICATE_REVIEW',
+            "You've already reviewed this. You can edit your existing review instead.",
+            409
+          );
+        }
+        
+        return errorResponse(
+          'DB_ERROR',
+          "We couldn't save your review. Please try again.",
+          500
         );
       }
 
       if (!reviewData) {
-        return NextResponse.json(
-          { error: 'Failed to create review - no data returned' },
-          { status: 500 }
+        return errorResponse(
+          'DB_ERROR',
+          "We couldn't save your review. Please try again.",
+          500
         );
       }
 
       review = reviewData;
     } catch (error) {
-      console.error('Unexpected error creating review:', error);
-      return NextResponse.json(
-        { error: 'Failed to create review', details: 'Unexpected error occurred' },
-        { status: 500 }
+      console.error('[Review API] Unexpected error creating review:', error);
+      return errorResponse(
+        'SERVER_ERROR',
+        'Something went wrong. Please try again.',
+        500
       );
     }
 
@@ -522,17 +637,11 @@ export async function POST(req: Request) {
       }
     );
   } catch (error) {
-    console.error('Error in reviews API:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-    const errorStack = error instanceof Error ? error.stack : undefined;
-
-    return NextResponse.json(
-      {
-        error: 'Internal server error',
-        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined,
-        stack: process.env.NODE_ENV === 'development' ? errorStack : undefined,
-      },
-      { status: 500 }
+    console.error('[Review API] Unexpected error:', error);
+    return errorResponse(
+      'SERVER_ERROR',
+      'Something went wrong on our side. Please try again.',
+      500
     );
   }
 }

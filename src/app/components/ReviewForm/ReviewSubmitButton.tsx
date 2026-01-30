@@ -1,22 +1,33 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, AlertCircle } from "lucide-react";
 
 interface ReviewSubmitButtonProps {
   isFormValid: boolean;
   onSubmit: () => void;
   isSubmitting?: boolean;
+  error?: string | null;
 }
 
 export default function ReviewSubmitButton({
   isFormValid,
   onSubmit,
   isSubmitting = false,
+  error = null,
 }: ReviewSubmitButtonProps) {
   const touchStartTime = useRef<number | null>(null);
   const lastTouchEnd = useRef<number | null>(null);
+  const errorRef = useRef<HTMLDivElement>(null);
+
+  // Scroll error into view when it appears
+  useEffect(() => {
+    if (error && errorRef.current) {
+      errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      errorRef.current.focus();
+    }
+  }, [error]);
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     // Prevent click if it was triggered by a recent touch (mobile devices)
@@ -62,7 +73,28 @@ export default function ReviewSubmitButton({
   };
 
   return (
-    <div className="pt-2">
+    <div className="pt-2 space-y-4">
+      {/* Inline Error Banner */}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            ref={errorRef}
+            initial={{ opacity: 0, y: -10, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: 'auto' }}
+            exit={{ opacity: 0, y: -10, height: 0 }}
+            role="alert"
+            tabIndex={-1}
+            className="flex items-start gap-3 p-4 rounded-[12px] bg-coral/10 border border-coral/30 text-charcoal"
+            style={{
+              fontFamily: 'Urbanist, system-ui, sans-serif',
+            }}
+          >
+            <AlertCircle className="w-5 h-5 text-coral flex-shrink-0 mt-0.5" />
+            <p className="text-sm font-medium">{error}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <motion.button
         type="button"
         onClick={handleClick}

@@ -37,6 +37,7 @@ interface ReviewFormProps {
   existingImages?: string[];
   onExistingImagesChange?: (urls: string[]) => void;
   isSubmitting?: boolean;
+  error?: string | null;
 }
 
 export default function ReviewForm({
@@ -57,6 +58,7 @@ export default function ReviewForm({
   existingImages = [],
   onExistingImagesChange,
   isSubmitting = false,
+  error = null,
 }: ReviewFormProps) {
   const hasImages = existingImages.length > 0 || selectedImages.length > 0;
 
@@ -180,6 +182,7 @@ export default function ReviewForm({
             isFormValid={isFormValid}
             onSubmit={onSubmit}
             isSubmitting={isSubmitting}
+            error={error}
           />
         </motion.div>
       </div>

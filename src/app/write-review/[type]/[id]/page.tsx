@@ -1,10 +1,10 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense, useRef } from "react";
 import dynamic from "next/dynamic";
-import { motion } from "framer-motion";
-import { Star, ArrowLeft, Calendar, MapPin, Clock } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Star, ArrowLeft, Calendar, MapPin, Clock, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useToast } from "../../../contexts/ToastContext";
@@ -14,6 +14,29 @@ import RatingSelector from "../../../components/ReviewForm/RatingSelector";
 import ReviewTextForm from "../../../components/ReviewForm/ReviewTextForm";
 import ReviewSubmitButton from "../../../components/ReviewForm/ReviewSubmitButton";
 import OptimizedImage from "../../../components/Performance/OptimizedImage";
+
+// Error code to message mapping
+const REVIEW_ERROR_MESSAGES: Record<string, string> = {
+  NOT_AUTHENTICATED: "Please log in to submit your review.",
+  MISSING_FIELDS: "Please fill in all required fields.",
+  INVALID_RATING: "Please select a rating (1-5 stars).",
+  CONTENT_TOO_SHORT: "Your review is too short. Please write at least 10 characters.",
+  VALIDATION_FAILED: "Please check your review and try again.",
+  CONTENT_MODERATION_FAILED: "Your review contains content that doesn't meet our guidelines.",
+  EVENT_NOT_FOUND: "We couldn't find that event. It may have been removed.",
+  SPECIAL_NOT_FOUND: "We couldn't find that special. It may have expired.",
+  DB_ERROR: "We couldn't save your review. Please try again.",
+  SERVER_ERROR: "Something went wrong on our side. Please try again.",
+};
+
+function getErrorMessage(result: { message?: string; code?: string; error?: string }): string {
+  if (result.message) return result.message;
+  if (result.code && REVIEW_ERROR_MESSAGES[result.code]) {
+    return REVIEW_ERROR_MESSAGES[result.code];
+  }
+  if (result.error) return result.error;
+  return "An error occurred. Please try again.";
+}
 
 const ImageUpload = dynamic(() => import("../../../components/ReviewForm/ImageUpload"), {
   ssr: false,
@@ -66,6 +89,8 @@ function WriteReviewContent() {
   const [target, setTarget] = useState<ReviewTarget | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const errorRef = useRef<HTMLDivElement>(null);
 
   // Form state
   const [rating, setRating] = useState(0);
@@ -73,7 +98,35 @@ function WriteReviewContent() {
   const [content, setContent] = useState("");
   const [images, setImages] = useState<File[]>([]);
 
-  const isFormValid = rating > 0 && content.trim().length > 0;
+  const isFormValid = rating > 0 && content.trim().length >= 10;
+
+  // Clear error when form fields change
+  const handleRatingChange = (newRating: number) => {
+    setFormError(null);
+    setRating(newRating);
+  };
+
+  const handleTitleChange = (newTitle: string) => {
+    setFormError(null);
+    setTitle(newTitle);
+  };
+
+  const handleContentChange = (newContent: string) => {
+    setFormError(null);
+    setContent(newContent);
+  };
+
+  const handleImagesChange = (newImages: File[]) => {
+    setFormError(null);
+    setImages(newImages);
+  };
+
+  // Scroll error into view
+  useEffect(() => {
+    if (formError && errorRef.current) {
+      errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [formError]);
 
   // Redirect if not logged in
   useEffect(() => {
@@ -121,7 +174,31 @@ function WriteReviewContent() {
   }, [type, id, router, showToast]);
 
   const handleSubmit = async () => {
-    if (!user || !target || rating === 0 || !content.trim()) return;
+    // Clear previous error
+    setFormError(null);
+
+    if (!user) {
+      setFormError("Please log in to submit your review.");
+      return;
+    }
+
+    if (!target) {
+      setFormError("Target not found. Please try again.");
+      return;
+    }
+
+    if (rating === 0) {
+      setFormError("Please select a rating (1-5 stars).");
+      return;
+    }
+
+    if (content.trim().length < 10) {
+      setFormError("Your review is too short. Please write at least 10 characters.");
+      return;
+    }
+
+    // Prevent double submission
+    if (submitting) return;
 
     try {
       setSubmitting(true);
@@ -144,16 +221,27 @@ function WriteReviewContent() {
         body: formData,
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to submit review");
+      let result;
+      try {
+        result = await response.json();
+      } catch {
+        setFormError("Something went wrong. Please try again.");
+        return;
       }
 
+      // Handle error responses
+      if (!response.ok || result.success === false) {
+        const errorMessage = getErrorMessage(result);
+        setFormError(errorMessage);
+        return;
+      }
+
+      // Success!
       showToast("Review submitted successfully!", "success");
       router.push(type === "event" ? `/event/${id}` : `/special/${id}`);
     } catch (error) {
       console.error("Error submitting review:", error);
-      showToast(error instanceof Error ? error.message : "Failed to submit review", "sage");
+      setFormError("Something went wrong. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -288,7 +376,7 @@ function WriteReviewContent() {
               </label>
               <RatingSelector
                 overallRating={rating}
-                onRatingChange={setRating}
+                onRatingChange={handleRatingChange}
               />
             </div>
 
@@ -300,7 +388,7 @@ function WriteReviewContent() {
               <input
                 type="text"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={(e) => handleTitleChange(e.target.value)}
                 placeholder="Sum up your experience..."
                 className="w-full px-4 py-3 border border-charcoal/20 rounded-lg focus:ring-2 focus:ring-coral/20 focus:border-coral transition-colors"
                 maxLength={100}
@@ -312,8 +400,8 @@ function WriteReviewContent() {
               <ReviewTextForm
                 reviewTitle={title}
                 reviewText={content}
-                onTitleChange={setTitle}
-                onTextChange={setContent}
+                onTitleChange={handleTitleChange}
+                onTextChange={handleContentChange}
               />
             </div>
 
@@ -324,7 +412,7 @@ function WriteReviewContent() {
               </label>
               <ImageUpload
                 existingImages={images.map((file) => URL.createObjectURL(file))}
-                onImagesChange={setImages}
+                onImagesChange={handleImagesChange}
                 maxImages={5}
               />
             </div>
@@ -334,6 +422,7 @@ function WriteReviewContent() {
               onSubmit={handleSubmit}
               isSubmitting={submitting}
               isFormValid={isFormValid}
+              error={formError}
             />
           </motion.div>
         </div>
