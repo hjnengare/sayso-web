@@ -10,7 +10,7 @@ import OptimizedLink from "../Navigation/OptimizedLink";
 import DesktopNav from "./DesktopNav";
 import MobileMenu from "./MobileMenu";
 import { useHeaderState } from "./useHeaderState";
-import { PRIMARY_LINKS, DISCOVER_LINKS } from "./headerActionsConfig";
+import { PRIMARY_LINKS, DISCOVER_LINKS, getLogoHref } from "./headerActionsConfig";
 
 export default function Header({
   showSearch = true,
@@ -101,6 +101,14 @@ export default function Header({
 
   const isPersonalLayout = !isBusinessAccountUser;
   const isHomePage = pathname === "/" || pathname === "/home";
+
+  // Role-aware logo href:
+  // - Business accounts → /my-businesses
+  // - Personal accounts → /home
+  // - Guests → /home?guest=true
+  const logoHref = isGuest 
+    ? "/home?guest=true" 
+    : getLogoHref(isBusinessAccountUser);
 
 
 
@@ -361,7 +369,7 @@ export default function Header({
               <div className="hidden lg:grid lg:grid-cols-[auto_1fr_auto] lg:items-center lg:gap-4">
                 {/* Left: Logo */}
                 <div className="flex items-center">
-                  <OptimizedLink href="/" className="group flex items-center" aria-label="sayso Home">
+                  <OptimizedLink href={logoHref} className="group flex items-center" aria-label="sayso Home">
                     <Logo
                       variant="default"
                       showMark={false}
@@ -394,7 +402,7 @@ export default function Header({
                       transition={{ duration: 0.15 }}
                       className="pl-2"
                     >
-                      <OptimizedLink href="/" className="group flex items-center flex-shrink-0" aria-label="sayso Home">
+                      <OptimizedLink href={logoHref} className="group flex items-center flex-shrink-0" aria-label="sayso Home">
                         <Logo
                           variant="default"
                           showMark={false}
@@ -494,7 +502,7 @@ export default function Header({
           ) : (
             /* Business Account Layout - unchanged */
             <div className="flex items-center justify-between gap-3 lg:gap-6 w-full h-full">
-              <OptimizedLink href="/" className="group flex flex-shrink-0 relative items-center pl-4 lg:pl-0" aria-label="sayso Home">
+              <OptimizedLink href={logoHref} className="group flex flex-shrink-0 relative items-center pl-4 lg:pl-0" aria-label="sayso Home">
                 <div className="relative">
                   <Logo
                     variant="default"
