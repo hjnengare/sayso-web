@@ -1,11 +1,41 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { X, UserCheck, Mail, Phone, FileText, Building2 } from "lucide-react";
+import { X, UserCheck, Mail, Phone, FileText, Building2, AlertCircle } from "lucide-react";
 import { Loader } from "../Loader/Loader";
 import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../contexts/ToastContext";
+
+// ============================================================================
+// Error Code to Message Mapping (fallback if API doesn't provide message)
+// ============================================================================
+const ERROR_CODE_MESSAGES: Record<string, string> = {
+  NOT_AUTHENTICATED: "Please log in to claim this business.",
+  MISSING_FIELDS: "Please fill in all required details.",
+  INVALID_EMAIL: "Please enter a valid email address.",
+  INVALID_PHONE: "Please enter a valid phone number.",
+  EMAIL_DOMAIN_MISMATCH: "This email doesn't match the business website domain. Use an official business email.",
+  DUPLICATE_CLAIM: "You already have a claim in progress for this business.",
+  ALREADY_OWNER: "You already own this business.",
+  BUSINESS_NOT_FOUND: "We couldn't find that business. Please try again.",
+  RLS_BLOCKED: "We couldn't process your claim right now. Please try again.",
+  DB_ERROR: "We couldn't process your claim right now. Please try again.",
+  SERVER_ERROR: "Something went wrong on our side. Please try again.",
+};
+
+function getErrorMessage(result: { message?: string; code?: string; error?: string }): string {
+  // Prefer explicit message from API
+  if (result.message) return result.message;
+  // Fall back to code mapping
+  if (result.code && ERROR_CODE_MESSAGES[result.code]) {
+    return ERROR_CODE_MESSAGES[result.code];
+  }
+  // Legacy error field
+  if (result.error) return result.error;
+  // Ultimate fallback
+  return "An error occurred. Please try again.";
+}
 
 interface ClaimModalProps {
   business: {
@@ -26,6 +56,8 @@ export function ClaimModal({ business, onClose, onSuccess }: ClaimModalProps) {
   const { user } = useAuth();
   const { showToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const errorRef = useRef<HTMLDivElement>(null);
   const [formData, setFormData] = useState({
     role: 'owner' as 'owner' | 'manager',
     phone: business.phone || '',
@@ -34,6 +66,20 @@ export function ClaimModal({ business, onClose, onSuccess }: ClaimModalProps) {
     cipc_registration_number: '',
     cipc_company_name: '',
   });
+
+  // Clear error when form data changes
+  const updateFormData = (updates: Partial<typeof formData>) => {
+    setFormError(null);
+    setFormData(prev => ({ ...prev, ...updates }));
+  };
+
+  // Scroll error into view when it appears
+  useEffect(() => {
+    if (formError && errorRef.current) {
+      errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      errorRef.current.focus();
+    }
+  }, [formError]);
 
   // Prevent background scrolling when modal is open
   useEffect(() => {
@@ -58,10 +104,21 @@ export function ClaimModal({ business, onClose, onSuccess }: ClaimModalProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    
+    // Prevent double submission
+    if (isSubmitting) return;
+    
+    // Clear any previous error
+    setFormError(null);
+    
+    if (!user) {
+      setFormError('Please log in to claim this business.');
+      return;
+    }
+    
     const hasContact = formData.email?.trim() || formData.phone?.trim() || (formData.cipc_registration_number?.trim() && formData.cipc_company_name?.trim());
     if (!hasContact) {
-      showToast('Please provide a business email, phone, or CIPC details.', 'sage', 4000);
+      setFormError('Please provide a business email, phone number, or CIPC details.');
       return;
     }
 
@@ -82,12 +139,23 @@ export function ClaimModal({ business, onClose, onSuccess }: ClaimModalProps) {
         }),
       });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to submit claim');
+      let result;
+      try {
+        result = await response.json();
+      } catch {
+        // JSON parsing failed
+        setFormError('Something went wrong. Please try again.');
+        return;
       }
 
+      // Handle error responses (structured or legacy)
+      if (!response.ok || result.success === false) {
+        const errorMessage = getErrorMessage(result);
+        setFormError(errorMessage);
+        return;
+      }
+
+      // Success: status === 'verified' means instant verification
       if (result.status === 'verified') {
         showToast(result.message || 'Business verified. You can now manage your listing.', 'success', 5000);
         onSuccess();
@@ -96,16 +164,13 @@ export function ClaimModal({ business, onClose, onSuccess }: ClaimModalProps) {
         return;
       }
 
+      // Success: claim submitted, needs verification
       showToast(result.message || result.display_status || 'Claim submitted. Complete the requested verification step.', 'success', 5000);
       onSuccess();
       onClose();
     } catch (error) {
       console.error('Error submitting claim:', error);
-      showToast(
-        error instanceof Error ? error.message : 'An error occurred. Please try again.',
-        'sage',
-        4000
-      );
+      setFormError('Something went wrong. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -154,7 +219,7 @@ export function ClaimModal({ business, onClose, onSuccess }: ClaimModalProps) {
             <div className="flex gap-3">
               <button
                 type="button"
-                onClick={() => setFormData({ ...formData, role: 'owner' })}
+                onClick={() => updateFormData({ role: 'owner' })}
                 className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all ${
                   formData.role === 'owner'
                     ? 'border-white bg-white/20 text-white'
@@ -168,7 +233,7 @@ export function ClaimModal({ business, onClose, onSuccess }: ClaimModalProps) {
               </button>
               <button
                 type="button"
-                onClick={() => setFormData({ ...formData, role: 'manager' })}
+                onClick={() => updateFormData({ role: 'manager' })}
                 className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all ${
                   formData.role === 'manager'
                     ? 'border-white bg-white/20 text-white'
@@ -196,7 +261,7 @@ export function ClaimModal({ business, onClose, onSuccess }: ClaimModalProps) {
                 id="claim-email"
                 type="email"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={(e) => updateFormData({ email: e.target.value })}
                 placeholder="info@business.co.za"
                 className="w-full px-4 py-3 rounded-lg border border-white/30 bg-white/10 text-white placeholder:text-white/60 focus:outline-none focus:border-white/50 transition-colors"
                 style={{
@@ -217,7 +282,7 @@ export function ClaimModal({ business, onClose, onSuccess }: ClaimModalProps) {
                 id="claim-phone"
                 type="tel"
                 value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                onChange={(e) => updateFormData({ phone: e.target.value })}
                 placeholder="Business phone for OTP"
                 className="w-full px-4 py-3 rounded-lg border border-white/30 bg-white/10 text-white placeholder:text-white/60 focus:outline-none focus:border-white/50 transition-colors"
                 style={{
@@ -237,7 +302,7 @@ export function ClaimModal({ business, onClose, onSuccess }: ClaimModalProps) {
               <input
                 type="text"
                 value={formData.cipc_registration_number}
-                onChange={(e) => setFormData({ ...formData, cipc_registration_number: e.target.value })}
+                onChange={(e) => updateFormData({ cipc_registration_number: e.target.value })}
                 placeholder="Company registration number"
                 className="w-full px-4 py-3 rounded-lg border border-white/30 bg-white/10 text-white placeholder:text-white/60 focus:outline-none focus:border-white/50 transition-colors"
                 style={{
@@ -247,7 +312,7 @@ export function ClaimModal({ business, onClose, onSuccess }: ClaimModalProps) {
               <input
                 type="text"
                 value={formData.cipc_company_name}
-                onChange={(e) => setFormData({ ...formData, cipc_company_name: e.target.value })}
+                onChange={(e) => updateFormData({ cipc_company_name: e.target.value })}
                 placeholder="Registered company name"
                 className="w-full px-4 py-3 rounded-lg border border-white/30 bg-white/10 text-white placeholder:text-white/60 focus:outline-none focus:border-white/50 transition-colors"
                 style={{
@@ -267,7 +332,7 @@ export function ClaimModal({ business, onClose, onSuccess }: ClaimModalProps) {
               <textarea
                 id="claim-notes"
                 value={formData.note}
-                onChange={(e) => setFormData({ ...formData, note: e.target.value })}
+                onChange={(e) => updateFormData({ note: e.target.value })}
                 placeholder="Tell us about your relationship with this business..."
                 rows={4}
                 className="w-full px-4 py-3 rounded-lg border border-white/30 bg-white/10 text-white placeholder:text-white/60 focus:outline-none focus:border-white/50 transition-colors resize-none"
@@ -277,6 +342,22 @@ export function ClaimModal({ business, onClose, onSuccess }: ClaimModalProps) {
               />
             </div>
           </div>
+
+          {/* Inline Error Banner */}
+          {formError && (
+            <div
+              ref={errorRef}
+              role="alert"
+              tabIndex={-1}
+              className="flex items-start gap-3 p-4 rounded-lg bg-coral/20 border border-coral/40 text-white animate-in fade-in slide-in-from-top-2 duration-200"
+              style={{
+                fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif"
+              }}
+            >
+              <AlertCircle className="w-5 h-5 text-coral flex-shrink-0 mt-0.5" />
+              <p className="text-sm font-medium">{formError}</p>
+            </div>
+          )}
 
           {/* Submit Button */}
           <div className="flex gap-3 pt-4">
@@ -302,7 +383,7 @@ export function ClaimModal({ business, onClose, onSuccess }: ClaimModalProps) {
               {isSubmitting ? (
                 <>
                   <Loader size="sm" variant="wavy" color="white" />
-                  Submitting...
+                  Starting claim...
                 </>
               ) : (
                 'Submit Claim'
