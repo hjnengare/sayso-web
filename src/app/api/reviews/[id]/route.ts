@@ -76,7 +76,7 @@ export async function GET(req: Request, { params }: RouteParams) {
     const userId = profile?.user_id ?? review.user_id;
     const displayName = userId == null
       ? 'Anonymous'
-      : (profile?.display_name || profile?.username || `User ${userId?.slice(0, 8)}` || 'User');
+      : (profile?.display_name || profile?.username || 'Anonymous');
 
     return NextResponse.json({
       review: {

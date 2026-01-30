@@ -105,7 +105,7 @@ export function useReviews(businessId?: string) {
             ...review,
             user: {
               id: review.user_id || profile?.user_id || '',
-              name: displayName || 'User', // Fallback to 'User' if no name found
+              name: displayName || 'Anonymous',
               avatar_url: profile?.avatar_url || undefined,
             },
             profile: profile, // Keep profile for backward compatibility
@@ -171,7 +171,7 @@ export function useReviews(businessId?: string) {
           ...review,
           user: {
             id: review.user_id || profile?.user_id || '',
-            name: displayName || 'User', // Fallback to 'User' if no name found
+            name: displayName || 'Anonymous',
             avatar_url: profile?.avatar_url || undefined,
           },
           profile: profile, // Keep profile for backward compatibility
@@ -301,8 +301,7 @@ export function useReviewSubmission() {
       }
       formData.append('content', reviewData.content);
       reviewData.tags.forEach(tag => formData.append('tags', tag));
-      // Anonymous (guest) reviews: skip images (RLS requires own review to attach images)
-      if (currentUser && reviewData.images?.length) {
+      if (reviewData.images?.length) {
         reviewData.images.forEach((image, index) => {
           const fileName = image.name && image.name.trim() ? image.name : `photo_${Date.now()}_${index}.jpg`;
           formData.append('images', image, fileName);

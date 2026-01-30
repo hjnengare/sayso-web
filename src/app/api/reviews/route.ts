@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 import { getServerSupabase } from '../../lib/supabase/server';
 import { ReviewValidator } from '../../lib/utils/validation';
 import { ContentModerator } from '../../lib/utils/contentModeration';
@@ -84,8 +85,9 @@ export async function POST(req: Request) {
       .getAll('images')
       .filter((file): file is File => file instanceof File && file.size > 0);
 
-    // If you have real image upload logic elsewhere, keep it.
-    // These are here so the file compiles (you referenced them in the response payload).
+    const MAX_REVIEW_IMAGES = 10;
+    const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+    const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     const uploadErrors: any[] = [];
     const uploadedImages: any[] = [];
 
@@ -463,6 +465,72 @@ export async function POST(req: Request) {
       }
     }
 
+    // Upload review images using service role client (bypasses RLS for anonymous reviews)
+    if (!isEventReview && !isSpecialReview && imageFiles.length > 0 && review?.id) {
+      const validImages = imageFiles
+        .filter(f => ALLOWED_IMAGE_TYPES.includes(f.type) && f.size <= MAX_IMAGE_SIZE)
+        .slice(0, MAX_REVIEW_IMAGES);
+
+      const adminClient = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        { auth: { autoRefreshToken: false, persistSession: false } }
+      );
+
+      for (let i = 0; i < validImages.length; i++) {
+        const file = validImages[i];
+        try {
+          const fileExt = file.name.split('.').pop() || 'jpg';
+          const filePath = `reviews/${review.id}/${Date.now()}-${i}.${fileExt}`;
+
+          const arrayBuffer = await file.arrayBuffer();
+          const { error: storageError } = await adminClient.storage
+            .from('review_images')
+            .upload(filePath, arrayBuffer, { contentType: file.type, upsert: false });
+
+          if (storageError) {
+            console.error('[Review API] Image upload error:', storageError);
+            uploadErrors.push({ file: file.name, error: storageError.message });
+            continue;
+          }
+
+          const { data: urlData } = adminClient.storage
+            .from('review_images')
+            .getPublicUrl(filePath);
+
+          const { data: imageRecord, error: insertError } = await adminClient
+            .from('review_images')
+            .insert({
+              review_id: review.id,
+              image_url: urlData.publicUrl,
+              storage_path: filePath,
+              alt_text: file.name,
+            })
+            .select()
+            .single();
+
+          if (insertError) {
+            console.error('[Review API] Image record insert error:', insertError);
+            await adminClient.storage.from('review_images').remove([filePath]);
+            uploadErrors.push({ file: file.name, error: insertError.message });
+            continue;
+          }
+
+          uploadedImages.push({
+            id: imageRecord.id,
+            review_id: review.id,
+            image_url: imageRecord.image_url,
+            storage_path: filePath,
+            alt_text: file.name,
+            created_at: imageRecord.created_at,
+          });
+        } catch (imgErr) {
+          console.error('[Review API] Image processing error:', imgErr);
+          uploadErrors.push({ file: file.name, error: 'Processing failed' });
+        }
+      }
+    }
+
     // Fetch complete review (table-aware)
     const fetchTable = isEventReview ? 'event_reviews' : isSpecialReview ? 'special_reviews' : 'reviews';
 
@@ -520,7 +588,7 @@ export async function POST(req: Request) {
     } catch (importError) {
       console.error('Error importing getDisplayUsername:', importError);
       getDisplayUsername = (username: string | null, displayName: string | null, _email: string | null, userId: string) =>
-        displayName || username || `User ${userId?.slice(0, 8)}` || 'User';
+        displayName || username || `Anonymous`;
     }
 
     // Normalize profile shape
@@ -540,7 +608,7 @@ export async function POST(req: Request) {
         displayName = getDisplayUsername(profile.username, profile.display_name, null, user_id);
       } catch (nameError) {
         console.error('Error generating display name:', nameError);
-        displayName = profile.display_name || profile.username || `User ${user_id?.slice(0, 8)}` || 'User';
+        displayName = profile.display_name || profile.username || 'Anonymous';
       }
     }
 
@@ -803,7 +871,7 @@ export async function GET(req: Request) {
     } catch (importError) {
       console.error('Error importing getDisplayUsername:', importError);
       getDisplayUsername = (username: string | null, displayName: string | null, _email: string | null, userId: string) =>
-        displayName || username || `User ${userId?.slice(0, 8)}` || 'User';
+        displayName || username || 'Anonymous';
     }
 
     const transformedReviews = (reviews || []).map((review: any) => {
@@ -819,7 +887,7 @@ export async function GET(req: Request) {
             displayName = getDisplayUsername(profile.username, profile.display_name, null, user_id);
           } catch (nameError) {
             console.error('Error generating display name:', nameError);
-            displayName = profile.display_name || profile.username || `User ${user_id?.slice(0, 8)}` || 'User';
+            displayName = profile.display_name || profile.username || 'Anonymous';
           }
         }
 
@@ -842,9 +910,9 @@ export async function GET(req: Request) {
           ...review,
           user: {
             id: review.user_id ?? null,
-            name: review.user_id == null ? 'Anonymous' : 'User',
+            name: 'Anonymous',
             username: null,
-            display_name: review.user_id == null ? 'Anonymous' : null,
+            display_name: 'Anonymous',
             email: null,
             avatar_url: null,
           },

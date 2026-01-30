@@ -42,6 +42,6 @@ export function getDisplayUsername(
   if (displayName) return displayName;
   if (email) return generateUsernameFromEmail(email);
   if (userId) return generateUsernameFromUserId(userId);
-  return 'user';
+  return 'Anonymous';
 }
 
