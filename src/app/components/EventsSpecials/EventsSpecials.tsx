@@ -134,17 +134,15 @@ export default function EventsSpecials({
           </div>
 
           <div className="pt-2">
-            <ScrollableSection>
-              <div className="flex gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2 items-stretch py-2 overflow-y-hidden scrollbar-hide">
-                {Array.from({ length: 4 }).map((_, index) => (
-                  <div
-                    key={index}
-                    className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto min-w-[clamp(220px,18vw,320px)] list-none flex"
-                  >
-                    <EventCardSkeleton />
-                  </div>
-                ))}
-              </div>
+            <ScrollableSection showArrows={false} className="items-stretch py-2">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="snap-start snap-always flex-shrink-0 w-[85vw] sm:w-auto min-w-[clamp(220px,18vw,320px)] list-none flex"
+                >
+                  <EventCardSkeleton />
+                </div>
+              ))}
             </ScrollableSection>
           </div>
         </div>
@@ -206,17 +204,15 @@ export default function EventsSpecials({
         </div>
 
         <div className="pt-2">
-          <ScrollableSection>
-            <div className="flex gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2 items-stretch py-2 overflow-y-hidden scrollbar-hide ">
-              {displayEvents.map((event, index) => (
-                <div
-                  key={event.id}
-                  className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto min-w-[clamp(220px,18vw,320px)] list-none flex "
-                >
-                  <EventCard event={event} index={index} />
-                </div>
-              ))}
-            </div>
+          <ScrollableSection showArrows={true} className="items-stretch py-2">
+            {displayEvents.map((event, index) => (
+              <div
+                key={event.id}
+                className="snap-start snap-always flex-shrink-0 w-[85vw] sm:w-auto min-w-[clamp(220px,18vw,320px)] list-none flex"
+              >
+                <EventCard event={event} index={index} />
+              </div>
+            ))}
           </ScrollableSection>
         </div>
       </div>
