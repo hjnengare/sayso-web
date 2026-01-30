@@ -61,6 +61,15 @@ export async function POST(req: Request) {
       )
     );
 
+    // Enforce maximum 3 deal-breakers
+    const MAX_DEALBREAKERS = 3;
+    if (cleaned.length > MAX_DEALBREAKERS) {
+      return NextResponse.json(
+        { error: `Maximum ${MAX_DEALBREAKERS} deal-breakers allowed` },
+        { status: 400 }
+      );
+    }
+
     // Validate that all deal-breaker IDs exist in the deal_breakers table
     if (cleaned.length > 0) {
       const { data: known, error: knownErr } = await supabase
