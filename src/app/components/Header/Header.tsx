@@ -221,7 +221,7 @@ export default function Header({
   const renderDesktopSearchInput = () => (
     <form
       onSubmit={handleSearchSubmit}
-      className="w-full max-w-[240px]"
+      className="w-full max-w-[280px]"
     >
       <div className="relative">
         {/* Search icon on left */}
