@@ -42,18 +42,24 @@ export async function POST(
       .maybeSingle();
 
     if (!claimError && claim) {
+      const claimRow = claim as {
+        business_id: string;
+        claimant_user_id: string;
+        verification_data: unknown;
+      };
       const { data: docs } = await service
         .from('business_claim_documents')
         .select('id, storage_path')
         .eq('claim_id', claimId);
-      for (const doc of docs ?? []) {
+      const docList: { id: string; storage_path: string | null }[] = docs ?? [];
+      for (const doc of docList) {
         if (doc.storage_path) {
           await service.storage.from(BUCKET).remove([doc.storage_path]).catch(() => {});
         }
       }
       await service.from('business_claim_documents').delete().eq('claim_id', claimId);
 
-      const { data: rpcResult, error: rpcError } = await service.rpc('verify_business_claim', {
+      const { data: rpcResult, error: rpcError } = await (service as any).rpc('verify_business_claim', {
         p_claim_id: claimId,
         p_admin_user_id: user.id,
         p_approved: true,
@@ -72,13 +78,13 @@ export async function POST(
       const { data: business } = await supabase
         .from('businesses')
         .select('id, name, category, location')
-        .eq('id', claim.business_id)
+        .eq('id', claimRow.business_id)
         .single();
 
       const { data: profile } = await supabase
         .from('profiles')
         .select('display_name, username')
-        .eq('user_id', claim.claimant_user_id)
+        .eq('user_id', claimRow.claimant_user_id)
         .maybeSingle();
 
       let userEmail: string | undefined;
@@ -91,22 +97,22 @@ export async function POST(
             serviceRoleKey,
             { auth: { autoRefreshToken: false, persistSession: false } }
           );
-          const { data: authUser } = await adminClient.auth.admin.getUserById(claim.claimant_user_id);
+          const { data: authUser } = await adminClient.auth.admin.getUserById(claimRow.claimant_user_id);
           userEmail = authUser?.user?.email;
         }
       } catch {
-        userEmail = (claim.verification_data as any)?.email;
+        userEmail = (claimRow.verification_data as any)?.email;
       }
 
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-      const dashboardUrl = `${baseUrl}/my-businesses/businesses/${claim.business_id}`;
+      const dashboardUrl = `${baseUrl}/my-businesses/businesses/${claimRow.business_id}`;
       await createClaimNotification({
-        userId: claim.claimant_user_id,
+        userId: claimRow.claimant_user_id,
         claimId,
         type: 'claim_status_changed',
         title: 'Claim approved',
         message: `Your claim for ${business?.name ?? 'your business'} has been approved. You can now manage your listing.`,
-        link: `/my-businesses/businesses/${claim.business_id}`,
+        link: `/my-businesses/businesses/${claimRow.business_id}`,
       });
       updateClaimLastNotified(claimId).catch(() => {});
 
@@ -122,7 +128,7 @@ export async function POST(
       }
 
       return NextResponse.json(
-        { success: true, message: 'Claim approved successfully', business_id: claim.business_id },
+        { success: true, message: 'Claim approved successfully', business_id: claimRow.business_id },
         { status: 200 }
       );
     }

@@ -571,7 +571,7 @@ export default function BusinessProfilePage() {
                                                 image={businessData.image || businessData.images[0] || ""}
                                                 alt={businessData.name}
                                                 rating={businessData.rating}
-                                                verified={businessData.verified || businessData.owner_verified}
+                                                verified={businessData.verified || (businessData as { owner_verified?: boolean }).owner_verified}
                                                 images={businessData.images}
                                                 uploaded_images={businessData.uploaded_images}
                                             />
@@ -584,7 +584,7 @@ export default function BusinessProfilePage() {
                                             <BusinessDescription description={businessData.description} />
                                             <BusinessDetailsCard
                                                 priceRange={businessData.price_range}
-                                                verified={businessData.verified || businessData.owner_verified}
+                                                verified={businessData.verified || (businessData as { owner_verified?: boolean }).owner_verified}
                                                 hours={business.hours || business.opening_hours || business.openingHours || undefined}
                                             />
 

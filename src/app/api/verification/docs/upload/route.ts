@@ -59,10 +59,11 @@ export async function POST(req: NextRequest) {
     if (claimError || !claim) {
       return NextResponse.json({ error: 'Claim not found' }, { status: 404 });
     }
-    if (claim.claimant_user_id !== user.id) {
+    const claimRow = claim as { claimant_user_id: string; status: string; business_id: string };
+    if (claimRow.claimant_user_id !== user.id) {
       return NextResponse.json({ error: 'You can only upload documents for your own claim' }, { status: 403 });
     }
-    if (claim.status !== 'action_required') {
+    if (claimRow.status !== 'action_required') {
       return NextResponse.json(
         { error: 'Documents can only be uploaded when we have requested them (action required)' },
         { status: 400 }
@@ -85,7 +86,7 @@ export async function POST(req: NextRequest) {
     }
 
     const deleteAfter = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-    const { error: insertError } = await service.from('business_claim_documents').insert({
+    const { error: insertError } = await (service as any).from('business_claim_documents').insert({
       claim_id: claimId,
       storage_path: storagePath,
       doc_type: docType,
@@ -99,13 +100,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Failed to save document record' }, { status: 500 });
     }
 
-    await service
+    await (service as any)
       .from('business_claims')
       .update({ status: 'under_review', updated_at: new Date().toISOString() })
       .eq('id', claimId);
 
-    const { data: business } = await service.from('businesses').select('name').eq('id', claim.business_id).single();
-    const claimantId = claim.claimant_user_id;
+    const { data: business } = await service.from('businesses').select('name').eq('id', claimRow.business_id).single();
+    const claimantId = claimRow.claimant_user_id;
     const { data: profile } = await service.from('profiles').select('display_name, username').eq('user_id', claimantId).maybeSingle();
     let recipientEmail: string | undefined;
     try {
@@ -121,21 +122,42 @@ export async function POST(req: NextRequest) {
       // ignore
     }
 
+    let businessDisplayName: string;
+    if (business === null || business === undefined) {
+      businessDisplayName = 'your business';
+    } else {
+      const b = business as { name?: string };
+      businessDisplayName = b.name ?? 'your business';
+    }
     await createClaimNotification({
       userId: claimantId,
       claimId,
       type: 'docs_received',
       title: 'Documents received',
-      message: `We've received your documents for ${business?.name ?? 'your business'}. Our team will review them shortly.`,
+      message: `We've received your documents for ${businessDisplayName}. Our team will review them shortly.`,
       link: '/claim-business',
     });
     updateClaimLastNotified(claimId).catch(() => {});
 
     if (recipientEmail) {
+      let businessName: string;
+      if (business === null || business === undefined) {
+        businessName = 'Your business';
+      } else {
+        const b = business as { name?: string };
+        businessName = b.name ?? 'Your business';
+      }
+      let recipientName: string | undefined;
+      if (profile === null || profile === undefined) {
+        recipientName = undefined;
+      } else {
+        const p = profile as { display_name?: string; username?: string };
+        recipientName = p.display_name ?? p.username ?? undefined;
+      }
       EmailService.sendDocsReceivedEmail({
         recipientEmail,
-        recipientName: (profile?.display_name || profile?.username) as string | undefined,
-        businessName: business?.name ?? 'Your business',
+        recipientName,
+        businessName,
       }).catch((err) => console.error('Docs received email failed:', err));
     }
 

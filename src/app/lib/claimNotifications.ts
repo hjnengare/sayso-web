@@ -20,7 +20,7 @@ export async function createClaimNotification(params: {
   link?: string | null;
 }): Promise<void> {
   const supabase = getServiceSupabase();
-  await supabase.from('notifications').insert({
+  await (supabase as any).from('notifications').insert({
     user_id: params.userId,
     claim_id: params.claimId,
     type: params.type,
@@ -37,7 +37,7 @@ export async function createClaimNotification(params: {
  */
 export async function updateClaimLastNotified(claimId: string): Promise<void> {
   const supabase = getServiceSupabase();
-  await supabase
+  await (supabase as any)
     .from('business_claims')
     .update({ last_notified_at: new Date().toISOString() })
     .eq('id', claimId);

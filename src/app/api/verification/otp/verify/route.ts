@@ -44,11 +44,12 @@ export async function POST(req: NextRequest) {
     if (claimError || !claim) {
       return NextResponse.json({ error: 'Claim not found' }, { status: 404 });
     }
-    if (claim.claimant_user_id !== user.id) {
+    const claimRow = claim as { claimant_user_id: string; status: string; business_id: string };
+    if (claimRow.claimant_user_id !== user.id) {
       return NextResponse.json({ error: 'You can only verify OTP for your own claim' }, { status: 403 });
     }
 
-    const { data: otpRow, error: otpError } = await service
+    const { data: otpData, error: otpError } = await service
       .from('business_claim_otp')
       .select('*')
       .eq('claim_id', claimId)
@@ -58,9 +59,10 @@ export async function POST(req: NextRequest) {
       .limit(1)
       .maybeSingle();
 
-    if (otpError || !otpRow) {
+    if (otpError || !otpData) {
       return NextResponse.json({ error: 'No valid verification code. Please request a new one.' }, { status: 400 });
     }
+    const otpRow = otpData as { id: string; attempts: number; code_hash: string };
 
     const currentAttempts = otpRow.attempts ?? 0;
     if (currentAttempts >= MAX_ATTEMPTS) {
@@ -68,7 +70,7 @@ export async function POST(req: NextRequest) {
     }
     const newAttempts = currentAttempts + 1;
 
-    await service
+    await (service as any)
       .from('business_claim_otp')
       .update({ attempts: newAttempts })
       .eq('id', otpRow.id);
@@ -78,13 +80,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid code' }, { status: 400 });
     }
 
-    await service
+    await (service as any)
       .from('business_claim_otp')
       .update({ verified_at: new Date().toISOString() })
       .eq('id', otpRow.id);
 
-    const previousStatus = claim.status;
-    await service
+    await (service as any)
       .from('business_claims')
       .update({
         status: 'under_review',
@@ -93,8 +94,8 @@ export async function POST(req: NextRequest) {
       })
       .eq('id', claimId);
 
-    const { data: business } = await service.from('businesses').select('name').eq('id', claim.business_id).single();
-    const claimantId = claim.claimant_user_id;
+    const { data: business } = await service.from('businesses').select('name').eq('id', claimRow.business_id).single();
+    const claimantId = claimRow.claimant_user_id;
     const { data: profile } = await service.from('profiles').select('display_name, username').eq('user_id', claimantId).maybeSingle();
     let recipientEmail: string | undefined;
     try {
@@ -110,12 +111,19 @@ export async function POST(req: NextRequest) {
       // ignore
     }
 
+    let businessDisplayName: string;
+    if (business === null || business === undefined) {
+      businessDisplayName = 'your business';
+    } else {
+      const b = business as { name?: string };
+      businessDisplayName = b.name ?? 'your business';
+    }
     await createClaimNotification({
       userId: claimantId,
       claimId,
       type: 'otp_verified',
       title: 'Phone verified',
-      message: `Your phone has been verified for ${business?.name ?? 'your business'}. We'll review your claim shortly.`,
+      message: `Your phone has been verified for ${businessDisplayName}. We'll review your claim shortly.`,
       link: '/claim-business',
     });
     await createClaimNotification({
@@ -123,16 +131,30 @@ export async function POST(req: NextRequest) {
       claimId,
       type: 'claim_status_changed',
       title: 'Claim under review',
-      message: `Your claim for ${business?.name ?? 'your business'} is now under review.`,
+      message: `Your claim for ${businessDisplayName} is now under review.`,
       link: '/claim-business',
     });
     updateClaimLastNotified(claimId).catch(() => {});
 
     if (recipientEmail) {
+      let recipientName: string | undefined;
+      if (profile === null || profile === undefined) {
+        recipientName = undefined;
+      } else {
+        const p = profile as { display_name?: string; username?: string };
+        recipientName = p.display_name ?? p.username ?? undefined;
+      }
+      let businessName: string;
+      if (business === null || business === undefined) {
+        businessName = 'Your business';
+      } else {
+        const b = business as { name?: string };
+        businessName = b.name ?? 'Your business';
+      }
       EmailService.sendOtpVerifiedEmail({
         recipientEmail,
-        recipientName: (profile?.display_name || profile?.username) as string | undefined,
-        businessName: business?.name ?? 'Your business',
+        recipientName,
+        businessName,
       }).catch((err) => console.error('OTP verified email failed:', err));
     }
 

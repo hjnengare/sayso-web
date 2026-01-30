@@ -310,9 +310,9 @@ function ClaimBusinessPageContent() {
                                   <p className="font-urbanist text-sm font-semibold text-charcoal truncate" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                                     {claim.business_name}
                                   </p>
-                                  {claim.location && (
+                                  {(claim as { location?: string }).location && (
                                     <p className="font-urbanist text-sm text-charcoal/70 mt-0.5" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                                      {claim.location}
+                                      {(claim as { location?: string }).location}
                                     </p>
                                   )}
                                   {claim.next_step && (

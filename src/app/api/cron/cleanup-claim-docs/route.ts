@@ -29,8 +29,9 @@ export async function GET(req: NextRequest) {
       .select('id, storage_path')
       .lt('delete_after', new Date().toISOString());
 
+    const docList: { id: string; storage_path: string | null }[] = expired ?? [];
     let deletedCount = 0;
-    for (const doc of expired ?? []) {
+    for (const doc of docList) {
       if (doc.storage_path) {
         await service.storage.from(BUCKET).remove([doc.storage_path]).catch(() => {});
       }

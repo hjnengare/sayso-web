@@ -53,8 +53,9 @@ export async function POST(req: NextRequest) {
     if (claimError || !claim) {
       return NextResponse.json({ error: 'Claim not found' }, { status: 404 });
     }
+    const claimRow = claim as { claimant_user_id: string; business_id: string };
 
-    const isClaimant = claim.claimant_user_id === user.id;
+    const isClaimant = claimRow.claimant_user_id === user.id;
     const userIsAdmin = await isAdmin(user.id);
     if (!isClaimant && !userIsAdmin) {
       return NextResponse.json({ error: 'You can only send OTP for your own claim' }, { status: 403 });
@@ -63,17 +64,23 @@ export async function POST(req: NextRequest) {
     const { data: business, error: bizError } = await service
       .from('businesses')
       .select('id, name, phone')
-      .eq('id', claim.business_id)
+      .eq('id', claimRow.business_id)
       .single();
 
-    if (bizError || !business?.phone?.trim()) {
+    if (bizError || !business) {
       return NextResponse.json(
         { error: 'Business phone number is required for phone verification' },
         { status: 400 }
       );
     }
-
-    const phoneE164 = business.phone.trim();
+    const businessRow = business as { id: string; name: string; phone: string };
+    if (!businessRow.phone?.trim()) {
+      return NextResponse.json(
+        { error: 'Business phone number is required for phone verification' },
+        { status: 400 }
+      );
+    }
+    const phoneE164 = businessRow.phone.trim();
 
     const since = new Date(Date.now() - 30 * 60 * 1000).toISOString();
     const { count } = await service
@@ -93,8 +100,8 @@ export async function POST(req: NextRequest) {
     const codeHash = hashOtp(code);
     const expiresAt = new Date(Date.now() + OTP_EXPIRY_SECONDS * 1000).toISOString();
 
-    await service.from('business_claim_otp').update({ verified_at: new Date().toISOString() }).eq('claim_id', claimId).is('verified_at', null);
-    const { error: insertError } = await service.from('business_claim_otp').insert({
+    await (service as any).from('business_claim_otp').update({ verified_at: new Date().toISOString() }).eq('claim_id', claimId).is('verified_at', null);
+    const { error: insertError } = await (service as any).from('business_claim_otp').insert({
       claim_id: claimId,
       phone_e164: phoneE164,
       code_hash: codeHash,
@@ -120,7 +127,7 @@ export async function POST(req: NextRequest) {
     }
 
     const maskedPhone = maskPhoneE164(phoneE164);
-    const claimantId = claim.claimant_user_id;
+    const claimantId = claimRow.claimant_user_id;
 
     const { data: profile } = await service.from('profiles').select('display_name, username').eq('user_id', claimantId).maybeSingle();
     let recipientEmail: string | undefined;
@@ -142,16 +149,23 @@ export async function POST(req: NextRequest) {
       claimId,
       type: 'otp_sent',
       title: 'Verification code sent',
-      message: `We sent a code to ${maskedPhone} for ${business.name}. Enter it in the app.`,
+      message: `We sent a code to ${maskedPhone} for ${businessRow.name}. Enter it in the app.`,
       link: '/claim-business',
     });
     updateClaimLastNotified(claimId).catch(() => {});
 
     if (recipientEmail) {
+      let recipientName: string | undefined;
+      if (profile === null || profile === undefined) {
+        recipientName = undefined;
+      } else {
+        const p = profile as { display_name?: string; username?: string };
+        recipientName = p.display_name ?? p.username ?? undefined;
+      }
       EmailService.sendOtpSentEmail({
         recipientEmail,
-        recipientName: (profile?.display_name || profile?.username) as string | undefined,
-        businessName: business.name,
+        recipientName,
+        businessName: businessRow.name,
         maskedPhone,
       }).catch((err) => console.error('OTP sent email failed:', err));
     }
