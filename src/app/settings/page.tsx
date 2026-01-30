@@ -73,8 +73,8 @@ export default function SettingsPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-off-white pb-12 px-2">
-        <div className="w-full max-w-md mx-auto">
+      <div className="min-h-screen bg-off-white pb-12 ">
+        <div className="w-full">
           {/* Breadcrumb Navigation */}
           <nav className="pt-2" aria-label="Breadcrumb">
             <ol className="flex items-center gap-2 text-sm sm:text-base">
@@ -95,7 +95,7 @@ export default function SettingsPage() {
           </nav>
 
           {/* Header */}
-          <div className="mb-8 sm:mb-12">
+          <div className="mb-8 sm:mb-12 px-4">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-charcoal mb-2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
               Settings
             </h1>
@@ -105,7 +105,7 @@ export default function SettingsPage() {
           </div>
 
         {/* Account Section */}
-        <div className="space-y-6">
+        <div className="space-y-6 px-4">
           {/* Username Card */}
           <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-lg p-6">
             <div className="flex items-center justify-between">
