@@ -364,7 +364,7 @@ function LeaderboardPage() {
         </motion.div>
 
         {/* Badge Definitions Section - Before Footer */}
-        <section className="py-8 sm:py-12 bg-off-white border-t border-charcoal/10">
+        <section className="py-4 sm:py-8 bg-off-white">
           <div className="mx-auto w-full max-w-[2000px] px-4 sm:px-6">
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
               <div className="text-center sm:text-left">
