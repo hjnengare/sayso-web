@@ -72,6 +72,9 @@ export default function OwnerBusinessDashboard() {
         setHasAccess(true);
         setBusiness(businessData);
 
+        // Use the resolved UUID from the returned business, not the raw URL param
+        const resolvedId = businessData.id;
+
         // Fetch stats, reviews, and conversations in parallel
         const supabase = getBrowserSupabase();
         const thirtyDaysAgo = new Date();
@@ -81,17 +84,17 @@ export default function OwnerBusinessDashboard() {
           supabase
             .from('business_stats')
             .select('average_rating, total_reviews')
-            .eq('business_id', businessId)
+            .eq('business_id', resolvedId)
             .single(),
           supabase
             .from('reviews')
             .select('*', { count: 'exact', head: true })
-            .eq('business_id', businessId)
+            .eq('business_id', resolvedId)
             .gte('created_at', thirtyDaysAgo.toISOString()),
           supabase
             .from('conversations')
             .select('*', { count: 'exact', head: true })
-            .eq('business_id', businessId)
+            .eq('business_id', resolvedId)
             .gte('created_at', thirtyDaysAgo.toISOString()),
         ]);
 
@@ -140,12 +143,13 @@ export default function OwnerBusinessDashboard() {
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
     const refetchBusiness = async () => {
-      if (cancelled || !businessId) return;
+      if (cancelled || !business?.id) return;
+      const resolvedId = business.id;
       try {
         const supabase = getBrowserSupabase();
         const [businessResult, statsResult] = await Promise.allSettled([
-          supabase.from('businesses').select('*').eq('id', businessId).single(),
-          supabase.from('business_stats').select('average_rating, total_reviews').eq('business_id', businessId).single(),
+          supabase.from('businesses').select('*').eq('id', resolvedId).single(),
+          supabase.from('business_stats').select('average_rating, total_reviews').eq('business_id', resolvedId).single(),
         ]);
 
         if (cancelled) return;
@@ -167,7 +171,7 @@ export default function OwnerBusinessDashboard() {
     };
 
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && businessId) {
+      if (document.visibilityState === 'visible' && business?.id) {
         timeoutId = setTimeout(refetchBusiness, 100);
       }
     };
@@ -185,7 +189,7 @@ export default function OwnerBusinessDashboard() {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
     };
-  }, [businessId]);
+  }, [business?.id]);
 
   // Listen for business deletion events
   useEffect(() => {

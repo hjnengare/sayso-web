@@ -59,7 +59,8 @@ export default function OwnerReviewsPage() {
         setHasAccess(true);
         setBusiness(businessData);
 
-        // Fetch reviews for the business
+        // Fetch reviews using the resolved UUID, not the raw URL param
+        const resolvedId = businessData.id;
         const supabase = getBrowserSupabase();
         const { data: reviewsData, error: reviewsError } = await supabase
           .from('reviews')
@@ -85,7 +86,7 @@ export default function OwnerReviewsPage() {
               alt_text
             )
           `)
-          .eq('business_id', businessId)
+          .eq('business_id', resolvedId)
           .order('created_at', { ascending: false })
           .limit(20);
 
