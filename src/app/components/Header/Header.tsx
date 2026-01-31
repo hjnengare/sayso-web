@@ -274,48 +274,54 @@ export default function Header({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
+      transition={{ duration: 0.15, ease: "easeOut" }}
     >
       <motion.form
-        initial={{ width: "40px", opacity: 0, scale: 0.8 }}
-        animate={{ 
-          width: "90%", 
-          opacity: 1, 
-          scale: 1,
+        initial={{ width: "36px", opacity: 0, borderRadius: "50%" }}
+        animate={{
+          width: "92%",
+          opacity: 1,
+          borderRadius: "9999px",
         }}
-        exit={{ 
-          width: "40px", 
-          opacity: 0, 
-          scale: 0.8,
+        exit={{
+          width: "36px",
+          opacity: 0,
+          borderRadius: "50%",
         }}
-        transition={{ 
-          duration: 0.35, 
-          ease: [0.32, 0.72, 0, 1],
-          opacity: { duration: 0.2 },
-          scale: { duration: 0.25 }
+        transition={{
+          width: { duration: 0.4, ease: [0.16, 1, 0.3, 1] },
+          opacity: { duration: 0.2, ease: "easeOut" },
+          borderRadius: { duration: 0.3, ease: "easeOut" },
         }}
         onSubmit={handleSearchSubmit}
-        className="relative"
+        className="relative origin-right"
+        style={{ transformOrigin: "right center" }}
       >
-        <motion.div 
+        <motion.div
           className="relative"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ delay: 0.1, duration: 0.2 }}
+          transition={{ delay: 0.18, duration: 0.2, ease: "easeOut" }}
         >
           {/* Search icon on left */}
-          <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none z-10">
+          <motion.div
+            className="absolute inset-y-0 left-4 flex items-center pointer-events-none z-10"
+            initial={{ opacity: 0, x: 8 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 8 }}
+            transition={{ delay: 0.22, duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+          >
             <Search className="w-5 h-5 text-charcoal/50" strokeWidth={2} />
-          </div>
+          </motion.div>
 
           {/* Clear/Close button on right */}
-          <motion.div 
+          <motion.div
             className="absolute inset-y-0 right-2 flex items-center z-10"
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.5 }}
-            transition={{ delay: 0.15, duration: 0.2 }}
+            initial={{ opacity: 0, rotate: -90, scale: 0 }}
+            animate={{ opacity: 1, rotate: 0, scale: 1 }}
+            exit={{ opacity: 0, rotate: 90, scale: 0 }}
+            transition={{ delay: 0.28, duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
           >
             <button
               type="button"
@@ -447,20 +453,9 @@ export default function Header({
                   )}
                 </AnimatePresence>
 
-                {/* Mobile Search (expandable, 90% width, sleek open/close animation) */}
+                {/* Mobile Search (expandable, premium open/close animation) */}
                 <AnimatePresence mode="wait">
-                  {isMobileSearchOpen && showSearch && isHomePage && (
-                    <motion.div
-                      key="mobile-search"
-                      className="absolute inset-x-0 top-0 bottom-0 flex items-center justify-center px-4 z-20"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      {renderMobileSearchInput()}
-                    </motion.div>
-                  )}
+                  {isMobileSearchOpen && showSearch && isHomePage && renderMobileSearchInput()}
                 </AnimatePresence>
 
                 {/* Right side icons */}

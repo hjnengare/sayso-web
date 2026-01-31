@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import type { CSSProperties } from "react";
+import { motion } from "framer-motion";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -445,47 +446,70 @@ export default function HeroCarousel() {
              <div className="absolute inset-0 bg-black/20" />
            </div>
 
-           {/* Left-aligned Text - Aligned with navbar left edge */}
+           {/* Hero Text with slide-in animation */}
            <div className="absolute inset-0 z-20 flex items-center justify-center w-full pt-[var(--header-height)] -translate-y-4">
-             <div className="w-full flex flex-col items-center justify-center text-center pb-20">
-               <h2 
-                 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-off-white drop-shadow-lg mb-4"
-                 style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+               <motion.div
+                 className="w-full flex flex-col items-center justify-center text-center pb-20"
+                 initial="hidden"
+                 animate="visible"
+                 variants={{
+                   hidden: {},
+                   visible: { transition: { staggerChildren: 0.12, delayChildren: 0.1 } },
+                 }}
                >
-                 Discover local gems
-               </h2>
-               <p 
-                 className="text-base sm:text-lg lg:text-xl text-off-white/90 drop-shadow-md max-w-xl mb-6"
-                 style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 500 }}
-               >
-                 {slide.description}
-               </p>
-               
-               {/* Conditional CTA Button: Sign In for unauthenticated, Discover for authenticated */}
-               {!user ? (
-                 <Link
-                   href="/login"
-                   className="group relative inline-block rounded-full py-3 px-12 text-base font-semibold text-white text-center bg-gradient-to-r from-coral to-coral/80 hover:from-sage hover:to-sage transition-all duration-300 shadow-lg hover:shadow-xl focus:outline-none focus-visible:ring-4 focus-visible:ring-sage/30 focus-visible:ring-offset-2 min-w-[180px]"
-                   style={{
-                     fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                     fontWeight: 600,
+                 <motion.h2
+                   className="text-3xl sm:text-4xl lg:text-5xl font-bold text-off-white drop-shadow-lg mb-4"
+                   style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                   variants={{
+                     hidden: { opacity: 0, y: 20, filter: "blur(4px)" },
+                     visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
                    }}
                  >
-                   <span className="relative z-10">Sign In</span>
-                 </Link>
-               ) : (
-                 <Link
-                   href="/trending"
-                   className="group relative inline-block rounded-full py-3 px-12 text-base font-semibold text-white text-center bg-gradient-to-r from-coral to-coral/80 hover:from-sage hover:to-sage transition-all duration-300 shadow-lg hover:shadow-xl focus:outline-none focus-visible:ring-4 focus-visible:ring-sage/30 focus-visible:ring-offset-2 min-w-[180px]"
-                   style={{
-                     fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                     fontWeight: 600,
+                   Discover local gems
+                 </motion.h2>
+                 <motion.p
+                   className="text-base sm:text-lg lg:text-xl text-off-white/90 drop-shadow-md max-w-xl mb-6"
+                   style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 500 }}
+                   variants={{
+                     hidden: { opacity: 0, y: 16, filter: "blur(3px)" },
+                     visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] } },
                    }}
                  >
-                   <span className="relative z-10">Discover</span>
-                 </Link>
-               )}
-             </div>
+                   Explore amazing local businesses, restaurants, and experiences in your city
+                 </motion.p>
+
+                 {/* Conditional CTA Button: Sign In for unauthenticated, Discover for authenticated */}
+                 <motion.div
+                   variants={{
+                     hidden: { opacity: 0, y: 12, scale: 0.97 },
+                     visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
+                   }}
+                 >
+                   {!user ? (
+                     <Link
+                       href="/login"
+                       className="group relative inline-block rounded-full py-3 px-12 text-base font-semibold text-white text-center bg-gradient-to-r from-coral to-coral/80 hover:from-sage hover:to-sage transition-all duration-300 shadow-lg hover:shadow-xl focus:outline-none focus-visible:ring-4 focus-visible:ring-sage/30 focus-visible:ring-offset-2 min-w-[180px]"
+                       style={{
+                         fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                         fontWeight: 600,
+                       }}
+                     >
+                       <span className="relative z-10">Sign In</span>
+                     </Link>
+                   ) : (
+                     <Link
+                       href="/trending"
+                       className="group relative inline-block rounded-full py-3 px-12 text-base font-semibold text-white text-center bg-gradient-to-r from-coral to-coral/80 hover:from-sage hover:to-sage transition-all duration-300 shadow-lg hover:shadow-xl focus:outline-none focus-visible:ring-4 focus-visible:ring-sage/30 focus-visible:ring-offset-2 min-w-[180px]"
+                       style={{
+                         fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                         fontWeight: 600,
+                       }}
+                     >
+                       <span className="relative z-10">Discover</span>
+                     </Link>
+                   )}
+                 </motion.div>
+               </motion.div>
            </div>
         </div>
       ))}

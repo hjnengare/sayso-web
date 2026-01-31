@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSupabase } from "@/app/lib/supabase/server";
-import { normalizeBusinessImages } from "@/app/lib/utils/businessImages";
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -158,13 +157,20 @@ export async function GET(request: NextRequest) {
       .order('is_primary', { ascending: false })
       .order('created_at', { ascending: false });
 
-    // Normalize images
-    const normalizedImages = normalizeBusinessImages(imagesData || []);
+    // Group images by business_id
+    const imagesByBusinessId: Record<string, Array<{ business_id: string; url: string; alt_text: string | null; is_primary: boolean | null }>> = {};
+    for (const img of imagesData || []) {
+      if (!imagesByBusinessId[img.business_id]) {
+        imagesByBusinessId[img.business_id] = [];
+      }
+      imagesByBusinessId[img.business_id].push(img);
+    }
 
     // Transform the data to match the UI expectations
     const featuredBusinesses = featuredData.map((business: any, index: number) => {
-      const businessImages = normalizedImages[business.id] || [];
-      const primaryImage = businessImages.find((img: any) => img.is_primary) || businessImages[0];
+      const businessImages = imagesByBusinessId[business.id] || [];
+      const primaryImage = businessImages.find((img) => img.is_primary) || businessImages[0];
+      const uploadedImageUrls = businessImages.map((img) => img.url).filter(Boolean);
 
       // Use the bucket for category display (sub_interest_id or category)
       const displayCategory = business.bucket || business.category || 'Miscellaneous';
@@ -173,6 +179,8 @@ export async function GET(request: NextRequest) {
         id: business.id,
         name: business.name,
         image: primaryImage?.url || business.image_url || '',
+        image_url: primaryImage?.url || business.image_url || '',
+        uploaded_images: uploadedImageUrls,
         alt: primaryImage?.alt_text || business.name,
         category: displayCategory,
         description: business.description || `Featured in ${displayCategory}`,
