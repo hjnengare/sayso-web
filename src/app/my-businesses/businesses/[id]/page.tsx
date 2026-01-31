@@ -37,6 +37,8 @@ export default function OwnerBusinessDashboard() {
   const { showToast } = useToast();
 
   useEffect(() => {
+    let cancelled = false;
+
     const fetchData = async () => {
       // If auth is still loading, wait
       if (authLoading) return;
@@ -56,10 +58,10 @@ export default function OwnerBusinessDashboard() {
 
       setIsLoading(true);
       try {
-        const supabase = getBrowserSupabase();
-
-        // Check ownership and fetch business in one call
+        // Check ownership and fetch business
         const businessData = await BusinessOwnershipService.getOwnedBusinessById(user.id, businessId);
+
+        if (cancelled) return;
 
         if (!businessData) {
           setError('You do not have access to this business or it does not exist');
@@ -70,132 +72,116 @@ export default function OwnerBusinessDashboard() {
         setHasAccess(true);
         setBusiness(businessData);
 
-        // Fetch stats
-        const { data: statsData, error: statsError } = await supabase
-          .from('business_stats')
-          .select('average_rating, total_reviews')
-          .eq('business_id', businessId)
-          .single();
-
-        if (!statsError && statsData) {
-          setStats({
-            average_rating: statsData.average_rating,
-            total_reviews: statsData.total_reviews || 0,
-          });
-        } else {
-          // Default stats if not found
-          setStats({
-            average_rating: null,
-            total_reviews: 0,
-          });
-        }
-
-        // Fetch analytics (last 30 days)
+        // Fetch stats, reviews, and conversations in parallel
+        const supabase = getBrowserSupabase();
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-        // Profile views (placeholder - would need a views table)
-        const profileViews = 0; // TODO: Implement when views tracking is added
+        const [statsResult, reviewsResult, conversationsResult] = await Promise.allSettled([
+          supabase
+            .from('business_stats')
+            .select('average_rating, total_reviews')
+            .eq('business_id', businessId)
+            .single(),
+          supabase
+            .from('reviews')
+            .select('*', { count: 'exact', head: true })
+            .eq('business_id', businessId)
+            .gte('created_at', thirtyDaysAgo.toISOString()),
+          supabase
+            .from('conversations')
+            .select('*', { count: 'exact', head: true })
+            .eq('business_id', businessId)
+            .gte('created_at', thirtyDaysAgo.toISOString()),
+        ]);
 
-        // New reviews in last 30 days
-        const { count: newReviewsCount } = await supabase
-          .from('reviews')
-          .select('*', { count: 'exact', head: true })
-          .eq('business_id', businessId)
-          .gte('created_at', thirtyDaysAgo.toISOString());
+        if (cancelled) return;
 
-        // New conversations in last 30 days
-        const { count: newConversationsCount } = await supabase
-          .from('conversations')
-          .select('*', { count: 'exact', head: true })
-          .eq('business_id', businessId)
-          .gte('created_at', thirtyDaysAgo.toISOString());
+        // Handle stats
+        if (statsResult.status === 'fulfilled' && !statsResult.value.error && statsResult.value.data) {
+          setStats({
+            average_rating: statsResult.value.data.average_rating,
+            total_reviews: statsResult.value.data.total_reviews || 0,
+          });
+        } else {
+          setStats({ average_rating: null, total_reviews: 0 });
+        }
+
+        // Handle analytics
+        const newReviewsCount = reviewsResult.status === 'fulfilled' ? reviewsResult.value.count : 0;
+        const newConversationsCount = conversationsResult.status === 'fulfilled' ? conversationsResult.value.count : 0;
 
         setAnalytics({
-          profileViews,
+          profileViews: 0, // TODO: Implement when views tracking is added
           newReviews: newReviewsCount || 0,
           newConversations: newConversationsCount || 0,
         });
       } catch (error) {
+        if (cancelled) return;
         console.error('Error fetching business data:', error);
         setError('Failed to load business data');
       } finally {
-        setIsLoading(false);
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchData();
+
+    return () => {
+      cancelled = true;
+    };
   }, [user?.id, authLoading, businessId]);
 
   // Refetch when page becomes visible (e.g., returning from edit page)
   useEffect(() => {
+    let cancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    const refetchBusiness = async () => {
+      if (cancelled || !businessId) return;
+      try {
+        const supabase = getBrowserSupabase();
+        const [businessResult, statsResult] = await Promise.allSettled([
+          supabase.from('businesses').select('*').eq('id', businessId).single(),
+          supabase.from('business_stats').select('average_rating, total_reviews').eq('business_id', businessId).single(),
+        ]);
+
+        if (cancelled) return;
+
+        if (businessResult.status === 'fulfilled' && !businessResult.value.error && businessResult.value.data) {
+          setBusiness(businessResult.value.data as Business);
+        }
+        if (statsResult.status === 'fulfilled' && !statsResult.value.error && statsResult.value.data) {
+          setStats({
+            average_rating: statsResult.value.data.average_rating,
+            total_reviews: statsResult.value.data.total_reviews || 0,
+          });
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.error('Error refetching business data:', error);
+        }
+      }
+    };
+
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && businessId) {
-        // Small delay to ensure edit page has finished redirecting
-        setTimeout(() => {
-          const fetchData = async () => {
-            try {
-              const supabase = getBrowserSupabase();
-              const { data: businessData, error: businessError } = await supabase
-                .from('businesses')
-                .select('*')
-                .eq('id', businessId)
-                .single();
-
-              if (!businessError && businessData) {
-                setBusiness(businessData as Business);
-              }
-
-              // Refresh stats
-              const { data: statsData, error: statsError } = await supabase
-                .from('business_stats')
-                .select('average_rating, total_reviews')
-                .eq('business_id', businessId)
-                .single();
-
-              if (!statsError && statsData) {
-                setStats({
-                  average_rating: statsData.average_rating,
-                  total_reviews: statsData.total_reviews || 0,
-                });
-              }
-            } catch (error) {
-              console.error('Error refetching business data:', error);
-            }
-          };
-          fetchData();
-        }, 100);
+        timeoutId = setTimeout(refetchBusiness, 100);
       }
+    };
+
+    const handleFocus = () => {
+      refetchBusiness();
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    // Also refetch on focus (when user returns to tab)
-    const handleFocus = () => {
-      if (businessId) {
-        const fetchData = async () => {
-          try {
-            const supabase = getBrowserSupabase();
-            const { data: businessData, error: businessError } = await supabase
-              .from('businesses')
-              .select('*')
-              .eq('id', businessId)
-              .single();
-
-            if (!businessError && businessData) {
-              setBusiness(businessData as Business);
-            }
-          } catch (error) {
-            console.error('Error refetching business data:', error);
-          }
-        };
-        fetchData();
-      }
-    };
-    
     window.addEventListener('focus', handleFocus);
 
     return () => {
+      cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
     };
