@@ -24,6 +24,8 @@ export default function OwnerReviewsPage() {
   const [hasAccess, setHasAccess] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
+
     const fetchData = async () => {
       // If auth is still loading, wait
       if (authLoading) return;
@@ -45,6 +47,8 @@ export default function OwnerReviewsPage() {
       try {
         // Check ownership
         const businessData = await BusinessOwnershipService.getOwnedBusinessById(user.id, businessId);
+
+        if (cancelled) return;
 
         if (!businessData) {
           setError('You do not have access to this business or it does not exist');
@@ -85,8 +89,9 @@ export default function OwnerReviewsPage() {
           .order('created_at', { ascending: false })
           .limit(20);
 
+        if (cancelled) return;
+
         if (!reviewsError && reviewsData) {
-          // Transform real reviews
           const transformedReviews: ReviewWithUser[] = reviewsData.map((review: any) => {
             const profile = Array.isArray(review.profile) ? review.profile[0] : review.profile;
             return {
@@ -101,18 +106,24 @@ export default function OwnerReviewsPage() {
           });
           setReviews(transformedReviews);
         } else {
-          // No reviews yet
           setReviews([]);
         }
       } catch (error) {
+        if (cancelled) return;
         console.error('Error fetching data:', error);
         setError('Failed to load reviews');
       } finally {
-        setIsLoading(false);
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchData();
+
+    return () => {
+      cancelled = true;
+    };
   }, [businessId, user?.id, authLoading]);
 
   // Show loader while auth or data is loading
