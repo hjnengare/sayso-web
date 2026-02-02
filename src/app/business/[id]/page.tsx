@@ -60,7 +60,7 @@ export default function BusinessProfilePage() {
     const handleLike = () => {
         setIsLiked(!isLiked);
         showToast(
-            isLiked ? "Removed from favorites" : "Added to favorites",
+            isLiked ? "Removed from favourites" : "Added to favourites",
             "success"
         );
     };
@@ -469,8 +469,8 @@ export default function BusinessProfilePage() {
         category: business.category || 'Business',
         location: business.location || 'Cape Town',
         address: business.address,
-        latitude: business.lat || business.latitude || null,
-        longitude: business.lng || business.longitude || null,
+        latitude: business.lat ?? null,
+        longitude: business.lng ?? null,
         phone: business.phone,
         email: business.email,
         website: business.website,

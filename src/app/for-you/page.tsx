@@ -146,26 +146,20 @@ export default function ForYouPage() {
     return isSearchActive ? searchResults.length : businesses.length;
   }, [businesses.length, searchResults.length, isSearchActive]);
 
-  // Convert businesses to map format (filter out null coords)
-  // ✅ IMPORTANT: Use currentBusinesses for map to show only paginated items
+  // Convert businesses to map format (filter out null coords) — use lat/lng only
+  // ✅ Same as trending: use currentBusinesses so map shows only current page items
   const mapBusinesses = useMemo((): BusinessMapItem[] => {
     return currentBusinesses
-      .map((b) => {
-        const lat = (b as any).latitude ?? (b as any).lat ?? null;
-        const lng = (b as any).longitude ?? (b as any).lng ?? null;
-        if (lat == null || lng == null) return null;
-
-        return {
-          id: b.id,
-          name: b.name,
-          lat,
-          lng,
-          category: b.category,
-          image_url: b.image_url,
-          slug: b.slug,
-        } satisfies BusinessMapItem;
-      })
-      .filter((b): b is Required<BusinessMapItem> => Boolean(b) && b.category != null);
+      .filter((b) => b.lat != null && b.lng != null)
+      .map((b) => ({
+        id: b.id,
+        name: b.name,
+        lat: b.lat!,
+        lng: b.lng!,
+        category: b.category,
+        image_url: b.image_url,
+        slug: b.slug,
+      }));
   }, [currentBusinesses]);
 
   const handleClearFilters = () => {
@@ -375,7 +369,7 @@ export default function ForYouPage() {
               </h1>
             </div>
             <p className="text-sm sm:text-base text-charcoal/70 max-w-2xl mx-auto leading-relaxed" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-              Discover personalized recommendations tailored to your interests and preferences. 
+              Discover personalised recommendations tailored to your interests and preferences. 
               We've handpicked the best local businesses just for you.
             </p>
           </div>

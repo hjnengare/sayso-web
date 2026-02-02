@@ -433,7 +433,7 @@ export default function Home() {
                               For You
                             </h3>
                             <p className="text-body sm:text-base text-charcoal/60 max-w-[60ch] mx-auto" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                              Sign up to unlock personalized recommendations tailored to your interests.
+                              Sign up to unlock personalised recommendations tailored to your interests.
                               <br />
                               <Link
                                 href="/register"
@@ -460,7 +460,7 @@ export default function Home() {
                             <BusinessRowSkeleton title="For You Now" />
                           ) : forYouError ? (
                             <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral">
-                              Couldn't load personalized picks right now. We'll retry in the background.
+                              Couldn't load personalised picks right now. We'll retry in the background.
                             </div>
                           ) : forYouBusinesses.length > 0 ? (
                             <MemoizedBusinessRow

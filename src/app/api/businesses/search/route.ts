@@ -18,6 +18,9 @@ interface BusinessSearchResult {
   claim_status: 'unclaimed' | 'claimed' | 'pending';
   pending_by_user?: boolean; // true if current user has pending claim
   claimed_by_user?: boolean; // true if current user owns this business
+  lat?: number | null;
+  lng?: number | null;
+  slug?: string | null;
   // Search relevance fields (from RPC)
   search_rank?: number;
   alias_boost?: number;
@@ -26,7 +29,7 @@ interface BusinessSearchResult {
   matched_alias?: string;
 }
 
-// Type for RPC result
+// Type for RPC result (search_businesses returns lat, lng, slug)
 interface SearchBusinessesResult {
   id: string;
   name: string;
@@ -38,6 +41,9 @@ interface SearchBusinessesResult {
   website?: string;
   image_url?: string;
   verified: boolean;
+  lat?: number | null;
+  lng?: number | null;
+  slug?: string | null;
   search_rank?: number;
   alias_boost?: number;
   fuzzy_similarity?: number;
@@ -94,7 +100,7 @@ export async function GET(req: NextRequest) {
 
         const { data: fallbackData, error: fallbackError } = await supabase
           .from('businesses')
-          .select('id, name, category, location, address, phone, email, website, image_url, verified')
+          .select('id, name, category, location, address, phone, email, website, image_url, verified, lat, lng, slug')
           .eq('status', 'active')
           .or(`name.ilike.%${query}%, description.ilike.%${query}%, category.ilike.%${query}%`)
           .limit(limit);
@@ -195,6 +201,9 @@ export async function GET(req: NextRequest) {
           claim_status,
           pending_by_user: hasPendingByUser,
           claimed_by_user: isOwnedByUser,
+          lat: business.lat ?? null,
+          lng: business.lng ?? null,
+          slug: business.slug ?? null,
           // Include search relevance fields if available (from RPC)
           search_rank: business.search_rank,
           alias_boost: business.alias_boost,
@@ -230,6 +239,9 @@ export async function GET(req: NextRequest) {
           claim_status: claimedBusinessIds.has(business.id) ? 'claimed' : 'unclaimed',
           pending_by_user: false,
           claimed_by_user: false,
+          lat: business.lat ?? null,
+          lng: business.lng ?? null,
+          slug: business.slug ?? null,
           // Include search relevance fields if available (from RPC)
           search_rank: business.search_rank,
           alias_boost: business.alias_boost,

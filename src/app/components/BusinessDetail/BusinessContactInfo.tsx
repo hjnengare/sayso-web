@@ -14,7 +14,7 @@ interface BusinessContactInfoProps {
   showMapLink?: boolean;
 }
 
-export default function BusinessContactInfo({ phone, website, address, email, location, onViewMap, showMapLink = false }: BusinessContactInfoProps) {
+export default function BusinessContactInfo({ phone, website, address, email, location }: BusinessContactInfoProps) {
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -108,18 +108,6 @@ export default function BusinessContactInfo({ phone, website, address, email, lo
               </span>
             )}
           </div>
-          {showMapLink && (address || location) && onViewMap && (
-            <div className="pt-2 border-t border-charcoal/10 mt-2.5">
-              <button
-                onClick={onViewMap}
-                className="flex items-center gap-2 text-body-sm font-semibold text-navbar-bg hover:text-coral transition-colors w-full"
-                style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-              >
-                <MapPin className="text-navbar-bg" size={16} />
-                View on map
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </motion.div>

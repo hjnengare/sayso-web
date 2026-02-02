@@ -25,6 +25,51 @@ interface BusinessesMapProps {
 
 const CAPE_TOWN_CENTER: [number, number] = [18.4241, -33.9249];
 
+// Location pin icon: white fill with dark outline for visibility on map
+const MARKER_FILL = '#ffffff';
+const MARKER_STROKE = '#374151';
+// Cluster circles stay sage
+const CLUSTER_COLOR = '#8BA888';
+
+/** Create a location pin image for Mapbox (canvas → ImageData) */
+function createLocationMarkerImage(): { width: number; height: number; data: Uint8Array | Uint8ClampedArray } {
+  const size = 32;
+  const scale = 2; // retina
+  const w = size * scale;
+  const h = size * scale;
+  const canvas = typeof document !== 'undefined' ? document.createElement('canvas') : null;
+  if (!canvas) {
+    return { width: w, height: h, data: new Uint8ClampedArray(w * h * 4) };
+  }
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return { width: w, height: h, data: new Uint8ClampedArray(w * h * 4) };
+
+  const cx = w / 2;
+  const headRadius = 10 * scale;
+  const headY = headRadius + 2 * scale;
+  const tipY = h - 2 * scale;
+  const neckWidth = 6 * scale;
+
+  ctx.clearRect(0, 0, w, h);
+  // Pin: circle on top + triangle pointing down
+  ctx.beginPath();
+  ctx.arc(cx, headY, headRadius, 0, Math.PI * 2);
+  ctx.moveTo(cx - neckWidth / 2, headY + headRadius);
+  ctx.lineTo(cx, tipY);
+  ctx.lineTo(cx + neckWidth / 2, headY + headRadius);
+  ctx.closePath();
+  ctx.fillStyle = MARKER_FILL;
+  ctx.fill();
+  ctx.strokeStyle = MARKER_STROKE;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  const imageData = ctx.getImageData(0, 0, w, h);
+  return { width: w, height: h, data: imageData.data };
+}
+
 export default function BusinessesMap({ businesses, className = '' }: BusinessesMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -103,6 +148,12 @@ export default function BusinessesMap({ businesses, className = '' }: Businesses
       map.removeSource('businesses');
     }
 
+    // Add location pin image once (for unclustered markers)
+    if (!map.hasImage('location-marker')) {
+      const { width, height, data } = createLocationMarkerImage();
+      map.addImage('location-marker', { width, height, data }, { pixelRatio: 2 });
+    }
+
     // Add source with clustering
     map.addSource('businesses', {
       type: 'geojson',
@@ -122,7 +173,7 @@ export default function BusinessesMap({ businesses, className = '' }: Businesses
         'circle-color': [
           'step',
           ['get', 'point_count'],
-          '#8BA888', // sage
+          CLUSTER_COLOR,
           10,
           '#6B8E68',
           30,
@@ -156,17 +207,17 @@ export default function BusinessesMap({ businesses, className = '' }: Businesses
       },
     });
 
-    // Add unclustered points
+    // Add unclustered points as location pin markers
     map.addLayer({
       id: 'unclustered-point',
-      type: 'circle',
+      type: 'symbol',
       source: 'businesses',
       filter: ['!', ['has', 'point_count']],
-      paint: {
-        'circle-color': '#8BA888',
-        'circle-radius': 8,
-        'circle-stroke-width': 2,
-        'circle-stroke-color': '#fff',
+      layout: {
+        'icon-image': 'location-marker',
+        'icon-size': 0.5,
+        'icon-anchor': 'bottom',
+        'icon-allow-overlap': true,
       },
     });
 
@@ -192,57 +243,16 @@ export default function BusinessesMap({ businesses, className = '' }: Businesses
       });
     });
 
-    // Click handler for unclustered points - open business page
+    // Click handler for unclustered points - go to business profile
     map.on('click', 'unclustered-point', (e) => {
       if (!e.features || !e.features.length) return;
 
       const feature = e.features[0];
-      const { id, name, category, slug } = feature.properties || {};
-      const coordinates = (feature.geometry as GeoJSON.Point).coordinates.slice() as [number, number];
+      const { id, slug } = feature.properties || {};
+      if (!id) return;
 
-      // Ensure that if the map is zoomed out such that multiple copies of the feature are visible,
-      // the popup appears over the copy being pointed to
-      while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-        coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-      }
-
-      // Create popup content
-      const popupContent = document.createElement('div');
-      popupContent.className = 'font-urbanist';
-      popupContent.innerHTML = `
-        <div class="p-2">
-          <h3 class="font-600 text-sm text-charcoal mb-1">${name}</h3>
-          ${category ? `<p class="text-xs text-charcoal/60 mb-2">${category}</p>` : ''}
-          <button
-            id="view-business-${id}"
-            class="w-full bg-sage text-white text-xs font-600 py-2 px-3 rounded-[12px] hover:bg-sage/90 transition-colors"
-          >
-            View Business
-          </button>
-        </div>
-      `;
-
-      // Create and display popup
-      const popup = new mapboxgl.Popup({
-        closeButton: true,
-        closeOnClick: true,
-        offset: 15,
-      })
-        .setLngLat(coordinates)
-        .setDOMContent(popupContent)
-        .addTo(map);
-
-      // Add click handler to button after popup is added to DOM
-      setTimeout(() => {
-        const button = document.getElementById(`view-business-${id}`);
-        if (button) {
-          button.addEventListener('click', () => {
-            const path = slug ? `/business/${slug}` : `/business/${id}`;
-            router.push(path);
-            popup.remove();
-          });
-        }
-      }, 0);
+      const path = slug ? `/business/${slug}` : `/business/${id}`;
+      router.push(path);
     });
 
     // Change cursor on hover

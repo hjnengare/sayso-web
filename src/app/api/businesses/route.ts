@@ -128,8 +128,8 @@ interface BusinessRPCResult {
   price_range: string;
   badge: string | null;
   slug: string;
-  latitude: number | null;
-  longitude: number | null;
+  lat: number | null;
+  lng: number | null;
   created_at: string;
   updated_at: string;
   total_reviews: number;
@@ -145,7 +145,7 @@ interface BusinessRPCResult {
 const BUSINESS_SELECT = `
   id, name, description, category, interest_id, sub_interest_id, location, address,
   phone, email, website, image_url,
-  verified, price_range, badge, slug, latitude, longitude,
+  verified, price_range, badge, slug, lat, lng,
   created_at, updated_at,
   business_stats (
     total_reviews, average_rating, percentiles
@@ -179,8 +179,8 @@ type DatabaseBusinessRow = {
   price_range: string;
   badge: string | null;
   slug: string;
-  latitude: number | null;
-  longitude: number | null;
+  lat: number | null;
+  lng: number | null;
   created_at: string;
   updated_at: string;
   business_stats?: Array<{
@@ -521,7 +521,7 @@ export async function GET(req: Request) {
           console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
           console.log('✅ [BUSINESSES API] RPC returned', data.length, 'businesses');
           console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-          console.log('[BUSINESSES API] Sample businesses:', data.slice(0, 3).map(b => ({
+          console.log('[BUSINESSES API] Sample businesses:', data.slice(0, 3).map((b: { id: string; name: string; category: string; location: string; uploaded_images?: string[] }) => ({
             id: b.id,
             name: b.name,
             category: b.category,
@@ -529,11 +529,19 @@ export async function GET(req: Request) {
             uploaded_images_count: Array.isArray(b.uploaded_images) ? b.uploaded_images.length : 0,
           })));
           
+          // Normalize RPC rows to lat/lng (RPC may return latitude/longitude)
+          const normalized = (data as Array<Record<string, unknown>>).map((row) => {
+            const b = { ...row } as unknown as BusinessRPCResult;
+            b.lat = (row.lat as number | null) ?? (row.latitude as number | null) ?? null;
+            b.lng = (row.lng as number | null) ?? (row.longitude as number | null) ?? null;
+            return b;
+          });
+
           // Calculate distance for RPC results if lat/lng provided
           if (lat !== null && lng !== null && isValidLatitude(lat) && isValidLongitude(lng)) {
-            businesses = (data as BusinessRPCResult[]).map((b) => {
-              if (b.latitude !== null && b.longitude !== null) {
-                b.distance_km = calculateDistanceKm(lat, lng, b.latitude, b.longitude);
+            businesses = normalized.map((b) => {
+              if (b.lat != null && b.lng != null) {
+                b.distance_km = calculateDistanceKm(lat, lng, b.lat, b.lng);
               }
               return b;
             });
@@ -545,7 +553,7 @@ export async function GET(req: Request) {
               );
             }
           } else {
-            businesses = data as BusinessRPCResult[];
+            businesses = normalized;
           }
         } else {
           // RPC returned empty array - this is valid, not an error
@@ -665,12 +673,15 @@ export async function GET(req: Request) {
         query = (query as any).ilike('location', `%${location}%`);
       }
       
-      // Enhanced full-text search
-      if (typeof (query as any).textSearch === 'function' && q) {
-        query = (query as any).textSearch('search_vector', q, {
-          type: 'websearch',
-          config: 'english'
-        });
+      // Search: use ILIKE across name, description, category, location for reliable results
+      // (search_vector may not exist or may be empty; ILIKE ensures matches)
+      if (typeof (query as any).or === 'function' && q) {
+        const escapeLike = (s: string) =>
+          s.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_');
+        const safeQ = escapeLike(q);
+        query = (query as any).or(
+          `name.ilike.%${safeQ}%,description.ilike.%${safeQ}%,category.ilike.%${safeQ}%,location.ilike.%${safeQ}%`
+        );
       }
 
       // Cursor pagination (only if methods exist)
@@ -739,8 +750,8 @@ export async function GET(req: Request) {
         // Calculate distance if lat/lng provided
         let distanceKm: number | null = null;
         if (lat !== null && lng !== null && isValidLatitude(lat) && isValidLongitude(lng)) {
-          if (b.latitude !== null && b.longitude !== null) {
-            distanceKm = calculateDistanceKm(lat, lng, b.latitude, b.longitude);
+          if (b.lat !== null && b.lng !== null) {
+            distanceKm = calculateDistanceKm(lat, lng, b.lat, b.lng);
           }
         }
 
@@ -748,10 +759,8 @@ export async function GET(req: Request) {
           ...b,
           interest_id: b.interest_id,
           sub_interest_id: b.sub_interest_id,
-          latitude: b.latitude,
-          longitude: b.longitude,
-          lat: b.latitude, // Map for map component
-          lng: b.longitude, // Map for map component
+          lat: b.lat,
+          lng: b.lng,
           total_reviews: b.business_stats?.[0]?.total_reviews || 0,
           average_rating: b.business_stats?.[0]?.average_rating || 0,
           percentiles: b.business_stats?.[0]?.percentiles || null,
@@ -1214,8 +1223,8 @@ async function handleMixedFeedV2(options: MixedFeedOptions) {
       price_range: row.price_range,
       badge: row.badge,
       slug: row.slug,
-      latitude: row.latitude,
-      longitude: row.longitude,
+      lat: row.lat ?? row.latitude,
+      lng: row.lng ?? row.longitude,
       created_at: row.created_at,
       updated_at: row.updated_at,
       total_reviews: row.total_reviews || 0,
@@ -1573,8 +1582,8 @@ async function fetchPersonalMatches(
         price_range: row.price_range,
         badge: row.badge,
         slug: row.slug,
-        latitude: row.latitude,
-        longitude: row.longitude,
+        lat: row.lat ?? row.latitude,
+        lng: row.lng ?? row.longitude,
         created_at: row.created_at,
         updated_at: row.updated_at,
         total_reviews: row.total_reviews || 0,
@@ -1778,10 +1787,8 @@ function normalizeBusinessRows(rows: DatabaseBusinessRow[]): BusinessRPCResult[]
       price_range: row.price_range,
       badge: row.badge,
       slug: row.slug,
-      latitude: row.latitude,
-      longitude: row.longitude,
-      lat: row.latitude, // Map for map component
-      lng: row.longitude, // Map for map component
+      lat: row.lat,
+      lng: row.lng,
       created_at: row.created_at,
       updated_at: row.updated_at,
       total_reviews: stats?.total_reviews || 0,
@@ -2022,6 +2029,9 @@ function transformBusinessForCard(business: BusinessRPCResult) {
     subInterestLabel,
     interestId: business.interest_id || undefined,
     location: business.location,
+    slug: business.slug || undefined,
+    lat: business.lat,
+    lng: business.lng,
     rating: hasRating ? Math.round(business.average_rating * 2) / 2 : undefined,
     totalRating: hasRating ? business.average_rating : undefined,
     reviews: hasReviews ? business.total_reviews : 0,

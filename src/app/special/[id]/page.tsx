@@ -167,7 +167,7 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
           throw new Error(errorData.error || errorData.details || 'Failed to save special');
         }
 
-        showToast("Saved to favorites", "sage", 2000);
+        showToast("Saved to favourites", "sage", 2000);
       } else {
         // Unsave the event/special
         const response = await fetch(`/api/user/saved-events?event_id=${special.id}`, {
@@ -179,7 +179,7 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
           
           // Handle specific error cases
           if (response.status === 401) {
-            showToast("Log in to manage favorites", "sage");
+            showToast("Log in to manage favourites", "sage");
             setIsLiked(!newLikedState);
             return;
           }
@@ -187,12 +187,12 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
           throw new Error(errorData.error || errorData.details || 'Failed to unsave special');
         }
 
-        showToast("Removed from favorites", "sage", 2000);
+        showToast("Removed from favourites", "sage", 2000);
       }
     } catch (error) {
       // Revert the state on error
       setIsLiked(!newLikedState);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update favorites';
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update favourites';
       showToast(errorMessage, "sage");
       console.error('Error saving/unsaving special:', error);
     }

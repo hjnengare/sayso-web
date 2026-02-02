@@ -8,7 +8,6 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const query = searchParams.get("q")?.trim();
-    const distanceKmParam = searchParams.get("distanceKm");
     const minRatingParam = searchParams.get("minRating");
     const offsetParam = searchParams.get("offset") || "0";
     const limitParam = searchParams.get("limit") || "20";
@@ -18,7 +17,6 @@ export async function GET(req: NextRequest) {
         results: [],
         meta: {
           query: null,
-          distanceKm: null,
           minRating: null,
         },
       });
@@ -26,82 +24,114 @@ export async function GET(req: NextRequest) {
 
     const limit = Math.min(Math.max(parseInt(limitParam, 10) || 20, 5), 50);
     const offset = Math.max(parseInt(offsetParam, 10) || 0, 0);
-    const distanceKm = distanceKmParam ? parseFloat(distanceKmParam) : null;
     const minRating = minRatingParam ? parseFloat(minRatingParam) : null;
 
     const supabase = await getServerSupabase();
 
-    const { data, error } = await supabase
-      .from("businesses")
-      .select(`
-        id,
-        slug,
-        name,
-        category,
-        location,
-        address,
-        phone,
-        email,
-        website,
-        image_url,
-        description,
-        price_range,
-        verified,
-        badge,
-        business_stats (average_rating)
-      `)
-      .eq("status", "active")
-      .or(`name.ilike.%${query}%, description.ilike.%${query}%, category.ilike.%${query}%, location.ilike.%${query}%`)
-      .order("name", { ascending: true })
-      .range(offset, offset + limit - 1);
+    // Try intelligent search_businesses RPC first (full-text + fuzzy + aliases)
+    const { data: rpcData, error: rpcError } = await supabase.rpc(
+      "search_businesses",
+      {
+        q: query,
+        p_limit: limit,
+        p_offset: offset,
+        p_verified_only: false,
+        p_location: null,
+      }
+    );
 
-    if (error) {
-      console.error("Live search error:", error);
-      return NextResponse.json(
-        { error: "Failed to search businesses" },
-        { status: 500 }
-      );
+    let results: Array<Record<string, unknown>>;
+
+    if (rpcError) {
+      // Fallback to ILIKE if RPC not available
+      console.warn("[SEARCH API] RPC fallback:", rpcError.message);
+
+      const { data, error } = await supabase
+        .from("businesses")
+        .select(
+          `id, slug, name, category, location, address, phone, email,
+           website, image_url, description, price_range, verified, badge,
+           business_stats (average_rating)`
+        )
+        .eq("status", "active")
+        .or(
+          `name.ilike.%${query}%, description.ilike.%${query}%, category.ilike.%${query}%, location.ilike.%${query}%`
+        )
+        .order("name", { ascending: true })
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        console.error("Live search error:", error);
+        return NextResponse.json(
+          { error: "Failed to search businesses" },
+          { status: 500 }
+        );
+      }
+
+      results = (data || []).map((business: Record<string, unknown>) => {
+        const stats = business.business_stats as
+          | Array<{ average_rating: number }>
+          | undefined;
+        return {
+          id: business.id,
+          slug: business.slug,
+          name: business.name,
+          category: business.category,
+          location: business.location,
+          address: business.address,
+          phone: business.phone,
+          email: business.email,
+          website: business.website,
+          image_url: business.image_url,
+          description: business.description,
+          price_range: business.price_range,
+          verified: business.verified,
+          badge: business.badge,
+          rating: stats?.[0]?.average_rating ?? null,
+          stats: {
+            average_rating: stats?.[0]?.average_rating ?? 0,
+          },
+        };
+      });
+    } else {
+      // RPC returns relevance-ranked results
+      results = (rpcData || []).map((business: Record<string, unknown>) => ({
+        id: business.id,
+        slug: business.slug,
+        name: business.name,
+        category: business.category,
+        location: business.location,
+        address: business.address,
+        phone: business.phone,
+        email: business.email,
+        website: business.website,
+        image_url: business.image_url,
+        description: business.description,
+        price_range: business.price_range,
+        verified: business.verified,
+        badge: business.badge,
+        rating: (business.average_rating as number) ?? null,
+        stats: {
+          average_rating: (business.average_rating as number) ?? 0,
+        },
+      }));
     }
 
-    const filtered = (data || []).filter((business) => {
-      if (minRating) {
-        const rating = business.business_stats?.[0]?.average_rating;
-        if (typeof rating !== "number" || rating < minRating) {
-          return false;
-        }
-      }
-      return true;
-    });
-
-    const results = filtered.map((business) => ({
-      id: business.id,
-      slug: business.slug,
-      name: business.name,
-      category: business.category,
-      location: business.location,
-      address: business.address,
-      phone: business.phone,
-      email: business.email,
-      website: business.website,
-      image_url: business.image_url,
-      description: business.description,
-      price_range: business.price_range,
-      verified: business.verified,
-      badge: business.badge,
-      rating: business.business_stats?.[0]?.average_rating ?? null,
-      stats: {
-        average_rating: business.business_stats?.[0]?.average_rating ?? 0,
-      },
-    }));
+    // Apply minRating filter if provided
+    if (minRating) {
+      results = results.filter((business) => {
+        const rating = (business.stats as { average_rating: number })
+          ?.average_rating;
+        return typeof rating === "number" && rating >= minRating;
+      });
+    }
 
     return NextResponse.json(
       {
         results,
         meta: {
           query,
-          distanceKm,
           minRating,
-          distanceFilterSupported: false, // TODO: wire up real geo filtering once coordinates are stored
           total: results.length,
         },
       },

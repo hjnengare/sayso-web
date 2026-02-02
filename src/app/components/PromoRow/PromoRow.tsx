@@ -33,7 +33,7 @@ const PROMO_CARDS: PromoCard[] = [
   },
   {
     title: "Top Rated",
-    subtitle: "Community favorites",
+    subtitle: "Community favourites",
     imageUrl: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&h=400&fit=crop&auto=format",
     href: "/top-rated",
     cta: "View All",

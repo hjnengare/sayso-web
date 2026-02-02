@@ -200,7 +200,7 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
           }
           throw new Error(errorData.error || 'Failed to save event');
         }
-        showToast("Event saved to favorites", "success");
+        showToast("Event saved to favourites", "success");
       } else {
         const response = await fetch(`/api/user/saved-events?event_id=${event.id}`, {
           method: 'DELETE',
@@ -209,11 +209,11 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
         if (!response.ok) {
           throw new Error('Failed to unsave event');
         }
-        showToast("Event removed from favorites", "success");
+        showToast("Event removed from favourites", "success");
       }
     } catch (error) {
       setIsLiked(!newLikedState);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update favorites';
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update favourites';
       showToast(errorMessage, "error");
       console.error('Error saving/unsaving event:', error);
     }

@@ -28,14 +28,14 @@ const HERO_IMAGE_EXTENSIONS = new Set(["jpg", "jpeg", "png", "webp", "gif", "avi
 const HERO_COPY = [
   {
     title: "Discover Local Gems",
-    description: "Explore amazing local businesses, restaurants, and experiences in your city",
+    description: "From everyday essentials to hidden favourites",
   },
   {
     title: "What's Trending Now",
     description: "See what everyone is talking about right now",
   },
   {
-    title: "Personalized For You",
+    title: "Personalised For You",
     description: "Get recommendations tailored to your interests",
   },
   {

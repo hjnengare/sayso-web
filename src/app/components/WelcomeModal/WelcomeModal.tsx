@@ -133,10 +133,10 @@ export default function WelcomeModal() {
                     </div>
                     <div className="flex-1">
                       <h4 className="font-urbanist text-sm font-600 text-charcoal mb-1">
-                        Save Favorites
+                        Save Favourites
                       </h4>
                       <p className="font-urbanist text-sm sm:text-xs text-charcoal/60 leading-relaxed">
-                        Create lists of your favorite spots to revisit anytime
+                        Create lists of your favourite spots to revisit anytime
                       </p>
                     </div>
                   </div>

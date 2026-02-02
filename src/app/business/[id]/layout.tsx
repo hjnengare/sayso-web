@@ -128,7 +128,7 @@ export default async function BusinessLayout({
           addressLocality: business.location || 'Cape Town',
           addressCountry: 'ZA',
         } : undefined,
-        geo: business.latitude && business.longitude ? {
+        geo: business.latitude != null && business.longitude != null ? {
           latitude: business.latitude,
           longitude: business.longitude,
         } : undefined,

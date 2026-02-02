@@ -616,13 +616,15 @@ export default function TrendingPage() {
                       )}
                     </AnimatePresence>
 
-                    {/* Pagination */}
-                    <Pagination
-                      currentPage={currentPage}
-                      totalPages={totalPages}
-                      onPageChange={handlePageChange}
-                      disabled={isPaginationLoading}
-                    />
+                    {/* Pagination - Only show in list mode */}
+                    {!isMapMode && (
+                      <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={handlePageChange}
+                        disabled={isPaginationLoading}
+                      />
+                    )}
                   </>
                 )}
               </>

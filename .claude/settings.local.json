@@ -61,7 +61,8 @@
       "Bash(psql:*)",
       "Bash(grep:*)",
       "Bash(npx next lint:*)",
-      "Bash(npx eslint:*)"
+      "Bash(npx eslint:*)",
+      "Bash(git status:*)"
     ],
     "deny": [],
     "ask": [],

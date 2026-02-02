@@ -224,7 +224,7 @@ export default function EventCard({ event, index: _index = 0 }: EventCardProps) 
                 fontWeight: 600,
               }}
             >
-              <span>Go to business</span>
+              <span>View event</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>

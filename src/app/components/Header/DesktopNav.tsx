@@ -309,7 +309,7 @@ export default function DesktopNav(props: DesktopNavProps) {
                                       </div>
                                       <div className="text-sm sm:text-xs text-charcoal/60 mt-0.5">
                                         {showLock
-                                          ? "Sign in for personalized picks"
+                                          ? "Sign in for personalised picks"
                                           : description}
                                       </div>
                                     </div>

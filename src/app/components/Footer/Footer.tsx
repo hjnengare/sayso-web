@@ -56,8 +56,9 @@ export default function Footer() {
     {
       title: "Legal",
       links: [
-        { name: "Privacy", href: "/privacy/sayso%20privacy%20policy%20%26%20terms%20of%20use.pdf" },
-        { name: "Terms", href: "/privacy/sayso%20privacy%20policy%20%26%20terms%20of%20use.pdf" },
+        { name: "Privacy Policy", href: "/privacy" },
+        { name: "Terms of Use", href: "/terms" },
+        { name: "Badge Definitions", href: "/badge-definitions" },
       ],
     },
   ];
@@ -92,7 +93,7 @@ export default function Footer() {
                 <Logo variant="footer" />
               </Link>
               <p className="font-urbanist text-sm sm:text-base text-off-white/80 font-normal text-left max-w-[46ch]">
-                Discover trusted local businesses, events, and community favorites.
+                Discover trusted local businesses, events, and community favourites.
               </p>
             </div>
 
