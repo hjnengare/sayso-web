@@ -137,9 +137,9 @@ const styles = `
   .animate-slide-in-left { animation: slideInLeft 0.6s ease-out forwards; }
   .animate-scale-in { animation: scaleIn 0.8s ease-out forwards; }
 
-  .animate-delay-200 { animation-delay: 0.2s; opacity: 0; }
-  .animate-delay-400 { animation-delay: 0.4s; opacity: 0; }
-  .animate-delay-700 { animation-delay: 0.7s; opacity: 0; }
+  .animate-delay-200 { animation-delay: 0.2s; }
+  .animate-delay-400 { animation-delay: 0.4s; }
+  .animate-delay-700 { animation-delay: 0.7s; }
 
   @media (prefers-reduced-motion: reduce) {
     .animate-fade-in-up,
@@ -166,6 +166,7 @@ export default function VerifyEmailPage() {
   const [isResending, setIsResending] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+  const [verificationSuccess, setVerificationSuccess] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const prefersReduced = usePrefersReducedMotion();
@@ -214,7 +215,9 @@ export default function VerifyEmailPage() {
   useEffect(() => {
     if (searchParams.get("verified") !== "1") return;
 
-    showToastOnce("email-verified-v1", "Email verified. Account secured.", "sage", 3000);
+    // Mark verification as successful for UI
+    setVerificationSuccess(true);
+    showToastOnce("email-verified-v1", "Email verified successfully!", "sage", 3000);
 
     if (typeof window !== "undefined") {
       sessionStorage.removeItem("pendingVerificationEmail");
@@ -229,9 +232,15 @@ export default function VerifyEmailPage() {
 
     // Redirect after showing success message
     const t = setTimeout(() => {
-      if (!user) return;
-      router.push(getPostVerifyRedirect());
-    }, 2000);
+      if (user) {
+        // User has session - redirect to appropriate page
+        router.push(getPostVerifyRedirect());
+      } else {
+        // CROSS-DEVICE: No session on this device - redirect to login
+        // The email IS verified, user just needs to log in on this device
+        router.push("/login?message=Email+verified!+Please+log+in+to+continue.");
+      }
+    }, 2500);
 
     return () => clearTimeout(t);
   }, [searchParams, router, showToastOnce, user, getPostVerifyRedirect]);
@@ -311,49 +320,63 @@ export default function VerifyEmailPage() {
     </div>
   );
 
-  if (isLoading) {
-    return (
-      <>
-        <style dangerouslySetInnerHTML={{ __html: styles }} />
-        <PageShell>
-          <div className="flex-1 flex items-center justify-center">
-            <AppLoader size="lg" variant="wavy" color="sage" />
-          </div>
-        </PageShell>
-      </>
-    );
-  }
-
-  if (isResending) {
-    return (
-      <>
-        <style dangerouslySetInnerHTML={{ __html: styles }} />
-        <PageShell>
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <div className="w-12 h-12 border-4 border-sage/20 border-t-sage rounded-full animate-spin mx-auto mb-4" />
-              <p className="font-urbanist text-base text-charcoal/70">Sending verification email...</p>
-            </div>
-          </div>
-        </PageShell>
-      </>
-    );
-  }
-
   const displayEmail = user?.email || pendingEmail;
 
-  if (!displayEmail) {
+  // Show success state when verification completed (especially for cross-device)
+  if (verificationSuccess) {
     return (
       <>
         <style dangerouslySetInnerHTML={{ __html: styles }} />
         <PageShell>
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center max-w-md mx-auto p-6">
-              <p className="text-lg text-charcoal mb-4">No verification pending.</p>
-              <Link href="/register" className="text-sage hover:text-sage/80 underline">
-                Go to registration
-              </Link>
+              <div className="w-20 h-20 mx-auto mb-6 bg-sage/20 rounded-full flex items-center justify-center">
+                <CheckCircle className="w-10 h-10 text-sage" />
+              </div>
+              <h2 
+                className="text-2xl font-bold text-charcoal mb-3"
+                style={{ fontFamily: "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}
+              >
+                Email Verified!
+              </h2>
+              <p 
+                className="text-base text-charcoal/70 mb-6"
+                style={{ fontFamily: "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}
+              >
+                {user 
+                  ? "Redirecting you to continue setup..." 
+                  : "Your email has been verified. Redirecting to login..."}
+              </p>
+              <div className="w-8 h-8 border-3 border-sage/20 border-t-sage rounded-full animate-spin mx-auto" />
             </div>
+          </div>
+        </PageShell>
+      </>
+    );
+  }
+
+  // Single unified loading/empty state - prevents layout shift
+  if (isLoading || isResending || !displayEmail) {
+    return (
+      <>
+        <style dangerouslySetInnerHTML={{ __html: styles }} />
+        <PageShell>
+          <div className="flex-1 flex items-center justify-center">
+            {isLoading ? (
+              <AppLoader size="lg" variant="wavy" color="sage" />
+            ) : isResending ? (
+              <div className="text-center">
+                <div className="w-12 h-12 border-4 border-sage/20 border-t-sage rounded-full animate-spin mx-auto mb-4" />
+                <p className="font-urbanist text-base text-charcoal/70">Sending verification email...</p>
+              </div>
+            ) : (
+              <div className="text-center max-w-md mx-auto p-6">
+                <p className="text-lg text-charcoal mb-4">No verification pending.</p>
+                <Link href="/register" className="text-sage hover:text-sage/80 underline">
+                  Go to registration
+                </Link>
+              </div>
+            )}
           </div>
         </PageShell>
       </>

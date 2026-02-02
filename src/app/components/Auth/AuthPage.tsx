@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
+import { useSearchParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -37,6 +38,7 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
   const prefersReduced = usePrefersReducedMotion();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const supabase = getBrowserSupabase();
+  const searchParams = useSearchParams();
 
   const { register, login, isLoading: authLoading, error: authError } = useAuth();
   const { showToast } = useToast();
@@ -73,6 +75,23 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Handle success messages from URL (e.g., cross-device email verification)
+  useEffect(() => {
+    const message = searchParams?.get("message");
+    if (message) {
+      // Decode the message and show as toast
+      const decodedMessage = decodeURIComponent(message.replace(/\+/g, " "));
+      showToast(decodedMessage, "sage", 4000);
+      
+      // Clean the URL
+      if (typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("message");
+        window.history.replaceState({}, "", url.pathname + (url.search || ""));
+      }
+    }
+  }, [searchParams, showToast]);
 
   useEffect(() => {
     const updateOnlineStatus = () => setIsOnline(navigator.onLine);

@@ -35,8 +35,9 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // Legacy hash fragment (e.g. email confirmation in different browser): tokens are in #access_token=...&refresh_token=...
+  // Legacy hash fragment (e.g. email confirmation in different browser/device): tokens are in #access_token=...&refresh_token=...
   // Server never sees the hash, so return HTML that sets session client-side then redirects.
+  // CROSS-DEVICE FIX: On different devices, we need to properly set up the session from the tokens.
   const typeFromQuery = requestUrl.searchParams.get('type');
   const nextFromQuery = requestUrl.searchParams.get('next') ?? '/';
   if (!code && !token) {
@@ -44,46 +45,174 @@ export async function GET(request: NextRequest) {
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
     const html = `<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="utf-8"/><title>Confirming…</title></head>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Verifying your email...</title>
+  <style>
+    body {
+      font-family: 'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background: #E5E0E5;
+      color: #2D2D2D;
+    }
+    .container {
+      text-align: center;
+      padding: 2rem;
+      max-width: 400px;
+    }
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid rgba(125, 155, 118, 0.2);
+      border-top-color: #7D9B76;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1.5rem;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    h1 { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; }
+    p { font-size: 1rem; color: #666; margin: 0; }
+    .error { color: #722F37; margin-top: 1rem; display: none; }
+    .error.show { display: block; }
+    .retry-btn {
+      margin-top: 1rem;
+      padding: 0.75rem 1.5rem;
+      background: #7D9B76;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      display: none;
+    }
+    .retry-btn.show { display: inline-block; }
+  </style>
+</head>
 <body>
-  <p>Confirming your sign-in…</p>
+  <div class="container">
+    <div class="spinner" id="spinner"></div>
+    <h1 id="title">Verifying your email...</h1>
+    <p id="message">Please wait while we confirm your account.</p>
+    <p class="error" id="error"></p>
+    <button class="retry-btn" id="retry" onclick="window.location.reload()">Try Again</button>
+  </div>
   <script>
     (function() {
       var SUPABASE_URL = ${JSON.stringify(supabaseUrl)};
       var SUPABASE_ANON_KEY = ${JSON.stringify(supabaseAnonKey)};
       var REDIRECT_TYPE = ${JSON.stringify(typeFromQuery || '')};
       var NEXT = ${JSON.stringify(nextFromQuery)};
+      
+      function showError(msg) {
+        document.getElementById('spinner').style.display = 'none';
+        document.getElementById('title').textContent = 'Verification Issue';
+        document.getElementById('message').textContent = 'We encountered a problem verifying your email.';
+        document.getElementById('error').textContent = msg;
+        document.getElementById('error').classList.add('show');
+        document.getElementById('retry').classList.add('show');
+      }
+      
+      function redirect(type) {
+        // Small delay to ensure cookies are set
+        setTimeout(function() {
+          if (type === 'recovery' || type === 'password_recovery') {
+            window.location.replace('/reset-password?verified=1');
+          } else if (type === 'email_change' || type === 'emailchange') {
+            window.location.replace('/profile?email_changed=true');
+          } else {
+            // For email verification, redirect to verify-email which will handle routing
+            window.location.replace('/verify-email?verified=1');
+          }
+        }, 300);
+      }
+      
+      // Parse hash fragment
       var hash = window.location.hash && window.location.hash.substring(1);
-      var params = new URLSearchParams(hash || '');
-      var access_token = params.get('access_token');
-      var refresh_token = params.get('refresh_token');
-      if (!access_token || !refresh_token) {
-        window.location.replace('/auth/auth-code-error?error=missing_tokens');
+      if (!hash) {
+        // No hash - check if this is a direct page load without tokens
+        // Redirect to login page
+        console.log('No hash fragment found');
+        window.location.replace('/login?message=Please+check+your+email+for+the+verification+link');
         return;
       }
+      
+      var params = new URLSearchParams(hash);
+      var access_token = params.get('access_token');
+      var refresh_token = params.get('refresh_token');
+      var error_param = params.get('error');
+      var error_description = params.get('error_description');
+      
+      // Handle error in hash (e.g., expired link)
+      if (error_param) {
+        console.error('Auth error in hash:', error_param, error_description);
+        if (error_description && error_description.includes('expired')) {
+          showError('This verification link has expired. Please request a new one.');
+        } else {
+          showError(error_description || error_param || 'Verification failed');
+        }
+        return;
+      }
+      
+      if (!access_token || !refresh_token) {
+        console.error('Missing tokens in hash');
+        showError('Invalid verification link. Please try clicking the link again or request a new one.');
+        return;
+      }
+      
+      // Load Supabase and set session
       var script = document.createElement('script');
       script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
       script.async = false;
       script.onload = function() {
         var supabase = window.supabase;
-        var client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        client.auth.setSession({ access_token: access_token, refresh_token: refresh_token })
-          .then(function() {
-            if (REDIRECT_TYPE === 'recovery' || REDIRECT_TYPE === 'password_recovery') {
-              window.location.replace('/reset-password?verified=1');
-            } else if (REDIRECT_TYPE === 'email_change' || REDIRECT_TYPE === 'emailchange') {
-              window.location.replace('/profile?email_changed=true');
+        var client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+          auth: {
+            autoRefreshToken: true,
+            persistSession: true,
+            detectSessionInUrl: false // We're handling it manually
+          }
+        });
+        
+        // Set the session from the tokens
+        client.auth.setSession({ 
+          access_token: access_token, 
+          refresh_token: refresh_token 
+        })
+        .then(function(result) {
+          if (result.error) {
+            console.error('Session set error:', result.error);
+            // Even if session set fails on different device, the email IS verified
+            // Just redirect and let the user log in
+            if (result.error.message && result.error.message.includes('expired')) {
+              showError('This link has expired. Your email may already be verified - try logging in.');
             } else {
-              window.location.replace('/verify-email?verified=1');
+              // Redirect anyway - email verification happened server-side
+              console.log('Session error but redirecting - email should be verified');
+              redirect(REDIRECT_TYPE);
             }
-          })
-          .catch(function(err) {
-            console.error('Hash session set error:', err);
-            window.location.replace('/auth/auth-code-error?error=session_set_failed');
-          });
+            return;
+          }
+          
+          console.log('Session set successfully');
+          redirect(REDIRECT_TYPE);
+        })
+        .catch(function(err) {
+          console.error('Hash session set error:', err);
+          // Still try to redirect - the email verification itself may have worked
+          // The user can log in on this device afterward
+          showError('Session setup failed. Your email may be verified - try logging in.');
+        });
       };
       script.onerror = function() {
-        window.location.replace('/auth/auth-code-error?error=script_load');
+        console.error('Failed to load Supabase script');
+        showError('Failed to load verification scripts. Please check your internet connection and try again.');
       };
       document.head.appendChild(script);
     })();

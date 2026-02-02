@@ -57,12 +57,20 @@ export default function EmailVerificationGuard({
   const userExists = !!(userId || userEmail);
 
   // Show loading only briefly - don't block if we have URL verification signal
+  // Use a minimal loading state to prevent layout shift
   if (isLoading && !isVerifiedFromUrl) {
+    // Return children with a loading overlay instead of replacing entire content
+    // This prevents the jarring flash when switching from loader to content
     return (
-      <div className="min-h-screen flex items-center justify-center bg-off-white">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-sage/20 border-t-sage rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="font-urbanist text-base text-charcoal/70">Loading...</p>
+      <div className="relative">
+        <div className="absolute inset-0 bg-off-white/80 backdrop-blur-sm z-50 flex items-center justify-center min-h-[200px]">
+          <div className="text-center">
+            <div className="w-10 h-10 border-3 border-sage/20 border-t-sage rounded-full animate-spin mx-auto mb-3"></div>
+            <p className="font-urbanist text-sm text-charcoal/70">Loading...</p>
+          </div>
+        </div>
+        <div className="opacity-0 pointer-events-none">
+          {children}
         </div>
       </div>
     );
