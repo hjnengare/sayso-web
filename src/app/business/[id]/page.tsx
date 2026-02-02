@@ -165,6 +165,11 @@ export default function BusinessProfilePage() {
             const data = await response.json();
             setBusiness(data);
 
+            // Record profile view (fire-and-forget)
+            if (data?.id) {
+              fetch(`/api/businesses/${data.id}/views`, { method: 'POST' }).catch(() => {});
+            }
+
             // SEO: Redirect from ID to slug if we have a slug and the URL uses an ID
             const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(businessId);
             if (!hasRedirected.current && data.slug && data.slug !== businessId && isUUID) {

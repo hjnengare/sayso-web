@@ -80,7 +80,7 @@ export default function OwnerBusinessDashboard() {
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-        const [statsResult, reviewsResult, conversationsResult] = await Promise.allSettled([
+        const [statsResult, reviewsResult, conversationsResult, viewsResult] = await Promise.allSettled([
           supabase
             .from('business_stats')
             .select('average_rating, total_reviews')
@@ -96,6 +96,7 @@ export default function OwnerBusinessDashboard() {
             .select('*', { count: 'exact', head: true })
             .eq('business_id', resolvedId)
             .gte('created_at', thirtyDaysAgo.toISOString()),
+          fetch(`/api/businesses/${resolvedId}/views?days=30`).then(r => r.json()),
         ]);
 
         if (cancelled) return;
@@ -113,9 +114,10 @@ export default function OwnerBusinessDashboard() {
         // Handle analytics
         const newReviewsCount = reviewsResult.status === 'fulfilled' ? reviewsResult.value.count : 0;
         const newConversationsCount = conversationsResult.status === 'fulfilled' ? conversationsResult.value.count : 0;
+        const profileViewsCount = viewsResult.status === 'fulfilled' ? viewsResult.value.count : 0;
 
         setAnalytics({
-          profileViews: 0, // TODO: Implement when views tracking is added
+          profileViews: profileViewsCount || 0,
           newReviews: newReviewsCount || 0,
           newConversations: newConversationsCount || 0,
         });
