@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { memo } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
@@ -110,7 +110,7 @@ const getCategoryIcon = (category: string, subInterestId?: string, subInterestLa
   return Tag;
 };
 
-export default function SimilarBusinessCard({
+function SimilarBusinessCard({
   id,
   slug,
   name,
@@ -291,3 +291,6 @@ export default function SimilarBusinessCard({
     </div>
   );
 }
+
+// Memoize to prevent re-renders when parent list updates
+export default memo(SimilarBusinessCard);

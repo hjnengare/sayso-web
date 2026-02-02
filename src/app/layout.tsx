@@ -1,7 +1,17 @@
 import type { Metadata } from "next";
 import { generateSEOMetadata } from "./lib/utils/seoMetadata";
-import { Urbanist } from "next/font/google";
+import { 
+  Urbanist, 
+  Dancing_Script, 
+  Permanent_Marker, 
+  Changa_One, 
+  Cormorant, 
+  Livvic, 
+  Playfair_Display, 
+  Barrio 
+} from "next/font/google";
 import dynamicImport from "next/dynamic";
+import Script from "next/script";
 import "./globals.css";
 import { AuthProvider } from "./contexts/AuthContext";
 import { OnboardingProvider } from "./contexts/OnboardingContext";
@@ -18,12 +28,67 @@ const WebVitals = dynamicImport(() => import("./components/Performance/WebVitals
 const BusinessNotifications = dynamicImport(() => import("./components/Notifications/BusinessNotifications"));
 const ClientLayoutWrapper = dynamicImport(() => import("./components/Performance/ClientLayoutWrapper"));
 
+// Primary font - Urbanist (preloaded, critical)
 const urbanist = Urbanist({
   subsets: ["latin"],
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
   display: "swap",
   fallback: ["system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
   variable: "--font-urbanist",
+});
+
+// Display fonts - loaded with swap for non-blocking render
+const dancingScript = Dancing_Script({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+  variable: "--font-dancing-script",
+});
+
+const permanentMarker = Permanent_Marker({
+  subsets: ["latin"],
+  weight: "400",
+  display: "swap",
+  variable: "--font-permanent-marker",
+});
+
+const changaOne = Changa_One({
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"],
+  display: "swap",
+  variable: "--font-changa-one",
+});
+
+const cormorant = Cormorant({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  style: ["normal", "italic"],
+  display: "swap",
+  variable: "--font-cormorant",
+});
+
+const livvic = Livvic({
+  subsets: ["latin"],
+  weight: ["100", "200", "300", "400", "500", "600", "700", "900"],
+  style: ["normal", "italic"],
+  display: "swap",
+  variable: "--font-livvic",
+});
+
+const playfairDisplay = Playfair_Display({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  style: ["normal", "italic"],
+  display: "swap",
+  variable: "--font-playfair-display",
+});
+
+const barrio = Barrio({
+  subsets: ["latin"],
+  weight: "400",
+  display: "swap",
+  variable: "--font-barrio",
 });
 
 export const metadata: Metadata = {
@@ -89,57 +154,34 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/favicon.png" />
 
         {/* Preconnect to external domains for faster resource loading */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href={process.env.NEXT_PUBLIC_SUPABASE_URL} />
+        <link rel="preconnect" href="https://api.mapbox.com" />
+        <link rel="dns-prefetch" href="https://api.mapbox.com" />
         
-        {/* Preload critical resources */}
-        <link rel="preload" href="/globals.css" as="style" />
-        
-        {/* Dancing Script Font */}
-        <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&display=swap" rel="stylesheet" />
-        
-        {/* Permanent Marker Font */}
-        <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap" rel="stylesheet" />
-        
-        {/* Changa One Font */}
-        <link href="https://fonts.googleapis.com/css2?family=Changa+One:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
-        
-        {/* Cormorant & Livvic Fonts */}
-        <link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300..700;1,300..700&family=Livvic:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,900&display=swap" rel="stylesheet" />
-        <link href="https://fonts.googleapis.com/css2?family=Momo+Trust+Display&display=swap" rel="stylesheet" />
-        
-        {/* Playfair Display - Premium font for logo */}
-        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet" />
- 
-        {/* Barrio - Font for business card titles */}
-        <link href="https://fonts.googleapis.com/css2?family=Barrio&display=swap" rel="stylesheet" />
-  
-        {/* Service Worker Registration */}
-        <script
+        {/* Canonical tag removed - set per page via metadata */}
+      </head>
+      <body className={`${urbanist.className} ${dancingScript.variable} ${permanentMarker.variable} ${changaOne.variable} ${cormorant.variable} ${livvic.variable} ${playfairDisplay.variable} ${barrio.variable} no-layout-shift scroll-smooth bg-off-white`}>
+        <SchemaMarkup schemas={[generateOrganizationSchema(), generateWebSiteSchema()]} />
+        <WebVitals />
+        <ClientLayoutWrapper />
+        {/* Service Worker Registration - deferred to not block initial render */}
+        <Script
+          id="sw-registration"
+          strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js')
-                    .then(function(registration) {
-                      console.log('SW registered: ', registration);
-                    })
-                    .catch(function(registrationError) {
-                      console.log('SW registration failed: ', registrationError);
-                    });
-                });
+                navigator.serviceWorker.register('/sw.js')
+                  .then(function(registration) {
+                    console.log('SW registered: ', registration);
+                  })
+                  .catch(function(registrationError) {
+                    console.log('SW registration failed: ', registrationError);
+                  });
               }
             `,
           }}
         />
-        
-        {/* Canonical tag removed - set per page via metadata */}
-      </head>
-      <body className={`${urbanist.className} no-layout-shift scroll-smooth bg-off-white`}>
-        <SchemaMarkup schemas={[generateOrganizationSchema(), generateWebSiteSchema()]} />
-        <WebVitals />
-        <ClientLayoutWrapper />
         <ToastProvider>
           <AuthProvider>
             <OnboardingProvider>

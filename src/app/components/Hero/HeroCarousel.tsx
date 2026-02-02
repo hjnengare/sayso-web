@@ -465,7 +465,7 @@ export default function HeroCarousel() {
                      visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
                    }}
                  >
-                   Discover local gems
+                   Discover Local Gems
                  </motion.h2>
                  <motion.p
                    className="text-base sm:text-lg lg:text-xl text-off-white/90 drop-shadow-md max-w-xl mb-6"
@@ -475,7 +475,7 @@ export default function HeroCarousel() {
                      visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] } },
                    }}
                  >
-                   Explore amazing local businesses, restaurants, and experiences in your city
+                   From everyday essentials to hidden favourites
                  </motion.p>
 
                  {/* Conditional CTA Button: Sign In for unauthenticated, Discover for authenticated */}

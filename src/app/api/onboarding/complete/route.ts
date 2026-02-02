@@ -33,11 +33,28 @@ export async function POST(req: Request) {
 
     const writeStart = nodePerformance.now();
 
-    const { data: interestsData, error: interestsError } = await supabase
-      .from('user_interests')
-      .select('interest_id')
-      .eq('user_id', user.id)
-      .limit(1);
+    // Parallelize all validation queries for faster response
+    const [interestsResult, subcategoriesResult, dealbreakersResult] = await Promise.all([
+      supabase
+        .from('user_interests')
+        .select('interest_id')
+        .eq('user_id', user.id)
+        .limit(1),
+      supabase
+        .from('user_subcategories')
+        .select('subcategory_id')
+        .eq('user_id', user.id)
+        .limit(1),
+      supabase
+        .from('user_dealbreakers')
+        .select('dealbreaker_id')
+        .eq('user_id', user.id)
+        .limit(1),
+    ]);
+
+    const { data: interestsData, error: interestsError } = interestsResult;
+    const { data: subcategoriesData, error: subcategoriesError } = subcategoriesResult;
+    const { data: dealbreakersData, error: dealbreakersError } = dealbreakersResult;
 
     if (interestsError) {
       console.error('[Complete API] Error checking interests:', interestsError);
@@ -49,12 +66,6 @@ export async function POST(req: Request) {
       return addNoCacheHeaders(response);
     }
 
-    const { data: subcategoriesData, error: subcategoriesError } = await supabase
-      .from('user_subcategories')
-      .select('subcategory_id')
-      .eq('user_id', user.id)
-      .limit(1);
-
     if (subcategoriesError) {
       console.error('[Complete API] Error checking subcategories:', subcategoriesError);
       throw subcategoriesError;
@@ -64,12 +75,6 @@ export async function POST(req: Request) {
       const response = NextResponse.json({ error: 'Complete subcategories first' }, { status: 400 });
       return addNoCacheHeaders(response);
     }
-
-    const { data: dealbreakersData, error: dealbreakersError } = await supabase
-      .from('user_dealbreakers')
-      .select('dealbreaker_id')
-      .eq('user_id', user.id)
-      .limit(1);
 
     if (dealbreakersError) {
       console.error('[Complete API] Error checking dealbreakers:', dealbreakersError);

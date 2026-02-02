@@ -112,67 +112,68 @@ export function getSubcategoryLabel(slug: string | undefined | null): string {
 /**
  * Deterministic 1:1 mapping: canonical slug → placeholder image path.
  * File names align with public/businessImagePlaceholders folder structure.
+ * All paths use URL-safe names (hyphens, no spaces or special characters).
  */
 export const SUBCATEGORY_PLACEHOLDER_MAP: Record<CanonicalSubcategorySlug, string> = {
   // Food & Drink
-  restaurants: `${P}/Food & Drink/restauarants.jpg`,
-  cafes: `${P}/Food & Drink/cafés & coffee.jpg`,
-  bars: `${P}/Food & Drink/bars & pubs.jpg`,
-  "fast-food": `${P}/Food & Drink/fast food.jpg`,
-  "fine-dining": `${P}/Food & Drink/fine dining.jpg`,
+  restaurants: `${P}/food-drink/restaurants.jpg`,
+  cafes: `${P}/food-drink/cafes-coffee.jpg`,
+  bars: `${P}/food-drink/bars-pubs.jpg`,
+  "fast-food": `${P}/food-drink/fast-food.jpg`,
+  "fine-dining": `${P}/food-drink/fine-dining.jpg`,
 
   // Beauty & Wellness
-  gyms: `${P}/Beauty & Wellness/gyms & fitness.jpg`,
-  spas: `${P}/Beauty & Wellness/spas.jpg`,
-  salons: `${P}/Beauty & Wellness/hair salons.jpg`,
-  wellness: `${P}/Beauty & Wellness/wellness centers.jpg`,
-  "nail-salons": `${P}/Beauty & Wellness/nail salons.jpg`,
+  gyms: `${P}/beauty-wellness/gyms-fitness.jpg`,
+  spas: `${P}/beauty-wellness/spas.jpg`,
+  salons: `${P}/beauty-wellness/hair-salons.jpg`,
+  wellness: `${P}/beauty-wellness/wellness-centers.jpg`,
+  "nail-salons": `${P}/beauty-wellness/nail-salons.jpg`,
 
   // Professional Services
-  "education-learning": `${P}/Professional Services/education & learning.jpg`,
-  "transport-travel": `${P}/Professional Services/transport & travel.jpg`,
-  "finance-insurance": `${P}/Professional Services/finance & insurance.jpg`,
-  plumbers: `${P}/Professional Services/plumbers.jpg`,
-  electricians: `${P}/Professional Services/electricians .jpg`,
-  "legal-services": `${P}/Professional Services/legal services.jpg`,
+  "education-learning": `${P}/professional-services/education-learning.jpg`,
+  "transport-travel": `${P}/professional-services/transport-travel.jpg`,
+  "finance-insurance": `${P}/professional-services/finance-insurance.jpg`,
+  plumbers: `${P}/professional-services/plumbers.jpg`,
+  electricians: `${P}/professional-services/electricians.jpg`,
+  "legal-services": `${P}/professional-services/legal-services.jpg`,
 
   // Outdoors & Adventure
-  hiking: `${P}/Outdoors & Adventure/hiking.jpg`,
-  cycling: `${P}/Outdoors & Adventure/cycling.jpg`,
-  "water-sports": `${P}/Outdoors & Adventure/watersports.jpg`,
-  camping: `${P}/Outdoors & Adventure/camping.jpg`,
+  hiking: `${P}/outdoors-adventure/hiking.jpg`,
+  cycling: `${P}/outdoors-adventure/cycling.jpg`,
+  "water-sports": `${P}/outdoors-adventure/water-sports.jpg`,
+  camping: `${P}/outdoors-adventure/camping.jpg`,
 
   // Entertainment & Experiences
-  "events-festivals": `${P}/Entertainment & Experiences/events & festivals.jpg`,
-  "sports-recreation": `${P}/Entertainment & Experiences/sports & recreation.jpg`,
-  nightlife: `${P}/Entertainment & Experiences/nightlife.jpg`,
-  "comedy-clubs": `${P}/Entertainment & Experiences/comedy clubs.jpg`,
-  cinemas: `${P}/Entertainment & Experiences/cinemas.jpg`,
+  "events-festivals": `${P}/entertainment-experiences/events-festivals.jpg`,
+  "sports-recreation": `${P}/entertainment-experiences/sports-recreation.jpg`,
+  nightlife: `${P}/entertainment-experiences/nightlife.jpg`,
+  "comedy-clubs": `${P}/entertainment-experiences/comedy-clubs.jpg`,
+  cinemas: `${P}/entertainment-experiences/cinemas.jpg`,
 
   // Arts & Culture
-  museums: `${P}/Arts & Culture/museums.jpg`,
-  galleries: `${P}/Arts & Culture/art galleries.jpg`,
-  theaters: `${P}/Arts & Culture/theatres.jpg`,
-  concerts: `${P}/Arts & Culture/concerts.jpg`,
+  museums: `${P}/arts-culture/museums.jpg`,
+  galleries: `${P}/arts-culture/art-galleries.jpg`,
+  theaters: `${P}/arts-culture/theatres.jpg`,
+  concerts: `${P}/arts-culture/concerts.jpg`,
 
   // Family & Pets
-  "family-activities": `${P}/Family & Pets/family activities.jpg`,
-  "pet-services": `${P}/Family & Pets/pet services.jpg`,
-  childcare: `${P}/Family & Pets/childcare.jpg`,
-  veterinarians: `${P}/Family & Pets/veterinarians.jpg`,
+  "family-activities": `${P}/family-pets/family-activities.jpg`,
+  "pet-services": `${P}/family-pets/pet-services.jpg`,
+  childcare: `${P}/family-pets/childcare.jpg`,
+  veterinarians: `${P}/family-pets/veterinarians.jpg`,
 
   // Shopping & Lifestyle
-  fashion: `${P}/Shopping & Lifestyle/fashion & clothing.jpg`,
-  electronics: `${P}/Shopping & Lifestyle/electronics.jpg`,
-  "home-decor": `${P}/Shopping & Lifestyle/home decor.jpg`,
-  books: `${P}/Shopping & Lifestyle/books & media.jpg`,
+  fashion: `${P}/shopping-lifestyle/fashion-clothing.jpg`,
+  electronics: `${P}/shopping-lifestyle/electronics.jpg`,
+  "home-decor": `${P}/shopping-lifestyle/home-decor.jpg`,
+  books: `${P}/shopping-lifestyle/books-media.jpg`,
 
-  // Miscellaneous (public/businessImagePlaceholders/Miscellaneous/miscellaneous.jpeg)
-  miscellaneous: `${P}/Miscellaneous/miscellaneous.jpeg`,
+  // Miscellaneous
+  miscellaneous: `${P}/miscellaneous/miscellaneous.jpeg`,
 };
 
 /** Global fallback — same file as miscellaneous slug. */
-export const DEFAULT_PLACEHOLDER = `${P}/Miscellaneous/miscellaneous.jpeg`;
+export const DEFAULT_PLACEHOLDER = `${P}/miscellaneous/miscellaneous.jpeg`;
 
 const slugSet = new Set<string>(CANONICAL_SUBCATEGORY_SLUGS);
 

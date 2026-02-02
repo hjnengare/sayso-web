@@ -118,6 +118,9 @@
     /* Prevents Safari/Chrome auto-darkening inputs */
     /* Keeps scrollbars light */
     /* Stops weird autofill colors */
+    
+    /* Display font CSS variables - set by next/font in layout.tsx */
+    /* Use these as: font-family: var(--font-dancing-script), cursive; */
   }
 
   html {

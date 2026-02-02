@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSupabase } from '@/app/lib/supabase/server';
+import { getSubcategoryLabel } from '@/app/utils/subcategoryPlaceholders';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -8,6 +9,9 @@ interface BusinessSearchResult {
   id: string;
   name: string;
   category: string;
+  subInterestId?: string;
+  subInterestLabel?: string;
+  interestId?: string;
   location: string;
   address?: string;
   phone?: string;
@@ -29,11 +33,13 @@ interface BusinessSearchResult {
   matched_alias?: string;
 }
 
-// Type for RPC result (search_businesses returns lat, lng, slug)
+// Type for RPC result (search_businesses returns lat, lng, slug, sub_interest_id)
 interface SearchBusinessesResult {
   id: string;
   name: string;
   category: string;
+  sub_interest_id?: string;
+  interest_id?: string;
   location: string;
   address?: string;
   phone?: string;
@@ -100,7 +106,7 @@ export async function GET(req: NextRequest) {
 
         const { data: fallbackData, error: fallbackError } = await supabase
           .from('businesses')
-          .select('id, name, category, location, address, phone, email, website, image_url, verified, lat, lng, slug')
+          .select('id, name, category, sub_interest_id, interest_id, location, address, phone, email, website, image_url, verified, lat, lng, slug')
           .eq('status', 'active')
           .or(`name.ilike.%${query}%, description.ilike.%${query}%, category.ilike.%${query}%`)
           .limit(limit);
@@ -187,10 +193,16 @@ export async function GET(req: NextRequest) {
           claim_status = 'unclaimed';
         }
 
+        const subInterestId = business.sub_interest_id || undefined;
+        const subInterestLabel = subInterestId ? getSubcategoryLabel(subInterestId) : undefined;
+
         results.push({
           id: business.id,
           name: business.name,
-          category: business.category,
+          category: subInterestLabel ?? getSubcategoryLabel(business.category) ?? business.category,
+          subInterestId,
+          subInterestLabel,
+          interestId: business.interest_id || undefined,
           location: business.location,
           address: business.address,
           phone: business.phone,
@@ -204,7 +216,6 @@ export async function GET(req: NextRequest) {
           lat: business.lat ?? null,
           lng: business.lng ?? null,
           slug: business.slug ?? null,
-          // Include search relevance fields if available (from RPC)
           search_rank: business.search_rank,
           alias_boost: business.alias_boost,
           fuzzy_similarity: business.fuzzy_similarity,
@@ -225,10 +236,16 @@ export async function GET(req: NextRequest) {
 
       // Build results without user-specific status
       for (const business of businesses) {
+        const subInterestId = business.sub_interest_id || undefined;
+        const subInterestLabel = subInterestId ? getSubcategoryLabel(subInterestId) : undefined;
+
         results.push({
           id: business.id,
           name: business.name,
-          category: business.category,
+          category: subInterestLabel ?? getSubcategoryLabel(business.category) ?? business.category,
+          subInterestId,
+          subInterestLabel,
+          interestId: business.interest_id || undefined,
           location: business.location,
           address: business.address,
           phone: business.phone,
@@ -242,7 +259,6 @@ export async function GET(req: NextRequest) {
           lat: business.lat ?? null,
           lng: business.lng ?? null,
           slug: business.slug ?? null,
-          // Include search relevance fields if available (from RPC)
           search_rank: business.search_rank,
           alias_boost: business.alias_boost,
           fuzzy_similarity: business.fuzzy_similarity,

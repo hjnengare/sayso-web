@@ -23,8 +23,18 @@ import { useEvents } from "../hooks/useEvents";
 import { useRoutePrefetch } from "../hooks/useRoutePrefetch";
 import { useUserPreferences } from "../hooks/useUserPreferences";
 import { useAuth } from "../contexts/AuthContext";
-import HeroCarousel from "../components/Hero/HeroCarousel";
 import SearchResultsPanel from "../components/SearchResultsPanel/SearchResultsPanel";
+
+// Dynamically import HeroCarousel - it's heavy with images and animations
+const HeroCarousel = nextDynamic(
+  () => import("../components/Hero/HeroCarousel"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[60vh] sm:h-[70vh] bg-gradient-to-b from-charcoal/5 to-transparent animate-pulse" />
+    ),
+  }
+);
 import { useLiveSearch } from "../hooks/useLiveSearch";
 
 // Note: dynamic and revalidate cannot be exported from client components

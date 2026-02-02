@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSupabase } from "@/app/lib/supabase/server";
+import { getSubcategoryLabel } from "@/app/utils/subcategoryPlaceholders";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -49,7 +50,7 @@ export async function GET(req: NextRequest) {
       const { data, error } = await supabase
         .from("businesses")
         .select(
-          `id, slug, name, category, location, address, phone, email,
+          `id, slug, name, category, sub_interest_id, interest_id, location, address, phone, email,
            website, image_url, description, price_range, verified, badge,
            business_stats (average_rating)`
         )
@@ -72,11 +73,16 @@ export async function GET(req: NextRequest) {
         const stats = business.business_stats as
           | Array<{ average_rating: number }>
           | undefined;
+        const subInterestId = (business.sub_interest_id as string) || undefined;
+        const subInterestLabel = subInterestId ? getSubcategoryLabel(subInterestId) : undefined;
         return {
           id: business.id,
           slug: business.slug,
           name: business.name,
-          category: business.category,
+          category: subInterestLabel ?? getSubcategoryLabel(business.category as string) ?? business.category,
+          subInterestId,
+          subInterestLabel,
+          interestId: (business.interest_id as string) || undefined,
           location: business.location,
           address: business.address,
           phone: business.phone,
@@ -94,27 +100,34 @@ export async function GET(req: NextRequest) {
         };
       });
     } else {
-      // RPC returns relevance-ranked results
-      results = (rpcData || []).map((business: Record<string, unknown>) => ({
-        id: business.id,
-        slug: business.slug,
-        name: business.name,
-        category: business.category,
-        location: business.location,
-        address: business.address,
-        phone: business.phone,
-        email: business.email,
-        website: business.website,
-        image_url: business.image_url,
-        description: business.description,
-        price_range: business.price_range,
-        verified: business.verified,
-        badge: business.badge,
-        rating: (business.average_rating as number) ?? null,
-        stats: {
-          average_rating: (business.average_rating as number) ?? 0,
-        },
-      }));
+      // RPC returns relevance-ranked results (includes sub_interest_id)
+      results = (rpcData || []).map((business: Record<string, unknown>) => {
+        const subInterestId = (business.sub_interest_id as string) || undefined;
+        const subInterestLabel = subInterestId ? getSubcategoryLabel(subInterestId) : undefined;
+        return {
+          id: business.id,
+          slug: business.slug,
+          name: business.name,
+          category: subInterestLabel ?? getSubcategoryLabel(business.category as string) ?? business.category,
+          subInterestId,
+          subInterestLabel,
+          interestId: (business.interest_id as string) || undefined,
+          location: business.location,
+          address: business.address,
+          phone: business.phone,
+          email: business.email,
+          website: business.website,
+          image_url: business.image_url,
+          description: business.description,
+          price_range: business.price_range,
+          verified: business.verified,
+          badge: business.badge,
+          rating: (business.average_rating as number) ?? null,
+          stats: {
+            average_rating: (business.average_rating as number) ?? 0,
+          },
+        };
+      });
     }
 
     // Apply minRating filter if provided

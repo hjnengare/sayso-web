@@ -1,4 +1,9 @@
 import type { NextConfig } from "next";
+import bundleAnalyzer from "@next/bundle-analyzer";
+
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === "true",
+});
 
 const nextConfig: NextConfig = {
   // Enhanced Image optimization for maximum performance
@@ -47,9 +52,6 @@ const nextConfig: NextConfig = {
       },
     ],
     
-    // Allow unoptimized images only in development
-    unoptimized: process.env.NODE_ENV === 'development',
-    
     // Content Security Policy for images
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
@@ -66,6 +68,7 @@ const nextConfig: NextConfig = {
     optimizePackageImports: [
       'framer-motion',
       'lucide-react',
+      'react-icons',
       'date-fns',
       '@supabase/supabase-js',
     ],
@@ -129,4 +132,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);

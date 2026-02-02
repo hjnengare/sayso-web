@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { formatDistanceToNow } from 'date-fns';
@@ -20,7 +20,7 @@ interface ReviewCardProps {
   isOwnerView?: boolean; // If true, show owner-specific actions like "Message Customer"
 }
 
-export default function ReviewCard({
+function ReviewCard({
   review,
   onUpdate,
   showBusinessInfo = false,
@@ -861,4 +861,7 @@ export default function ReviewCard({
     </motion.div>
   );
 }
+
+// Memoize to prevent re-renders when parent updates
+export default memo(ReviewCard);
 

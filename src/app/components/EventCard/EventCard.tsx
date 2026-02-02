@@ -7,7 +7,7 @@ import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { getEventIconPng } from "../../utils/eventIconToPngMapping";
 import EventBadge from "./EventBadge";
-import { useState } from "react";
+import { useState, memo } from "react";
 
 const EVENT_IMAGE_BASE_PATH = "/png";
 
@@ -115,7 +115,7 @@ interface EventCardProps {
   index?: number;
 }
 
-export default function EventCard({ event, index: _index = 0 }: EventCardProps) {
+function EventCard({ event, index: _index = 0 }: EventCardProps) {
   const router = useRouter();
   const iconPng = getEventIconPng(event.icon);
   const mediaImage = getEventMediaImage(event);
@@ -232,3 +232,6 @@ export default function EventCard({ event, index: _index = 0 }: EventCardProps) 
     </li>
   );
 }
+
+// Memoize to prevent re-renders when parent list updates
+export default memo(EventCard);

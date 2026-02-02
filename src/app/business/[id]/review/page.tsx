@@ -18,6 +18,7 @@ import BusinessInfoModal, { BusinessInfo } from "../../../components/BusinessInf
 import { TestimonialCarousel } from "../../../components/Business/TestimonialCarousel";
 import Footer from "../../../components/Footer/Footer";
 import WavyTypedTitle from "../../../../components/Animations/WavyTypedTitle";
+import { isPlaceholderImage } from "../../../utils/subcategoryPlaceholders";
 
 const urbanist = Urbanist({
   weight: ["400", "600", "700", "800"],
@@ -213,42 +214,32 @@ function WriteReviewContent() {
     }
   }, [businessName]);
   
-  const isPngPlaceholder = (url: string | null | undefined) => {
-    if (!url) return true;
-    return url.startsWith('/png/') || url.includes('/png/');
-  };
-  
   const businessImages = useMemo(() => {
     if (!business) return [];
-    
-    // Priority 1: Use uploaded_images array (new structure)
-    // First image in array is the primary/cover image
+
     let allImages: string[] = [];
-    
+
     if (business.uploaded_images && Array.isArray(business.uploaded_images) && business.uploaded_images.length > 0) {
       allImages = business.uploaded_images
-        .filter((url: string) => url && typeof url === 'string' && url.trim() !== '' && !isPngPlaceholder(url));
+        .filter((url: string) => url && typeof url === 'string' && url.trim() !== '' && !isPlaceholderImage(url));
     }
-    
-    // Priority 2: Add image_url if not already included
-    if (business.image_url && typeof business.image_url === 'string' && business.image_url.trim() !== '' && !isPngPlaceholder(business.image_url) && !allImages.includes(business.image_url)) {
+
+    if (business.image_url && typeof business.image_url === 'string' && business.image_url.trim() !== '' && !isPlaceholderImage(business.image_url) && !allImages.includes(business.image_url)) {
       allImages.push(business.image_url);
     }
-    
-    // Priority 3: Add images from images array if provided
+
     if (Array.isArray(business.images)) {
       business.images.forEach((img: string) => {
-        if (img && typeof img === 'string' && img.trim() !== '' && !isPngPlaceholder(img) && !allImages.includes(img)) {
+        if (img && typeof img === 'string' && img.trim() !== '' && !isPlaceholderImage(img) && !allImages.includes(img)) {
           allImages.push(img);
         }
       });
     }
-    
-    // Priority 4: Add business.image as last fallback
-    if (business.image && typeof business.image === 'string' && business.image.trim() !== '' && !isPngPlaceholder(business.image) && !allImages.includes(business.image)) {
+
+    if (business.image && typeof business.image === 'string' && business.image.trim() !== '' && !isPlaceholderImage(business.image) && !allImages.includes(business.image)) {
       allImages.push(business.image);
     }
-    
+
     return allImages;
   }, [business?.uploaded_images, business?.image_url, business?.images, business?.image]);
 

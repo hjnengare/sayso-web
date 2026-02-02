@@ -13,6 +13,8 @@ interface BusinessCardImageProps {
   categoryKey: string;
   businessName: string;
   verified?: boolean;
+  /** Set to true for above-fold images (first ~3 cards) to improve LCP */
+  priority?: boolean;
 }
 
 const BusinessCardImage: React.FC<BusinessCardImageProps> = ({
@@ -22,6 +24,7 @@ const BusinessCardImage: React.FC<BusinessCardImageProps> = ({
   imgError,
   onImageError,
   categoryKey,
+  priority = false,
 }) => {
   return (
     <div className="relative w-full h-full">
@@ -33,7 +36,9 @@ const BusinessCardImage: React.FC<BusinessCardImageProps> = ({
             fill
             sizes="(max-width: 768px) 540px, 340px"
             className="object-cover"
-            quality={90}
+            quality={85}
+            priority={priority}
+            loading={priority ? "eager" : "lazy"}
             onError={onImageError}
           />
         </div>
