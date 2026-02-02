@@ -15,8 +15,8 @@ const EXCLUDED_ROUTES = [
   "/forgot-password",
   "/reset-password",
   "/verify-email",
-  "/privacy/sayso%20privacy%20policy%20%26%20terms%20of%20use.pdf",
-  "/terms/sayso%20privacy%20policy%20%26%20terms%20of%20use.pdf",
+  "/privacy",
+  "/terms",
   "/verify-email",
 ];
 

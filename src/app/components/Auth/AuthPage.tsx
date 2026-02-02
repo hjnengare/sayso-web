@@ -760,14 +760,14 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
                               <span className="flex-1 leading-relaxed">
                                 I agree to the{" "}
                                 <Link
-                                  href="/privacy/sayso%20privacy%20policy%20%26%20terms%20of%20use.pdf"
+                                  href="/terms"
                                   className="underline text-white hover:text-coral transition-colors font-semibold decoration-white/50"
                                 >
                                   Terms of Use
                                 </Link>{" "}
                                 and{" "}
                                 <Link
-                                  href="/privacy/sayso%20privacy%20policy%20%26%20terms%20of%20use.pdf"
+                                  href="/privacy"
                                   className="underline text-white hover:text-coral transition-colors font-semibold decoration-white/50"
                                 >
                                   Privacy Policy
