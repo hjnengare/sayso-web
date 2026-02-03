@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import nextDynamic from "next/dynamic";
-import { ChevronRight, Award, FileText, Download, ExternalLink } from "lucide-react";
+import { ChevronRight, Award, FileText, ExternalLink } from "lucide-react";
 import EmailVerificationGuard from "../components/Auth/EmailVerificationGuard";
 import LeaderboardPodium from "../components/Leaderboard/LeaderboardPodium";
 import LeaderboardList from "../components/Leaderboard/LeaderboardList";
@@ -383,30 +383,18 @@ function LeaderboardPage() {
               </div>
               
               <div className="flex items-center gap-2">
-                {/* View PDF button */}
+                {/* View Badge Guide button - Opens in new tab */}
                 <a
-                  href="/badges/Badge%20Defininitions.pdf"
+                  href="/badges"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-full bg-sage text-white hover:bg-sage/90 transition-all duration-200 text-sm font-semibold shadow-sm hover:shadow-md"
+                  className="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-full bg-sage text-white hover:bg-sage/90 transition-all duration-200 text-sm font-semibold shadow-sm hover:shadow-md hover:-translate-y-0.5"
                   style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                 >
                   <FileText className="w-4 h-4" />
-                  <span className="hidden sm:inline">View badge definitions</span>
+                  <span className="hidden sm:inline">View badge guide</span>
                   <span className="sm:hidden">View</span>
                   <ExternalLink className="w-3.5 h-3.5 opacity-80" />
-                </a>
-                
-                {/* Download button */}
-                <a
-                  href="/badges/Badge%20Defininitions.pdf"
-                  download="Badge Definitions.pdf"
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-charcoal/5 border border-charcoal/20 text-charcoal hover:bg-charcoal/10 hover:border-charcoal/30 transition-all duration-200 text-sm font-semibold"
-                  style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-                  aria-label="Download badge definitions PDF"
-                >
-                  <Download className="w-4 h-4" />
-                  <span className="hidden sm:inline">Download</span>
                 </a>
               </div>
             </div>
