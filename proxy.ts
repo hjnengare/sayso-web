@@ -1,15 +1,15 @@
 /**
- * Next.js Middleware
- * 
+ * Next.js 16 Proxy (formerly Middleware)
+ *
  * Handles authentication, email verification, and onboarding routing.
  * Uses the proxy function from src/proxy.ts for main logic.
  */
 
-import { proxy } from './src/proxy';
+import { proxy as handleRequest } from './src/proxy';
 import type { NextRequest } from 'next/server';
 
-export async function middleware(request: NextRequest) {
-  return proxy(request);
+export async function proxy(request: NextRequest) {
+  return handleRequest(request);
 }
 
 // Config must be a static object (can't be re-exported)
