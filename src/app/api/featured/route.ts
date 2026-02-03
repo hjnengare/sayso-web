@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSupabase } from "@/app/lib/supabase/server";
 import { getSubcategoryLabel } from "@/app/utils/subcategoryPlaceholders";
+import { getInterestIdForSubcategory } from "@/app/lib/onboarding/subcategoryMapping";
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -24,6 +25,7 @@ async function getFeaturedFallback(supabase: any, limit: number) {
       name,
       image_url,
       category,
+      interest_id,
       sub_interest_id,
       description,
       location,
@@ -94,6 +96,7 @@ async function getFeaturedFallback(supabase: any, limit: number) {
       name: b.name,
       image_url: b.image_url || '',
       category: b.category,
+      interest_id: b.interest_id || null,
       sub_interest_id: b.sub_interest_id,
       description: b.description,
       location: b.location,
@@ -208,8 +211,10 @@ export async function GET(request: NextRequest) {
       const primaryImage = businessImages.find((img) => img.is_primary) || businessImages[0];
       const uploadedImageUrls = businessImages.map((img) => img.url).filter(Boolean);
 
-      const slug = business.sub_interest_id || business.bucket || business.category;
-      const displayCategory = getSubcategoryLabel(slug);
+      const subInterestSlug = (business.sub_interest_id || business.bucket || business.category || '').toString().trim().toLowerCase();
+      const displayCategory = getSubcategoryLabel(subInterestSlug);
+      // Derive parent interest ID from subcategory slug, fall back to DB value
+      const interestId = business.interest_id || getInterestIdForSubcategory(subInterestSlug) || 'miscellaneous';
 
       return {
         id: business.id,
@@ -219,7 +224,12 @@ export async function GET(request: NextRequest) {
         uploaded_images: uploadedImageUrls,
         alt: primaryImage?.alt_text || business.name,
         category: displayCategory,
-        sub_interest_id: business.sub_interest_id || business.bucket || business.category,
+        // Snake_case for backward compatibility
+        sub_interest_id: subInterestSlug,
+        // CamelCase for leaderboard components
+        interestId,
+        subInterestId: subInterestSlug,
+        subInterestLabel: displayCategory,
         description: business.description || `Featured in ${displayCategory}`,
         location: business.location || 'Cape Town',
         rating: business.average_rating > 0 ? 5 : 0,
