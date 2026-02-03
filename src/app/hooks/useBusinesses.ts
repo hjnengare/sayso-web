@@ -393,8 +393,13 @@ export function useForYouBusinesses(
   const shouldWaitForPreferences = preferencesLoading && overrideInterestIds === undefined;
 
   const fetchForYou = useCallback(async (force = false) => {
-    if (extraOptions.skip || shouldWaitForPreferences) {
+    if (extraOptions.skip) {
       setLoading(false);
+      return;
+    }
+
+    // Keep loading = true while waiting for preferences — we haven't fetched yet
+    if (shouldWaitForPreferences) {
       return;
     }
 

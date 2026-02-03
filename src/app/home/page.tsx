@@ -69,9 +69,9 @@ export default function Home() {
   usePredefinedPageTitle('home');
 
   const searchParams = useSearchParams();
-  const isGuestMode = searchParams.get('guest') === 'true';
   const searchQueryParam = searchParams.get('search') || "";
   const { user } = useAuth();
+  const isGuestMode = searchParams.get('guest') === 'true' && !user;
 
   const {
     query: liveQuery,
