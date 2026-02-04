@@ -27,6 +27,51 @@ export interface UseUserPreferencesOptions {
   skipInitialFetch?: boolean;
 }
 
+const EMPTY_PREFS: UserPreferences = { interests: [], subcategories: [], dealbreakers: [] };
+const PREFERENCES_CACHE_TTL_MS = 60_000;
+
+const preferencesCache = new Map<string, { data: UserPreferences; fetchedAtMs: number }>();
+const inFlightByUserId = new Map<string, Promise<UserPreferences>>();
+
+function isCacheFresh(entry: { fetchedAtMs: number }) {
+  return Date.now() - entry.fetchedAtMs < PREFERENCES_CACHE_TTL_MS;
+}
+
+async function fetchPreferencesOnce(userId: string): Promise<UserPreferences> {
+  const cached = preferencesCache.get(userId);
+  if (cached && isCacheFresh(cached)) return cached.data;
+
+  const inFlight = inFlightByUserId.get(userId);
+  if (inFlight) return inFlight;
+
+  const promise = (async () => {
+    const response = await fetch('/api/user/preferences', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+
+    if (!response.ok) return EMPTY_PREFS;
+
+    const data = await response.json();
+    const prefs: UserPreferences = {
+      interests: data.interests || [],
+      subcategories: data.subcategories || [],
+      dealbreakers: data.dealbreakers || [],
+    };
+
+    preferencesCache.set(userId, { data: prefs, fetchedAtMs: Date.now() });
+    return prefs;
+  })();
+
+  inFlightByUserId.set(userId, promise);
+  try {
+    return await promise;
+  } finally {
+    inFlightByUserId.delete(userId);
+  }
+}
+
 /**
  * Hook to fetch user's preferences (interests, subcategories, dealbreakers)
  */
@@ -68,41 +113,26 @@ export function useUserPreferences(options: UseUserPreferencesOptions = {}): Use
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/user/preferences', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Ensure cookies/session are sent
-      });
-      
-      console.log('[useUserPreferences] response status:', response.status);
-      
-      if (!response.ok) {
-        // Handle 404 specifically - route might not exist or user not authenticated
-        if (response.status === 404) {
-          console.warn('[useUserPreferences] API route not found (404). This may be expected if user is not authenticated or route is not available.');
-        } else {
-          console.error('[useUserPreferences] API returned error:', response.status, response.statusText);
-        }
-        // Don't throw - return empty preferences instead
-        setInterests([]);
-        setSubcategories([]);
-        setDealbreakers([]);
+      // De-duplicate: share a single in-flight request + short-lived cache per user.
+      const cached = preferencesCache.get(user.id);
+      if (cached && isCacheFresh(cached)) {
+        setInterests(cached.data.interests || []);
+        setSubcategories(cached.data.subcategories || []);
+        setDealbreakers(cached.data.dealbreakers || []);
         setLoading(false);
         return;
       }
 
-      const data = await response.json();
-      
-      setInterests(data.interests || []);
-      setSubcategories(data.subcategories || []);
-      setDealbreakers(data.dealbreakers || []);
+      const prefs = await fetchPreferencesOnce(user.id);
+
+      setInterests(prefs.interests || []);
+      setSubcategories(prefs.subcategories || []);
+      setDealbreakers(prefs.dealbreakers || []);
       
       console.log('[useUserPreferences] Loaded preferences:', {
-        interests: data.interests?.length || 0,
-        subcategories: data.subcategories?.length || 0,
-        dealbreakers: data.dealbreakers?.length || 0,
+        interests: prefs.interests?.length || 0,
+        subcategories: prefs.subcategories?.length || 0,
+        dealbreakers: prefs.dealbreakers?.length || 0,
       });
     } catch (err: any) {
       console.error('[useUserPreferences] Error fetching user preferences:', err);
@@ -126,6 +156,13 @@ export function useUserPreferences(options: UseUserPreferencesOptions = {}): Use
     if (options.skipInitialFetch && hasInitialData) {
       if (!hasSkippedRef.current) {
         hasSkippedRef.current = true;
+        // Prime shared cache so other callers (same user) don't refetch immediately.
+        if (!authLoading && user?.id) {
+          preferencesCache.set(user.id, {
+            data: options.initialData ?? EMPTY_PREFS,
+            fetchedAtMs: Date.now(),
+          });
+        }
         return;
       }
 

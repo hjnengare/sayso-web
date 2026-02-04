@@ -31,6 +31,7 @@ export default function Footer() {
       title: "Community",
       links: [
         { name: "Reviews", href: "/discover/reviews" },
+        { name: "Badges", href: "/badges" },
         { name: "For You", href: "/for-you" },
         { name: "Saved", href: "/saved" },
         { name: "Messages", href: "/dm" },
@@ -58,7 +59,7 @@ export default function Footer() {
       links: [
         { name: "Privacy Policy", href: "/privacy" },
         { name: "Terms of Use", href: "/terms" },
-        { name: "Badge Definitions", href: "/badge-definitions" },
+        { name: "Badge Definitions", href: "/badges" },
       ],
     },
   ];
@@ -150,14 +151,6 @@ export default function Footer() {
         </div>
       </div>
 
-      <style jsx global>{`
-        .font-urbanist {
-          font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
-          -webkit-font-smoothing: antialiased;
-          -moz-osx-font-smoothing: grayscale;
-          font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
-        }
-      `}</style>
     </footer>
   );
 }

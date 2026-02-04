@@ -9,6 +9,7 @@ import Logo from "../Logo/Logo";
 import OptimizedLink from "../Navigation/OptimizedLink";
 import DesktopNav from "./DesktopNav";
 import MobileMenu from "./MobileMenu";
+import HeaderSkeleton from "./HeaderSkeleton";
 import { useHeaderState } from "./useHeaderState";
 import { PRIMARY_LINKS, DISCOVER_LINKS, getLogoHref } from "./headerActionsConfig";
 
@@ -36,6 +37,7 @@ export default function Header({
   heroSearchButton?: boolean;
 }) {
   const {
+    authLoading,
     isGuest,
     isBusinessAccountUser,
     isCheckingBusinessOwner,
@@ -396,6 +398,11 @@ export default function Header({
     onNotificationsClick: () => setShowSearchBar(true),
     sf,
   };
+
+  // Show skeleton while auth is resolving to prevent layout shift
+  if (authLoading) {
+    return <HeaderSkeleton showSearch={showSearch} />;
+  }
 
   return (
     <>

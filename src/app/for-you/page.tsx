@@ -61,39 +61,49 @@ async function fetchPreferences(baseUrl: string, cookieHeader: string): Promise<
   }
 }
 
-async function fetchBusinesses(baseUrl: string, cookieHeader: string): Promise<BusinessesFetchResult> {
-  try {
-    const params = new URLSearchParams({
-      limit: "120",
-      feed_strategy: "mixed",
-    });
-
-    const response = await fetch(`${baseUrl}/api/businesses?${params.toString()}`, {
-      headers: cookieHeader ? { cookie: cookieHeader } : undefined,
-      cache: "no-store",
-    });
-
-    if (!response.ok) {
-      return { businesses: [], error: `Failed to load businesses (${response.status})` };
-    }
-
-    const data = await response.json();
-    const businesses = data?.businesses ?? data?.data ?? [];
-    return { businesses, error: null };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to load businesses";
-    return { businesses: [], error: message };
-  }
-}
-
 export default async function ForYouPage() {
   const baseUrl = await getBaseUrl();
   const cookieHeader = await buildCookieHeader();
 
-  const [preferencesResult, businessesResult] = await Promise.all([
-    fetchPreferences(baseUrl, cookieHeader),
-    fetchBusinesses(baseUrl, cookieHeader),
-  ]);
+  const preferencesResult = await fetchPreferences(baseUrl, cookieHeader);
+
+  // Pass preference IDs to /api/businesses so it doesn't do a second prefs lookup internally.
+  const params = new URLSearchParams({
+    limit: "120",
+    feed_strategy: "mixed",
+  });
+
+  const interestIds = preferencesResult.preferences?.interests?.map((i) => i.id).filter(Boolean) ?? [];
+  const subInterestIds = preferencesResult.preferences?.subcategories?.map((s) => s.id).filter(Boolean) ?? [];
+  const dealbreakerIds = preferencesResult.preferences?.dealbreakers?.map((d) => d.id).filter(Boolean) ?? [];
+
+  if (interestIds.length > 0) params.set('interest_ids', interestIds.join(','));
+  if (subInterestIds.length > 0) params.set('sub_interest_ids', subInterestIds.join(','));
+  if (dealbreakerIds.length > 0) params.set('dealbreakers', dealbreakerIds.join(','));
+
+  if (dealbreakerIds.includes('value-for-money')) {
+    params.set('preferred_price_ranges', ['$', '$$'].join(','));
+  }
+
+  const businessesResult = await (async (): Promise<BusinessesFetchResult> => {
+    try {
+      const response = await fetch(`${baseUrl}/api/businesses?${params.toString()}`, {
+        headers: cookieHeader ? { cookie: cookieHeader } : undefined,
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        return { businesses: [], error: `Failed to load businesses (${response.status})` };
+      }
+
+      const data = await response.json();
+      const businesses = data?.businesses ?? data?.data ?? [];
+      return { businesses, error: null };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to load businesses";
+      return { businesses: [], error: message };
+    }
+  })();
 
   return (
     <ForYouClient

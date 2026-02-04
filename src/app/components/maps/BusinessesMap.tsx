@@ -42,7 +42,7 @@ const injectMarkerStyles = () => {
     }
     .sayso-biz-marker:hover .sayso-biz-pin {
       transform: rotate(-45deg) scale(1.15) !important;
-      box-shadow: 0 6px 20px rgba(224,122,95,0.5), 0 3px 8px rgba(0,0,0,0.2) !important;
+      box-shadow: 0 6px 20px rgba(114,47,55,0.5), 0 3px 8px rgba(0,0,0,0.2) !important;
     }
     .sayso-biz-marker:active .sayso-biz-pin {
       transform: rotate(-45deg) scale(1.05) !important;
@@ -68,14 +68,14 @@ function createPinMarker(): HTMLDivElement {
       <div class="sayso-biz-pin" style="
         width: 36px;
         height: 36px;
-        background: linear-gradient(145deg, #E8876C 0%, #E07A5F 50%, #D46D52 100%);
+        background: linear-gradient(145deg, #8A3A44 0%, #722F37 50%, #5E2830 100%);
         border-radius: 50% 50% 50% 0;
         transform: rotate(-45deg);
         display: flex;
         align-items: center;
         justify-content: center;
         box-shadow:
-          0 4px 12px rgba(224,122,95,0.4),
+          0 4px 12px rgba(114,47,55,0.4),
           0 2px 6px rgba(0,0,0,0.15),
           inset 0 1px 3px rgba(255,255,255,0.2);
         border: 2.5px solid white;

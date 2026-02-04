@@ -2,6 +2,13 @@ import { NextResponse } from "next/server";
 import { getServerSupabase } from "@/app/lib/supabase/server";
 import { CachePresets } from "@/app/lib/utils/httpCache";
 import {
+  applyFeedCachingHeaders,
+  createFeedSeedWindow,
+  createRequestId,
+  createWeakEtagFromKey,
+  maybeNotModified,
+} from "@/app/lib/utils/feedCaching";
+import {
   calculateDistanceKm,
   highlightText,
   extractSnippet,
@@ -40,29 +47,16 @@ async function fetchUserPreferences(
   }
 
   try {
-    // Fetch interests
-    const { data: interestsData } = await supabase
-      .from('user_interests')
-      .select('interest_id')
-      .eq('user_id', userId);
-    
-    const interestIds = (interestsData || []).map(i => i.interest_id);
+    // Fetch all preference types in parallel for speed
+    const [interestsResult, subcategoriesResult, dealbreakersResult] = await Promise.all([
+      supabase.from('user_interests').select('interest_id').eq('user_id', userId),
+      supabase.from('user_subcategories').select('subcategory_id').eq('user_id', userId),
+      supabase.from('user_dealbreakers').select('dealbreaker_id').eq('user_id', userId),
+    ]);
 
-    // Fetch subcategories
-    const { data: subcategoriesData } = await supabase
-      .from('user_subcategories')
-      .select('subcategory_id')
-      .eq('user_id', userId);
-    
-    const subcategoryIds = (subcategoriesData || []).map(s => s.subcategory_id);
-
-    // Fetch deal breakers
-    const { data: dealbreakersData } = await supabase
-      .from('user_dealbreakers')
-      .select('dealbreaker_id')
-      .eq('user_id', userId);
-    
-    const dealbreakerIds = (dealbreakersData || []).map(d => d.dealbreaker_id);
+    const interestIds = (interestsResult.data || []).map(i => i.interest_id);
+    const subcategoryIds = (subcategoriesResult.data || []).map(s => s.subcategory_id);
+    const dealbreakerIds = (dealbreakersResult.data || []).map(d => d.dealbreaker_id);
 
     return {
       interestIds,
@@ -309,32 +303,6 @@ export async function GET(req: Request) {
       } : null,
     });
 
-    // RLS truth test - check visible businesses count
-    const countStart = Date.now();
-    const { count: visibleCount, error: countError } = await supabase
-      .from('businesses')
-      .select('id', { head: true, count: 'exact' })
-      .eq('status', 'active');
-    console.log('[BUSINESSES API] Visible count duration ms:', Date.now() - countStart);
-    
-    console.log('[BUSINESSES API] Visible businesses count (RLS truth test):', {
-      count: visibleCount,
-      error: countError ? {
-        message: countError.message,
-        code: countError.code,
-        details: countError.details,
-      } : null,
-      isAnon: !serverUser,
-      isAuthenticated: !!serverUser,
-    });
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-
-    if (visibleCount === 0 && !countError) {
-      console.warn('⚠️ [BUSINESSES API] WARNING: RLS returned 0 businesses but no error!');
-      console.warn('⚠️ This suggests RLS policies are blocking reads.');
-      console.warn('⚠️ Check: businesses_select_public_and_owners policy exists and allows public reads');
-    }
-
     const requestUrl = req?.url ?? `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/businesses`;
     const { searchParams } = new URL(requestUrl);
 
@@ -356,28 +324,12 @@ export async function GET(req: Request) {
     const interestIds = interestIdsParam
       ? interestIdsParam.split(',').map(id => id.trim()).filter(Boolean)
       : [];
-    
+
     // Sub-interest (subcategory) filtering
     const subInterestIdsParam = searchParams.get('sub_interest_ids');
     const subInterestIds = subInterestIdsParam
       ? subInterestIdsParam.split(',').map(id => id.trim()).filter(Boolean)
       : [];
-    
-    // Map interests to subcategories (legacy mapping, kept for backward compatibility)
-    let subcategoriesToFilter: string[] = [];
-    if (interestIds.length > 0) {
-      for (const interestId of interestIds) {
-        const subcats = INTEREST_TO_SUBCATEGORIES[interestId];
-        if (subcats) {
-          subcategoriesToFilter.push(...subcats);
-        }
-      }
-    }
-    console.log('[BUSINESSES API] Interest/subcategory filtering:', {
-      interests: interestIds,
-      subInterestIds: subInterestIds,
-      mappedSubcategories: subcategoriesToFilter,
-    });
 
     // Enhanced search parameters with synonym expansion
     // Support both 'q' (new) and 'search' (backward compatible)
@@ -387,7 +339,6 @@ export async function GET(req: Request) {
     const search = expandedQuery; // Keep for backward compatibility
 
     // Enhanced location parameters
-    // Support both 'lat'/'lng' (new) and existing 'lat'/'lng' params
     const latParam = searchParams.get('lat');
     const lngParam = searchParams.get('lng');
     const lat = latParam ? parseFloat(latParam) : null;
@@ -395,12 +346,10 @@ export async function GET(req: Request) {
     const radiusKm = searchParams.get('radius_km') ? parseFloat(searchParams.get('radius_km')!) : null;
 
     // Enhanced sorting parameters
-    // New 'sort' param: 'relevance', 'distance', 'rating_desc', 'price_asc', 'combo'
-    // Backward compatible with 'sort_by' and 'sort_order'
     const sortParam = searchParams.get('sort');
     let sortBy = searchParams.get('sort_by') || 'created_at';
     let sortOrder = searchParams.get('sort_order') || 'desc';
-    
+
     // Map new 'sort' param to sortBy/sortOrder
     if (sortParam) {
       switch (sortParam) {
@@ -449,7 +398,109 @@ export async function GET(req: Request) {
     // Legacy location parameters (keep for backward compatibility)
     const radius = searchParams.get('radius') ? parseFloat(searchParams.get('radius')!) : (radiusKm || 10);
 
+    // Map interests to subcategories (legacy mapping, kept for backward compatibility)
+    const subcategoriesToFilter: string[] = [];
+    if (interestIds.length > 0) {
+      for (const interestId of interestIds) {
+        const subcats = INTEREST_TO_SUBCATEGORIES[interestId];
+        if (subcats) {
+          subcategoriesToFilter.push(...subcats);
+        }
+      }
+    }
+
     if (feedStrategy === 'mixed') {
+      const requestId = searchParams.get('rid') || createRequestId();
+      const ip =
+        req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+        req.headers.get('x-real-ip') ||
+        'unknown';
+      const regionKey =
+        location ? `loc:${location}` :
+        (lat !== null && lng !== null && isValidLatitude(lat) && isValidLongitude(lng))
+          ? `geo:${lat.toFixed(2)},${lng.toFixed(2)}`
+          : 'global';
+
+      // Deterministic seed to keep ordering stable for a short window.
+      const explicitSeed = searchParams.get('seed');
+      const seedWindowMinutesEnv = Number(process.env.FEED_SEED_WINDOW_MINUTES || 15);
+      const seedWindowMinutes = Number.isFinite(seedWindowMinutesEnv) ? seedWindowMinutesEnv : 15;
+      const seedWindow = explicitSeed
+        ? { seed: explicitSeed, expiresAtMs: Date.now() + seedWindowMinutes * 60_000, windowMinutes: seedWindowMinutes }
+        : createFeedSeedWindow({
+            userKey: userId ? `user:${userId}` : `anon:${ip}`,
+            regionKey,
+            windowMinutes: seedWindowMinutes,
+          });
+
+      const preferenceSource =
+        interestIds.length > 0 || subInterestIds.length > 0
+          ? 'client'
+          : userId
+            ? 'server'
+            : 'none';
+
+      const etagKey = JSON.stringify({
+        v: 1,
+        strategy: 'mixed',
+        preferenceSource,
+        // Region + seed are the stabilizers; per-user caching is enforced via private Cache-Control.
+        regionKey,
+        seed: seedWindow.seed,
+        limit,
+        category,
+        badge,
+        verified,
+        priceRange,
+        preferredPriceRanges,
+        minRating,
+        sortBy,
+        sortOrder,
+        interestIds,
+        subInterestIds,
+        dealbreakerIds,
+      });
+      const etag = createWeakEtagFromKey(etagKey);
+
+      const notModified = maybeNotModified(req, {
+        etag,
+        ttlSeconds: 90,
+        swrSeconds: 30,
+        requestId,
+        seed: seedWindow.seed,
+        seedExpiresAtMs: seedWindow.expiresAtMs,
+        feedPath: 'mixed',
+      });
+      if (notModified) {
+        return withDuration(notModified);
+      }
+
+      // Server-side preference resolution: if the client didn't pass
+      // interest/subcategory IDs but we have an authenticated user,
+      // fetch them here so the client doesn't have to wait for a
+      // separate preferences API call before requesting the feed.
+      let resolvedInterestIds = interestIds;
+      let resolvedSubInterestIds = subInterestIds.length > 0 ? subInterestIds : subcategoriesToFilter;
+      let resolvedDealbreakerIds = dealbreakerIds;
+
+      if (userId && interestIds.length === 0 && subInterestIds.length === 0) {
+        const prefsStart = Date.now();
+        const userPrefs = await fetchUserPreferences(supabase, userId);
+        console.log('[BUSINESSES API] Server-side prefs fetch ms:', Date.now() - prefsStart);
+        resolvedInterestIds = userPrefs.interestIds;
+        resolvedDealbreakerIds = dealbreakerIds.length > 0 ? dealbreakerIds : userPrefs.dealbreakerIds;
+
+        // Map resolved interests to subcategories for broader matching
+        const mappedSubcategories: string[] = [];
+        for (const iid of resolvedInterestIds) {
+          const subcats = INTEREST_TO_SUBCATEGORIES[iid];
+          if (subcats) mappedSubcategories.push(...subcats);
+        }
+        resolvedSubInterestIds = userPrefs.subcategoryIds.length > 0
+          ? userPrefs.subcategoryIds
+          : mappedSubcategories;
+      }
+
       // Use the Netflix-style two-stage recommender (V2)
       const response = await handleMixedFeedV2({
         supabase,
@@ -461,16 +512,44 @@ export async function GET(req: Request) {
         preferredPriceRanges,
         location,
         minRating,
-        interestIds,
-        subInterestIds: subInterestIds.length > 0 ? subInterestIds : subcategoriesToFilter,
-        dealbreakerIds,
+        interestIds: resolvedInterestIds,
+        subInterestIds: resolvedSubInterestIds,
+        dealbreakerIds: resolvedDealbreakerIds,
         sortBy,
         sortOrder,
         latitude: lat,
         longitude: lng,
-        userId, // Pass userId for impression tracking and repetition suppression
+        userId,
+        requestId,
+        seed: seedWindow.seed,
+        seedExpiresAtMs: seedWindow.expiresAtMs,
+        cacheEtag: etag,
       });
+
+      applyFeedCachingHeaders(response, {
+        etag,
+        ttlSeconds: 90,
+        swrSeconds: 30,
+        requestId,
+        seed: seedWindow.seed,
+        seedExpiresAtMs: seedWindow.expiresAtMs,
+      });
+
       return withDuration(response);
+    }
+
+    // =============================================
+    // RLS TRUTH TEST (standard feed only — mixed feed skips this)
+    // =============================================
+    const countStart = Date.now();
+    const { count: visibleCount, error: countError } = await supabase
+      .from('businesses')
+      .select('id', { head: true, count: 'exact' })
+      .eq('status', 'active');
+    console.log('[BUSINESSES API] Visible count duration ms:', Date.now() - countStart);
+
+    if (visibleCount === 0 && !countError) {
+      console.warn('[BUSINESSES API] RLS returned 0 businesses — check policies');
     }
 
     // Try to use the optimized RPC function for listing, fallback to regular query
@@ -1113,6 +1192,40 @@ export async function HEAD(req: Request) {
 
 // ---- Mixed strategy helpers -------------------------------------------------
 
+type FeedV2Mode = 'v2_only' | 'v2_with_legacy_fallback';
+
+function getFeedV2Mode(): FeedV2Mode {
+  const raw = (process.env.FEED_V2_MODE || '').trim().toLowerCase();
+  if (raw === 'v2_with_legacy_fallback') return 'v2_with_legacy_fallback';
+  if (raw === 'v2_only') return 'v2_only';
+  // Default: be strict in production, permissive in development.
+  return process.env.NODE_ENV === 'development' ? 'v2_with_legacy_fallback' : 'v2_only';
+}
+
+const v2CircuitState: {
+  failureTimestampsMs: number[];
+  openUntilMs: number;
+} = {
+  failureTimestampsMs: [],
+  openUntilMs: 0,
+};
+
+function noteV2Failure(nowMs: number) {
+  const windowMs = 5 * 60 * 1000;
+  v2CircuitState.failureTimestampsMs = v2CircuitState.failureTimestampsMs.filter((t) => nowMs - t < windowMs);
+  v2CircuitState.failureTimestampsMs.push(nowMs);
+  const failuresInWindow = v2CircuitState.failureTimestampsMs.length;
+  const threshold = Number(process.env.FEED_V2_CIRCUIT_THRESHOLD || 3);
+  if (failuresInWindow >= threshold) {
+    const openForMs = Number(process.env.FEED_V2_CIRCUIT_OPEN_MS || 2 * 60 * 1000);
+    v2CircuitState.openUntilMs = nowMs + openForMs;
+  }
+}
+
+function isV2CircuitOpen(nowMs: number) {
+  return v2CircuitState.openUntilMs > nowMs;
+}
+
 type MixedFeedOptions = {
   supabase: SupabaseClientInstance;
   limit: number;
@@ -1131,6 +1244,10 @@ type MixedFeedOptions = {
   latitude: number | null;
   longitude: number | null;
   userId?: string | null;
+  requestId?: string;
+  seed?: string;
+  seedExpiresAtMs?: number;
+  cacheEtag?: string;
 };
 
 // =============================================
@@ -1152,6 +1269,8 @@ async function handleMixedFeedV2(options: MixedFeedOptions) {
     latitude,
     longitude,
     userId,
+    requestId,
+    seed,
   } = options;
 
   console.log('[BUSINESSES API] handleMixedFeedV2 (Netflix-style) called with:', {
@@ -1161,14 +1280,28 @@ async function handleMixedFeedV2(options: MixedFeedOptions) {
     dealbreakerIds: dealbreakerIds?.length || 0,
     hasUserId: !!userId,
     hasLocation: !!(latitude && longitude),
+    hasSeed: !!seed,
+    requestId: requestId ?? null,
   });
+
+  const mode = getFeedV2Mode();
+  const nowMs = Date.now();
+  if (isV2CircuitOpen(nowMs)) {
+    console.warn('[BUSINESSES API] V2 circuit is open; serving top picks.', {
+      requestId: requestId ?? null,
+      openUntilMs: v2CircuitState.openUntilMs,
+    });
+    const topPicks = await fetchTopPicksFallback(options, { reason: 'circuit_open' });
+    topPicks.headers.set('X-Feed-Path', 'v2_circuit_open');
+    return topPicks;
+  }
 
   // Derive price filters
   const priceFilters = derivePriceFilters(priceRange, preferredPriceRanges);
 
   try {
     // Call the V2 recommender RPC
-    const rpcPayload = {
+    const rpcPayloadBase = {
       p_user_id: userId || null,
       p_interest_ids: interestIds || [],
       p_sub_interest_ids: subInterestIds || [],
@@ -1178,11 +1311,15 @@ async function handleMixedFeedV2(options: MixedFeedOptions) {
       p_price_ranges: priceFilters && priceFilters.length > 0 ? priceFilters : null,
       p_suppress_recent_hours: userId ? 48 : 0, // Only suppress for logged-in users
     };
+    const rpcPayloadSeeded = {
+      ...rpcPayloadBase,
+      p_seed: seed || null,
+    };
 
-    console.log('[BUSINESSES API] Calling recommend_for_you_v2 RPC with:', {
-      ...rpcPayload,
-      p_interest_ids_count: rpcPayload.p_interest_ids.length,
-      p_sub_interest_ids_count: rpcPayload.p_sub_interest_ids.length,
+    console.log('[BUSINESSES API] Calling recommend_for_you_v2_seeded RPC with:', {
+      ...rpcPayloadSeeded,
+      p_interest_ids_count: rpcPayloadSeeded.p_interest_ids.length,
+      p_sub_interest_ids_count: rpcPayloadSeeded.p_sub_interest_ids.length,
     });
 
     // Try V2 RPC with explicit error handling
@@ -1191,15 +1328,45 @@ async function handleMixedFeedV2(options: MixedFeedOptions) {
     const rpcStart = Date.now();
 
     try {
-      const result = await supabase.rpc('recommend_for_you_v2', rpcPayload);
-      rpcData = result.data;
-      rpcError = result.error;
+      const timeoutMs = Number(process.env.FEED_V2_TIMEOUT_MS || 900);
+
+      const callWithTimeout = async (fnName: string, payload: any) => {
+        const result = await Promise.race([
+          supabase.rpc(fnName, payload),
+          new Promise<never>((_, reject) => {
+            setTimeout(() => reject(new Error(`${fnName} timed out after ${timeoutMs}ms`)), timeoutMs);
+          }),
+        ]);
+        return result as any;
+      };
+
+      // Prefer the seeded wrapper if present (deterministic ordering + images).
+      const seeded = await callWithTimeout('recommend_for_you_v2_seeded', rpcPayloadSeeded);
+      rpcData = seeded.data;
+      rpcError = seeded.error;
+
+      // If wrapper isn't available, try the original V2 function (then we seed-sort in Node).
+      if (rpcError?.code === '42883' || rpcError?.message?.includes('does not exist')) {
+        console.warn('[BUSINESSES API] recommend_for_you_v2_seeded not found; falling back to recommend_for_you_v2');
+        const unseeded = await callWithTimeout('recommend_for_you_v2', rpcPayloadBase);
+        rpcData = unseeded.data;
+        rpcError = unseeded.error;
+      }
     } catch (rpcCallError: any) {
       console.log('[BUSINESSES API] V2 RPC duration ms:', Date.now() - rpcStart);
       // RPC function might not exist yet (migrations not run)
-      console.warn('[BUSINESSES API] recommend_for_you_v2 RPC call failed:', rpcCallError?.message || rpcCallError);
-      console.log('[BUSINESSES API] Falling back to legacy handleMixedFeed (V2 not available)');
-      return handleMixedFeedLegacy(options);
+      console.warn('[BUSINESSES API] V2 RPC call failed:', rpcCallError?.message || rpcCallError);
+      noteV2Failure(Date.now());
+      if (mode === 'v2_with_legacy_fallback') {
+        console.log('[BUSINESSES API] Using legacy handleMixedFeed fallback (mode=v2_with_legacy_fallback)');
+        const legacy = await handleMixedFeedLegacy(options);
+        legacy.headers.set('X-Feed-Path', 'legacy_fallback');
+        return legacy;
+      }
+
+      const topPicks = await fetchTopPicksFallback(options, { reason: 'rpc_call_failed' });
+      topPicks.headers.set('X-Feed-Path', 'v2_error_top_picks');
+      return topPicks;
     }
     console.log('[BUSINESSES API] V2 RPC duration ms:', Date.now() - rpcStart);
 
@@ -1208,15 +1375,31 @@ async function handleMixedFeedV2(options: MixedFeedOptions) {
       // Check if it's a "function does not exist" error
       if (rpcError.code === '42883' || rpcError.message?.includes('does not exist')) {
         console.log('[BUSINESSES API] V2 RPC function not found, using legacy handler');
-      } else {
-        console.log('[BUSINESSES API] Falling back to legacy handleMixedFeed due to RPC error');
       }
-      return handleMixedFeedLegacy(options);
+
+      noteV2Failure(Date.now());
+      if (mode === 'v2_with_legacy_fallback') {
+        console.log('[BUSINESSES API] Using legacy handleMixedFeed fallback (mode=v2_with_legacy_fallback)');
+        const legacy = await handleMixedFeedLegacy(options);
+        legacy.headers.set('X-Feed-Path', 'legacy_fallback');
+        return legacy;
+      }
+
+      const topPicks = await fetchTopPicksFallback(options, { reason: 'rpc_error', details: rpcError?.code || rpcError?.message });
+      topPicks.headers.set('X-Feed-Path', 'v2_error_top_picks');
+      return topPicks;
     }
 
     if (!rpcData || rpcData.length === 0) {
-      console.log('[BUSINESSES API] V2 RPC returned 0 results, trying legacy fallback');
-      return handleMixedFeedLegacy(options);
+      console.log('[BUSINESSES API] V2 RPC returned 0 results');
+      if (mode === 'v2_with_legacy_fallback') {
+        const legacy = await handleMixedFeedLegacy(options);
+        legacy.headers.set('X-Feed-Path', 'legacy_fallback_empty');
+        return legacy;
+      }
+      const topPicks = await fetchTopPicksFallback(options, { reason: 'empty' });
+      topPicks.headers.set('X-Feed-Path', 'v2_empty_top_picks');
+      return topPicks;
     }
 
     console.log('[BUSINESSES API] V2 RPC returned', rpcData.length, 'businesses');
@@ -1235,7 +1418,7 @@ async function handleMixedFeedV2(options: MixedFeedOptions) {
       email: row.email,
       website: row.website,
       image_url: row.image_url,
-      uploaded_images: [], // Images fetched separately from business_images table
+      uploaded_images: Array.isArray(row.uploaded_images) ? row.uploaded_images : [],
       verified: row.verified,
       price_range: row.price_range,
       badge: row.badge,
@@ -1257,30 +1440,47 @@ async function handleMixedFeedV2(options: MixedFeedOptions) {
     // Apply dealbreaker filtering (client-side for additional safety)
     const filteredBusinesses = filterByDealbreakers(businesses, dealbreakerIds);
 
-    // Fetch business_images for the filtered results
-    const businessIds = filteredBusinesses.map(b => b.id);
-    if (businessIds.length > 0) {
-      const imagesStart = Date.now();
-      const { data: imagesData } = await supabase
-        .from('business_images')
-        .select('business_id, url, type, sort_order, is_primary')
-        .in('business_id', businessIds)
-        .order('sort_order', { ascending: true });
-      console.log('[BUSINESSES API] V2 images query duration ms:', Date.now() - imagesStart);
+    // Deterministic tie-breaker: keep "jitter" stable for the current seed window.
+    // This reduces jumpiness when scores are close or identical.
+    if (seed && filteredBusinesses.length > 1) {
+      filteredBusinesses.sort((a, b) => {
+        const scoreA = (a.personalization_score ?? 0);
+        const scoreB = (b.personalization_score ?? 0);
+        if (scoreA !== scoreB) return scoreB - scoreA;
+        const rankA = createWeakEtagFromKey(`${seed}|${a.id}`);
+        const rankB = createWeakEtagFromKey(`${seed}|${b.id}`);
+        return rankA.localeCompare(rankB);
+      });
+    }
 
-      if (imagesData) {
-        const imagesByBusiness = new Map<string, string[]>();
-        for (const img of imagesData) {
-          const existing = imagesByBusiness.get(img.business_id) || [];
-          existing.push(img.url);
-          imagesByBusiness.set(img.business_id, existing);
-        }
+    // Back-compat: if RPC doesn't return uploaded_images (older migrations),
+    // fetch them once. Newer recommend_for_you_v2 returns uploaded_images.
+    const missingImages = filteredBusinesses.some((b) => !b.uploaded_images || b.uploaded_images.length === 0);
+    if (missingImages) {
+      const businessIds = filteredBusinesses.map(b => b.id);
+      if (businessIds.length > 0) {
+        const imagesStart = Date.now();
+        const { data: imagesData } = await supabase
+          .from('business_images')
+          .select('business_id, url, type, sort_order, is_primary')
+          .in('business_id', businessIds)
+          .order('sort_order', { ascending: true });
+        console.log('[BUSINESSES API] V2 images query duration ms:', Date.now() - imagesStart);
 
-        // Attach images to businesses
-        for (const business of filteredBusinesses) {
-          const images = imagesByBusiness.get(business.id);
-          if (images && images.length > 0) {
-            business.uploaded_images = images;
+        if (imagesData) {
+          const imagesByBusiness = new Map<string, string[]>();
+          for (const img of imagesData) {
+            const existing = imagesByBusiness.get(img.business_id) || [];
+            existing.push(img.url);
+            imagesByBusiness.set(img.business_id, existing);
+          }
+
+          // Attach images to businesses
+          for (const business of filteredBusinesses) {
+            const images = imagesByBusiness.get(business.id);
+            if (images && images.length > 0) {
+              business.uploaded_images = images;
+            }
           }
         }
       }
@@ -1301,9 +1501,11 @@ async function handleMixedFeedV2(options: MixedFeedOptions) {
       // Fire and forget - don't wait for completion
       (async () => {
         try {
-          await supabase.rpc('record_reco_impressions', {
+          await supabase.rpc('record_reco_impressions_v2', {
             p_user_id: userId,
             p_business_ids: impressionIds,
+            p_feed_context: `mixed_v2`,
+            p_request_id: requestId || null,
           });
           console.log('[BUSINESSES API] Recorded', impressionIds.length, 'impressions for user');
         } catch (err: any) {
@@ -1315,6 +1517,11 @@ async function handleMixedFeedV2(options: MixedFeedOptions) {
     const response = NextResponse.json({
       businesses: transformedBusinesses,
       cursorId: null,
+      meta: {
+        requestId: requestId ?? null,
+        seed: seed ?? null,
+        v2DurationMs: Date.now() - v2Start,
+      },
     });
     response.headers.set('X-Feed-Path', 'v2');
     console.log('[BUSINESSES API] V2 total duration ms:', Date.now() - v2Start);
@@ -1323,9 +1530,68 @@ async function handleMixedFeedV2(options: MixedFeedOptions) {
 
   } catch (error) {
     console.error('[BUSINESSES API] Error in handleMixedFeedV2:', error);
-    // Fallback to legacy handler
-    return handleMixedFeedLegacy(options);
+    noteV2Failure(Date.now());
+    if (mode === 'v2_with_legacy_fallback') {
+      const legacy = await handleMixedFeedLegacy(options);
+      legacy.headers.set('X-Feed-Path', 'legacy_fallback_exception');
+      return legacy;
+    }
+    const topPicks = await fetchTopPicksFallback(options, { reason: 'exception' });
+    topPicks.headers.set('X-Feed-Path', 'v2_error_top_picks');
+    return topPicks;
   }
+}
+
+async function fetchTopPicksFallback(
+  options: MixedFeedOptions,
+  details: { reason: string; details?: string }
+): Promise<NextResponse> {
+  const start = Date.now();
+  const {
+    supabase,
+    limit,
+    category,
+    badge,
+    verified,
+    priceRange,
+    preferredPriceRanges,
+    location,
+    minRating,
+    dealbreakerIds,
+    requestId,
+    seed,
+  } = options;
+
+  const priceFilters = derivePriceFilters(priceRange, preferredPriceRanges);
+  const topRated = await fetchTopRated(supabase, {
+    limit: Math.min(Math.max(limit, 20), 80),
+    category,
+    badge,
+    verified,
+    priceRange,
+    preferredPriceRanges: priceFilters,
+    location,
+    minRating,
+    dealbreakerIds,
+  });
+
+  const prioritized = await prioritizeRecentlyReviewedBusinesses(supabase, topRated.slice(0, limit));
+  const transformed = prioritized.map(transformBusinessForCard);
+
+  const response = NextResponse.json({
+    businesses: transformed,
+    cursorId: null,
+    meta: {
+      fallback: 'top_picks',
+      reason: details.reason,
+      details: details.details ?? null,
+      requestId: requestId ?? null,
+      seed: seed ?? null,
+      durationMs: Date.now() - start,
+    },
+  });
+
+  return applySharedResponseHeaders(response);
 }
 
 // Legacy mixed feed handler (kept for fallback)

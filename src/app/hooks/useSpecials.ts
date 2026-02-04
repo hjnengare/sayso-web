@@ -56,7 +56,19 @@ export function useSpecials(options: UseSpecialsOptions = {}): UseSpecialsResult
       });
 
       if (!response.ok) {
-        const message = `Failed to fetch specials: ${response.statusText}`;
+        let message = `Failed to fetch specials: ${response.statusText}`;
+        try {
+          const errorBody = await response.json();
+          if (errorBody?.details) {
+            message = `Failed to fetch specials: ${errorBody.details}`;
+          } else if (errorBody?.message) {
+            message = `Failed to fetch specials: ${errorBody.message}`;
+          } else if (errorBody?.error) {
+            message = `Failed to fetch specials: ${errorBody.error}`;
+          }
+        } catch {
+          // Ignore JSON parse errors; fall back to statusText
+        }
         if (!abortController.signal.aborted) {
           setError(message);
           console.error('[useSpecials] Error:', message);

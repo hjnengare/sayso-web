@@ -59,9 +59,10 @@ export default function BusinessOfTheMonthCard({ business, index: _index = 0 }: 
 
   const hasReviews = business.reviewCount > 0;
   const ribbonText = useMemo(() => {
-    const src = (business as any).monthAchievement || business.badge || "Featured";
+    const reasonLabel = (business as any).ui_hints?.reason?.label;
+    const src = reasonLabel || (business as any).monthAchievement || business.badge || "Featured";
     return src.replace(/^Best\s+/i, "Featured ");
-  }, [(business as any).monthAchievement, business.badge]);
+  }, [(business as any).monthAchievement, (business as any).ui_hints?.reason?.label, business.badge]);
 
   // Image fallback logic with edge case handling
   const getDisplayImage = useMemo(() => {

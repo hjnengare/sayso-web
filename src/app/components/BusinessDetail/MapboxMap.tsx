@@ -32,7 +32,7 @@ const injectMarkerStyles = () => {
         }
         .sayso-marker:hover .sayso-marker-pin {
             transform: rotate(-45deg) scale(1.15) !important;
-            box-shadow: 0 8px 25px rgba(45, 52, 54, 0.6), 0 4px 10px rgba(0,0,0,0.25) !important;
+            box-shadow: 0 8px 25px rgba(114, 47, 55, 0.6), 0 4px 10px rgba(0,0,0,0.25) !important;
         }
         .sayso-marker:active .sayso-marker-pin {
             transform: rotate(-45deg) scale(1.05) !important;
@@ -49,7 +49,7 @@ const createCustomMarker = (): HTMLDivElement => {
     el.className = 'sayso-marker';
     el.style.cssText = 'cursor: pointer; z-index: 10;';
 
-    // navbar-bg is #2D3436, with 90% opacity = rgba(45, 52, 54, 0.9)
+    // navbar-bg is #722F37
     el.innerHTML = `
         <div style="
             position: relative;
@@ -60,14 +60,14 @@ const createCustomMarker = (): HTMLDivElement => {
             <div class="sayso-marker-pin" style="
                 width: 52px;
                 height: 52px;
-                background: linear-gradient(145deg, rgba(55, 62, 64, 0.9) 0%, rgba(45, 52, 54, 0.9) 50%, rgba(35, 42, 44, 0.9) 100%);
+                background: linear-gradient(145deg, #8A3A44 0%, #722F37 50%, #5E2830 100%);
                 border-radius: 50% 50% 50% 0;
                 transform: rotate(-45deg);
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 box-shadow:
-                    0 6px 20px rgba(45, 52, 54, 0.5),
+                    0 6px 20px rgba(114, 47, 55, 0.5),
                     0 3px 8px rgba(0,0,0,0.25),
                     inset 0 2px 4px rgba(255,255,255,0.15);
                 border: 3px solid white;
@@ -96,7 +96,7 @@ const createCustomMarker = (): HTMLDivElement => {
                 bottom: 2px;
                 width: 14px;
                 height: 14px;
-                background: rgba(45, 52, 54, 0.5);
+                background: rgba(114, 47, 55, 0.5);
                 border-radius: 50%;
                 animation: saysoMarkerPulse 2s ease-out infinite;
             "></div>
@@ -105,7 +105,7 @@ const createCustomMarker = (): HTMLDivElement => {
                 bottom: 2px;
                 width: 14px;
                 height: 14px;
-                background: rgba(45, 52, 54, 0.3);
+                background: rgba(114, 47, 55, 0.3);
                 border-radius: 50%;
                 animation: saysoMarkerPulse 2s ease-out infinite;
                 animation-delay: 0.5s;
@@ -280,7 +280,7 @@ export default function MapboxMap({
                         source: 'marker-radius',
                         paint: {
                             'circle-radius': 80,
-                            'circle-color': '#2D3436',
+                            'circle-color': '#722F37',
                             'circle-opacity': 0.08,
                         }
                     });
@@ -292,10 +292,10 @@ export default function MapboxMap({
                         source: 'marker-radius',
                         paint: {
                             'circle-radius': 45,
-                            'circle-color': '#2D3436',
+                            'circle-color': '#722F37',
                             'circle-opacity': 0.15,
                             'circle-stroke-width': 2,
-                            'circle-stroke-color': '#2D3436',
+                            'circle-stroke-color': '#722F37',
                             'circle-stroke-opacity': 0.3,
                         }
                     });

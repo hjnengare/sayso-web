@@ -293,21 +293,9 @@ export function useBusinesses(options: UseBusinessesOptions = {}): UseBusinesses
   };
 }
 
-/**
- * Hook to fetch trending businesses (sorted by rating, limited)
- */
-export function useTrendingBusinesses(
-  limit: number = 10,
-  extraOptions: Partial<UseBusinessesOptions> = {}
-): UseBusinessesResult {
-  return useBusinesses({
-    limit,
-    sortBy: 'total_rating',
-    sortOrder: 'desc',
-    feedStrategy: 'mixed',
-    ...extraOptions,
-  });
-}
+// Trending is now a first-class global feed (not personalized mixed feed).
+// Re-export from the standalone hook for backward compatibility.
+export { useTrendingBusinesses } from './useTrendingBusinesses';
 
 /**
  * Hook to fetch businesses for "For You" section personalized based on user interests
@@ -390,10 +378,11 @@ export function useForYouBusinesses(
     ]
   );
 
-  const shouldWaitForPreferences = preferencesLoading && overrideInterestIds === undefined;
-
+  // No longer block on client-side preferences. The server fetches
+  // preferences internally when they are not provided in URL params,
+  // eliminating the client-side waterfall (auth → prefs → feed).
   const fetchForYou = useCallback(async (force = false) => {
-    if (extraOptions.skip || shouldWaitForPreferences) {
+    if (extraOptions.skip) {
       setLoading(false);
       return;
     }
@@ -454,7 +443,7 @@ export function useForYouBusinesses(
       const data = await response.json();
       const businessesList = data.businesses || data.data || [];
 
-      console.log(`[useForYouBusinesses] ✅ Received ${businessesList.length} businesses`);
+      console.log(`[useForYouBusinesses] Received ${businessesList.length} businesses`);
       setBusinesses(businessesList);
 
     } catch (err: any) {
@@ -468,7 +457,6 @@ export function useForYouBusinesses(
     extraOptions.skip,
     extraOptions.latitude,
     extraOptions.longitude,
-    shouldWaitForPreferences,
     limit,
     interestIds,
     subInterestIds,

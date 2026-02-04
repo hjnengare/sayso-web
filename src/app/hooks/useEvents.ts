@@ -313,6 +313,9 @@ export function useEvents(options: UseEventsOptions = {}): UseEventsResult {
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
 
+    // Use a single controller for both deduplication and timeout
+    const timeoutId = setTimeout(() => abortController.abort(), 8000);
+
     try {
       setLoading(true);
       setError(null);
@@ -325,14 +328,10 @@ export function useEvents(options: UseEventsOptions = {}): UseEventsResult {
       if (search) params.set('search', search);
       if (upcoming !== undefined) params.set('upcoming', upcoming.toString());
 
-      // Add timeout to ensure response within 2 seconds
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2000);
-
       const response = await fetch(`/api/events?${params.toString()}`, {
-        signal: controller.signal,
+        signal: abortController.signal,
       });
-      
+
       clearTimeout(timeoutId);
 
       if (!response.ok) {
@@ -345,7 +344,7 @@ export function useEvents(options: UseEventsOptions = {}): UseEventsResult {
       }
 
       const data = await response.json();
-      
+
       // Debug logging
       if (typeof window !== 'undefined') {
         console.log('[useEvents] API Response:', {
@@ -365,15 +364,12 @@ export function useEvents(options: UseEventsOptions = {}): UseEventsResult {
         const city = dbEvent.city;
         const bookingUrl = dbEvent.ticket_url || dbEvent.booking_url || dbEvent.url || undefined;
 
-        // Extract attraction ID and venue ID from raw_data (Ticketmaster API response)
-        // This is critical for proper event consolidation
-        const rawData = dbEvent.raw_data;
-        const attractionId = extractAttractionId(rawData) ||
+        // Use pre-extracted attraction/venue IDs from the API response
+        // (server extracts these from raw_data to keep payloads small)
+        const attractionId = dbEvent.attraction_id ||
           dbEvent.ticketmaster_attraction_id ||
-          dbEvent.attraction_id ||
           null;
-        const venueId = extractVenueId(rawData) ||
-          dbEvent.venue_id ||
+        const venueId = dbEvent.venue_id ||
           dbEvent.venueId ||
           null;
 
@@ -425,17 +421,25 @@ export function useEvents(options: UseEventsOptions = {}): UseEventsResult {
         setCount(data.count || 0);
       }
     } catch (err: any) {
+      clearTimeout(timeoutId);
       if (err.name === 'AbortError') {
-        // Request was aborted, ignore
+        // If a newer request replaced us, ignore silently
+        if (abortControllerRef.current !== abortController) {
+          return;
+        }
+        // Otherwise this was a timeout — log it but don't block rendering
+        console.warn('[useEvents] Request timed out after 8s');
+        setLoading(false);
         return;
       }
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch events';
-      if (!abortController.signal.aborted) {
+      if (abortControllerRef.current === abortController) {
         setError(errorMessage);
         console.error('[useEvents] Error:', err);
       }
     } finally {
-      if (!abortController.signal.aborted) {
+      clearTimeout(timeoutId);
+      if (abortControllerRef.current === abortController) {
         setLoading(false);
       }
     }
@@ -477,14 +481,11 @@ const transformDbEvent = (dbEvent: any): Event => {
   const city = dbEvent.city;
   const bookingUrl = dbEvent.ticket_url || dbEvent.booking_url || dbEvent.url || undefined;
 
-  // Extract attraction ID and venue ID from raw_data (Ticketmaster API response)
-  const rawData = dbEvent.raw_data;
-  const attractionId = extractAttractionId(rawData) ||
+  // Use pre-extracted attraction/venue IDs from the API response
+  const attractionId = dbEvent.attraction_id ||
     dbEvent.ticketmaster_attraction_id ||
-    dbEvent.attraction_id ||
     null;
-  const venueId = extractVenueId(rawData) ||
-    dbEvent.venue_id ||
+  const venueId = dbEvent.venue_id ||
     dbEvent.venueId ||
     null;
 

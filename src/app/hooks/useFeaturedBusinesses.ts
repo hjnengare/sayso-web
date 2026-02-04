@@ -21,6 +21,20 @@ export interface FeaturedBusiness {
   href: string;
   monthAchievement: string;
   verified: boolean;
+  ui_hints?: {
+    badge?: "featured";
+    rank?: number;
+    period?: string;
+    reason?: {
+      label: string;
+      metric?: string;
+      value?: number;
+    };
+  };
+  featured_score?: number;
+  recent_reviews_30d?: number;
+  recent_reviews_7d?: number;
+  bayesian_rating?: number | null;
 }
 
 export interface UseFeaturedBusinessesOptions {
@@ -34,6 +48,15 @@ export interface UseFeaturedBusinessesResult {
   loading: boolean;
   error: string | null;
   refetch: () => void;
+  meta?: FeaturedBusinessesMeta | null;
+}
+
+export interface FeaturedBusinessesMeta {
+  period?: string;
+  generated_at?: string;
+  seed?: string;
+  source?: 'rpc' | 'fallback';
+  count?: number;
 }
 
 /**
@@ -43,6 +66,7 @@ export function useFeaturedBusinesses(options: UseFeaturedBusinessesOptions = {}
   const [featuredBusinesses, setFeaturedBusinesses] = useState<FeaturedBusiness[]>([]);
   const [loading, setLoading] = useState(!options.skip);
   const [error, setError] = useState<string | null>(null);
+  const [meta, setMeta] = useState<FeaturedBusinessesMeta | null>(null);
 
   const fetchFeaturedBusinesses = useCallback(async () => {
     if (options.skip) return;
@@ -62,11 +86,18 @@ export function useFeaturedBusinesses(options: UseFeaturedBusinessesOptions = {}
       }
 
       const data = await response.json();
-      setFeaturedBusinesses(data);
+      if (Array.isArray(data)) {
+        setFeaturedBusinesses(data);
+        setMeta(null);
+      } else {
+        setFeaturedBusinesses(data?.data || []);
+        setMeta(data?.meta || null);
+      }
     } catch (err) {
       console.error('Error fetching featured businesses:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
       setFeaturedBusinesses([]);
+      setMeta(null);
     } finally {
       setLoading(false);
     }
@@ -85,5 +116,6 @@ export function useFeaturedBusinesses(options: UseFeaturedBusinessesOptions = {}
     loading,
     error,
     refetch,
+    meta,
   };
 }
