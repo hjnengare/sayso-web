@@ -13,7 +13,7 @@ DECLARE
   v_has_geo_columns BOOLEAN;
   v_create_view_sql TEXT;
 BEGIN
-  -- Check if latitude and longitude columns exist
+  -- Check if lat (and lng) columns exist (schema uses lat/lng, not latitude/longitude)
   SELECT EXISTS (
     SELECT 1 FROM information_schema.columns 
     WHERE table_name = 'businesses' 
@@ -33,7 +33,6 @@ BEGIN
         b.category,
         b.location,
         b.image_url,
-        b.uploaded_image,
         b.verified,
         b.price_range,
         b.badge,
@@ -66,7 +65,6 @@ BEGIN
         b.category,
         b.location,
         b.image_url,
-        b.uploaded_image,
         b.verified,
         b.price_range,
         b.badge,
@@ -128,11 +126,11 @@ DECLARE
   v_has_geo_columns BOOLEAN;
   v_create_view_sql TEXT;
 BEGIN
-  -- Check if latitude and longitude columns exist
+  -- Check if lat (and lng) columns exist (schema uses lat/lng, not latitude/longitude)
   SELECT EXISTS (
     SELECT 1 FROM information_schema.columns 
     WHERE table_name = 'businesses' 
-    AND column_name = 'latitude'
+    AND column_name = 'lat'
   ) INTO v_has_geo_columns;
 
   -- Drop existing view if it exists
@@ -148,7 +146,6 @@ BEGIN
         b.category,
         b.location,
         b.image_url,
-        b.uploaded_image,
         b.verified,
         b.price_range,
         b.badge,
@@ -174,8 +171,8 @@ BEGIN
       WHERE 
         b.status = ''active''
         AND b.created_at <= NOW() - INTERVAL ''7 days''
-      GROUP BY b.id, b.name, b.category, b.location, b.image_url, b.uploaded_image, 
-               b.verified, b.price_range, b.badge, b.slug, b.latitude, b.longitude,
+      GROUP BY b.id, b.name, b.category, b.location, b.image_url,
+               b.verified, b.price_range, b.badge, b.slug, b.lat, b.lng,
                bs.total_reviews, bs.average_rating, bs.percentiles
       HAVING 
         COUNT(DISTINCT r.id) FILTER (WHERE r.created_at >= NOW() - INTERVAL ''30 days'') >= 2
@@ -190,7 +187,6 @@ BEGIN
         b.category,
         b.location,
         b.image_url,
-        b.uploaded_image,
         b.verified,
         b.price_range,
         b.badge,
@@ -216,7 +212,7 @@ BEGIN
       WHERE 
         b.status = ''active''
         AND b.created_at <= NOW() - INTERVAL ''7 days''
-      GROUP BY b.id, b.name, b.category, b.location, b.image_url, b.uploaded_image, 
+      GROUP BY b.id, b.name, b.category, b.location, b.image_url,
                b.verified, b.price_range, b.badge, b.slug,
                bs.total_reviews, bs.average_rating, bs.percentiles
       HAVING 
@@ -248,11 +244,11 @@ DECLARE
   v_has_geo_columns BOOLEAN;
   v_create_view_sql TEXT;
 BEGIN
-  -- Check if latitude and longitude columns exist
+  -- Check if lat (and lng) columns exist (schema uses lat/lng, not latitude/longitude)
   SELECT EXISTS (
     SELECT 1 FROM information_schema.columns 
     WHERE table_name = 'businesses' 
-    AND column_name = 'latitude'
+    AND column_name = 'lat'
   ) INTO v_has_geo_columns;
 
   -- Drop existing view if it exists
@@ -268,7 +264,6 @@ BEGIN
         b.category,
         b.location,
         b.image_url,
-        b.uploaded_image,
         b.verified,
         b.price_range,
         b.badge,
@@ -297,7 +292,6 @@ BEGIN
         b.category,
         b.location,
         b.image_url,
-        b.uploaded_image,
         b.verified,
         b.price_range,
         b.badge,

@@ -136,6 +136,7 @@ export default function Home() {
     businesses: trendingBusinesses,
     loading: trendingLoading,
     error: trendingError,
+    statusCode: trendingStatus,
     refetch: refetchTrending,
   } = useTrendingBusinesses();
 
@@ -158,7 +159,7 @@ export default function Home() {
   }, [hasUserInitiatedFilters, selectedInterestIds, filters]);
 
   // Fetch featured businesses from API
-  const { featuredBusinesses, loading: featuredLoading } = useFeaturedBusinesses({
+  const { featuredBusinesses, loading: featuredLoading, error: featuredError, statusCode: featuredStatus } = useFeaturedBusinesses({
     limit: 12,
     region: userLocation ? 'Cape Town' : null, // TODO: Get actual region from user location
     skip: authLoading,
@@ -539,8 +540,12 @@ export default function Home() {
                         <MemoizedBusinessRow title="Trending Now" businesses={[]} cta="See More" href="/trending" />
                       )}
                       {trendingError && !trendingLoading && (
-                        <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral">
-                          Trending businesses are still loading. Refresh to try again.
+                        <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral space-y-1">
+                          <p className="font-medium">Trending</p>
+                          <p>{trendingError}</p>
+                          {trendingStatus != null && (
+                            <p className="text-charcoal/70">Status: {trendingStatus}</p>
+                          )}
                         </div>
                       )}
                     </div>
@@ -554,9 +559,17 @@ export default function Home() {
                     />
                   </div>
 
-                  {/* Community Highlights */}
+                  {/* Community Highlights (Featured by Category) */}
                   <div className="relative z-10 snap-start">
-                    {allBusinessesLoading ? (
+                    {featuredError && !featuredLoading ? (
+                      <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral space-y-1">
+                        <p className="font-medium">Featured</p>
+                        <p>{featuredError}</p>
+                        {featuredStatus != null && (
+                          <p className="text-charcoal/70">Status: {featuredStatus}</p>
+                        )}
+                      </div>
+                    ) : allBusinessesLoading ? (
                       <CommunityHighlightsSkeleton reviewerCount={4} businessCount={4} />
                     ) : (
                       <CommunityHighlights

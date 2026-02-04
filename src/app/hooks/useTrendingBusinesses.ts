@@ -22,6 +22,8 @@ export interface UseTrendingResult {
   businesses: Business[];
   loading: boolean;
   error: string | null;
+  /** HTTP status when error is set (e.g. 500). Helps UI show status so count 0 doesn't hide the problem. */
+  statusCode: number | null;
   count: number;
   refetch: () => void;
   refreshedAt: string | null;
@@ -35,6 +37,7 @@ export function useTrendingBusinesses(
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(!skip);
   const [error, setError] = useState<string | null>(null);
+  const [statusCode, setStatusCode] = useState<number | null>(null);
   const [count, setCount] = useState(0);
   const [refreshedAt, setRefreshedAt] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -52,11 +55,12 @@ export function useTrendingBusinesses(
 
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
-    const timeoutId = setTimeout(() => abortController.abort(), 10_000);
+    const timeoutId = setTimeout(() => abortController.abort(), 18_000);
 
     try {
       setLoading(true);
       setError(null);
+      setStatusCode(null);
 
       const params = new URLSearchParams();
       params.set('limit', limit.toString());
@@ -69,9 +73,16 @@ export function useTrendingBusinesses(
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        const message = `Failed to fetch trending: ${response.statusText}`;
+        let message = response.statusText;
+        try {
+          const body = await response.json();
+          message = body?.error || body?.details || message;
+        } catch {
+          // keep message as statusText
+        }
         if (abortControllerRef.current === abortController) {
-          setError(message);
+          setStatusCode(response.status);
+          setError(`${response.status}: ${message}`);
         }
         return;
       }
@@ -80,7 +91,7 @@ export function useTrendingBusinesses(
 
       if (abortControllerRef.current === abortController) {
         setBusinesses(data.businesses || []);
-        setCount(data.meta?.count || 0);
+        setCount(data.meta?.count ?? (data.businesses?.length ?? 0));
         setRefreshedAt(data.meta?.refreshedAt || null);
       }
     } catch (err: any) {
@@ -94,6 +105,7 @@ export function useTrendingBusinesses(
         return;
       }
       if (abortControllerRef.current === abortController) {
+        setStatusCode(null);
         setError(err instanceof Error ? err.message : 'Failed to fetch trending');
         console.error('[useTrendingBusinesses] Error:', err);
       }
@@ -118,6 +130,7 @@ export function useTrendingBusinesses(
     businesses,
     loading,
     error,
+    statusCode,
     count,
     refetch: fetchTrending,
     refreshedAt,

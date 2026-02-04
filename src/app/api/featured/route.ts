@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "crypto";
 import { getServerSupabase } from "@/app/lib/supabase/server";
-import { getSubcategoryLabel } from "@/app/utils/subcategoryPlaceholders";
+import { getServiceSupabase } from "@/app/lib/admin";
+import { getCategoryLabelFromBusiness, getSubcategoryLabel } from "@/app/utils/subcategoryPlaceholders";
 import { getInterestIdForSubcategory } from "@/app/lib/onboarding/subcategoryMapping";
 
 export const dynamic = 'force-dynamic';
@@ -59,6 +60,27 @@ function buildFeaturedReason(business: any) {
     return { label: "Top rated", metric: "average_rating", value: averageRating };
   }
   return { label: "Featured pick", metric: "featured_score", value: Number(business.featured_score ?? 0) };
+}
+
+/** Map MV row (quality fallback or new businesses) to featured-like shape for transform. */
+function mvRowToFeaturedShape(b: any, scoreKey: 'quality_score' | null): any {
+  return {
+    id: b.id,
+    name: b.name,
+    image_url: b.image_url ?? '',
+    category: b.category ?? '',
+    location: b.location ?? '',
+    slug: b.slug ?? b.id,
+    verified: Boolean(b.verified),
+    average_rating: Number(b.average_rating ?? 0),
+    total_reviews: Number(b.total_reviews ?? 0),
+    recent_reviews_30d: 0,
+    recent_reviews_7d: 0,
+    featured_score: scoreKey ? Number(b[scoreKey] ?? 0) : 0,
+    sub_interest_id: b.sub_interest_id ?? null,
+    bucket: b.category ?? b.bucket ?? '',
+    description: b.description ?? null,
+  };
 }
 
 /**
@@ -191,6 +213,13 @@ async function getFeaturedFallback(
         Math.log(1 + recent30) * 0.2;
 
       const bucket = business.sub_interest_id || business.category;
+      const displayCategory = (() => {
+        const hasSlug = !!(business.sub_interest_id || business.interest_id);
+        const rawCategory = typeof business.category === "string" ? business.category.trim() : "";
+        const isMissingAll = !hasSlug && rawCategory.length === 0;
+        if (isMissingAll) return "";
+        return getCategoryLabelFromBusiness(business);
+      })();
       const isLocal = !!region && typeof business.location === 'string'
         ? business.location.toLowerCase().includes(region.toLowerCase())
         : false;
@@ -199,7 +228,7 @@ async function getFeaturedFallback(
         id: business.id,
         name: business.name,
         image_url: business.image_url || '',
-        category: business.category,
+        category: displayCategory,
         interest_id: business.interest_id || null,
         sub_interest_id: business.sub_interest_id,
         description: business.description,
@@ -272,11 +301,22 @@ async function getFeaturedFallback(
 
 /**
  * GET /api/featured
- * Returns featured businesses with geographic filtering
+ * 1. Try get_featured_businesses (or getFeaturedFallback if RPC fails).
+ * 2. If result < limit, fill remainder with get_quality_fallback_businesses (excluding IDs already used).
+ * 3. If still short, fill from get_new_businesses.
+ * Outcome: home page never empty; real featured stays first.
  */
 export async function GET(request: NextRequest) {
+  const start = Date.now();
+  console.log('[FEATURED API] GET start at', new Date().toISOString());
   try {
-    const supabase = await getServerSupabase();
+    let supabase;
+    try {
+      supabase = getServiceSupabase();
+    } catch {
+      supabase = await getServerSupabase();
+      console.warn('[FEATURED API] Service role not configured, using anon (guests may get empty if RLS restricts)');
+    }
     const { searchParams } = new URL(request.url);
 
     const limit = Math.min(parseInt(searchParams.get('limit') || '12'), 50); // Cap at 50
@@ -287,8 +327,9 @@ export async function GET(request: NextRequest) {
 
     let featuredData: any[] = [];
     let useRpc = true;
+    const usedIds = new Set<string>();
 
-    // Try RPC first, fall back to direct query if it fails
+    // 1. Try get_featured_businesses RPC first
     try {
       let dataResult: any[] | null = null;
       let rpcError: any = null;
@@ -315,18 +356,55 @@ export async function GET(request: NextRequest) {
         useRpc = false;
       } else {
         featuredData = dataResult || [];
+        featuredData.forEach((b: any) => b?.id && usedIds.add(b.id));
       }
     } catch (rpcError: any) {
       console.warn('[FEATURED API] RPC call failed, using fallback:', rpcError?.message);
       useRpc = false;
     }
 
-    // Use fallback if RPC failed or returned no data
+    // Use getFeaturedFallback if RPC failed or returned no data
     if (!useRpc || featuredData.length === 0) {
       featuredData = await getFeaturedFallback(supabase, { limit, region, seed });
+      featuredData.forEach((b: any) => b?.id && usedIds.add(b.id));
+    }
+
+    // 2. If short, fill with get_quality_fallback_businesses (excluding already used)
+    if (featuredData.length < limit) {
+      const need = limit - featuredData.length;
+      const { data: qualityData } = await supabase.rpc('get_quality_fallback_businesses', {
+        p_limit: limit + need,
+      });
+      const qualityList = Array.isArray(qualityData) ? qualityData : [];
+      for (const b of qualityList) {
+        if (featuredData.length >= limit) break;
+        if (b?.id && !usedIds.has(b.id)) {
+          usedIds.add(b.id);
+          featuredData.push(mvRowToFeaturedShape(b, 'quality_score'));
+        }
+      }
+    }
+
+    // 3. If still short, fill from get_new_businesses (excluding already used)
+    if (featuredData.length < limit) {
+      const need = limit - featuredData.length;
+      const { data: newData } = await supabase.rpc('get_new_businesses', {
+        p_limit: limit + need,
+        p_category: null,
+      });
+      const newList = Array.isArray(newData) ? newData : [];
+      for (const b of newList) {
+        if (featuredData.length >= limit) break;
+        if (b?.id && !usedIds.has(b.id)) {
+          usedIds.add(b.id);
+          featuredData.push(mvRowToFeaturedShape(b, null));
+        }
+      }
     }
 
     if (!featuredData || featuredData.length === 0) {
+      console.warn('[FEATURED API] No featured businesses after RPC + fallbacks.');
+      console.log('[FEATURED API] GET end total ms:', Date.now() - start);
       return NextResponse.json({
         data: [],
         meta: {
@@ -339,9 +417,33 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    // Diversity cap: prefer one per subcategory so one category doesn't dominate
+    const usedSubcategories = new Set<string>();
+    const diversified: typeof featuredData = [];
+    for (const b of featuredData) {
+      const key = (b.sub_interest_id ?? b.bucket ?? b.category ?? 'misc').toString().trim().toLowerCase();
+      if (!usedSubcategories.has(key)) {
+        diversified.push(b);
+        usedSubcategories.add(key);
+      }
+      if (diversified.length >= limit) break;
+    }
+    if (diversified.length < limit) {
+      const diversifiedIds = new Set(diversified.map((x: any) => x.id));
+      for (const b of featuredData) {
+        if (diversified.length >= limit) break;
+        if (b?.id && !diversifiedIds.has(b.id)) {
+          diversified.push(b);
+          diversifiedIds.add(b.id);
+        }
+      }
+    }
+    featuredData = diversified.slice(0, limit);
+
     const featuredEtag = buildFeaturedEtag(seed, featuredData);
     const ifNoneMatch = request.headers.get('if-none-match');
     if (ifNoneMatch && ifNoneMatch === featuredEtag) {
+      console.log('[FEATURED API] GET end total ms:', Date.now() - start);
       const response = new NextResponse(null, { status: 304 });
       response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
       response.headers.set('ETag', featuredEtag);
@@ -429,6 +531,7 @@ export async function GET(request: NextRequest) {
       },
     };
 
+    console.log('[FEATURED API] GET end total ms:', Date.now() - start);
     const response = NextResponse.json(payload);
     response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
     response.headers.set('ETag', featuredEtag);
@@ -436,7 +539,13 @@ export async function GET(request: NextRequest) {
     response.headers.set('X-Featured-Generated-At', generatedAt.toISOString());
     return response;
 
-  } catch (error) {
+  } catch (error: unknown) {
+    const totalMs = Date.now() - start;
+    const msg = error instanceof Error ? error.message : String(error);
+    if (/timeout|timed out|abort/i.test(msg)) {
+      console.warn('[FEATURED API] GET timed out / aborted:', msg, 'total ms:', totalMs);
+    }
+    console.error('[FEATURED API] GET end (error) total ms:', totalMs);
     console.error('Unexpected error in featured API:', error);
     return NextResponse.json(
       { error: 'Internal server error' },

@@ -56,7 +56,7 @@ export type CanonicalSubcategorySlug = (typeof CANONICAL_SUBCATEGORY_SLUGS)[numb
 
 /**
  * Canonical slug → display label (matches api/subcategories FALLBACK_SUBCATEGORIES).
- * Use this everywhere so sub_interest_id always shows the correct label — no "Miscellaneous" leak.
+ * Used by placeholder map and type-safe paths.
  */
 export const SUBCATEGORY_SLUG_TO_LABEL: Record<CanonicalSubcategorySlug, string> = {
   restaurants: "Restaurants",
@@ -86,7 +86,7 @@ export const SUBCATEGORY_SLUG_TO_LABEL: Record<CanonicalSubcategorySlug, string>
   cinemas: "Cinemas",
   museums: "Museums",
   galleries: "Art Galleries",
-  theaters: "Theaters",
+  theaters: "Theatres",
   concerts: "Concerts",
   "family-activities": "Family Activities",
   "pet-services": "Pet Services",
@@ -94,19 +94,195 @@ export const SUBCATEGORY_SLUG_TO_LABEL: Record<CanonicalSubcategorySlug, string>
   veterinarians: "Veterinarians",
   fashion: "Fashion & Clothing",
   electronics: "Electronics",
-  "home-decor": "Home Decor",
-  books: "Books & Media",
+  "home-decor": "Home Décor",
+  books: "Books & Stationery",
   miscellaneous: "Miscellaneous",
 };
 
+/** Canonical label (normalized) -> canonical slug. */
+const SUBCATEGORY_LABEL_TO_SLUG: Record<string, CanonicalSubcategorySlug> = Object.fromEntries(
+  (Object.entries(SUBCATEGORY_SLUG_TO_LABEL) as Array<[CanonicalSubcategorySlug, string]>).map(
+    ([slug, label]) => [label.trim().toLowerCase(), slug],
+  ),
+) as Record<string, CanonicalSubcategorySlug>;
+
+/** Alias slug (seen in DB) -> canonical slug (used for placeholder resolution). */
+const SUBCATEGORY_ALIAS_TO_CANONICAL: Record<string, CanonicalSubcategorySlug> = {
+  restaurant: "restaurants",
+  cafe: "cafes",
+  bar: "bars",
+  salon: "salons",
+  gym: "gyms",
+  spa: "spas",
+  museum: "museums",
+  gallery: "galleries",
+  theater: "theaters",
+  theatre: "theaters",
+  theatres: "theaters",
+  concert: "concerts",
+  cinema: "cinemas",
+  bookstore: "books",
+};
+
+/**
+ * Complete canonical mapping: every known sub_interest_id slug → display label.
+ * Source of truth for UI so DB diversity shows correctly (no "Miscellaneous" leak).
+ * Add new slugs here when new data appears; dev warning will catch unmapped slugs.
+ */
+export const SUBCATEGORY_LABELS: Record<string, string> = {
+  ...SUBCATEGORY_SLUG_TO_LABEL,
+  // Singular/alias variants seen in DB
+  restaurant: "Restaurants",
+  cafe: "Cafés & Coffee",
+  bar: "Bars & Pubs",
+  salon: "Hair Salons",
+  gym: "Gyms & Fitness",
+  spa: "Spas",
+  museum: "Museums",
+  gallery: "Art Galleries",
+  theater: "Theatres",
+  theatres: "Theatres",
+  concert: "Concerts",
+  cinema: "Cinemas",
+  bookstore: "Books & Stationery",
+};
+
+/**
+ * Interest id → display label. Use only when sub_interest_id is absent (sub_interest_id is source of truth).
+ */
+export const INTEREST_LABELS: Record<string, string> = {
+  "food-drink": "Food & Drink",
+  "beauty-wellness": "Beauty & Wellness",
+  "professional-services": "Professional Services",
+  "outdoors-adventure": "Outdoors & Adventure",
+  "experiences-entertainment": "Entertainment & Experiences",
+  "arts-culture": "Arts & Culture",
+  "family-pets": "Family & Pets",
+  "shopping-lifestyle": "Shopping & Lifestyle",
+  miscellaneous: "Miscellaneous",
+};
+
+/** Interest id (or label) -> representative canonical subcategory slug (used for placeholders when subcategory is missing). */
+const INTEREST_TO_DEFAULT_SUBCATEGORY: Record<string, CanonicalSubcategorySlug> = {
+  "food-drink": "restaurants",
+  "beauty-wellness": "salons",
+  "professional-services": "finance-insurance",
+  "outdoors-adventure": "hiking",
+  "experiences-entertainment": "events-festivals",
+  "arts-culture": "museums",
+  "family-pets": "family-activities",
+  "shopping-lifestyle": "fashion",
+  miscellaneous: "miscellaneous",
+};
+
+const INTEREST_LABEL_TO_ID: Record<string, string> = Object.fromEntries(
+  Object.entries(INTEREST_LABELS).map(([id, label]) => [label.trim().toLowerCase(), id]),
+);
+
 /**
  * Returns the display label for a subcategory slug. Use for all business cards/APIs.
- * Unknown slug → "Miscellaneous" (no leak of raw slug).
+ * Prefer sub_interest_id when present: label = sub_interest_id ? getSubcategoryLabel(sub_interest_id) : mapInterest(interest_id).
+ * Unknown slug → "Miscellaneous"; in dev, logs [CATEGORY MISSING] so you can add the slug.
  */
 export function getSubcategoryLabel(slug: string | undefined | null): string {
   if (slug == null || typeof slug !== "string") return "Miscellaneous";
   const key = slug.trim().toLowerCase();
-  return SUBCATEGORY_SLUG_TO_LABEL[key as CanonicalSubcategorySlug] ?? "Miscellaneous";
+  if (!key) return "Miscellaneous";
+
+  const label = SUBCATEGORY_LABELS[key];
+  if (label) return label;
+
+  if (process.env.NODE_ENV === "development") {
+    console.warn("[CATEGORY MISSING]", key);
+  }
+  return "Miscellaneous";
+}
+
+/**
+ * Display category for a business: sub_interest_id is source of truth; do not infer from interest_id when sub exists.
+ * Rule: label = sub_interest_id ? mapSubcategory(sub_interest_id) : mapInterest(interest_id) ?? mapSubcategory(category).
+ */
+export function getDisplayCategoryForBusiness(business: {
+  sub_interest_id?: string | null;
+  interest_id?: string | null;
+  category?: string | null;
+}): string {
+  const sub = business.sub_interest_id?.trim().toLowerCase();
+  if (sub) return getSubcategoryLabel(sub);
+  const interest = business.interest_id?.trim().toLowerCase();
+  if (interest) return INTEREST_LABELS[interest] ?? getSubcategoryLabel(interest) ?? "Miscellaneous";
+  return getSubcategoryLabel(business.category) ?? "Miscellaneous";
+}
+
+/** Slug-only keys for category slug resolution. Never use category — it may be a label (e.g. "Fashion & Clothing"), not a slug. */
+const CATEGORY_SLUG_KEYS = [
+  "sub_interest_id",
+  "subInterestId",
+  "sub_interest_slug",
+  "interest_id",
+  "interestId",
+] as const;
+
+export type BusinessLikeForCategory = {
+  sub_interest_id?: string | null;
+  subInterestId?: string | null;
+  sub_interest_slug?: string | null;
+  interest_id?: string | null;
+  interestId?: string | null;
+  category?: string | null;
+  subInterestLabel?: string | null;
+};
+
+/**
+ * Get the category slug from a business object. Uses slug fields only (never category, which may be a label).
+ * Order: sub_interest_id → subInterestId → sub_interest_slug → interest_id → interestId.
+ */
+export function getCategorySlugFromBusiness(
+  business: BusinessLikeForCategory | undefined | null
+): string {
+  if (!business) return "";
+  for (const key of CATEGORY_SLUG_KEYS) {
+    const value = (business as Record<string, unknown>)[key];
+    if (value != null && typeof value === "string") {
+      const s = value.trim();
+      if (s) return s.toLowerCase();
+    }
+  }
+  return "";
+}
+
+/**
+ * Get display label for a business. Slug from slug fields only; then:
+ * - If slug is known subcategory → SUBCATEGORY_LABELS[slug]
+ * - Else if slug is known interest → INTEREST_LABELS[slug]
+ * - Else if business.category exists (treat as label) → use it
+ * - Else "Miscellaneous"
+ */
+export function getCategoryLabelFromBusiness(
+  business: BusinessLikeForCategory | undefined | null
+): string {
+  const slug = getCategorySlugFromBusiness(business);
+  if (!slug) {
+    const rawCategory = business?.category?.trim();
+    if (!rawCategory || rawCategory.length === 0) return "Miscellaneous";
+    // If category looks like a canonical slug/known label, prefer the mapped display label.
+    const rawKey = rawCategory.toLowerCase();
+    const explicitSubcategory = SUBCATEGORY_LABELS[rawKey];
+    if (explicitSubcategory) return explicitSubcategory;
+    const mapped = getSubcategoryLabel(rawCategory);
+    return mapped !== "Miscellaneous" ? mapped : rawCategory;
+  }
+  const fromSubcategory = SUBCATEGORY_LABELS[slug];
+  if (fromSubcategory) return fromSubcategory;
+  const fromInterest = INTEREST_LABELS[slug];
+  if (fromInterest) return fromInterest;
+  const rawCategory = business?.category?.trim();
+  if (!rawCategory || rawCategory.length === 0) return "Miscellaneous";
+  const rawKey = rawCategory.toLowerCase();
+  const explicitSubcategory = SUBCATEGORY_LABELS[rawKey];
+  if (explicitSubcategory) return explicitSubcategory;
+  const mapped = getSubcategoryLabel(rawCategory);
+  return mapped !== "Miscellaneous" ? mapped : rawCategory;
 }
 
 /**
@@ -161,6 +337,7 @@ export const SUBCATEGORY_PLACEHOLDER_MAP: Record<CanonicalSubcategorySlug, strin
   "pet-services": `${P}/family-pets/pet-services.jpg`,
   childcare: `${P}/family-pets/childcare.jpg`,
   veterinarians: `${P}/family-pets/veterinarians.jpg`,
+  veterina
 
   // Shopping & Lifestyle
   fashion: `${P}/shopping-lifestyle/fashion-clothing.jpg`,
@@ -177,9 +354,37 @@ export const DEFAULT_PLACEHOLDER = `${P}/miscellaneous/miscellaneous.jpeg`;
 
 const slugSet = new Set<string>(CANONICAL_SUBCATEGORY_SLUGS);
 
+function normalizeToCanonicalSubcategorySlug(
+  raw: string | undefined | null
+): CanonicalSubcategorySlug | null {
+  if (raw == null || typeof raw !== "string") return null;
+  const key = raw.trim().toLowerCase();
+  if (!key) return null;
+
+  // 1) Canonical slug.
+  if (slugSet.has(key)) return key as CanonicalSubcategorySlug;
+
+  // 2) Alias slug (e.g. "museum" -> "museums").
+  const aliased = SUBCATEGORY_ALIAS_TO_CANONICAL[key];
+  if (aliased) return aliased;
+
+  // 3) Canonical label (e.g. "Museums" -> "museums").
+  const fromLabel = SUBCATEGORY_LABEL_TO_SLUG[key];
+  if (fromLabel) return fromLabel;
+
+  // 4) Interest id (or label) -> representative canonical subcategory slug.
+  const fromInterestId = INTEREST_TO_DEFAULT_SUBCATEGORY[key];
+  if (fromInterestId) return fromInterestId;
+  const interestIdFromLabel = INTEREST_LABEL_TO_ID[key];
+  if (interestIdFromLabel) {
+    return INTEREST_TO_DEFAULT_SUBCATEGORY[interestIdFromLabel] ?? null;
+  }
+
+  return null;
+}
+
 export function isCanonicalSlug(slug: string | undefined | null): slug is CanonicalSubcategorySlug {
-  if (slug == null || typeof slug !== "string") return false;
-  return slugSet.has(slug.trim());
+  return normalizeToCanonicalSubcategorySlug(slug) != null;
 }
 
 /**
@@ -187,19 +392,16 @@ export function isCanonicalSlug(slug: string | undefined | null): slug is Canoni
  * If the slug is not in the taxonomy, logs a dev warning and returns the global default.
  */
 export function getSubcategoryPlaceholder(slug: string | undefined | null): string {
-  if (slug == null || typeof slug !== "string") {
-    return DEFAULT_PLACEHOLDER;
-  }
-  const trimmed = slug.trim();
-  if (!trimmed) return DEFAULT_PLACEHOLDER;
+  const canonical = normalizeToCanonicalSubcategorySlug(slug);
+  if (!canonical) return DEFAULT_PLACEHOLDER;
 
-  const path = SUBCATEGORY_PLACEHOLDER_MAP[trimmed as CanonicalSubcategorySlug];
+  const path = SUBCATEGORY_PLACEHOLDER_MAP[canonical];
   if (path) return path;
 
   if (process.env.NODE_ENV === "development") {
     console.warn(
       "[subcategoryPlaceholders] No placeholder for slug:",
-      JSON.stringify(trimmed),
+      JSON.stringify(slug),
       "- using default. Ensure slug is one of CANONICAL_SUBCATEGORY_SLUGS."
     );
   }
@@ -214,9 +416,8 @@ export function getSubcategoryPlaceholderFromCandidates(
   candidates: ReadonlyArray<string | undefined | null>
 ): string {
   for (const c of candidates) {
-    if (c != null && typeof c === "string" && slugSet.has(c.trim())) {
-      return SUBCATEGORY_PLACEHOLDER_MAP[c.trim() as CanonicalSubcategorySlug];
-    }
+    const canonical = normalizeToCanonicalSubcategorySlug(c);
+    if (canonical) return SUBCATEGORY_PLACEHOLDER_MAP[canonical];
   }
   return DEFAULT_PLACEHOLDER;
 }

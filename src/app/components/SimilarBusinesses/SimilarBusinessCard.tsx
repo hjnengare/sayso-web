@@ -7,6 +7,7 @@ import Image from "next/image";
 import { Scissors, Coffee, UtensilsCrossed, Wine, Dumbbell, Activity, Heart, Book, ShoppingBag, Home, Briefcase, MapPin, Music, Film, Camera, Car, GraduationCap, CreditCard, Tag } from "lucide-react";
 import { ImageIcon } from "lucide-react";
 import { getCategoryPlaceholder, isPlaceholderImage } from "../../utils/categoryToPngMapping";
+import { getCategorySlugFromBusiness } from "../../utils/subcategoryPlaceholders";
 
 interface SimilarBusinessCardProps {
   id: string;
@@ -27,6 +28,7 @@ interface SimilarBusinessCardProps {
   priceRange?: string;
   price_range?: string;
   compact?: boolean;
+  sub_interest_id?: string | null;
   subInterestId?: string;
   subInterestLabel?: string;
 }
@@ -129,6 +131,7 @@ function SimilarBusinessCard({
   priceRange,
   price_range,
   compact = false,
+  sub_interest_id,
   subInterestId,
   subInterestLabel,
 }: SimilarBusinessCardProps) {
@@ -137,8 +140,9 @@ function SimilarBusinessCard({
   const [imgError, setImgError] = React.useState(false);
   const [usingFallback, setUsingFallback] = React.useState(false);
 
-  // Use canonical subcategory slug so each card gets the correct category placeholder (not default)
-  const placeholderSrc = getCategoryPlaceholder(subInterestId ?? category);
+  // Use canonical subcategory slug (sub_interest_id → subInterestId → … → category) for placeholder
+  const categorySlug = getCategorySlugFromBusiness({ sub_interest_id, subInterestId, category });
+  const placeholderSrc = getCategoryPlaceholder(categorySlug || undefined);
 
   const rawImage = (uploaded_images && uploaded_images.length > 0 && !isPlaceholderImage(uploaded_images[0]) ? uploaded_images[0] : null)
     || (image_url && !isPlaceholderImage(image_url) ? image_url : null)
@@ -261,7 +265,7 @@ function SimilarBusinessCard({
         {(location || address) && (
           <div className="flex items-center gap-1.5 text-xs text-charcoal/60 mt-1">
             {(() => {
-              const CategoryIcon = getCategoryIcon(category, subInterestId, subInterestLabel);
+              const CategoryIcon = getCategoryIcon(category, categorySlug || subInterestId, subInterestLabel);
               return (
                 <div className="w-8 h-8 rounded-full bg-navbar-bg/50 flex items-center justify-center flex-shrink-0">
                   <CategoryIcon className="w-4 h-4 text-white/80" strokeWidth={2.5} />

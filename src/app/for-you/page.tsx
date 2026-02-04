@@ -20,6 +20,39 @@ type PreferencesFetchResult = {
   ok: boolean;
 };
 
+async function fetchJsonWithTimeout<T>(
+  url: string,
+  options: { cookieHeader: string; timeoutMs: number }
+): Promise<{ ok: true; status: number; data: T } | { ok: false; status: number; error: string }> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), Math.max(1, options.timeoutMs));
+
+  try {
+    const response = await fetch(url, {
+      headers: options.cookieHeader ? { cookie: options.cookieHeader } : undefined,
+      cache: "no-store",
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      return { ok: false, status: response.status, error: `HTTP ${response.status}` };
+    }
+
+    const data = (await response.json()) as T;
+    return { ok: true, status: response.status, data };
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.name === "AbortError"
+          ? `Timeout after ${options.timeoutMs}ms`
+          : error.message
+        : "Fetch failed";
+    return { ok: false, status: 0, error: message };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function getBaseUrl() {
   const headerList = await headers();
   const host = headerList.get("x-forwarded-host") ?? headerList.get("host");
@@ -38,16 +71,21 @@ async function buildCookieHeader() {
 
 async function fetchPreferences(baseUrl: string, cookieHeader: string): Promise<PreferencesFetchResult> {
   try {
-    const response = await fetch(`${baseUrl}/api/user/preferences`, {
-      headers: cookieHeader ? { cookie: cookieHeader } : undefined,
-      cache: "no-store",
+    const res = await fetchJsonWithTimeout<{
+      interests?: Array<{ id: string; name: string }>;
+      subcategories?: Array<{ id: string; name: string }>;
+      dealbreakers?: Array<{ id: string; name: string }>;
+    }>(`${baseUrl}/api/user/preferences`, {
+      cookieHeader,
+      // If this times out, we can still render and let /api/businesses resolve prefs server-side.
+      timeoutMs: 5000,
     });
 
-    if (!response.ok) {
+    if (!res.ok) {
       return { preferences: EMPTY_PREFERENCES, ok: false };
     }
 
-    const data = await response.json();
+    const data = res.data;
     return {
       preferences: {
         interests: data?.interests ?? [],
@@ -61,6 +99,8 @@ async function fetchPreferences(baseUrl: string, cookieHeader: string): Promise<
   }
 }
 
+// If this page ever fetches multiple APIs in parallel (e.g. featured + trending),
+// use Promise.allSettled() so one timeout doesn't make all sections empty.
 export default async function ForYouPage() {
   const baseUrl = await getBaseUrl();
   const cookieHeader = await buildCookieHeader();
@@ -87,16 +127,20 @@ export default async function ForYouPage() {
 
   const businessesResult = await (async (): Promise<BusinessesFetchResult> => {
     try {
-      const response = await fetch(`${baseUrl}/api/businesses?${params.toString()}`, {
-        headers: cookieHeader ? { cookie: cookieHeader } : undefined,
-        cache: "no-store",
+      const res = await fetchJsonWithTimeout<{
+        businesses?: Business[];
+        data?: Business[];
+      }>(`${baseUrl}/api/businesses?${params.toString()}`, {
+        cookieHeader,
+        // Stabilize SSR: 8s+ renders are common; short timeouts caused empty sections (TimeoutError).
+        timeoutMs: 18000,
       });
 
-      if (!response.ok) {
-        return { businesses: [], error: `Failed to load businesses (${response.status})` };
+      if (!res.ok) {
+        return { businesses: [], error: `Failed to load businesses (${res.status || "fetch"})` };
       }
 
-      const data = await response.json();
+      const data = res.data;
       const businesses = data?.businesses ?? data?.data ?? [];
       return { businesses, error: null };
     } catch (error) {

@@ -47,6 +47,8 @@ export interface UseFeaturedBusinessesResult {
   featuredBusinesses: FeaturedBusiness[];
   loading: boolean;
   error: string | null;
+  /** HTTP status when error is set. Helps UI show status so count 0 doesn't hide the problem. */
+  statusCode: number | null;
   refetch: () => void;
   meta?: FeaturedBusinessesMeta | null;
 }
@@ -66,6 +68,7 @@ export function useFeaturedBusinesses(options: UseFeaturedBusinessesOptions = {}
   const [featuredBusinesses, setFeaturedBusinesses] = useState<FeaturedBusiness[]>([]);
   const [loading, setLoading] = useState(!options.skip);
   const [error, setError] = useState<string | null>(null);
+  const [statusCode, setStatusCode] = useState<number | null>(null);
   const [meta, setMeta] = useState<FeaturedBusinessesMeta | null>(null);
 
   const fetchFeaturedBusinesses = useCallback(async () => {
@@ -73,6 +76,7 @@ export function useFeaturedBusinesses(options: UseFeaturedBusinessesOptions = {}
 
     setLoading(true);
     setError(null);
+    setStatusCode(null);
 
     try {
       const params = new URLSearchParams();
@@ -82,7 +86,18 @@ export function useFeaturedBusinesses(options: UseFeaturedBusinessesOptions = {}
       const response = await fetch(`/api/featured?${params.toString()}`);
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch featured businesses: ${response.status}`);
+        let message = `Failed to fetch featured businesses: ${response.status}`;
+        try {
+          const body = await response.json();
+          message = body?.error || message;
+        } catch {
+          // keep message
+        }
+        setStatusCode(response.status);
+        setError(`${response.status}: ${message}`);
+        setFeaturedBusinesses([]);
+        setMeta(null);
+        return;
       }
 
       const data = await response.json();
@@ -95,6 +110,7 @@ export function useFeaturedBusinesses(options: UseFeaturedBusinessesOptions = {}
       }
     } catch (err) {
       console.error('Error fetching featured businesses:', err);
+      setStatusCode(null);
       setError(err instanceof Error ? err.message : 'Unknown error');
       setFeaturedBusinesses([]);
       setMeta(null);
@@ -115,6 +131,7 @@ export function useFeaturedBusinesses(options: UseFeaturedBusinessesOptions = {}
     featuredBusinesses,
     loading,
     error,
+    statusCode,
     refetch,
     meta,
   };

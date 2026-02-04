@@ -314,7 +314,7 @@ export function useEvents(options: UseEventsOptions = {}): UseEventsResult {
     abortControllerRef.current = abortController;
 
     // Use a single controller for both deduplication and timeout
-    const timeoutId = setTimeout(() => abortController.abort(), 8000);
+    const timeoutId = setTimeout(() => abortController.abort(), 15_000);
 
     try {
       setLoading(true);
@@ -428,7 +428,7 @@ export function useEvents(options: UseEventsOptions = {}): UseEventsResult {
           return;
         }
         // Otherwise this was a timeout — log it but don't block rendering
-        console.warn('[useEvents] Request timed out after 8s');
+        console.warn('[useEvents] Request timed out after 15s');
         setLoading(false);
         return;
       }
@@ -610,9 +610,9 @@ export function useEventsWithGlobalConsolidation(
       if (search) params.set('search', search);
       params.set('upcoming', upcoming.toString());
 
-      // Add timeout to ensure response within 5 seconds (longer for accumulator)
+      // Add timeout to ensure response within 12 seconds (accumulator)
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const timeoutId = setTimeout(() => controller.abort(), 12_000);
 
       const response = await fetch(`/api/events?${params.toString()}`, {
         signal: controller.signal,
