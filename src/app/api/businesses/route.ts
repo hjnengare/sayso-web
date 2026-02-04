@@ -40,29 +40,16 @@ async function fetchUserPreferences(
   }
 
   try {
-    // Fetch interests
-    const { data: interestsData } = await supabase
-      .from('user_interests')
-      .select('interest_id')
-      .eq('user_id', userId);
-    
-    const interestIds = (interestsData || []).map(i => i.interest_id);
+    // Fetch all preference types in parallel for speed
+    const [interestsResult, subcategoriesResult, dealbreakersResult] = await Promise.all([
+      supabase.from('user_interests').select('interest_id').eq('user_id', userId),
+      supabase.from('user_subcategories').select('subcategory_id').eq('user_id', userId),
+      supabase.from('user_dealbreakers').select('dealbreaker_id').eq('user_id', userId),
+    ]);
 
-    // Fetch subcategories
-    const { data: subcategoriesData } = await supabase
-      .from('user_subcategories')
-      .select('subcategory_id')
-      .eq('user_id', userId);
-    
-    const subcategoryIds = (subcategoriesData || []).map(s => s.subcategory_id);
-
-    // Fetch deal breakers
-    const { data: dealbreakersData } = await supabase
-      .from('user_dealbreakers')
-      .select('dealbreaker_id')
-      .eq('user_id', userId);
-    
-    const dealbreakerIds = (dealbreakersData || []).map(d => d.dealbreaker_id);
+    const interestIds = (interestsResult.data || []).map(i => i.interest_id);
+    const subcategoryIds = (subcategoriesResult.data || []).map(s => s.subcategory_id);
+    const dealbreakerIds = (dealbreakersResult.data || []).map(d => d.dealbreaker_id);
 
     return {
       interestIds,
@@ -309,32 +296,6 @@ export async function GET(req: Request) {
       } : null,
     });
 
-    // RLS truth test - check visible businesses count
-    const countStart = Date.now();
-    const { count: visibleCount, error: countError } = await supabase
-      .from('businesses')
-      .select('id', { head: true, count: 'exact' })
-      .eq('status', 'active');
-    console.log('[BUSINESSES API] Visible count duration ms:', Date.now() - countStart);
-    
-    console.log('[BUSINESSES API] Visible businesses count (RLS truth test):', {
-      count: visibleCount,
-      error: countError ? {
-        message: countError.message,
-        code: countError.code,
-        details: countError.details,
-      } : null,
-      isAnon: !serverUser,
-      isAuthenticated: !!serverUser,
-    });
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-
-    if (visibleCount === 0 && !countError) {
-      console.warn('⚠️ [BUSINESSES API] WARNING: RLS returned 0 businesses but no error!');
-      console.warn('⚠️ This suggests RLS policies are blocking reads.');
-      console.warn('⚠️ Check: businesses_select_public_and_owners policy exists and allows public reads');
-    }
-
     const requestUrl = req?.url ?? `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/businesses`;
     const { searchParams } = new URL(requestUrl);
 
@@ -356,28 +317,12 @@ export async function GET(req: Request) {
     const interestIds = interestIdsParam
       ? interestIdsParam.split(',').map(id => id.trim()).filter(Boolean)
       : [];
-    
+
     // Sub-interest (subcategory) filtering
     const subInterestIdsParam = searchParams.get('sub_interest_ids');
     const subInterestIds = subInterestIdsParam
       ? subInterestIdsParam.split(',').map(id => id.trim()).filter(Boolean)
       : [];
-    
-    // Map interests to subcategories (legacy mapping, kept for backward compatibility)
-    let subcategoriesToFilter: string[] = [];
-    if (interestIds.length > 0) {
-      for (const interestId of interestIds) {
-        const subcats = INTEREST_TO_SUBCATEGORIES[interestId];
-        if (subcats) {
-          subcategoriesToFilter.push(...subcats);
-        }
-      }
-    }
-    console.log('[BUSINESSES API] Interest/subcategory filtering:', {
-      interests: interestIds,
-      subInterestIds: subInterestIds,
-      mappedSubcategories: subcategoriesToFilter,
-    });
 
     // Enhanced search parameters with synonym expansion
     // Support both 'q' (new) and 'search' (backward compatible)
@@ -387,7 +332,6 @@ export async function GET(req: Request) {
     const search = expandedQuery; // Keep for backward compatibility
 
     // Enhanced location parameters
-    // Support both 'lat'/'lng' (new) and existing 'lat'/'lng' params
     const latParam = searchParams.get('lat');
     const lngParam = searchParams.get('lng');
     const lat = latParam ? parseFloat(latParam) : null;
@@ -395,12 +339,10 @@ export async function GET(req: Request) {
     const radiusKm = searchParams.get('radius_km') ? parseFloat(searchParams.get('radius_km')!) : null;
 
     // Enhanced sorting parameters
-    // New 'sort' param: 'relevance', 'distance', 'rating_desc', 'price_asc', 'combo'
-    // Backward compatible with 'sort_by' and 'sort_order'
     const sortParam = searchParams.get('sort');
     let sortBy = searchParams.get('sort_by') || 'created_at';
     let sortOrder = searchParams.get('sort_order') || 'desc';
-    
+
     // Map new 'sort' param to sortBy/sortOrder
     if (sortParam) {
       switch (sortParam) {
@@ -449,7 +391,44 @@ export async function GET(req: Request) {
     // Legacy location parameters (keep for backward compatibility)
     const radius = searchParams.get('radius') ? parseFloat(searchParams.get('radius')!) : (radiusKm || 10);
 
+    // Map interests to subcategories (legacy mapping, kept for backward compatibility)
+    const subcategoriesToFilter: string[] = [];
+    if (interestIds.length > 0) {
+      for (const interestId of interestIds) {
+        const subcats = INTEREST_TO_SUBCATEGORIES[interestId];
+        if (subcats) {
+          subcategoriesToFilter.push(...subcats);
+        }
+      }
+    }
+
     if (feedStrategy === 'mixed') {
+      // Server-side preference resolution: if the client didn't pass
+      // interest/subcategory IDs but we have an authenticated user,
+      // fetch them here so the client doesn't have to wait for a
+      // separate preferences API call before requesting the feed.
+      let resolvedInterestIds = interestIds;
+      let resolvedSubInterestIds = subInterestIds.length > 0 ? subInterestIds : subcategoriesToFilter;
+      let resolvedDealbreakerIds = dealbreakerIds;
+
+      if (userId && interestIds.length === 0 && subInterestIds.length === 0) {
+        const prefsStart = Date.now();
+        const userPrefs = await fetchUserPreferences(supabase, userId);
+        console.log('[BUSINESSES API] Server-side prefs fetch ms:', Date.now() - prefsStart);
+        resolvedInterestIds = userPrefs.interestIds;
+        resolvedDealbreakerIds = dealbreakerIds.length > 0 ? dealbreakerIds : userPrefs.dealbreakerIds;
+
+        // Map resolved interests to subcategories for broader matching
+        const mappedSubcategories: string[] = [];
+        for (const iid of resolvedInterestIds) {
+          const subcats = INTEREST_TO_SUBCATEGORIES[iid];
+          if (subcats) mappedSubcategories.push(...subcats);
+        }
+        resolvedSubInterestIds = userPrefs.subcategoryIds.length > 0
+          ? userPrefs.subcategoryIds
+          : mappedSubcategories;
+      }
+
       // Use the Netflix-style two-stage recommender (V2)
       const response = await handleMixedFeedV2({
         supabase,
@@ -461,16 +440,30 @@ export async function GET(req: Request) {
         preferredPriceRanges,
         location,
         minRating,
-        interestIds,
-        subInterestIds: subInterestIds.length > 0 ? subInterestIds : subcategoriesToFilter,
-        dealbreakerIds,
+        interestIds: resolvedInterestIds,
+        subInterestIds: resolvedSubInterestIds,
+        dealbreakerIds: resolvedDealbreakerIds,
         sortBy,
         sortOrder,
         latitude: lat,
         longitude: lng,
-        userId, // Pass userId for impression tracking and repetition suppression
+        userId,
       });
       return withDuration(response);
+    }
+
+    // =============================================
+    // RLS TRUTH TEST (standard feed only — mixed feed skips this)
+    // =============================================
+    const countStart = Date.now();
+    const { count: visibleCount, error: countError } = await supabase
+      .from('businesses')
+      .select('id', { head: true, count: 'exact' })
+      .eq('status', 'active');
+    console.log('[BUSINESSES API] Visible count duration ms:', Date.now() - countStart);
+
+    if (visibleCount === 0 && !countError) {
+      console.warn('[BUSINESSES API] RLS returned 0 businesses — check policies');
     }
 
     // Try to use the optimized RPC function for listing, fallback to regular query

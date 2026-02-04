@@ -38,55 +38,30 @@ export async function GET() {
 
     console.log('[Preferences API] Fetching preferences for user:', user.id);
 
-    // Fetch user's interests - handle gracefully if table doesn't exist
-    let interestIds: string[] = [];
-    const { data: interestsData, error: interestsError } = await supabase
-      .from('user_interests')
-      .select('interest_id')
-      .eq('user_id', user.id);
+    // Fetch all preference types in parallel for speed
+    const [interestsResult, subcategoriesResult, dealbreakersResult] = await Promise.all([
+      supabase.from('user_interests').select('interest_id').eq('user_id', user.id),
+      supabase.from('user_subcategories').select('subcategory_id').eq('user_id', user.id),
+      supabase.from('user_dealbreakers').select('dealbreaker_id').eq('user_id', user.id),
+    ]);
 
-    console.log('[Preferences API] user_interests query result:', {
-      hasData: !!interestsData,
-      dataLength: interestsData?.length || 0,
-      data: interestsData,
-      error: interestsError?.message,
-    });
+    const { data: interestsData, error: interestsError } = interestsResult;
+    const { data: subcategoriesData, error: subcategoriesError } = subcategoriesResult;
+    const { data: dealbreakersData, error: dealbreakersError } = dealbreakersResult;
 
     if (interestsError) {
       console.warn('[Preferences API] Warning fetching interests:', interestsError.message);
-      // Don't throw - table might not exist yet
-    } else if (interestsData) {
-      interestIds = interestsData.map(i => i.interest_id);
-      console.log('[Preferences API] Extracted interest IDs:', interestIds);
     }
-
-    // Fetch user's subcategories
-    let subcategoryIds: string[] = [];
-    const { data: subcategoriesData, error: subcategoriesError } = await supabase
-      .from('user_subcategories')
-      .select('subcategory_id')
-      .eq('user_id', user.id);
-
     if (subcategoriesError) {
       console.warn('[Preferences API] Warning fetching subcategories:', subcategoriesError.message);
-      // Don't throw - table might not exist yet
-    } else if (subcategoriesData) {
-      subcategoryIds = subcategoriesData.map(s => s.subcategory_id);
     }
-
-    // Fetch user's deal-breakers
-    let dealbreakersIds: string[] = [];
-    const { data: dealbreakersData, error: dealbreakersError } = await supabase
-      .from('user_dealbreakers')
-      .select('dealbreaker_id')
-      .eq('user_id', user.id);
-
     if (dealbreakersError) {
       console.warn('[Preferences API] Warning fetching dealbreakers:', dealbreakersError.message);
-      // Don't throw - table might not exist yet
-    } else if (dealbreakersData) {
-      dealbreakersIds = dealbreakersData.map(d => d.dealbreaker_id);
     }
+
+    const interestIds = interestsData ? interestsData.map(i => i.interest_id) : [];
+    const subcategoryIds = subcategoriesData ? subcategoriesData.map(s => s.subcategory_id) : [];
+    const dealbreakersIds = dealbreakersData ? dealbreakersData.map(d => d.dealbreaker_id) : [];
 
     // Return preferences as IDs only - catalog tables don't exist
     // The frontend can map IDs to names using hardcoded lists if needed

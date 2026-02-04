@@ -72,8 +72,9 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get('search')?.trim();
     const upcoming = searchParams.get('upcoming') !== 'false'; // Default to true
 
-    // Optimize query - select all fields from ticketmaster_events table
-    // Include raw_data for attraction/venue ID extraction (needed for event consolidation)
+    // Optimize query - select only fields needed for display
+    // Extract attraction_id and venue_id server-side from raw_data to avoid
+    // sending large JSON blobs to the client (raw_data can be 5-50KB per event)
     let query = supabase
       .from('ticketmaster_events')
       .select('id, ticketmaster_id, title, description, type, start_date, end_date, location, city, country, venue_name, venue_address, image_url, url, price_range, classification, segment, genre, sub_genre, raw_data', { count: 'estimated' })
@@ -122,8 +123,31 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // Extract attraction_id and venue_id from raw_data server-side,
+    // then strip raw_data to keep the response payload small
+    const processedEvents = (events || []).map((evt: any) => {
+      const rawData = evt.raw_data;
+      let attraction_id: string | null = null;
+      let venue_id: string | null = null;
+
+      if (rawData) {
+        const attractions = rawData._embedded?.attractions;
+        if (attractions && Array.isArray(attractions) && attractions.length > 0) {
+          attraction_id = attractions[0].id || null;
+        }
+        const venues = rawData._embedded?.venues;
+        if (venues && Array.isArray(venues) && venues.length > 0) {
+          venue_id = venues[0].id || null;
+        }
+      }
+
+      // Return event without raw_data, with extracted IDs
+      const { raw_data: _, ...eventWithoutRawData } = evt;
+      return { ...eventWithoutRawData, attraction_id, venue_id };
+    });
+
     const response = {
-      events: events || [],
+      events: processedEvents,
       count: count || 0,
       limit,
       offset,

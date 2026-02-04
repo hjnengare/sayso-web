@@ -61,7 +61,7 @@ function PercentileChipsSection({
       </div>
 
       {/* Metrics Grid */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
         {metrics.map((metric, index) => {
           const Icon = metric.icon;
           const isPlaceholder = metric.value === 0;
@@ -102,7 +102,7 @@ function PercentileChipsSection({
                 </span>
               )}
               <div className="text-center">
-                <p className="text-xs font-medium text-charcoal/70 line-clamp-2 h-5">
+                <p className="text-xs font-medium text-charcoal/70 leading-snug">
                   {metric.label}
                 </p>
                 <p

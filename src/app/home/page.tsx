@@ -444,8 +444,8 @@ export default function Home() {
                   exit={{ opacity: 0, y: -20, transition: { duration: 0.25, ease: [0.4, 0, 0.2, 1] } }}
                   className="flex flex-col gap-8 sm:gap-10 md:gap-12 pt-8"
                 >
-                  {/* For You Section - Only show when NOT filtered, NOT searching, AND prefs are ready */}
-                  {!isFiltered && !prefsLoading && (
+                  {/* For You Section - Only show when NOT filtered */}
+                  {!isFiltered && (
                     <div className="relative z-10 snap-start">
                       {isGuestMode ? (
                         /* Guest Mode: Show Locked For You Section */
@@ -505,13 +505,6 @@ export default function Home() {
                           )}
                         </>
                       )}
-                    </div>
-                  )}
-                  
-                  {/* Show skeleton while prefs are loading */}
-                  {!isFiltered && prefsLoading && (
-                    <div className="relative z-10 snap-start">
-                      <BusinessRowSkeleton title="For You Now" />
                     </div>
                   )}
 
