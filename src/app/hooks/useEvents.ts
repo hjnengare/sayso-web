@@ -337,9 +337,19 @@ export function useEvents(options: UseEventsOptions = {}): UseEventsResult {
       if (!response.ok) {
         const message = `Failed to fetch events: ${response.statusText}`;
         if (!abortController.signal.aborted) {
+          // 404 usually means events API not available (e.g. route not registered); fail softly
+          if (response.status === 404) {
+            console.warn('[useEvents] Events API not found (404). Showing empty list.');
+            setEvents([]);
+            setCount(0);
+            setError(null);
+            setLoading(false);
+            return;
+          }
           setError(message);
           console.error('[useEvents] Error:', message);
         }
+        setLoading(false);
         return;
       }
 
@@ -623,8 +633,15 @@ export function useEventsWithGlobalConsolidation(
       if (!response.ok) {
         const message = `Failed to fetch events: ${response.statusText}`;
         if (!abortController.signal.aborted) {
-          setError(message);
-          console.error('[useEventsAccumulator] Error:', message);
+          if (response.status === 404) {
+            console.warn('[useEventsAccumulator] Events API not found (404). Showing empty list.');
+            setRawEvents([]);
+            setTotalCount(0);
+            setError(null);
+          } else {
+            setError(message);
+            console.error('[useEventsAccumulator] Error:', message);
+          }
         }
         return;
       }

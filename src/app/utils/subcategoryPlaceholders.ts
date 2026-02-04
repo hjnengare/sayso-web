@@ -337,7 +337,6 @@ export const SUBCATEGORY_PLACEHOLDER_MAP: Record<CanonicalSubcategorySlug, strin
   "pet-services": `${P}/family-pets/pet-services.jpg`,
   childcare: `${P}/family-pets/childcare.jpg`,
   veterinarians: `${P}/family-pets/veterinarians.jpg`,
-  veterina
 
   // Shopping & Lifestyle
   fashion: `${P}/shopping-lifestyle/fashion-clothing.jpg`,

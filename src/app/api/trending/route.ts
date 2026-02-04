@@ -106,6 +106,8 @@ export async function GET(request: NextRequest) {
       const primaryImage = images.find((img) => img.is_primary) || images[0];
       const uploadedImageUrls = images.map((img) => img.url).filter(Boolean);
       const displayCategory = getCategoryLabelFromBusiness(business) || 'Miscellaneous';
+      const lat = business.lat ?? business.latitude ?? null;
+      const lng = business.lng ?? business.longitude ?? null;
 
       return {
         id: business.id,
@@ -117,6 +119,8 @@ export async function GET(request: NextRequest) {
         category: displayCategory,
         sub_interest_id: business.sub_interest_id ?? undefined,
         location: business.location,
+        lat,
+        lng,
         rating: business.average_rating > 0 ? Math.round(business.average_rating * 2) / 2 : undefined,
         totalRating: business.average_rating > 0 ? business.average_rating : undefined,
         reviews: business.total_reviews || 0,

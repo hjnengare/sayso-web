@@ -20,6 +20,7 @@ import { Loader } from "../components/Loader/Loader";
 import { usePredefinedPageTitle } from "../hooks/usePageTitle";
 import BusinessGridSkeleton from "../components/Explore/BusinessGridSkeleton";
 import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
+import { sortBusinessesByPriority } from "../utils/businessPrioritization";
 
 
 // Note: dynamic and revalidate cannot be exported from client components
@@ -85,10 +86,13 @@ export default function TrendingPage() {
   });
 
   // Pick the active result set
-  const trendingBusinesses = isSearching ? searchResults : trendingResults;
+  const rawBusinesses = isSearching ? searchResults : trendingResults;
   const loading = isSearching ? searchLoading : trendingLoading;
   const error = isSearching ? searchError : trendingError;
   const refetch = isSearching ? refetchSearch : refetchTrending;
+
+  // Apply tiered prioritization: Tier 1 (canonical) → Tier 2 (interest) → Tier 3 (misc)
+  const trendingBusinesses = useMemo(() => sortBusinessesByPriority(rawBusinesses), [rawBusinesses]);
 
   const totalPages = useMemo(() => Math.ceil(trendingBusinesses.length / ITEMS_PER_PAGE), [trendingBusinesses.length]);
   const currentBusinesses = useMemo(() => {
@@ -97,15 +101,21 @@ export default function TrendingPage() {
     return trendingBusinesses.slice(startIndex, endIndex);
   }, [trendingBusinesses, currentPage]);
 
-  // Convert businesses to map format (filter out null coords)
+  // Convert all businesses to map format (filter out null coords)
+  // Map shows ALL businesses, not just current page
   const mapBusinesses = useMemo((): BusinessMapItem[] => {
     return trendingBusinesses
-      .filter(b => b.lat != null && b.lng != null)
-      .map(b => ({
+      .map((b) => {
+        const lat = (b as any).lat ?? (b as any).latitude ?? null;
+        const lng = (b as any).lng ?? (b as any).longitude ?? null;
+        return { b, lat, lng };
+      })
+      .filter(({ lat, lng }) => lat != null && lng != null)
+      .map(({ b, lat, lng }) => ({
         id: b.id,
         name: b.name,
-        lat: b.lat!,
-        lng: b.lng!,
+        lat: lat as number,
+        lng: lng as number,
         category: b.category,
         image_url: b.image_url,
         slug: b.slug,

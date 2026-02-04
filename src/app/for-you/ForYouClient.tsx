@@ -24,6 +24,7 @@ import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
 import type { Business } from "../components/BusinessCard/BusinessCard";
 import type { UserPreferences } from "../hooks/useUserPreferences";
 import type { BusinessMapItem } from "../components/maps/BusinessesMap";
+import { sortBusinessesByPriority } from "../utils/businessPrioritization";
 
 
 // Note: dynamic and revalidate cannot be exported from client components
@@ -165,37 +166,49 @@ export default function ForYouClient({
   // Note: Prioritization of recently reviewed businesses is now handled on the backend
   // The API automatically prioritizes businesses the user has reviewed within the last 24 hours
 
+  // Apply tiered prioritization: Tier 1 (canonical + images) → Tier 2 (interest) → Tier 3 (misc)
+  // This ensures well-classified businesses appear first, with Miscellaneous as discoverable long-tail
+  const prioritizedBusinesses = useMemo(() => sortBusinessesByPriority(businesses), [businesses]);
+  const prioritizedSearchResults = useMemo(() => sortBusinessesByPriority(searchResults), [searchResults]);
+
   const totalPages = useMemo(() => {
-    const businessesToCount = isSearchActive ? searchResults : businesses;
+    const businessesToCount = isSearchActive ? prioritizedSearchResults : prioritizedBusinesses;
     return Math.ceil(businessesToCount.length / ITEMS_PER_PAGE);
-  }, [businesses.length, searchResults.length, isSearchActive, ITEMS_PER_PAGE]);
+  }, [prioritizedBusinesses.length, prioritizedSearchResults.length, isSearchActive, ITEMS_PER_PAGE]);
 
   const currentBusinesses = useMemo(() => {
-    const businessesToPaginate = isSearchActive ? searchResults : businesses;
+    const businessesToPaginate = isSearchActive ? prioritizedSearchResults : prioritizedBusinesses;
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     const endIndex = startIndex + ITEMS_PER_PAGE;
     return businessesToPaginate.slice(startIndex, endIndex);
-  }, [businesses, searchResults, currentPage, isSearchActive, ITEMS_PER_PAGE]);
+  }, [prioritizedBusinesses, prioritizedSearchResults, currentPage, isSearchActive, ITEMS_PER_PAGE]);
 
   const totalCount = useMemo(() => {
-    return isSearchActive ? searchResults.length : businesses.length;
-  }, [businesses.length, searchResults.length, isSearchActive]);
+    return isSearchActive ? prioritizedSearchResults.length : prioritizedBusinesses.length;
+  }, [prioritizedBusinesses.length, prioritizedSearchResults.length, isSearchActive]);
 
-  // Convert businesses to map format (filter out null coords) — use lat/lng only
-  // ✅ Same as trending: use currentBusinesses so map shows only current page items
+  // Convert all businesses to map format (filter out null coords) — use lat/lng only
+  // Map shows ALL businesses from the full result set, not just current page
+  // Uses prioritized lists to maintain consistent ordering with list view
   const mapBusinesses = useMemo((): BusinessMapItem[] => {
-    return currentBusinesses
-      .filter((b) => b.lat != null && b.lng != null)
-      .map((b) => ({
+    const businessesToMap = isSearchActive ? prioritizedSearchResults : prioritizedBusinesses;
+    return businessesToMap
+      .map((b) => {
+        const lat = (b as any).lat ?? (b as any).latitude ?? null;
+        const lng = (b as any).lng ?? (b as any).longitude ?? null;
+        return { b, lat, lng };
+      })
+      .filter(({ lat, lng }) => lat != null && lng != null)
+      .map(({ b, lat, lng }) => ({
         id: b.id,
         name: b.name,
-        lat: b.lat!,
-        lng: b.lng!,
+        lat: lat as number,
+        lng: lng as number,
         category: b.category,
         image_url: b.image_url,
         slug: b.slug,
       }));
-  }, [currentBusinesses]);
+  }, [prioritizedBusinesses, prioritizedSearchResults, isSearchActive]);
 
   const handleClearFilters = () => {
     // ✅ Reset filter state - return to default mode
