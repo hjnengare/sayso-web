@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSupabase } from '@/app/lib/supabase/server';
 import { getServiceSupabase } from '@/app/lib/admin';
+import { getCategoryLabelFromBusiness } from '@/app/utils/subcategoryPlaceholders';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -99,10 +100,12 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform to the card shape expected by BusinessRow / BusinessCard
+    // Display category from sub_interest_id first (canonical slug), else category
     const transformed = businesses.map((business: any) => {
       const images = imagesByBusinessId[business.id] || [];
       const primaryImage = images.find((img) => img.is_primary) || images[0];
       const uploadedImageUrls = images.map((img) => img.url).filter(Boolean);
+      const displayCategory = getCategoryLabelFromBusiness(business) || 'Miscellaneous';
 
       return {
         id: business.id,
@@ -111,7 +114,8 @@ export async function GET(request: NextRequest) {
         image_url: primaryImage?.url || business.image_url || business.uploaded_image || null,
         uploaded_images: uploadedImageUrls,
         alt: primaryImage?.alt_text || business.name,
-        category: business.category,
+        category: displayCategory,
+        sub_interest_id: business.sub_interest_id ?? undefined,
         location: business.location,
         rating: business.average_rating > 0 ? Math.round(business.average_rating * 2) / 2 : undefined,
         totalRating: business.average_rating > 0 ? business.average_rating : undefined,

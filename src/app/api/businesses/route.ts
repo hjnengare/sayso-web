@@ -1156,12 +1156,13 @@ export async function HEAD(req: Request) {
       );
     }
 
-    // Transform to card format
+    // Transform to card format; display category from sub_interest_id first (canonical slug)
     const transformedBusinesses = (data || []).map((business: any) => ({
       id: business.id,
       name: business.name,
       image: business.image_url || (business.uploaded_images && business.uploaded_images.length > 0 ? business.uploaded_images[0] : null),
-      category: business.category,
+      category: business.sub_interest_id ? getSubcategoryLabel(business.sub_interest_id) : (getSubcategoryLabel(business.category) ?? business.category),
+      sub_interest_id: business.sub_interest_id ?? undefined,
       location: business.location,
       rating: business.average_rating > 0 ? Math.round(business.average_rating * 2) / 2 : undefined,
       totalRating: business.average_rating > 0 ? business.average_rating : undefined,
@@ -1774,8 +1775,30 @@ async function handleMixedFeedLegacy(options: MixedFeedOptions) {
   const prioritizeStart = Date.now();
   const prioritizedBlended = await prioritizeRecentlyReviewedBusinesses(supabase, blended);
   console.log('[BUSINESSES API] Legacy prioritize duration ms:', Date.now() - prioritizeStart);
-  
-  const transformedBusinesses = prioritizedBlended.map(transformBusinessForCard);
+
+  // Diversity cap: prefer one per subcategory so we don't flood with one category (e.g. fashion)
+  const usedSubcategories = new Set<string>();
+  const diversified: typeof prioritizedBlended = [];
+  for (const b of prioritizedBlended) {
+    const key = (b.sub_interest_id ?? b.category ?? 'misc').toString();
+    if (!usedSubcategories.has(key)) {
+      diversified.push(b);
+      usedSubcategories.add(key);
+    }
+    if (diversified.length >= limit) break;
+  }
+  // Fill remainder from rest of list if we have room (after diversity cap)
+  if (diversified.length < limit) {
+    const diversifiedIds = new Set(diversified.map((x) => x.id));
+    for (const b of prioritizedBlended) {
+      if (diversified.length >= limit) break;
+      if (diversifiedIds.has(b.id)) continue;
+      diversified.push(b);
+      diversifiedIds.add(b.id);
+    }
+  }
+
+  const transformedBusinesses = diversified.map(transformBusinessForCard);
 
   // =============================================
   // STEP 4: Check if blended > 0 but final = 0
@@ -2323,16 +2346,23 @@ function transformBusinessForCard(business: BusinessRPCResult) {
     transformLog.status = 'transformed';
   }
 
+  // When sub_interest_id is missing, use DB category as label if slug lookup returns "Miscellaneous"
+  const fromCategorySlug = business.category ? getSubcategoryLabel(business.category) : "Miscellaneous";
+  const displayCategory =
+    subInterestLabel ??
+    (fromCategorySlug !== "Miscellaneous" ? fromCategorySlug : (business.category?.trim() || "Miscellaneous"));
+
   const transformed = {
     id: business.id,
     name: business.name,
     image: displayImage,
     uploaded_images: business.uploaded_images || [], // Include uploaded_images array for BusinessCard component
     image_url: business.image_url || undefined, // Preserve image_url as fallback
-    category: subInterestLabel ?? getSubcategoryLabel(business.category) ?? business.category,
-    subInterestId: business.sub_interest_id || undefined,
-    subInterestLabel,
-    interestId: business.interest_id || undefined,
+    category: displayCategory,
+    sub_interest_id: business.sub_interest_id ?? undefined,
+    subInterestId: business.sub_interest_id ?? undefined,
+    subInterestLabel: subInterestLabel ?? (displayCategory !== "Miscellaneous" ? displayCategory : undefined),
+    interestId: business.interest_id ?? undefined,
     location: business.location,
     slug: business.slug || undefined,
     lat: business.lat,

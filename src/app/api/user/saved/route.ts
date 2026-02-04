@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSupabase } from '../../../lib/supabase/server';
 import { normalizeBusinessImages } from '../../../lib/utils/businessImages';
+import { getCategoryLabelFromBusiness } from '../../../utils/subcategoryPlaceholders';
 
 /**
  * GET /api/user/saved
@@ -151,13 +152,14 @@ export async function GET(req: Request) {
 
         // Normalize business_images to uploaded_images format
         const { uploaded_images, cover_image } = normalizeBusinessImages(business);
+        const displayCategory = getCategoryLabelFromBusiness(business);
 
         return {
           id: business.id,
           name: business.name,
           image: cover_image || (uploaded_images && uploaded_images.length > 0 ? uploaded_images[0] : null) || business.image_url || null,
-          alt: `${business.name} - ${business.category} in ${business.location}`,
-          category: business.category,
+          alt: `${business.name} - ${displayCategory} in ${business.location}`,
+          category: displayCategory,
           location: business.location,
           rating: averageRating 
             ? Math.round((averageRating * 2) / 2) 

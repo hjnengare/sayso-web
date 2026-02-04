@@ -6,6 +6,7 @@ import { Star, Trophy, MapPin, ImageIcon } from "lucide-react";
 import Image from "next/image";
 import { BusinessOfTheMonth } from "../../types/community";
 import { getCategoryPlaceholder, getCategoryPlaceholderFromLabels, isPlaceholderImage } from "../../utils/categoryToPngMapping";
+import { getCategorySlugFromBusiness } from "../../utils/subcategoryPlaceholders";
 
 interface BusinessLeaderboardItemProps {
   business: BusinessOfTheMonth;
@@ -30,8 +31,8 @@ function BusinessLeaderboardItem({ business, index, rank }: BusinessLeaderboardI
     }
   };
 
-  // Image fallback logic - matches BusinessCard pattern
-  const categoryKey = (business as any).subInterestId || (business as any).interestId || business.category || "default";
+  // Image fallback logic - matches BusinessCard pattern (sub_interest_id → subInterestId → … → category)
+  const categoryKey = getCategorySlugFromBusiness(business as any) || "default";
   const getDisplayImage = useMemo(() => {
     const uploadedImages = (business as any).uploaded_images;
     if (uploadedImages && Array.isArray(uploadedImages) && uploadedImages.length > 0) {

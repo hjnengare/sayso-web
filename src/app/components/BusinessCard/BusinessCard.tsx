@@ -11,8 +11,12 @@ import Tooltip from "../Tooltip/Tooltip";
 import { useSavedItems } from "../../contexts/SavedItemsContext";
 import { useToast } from "../../contexts/ToastContext";
 import { useAuth } from "../../contexts/AuthContext";
-import { getCategoryPlaceholder, getCategoryPlaceholderFromLabels, isPlaceholderImage } from "../../utils/categoryToPngMapping";
-import { getSubcategoryLabel } from "../../utils/subcategoryPlaceholders";
+import {
+  getCategoryLabelFromBusiness,
+  getCategorySlugFromBusiness,
+  getSubcategoryPlaceholderFromCandidates,
+  isPlaceholderImage,
+} from "../../utils/subcategoryPlaceholders";
 import BusinessCardImage from "./parts/BusinessCardImage";
 import BusinessCardCategory from "./parts/BusinessCardCategory";
 import BusinessCardActions from "./parts/BusinessCardActions";
@@ -35,8 +39,10 @@ type Business = {
   uploaded_images?: string[]; // Array of image URLs from uploaded_images field
   alt: string;
   category: string;
+  sub_interest_id?: string | null;
   subInterestId?: string;
   subInterestLabel?: string;
+  interest_id?: string | null;
   interestId?: string;
   location: string;
   rating?: number;
@@ -338,13 +344,22 @@ function BusinessCard({
 
   // Image fallback logic
 
-  const categoryKey = business.subInterestId || business.category || "default";
-  const displayCategoryLabel =
-    business.subInterestLabel ||
-    getSubcategoryLabel(business.subInterestId) ||
-    getSubcategoryLabel(business.category) ||
-    business.category ||
-    "Miscellaneous";
+  const categoryKey = getCategorySlugFromBusiness(business) || "default";
+  const displayCategoryLabel = getCategoryLabelFromBusiness(business);
+
+  if (process.env.NODE_ENV === "development") {
+    console.log("[CARD CATEGORY DEBUG]", {
+      id: business.id,
+      name: business.name,
+      sub_interest_id: (business as { sub_interest_id?: string }).sub_interest_id,
+      subInterestId: business.subInterestId,
+      interest_id: (business as { interest_id?: string }).interest_id,
+      interestId: business.interestId,
+      category: business.category,
+      categoryKey,
+      displayCategoryLabel,
+    });
+  }
 
   const getDisplayImage = useMemo(() => {
     // Priority 1: Check uploaded_images array (new source of truth)
@@ -375,21 +390,25 @@ function BusinessCard({
       return { image: business.image, isPlaceholder: false };
     }
 
-    // Priority 4: Subcategory placeholder photo
-    const placeholder = getCategoryPlaceholderFromLabels(
-      [business.subInterestId, business.subInterestLabel, business.category, categoryKey],
-      business.interestId
-    );
+    // Priority 4: Canonical subcategory placeholder only (no fuzzy/old mapping)
+    const placeholder = getSubcategoryPlaceholderFromCandidates([
+      (business as { sub_interest_id?: string }).sub_interest_id,
+      business.subInterestId,
+      (business as { sub_interest_slug?: string }).sub_interest_slug,
+      (business as { interest_id?: string }).interest_id,
+      business.interestId,
+      business.category,
+    ]);
     return { image: placeholder, isPlaceholder: true };
   }, [
     business.uploaded_images,
     business.image_url,
     business.image,
-    categoryKey,
+    (business as { sub_interest_id?: string }).sub_interest_id,
     business.subInterestId,
-    business.subInterestLabel,
-    business.category,
+    (business as { interest_id?: string }).interest_id,
     business.interestId,
+    business.category,
   ]);
 
   const displayImage = getDisplayImage.image;
@@ -511,9 +530,9 @@ function BusinessCard({
                 {/* Category with icon - Stacked layout */}
                 <div className="flex flex-col items-center gap-1.5 w-full">
                   <BusinessCardCategory
-                    category={business.category}
-                    subInterestId={business.subInterestId}
-                    subInterestLabel={business.subInterestLabel}
+                    category={displayCategoryLabel}
+                    subInterestId={categoryKey === "default" ? undefined : categoryKey}
+                    subInterestLabel={displayCategoryLabel}
                     displayCategoryLabel={displayCategoryLabel}
                   />
                   {/* Description - Stacked below category */}

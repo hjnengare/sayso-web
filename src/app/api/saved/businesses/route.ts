@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSupabase } from '../../../lib/supabase/server';
 import { normalizeBusinessImages } from '../../../lib/utils/businessImages';
+import { getCategoryLabelFromBusiness } from '../../../utils/subcategoryPlaceholders';
 
 type RouteContext = {
   params: Promise<{ id?: string }>;
@@ -174,12 +175,19 @@ export async function GET(req: NextRequest) {
 
         // Normalize business_images to uploaded_images format
         const { uploaded_images, cover_image, logo_url } = normalizeBusinessImages(business);
+        const displayCategory = (() => {
+          const hasSlug = !!(business.sub_interest_id || business.interest_id);
+          const rawCategory = typeof business.category === 'string' ? business.category.trim() : '';
+          const isMissingAll = !hasSlug && rawCategory.length === 0;
+          if (isMissingAll) return 'Uncategorized';
+          return getCategoryLabelFromBusiness(business);
+        })();
 
         return {
           id: business.id,
           name: business.name.trim(),
           description: business.description || null,
-          category: business.category || 'Uncategorized',
+          category: displayCategory,
           interest_id: business.interest_id,
           sub_interest_id: business.sub_interest_id,
           location: business.location || business.address || 'Location not available',

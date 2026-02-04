@@ -11,8 +11,12 @@ import Stars from "../Stars/Stars";
 import VerifiedBadge from "../VerifiedBadge/VerifiedBadge";
 import Tooltip from "../Tooltip/Tooltip";
 import { BusinessOfTheMonth } from "../../types/community";
-import { getCategoryPlaceholder, isPlaceholderImage } from "../../utils/categoryToPngMapping";
-import { getSubcategoryLabel } from "../../utils/subcategoryPlaceholders";
+import {
+  getCategoryLabelFromBusiness,
+  getCategorySlugFromBusiness,
+  getSubcategoryPlaceholderFromCandidates,
+  isPlaceholderImage,
+} from "../../utils/subcategoryPlaceholders";
 import { useSavedItems } from "../../contexts/SavedItemsContext";
 import { useToast } from "../../contexts/ToastContext";
 
@@ -87,9 +91,15 @@ export default function BusinessOfTheMonthCard({ business, index: _index = 0 }: 
       return { image: imageUrl, isPlaceholder: false };
     }
 
-    // Priority 3: Subcategory placeholder — use canonical slug so we get the correct image, not default
-    const categorySlug = (business as any).sub_interest_id ?? (business as any).subInterestId ?? business.category;
-    const placeholder = getCategoryPlaceholder(categorySlug);
+    // Priority 3: Canonical subcategory placeholder only (no old fuzzy mapping)
+    const b = business as any;
+    const placeholder = getSubcategoryPlaceholderFromCandidates([
+      b.sub_interest_id,
+      b.subInterestId,
+      b.sub_interest_slug,
+      b.interest_id,
+      b.interestId,
+    ]);
     return { image: placeholder, isPlaceholder: true };
   }, [business]);
 
@@ -214,7 +224,13 @@ export default function BusinessOfTheMonthCard({ business, index: _index = 0 }: 
             {!imgError && displayImage ? (
               <div className="relative w-full h-full overflow-hidden rounded-[12px] shadow-sm">
                 <Image
-                  src={usingFallback ? getCategoryPlaceholder((business as any).sub_interest_id ?? (business as any).subInterestId ?? business.category) : displayImage}
+                  src={usingFallback ? getSubcategoryPlaceholderFromCandidates([
+                    (business as any).sub_interest_id,
+                    (business as any).subInterestId,
+                    (business as any).sub_interest_slug,
+                    (business as any).interest_id,
+                    (business as any).interestId,
+                  ]) : displayImage}
                   alt={displayAlt}
                   fill
                   sizes="(max-width: 640px) 92vw, (max-width: 1024px) 50vw, 340px"
@@ -357,8 +373,7 @@ export default function BusinessOfTheMonthCard({ business, index: _index = 0 }: 
                   {/* Category row with icon - Pill badge style */}
                   <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5">
                     {(() => {
-                      const categorySlug = (business as any).sub_interest_id ?? (business as any).subInterestId ?? business.category;
-                      const categoryLabel = (business as any).subInterestLabel ?? getSubcategoryLabel(categorySlug);
+                      const categoryLabel = getCategoryLabelFromBusiness(business as any);
                       const CategoryIcon = getCategoryIcon(categoryLabel);
                       return (
                         <>

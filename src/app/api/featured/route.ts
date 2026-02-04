@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "crypto";
 import { getServerSupabase } from "@/app/lib/supabase/server";
 import { getServiceSupabase } from "@/app/lib/admin";
-import { getSubcategoryLabel } from "@/app/utils/subcategoryPlaceholders";
+import { getCategoryLabelFromBusiness, getSubcategoryLabel } from "@/app/utils/subcategoryPlaceholders";
 import { getInterestIdForSubcategory } from "@/app/lib/onboarding/subcategoryMapping";
 
 export const dynamic = 'force-dynamic';
@@ -213,6 +213,13 @@ async function getFeaturedFallback(
         Math.log(1 + recent30) * 0.2;
 
       const bucket = business.sub_interest_id || business.category;
+      const displayCategory = (() => {
+        const hasSlug = !!(business.sub_interest_id || business.interest_id);
+        const rawCategory = typeof business.category === "string" ? business.category.trim() : "";
+        const isMissingAll = !hasSlug && rawCategory.length === 0;
+        if (isMissingAll) return "";
+        return getCategoryLabelFromBusiness(business);
+      })();
       const isLocal = !!region && typeof business.location === 'string'
         ? business.location.toLowerCase().includes(region.toLowerCase())
         : false;
@@ -221,7 +228,7 @@ async function getFeaturedFallback(
         id: business.id,
         name: business.name,
         image_url: business.image_url || '',
-        category: business.category,
+        category: displayCategory,
         interest_id: business.interest_id || null,
         sub_interest_id: business.sub_interest_id,
         description: business.description,
@@ -409,6 +416,29 @@ export async function GET(request: NextRequest) {
         }
       });
     }
+
+    // Diversity cap: prefer one per subcategory so one category doesn't dominate
+    const usedSubcategories = new Set<string>();
+    const diversified: typeof featuredData = [];
+    for (const b of featuredData) {
+      const key = (b.sub_interest_id ?? b.bucket ?? b.category ?? 'misc').toString().trim().toLowerCase();
+      if (!usedSubcategories.has(key)) {
+        diversified.push(b);
+        usedSubcategories.add(key);
+      }
+      if (diversified.length >= limit) break;
+    }
+    if (diversified.length < limit) {
+      const diversifiedIds = new Set(diversified.map((x: any) => x.id));
+      for (const b of featuredData) {
+        if (diversified.length >= limit) break;
+        if (b?.id && !diversifiedIds.has(b.id)) {
+          diversified.push(b);
+          diversifiedIds.add(b.id);
+        }
+      }
+    }
+    featuredData = diversified.slice(0, limit);
 
     const featuredEtag = buildFeaturedEtag(seed, featuredData);
     const ifNoneMatch = request.headers.get('if-none-match');
