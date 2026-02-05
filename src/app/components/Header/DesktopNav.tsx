@@ -331,89 +331,63 @@ export default function DesktopNav(props: DesktopNavProps) {
 
   const renderIcons = () => (
     <div className="flex items-center justify-end gap-2 min-w-0">
-        {/* Notifications */}
-        <button
-          onClick={onNotificationsClick}
-          className={iconWrapClass(isNotificationsActive)}
-          aria-label="Notifications"
-          type="button"
-        >
-          <Bell
-            className={iconClass(isNotificationsActive)}
-            fill={isNotificationsActive ? "currentColor" : "none"}
-            style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
-          />
-          {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[12px] h-5 px-1.5 text-white text-[11px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
-              {unreadCount > 99 ? "99+" : unreadCount}
-            </span>
-          )}
-        </button>
+      {/* Notifications */}
+      <button
+        onClick={onNotificationsClick}
+        className={iconWrapClass(isNotificationsActive)}
+        aria-label="Notifications"
+        type="button"
+      >
+        <Bell
+          className={iconClass(isNotificationsActive)}
+          fill={isNotificationsActive ? "currentColor" : "none"}
+          style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
+        />
+        {unreadCount > 0 && (
+          <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[12px] h-5 px-1.5 text-white text-[11px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
+            {unreadCount > 99 ? "99+" : unreadCount}
+          </span>
+        )}
+      </button>
 
-        {/* Saved (Bookmark) - ONLY authenticated personal users, immediately after Notifications */}
-        {!isBusinessAccountUser && !isGuest && (
-          <div className="relative">
-            <OptimizedLink
-              href="/saved"
-              className={`group flex w-10 h-10 items-center justify-center rounded-lg transition-all duration-200 relative ${
-                isSavedActive
-                  ? "text-sage bg-sage/5"
-                  : whiteText
-                    ? "text-white hover:text-white/85 hover:bg-white/10"
-                    : "text-charcoal/80 hover:text-sage hover:bg-sage/5"
-              }`}
-              aria-label="Saved"
-            >
-              <Bookmark
-                className={`w-5 h-5 transition-all duration-200 group-hover:scale-110 ${
+      {/* Personal actions (keep Saved closer to Profile) */}
+      {!isBusinessAccountUser ? (
+        <div className="flex items-center gap-1">
+          {/* Saved (Bookmark) - ONLY authenticated personal users */}
+          {!isGuest && (
+            <div className="relative">
+              <OptimizedLink
+                href="/saved"
+                className={`group flex w-10 h-10 items-center justify-center rounded-lg transition-all duration-200 relative ${
                   isSavedActive
-                    ? "text-sage"
+                    ? "text-sage bg-sage/5"
                     : whiteText
-                      ? "text-white group-hover:text-white/85"
-                      : "text-current group-hover:text-sage"
+                      ? "text-white hover:text-white/85 hover:bg-white/10"
+                      : "text-charcoal/80 hover:text-sage hover:bg-sage/5"
                 }`}
-                fill={isSavedActive ? "currentColor" : "none"}
-                style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
-              />
-              {savedCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[12px] h-5 px-1.5 text-white text-[11px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
-                  {savedCount > 99 ? "99+" : savedCount}
-                </span>
-              )}
-            </OptimizedLink>
-          </div>
-        )}
+                aria-label="Saved"
+              >
+                <Bookmark
+                  className={`w-5 h-5 transition-all duration-200 group-hover:scale-110 ${
+                    isSavedActive
+                      ? "text-sage"
+                      : whiteText
+                        ? "text-white group-hover:text-white/85"
+                        : "text-current group-hover:text-sage"
+                  }`}
+                  fill={isSavedActive ? "currentColor" : "none"}
+                  style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
+                />
+                {savedCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[12px] h-5 px-1.5 text-white text-[11px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
+                    {savedCount > 99 ? "99+" : savedCount}
+                  </span>
+                )}
+              </OptimizedLink>
+            </div>
+          )}
 
-        {/* Messages - All authenticated users */}
-        {/* Settings (business only) */}
-        {isBusinessAccountUser && (
-          <div
-            className="relative"
-            onMouseEnter={() => isGuest && setHoveredLockedItem("settings")}
-            onMouseLeave={() => setHoveredLockedItem(null)}
-          >
-            <OptimizedLink
-              href={isGuest ? "/login" : "/settings"}
-              className={iconWrapClass(isSettingsActive)}
-              aria-label={isGuest ? "Sign in to open settings" : "Settings"}
-            >
-              <Settings
-                className={iconClass(isSettingsActive)}
-                fill={isSettingsActive ? "currentColor" : "none"}
-                style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
-              />
-              {isGuest && (
-                <span className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center w-4 h-4 text-white">
-                  <Lock className="w-2 h-2" />
-                </span>
-              )}
-            </OptimizedLink>
-            <LockedTooltip show={hoveredLockedItem === "settings"} label="open settings" />
-          </div>
-        )}
-
-        {/* Profile (personal only) */}
-        {!isBusinessAccountUser && (
+          {/* Profile (personal only) */}
           <div
             className="relative"
             onMouseEnter={() => isGuest && setHoveredLockedItem("profile")}
@@ -437,7 +411,33 @@ export default function DesktopNav(props: DesktopNavProps) {
             </OptimizedLink>
             <LockedTooltip show={hoveredLockedItem === "profile"} label="view profile" />
           </div>
-        )}
+        </div>
+      ) : (
+        /* Business actions */
+        <div
+          className="relative"
+          onMouseEnter={() => isGuest && setHoveredLockedItem("settings")}
+          onMouseLeave={() => setHoveredLockedItem(null)}
+        >
+          <OptimizedLink
+            href={isGuest ? "/login" : "/settings"}
+            className={iconWrapClass(isSettingsActive)}
+            aria-label={isGuest ? "Sign in to open settings" : "Settings"}
+          >
+            <Settings
+              className={iconClass(isSettingsActive)}
+              fill={isSettingsActive ? "currentColor" : "none"}
+              style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
+            />
+            {isGuest && (
+              <span className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center w-4 h-4 text-white">
+                <Lock className="w-2 h-2" />
+              </span>
+            )}
+          </OptimizedLink>
+          <LockedTooltip show={hoveredLockedItem === "settings"} label="open settings" />
+        </div>
+      )}
     </div>
   );
 
