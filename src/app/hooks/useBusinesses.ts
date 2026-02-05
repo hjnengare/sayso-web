@@ -459,6 +459,13 @@ export function useForYouBusinesses(
       const businessesList = data.businesses || data.data || [];
 
       console.log(`[useForYouBusinesses] Received ${businessesList.length} businesses`);
+      if (businessesList.length === 0) {
+        console.warn('[useForYouBusinesses] Empty For You response diagnostics:', {
+          status: response.status,
+          feedPath: response.headers.get('X-Feed-Path'),
+          meta: data?.meta ?? null,
+        });
+      }
       setBusinesses(businessesList);
 
     } catch (err: any) {

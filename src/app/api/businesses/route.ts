@@ -157,6 +157,13 @@ const BUSINESS_SELECT = `
   )
 `;
 
+const BUSINESS_SELECT_FALLBACK = `
+  id, name, description, primary_subcategory_slug, primary_subcategory_label, primary_category_slug, location, address,
+  phone, email, website, image_url,
+  verified, price_range, badge, slug, lat, lng,
+  created_at, updated_at
+`;
+
 type SupabaseClientInstance = Awaited<ReturnType<typeof getServerSupabase>>;
 
 type DatabaseBusinessRow = {
@@ -2238,9 +2245,10 @@ async function fetchPersonalMatches(
       return [];
     }
 
-    console.log('[BUSINESSES API] fetchPersonalMatches fallback returned', (data || []).length, 'businesses');
+    const rows = (Array.isArray(data) ? (data as unknown as DatabaseBusinessRow[]) : []);
+    console.log('[BUSINESSES API] fetchPersonalMatches fallback returned', rows.length, 'businesses');
 
-    const normalized = filterByMinRating(normalizeBusinessRows(data || []), options.minRating)
+    const normalized = filterByMinRating(normalizeBusinessRows(rows), options.minRating)
       .sort((a, b) => scorePersonal(b) - scorePersonal(a));
     return filterByDealbreakers(normalized, options.dealbreakerIds);
   } catch (err) {
@@ -2277,16 +2285,33 @@ async function fetchTopRated(
 
     query = applyCommonFilters(query, options);
 
-    const { data, error } = await query.limit(Math.min(options.limit, 150));
+    let { data, error } = await query.limit(Math.min(options.limit, 150));
 
     if (error) {
       console.error('[BUSINESSES API] Top rated query error:', error);
-      return [];
+      if (shouldRetryWithoutJoins(error)) {
+        console.warn('[BUSINESSES API] Top rated retrying without joins');
+        let fallbackQuery = buildBaseBusinessQuery(supabase, BUSINESS_SELECT_FALLBACK);
+        if (options.category) {
+          fallbackQuery = fallbackQuery.eq('primary_subcategory_slug', options.category);
+        }
+        fallbackQuery = applyCommonFilters(fallbackQuery, options);
+        const retry = await fallbackQuery.limit(Math.min(options.limit, 150));
+        data = retry.data;
+        error = retry.error;
+        if (error) {
+          console.error('[BUSINESSES API] Top rated fallback query error:', error);
+          return [];
+        }
+      } else {
+        return [];
+      }
     }
 
-    console.log('[BUSINESSES API] fetchTopRated returned', (data || []).length, 'businesses');
+    const rows = (Array.isArray(data) ? (data as unknown as DatabaseBusinessRow[]) : []);
+    console.log('[BUSINESSES API] fetchTopRated returned', rows.length, 'businesses');
 
-    const normalized = filterByMinRating(normalizeBusinessRows(data || []), options.minRating)
+    const normalized = filterByMinRating(normalizeBusinessRows(rows), options.minRating)
       .sort((a, b) => scoreTopRated(b) - scoreTopRated(a));
     return filterByDealbreakers(normalized, options.dealbreakerIds);
   } catch (err) {
@@ -2323,18 +2348,37 @@ async function fetchExplore(
 
     query = applyCommonFilters(query, options);
 
-    const { data, error } = await query
+    let { data, error } = await query
       .order('created_at', { ascending: false })
       .limit(Math.min(options.limit, 150));
 
     if (error) {
       console.error('[BUSINESSES API] Explore query error:', error);
-      return [];
+      if (shouldRetryWithoutJoins(error)) {
+        console.warn('[BUSINESSES API] Explore retrying without joins');
+        let fallbackQuery = buildBaseBusinessQuery(supabase, BUSINESS_SELECT_FALLBACK);
+        if (options.category) {
+          fallbackQuery = fallbackQuery.eq('primary_subcategory_slug', options.category);
+        }
+        fallbackQuery = applyCommonFilters(fallbackQuery, options);
+        const retry = await fallbackQuery
+          .order('created_at', { ascending: false })
+          .limit(Math.min(options.limit, 150));
+        data = retry.data;
+        error = retry.error;
+        if (error) {
+          console.error('[BUSINESSES API] Explore fallback query error:', error);
+          return [];
+        }
+      } else {
+        return [];
+      }
     }
 
-    console.log('[BUSINESSES API] fetchExplore returned', (data || []).length, 'businesses');
+    const rows = (Array.isArray(data) ? (data as unknown as DatabaseBusinessRow[]) : []);
+    console.log('[BUSINESSES API] fetchExplore returned', rows.length, 'businesses');
 
-    const normalized = filterByMinRating(normalizeBusinessRows(data || []), options.minRating)
+    const normalized = filterByMinRating(normalizeBusinessRows(rows), options.minRating)
       .sort((a, b) => scoreExplore(b) - scoreExplore(a));
     return filterByDealbreakers(normalized, options.dealbreakerIds);
   } catch (err) {
@@ -2343,11 +2387,22 @@ async function fetchExplore(
   }
 }
 
-function buildBaseBusinessQuery(supabase: SupabaseClientInstance) {
+function buildBaseBusinessQuery(supabase: SupabaseClientInstance, select: string = BUSINESS_SELECT) {
   return supabase
     .from('businesses')
-    .select(BUSINESS_SELECT)
+    .select(select)
     .eq('status', 'active');
+}
+
+function shouldRetryWithoutJoins(error: any): boolean {
+  const message = (error?.message || '').toString().toLowerCase();
+  return (
+    message.includes('relationship') ||
+    message.includes('schema cache') ||
+    message.includes('could not find') ||
+    message.includes('foreign key') ||
+    message.includes('does not exist')
+  );
 }
 
 function applyCommonFilters(query: any, options: BucketOptions) {
