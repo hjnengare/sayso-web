@@ -136,6 +136,13 @@
     overflow-x: hidden;
   }
 
+  /* Smooth scrolling (respect reduced motion). */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
   body {
     @apply text-base bg-off-white;
     /* Use token system: 16px with 1.6 line-height */
@@ -151,10 +158,27 @@
     width: 100%;
     max-width: 100vw;
     overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     line-height: 1.6;
     color-scheme: light;
+  }
+
+  /*
+    iOS/Safari: `background-attachment: fixed` is a common cause of scroll jank/flicker.
+    Keep the premium background on desktop, but switch to `scroll` on touch/tablet/mobile.
+  */
+  @media (max-width: 1024px) {
+    body {
+      background-attachment: scroll;
+    }
+  }
+
+  @supports (-webkit-touch-callout: none) {
+    body {
+      background-attachment: scroll;
+    }
   }
 
   /* Force form controls to stay light */
