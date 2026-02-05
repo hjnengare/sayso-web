@@ -320,6 +320,8 @@ export function useForYouBusinesses(
   const preferenceSubcategories = preferenceSource?.subcategories ?? [];
   const preferenceDealbreakers = preferenceSource?.dealbreakers ?? [];
   const preferencesLoading = extraOptions.preferencesLoading ?? false;
+  const shouldWaitForPreferences =
+    preferencesLoading && overrideInterestIds === undefined && !extraOptions.skip;
 
   const hasInitialBusinesses = (extraOptions.initialBusinesses?.length ?? 0) > 0;
   const [businesses, setBusinesses] = useState<Business[]>(extraOptions.initialBusinesses ?? []);
@@ -388,6 +390,13 @@ export function useForYouBusinesses(
   const fetchForYou = useCallback(async (force = false) => {
     if (extraOptions.skip) {
       setLoading(false);
+      return;
+    }
+
+    if (!force && shouldWaitForPreferences) {
+      // Prevent a cold-start fetch with empty preference arrays before preferences have loaded.
+      // Once preferencesLoading flips false, the effect below will trigger a real fetch.
+      setLoading(true);
       return;
     }
 
@@ -469,6 +478,7 @@ export function useForYouBusinesses(
     dealbreakerIds,
     preferredPriceRanges,
     requestKey,
+    shouldWaitForPreferences,
   ]);
 
   // Fire For You request as soon as the component is committed (before paint) so content shows right away
@@ -485,8 +495,13 @@ export function useForYouBusinesses(
       return;
     }
 
+    if (shouldWaitForPreferences) {
+      setLoading(true);
+      return;
+    }
+
     fetchForYou();
-  }, [fetchForYou, extraOptions.skipInitialFetch, hasInitialBusinesses, requestKey]);
+  }, [fetchForYou, extraOptions.skipInitialFetch, hasInitialBusinesses, requestKey, shouldWaitForPreferences]);
 
   return {
     businesses,
