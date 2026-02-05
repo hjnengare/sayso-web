@@ -1,7 +1,7 @@
 // src/components/Header/Header.tsx
 "use client";
 
-import { useCallback, useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Menu, Bell, Settings, Bookmark, Search, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -12,6 +12,7 @@ import MobileMenu from "./MobileMenu";
 import HeaderSkeleton from "./HeaderSkeleton";
 import { useHeaderState } from "./useHeaderState";
 import { PRIMARY_LINKS, DISCOVER_LINKS, getLogoHref } from "./headerActionsConfig";
+import { useLiveSearch, type LiveSearchResult } from "../../hooks/useLiveSearch";
 
 export default function Header({
   showSearch = true,
@@ -77,6 +78,8 @@ export default function Header({
   const inputRef = useRef<HTMLInputElement>(null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const desktopSearchWrapRef = useRef<HTMLDivElement>(null);
+  const mobileSearchWrapRef = useRef<HTMLDivElement>(null);
   
   // Get search query from URL params
   const urlSearchQuery = searchParams.get('search') || '';
@@ -86,6 +89,15 @@ export default function Header({
     "Search..."
   );
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const [isDesktopSearchExpanded, setIsDesktopSearchExpanded] = useState(false);
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState<number>(-1);
+
+  const {
+    query: suggestionQuery,
+    setQuery: setSuggestionQuery,
+    loading: suggestionsLoading,
+    results: suggestionResults,
+  } = useLiveSearch({ initialQuery: urlSearchQuery, debounceMs: 120 });
 
   // Sync local state with URL params
   useEffect(() => {
@@ -97,6 +109,19 @@ export default function Header({
   }, [urlSearchQuery]);
 
   const isSearchActive = headerSearchQuery.trim().length > 0;
+
+  useEffect(() => {
+    setSuggestionQuery(headerSearchQuery);
+  }, [headerSearchQuery, setSuggestionQuery]);
+
+  const isSuggestionsOpen =
+    headerSearchQuery.trim().length > 0 &&
+    (isDesktopSearchExpanded || isMobileSearchOpen);
+
+  const cappedSuggestions = useMemo(() => {
+    const list = Array.isArray(suggestionResults) ? suggestionResults : [];
+    return list.slice(0, 6);
+  }, [suggestionResults]);
 
   const headerClassName =
     "sticky top-0 left-0 right-0 w-full z-50 bg-navbar-bg shadow-md transition-all duration-300";
@@ -192,6 +217,159 @@ export default function Header({
     mobileInputRef.current?.focus();
   };
 
+  const collapseDesktopSearch = useCallback(() => {
+    setIsDesktopSearchExpanded(false);
+    setActiveSuggestionIndex(-1);
+  }, []);
+
+  const expandDesktopSearch = useCallback(() => {
+    setIsDesktopSearchExpanded(true);
+    setActiveSuggestionIndex(-1);
+    window.setTimeout(() => inputRef.current?.focus(), 0);
+  }, []);
+
+  // Close suggestions when clicking outside (desktop + mobile overlay)
+  useEffect(() => {
+    const onDown = (e: MouseEvent) => {
+      const target = e.target as Node | null;
+      if (!target) return;
+      const inDesktop = desktopSearchWrapRef.current?.contains(target);
+      const inMobile = mobileSearchWrapRef.current?.contains(target);
+      if (!inDesktop && !inMobile) {
+        collapseDesktopSearch();
+        setActiveSuggestionIndex(-1);
+      }
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [collapseDesktopSearch]);
+
+  const navigateToSuggestion = useCallback(
+    (item: LiveSearchResult) => {
+      if (!item?.id) return;
+      collapseDesktopSearch();
+      setIsMobileSearchOpen(false);
+      setActiveSuggestionIndex(-1);
+      router.push(`/business/${item.id}`);
+    },
+    [collapseDesktopSearch, router]
+  );
+
+  const navigateToSearchResults = useCallback(() => {
+    const q = headerSearchQuery.trim();
+    if (!q) return;
+    collapseDesktopSearch();
+    setIsMobileSearchOpen(false);
+    setActiveSuggestionIndex(-1);
+
+    const params = new URLSearchParams();
+    params.set("search", q);
+    router.push(`/?${params.toString()}`);
+  }, [collapseDesktopSearch, headerSearchQuery, router]);
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!isSuggestionsOpen) return;
+    const max = cappedSuggestions.length;
+    if (e.key === "Escape") {
+      e.preventDefault();
+      collapseDesktopSearch();
+      setIsMobileSearchOpen(false);
+      return;
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (max === 0) return;
+      setActiveSuggestionIndex((prev) => (prev + 1) % max);
+      return;
+    }
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (max === 0) return;
+      setActiveSuggestionIndex((prev) => (prev - 1 + max) % max);
+      return;
+    }
+    if (e.key === "Enter" && activeSuggestionIndex >= 0) {
+      e.preventDefault();
+      const chosen = cappedSuggestions[activeSuggestionIndex];
+      if (chosen) navigateToSuggestion(chosen);
+    }
+  };
+
+  const renderSuggestionsDropdown = (mode: "desktop" | "mobile") => {
+    const show = isSuggestionsOpen && (suggestionsLoading || cappedSuggestions.length > 0);
+    const widthClass = mode === "desktop" ? "w-[280px]" : "w-full";
+    const topClass = mode === "desktop" ? "top-[44px] right-0" : "top-[56px] left-0 right-0";
+
+    return (
+      <AnimatePresence>
+        {show && (
+          <motion.div
+            initial={{ opacity: 0, y: 6, scale: 0.98, filter: "blur(6px)" }}
+            animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+            exit={{ opacity: 0, y: 6, scale: 0.98, filter: "blur(6px)" }}
+            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            className={`absolute ${topClass} ${widthClass} z-[100] rounded-[14px] border border-white/50 bg-off-white/95 backdrop-blur-xl shadow-[0_18px_50px_rgba(0,0,0,0.18),0_8px_20px_rgba(0,0,0,0.10)] overflow-hidden`}
+            role="listbox"
+            aria-label="Search suggestions"
+            onMouseDown={(e) => e.preventDefault()} // keep input focus for clicks
+          >
+            <div className="px-4 py-3 border-b border-charcoal/10 flex items-center justify-between">
+              <div className="text-xs font-semibold text-charcoal/70" style={sf}>
+                Suggestions
+              </div>
+              <button
+                type="button"
+                className="text-xs font-semibold text-coral hover:underline"
+                style={sf}
+                onClick={navigateToSearchResults}
+              >
+                View all
+              </button>
+            </div>
+
+            <div className="py-2">
+              {suggestionsLoading && cappedSuggestions.length === 0 ? (
+                <div className="px-4 py-3 text-sm text-charcoal/60" style={sf}>
+                  Searching…
+                </div>
+              ) : (
+                cappedSuggestions.map((item, idx) => {
+                  const isActive = idx === activeSuggestionIndex;
+                  const label = (item as any).category_label ?? item.category ?? "";
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      role="option"
+                      aria-selected={isActive}
+                      onMouseEnter={() => setActiveSuggestionIndex(idx)}
+                      onClick={() => navigateToSuggestion(item)}
+                      className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors duration-150 ${
+                        isActive ? "bg-gradient-to-r from-sage/10 to-coral/5" : "hover:bg-charcoal/5"
+                      }`}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-semibold text-charcoal truncate" style={sf}>
+                          {item.name}
+                        </div>
+                        <div className="text-xs text-charcoal/60 truncate" style={sf}>
+                          {label ? `${label} • ` : ""}{item.location}
+                        </div>
+                      </div>
+                      <div className="text-xs text-charcoal/40" style={sf}>
+                        ↵
+                      </div>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    );
+  };
+
   // Handle mobile search toggle
   const handleMobileSearchToggle = () => {
     setIsMobileSearchOpen(!isMobileSearchOpen);
@@ -222,51 +400,95 @@ export default function Header({
 
   // Desktop search input (compact, for right side)
   const renderDesktopSearchInput = () => (
-    <form
-      onSubmit={handleSearchSubmit}
-      className="w-full max-w-[280px]"
-    >
-      <div className="relative">
-        {/* Search icon on left */}
-        <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none z-10">
-          <Search className="w-4 h-4 text-charcoal/50" strokeWidth={2} />
-        </div>
-
-        {/* Clear button on right */}
-        {isSearchActive && headerSearchQuery && (
-          <div className="absolute inset-y-0 right-2 flex items-center z-10">
+    <div ref={desktopSearchWrapRef} className="relative w-[280px] h-10 flex justify-end">
+      <motion.form
+        onSubmit={handleSearchSubmit}
+        initial={false}
+        animate={{ width: isDesktopSearchExpanded ? 280 : 44 }}
+        transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+        className="absolute right-0 top-0 h-10"
+        style={{ transformOrigin: "right center" }}
+      >
+        <div className="relative h-10">
+          {/* Collapsed trigger */}
+          {!isDesktopSearchExpanded && (
             <button
               type="button"
-              onClick={handleClearSearch}
-              className="flex items-center justify-center w-6 h-6 rounded-full text-charcoal/60 hover:text-charcoal hover:bg-charcoal/5 transition-all duration-200"
-              aria-label="Clear search"
+              onClick={expandDesktopSearch}
+              className="mi-tap w-11 h-10 flex items-center justify-center rounded-full bg-off-white/95 border border-charcoal/10 hover:bg-white transition-colors duration-200"
+              aria-label="Open search"
             >
-              <X className="w-4 h-4" strokeWidth={2} />
+              <Search className="w-4 h-4 text-charcoal/60" strokeWidth={2} />
             </button>
-          </div>
-        )}
+          )}
 
-        <input
-          ref={inputRef}
-          type="text"
-          value={headerSearchQuery}
-          onChange={handleSearchInputChange}
-          placeholder={headerPlaceholder}
-          className={`w-full rounded-full bg-off-white text-charcoal placeholder:text-charcoal/50
-            border text-sm
-            focus:outline-none focus:bg-white focus:border-sage focus:ring-1 focus:ring-sage/30
-            hover:bg-white/90 transition-all duration-200
-            pl-9 pr-8 py-2
-            ${isSearchActive ? 'border-sage bg-white' : 'border-charcoal/10'}
-          `}
-          style={{
-            fontFamily: "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-          }}
-          aria-label="Search businesses"
-          autoComplete="off"
-        />
-      </div>
-    </form>
+          {/* Expanded input */}
+          <AnimatePresence initial={false}>
+            {isDesktopSearchExpanded && (
+              <motion.div
+                key="desktop-search-expanded"
+                initial={{ opacity: 0, x: 10, filter: "blur(6px)" }}
+                animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                exit={{ opacity: 0, x: 10, filter: "blur(6px)" }}
+                transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                className="relative"
+              >
+                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none z-10">
+                  <Search className="w-4 h-4 text-charcoal/50" strokeWidth={2} />
+                </div>
+
+                <div className="absolute inset-y-0 right-2 flex items-center z-10">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (headerSearchQuery) handleClearSearch();
+                      collapseDesktopSearch();
+                    }}
+                    className="mi-tap flex items-center justify-center w-7 h-7 rounded-full text-charcoal/60 hover:text-charcoal hover:bg-charcoal/5 transition-all duration-150"
+                    aria-label={headerSearchQuery ? "Clear search" : "Close search"}
+                  >
+                    <X className="w-4 h-4" strokeWidth={2} />
+                  </button>
+                </div>
+
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={headerSearchQuery}
+                  onChange={handleSearchInputChange}
+                  onKeyDown={handleSearchKeyDown}
+                  onFocus={() => setIsDesktopSearchExpanded(true)}
+                  onBlur={() => {
+                    // Let clicks on suggestions register without flicker.
+                    window.setTimeout(() => {
+                      const active = document.activeElement as HTMLElement | null;
+                      if (active && desktopSearchWrapRef.current?.contains(active)) return;
+                      collapseDesktopSearch();
+                    }, 90);
+                  }}
+                  placeholder={headerPlaceholder}
+                  className={`w-[280px] h-10 rounded-full bg-off-white text-charcoal placeholder:text-charcoal/50
+                    border text-sm
+                    focus:outline-none focus:bg-white focus:border-sage focus:ring-1 focus:ring-sage/30
+                    hover:bg-white/90 transition-all duration-200
+                    pl-9 pr-10
+                    ${isSearchActive ? "border-sage bg-white" : "border-charcoal/10"}
+                  `}
+                  style={{
+                    fontFamily:
+                      "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                  }}
+                  aria-label="Search businesses"
+                  autoComplete="off"
+                />
+
+                {renderSuggestionsDropdown("desktop")}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </motion.form>
+    </div>
   );
 
   // Mobile search input (expandable with sleek animation)
@@ -301,6 +523,7 @@ export default function Header({
         style={{ transformOrigin: "right center" }}
       >
         <motion.div
+          ref={mobileSearchWrapRef}
           className="relative"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -347,6 +570,7 @@ export default function Header({
             type="text"
             value={headerSearchQuery}
             onChange={handleSearchInputChange}
+            onKeyDown={handleSearchKeyDown}
             placeholder="Search businesses..."
             className={`w-full rounded-full bg-off-white text-charcoal placeholder:text-charcoal/50
               border-2 text-base
@@ -361,6 +585,8 @@ export default function Header({
             aria-label="Search businesses"
             autoComplete="off"
           />
+
+          {renderSuggestionsDropdown("mobile")}
         </motion.div>
       </motion.form>
     </motion.div>
