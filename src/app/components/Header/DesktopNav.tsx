@@ -102,16 +102,16 @@ export default function DesktopNav(props: DesktopNavProps) {
   const isSavedActive = pathname === "/saved";
 
   const baseLinkClass =
-    "group capitalize px-2.5 lg:px-3.5 py-1.5 rounded-lg text-sm sm:text-xs md:text-sm font-semibold transition-all duration-200 relative flex items-center gap-1.5";
+    "group capitalize px-2.5 lg:px-3.5 py-1.5 rounded-lg text-sm sm:text-xs md:text-sm font-semibold transition-colors duration-200 relative flex items-center gap-1.5";
 
   const activeTextClass = "text-sage";
   const idleTextClass = whiteText
-    ? "text-white hover:text-white/90 hover:bg-white/10"
-    : "text-charcoal/90 md:text-charcoal/95 hover:text-sage hover:bg-sage/5";
+    ? "text-white/75 hover:text-white"
+    : "text-charcoal/70 md:text-charcoal/80 hover:text-charcoal/95";
 
   const businessPalette = whiteText
-    ? "text-white hover:text-white/90 hover:bg-white/10"
-    : "text-charcoal/90 md:text-charcoal/95 hover:text-sage hover:bg-sage/5";
+    ? "text-white/75 hover:text-white"
+    : "text-charcoal/70 md:text-charcoal/80 hover:text-charcoal/95";
 
   const iconWrapClass = (isActive: boolean) =>
     `mi-tap group w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 relative ${

@@ -10,12 +10,56 @@ import { motion, useReducedMotion } from "framer-motion";
 export default function Footer() {
   const [currentYear, setCurrentYear] = useState<number>(2025);
   const [mounted, setMounted] = useState(false);
+  const [email, setEmail] = useState("");
+  const [subscribeStatus, setSubscribeStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [subscribeMessage, setSubscribeMessage] = useState<string>("");
   const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
     setCurrentYear(new Date().getFullYear());
     setMounted(true);
   }, []);
+
+  const submitSubscription = async () => {
+    const trimmed = email.trim().toLowerCase();
+    if (!trimmed) return;
+
+    setSubscribeStatus("loading");
+    setSubscribeMessage("");
+
+    try {
+      const res = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: trimmed, source: "footer" }),
+      });
+
+      const json = (await res.json().catch(() => null)) as
+        | { ok?: boolean; message?: string }
+        | null;
+
+      if (!res.ok || !json?.ok) {
+        setSubscribeStatus("error");
+        setSubscribeMessage(json?.message || "Couldn’t sign you up. Try again.");
+        return;
+      }
+
+      setSubscribeStatus("success");
+      setSubscribeMessage("You’re in. Watch your inbox.");
+      setEmail("");
+    } catch {
+      setSubscribeStatus("error");
+      setSubscribeMessage("Couldn’t sign you up. Check your connection.");
+    }
+  };
+
+  const isValidEmail = (value: string) => {
+    const v = value.trim();
+    if (!v) return false;
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+  };
 
 
   const linkSections = [
@@ -104,6 +148,96 @@ export default function Footer() {
 
       <div className="relative mx-auto w-full max-w-[2000px] px-4 sm:px-6 lg:px-8">
         <div className="border-t border-white/10 py-10 sm:py-12">
+          {/* Subscribe */}
+          <motion.div
+            className="mb-10 sm:mb-12"
+            variants={{
+              hidden: { opacity: 0, y: prefersReducedMotion ? 0 : 10 },
+              visible: {
+                opacity: 1,
+                y: 0,
+                transition: prefersReducedMotion
+                  ? { duration: 0 }
+                  : { duration: 0.45, ease: [0.16, 1, 0.3, 1] },
+              },
+            }}
+          >
+            <div className="relative overflow-hidden rounded-[20px] border border-white/10 bg-white/[0.04] px-5 py-6 sm:px-7 sm:py-7">
+              <div aria-hidden className="pointer-events-none absolute inset-0">
+                <div className="absolute -top-20 left-10 h-40 w-72 rounded-full bg-off-white/10 blur-3xl" />
+                <div className="absolute -bottom-24 right-0 h-44 w-80 rounded-full bg-sage/15 blur-3xl" />
+              </div>
+
+              <div className="relative flex flex-col gap-4 sm:gap-5">
+                <p className="tracking-[0.24em] uppercase text-xs sm:text-sm text-off-white/80 font-semibold">
+                  Subscribe to our emails
+                </p>
+
+                <form
+                  className="w-full"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (subscribeStatus === "loading") return;
+                    if (!isValidEmail(email)) {
+                      setSubscribeStatus("error");
+                      setSubscribeMessage("Enter a valid email address.");
+                      return;
+                    }
+                    submitSubscription();
+                  }}
+                >
+                  <div className="flex items-center gap-2 rounded-full bg-off-white text-charcoal px-3 py-2 shadow-[0_10px_30px_rgba(0,0,0,0.25)] ring-1 ring-white/10 focus-within:ring-2 focus-within:ring-sage/40 transition-[box-shadow,ring]">
+                    <label className="sr-only" htmlFor="footer-email">
+                      Email address
+                    </label>
+                    <input
+                      id="footer-email"
+                      type="email"
+                      inputMode="email"
+                      autoComplete="email"
+                      placeholder="Email Address"
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (subscribeStatus !== "idle") {
+                          setSubscribeStatus("idle");
+                          setSubscribeMessage("");
+                        }
+                      }}
+                      className="flex-1 bg-transparent px-3 py-2 text-base sm:text-lg placeholder:text-charcoal/55 outline-none"
+                      aria-invalid={subscribeStatus === "error" ? "true" : "false"}
+                    />
+                    <button
+                      type="submit"
+                      disabled={subscribeStatus === "loading"}
+                      className="shrink-0 rounded-full bg-charcoal px-5 sm:px-7 py-2.5 text-xs sm:text-sm font-bold tracking-[0.16em] uppercase text-off-white transition-colors hover:bg-charcoal/90 disabled:opacity-60 disabled:hover:bg-charcoal"
+                    >
+                      {subscribeStatus === "loading" ? "Signing up" : "Sign up"}
+                    </button>
+                  </div>
+
+                  <div className="mt-2 min-h-[20px]">
+                    {subscribeMessage && (
+                      <p
+                        className={`text-sm ${
+                          subscribeStatus === "success"
+                            ? "text-sage"
+                            : "text-off-white/80"
+                        }`}
+                      >
+                        {subscribeMessage}
+                      </p>
+                    )}
+                  </div>
+                </form>
+
+                <p className="text-xs text-off-white/60">
+                  Occasional drops. No spam. Unsubscribe anytime.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
           <motion.div
             className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr_1fr_1fr] gap-10 lg:gap-12 items-start"
             variants={{

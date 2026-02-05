@@ -15,7 +15,7 @@ export default function HeaderSkeleton({
 
   return (
     <header
-      className="sticky top-0 left-0 right-0 w-full z-50 bg-navbar-bg shadow-md transition-all duration-300"
+      className="sticky top-0 left-0 right-0 w-full z-50 bg-navbar-bg shadow-md transition-all duration-300 pt-[var(--safe-area-top)]"
       aria-label="Loading header"
       aria-busy="true"
     >

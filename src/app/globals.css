@@ -114,6 +114,7 @@
   :root {
     color-scheme: light;
     --header-height: 96px;
+    --safe-area-top: env(safe-area-inset-top, 0px);
     /* Disables OS dark-mode form overrides */
     /* Prevents Safari/Chrome auto-darkening inputs */
     /* Keeps scrollbars light */
@@ -1536,5 +1537,66 @@ nav[aria-label="Breadcrumb"] li span {
   nav[aria-label="Breadcrumb"] {
     padding-inline: clamp(1.5rem, 3vw, 2rem);
     margin-top: 1rem;
+  }
+}
+
+/* ========================================
+ * Fast, smooth page transitions
+ * ======================================== */
+
+@keyframes sayso-page-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    filter: blur(0);
+  }
+}
+
+.page-enter {
+  animation: sayso-page-enter 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: opacity, transform, filter;
+}
+
+/* Prefer native View Transitions when available (used by `OptimizedLink`). */
+@supports (view-transition-name: root) {
+  :root {
+    view-transition-name: root;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 200ms;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  ::view-transition-old(root) {
+    animation-name: sayso-vt-fade-out;
+  }
+
+  ::view-transition-new(root) {
+    animation-name: sayso-vt-fade-in;
+  }
+}
+
+@keyframes sayso-vt-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes sayso-vt-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
   }
 }

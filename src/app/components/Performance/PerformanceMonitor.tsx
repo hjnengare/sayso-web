@@ -4,6 +4,14 @@ import { useEffect } from "react";
 
 export default function PerformanceMonitor() {
   useEffect(() => {
+    const enabled =
+      process.env.NODE_ENV !== "production" ||
+      process.env.NEXT_PUBLIC_ENABLE_PERF_MONITOR === "true";
+
+    if (!enabled) return;
+    if (typeof window === "undefined") return;
+    if (typeof PerformanceObserver === "undefined") return;
+
     // Monitor Core Web Vitals
     const measurePerformance = () => {
       // First Contentful Paint (FCP)

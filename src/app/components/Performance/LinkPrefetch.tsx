@@ -16,6 +16,16 @@ export default function LinkPrefetch() {
   const router = useRouter();
 
   useEffect(() => {
+    const g = globalThis as any;
+
+    const connection = (navigator as any).connection as
+      | { saveData?: boolean; effectiveType?: string }
+      | undefined;
+
+    if (connection?.saveData) return;
+    const effectiveType = connection?.effectiveType ?? "";
+    if (effectiveType.includes("2g")) return;
+
     // Prefetch critical routes after initial load
     const prefetchRoutes = () => {
       CRITICAL_ROUTES.forEach(route => {
@@ -23,10 +33,22 @@ export default function LinkPrefetch() {
       });
     };
 
-    // Prefetch after a short delay to not block initial render
-    const timer = setTimeout(prefetchRoutes, 1000);
-    
-    return () => clearTimeout(timer);
+    // Prefetch during idle time to avoid competing with initial render/hydration.
+    let idleId: number | null = null;
+    let timerId: ReturnType<typeof setTimeout> | null = null;
+
+    if (typeof g.requestIdleCallback === "function") {
+      idleId = g.requestIdleCallback(prefetchRoutes, { timeout: 2500 });
+    } else {
+      timerId = setTimeout(prefetchRoutes, 1500);
+    }
+
+    return () => {
+      if (idleId && typeof g.cancelIdleCallback === "function") {
+        g.cancelIdleCallback(idleId);
+      }
+      if (timerId) clearTimeout(timerId);
+    };
   }, [router]);
 
   return null;

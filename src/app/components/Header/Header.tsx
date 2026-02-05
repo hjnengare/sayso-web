@@ -124,7 +124,7 @@ export default function Header({
   }, [suggestionResults]);
 
   const headerClassName =
-    "sticky top-0 left-0 right-0 w-full z-50 bg-navbar-bg shadow-md transition-all duration-300";
+    "sticky top-0 left-0 right-0 w-full z-50 bg-navbar-bg shadow-md transition-all duration-300 pt-[var(--safe-area-top)]";
     
 
   const isPersonalLayout = !isBusinessAccountUser;

@@ -8,6 +8,16 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export interface Database {
   public: {
     Tables: {
+      email_subscribers: {
+        Row: {
+          email: string;
+          source: string | null;
+          created_at: string;
+          [key: string]: unknown;
+        };
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
+      };
       business_claims: {
         Row: {
           id: string;
