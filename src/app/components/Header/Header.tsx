@@ -304,10 +304,10 @@ export default function Header({
       <AnimatePresence>
         {show && (
           <motion.div
-            initial={{ opacity: 0, y: 6, scale: 0.98, filter: "blur(6px)" }}
-            animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-            exit={{ opacity: 0, y: 6, scale: 0.98, filter: "blur(6px)" }}
-            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0, y: 8, scale: 0.99 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.99 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
             className={`absolute ${topClass} ${widthClass} z-[100] rounded-[14px] border border-white/50 bg-off-white/95 backdrop-blur-xl shadow-[0_18px_50px_rgba(0,0,0,0.18),0_8px_20px_rgba(0,0,0,0.10)] overflow-hidden`}
             role="listbox"
             aria-label="Search suggestions"
@@ -405,7 +405,7 @@ export default function Header({
         onSubmit={handleSearchSubmit}
         initial={false}
         animate={{ width: isDesktopSearchExpanded ? 280 : 44 }}
-        transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ type: "spring", stiffness: 520, damping: 44, mass: 0.85 }}
         className="absolute right-0 top-0 h-10"
         style={{ transformOrigin: "right center" }}
       >
@@ -427,10 +427,10 @@ export default function Header({
             {isDesktopSearchExpanded && (
               <motion.div
                 key="desktop-search-expanded"
-                initial={{ opacity: 0, x: 10, filter: "blur(6px)" }}
-                animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
-                exit={{ opacity: 0, x: 10, filter: "blur(6px)" }}
-                transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
                 className="relative"
               >
                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none z-10">
@@ -499,7 +499,7 @@ export default function Header({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.15, ease: "easeOut" }}
+      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
     >
       <motion.form
         initial={{ width: "36px", opacity: 0, borderRadius: "50%" }}
@@ -514,9 +514,9 @@ export default function Header({
           borderRadius: "50%",
         }}
         transition={{
-          width: { duration: 0.4, ease: [0.16, 1, 0.3, 1] },
-          opacity: { duration: 0.2, ease: "easeOut" },
-          borderRadius: { duration: 0.3, ease: "easeOut" },
+          width: { type: "spring", stiffness: 520, damping: 44, mass: 0.85 },
+          opacity: { duration: 0.2, ease: [0.16, 1, 0.3, 1] },
+          borderRadius: { type: "spring", stiffness: 560, damping: 50, mass: 0.9 },
         }}
         onSubmit={handleSearchSubmit}
         className="relative origin-right"
