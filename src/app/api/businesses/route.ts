@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSupabase } from "@/app/lib/supabase/server";
+import { getServiceSupabase } from "@/app/lib/admin";
 import { CachePresets } from "@/app/lib/utils/httpCache";
 import {
   applyFeedCachingHeaders,
@@ -298,6 +299,12 @@ export async function GET(req: Request) {
     // This ensures server-side auth works correctly
     // =============================================
     const supabase = await getServerSupabase(req); // ✅ Pass request to get cookies
+    let serviceSupabase: Awaited<ReturnType<typeof getServerSupabase>> | null = null;
+    try {
+      serviceSupabase = getServiceSupabase() as unknown as Awaited<ReturnType<typeof getServerSupabase>>;
+    } catch {
+      serviceSupabase = null;
+    }
     
     // =============================================
     // RLS TRUTH TEST: Check if server can see user and businesses
@@ -415,6 +422,11 @@ export async function GET(req: Request) {
       (feedParam === 'for-you' ? 'mixed' : null) ||
       'standard';
 
+    // For mixed feeds, prefer service role when the user is authenticated.
+    // This avoids "empty feed" issues if RLS policies on businesses/images/stats are too strict in production.
+    // Never use service role for unauthenticated callers.
+    const feedSupabase = userId ? (serviceSupabase ?? supabase) : supabase;
+
     // Legacy location parameters (keep for backward compatibility)
     const radius = searchParams.get('radius') ? parseFloat(searchParams.get('radius')!) : (radiusKm || 10);
 
@@ -505,7 +517,7 @@ export async function GET(req: Request) {
 
       if (userId && interestIds.length === 0 && subInterestIds.length === 0) {
         const prefsStart = Date.now();
-        const userPrefs = await fetchUserPreferences(supabase, userId);
+        const userPrefs = await fetchUserPreferences(feedSupabase, userId);
         console.log('[BUSINESSES API] Server-side prefs fetch ms:', Date.now() - prefsStart);
         resolvedInterestIds = userPrefs.interestIds;
         resolvedDealbreakerIds = dealbreakerIds.length > 0 ? dealbreakerIds : userPrefs.dealbreakerIds;
@@ -523,7 +535,7 @@ export async function GET(req: Request) {
 
       // For You: zero-stats only (preference + quality; no reviews, views, clicks)
       const response = await handleForYouZeroStats({
-        supabase,
+        supabase: feedSupabase,
         limit,
         category,
         badge,
