@@ -33,20 +33,6 @@ export default function HeroSkeleton() {
             <div className="h-12 bg-white/35 rounded-full w-[180px] mx-auto animate-pulse" />
           </div>
         </div>
-
-        {/* Dot indicators skeleton */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-3">
-          <div className="flex items-center gap-2.5">
-            {[...Array(4)].map((_, i) => (
-              <div
-                key={i}
-                className={`rounded-full bg-white/40 animate-pulse ${
-                  i === 0 ? "w-8 h-2" : "w-2 h-2"
-                }`}
-              />
-            ))}
-          </div>
-        </div>
       </section>
     </div>
   );

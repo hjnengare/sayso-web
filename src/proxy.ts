@@ -178,12 +178,18 @@ export async function proxy(request: NextRequest) {
   );
 
   // Define public routes that should always be accessible (no auth required)
-  // Leaderboard: public discovery page — guests can view rankings/scores; write actions stay behind auth
+  // Include both /path and /path/ so "/business" and "/business/slug" both match
   const publicRoutes = [
+    '/home',
+    '/business',
     '/business/',
+    '/event',
     '/event/',
+    '/special',
     '/special/',
+    '/category',
     '/category/',
+    '/explore',
     '/explore/',
     '/trending',
     '/leaderboard',
@@ -258,20 +264,11 @@ export async function proxy(request: NextRequest) {
           console.warn('Middleware: Error clearing cookies:', clearError);
         }
 
-        // Check if this is a guest mode request (guest=true query param)
-        const isGuestMode = request.nextUrl.searchParams.get('guest') === 'true';
-
-        // Only redirect protected routes, allow public routes
-        const protectedRoutes = ['/interests', '/subcategories', '/deal-breakers', '/complete', '/home', '/profile', '/reviews', '/write-review', '/saved', '/dm', '/reviewer'];
-        const isProtectedRoute = protectedRoutes.some(route =>
+        // Only redirect protected routes, allow public routes (/home is public)
+        const protectedRoutesFatal = ['/interests', '/subcategories', '/deal-breakers', '/complete', '/profile', '/reviews', '/write-review', '/saved', '/dm', '/reviewer'];
+        const isProtectedRoute = protectedRoutesFatal.some(route =>
           request.nextUrl.pathname.startsWith(route)
         );
-
-        // Allow /home if guest mode is enabled
-        if (isProtectedRoute && request.nextUrl.pathname === '/home' && isGuestMode) {
-          console.log('Middleware: Allowing guest mode access to /home');
-          return response;
-        }
 
         if (isProtectedRoute) {
           return redirectWithGuard(request, new URL('/login', request.url));
@@ -329,11 +326,12 @@ export async function proxy(request: NextRequest) {
   }
 
   // Protected routes - require authentication AND email verification
+  // /home is public (guest landing); protect actions inside the page instead
   const protectedRoutes = [
     // Onboarding routes
     '/interests', '/subcategories', '/deal-breakers', '/complete',
-    // Main app routes
-    '/home', '/dashboard', '/profile', '/saved', '/dm', '/reviewer',
+    // Main app routes (no /home — public)
+    '/dashboard', '/profile', '/saved', '/dm', '/reviewer',
     // Content discovery routes
     '/explore', '/for-you', '/trending', '/events-specials',
     // Review routes
@@ -352,10 +350,6 @@ export async function proxy(request: NextRequest) {
   const isProtectedRoute = protectedRoutes.some(route =>
     request.nextUrl.pathname.startsWith(route)
   ) || isBusinessReviewRoute;
-
-  // Guest mode: allow unauthenticated access to /home when guest=true
-  const isGuestMode = request.nextUrl.searchParams.get('guest') === 'true';
-  const isGuestHome = pathname === '/home' && isGuestMode;
 
   // Business Owner Routes
   const ownersRoutes = ['/my-businesses', '/owners'];
@@ -400,16 +394,17 @@ export async function proxy(request: NextRequest) {
       edgeLog('ALLOW', pathname, { hasUser: false });
       return response;
     }
-    // Allow /home?guest=true for unauthenticated users (Get Started from onboarding)
-    if (pathname === '/home' && request.nextUrl.searchParams.get('guest') === 'true') {
-      edgeLog('ALLOW', pathname, { hasUser: false, reason: 'guest_home' });
-      return response;
-    }
     if (isProtectedRoute) {
       const referer = request.headers.get('referer') || '';
       const cameFromVerifyEmail = referer.includes('/verify-email') || referer.includes('/auth/callback');
       const to = cameFromVerifyEmail ? '/verify-email' : '/login';
       edgeLog('REDIRECT', pathname, { hasUser: false, to });
+      return redirectWithGuard(request, new URL(to, request.url));
+    }
+    // CRITICAL: Guest hitting "/" — middleware must redirect here. Otherwise app/page.tsx runs and we get competing redirect sources (loop on iOS webview).
+    if (pathname === '/') {
+      const to = '/home';
+      edgeLog('REDIRECT', pathname, { hasUser: false, to, reason: 'root_guest' });
       return redirectWithGuard(request, new URL(to, request.url));
     }
     edgeLog('ALLOW', pathname, { hasUser: false });
@@ -574,18 +569,11 @@ export async function proxy(request: NextRequest) {
       return response;
     }
 
-    // Personal discovery routes: Block business owners (leaderboard excluded — public view-only page)
-    // EXCEPTION: Allow /home?guest=true for business owners exploring the platform
+    // Personal discovery routes: redirect business owners to /my-businesses (/home is public; page can show switch if desired)
     const isPersonalRoute = ['/home', '/for-you', '/trending', '/explore', '/events-specials', '/profile', '/saved', '/write-review', '/reviewer'].some(route =>
       pathname === route || pathname.startsWith(route + '/')
     );
     if (isPersonalRoute) {
-      // Allow guest mode on /home even for business owners
-      if (pathname === '/home' && request.nextUrl.searchParams.get('guest') === 'true') {
-        debugLog('ALLOW', { requestId, reason: 'business_guest_home', pathname });
-        edgeLog('ALLOW', pathname, { hasUser: true, emailConfirmed: true, isBusiness: true, reason: 'guest_home' });
-        return response;
-      }
       debugLog('REDIRECT', { requestId, reason: 'business_on_personal_route', to: '/my-businesses' });
       edgeLog('REDIRECT', pathname, { hasUser: true, emailConfirmed: true, isBusiness: true, to: '/my-businesses' });
       return redirectWithGuard(request, new URL('/my-businesses', request.url));
@@ -629,15 +617,7 @@ export async function proxy(request: NextRequest) {
         debugLog('ALLOW', { requestId, reason: 'completed_user_on_protected', pathname });
         return response;
       }
-      
-      // CRITICAL: Allow /home?guest=true even for users with incomplete onboarding
-      // This prevents redirect loops when users are exploring before completing onboarding
-      if (pathname === '/home' && request.nextUrl.searchParams.get('guest') === 'true') {
-        debugLog('ALLOW', { requestId, reason: 'guest_home_with_user', pathname });
-        edgeLog('ALLOW', pathname, { hasUser: true, emailConfirmed: !!user.email_confirmed_at, reason: 'guest_home' });
-        return response;
-      }
-      
+
       // User with incomplete onboarding must complete onboarding first
       // CRITICAL: Only redirect if we have confirmed incomplete status
       if (onboardingStatus !== null && !isOnboardingComplete) {
@@ -663,13 +643,7 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Allow unauthenticated guest access to /home?guest=true
-  if (isGuestHome) {
-    debugLog('ALLOW', { requestId, reason: 'guest_home', pathname });
-    return response;
-  }
-
-  // (Unauthenticated users already returned above; this is redundant but kept for clarity)
+  // (Unauthenticated users already returned above)
   if (isPublicRoute) {
     edgeLog('ALLOW', pathname, { hasUser: !!user, emailConfirmed: !!user?.email_confirmed_at });
     return response;
