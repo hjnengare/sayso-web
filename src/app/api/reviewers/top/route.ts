@@ -49,9 +49,13 @@ export async function GET(req: Request) {
 
     const reviewIds: string[] = [];
     const userStats = new Map<string, { count: number; ratingSum: number; hasLong: boolean; hasPhoto: boolean }>();
+    const reviewIdToUserId = new Map<string, string>();
     for (const r of reviews) {
       if (!r?.user_id) continue;
-      if (r?.id) reviewIds.push(r.id);
+      if (r?.id) {
+        reviewIds.push(r.id);
+        reviewIdToUserId.set(r.id, r.user_id);
+      }
       if (!userStats.has(r.user_id)) {
         userStats.set(r.user_id, { count: 0, ratingSum: 0, hasLong: false, hasPhoto: false });
       }
@@ -78,10 +82,10 @@ export async function GET(req: Request) {
         }
         const reviewsWithImages = new Set((imageRows || []).map((x: any) => x.review_id).filter(Boolean));
         if (reviewsWithImages.size === 0) continue;
-        for (const r of reviews) {
-          if (!r?.id || !r?.user_id) continue;
-          if (!reviewsWithImages.has(r.id)) continue;
-          const stats = userStats.get(r.user_id);
+        for (const reviewId of reviewsWithImages) {
+          const userId = reviewIdToUserId.get(reviewId);
+          if (!userId) continue;
+          const stats = userStats.get(userId);
           if (stats) stats.hasPhoto = true;
         }
       }
