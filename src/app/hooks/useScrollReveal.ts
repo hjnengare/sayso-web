@@ -21,6 +21,7 @@ export function useScrollReveal(options: UseScrollRevealOptions = {}) {
 
   const observerRef = useRef<IntersectionObserver | null>(null);
   const observedElementsRef = useRef<Set<Element>>(new Set());
+  const rafIdRef = useRef<number | null>(null);
 
   useEffect(() => {
     // Create IntersectionObserver
@@ -47,35 +48,55 @@ export function useScrollReveal(options: UseScrollRevealOptions = {}) {
       }
     );
 
-    // Function to observe all sections and individual reveal elements
-    const observeElements = () => {
-      // Observe sections (for backward compatibility)
-      const sections = document.querySelectorAll("[data-section]");
-      sections.forEach((section) => {
-        if (!observedElementsRef.current.has(section) && observerRef.current) {
-          observerRef.current.observe(section);
-          observedElementsRef.current.add(section);
-        }
-      });
-      
-      // Observe individual reveal elements (for per-element reveals)
-      const revealElements = document.querySelectorAll("[data-reveal]");
-      revealElements.forEach((element) => {
-        if (!observedElementsRef.current.has(element) && observerRef.current) {
-          observerRef.current.observe(element);
-          observedElementsRef.current.add(element);
-        }
+    const observeElement = (element: Element) => {
+      if (!observerRef.current) return;
+      if (observedElementsRef.current.has(element)) return;
+      observerRef.current.observe(element);
+      observedElementsRef.current.add(element);
+    };
+
+    const observeFromRoot = (root: ParentNode) => {
+      const sections = root.querySelectorAll?.("[data-section]") || [];
+      sections.forEach((section) => observeElement(section));
+
+      const reveals = root.querySelectorAll?.("[data-reveal]") || [];
+      reveals.forEach((el) => observeElement(el));
+    };
+
+    const observeNode = (node: Node) => {
+      if (!(node instanceof Element)) return;
+      if (node.matches("[data-section], [data-reveal]")) {
+        observeElement(node);
+      }
+      observeFromRoot(node);
+    };
+
+    const scheduleObserveAll = () => {
+      if (rafIdRef.current != null) return;
+      rafIdRef.current = window.requestAnimationFrame(() => {
+        rafIdRef.current = null;
+        observeFromRoot(document);
       });
     };
 
     // Initial observation - use setTimeout to ensure DOM is ready
     const timeoutId = setTimeout(() => {
-      observeElements();
+      observeFromRoot(document);
     }, 0);
 
     // Also observe on any dynamic content changes
-    const mutationObserver = new MutationObserver(() => {
-      observeElements();
+    const mutationObserver = new MutationObserver((mutations) => {
+      // Prefer scanning only newly-added nodes (cheap), fall back to a debounced full scan.
+      let sawAddedNodes = false;
+      for (const mutation of mutations) {
+        if (mutation.addedNodes && mutation.addedNodes.length > 0) {
+          sawAddedNodes = true;
+          mutation.addedNodes.forEach((n) => observeNode(n));
+        }
+      }
+      if (!sawAddedNodes) {
+        scheduleObserveAll();
+      }
     });
 
     // Observe the document body for new sections
@@ -87,6 +108,10 @@ export function useScrollReveal(options: UseScrollRevealOptions = {}) {
     // Cleanup
     return () => {
       clearTimeout(timeoutId);
+      if (rafIdRef.current != null) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
       mutationObserver.disconnect();
       if (observerRef.current) {
         observedElementsRef.current.forEach((element) => {
