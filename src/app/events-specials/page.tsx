@@ -75,6 +75,22 @@ export default function EventsSpecialsPage() {
     );
   }, [mergedEvents, selectedFilter]);
 
+  const searchSuggestions = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return [];
+    const matches = mergedEvents.filter((item) => {
+      const haystack = `${item.title ?? ""} ${item.location ?? ""} ${item.description ?? ""}`.toLowerCase();
+      return haystack.includes(q);
+    });
+    return matches.slice(0, 6).map((item) => ({
+      id: item.id,
+      title: item.title,
+      subtitle: item.location || undefined,
+      typeLabel: item.type === "event" ? "Event" : "Special",
+      href: item.type === "event" ? `/event/${item.id}` : `/special/${item.id}`,
+    }));
+  }, [mergedEvents, searchQuery]);
+
   const eventsSectionItems = filteredEvents.filter((event) => event.type === "event");
   const specialsSectionItems = filteredEvents.filter((event) => event.type === "special");
 
@@ -273,6 +289,9 @@ export default function EventsSpecialsPage() {
               onSubmitQuery={handleSubmitQuery}
               showFilter={false}
               showSearchIcon={false}
+              enableSuggestions={true}
+              suggestionsMode="custom"
+              customSuggestions={searchSuggestions}
             />
             {/* Show search status indicator */}
             {debouncedSearchQuery.trim().length > 0 && (

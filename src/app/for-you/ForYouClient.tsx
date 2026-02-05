@@ -444,6 +444,7 @@ export default function ForYouClient({
               onSearch={handleSearchChange}
               onSubmitQuery={handleSubmitQuery}
               showFilter={false}
+              enableSuggestions={true}
             />
           </div>
 

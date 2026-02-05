@@ -339,6 +339,7 @@ export default function TrendingPage() {
               onSearch={handleSearchChange}
               onSubmitQuery={handleSubmitQuery}
               showFilter={false}
+              enableSuggestions={true}
             />
           </div>
 
