@@ -15,12 +15,12 @@ export default function HeaderSkeleton({
 
   return (
     <header
-      className="sticky top-0 left-0 right-0 w-full max-w-7xl mx-auto z-50 bg-navbar-bg shadow-md transition-all duration-300"
+      className="sticky top-0 left-0 right-0 w-full z-50 bg-navbar-bg shadow-md transition-all duration-300"
       aria-label="Loading header"
       aria-busy="true"
     >
       {/* Inner wrapper — matches Header.tsx: py-4, responsive px, min-h */}
-      <div className="relative py-4 z-[1] mx-auto w-full max-w-7xl px-4 sm:px-6 md:px-8 lg:px-10 flex items-center h-full min-h-[72px] lg:min-h-[80px]">
+      <div className="relative py-4 z-[1] w-full px-4 sm:px-6 md:px-8 lg:px-10 flex items-center h-full min-h-[72px] lg:min-h-[80px]">
         <div className="w-full">
 
           {/* ── Mobile layout (lg:hidden) — matches Header personal mobile ── */}
