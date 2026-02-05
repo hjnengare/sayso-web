@@ -21,6 +21,8 @@ interface HeroSlide {
   description: string;
 }
 
+type HeroViewport = "mobile" | "tablet" | "desktop";
+
 const HERO_COPY = [
   {
     title: "Discover Local Gems",
@@ -49,10 +51,76 @@ const shuffleImages = (images: string[]): string[] => {
   return result;
 };
 
+const HERO_SEED_STORAGE_KEY = "sayso.hero.seed.v1";
+
+function getOrCreateSessionSeed(): string {
+  if (typeof window === "undefined") return "server";
+  try {
+    const existing = window.sessionStorage.getItem(HERO_SEED_STORAGE_KEY);
+    if (existing) return existing;
+    const seed =
+      typeof window.crypto !== "undefined" && "getRandomValues" in window.crypto
+        ? (() => {
+            const buf = new Uint32Array(2);
+            window.crypto.getRandomValues(buf);
+            return `${buf[0].toString(36)}${buf[1].toString(36)}`;
+          })()
+        : Math.floor(Math.random() * 1e12).toString(36);
+    window.sessionStorage.setItem(HERO_SEED_STORAGE_KEY, seed);
+    return seed;
+  } catch {
+    return Math.floor(Math.random() * 1e12).toString(36);
+  }
+}
+
+function hashSeedToUint32(seed: string): number {
+  // FNV-1a 32-bit
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < seed.length; i += 1) {
+    hash ^= seed.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return hash >>> 0;
+}
+
+function mulberry32(seed: number): () => number {
+  let t = seed >>> 0;
+  return () => {
+    t += 0x6d2b79f5;
+    let x = t;
+    x = Math.imul(x ^ (x >>> 15), x | 1);
+    x ^= x + Math.imul(x ^ (x >>> 7), x | 61);
+    return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function seededShuffle(images: string[], seed: string): string[] {
+  const result = [...images];
+  const rand = mulberry32(hashSeedToUint32(seed));
+  for (let i = result.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(rand() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+function selectStableSubset(images: string[], cap: number, seed: string): string[] {
+  if (cap >= images.length) return images;
+  // Shuffle once deterministically, then take the first N.
+  return seededShuffle(images, seed).slice(0, cap);
+}
+
+function getViewportFromWindow(): HeroViewport {
+  if (typeof window === "undefined" || !window.matchMedia) return "desktop";
+  if (window.matchMedia("(max-width: 767px)").matches) return "mobile";
+  if (window.matchMedia("(min-width: 768px) and (max-width: 1024px)").matches) return "tablet";
+  return "desktop";
+}
+
 const FONT_STACK = "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif";
 
-const buildSlides = (images: string[]): HeroSlide[] => {
-  const randomized = shuffleImages(images);
+const buildSlides = (images: string[], seed: string): HeroSlide[] => {
+  const randomized = seededShuffle(images, seed);
   return randomized.map((image, index) => {
     const copy = HERO_COPY[index % HERO_COPY.length];
     return {
@@ -224,16 +292,51 @@ export default function HeroCarousel() {
   const [paused, setPaused] = useState(false);
   const [progress, setProgress] = useState(0);
   const [heroImages] = useState<string[]>(() => HERO_IMAGES);
+  const [heroViewport, setHeroViewport] = useState<HeroViewport>(() => getViewportFromWindow());
+  const [heroSeed] = useState<string>(() => getOrCreateSessionSeed());
   const [failedImageUrls, setFailedImageUrls] = useState<Set<string>>(new Set());
   const progressRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLElement>(null);
   const currentIndexRef = useRef(currentIndex);
-  const slides = useMemo(
-    () => buildSlides(Array.isArray(heroImages) ? heroImages : HERO_IMAGES),
-    [heroImages]
-  );
+  const cappedHeroImages = useMemo(() => {
+    const cap = heroViewport === "mobile" ? 12 : heroViewport === "tablet" ? 18 : null;
+    const base = Array.isArray(heroImages) ? heroImages : HERO_IMAGES;
+    if (!cap) return base;
+    return selectStableSubset(base, cap, heroSeed);
+  }, [heroImages, heroViewport, heroSeed]);
+  const slides = useMemo(() => buildSlides(cappedHeroImages, heroSeed), [cappedHeroImages, heroSeed]);
   const slidesRef = useRef<HeroSlide[]>(slides);
   const preloadedImagesRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+
+    const mobileMql = window.matchMedia("(max-width: 767px)");
+    const tabletMql = window.matchMedia("(min-width: 768px) and (max-width: 1024px)");
+
+    const update = () => {
+      setHeroViewport(mobileMql.matches ? "mobile" : tabletMql.matches ? "tablet" : "desktop");
+    };
+
+    update();
+
+    const add = (mql: MediaQueryList) => {
+      if ("addEventListener" in mql) {
+        mql.addEventListener("change", update);
+        return () => mql.removeEventListener("change", update);
+      }
+      // Safari < 14
+      (mql as any).addListener?.(update);
+      return () => (mql as any).removeListener?.(update);
+    };
+
+    const removeMobile = add(mobileMql);
+    const removeTablet = add(tabletMql);
+    return () => {
+      removeMobile();
+      removeTablet();
+    };
+  }, []);
 
   useEffect(() => {
     slidesRef.current = slides;
@@ -552,9 +655,9 @@ export default function HeroCarousel() {
                src={failedImageUrls.has(slide.image) ? HERO_IMAGES[index % HERO_IMAGES.length] : slide.image}
                alt={slide.title}
                fill
-               priority={index < 2}
-               loading={index < 2 ? "eager" : "lazy"}
-               fetchPriority={index < 2 ? "high" : "auto"}
+               priority={index === 0}
+               loading={index === 0 ? "eager" : "lazy"}
+               fetchPriority={index === 0 ? "high" : "auto"}
                quality={80}
                className="object-cover scale-[1.02]"
                style={{ filter: "brightness(0.95) contrast(1.05) saturate(1.1)" }}
