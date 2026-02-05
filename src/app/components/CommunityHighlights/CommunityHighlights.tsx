@@ -2,6 +2,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Award, ArrowRight } from "lucide-react";
 import ReviewerCard from "../ReviewerCard/ReviewerCard";
@@ -216,6 +217,16 @@ export default function CommunityHighlights({
               <p className="text-body-sm text-charcoal/60 max-w-[70ch] mx-auto" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 500 }}>
                 {contributorsEmptyBody}
               </p>
+              <div className="pt-2 flex items-center justify-center">
+                <Link
+                  href="https://sayso.co.za/badges"
+                  className="mi-tap group inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-charcoal text-white text-sm font-semibold shadow-md hover:bg-charcoal/90 transition"
+                  aria-label="Learn about badges"
+                >
+                  <span>Explore badges</span>
+                  <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+                </Link>
+              </div>
             </div>
           </div>
         )}
