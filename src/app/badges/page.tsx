@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { 
   ChevronLeft, 
   Compass, 
@@ -579,6 +580,7 @@ function BadgeSection({
 }
 
 export default function BadgesPage() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
 
   // Group badges by category
@@ -630,14 +632,21 @@ export default function BadgesPage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.4 }}
           >
-            <Link 
-              href="/leaderboard"
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window !== "undefined" && window.history.length > 1) {
+                  router.back();
+                } else {
+                  router.push("/leaderboard");
+                }
+              }}
               className="inline-flex items-center gap-2 text-charcoal/70 hover:text-charcoal transition-colors mb-8 group"
               style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
             >
               <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-              <span className="text-sm font-medium">Back to Leaderboard</span>
-            </Link>
+              <span className="text-sm font-medium">Back to previous page</span>
+            </button>
           </motion.div>
 
           {/* Hero Content */}
