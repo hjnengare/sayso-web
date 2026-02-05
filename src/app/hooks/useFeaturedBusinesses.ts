@@ -102,13 +102,13 @@ export function useFeaturedBusinesses(options: UseFeaturedBusinessesOptions = {}
       }
 
       const data = await response.json();
-      if (Array.isArray(data)) {
-        setFeaturedBusinesses(data);
-        setMeta(null);
-      } else {
-        setFeaturedBusinesses(data?.data || []);
-        setMeta(data?.meta || null);
-      }
+      const list = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.data)
+          ? data.data
+          : [];
+      setFeaturedBusinesses(list);
+      setMeta(data && !Array.isArray(data) ? data?.meta ?? null : null);
     } catch (err) {
       console.error('Error fetching featured businesses:', err);
       setStatusCode(null);

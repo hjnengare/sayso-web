@@ -372,10 +372,11 @@ export default function Home() {
         hasImage: !!(allBusinesses[0].image || allBusinesses[0].image_url || allBusinesses[0].uploaded_images),
       } : null,
     });
+    const safeFeatured = Array.isArray(featuredByCategory) ? featuredByCategory : [];
     console.log('[Home Page] Featured by Category:', {
-      count: featuredByCategory.length,
+      count: safeFeatured.length,
       loading: featuredLoading,
-      categories: featuredByCategory.map(f => f.category),
+      categories: safeFeatured.map(f => f.category),
     });
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   }, [forYouBusinesses, trendingBusinesses, allBusinesses, forYouLoading, trendingLoading, allBusinessesLoading, featuredByCategory, featuredLoading]);
@@ -573,7 +574,7 @@ export default function Home() {
                       <CommunityHighlightsSkeleton reviewerCount={4} businessCount={4} />
                     ) : (
                       <CommunityHighlights
-                        businessesOfTheMonth={featuredByCategory}
+                        businessesOfTheMonth={Array.isArray(featuredByCategory) ? featuredByCategory : []}
                         variant="reviews"
                       />
                     )}

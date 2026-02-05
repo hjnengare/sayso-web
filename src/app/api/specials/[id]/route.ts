@@ -28,7 +28,7 @@ export async function GET(
       id: string;
       name: string;
       slug?: string;
-      logo_url?: string;
+      image_url?: string;
       address?: string;
       phone?: string;
       website?: string;
@@ -80,7 +80,7 @@ export async function GET(
           id,
           name,
           slug,
-          logo_url,
+          image_url,
           address,
           phone,
           website,
@@ -159,8 +159,8 @@ export async function GET(
       businessSlug: (special.businesses && !Array.isArray(special.businesses)) ? special.businesses.slug
         : Array.isArray(special.businesses) ? special.businesses[0]?.slug
         : undefined,
-      businessLogo: (special.businesses && !Array.isArray(special.businesses)) ? special.businesses.logo_url
-        : Array.isArray(special.businesses) ? special.businesses[0]?.logo_url
+      businessLogo: (special.businesses && !Array.isArray(special.businesses)) ? special.businesses.image_url
+        : Array.isArray(special.businesses) ? special.businesses[0]?.image_url
         : undefined,
       businessAddress: (special.businesses && !Array.isArray(special.businesses)) ? special.businesses.address
         : Array.isArray(special.businesses) ? special.businesses[0]?.address

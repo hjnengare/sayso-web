@@ -42,6 +42,10 @@ type Business = {
   category?: string;
   /** Display label (e.g. "Restaurants"). Prefer this for UI text. */
   category_label?: string;
+  /** New schema (20260210): DB primary taxonomy columns. Prefer when present. */
+  primary_subcategory_slug?: string | null;
+  primary_subcategory_label?: string | null;
+  primary_category_slug?: string | null;
   sub_interest_id?: string | null;
   subInterestId?: string;
   subInterestLabel?: string;

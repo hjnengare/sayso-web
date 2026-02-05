@@ -88,7 +88,7 @@ export async function GET(req: NextRequest) {
           id,
           name,
           slug,
-          logo_url
+          image_url
         )
       `, { count: 'exact' })
       .eq('type', 'special')
@@ -150,7 +150,7 @@ export async function GET(req: NextRequest) {
       businessId: special.business_id,
       businessName: special.businesses?.name || 'Unknown Business',
       businessSlug: special.businesses?.slug,
-      businessLogo: special.businesses?.logo_url,
+      businessLogo: special.businesses?.image_url ?? null,
       createdBy: special.created_by,
       createdAt: special.created_at,
       isBusinessOwned: true,

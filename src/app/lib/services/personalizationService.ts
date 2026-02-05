@@ -12,6 +12,10 @@
 
 export interface BusinessForScoring {
   id: string;
+  /** New schema: primary_category_slug (parent). Resolved to interest_id for scoring when present. */
+  primary_category_slug?: string | null;
+  /** New schema: primary_subcategory_slug (canonical subcategory). Resolved to sub_interest_id when present. */
+  primary_subcategory_slug?: string | null;
   interest_id?: string | null;
   sub_interest_id?: string | null;
   category?: string;
@@ -95,14 +99,18 @@ const DEALBREAKER_RULES: Record<string, (business: BusinessForScoring) => boolea
  * Calculate interest match score
  * Higher score if business matches user's interests
  */
+function resolveInterestIdForScoring(b: BusinessForScoring): string | null | undefined {
+  return b.primary_category_slug ?? b.interest_id ?? null;
+}
+
 function calculateInterestMatch(
   business: BusinessForScoring,
   userInterestIds: string[]
 ): number {
   if (userInterestIds.length === 0) return 0;
-  if (!business.interest_id) return 0;
-  
-  const match = userInterestIds.includes(business.interest_id);
+  const interestId = resolveInterestIdForScoring(business);
+  if (!interestId) return 0;
+  const match = userInterestIds.includes(interestId);
   return match ? 15 : 0; // Strong weight for interest match
 }
 
@@ -110,14 +118,18 @@ function calculateInterestMatch(
  * Calculate subcategory match score
  * Higher score if business matches user's specific subcategories
  */
+function resolveSubInterestIdForScoring(b: BusinessForScoring): string | null | undefined {
+  return b.primary_subcategory_slug ?? b.sub_interest_id ?? null;
+}
+
 function calculateSubcategoryMatch(
   business: BusinessForScoring,
   userSubcategoryIds: string[]
 ): number {
   if (userSubcategoryIds.length === 0) return 0;
-  if (!business.sub_interest_id) return 0;
-  
-  const match = userSubcategoryIds.includes(business.sub_interest_id);
+  const subInterestId = resolveSubInterestIdForScoring(business);
+  if (!subInterestId) return 0;
+  const match = userSubcategoryIds.includes(subInterestId);
   return match ? 25 : 0; // Strongest weight for subcategory match (most specific)
 }
 
@@ -236,14 +248,18 @@ function generateInsights(
 ): string[] {
   const insights: string[] = [];
   
+  const interestId = resolveInterestIdForScoring(business);
+  const subInterestId = resolveSubInterestIdForScoring(business);
+  const categoryLabel = business.category ?? business.primary_subcategory_slug ?? 'this category';
+
   // Interest match insight
-  if (business.interest_id && userPreferences.interestIds.includes(business.interest_id)) {
-    insights.push(`Matches your interest in ${business.category || 'this category'}`);
+  if (interestId && userPreferences.interestIds.includes(interestId)) {
+    insights.push(`Matches your interest in ${categoryLabel}`);
   }
   
   // Subcategory match insight
-  if (business.sub_interest_id && userPreferences.subcategoryIds.includes(business.sub_interest_id)) {
-    insights.push(`Perfect match for your preferred ${business.category || 'category'}`);
+  if (subInterestId && userPreferences.subcategoryIds.includes(subInterestId)) {
+    insights.push(`Perfect match for your preferred ${categoryLabel}`);
   }
   
   // High rating insight

@@ -45,9 +45,9 @@ export async function GET(req: NextRequest) {
           id,
           name,
           description,
-          category,
-          interest_id,
-          sub_interest_id,
+          primary_subcategory_slug,
+          primary_subcategory_label,
+          primary_category_slug,
           location,
           address,
           phone,
@@ -176,13 +176,20 @@ export async function GET(req: NextRequest) {
 
         // Normalize business_images to uploaded_images format
         const { uploaded_images, cover_image, logo_url } = normalizeBusinessImages(business);
-        const resolvedInterestId = business.interest_id ?? (business.sub_interest_id ? getInterestIdForSubcategory(business.sub_interest_id) : undefined);
+        const primaryCategorySlug = business.primary_category_slug ?? (business.primary_subcategory_slug ? getInterestIdForSubcategory(business.primary_subcategory_slug) : undefined);
         const displayCategory = (() => {
-          const hasSlug = !!(business.sub_interest_id || resolvedInterestId || business.interest_id);
-          const rawCategory = typeof business.category === 'string' ? business.category.trim() : '';
-          const isMissingAll = !hasSlug && rawCategory.length === 0;
-          if (isMissingAll) return 'Uncategorized';
-          return getCategoryLabelFromBusiness({ ...business, interest_id: resolvedInterestId ?? business.interest_id });
+          const hasSlug = !!(business.primary_subcategory_slug || primaryCategorySlug || business.primary_category_slug);
+          const rawCategory = typeof business.primary_subcategory_slug === 'string' ? business.primary_subcategory_slug.trim() : '';
+          if (!hasSlug && !rawCategory) return 'Uncategorized';
+          return getCategoryLabelFromBusiness({
+            primary_subcategory_slug: business.primary_subcategory_slug,
+            primary_subcategory_label: business.primary_subcategory_label,
+            primary_category_slug: business.primary_category_slug,
+            category: business.primary_subcategory_slug,
+            category_label: business.primary_subcategory_label,
+            sub_interest_id: business.primary_subcategory_slug,
+            interest_id: primaryCategorySlug ?? business.primary_category_slug,
+          });
         })();
 
         return {
@@ -190,10 +197,10 @@ export async function GET(req: NextRequest) {
           name: business.name.trim(),
           description: business.description || null,
           category: displayCategory,
-          interest_id: resolvedInterestId ?? business.interest_id ?? undefined,
-          interestId: resolvedInterestId ?? business.interest_id ?? undefined,
-          sub_interest_id: business.sub_interest_id ?? undefined,
-          subInterestId: business.sub_interest_id ?? undefined,
+          interest_id: primaryCategorySlug ?? business.primary_category_slug ?? undefined,
+          interestId: primaryCategorySlug ?? business.primary_category_slug ?? undefined,
+          sub_interest_id: business.primary_subcategory_slug ?? undefined,
+          subInterestId: business.primary_subcategory_slug ?? undefined,
           location: business.location || business.address || 'Location not available',
           address: business.address || null,
           phone: business.phone || null,

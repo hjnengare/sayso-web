@@ -217,7 +217,7 @@ export default function CommunityHighlights({
         )}
 
         {/* Businesses of the Month */}
-        {businessesOfTheMonth && businessesOfTheMonth.length > 0 && (
+        {Array.isArray(businessesOfTheMonth) && businessesOfTheMonth.length > 0 && (
           <section
             className="relative m-0 p-0 w-full mt-3 list-none"
             aria-label="Featured Businesses of the Month by Category"
@@ -258,7 +258,7 @@ export default function CommunityHighlights({
                   }
                 `}} />
                 <div className="flex gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2 items-stretch pt-2 list-none">
-                  {businessesOfTheMonth.map((business, index) => (
+                  {(Array.isArray(businessesOfTheMonth) ? businessesOfTheMonth : []).map((business, index) => (
                     <div key={business.id} className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto sm:min-w-[25%] md:min-w-[25%] lg:min-w-[20%] xl:min-w-[18%] 2xl:min-w-[16%] list-none flex justify-center business-month-card-full-width">
                       <BusinessOfTheMonthCard
                         business={business}

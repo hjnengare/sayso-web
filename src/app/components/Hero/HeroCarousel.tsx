@@ -228,7 +228,10 @@ export default function HeroCarousel() {
   const progressRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLElement>(null);
   const currentIndexRef = useRef(currentIndex);
-  const slides = useMemo(() => buildSlides(heroImages), [heroImages]);
+  const slides = useMemo(
+    () => buildSlides(Array.isArray(heroImages) ? heroImages : HERO_IMAGES),
+    [heroImages]
+  );
   const slidesRef = useRef<HeroSlide[]>(slides);
   const preloadedImagesRef = useRef<Set<string>>(new Set());
 
@@ -263,21 +266,52 @@ export default function HeroCarousel() {
     window.matchMedia &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // Prefetch a few hero images as soon as URLs are known.
+  // Preload first 3 hero images in <head> for fastest LCP (browser fetches before paint).
   useEffect(() => {
     if (typeof window === "undefined" || slides.length === 0) return;
+    const preloadCount = 3;
+    const urls = slides.slice(0, preloadCount).map((s) => s.image);
+    const links: HTMLLinkElement[] = [];
+    urls.forEach((href) => {
+      const link = document.createElement("link");
+      link.rel = "preload";
+      link.as = "image";
+      link.href = href;
+      document.head.appendChild(link);
+      links.push(link);
+    });
+    return () => links.forEach((link) => link.remove());
+  }, [slides]);
 
-    const prefetchCount = 4;
+  // Prefetch next 8 hero images so next slides load instantly.
+  useEffect(() => {
+    if (typeof window === "undefined" || slides.length === 0) return;
+    const prefetchCount = 8;
     const imagesToPrefetch = slides.slice(0, prefetchCount).map((slide) => slide.image);
-
     imagesToPrefetch.forEach((src) => {
+      if (preloadedImagesRef.current.has(src)) return;
+      preloadedImagesRef.current.add(src);
+      const img = new window.Image();
+      img.decoding = "async";
+      img.fetchPriority = "low";
+      img.src = src;
+    });
+  }, [slides]);
+
+  // When slide changes, preload the next 2 slides if not already loaded.
+  useEffect(() => {
+    if (typeof window === "undefined" || slides.length === 0) return;
+    const next1 = (currentIndex + 1) % slides.length;
+    const next2 = (currentIndex + 2) % slides.length;
+    [next1, next2].forEach((idx) => {
+      const src = slides[idx].image;
       if (preloadedImagesRef.current.has(src)) return;
       preloadedImagesRef.current.add(src);
       const img = new window.Image();
       img.decoding = "async";
       img.src = src;
     });
-  }, [slides]);
+  }, [currentIndex, slides]);
 
   const next = useCallback(() => {
     if (slides.length === 0) return;
@@ -607,13 +641,7 @@ export default function HeroCarousel() {
       <div className="sr-only" aria-live="polite">
         {slides[currentIndex]?.title}
       </div>
-
-      {/* Slide counter */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 rounded-full bg-black/30 px-3 py-1.5 text-sm text-white/90">
-        <span aria-live="polite">
-          {currentIndex + 1} / {slides.length}
-        </span>
-      </div>
+      
         </section>
       </div>
 

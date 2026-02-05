@@ -2,7 +2,7 @@
  * Hook to fetch businesses from the API
  */
 
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useMemo, useCallback, useRef } from 'react';
 import { Business } from '../components/BusinessCard/BusinessCard';
 import { type UserPreferences } from './useUserPreferences';
 import { businessUpdateEvents } from '../lib/utils/businessUpdateEvents';
@@ -412,12 +412,11 @@ export function useForYouBusinesses(
       params.set('limit', limit.toString());
       params.set('feed_strategy', 'mixed');
 
-      // Pass interests (broad categories)
+      // Pass interests (broad) → API filters by primary_category_slug
       if (interestIds && interestIds.length > 0) {
         params.set('interest_ids', interestIds.join(','));
       }
-
-      // Pass subcategories (specific preferences) separately
+      // Pass subcategories (specific) → API filters by primary_subcategory_slug
       if (subInterestIds && subInterestIds.length > 0) {
         params.set('sub_interest_ids', subInterestIds.join(','));
       }
@@ -472,7 +471,8 @@ export function useForYouBusinesses(
     requestKey,
   ]);
 
-  useEffect(() => {
+  // Fire For You request as soon as the component is committed (before paint) so content shows right away
+  useLayoutEffect(() => {
     const shouldSkipInitialFetch =
       extraOptions.skipInitialFetch && hasInitialBusinesses && skipInitialFetchRef.current;
 

@@ -1641,7 +1641,12 @@ async function fetchTopPicksFallback(
   return applySharedResponseHeaders(response);
 }
 
-// Legacy mixed feed handler (kept for fallback)
+/**
+ * For You (legacy mixed feed): personalized discovery, not trending.
+ * - Layers: high-match picks, quality wildcards, explore nearby tastes, new-but-relevant.
+ * - Excludes: dealbreakers, businesses the user already reviewed (avoid repetition).
+ * - Diversity: cap per subcategory so feed isn’t one category; mix personal + top + explore.
+ */
 async function handleMixedFeedLegacy(options: MixedFeedOptions) {
   const legacyStart = Date.now();
   const {
@@ -1659,6 +1664,7 @@ async function handleMixedFeedLegacy(options: MixedFeedOptions) {
     dealbreakerIds,
     latitude,
     longitude,
+    userId,
   } = options;
 
   console.log('[BUSINESSES API] handleMixedFeed called with:', {
@@ -1805,16 +1811,18 @@ async function handleMixedFeedLegacy(options: MixedFeedOptions) {
       exploreSample: explore[0] ? { id: explore[0].id, name: explore[0].name } : null,
     });
   }
-  
-  // Prioritize businesses the user has recently reviewed (within 24 hours)
-  const prioritizeStart = Date.now();
-  const prioritizedBlended = await prioritizeRecentlyReviewedBusinesses(supabase, blended);
-  console.log('[BUSINESSES API] Legacy prioritize duration ms:', Date.now() - prioritizeStart);
+
+  // For You: exclude businesses the user already reviewed (discovery = places to try next, not repetition)
+  const excludeStart = Date.now();
+  const forDiscovery = userId
+    ? await excludeAlreadyReviewedBusinesses(supabase, userId, blended)
+    : blended;
+  console.log('[BUSINESSES API] Legacy exclude-already-reviewed duration ms:', Date.now() - excludeStart, 'excluded:', blended.length - forDiscovery.length);
 
   // Diversity cap: prefer one per subcategory so we don't flood with one category (e.g. fashion)
   const usedSubcategories = new Set<string>();
-  const diversified: typeof prioritizedBlended = [];
-  for (const b of prioritizedBlended) {
+  const diversified: typeof forDiscovery = [];
+  for (const b of forDiscovery) {
     const key = (b.sub_interest_id ?? b.category ?? 'misc').toString();
     if (!usedSubcategories.has(key)) {
       diversified.push(b);
@@ -1825,7 +1833,7 @@ async function handleMixedFeedLegacy(options: MixedFeedOptions) {
   // Fill remainder from rest of list if we have room (after diversity cap)
   if (diversified.length < limit) {
     const diversifiedIds = new Set(diversified.map((x) => x.id));
-    for (const b of prioritizedBlended) {
+    for (const b of forDiscovery) {
       if (diversified.length >= limit) break;
       if (diversifiedIds.has(b.id)) continue;
       diversified.push(b);
@@ -2443,6 +2451,30 @@ function transformBusinessForCard(business: BusinessRPCResult) {
   }
 
   return transformed;
+}
+
+/**
+ * Exclude businesses the user has already reviewed (ever).
+ * For You = discovery of places to try next; avoid repetition.
+ */
+async function excludeAlreadyReviewedBusinesses(
+  supabase: SupabaseClientInstance,
+  userId: string,
+  businesses: BusinessRPCResult[]
+): Promise<BusinessRPCResult[]> {
+  if (!businesses?.length) return businesses;
+  try {
+    const { data: reviews, error } = await supabase
+      .from('reviews')
+      .select('business_id')
+      .eq('user_id', userId);
+    if (error || !reviews?.length) return businesses;
+    const reviewedIds = new Set(reviews.map((r) => r.business_id));
+    return businesses.filter((b) => !reviewedIds.has(b.id) && !reviewedIds.has(b.slug));
+  } catch (e) {
+    console.warn('[BUSINESSES API] excludeAlreadyReviewedBusinesses error:', e);
+    return businesses;
+  }
 }
 
 /**

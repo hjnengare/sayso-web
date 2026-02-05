@@ -25,6 +25,7 @@ import type { Business } from "../components/BusinessCard/BusinessCard";
 import type { UserPreferences } from "../hooks/useUserPreferences";
 import type { BusinessMapItem } from "../components/maps/BusinessesMap";
 import { sortBusinessesByPriority } from "../utils/businessPrioritization";
+import { getCategoryLabelFromBusiness } from "../utils/subcategoryPlaceholders";
 
 
 // Note: dynamic and revalidate cannot be exported from client components
@@ -204,7 +205,7 @@ export default function ForYouClient({
         name: b.name,
         lat: lat as number,
         lng: lng as number,
-        category: b.category,
+        category: getCategoryLabelFromBusiness(b),
         image_url: b.image_url,
         slug: b.slug,
       }));
