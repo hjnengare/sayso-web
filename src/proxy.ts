@@ -542,6 +542,17 @@ export async function proxy(request: NextRequest) {
   });
 
   // ============================================
+  // SINGLE DECISION POINT FOR / — no competing redirects in pages
+  // Prevents redirect loop (e.g. iPhone Gmail webview: / ↔ /home).
+  // Only middleware decides where / goes. One redirect, then return.
+  // ============================================
+  if (pathname === '/') {
+    const to = !user ? '/home' : (isBusinessAccount ? '/my-businesses' : '/home');
+    edgeLog('REDIRECT', pathname, { hasUser: !!user, isBusiness: isBusinessAccount, to });
+    return redirectWithGuard(request, new URL(to, request.url));
+  }
+
+  // ============================================
   // SIMPLIFIED ONBOARDING GUARD LOGIC (only runs when user exists)
   // ============================================
 

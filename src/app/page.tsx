@@ -1,54 +1,24 @@
 import { redirect } from "next/navigation";
 import { Metadata } from "next";
 import { PageMetadata } from "./lib/utils/seoMetadata";
-import { getServerSupabase } from "./lib/supabase/server";
 
 // Set canonical to /home to prevent duplicate content
 export const metadata: Metadata = {
   ...PageMetadata.home(),
   alternates: {
-    canonical: "/home", // Point canonical to /home since this redirects there
+    canonical: "/home", // Point canonical to /home since middleware redirects / there
   },
   robots: {
-    index: false, // Don't index the redirect page
+    index: false, // Don't index the router URL
     follow: true,
   },
 };
 
 /**
- * Root page - role-aware redirect
- * - Business owners -> /my-businesses
- * - Unverified users -> /verify-email
- * - Everyone else -> /home
+ * Root page — router URL only.
+ * Middleware is the single decision point for / (guest → /home, personal → /home, business → /my-businesses).
+ * This page should not run in normal flow; fallback redirect only if middleware did not run.
  */
-export default async function RootPage() {
-  try {
-    const supabase = await getServerSupabase();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (user && user.email_confirmed_at) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role, account_role")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      const resolvedRole = profile?.role || profile?.account_role;
-      if (resolvedRole === "business_owner") {
-        redirect("/my-businesses");
-      }
-      redirect("/home");
-    }
-
-    if (user && !user.email_confirmed_at) {
-      redirect("/verify-email");
-    }
-  } catch {
-    // Fall through when no session or auth error.
-  }
-
-  // No user → send to /home as guest so middleware allows (avoids redirect to /login)
-  redirect("/home?guest=true");
+export default function RootPage() {
+  redirect("/home");
 }
