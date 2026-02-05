@@ -212,7 +212,7 @@ export default function Footer() {
                       disabled={subscribeStatus === "loading"}
                       className="shrink-0 rounded-full bg-charcoal px-5 sm:px-7 py-2.5 text-xs sm:text-sm font-bold tracking-[0.16em] uppercase text-off-white transition-colors hover:bg-charcoal/90 disabled:opacity-60 disabled:hover:bg-charcoal"
                     >
-                      {subscribeStatus === "loading" ? "Signing up" : "Sign up"}
+                      {subscribeStatus === "loading" ? "Submitting" : "Submit"}
                     </button>
                   </div>
 

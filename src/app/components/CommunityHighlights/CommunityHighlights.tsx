@@ -15,6 +15,15 @@ import {
   BusinessOfTheMonth,
 } from "../../types/community";
 
+const badgePreviews = [
+  { label: "First Review", description: "Your first trusted review.", icon: "✍️" },
+  { label: "Local Legend", description: "A go-to voice in your area.", icon: "🏆" },
+  { label: "Hidden Gem", description: "Spotlight something underrated.", icon: "💎" },
+  { label: "Top Contributor", description: "Consistently helping others decide.", icon: "⚡" },
+  { label: "Verified Vibes", description: "Quality reviews with helpful detail.", icon: "✅" },
+  { label: "Weekend Explorer", description: "Always out finding new places.", icon: "🗺️" },
+] as const;
+
 // Sample review texts for variety
 const sampleReviewTexts = [
   "Absolutely love this place! Great atmosphere and amazing service. Will definitely come back!",
@@ -226,6 +235,85 @@ export default function CommunityHighlights({
                   <span>Explore badges</span>
                   <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
                 </Link>
+              </div>
+
+              {/* Badge preview strip */}
+              <div className="pt-5">
+                <p className="text-xs text-charcoal/50 font-medium text-center mb-3 sm:hidden">
+                  Swipe to preview badges
+                </p>
+
+                <div className="relative badge-marquee" aria-label="Badge previews">
+                  <div className="badge-track">
+                    {[...badgePreviews, ...badgePreviews].map((badge, idx) => (
+                      <div
+                        key={`${badge.label}-${idx}`}
+                        className="group relative flex items-center gap-2 rounded-full bg-white/70 backdrop-blur-sm border border-charcoal/10 px-4 py-2 shadow-[0_6px_18px_rgba(0,0,0,0.06)] transition-transform duration-200 hover:-translate-y-0.5"
+                        title={badge.description}
+                        tabIndex={0}
+                      >
+                        <span className="text-base leading-none" aria-hidden>
+                          {badge.icon}
+                        </span>
+                        <span className="text-sm font-semibold text-charcoal/80 whitespace-nowrap">
+                          {badge.label}
+                        </span>
+
+                        {/* Tooltip (desktop) */}
+                        <div className="hidden sm:block pointer-events-none absolute -top-11 left-1/2 -translate-x-1/2 opacity-0 translate-y-1 transition-all duration-200 sm:group-hover:opacity-100 sm:group-hover:translate-y-0 sm:group-focus:opacity-100 sm:group-focus:translate-y-0">
+                          <div className="rounded-xl bg-charcoal text-off-white text-xs font-medium px-3 py-2 shadow-[0_10px_30px_rgba(0,0,0,0.18)] border border-white/10 whitespace-nowrap">
+                            {badge.description}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <style dangerouslySetInnerHTML={{ __html: `
+                    .badge-marquee {
+                      overflow-x: auto;
+                      overflow-y: visible;
+                      -webkit-overflow-scrolling: touch;
+                      scrollbar-width: none;
+                    }
+                    .badge-marquee::-webkit-scrollbar { display: none; }
+
+                    .badge-track {
+                      display: flex;
+                      gap: 12px;
+                      width: max-content;
+                      padding: 0 6px 4px 6px;
+                      align-items: center;
+                    }
+
+                    @media (min-width: 640px) {
+                      .badge-marquee {
+                        overflow: hidden;
+                        padding: 0 8px;
+                        mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+                        -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+                      }
+
+                      .badge-track {
+                        animation: badge-scroll 22s linear infinite;
+                        will-change: transform;
+                      }
+
+                      .badge-marquee:hover .badge-track {
+                        animation-play-state: paused;
+                      }
+                    }
+
+                    @media (prefers-reduced-motion: reduce) {
+                      .badge-track { animation: none !important; }
+                    }
+
+                    @keyframes badge-scroll {
+                      from { transform: translate3d(0, 0, 0); }
+                      to { transform: translate3d(-50%, 0, 0); }
+                    }
+                  `}} />
+                </div>
               </div>
             </div>
           </div>
