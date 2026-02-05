@@ -63,12 +63,23 @@ const Footer = nextDynamic(() => import("../components/Footer/Footer"), {
 
 const MemoizedBusinessRow = memo(BusinessRow);
 
+function isIOSBrowser(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  const platform = (navigator as any).platform || '';
+  const maxTouchPoints = (navigator as any).maxTouchPoints || 0;
+  const isIPadOS = platform === 'MacIntel' && maxTouchPoints > 1;
+  return /iPad|iPhone|iPod/i.test(ua) || isIPadOS;
+}
+
 
 export default function HomeClient() {
   // Events and Specials
   const { events, loading: eventsLoading } = useEvents();
   usePredefinedPageTitle('home');
   useScrollReveal({ threshold: 0.12, rootMargin: "0px 0px -120px 0px", once: true });
+  const isIOS = useMemo(() => isIOSBrowser(), []);
+  const [heroReady, setHeroReady] = useState(!isIOS);
 
   const searchParams = useSearchParams();
   const searchQueryParam = searchParams.get('search') || "";
@@ -395,6 +406,58 @@ export default function HomeClient() {
   const hasForYouBusinesses = forYouBusinesses.length > 0;
   const hasTrendingBusinesses = trendingBusinesses.length > 0;
 
+  // iOS WebKit tends to be more sensitive to large above-the-fold image/animation work.
+  // Defer mounting HeroCarousel until idle or first interaction to avoid "Can't open this page" crashes.
+  useEffect(() => {
+    if (!isIOS) {
+      setHeroReady(true);
+      return;
+    }
+    if (heroReady) return;
+
+    let didSet = false;
+    let idleId: number | null = null;
+    let delayId: number | null = null;
+    const cleanupFns: Array<() => void> = [];
+
+    const markReady = () => {
+      if (didSet) return;
+      didSet = true;
+      setHeroReady(true);
+      cleanupFns.forEach((fn) => fn());
+      cleanupFns.length = 0;
+    };
+
+    const onInteract = () => markReady();
+
+    // Interaction signals: scroll/tap/click.
+    window.addEventListener('touchstart', onInteract, { passive: true, once: true });
+    window.addEventListener('pointerdown', onInteract, { passive: true, once: true });
+    window.addEventListener('scroll', onInteract, { passive: true, once: true });
+    cleanupFns.push(() => window.removeEventListener('touchstart', onInteract));
+    cleanupFns.push(() => window.removeEventListener('pointerdown', onInteract));
+    cleanupFns.push(() => window.removeEventListener('scroll', onInteract));
+
+    const scheduleIdle = () => {
+      const anyWindow = window as any;
+      if (typeof anyWindow.requestIdleCallback === 'function') {
+        idleId = anyWindow.requestIdleCallback(() => markReady(), { timeout: 2500 });
+        cleanupFns.push(() => anyWindow.cancelIdleCallback?.(idleId));
+      } else {
+        delayId = window.setTimeout(() => markReady(), 2500);
+        cleanupFns.push(() => delayId != null && clearTimeout(delayId));
+      }
+    };
+
+    // Small delay so the first paint happens before we schedule heavier work.
+    delayId = window.setTimeout(() => scheduleIdle(), 300);
+    cleanupFns.push(() => delayId != null && clearTimeout(delayId));
+
+    return () => {
+      cleanupFns.forEach((fn) => fn());
+    };
+  }, [isIOS, heroReady]);
+
   return (
     <>
       <div className="min-h-dvh flex flex-col">
@@ -408,7 +471,11 @@ export default function HomeClient() {
               exit={{ opacity: 0, height: 0, transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] } }}
               className="overflow-hidden"
             >
-              <HeroCarousel />
+              {heroReady ? (
+                <HeroCarousel />
+              ) : (
+                <div className="h-[60vh] sm:h-[70vh] bg-gradient-to-b from-charcoal/5 to-transparent" />
+              )}
             </motion.div>
           )}
         </AnimatePresence>
