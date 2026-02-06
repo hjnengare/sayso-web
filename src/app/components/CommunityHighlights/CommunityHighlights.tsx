@@ -4,6 +4,7 @@
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import { Award, ArrowRight } from "lucide-react";
 import ReviewerCard from "../ReviewerCard/ReviewerCard";
 import BusinessOfTheMonthCard from "../BusinessCard/BusinessOfTheMonthCard";
@@ -31,11 +32,12 @@ const badgePreviews = badgePreviewIds
     if (!mapping) return null;
     return {
       label: mapping.name,
-      description: mapping.name,
-      icon,
+      description: mapping.description || mapping.name,
+      pngPath: mapping.pngPath,
+      fallbackIcon: icon,
     };
   })
-  .filter(Boolean) as Array<{ label: string; description: string; icon: string }>;
+  .filter(Boolean) as Array<{ label: string; description: string; pngPath: string; fallbackIcon: string }>;
 
 // Sample review texts for variety
 const sampleReviewTexts = [
@@ -317,8 +319,21 @@ export default function CommunityHighlights({
                           title={badge.description}
                           tabIndex={0}
                         >
-                        <span className="text-base leading-none" aria-hidden>
-                          {badge.icon}
+                        <span
+                          className="flex items-center justify-center w-5 h-5 flex-shrink-0"
+                          aria-hidden
+                        >
+                          {badge.pngPath ? (
+                            <Image
+                              src={badge.pngPath}
+                              alt=""
+                              width={18}
+                              height={18}
+                              className="object-contain"
+                            />
+                          ) : (
+                            <span className="text-base leading-none">{badge.fallbackIcon}</span>
+                          )}
                         </span>
                         <span className="text-sm font-semibold text-charcoal/80 whitespace-nowrap">
                           {badge.label}
