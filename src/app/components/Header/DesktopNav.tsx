@@ -19,7 +19,7 @@ import {
   Bookmark,
 } from "lucide-react";
 import OptimizedLink from "../Navigation/OptimizedLink";
-import LockedTooltip from "./LockedTooltip";
+
 import { shouldShowLockIndicator, getLinkHref } from "./headerActionsConfig";
 
 export type NavLink = {
@@ -94,7 +94,7 @@ export default function DesktopNav(props: DesktopNavProps) {
   } = props;
 
   const pathname = usePathname();
-  const [hoveredLockedItem, setHoveredLockedItem] = useState<string | null>(null);
+
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
@@ -332,23 +332,40 @@ export default function DesktopNav(props: DesktopNavProps) {
   const renderIcons = () => (
     <div className="flex items-center justify-end gap-2 min-w-0">
       {/* Notifications */}
-      <button
-        onClick={onNotificationsClick}
-        className={iconWrapClass(isNotificationsActive)}
-        aria-label="Notifications"
-        type="button"
-      >
-        <Bell
-          className={iconClass(isNotificationsActive)}
-          fill={isNotificationsActive ? "currentColor" : "none"}
-          style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
-        />
-        {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[12px] h-5 px-1.5 text-white text-[11px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
-            {unreadCount > 99 ? "99+" : unreadCount}
+      {isGuest ? (
+        <OptimizedLink
+          href="/login"
+          className={iconWrapClass(false)}
+          aria-label="Sign in for notifications"
+        >
+          <Bell
+            className={iconClass(false)}
+            fill="none"
+            style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
+          />
+          <span className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center w-4 h-4 text-charcoal/50">
+            <Lock className="w-2.5 h-2.5" />
           </span>
-        )}
-      </button>
+        </OptimizedLink>
+      ) : (
+        <button
+          onClick={onNotificationsClick}
+          className={iconWrapClass(isNotificationsActive)}
+          aria-label="Notifications"
+          type="button"
+        >
+          <Bell
+            className={iconClass(isNotificationsActive)}
+            fill={isNotificationsActive ? "currentColor" : "none"}
+            style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
+          />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[12px] h-5 px-1.5 text-white text-[11px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
+          )}
+        </button>
+      )}
 
       {/* Personal actions (keep Saved closer to Profile) */}
       {!isBusinessAccountUser ? (
@@ -388,11 +405,7 @@ export default function DesktopNav(props: DesktopNavProps) {
           )}
 
           {/* Profile (personal only) */}
-          <div
-            className="relative"
-            onMouseEnter={() => isGuest && setHoveredLockedItem("profile")}
-            onMouseLeave={() => setHoveredLockedItem(null)}
-          >
+          <div className="relative">
             <OptimizedLink
               href={isGuest ? "/login" : "/profile"}
               className={iconWrapClass(isProfileActive)}
@@ -403,39 +416,23 @@ export default function DesktopNav(props: DesktopNavProps) {
                 fill={isProfileActive ? "currentColor" : "none"}
                 style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
               />
-              {isGuest && (
-                <span className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center w-4 h-4 text-white">
-                  <Lock className="w-2 h-2" />
-                </span>
-              )}
             </OptimizedLink>
-            <LockedTooltip show={hoveredLockedItem === "profile"} label="view profile" />
           </div>
         </div>
       ) : (
         /* Business actions */
-        <div
-          className="relative"
-          onMouseEnter={() => isGuest && setHoveredLockedItem("settings")}
-          onMouseLeave={() => setHoveredLockedItem(null)}
-        >
+        <div className="relative">
           <OptimizedLink
             href={isGuest ? "/login" : "/settings"}
             className={iconWrapClass(isSettingsActive)}
-            aria-label={isGuest ? "Sign in to open settings" : "Settings"}
+            aria-label={isGuest ? "Sign in" : "Settings"}
           >
             <Settings
               className={iconClass(isSettingsActive)}
               fill={isSettingsActive ? "currentColor" : "none"}
               style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
             />
-            {isGuest && (
-              <span className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center w-4 h-4 text-white">
-                <Lock className="w-2 h-2" />
-              </span>
-            )}
           </OptimizedLink>
-          <LockedTooltip show={hoveredLockedItem === "settings"} label="open settings" />
         </div>
       )}
     </div>

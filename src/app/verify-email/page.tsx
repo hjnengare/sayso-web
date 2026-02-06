@@ -158,7 +158,7 @@ const styles = `
 `;
 
 export default function VerifyEmailPage() {
-  const { user, resendVerificationEmail, isLoading } = useAuth();
+  const { user, resendVerificationEmail, refreshUser, isLoading } = useAuth();
   const { showToast, showToastOnce } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -306,12 +306,15 @@ export default function VerifyEmailPage() {
   const handleRefreshUser = async () => {
     setIsChecking(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      showToast("Checking status...", "sage", 1500);
-
-      setTimeout(() => {
-        window.location.reload();
-      }, 2000);
+      await refreshUser();
+      // Give React a tick to process the state update and trigger the redirect effect
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      // If the redirect effect fired, redirectingRef is true — don't show error
+      if (!redirectingRef.current) {
+        showToast("Email not verified yet. Please click the link in your inbox first.", "error", 4000);
+      }
+    } catch {
+      showToast("Could not check status. Please try again.", "error", 3000);
     } finally {
       setIsChecking(false);
     }

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, use } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -48,6 +48,10 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
   const [special, setSpecial] = useState<SpecialWithBusiness | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [occurrencesList, setOccurrencesList] = useState<
+    Array<{ id: string; start_date: string; end_date: string | null; booking_url?: string | null; location?: string | null }>
+  >([]);
+  const [occurrencesCount, setOccurrencesCount] = useState(1);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const router = useRouter();
@@ -64,7 +68,7 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
         setLoading(true);
         setError(null);
 
-        const response = await fetch(`/api/specials/${resolvedParams.id}`);
+        const response = await fetch(`/api/events-and-specials/${resolvedParams.id}`);
 
         if (!response.ok) {
           if (response.status === 404) {
@@ -77,14 +81,31 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
 
         const data = await response.json();
 
+        const incoming = (data?.event ?? data?.special) as SpecialWithBusiness | undefined;
+        const isExpired =
+          Boolean(data?.isExpired) ||
+          (incoming?.type === "special" &&
+            (() => {
+              const now = Date.now();
+              const end = incoming?.endDateISO ? new Date(incoming.endDateISO).getTime() : NaN;
+              const start = incoming?.startDateISO ? new Date(incoming.startDateISO).getTime() : NaN;
+              if (Number.isFinite(end)) return end < now;
+              if (Number.isFinite(start)) return start < now;
+              return false;
+            })());
+
         // Don't render expired specials
-        if (data.isExpired) {
+        if (isExpired) {
           setError('This special has expired');
           setSpecial(null);
           return;
         }
 
-        setSpecial(data.special);
+        setSpecial(incoming ?? null);
+        setOccurrencesList(Array.isArray(data?.occurrences_list) ? data.occurrences_list : []);
+        setOccurrencesCount(
+          Number.isFinite(Number(data?.occurrences)) ? Number(data.occurrences) : Array.isArray(data?.occurrences_list) ? data.occurrences_list.length : 1,
+        );
       } catch (err) {
         console.error('Error fetching special:', err);
         setError('Failed to load special');
@@ -493,6 +514,89 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
                   </div>
                 </div>
               </motion.div>
+
+              {/* More dates */}
+              {(() => {
+                if (occurrencesCount <= 1 || occurrencesList.length <= 1 || !special) return null;
+
+                // Compute the current special's date label to exclude from "More dates"
+                const currentStart = new Date(special.startDateISO || special.startDate);
+                const currentEnd = special.endDateISO || special.endDate ? new Date(special.endDateISO || special.endDate!) : null;
+                const currentSameDay =
+                  currentEnd &&
+                  currentStart.getFullYear() === currentEnd.getFullYear() &&
+                  currentStart.getMonth() === currentEnd.getMonth() &&
+                  currentStart.getDate() === currentEnd.getDate();
+                const currentStartLabel = Number.isFinite(currentStart.getTime())
+                  ? currentStart.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                  : special.startDate;
+                const currentEndLabel =
+                  currentEnd && Number.isFinite(currentEnd.getTime())
+                    ? currentEnd.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                    : undefined;
+                const currentDateLabel = currentEnd && !currentSameDay && currentEndLabel
+                  ? `${currentStartLabel}–${currentEndLabel}`
+                  : currentStartLabel;
+
+                const otherDates = occurrencesList
+                  .reduce<Array<{ id: string; label: string }>>((unique, o) => {
+                    const start = new Date(o.start_date);
+                    const end = o.end_date ? new Date(o.end_date) : null;
+                    const sameDay =
+                      end &&
+                      start.getFullYear() === end.getFullYear() &&
+                      start.getMonth() === end.getMonth() &&
+                      start.getDate() === end.getDate();
+
+                    const startLabel = Number.isFinite(start.getTime())
+                      ? start.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                      : o.start_date;
+                    const endLabel =
+                      end && Number.isFinite(end.getTime())
+                        ? end.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                        : o.end_date;
+                    const label = end && !sameDay && endLabel ? `${startLabel}–${endLabel}` : startLabel;
+
+                    if (label !== currentDateLabel && !unique.some((u) => u.label === label)) {
+                      unique.push({ id: o.id, label });
+                    }
+                    return unique;
+                  }, []);
+
+                if (otherDates.length === 0) return null;
+
+                return (
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.55, duration: 0.6 }}
+                    className="bg-gradient-to-br from-white/50 via-white/40 to-white/30 backdrop-blur-xl border border-white/60 rounded-[12px] ring-1 ring-white/30 p-4"
+                  >
+                    <h3
+                      className="text-lg font-bold text-charcoal mb-3"
+                      style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                    >
+                      More dates
+                    </h3>
+                    <div className="space-y-2">
+                      {otherDates.map((o) => (
+                        <div key={o.id} className="flex items-center justify-between gap-3">
+                          <span className="text-sm text-charcoal/80" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                            {o.label}
+                          </span>
+                          <Link
+                            href={`/special/${o.id}`}
+                            className="text-sm font-semibold text-coral hover:underline"
+                            style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                          >
+                            View
+                          </Link>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                );
+              })()}
 
               {/* Contact Info */}
               <motion.div

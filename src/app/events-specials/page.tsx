@@ -12,8 +12,6 @@ import EmptyState from "../components/EventsPage/EmptyState";
 import SearchInput from "../components/SearchInput/SearchInput";
 import type { Event } from "../lib/types/Event";
 import { useDebounce } from "../hooks/useDebounce";
-import { useEventsWithGlobalConsolidation } from "../hooks/useEvents";
-import { useSpecials } from "../hooks/useSpecials";
 import { ChevronUp, ChevronRight, ChevronDown } from "lucide-react";
 import { Loader } from "../components/Loader/Loader";
 import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
@@ -25,55 +23,82 @@ export default function EventsSpecialsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
+  const [items, setItems] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [count, setCount] = useState(0);
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
 
   // Debounce search query for smoother real-time filtering (300ms delay)
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
-  // Fetch events with global consolidation
-  const {
-    events: allEvents,
-    loading: eventsLoading,
-    loadingMore,
-    error: eventsError,
-    hasMore,
-    loadMore,
-    reset: resetEvents,
-  } = useEventsWithGlobalConsolidation({
-    pageSize: ITEMS_PER_PAGE,
-    search: debouncedSearchQuery.trim() || undefined,
-    upcoming: true,
-  });
+  const fetchPage = async (nextOffset: number, append: boolean) => {
+    try {
+      if (append) setLoadingMore(true);
+      else setLoading(true);
+      setError(null);
 
-  // Fetch business specials (merged into the same grid)
-  const {
-    specials: allSpecials,
-    loading: specialsLoading,
-    error: specialsError,
-    hasMore: specialsHasMore,
-    loadMore: loadMoreSpecials,
-    refetch: refetchSpecials,
-  } = useSpecials({
-    limit: ITEMS_PER_PAGE,
-    search: debouncedSearchQuery.trim() || undefined,
-  });
+      const url = new URL("/api/events-and-specials", window.location.origin);
+      url.searchParams.set("limit", String(ITEMS_PER_PAGE));
+      url.searchParams.set("offset", String(nextOffset));
+      if (selectedFilter !== "all") {
+        url.searchParams.set("type", selectedFilter);
+      }
+
+      const res = await fetch(url.toString());
+      if (!res.ok) {
+        throw new Error(`Failed to fetch: ${res.status}`);
+      }
+
+      const data = await res.json();
+      const newItems = (data.items || []) as Event[];
+      const total = Number(data.count || 0);
+
+      setCount(total);
+      setHasMore(nextOffset + ITEMS_PER_PAGE < total);
+      setOffset(nextOffset);
+      setItems((prev) => (append ? [...prev, ...newItems] : newItems));
+    } catch (e: any) {
+      setError(e?.message || "Failed to load");
+      if (!append) setItems([]);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
+  // Initial fetch + refetch when filter changes
+  useEffect(() => {
+    setOffset(0);
+    fetchPage(0, false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedFilter]);
 
   // Merge events and specials for unified display
   const mergedEvents = useMemo(() => {
-    // Merge and sort by startDate (descending)
-    const merged = [...allEvents, ...allSpecials];
-    return merged.sort((a, b) => {
+    return (items || []).slice().sort((a, b) => {
       const aDate = new Date(a.startDateISO || a.startDate).getTime();
       const bDate = new Date(b.startDateISO || b.startDate).getTime();
-      return bDate - aDate;
+      return aDate - bDate;
     });
-  }, [allEvents, allSpecials]);
+  }, [items]);
 
   // Client-side filtering for type (all/event/special)
   const filteredEvents = useMemo(() => {
-    return mergedEvents.filter((event) =>
-      selectedFilter === "all" || event.type === selectedFilter
-    );
-  }, [mergedEvents, selectedFilter]);
+    let filtered = mergedEvents;
+
+    if (debouncedSearchQuery.trim()) {
+      const q = debouncedSearchQuery.trim().toLowerCase();
+      filtered = filtered.filter((item) => {
+        const haystack = `${item.title ?? ""} ${item.location ?? ""} ${item.description ?? ""}`.toLowerCase();
+        return haystack.includes(q);
+      });
+    }
+
+    return filtered;
+  }, [mergedEvents, debouncedSearchQuery]);
 
   const searchSuggestions = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -135,27 +160,21 @@ export default function EventsSpecialsPage() {
 
   // Handle load more button click
   const handleLoadMore = async () => {
-    await loadMore();
+    if (loadingMore || !hasMore) return;
+    await fetchPage(offset + ITEMS_PER_PAGE, true);
   };
 
   const handleRetry = async () => {
-    if (eventsError && resetEvents) {
-      await resetEvents();
-    }
-    if (specialsError && refetchSpecials) {
-      await refetchSpecials();
-    }
+    await fetchPage(0, false);
   };
 
-  const hasEventsData = Array.isArray(allEvents) && allEvents.length > 0;
-  const hasSpecialsData = Array.isArray(allSpecials) && allSpecials.length > 0;
-  const hasAnyData = hasEventsData || hasSpecialsData;
-  const isLoading = eventsLoading || specialsLoading;
-  const hasError = Boolean(eventsError || specialsError);
+  const hasAnyData = Array.isArray(items) && items.length > 0;
+  const isLoading = loading;
+  const hasError = Boolean(error);
   const isBlockingError = !hasAnyData && hasError;
   const showPartialErrorBanner = hasAnyData && hasError;
   const shouldShowCta = !hasAnyData && !isLoading && !hasError;
-  const combinedErrorMessage = eventsError || specialsError;
+  const combinedErrorMessage = error;
 
   const renderGridSection = (items: Event[], title: string) => (
     <section key={title} className="space-y-4">
@@ -366,18 +385,15 @@ export default function EventsSpecialsPage() {
                 )}
                 {eventsSectionItems.length > 0 && renderGridSection(eventsSectionItems, "Events")}
                 {specialsSectionItems.length > 0 && renderGridSection(specialsSectionItems, "Specials")}
-                {(hasMore || specialsHasMore) && (
+                {hasMore && (
                   <div className="flex items-center justify-center py-8">
                     <button
-                      onClick={async () => {
-                        if (hasMore) await handleLoadMore();
-                        if (specialsHasMore) await loadMoreSpecials();
-                      }}
-                      disabled={loadingMore || specialsLoading}
+                      onClick={handleLoadMore}
+                      disabled={loadingMore}
                       className="flex items-center gap-2 px-6 py-3 bg-navbar-bg text-white rounded-full font-medium hover:bg-navbar-bg/90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
                       style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                     >
-                      {(loadingMore || specialsLoading) ? (
+                      {loadingMore ? (
                         <>
                           <Loader size="sm" variant="spinner" color="white" />
                           <span>Loading more...</span>

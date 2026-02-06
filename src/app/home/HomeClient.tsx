@@ -20,19 +20,18 @@ import FeaturedBusinessesSkeleton from "../components/CommunityHighlights/Featur
 import CommunityHighlightsSkeleton from "../components/CommunityHighlights/CommunityHighlightsSkeleton";
 import { useBusinesses, useForYouBusinesses, useTrendingBusinesses } from "../hooks/useBusinesses";
 import { useFeaturedBusinesses } from "../hooks/useFeaturedBusinesses";
-import { useEvents } from "../hooks/useEvents";
 import { useRoutePrefetch } from "../hooks/useRoutePrefetch";
 import { useUserPreferences } from "../hooks/useUserPreferences";
 import { useAuth } from "../contexts/AuthContext";
 import SearchResultsPanel from "../components/SearchResultsPanel/SearchResultsPanel";
+import type { Event } from "../lib/types/Event";
 
 // Dynamically import HeroCarousel - it's heavy with images and animations
 const HeroCarousel = nextDynamic(
   () => import("../components/Hero/HeroCarousel"),
   {
-    ssr: false,
     loading: () => (
-      <div className="h-[60vh] sm:h-[70vh] bg-gradient-to-b from-charcoal/5 to-transparent animate-pulse" />
+      <div className="h-[calc(100dvh-var(--header-height)-0.5rem)] sm:h-[90dvh] md:h-[80dvh] bg-gradient-to-b from-charcoal/5 to-transparent animate-pulse" />
     ),
   }
 );
@@ -87,12 +86,51 @@ const homeCardRevealViewport = { once: true, margin: "-50px" as const };
 
 
 export default function HomeClient() {
-  // Events and Specials
-  const { events, loading: eventsLoading } = useEvents();
+  const [eventsAndSpecials, setEventsAndSpecials] = useState<Event[]>([]);
+  const [eventsAndSpecialsLoading, setEventsAndSpecialsLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        setEventsAndSpecialsLoading(true);
+        const url = new URL("/api/events-and-specials", window.location.origin);
+        url.searchParams.set("limit", "24");
+
+        const res = await fetch(url.toString());
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+        const items = Array.isArray(data?.items) ? (data.items as Event[]) : [];
+
+        if (!cancelled) {
+          setEventsAndSpecials(items);
+        }
+      } catch (err) {
+        console.warn("[Home] Failed to fetch events-and-specials:", err);
+        if (!cancelled) {
+          setEventsAndSpecials([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setEventsAndSpecialsLoading(false);
+        }
+      }
+    };
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   usePredefinedPageTitle('home');
   useScrollReveal({ threshold: 0.12, rootMargin: "0px 0px -120px 0px", once: true });
   const isIOS = useMemo(() => isIOSBrowser(), []);
-  const [heroReady, setHeroReady] = useState(!isIOS);
+  const [heroReady, setHeroReady] = useState(false);
 
   const searchParams = useSearchParams();
   const searchQueryParam = searchParams.get('search') || "";
@@ -486,7 +524,7 @@ export default function HomeClient() {
               {heroReady ? (
                 <HeroCarousel />
               ) : (
-                <div className="h-[60vh] sm:h-[70vh] bg-gradient-to-b from-charcoal/5 to-transparent" />
+                <div className="h-[calc(100dvh-var(--header-height)-0.5rem)] sm:h-[90dvh] md:h-[80dvh] bg-gradient-to-b from-charcoal/5 to-transparent" />
               )}
             </motion.div>
           )}
@@ -540,7 +578,7 @@ export default function HomeClient() {
                       {!user ? (
                         /* Not signed in: Show Locked For You Section (teaser only) */
                         <div className="mx-auto w-full max-w-[2000px] px-2">
-                          <div className="relative border border-charcoal/10 bg-white/40 backdrop-blur-sm rounded-[14px] p-6 sm:p-8 md:p-10 text-center space-y-4 shadow-[0_1px_0_rgba(0,0,0,0.02)]">
+                          <div className="relative border border-charcoal/10 bg-off-white rounded-[14px] p-6 sm:p-8 md:p-10 text-center space-y-4 shadow-[0_1px_0_rgba(0,0,0,0.02)]">
                             <h3 className="text-lg sm:text-xl font-bold text-charcoal" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                               For You
                             </h3>
@@ -665,8 +703,8 @@ export default function HomeClient() {
                     viewport={homeCardRevealViewport}
                   >
                     <EventsSpecials
-                      events={events.length > 0 ? events : []}
-                      loading={eventsLoading}
+                      events={eventsAndSpecials}
+                      loading={eventsAndSpecialsLoading}
                     />
                   </motion.div>
 

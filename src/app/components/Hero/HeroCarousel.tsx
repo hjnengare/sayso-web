@@ -285,20 +285,34 @@ export default function HeroCarousel() {
   const { user, isLoading: authLoading } = useAuth();
   const [isHeroReady, setIsHeroReady] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [prevIndex, setPrevIndex] = useState<number | null>(null);
+  const [textIndex, setTextIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [heroImages] = useState<string[]>(() => HERO_IMAGES);
   const [heroViewport, setHeroViewport] = useState<HeroViewport>(() => getViewportFromWindow());
   const [heroSeed] = useState<string>(() => getOrCreateSessionSeed());
   const [failedImageUrls, setFailedImageUrls] = useState<Set<string>>(new Set());
   const slideTimeoutRef = useRef<number | null>(null);
+  const clearPrevTimeoutRef = useRef<number | null>(null);
   const containerRef = useRef<HTMLElement>(null);
   const currentIndexRef = useRef(currentIndex);
+  const isIOS = useMemo(() => {
+    if (typeof navigator === "undefined") return false;
+    const ua = navigator.userAgent || "";
+    const isAppleMobile = /iPad|iPhone|iPod/i.test(ua);
+    const isIpadOS13Plus =
+      navigator.platform === "MacIntel" && typeof navigator.maxTouchPoints === "number" && navigator.maxTouchPoints > 1;
+    return isAppleMobile || isIpadOS13Plus;
+  }, []);
+  const isIOSMobile = isIOS && heroViewport === "mobile";
+
   const cappedHeroImages = useMemo(() => {
-    const cap = heroViewport === "mobile" ? 12 : heroViewport === "tablet" ? 18 : null;
+    // Keep iOS mobile extremely light: fewer slides + fewer image elements prevents Safari tab crashes.
+    const cap = isIOSMobile ? 4 : heroViewport === "mobile" ? 8 : heroViewport === "tablet" ? 14 : null;
     const base = Array.isArray(heroImages) ? heroImages : HERO_IMAGES;
     if (!cap) return base;
     return selectStableSubset(base, cap, heroSeed);
-  }, [heroImages, heroViewport, heroSeed]);
+  }, [heroImages, heroViewport, heroSeed, isIOSMobile]);
   const slides = useMemo(() => buildSlides(cappedHeroImages, heroSeed), [cappedHeroImages, heroSeed]);
   const slidesRef = useRef<HeroSlide[]>(slides);
   const preloadedImagesRef = useRef<Set<string>>(new Set());
@@ -344,6 +358,28 @@ export default function HeroCarousel() {
     }
   }, [currentIndex, slides.length]);
 
+  // Keep only 2 slides mounted (current + previous) to reduce memory pressure on iOS Safari.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (clearPrevTimeoutRef.current != null) {
+      window.clearTimeout(clearPrevTimeoutRef.current);
+      clearPrevTimeoutRef.current = null;
+    }
+    if (prevIndex == null) return;
+
+    clearPrevTimeoutRef.current = window.setTimeout(() => {
+      setPrevIndex(null);
+      clearPrevTimeoutRef.current = null;
+    }, 1100);
+
+    return () => {
+      if (clearPrevTimeoutRef.current != null) {
+        window.clearTimeout(clearPrevTimeoutRef.current);
+        clearPrevTimeoutRef.current = null;
+      }
+    };
+  }, [currentIndex, prevIndex]);
+
   // Mark hero as ready once auth state is known
   useEffect(() => {
     if (!authLoading) {
@@ -366,6 +402,7 @@ export default function HeroCarousel() {
   // Preload first 3 hero images in <head> for fastest LCP (browser fetches before paint).
   useEffect(() => {
     if (typeof window === "undefined" || slides.length === 0) return;
+    if (isIOSMobile) return;
     const preloadCount = 3;
     const urls = slides.slice(0, preloadCount).map((s) => s.image);
     const links: HTMLLinkElement[] = [];
@@ -378,12 +415,13 @@ export default function HeroCarousel() {
       links.push(link);
     });
     return () => links.forEach((link) => link.remove());
-  }, [slides]);
+  }, [slides, isIOSMobile]);
 
   // Prefetch next 8 hero images so next slides load instantly.
   useEffect(() => {
     if (typeof window === "undefined" || slides.length === 0) return;
-    const prefetchCount = 8;
+    if (heroViewport === "mobile" || isIOS) return;
+    const prefetchCount = heroViewport === "tablet" ? 4 : 6;
     const imagesToPrefetch = slides.slice(0, prefetchCount).map((slide) => slide.image);
     imagesToPrefetch.forEach((src) => {
       if (preloadedImagesRef.current.has(src)) return;
@@ -393,11 +431,12 @@ export default function HeroCarousel() {
       img.fetchPriority = "low";
       img.src = src;
     });
-  }, [slides]);
+  }, [slides, heroViewport, isIOS]);
 
   // When slide changes, preload the next 2 slides if not already loaded.
   useEffect(() => {
     if (typeof window === "undefined" || slides.length === 0) return;
+    if (heroViewport === "mobile" || isIOS) return;
     const next1 = (currentIndex + 1) % slides.length;
     const next2 = (currentIndex + 2) % slides.length;
     [next1, next2].forEach((idx) => {
@@ -408,28 +447,39 @@ export default function HeroCarousel() {
       img.decoding = "async";
       img.src = src;
     });
-  }, [currentIndex, slides]);
+  }, [currentIndex, slides, heroViewport, isIOS]);
+
+  const transitionToIndex = useCallback(
+    (computeNextIndex: (prev: number) => number) => {
+      if (slides.length === 0) return;
+      setCurrentIndex((prev) => {
+        const nextIndex = computeNextIndex(prev);
+        setPrevIndex(prev);
+        currentIndexRef.current = nextIndex;
+        return nextIndex;
+      });
+    },
+    [slides.length],
+  );
 
   const next = useCallback(() => {
-    if (slides.length === 0) return;
-    setCurrentIndex((prev) => {
-      const newIndex = (prev + 1) % slides.length;
-      currentIndexRef.current = newIndex;
-      return newIndex;
-    });
-  }, [slides.length]);
+    transitionToIndex((prev) => (prev + 1) % slides.length);
+  }, [slides.length, transitionToIndex]);
   const prev = useCallback(() => {
-    if (slides.length === 0) return;
-    setCurrentIndex((prev) => {
-      const newIndex = (prev - 1 + slides.length) % slides.length;
-      currentIndexRef.current = newIndex;
-      return newIndex;
-    });
-  }, [slides.length]);
+    transitionToIndex((prev) => (prev - 1 + slides.length) % slides.length);
+  }, [slides.length, transitionToIndex]);
 
   // Update ref when currentIndex changes
   useEffect(() => {
     currentIndexRef.current = currentIndex;
+  }, [currentIndex]);
+
+  // Stagger text change: update after image transition starts
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setTextIndex(currentIndex);
+    }, 800);
+    return () => window.clearTimeout(timer);
   }, [currentIndex]);
 
   // Auto-advance slides (avoid frequent state updates on mobile Safari).
@@ -449,11 +499,7 @@ export default function HeroCarousel() {
     }
 
     slideTimeoutRef.current = window.setTimeout(() => {
-      setCurrentIndex((prev) => {
-        const newIndex = (prev + 1) % slides.length;
-        currentIndexRef.current = newIndex;
-        return newIndex;
-      });
+      transitionToIndex((prev) => (prev + 1) % slides.length);
     }, 5000);
 
     return () => {
@@ -462,7 +508,7 @@ export default function HeroCarousel() {
         slideTimeoutRef.current = null;
       }
     };
-  }, [prefersReduced, paused, currentIndex, slides.length]);
+  }, [prefersReduced, paused, currentIndex, slides.length, transitionToIndex]);
 
   // pause when tab is hidden
   useEffect(() => {
@@ -598,33 +644,46 @@ export default function HeroCarousel() {
     );
   }
 
+  const slideIndicesToRender = (() => {
+    const set = new Set<number>();
+    set.add(currentIndex);
+    if (prevIndex != null && prevIndex !== currentIndex) set.add(prevIndex);
+    return [...set];
+  })();
+
+  const currentTextSlide = slides[textIndex % slides.length] ?? slides[0];
+
   return (
     <>
       {/* Hero Container with padding */}
-      <div className="relative w-full px-0 py-0 md:pt-2 md:px-2">
+      <div className="relative w-full px-2 pb-2 pt-[calc(var(--header-height)+0.5rem)] sm:px-0 sm:pb-0 sm:pt-0 md:pt-2 md:px-2">
         {/* Hero Section with rounded corners - 75vh responsive height */}
         <section
           ref={containerRef as React.RefObject<HTMLElement>}
-          className="relative h-[90dvh] md:h-[80dvh] w-full overflow-hidden outline-none rounded-none md:rounded-none lg:rounded-none min-h-[420px] sm:min-h-[520px] max-h-[820px] shadow-md"
+          className="relative h-[calc(100dvh-var(--header-height)-0.5rem)] sm:h-[90dvh] md:h-[80dvh] w-full overflow-hidden outline-none rounded-[12px] min-h-[420px] sm:min-h-[520px] sm:max-h-[820px] shadow-md"
           aria-label="Hero carousel"
           tabIndex={0}
           style={{ fontFamily: FONT_STACK }}
         >
           {/* Liquid Glass Ambient Lighting */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-sage/10 pointer-events-none rounded-none md:rounded-none lg:rounded-none" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(255,255,255,0.15)_0%,_transparent_70%)] pointer-events-none rounded-none md:rounded-none lg:rounded-none" />
-      <div className="absolute inset-0 backdrop-blur-[1px] bg-off-white/5 mix-blend-overlay pointer-events-none rounded-none md:rounded-none lg:rounded-none" />
-      {/* Slides */}
-      {slides.map((slide, index) => (
-        <div
+      <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-sage/10 pointer-events-none rounded-[12px] lg:rounded-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(255,255,255,0.15)_0%,_transparent_70%)] pointer-events-none rounded-[12px]" />
+      <div className="absolute inset-0 backdrop-blur-[1px] bg-off-white/5 mix-blend-overlay pointer-events-none rounded-[12px]" />
+      {/* Slides - images only */}
+      {slideIndicesToRender.map((index) => {
+        const slide = slides[index];
+        const isActive = index === currentIndex;
+        const isPrev = prevIndex != null && index === prevIndex;
+        return (
+        <motion.div
           key={slide.id}
-          aria-hidden={index !== currentIndex}
-          className={`absolute inset-0 w-auto h-auto overflow-hidden transition-opacity duration-1000 ease-in-out will-change-transform transform-gpu [backface-visibility:hidden] rounded-none md:rounded-none lg:rounded-none ${
-            index === currentIndex ? "opacity-100 z-10" : "opacity-0 z-0"
-          }`}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isActive || isPrev ? 1 : 0, zIndex: isActive ? 10 : 0 }}
+          transition={{ duration: 1, ease: "easeInOut" }}
+          aria-hidden={!isActive}
+          className="absolute inset-0 w-auto h-auto overflow-hidden will-change-transform transform-gpu [backface-visibility:hidden] rounded-[12px]"
         >
-           {/* Full Background Image - All Screen Sizes; fallback to /hero when not loading */}
-           <div className="absolute inset-0 bg-black rounded-none md:rounded-none lg:rounded-none overflow-hidden px-0 mx-0 transform-gpu [backface-visibility:hidden]">
+           <div className="absolute inset-0 rounded-[12px] overflow-hidden px-0 mx-0 transform-gpu [backface-visibility:hidden]">
               <Image
                 src={failedImageUrls.has(slide.image) ? HERO_IMAGES[index % HERO_IMAGES.length] : slide.image}
                 alt={slide.title}
@@ -632,7 +691,7 @@ export default function HeroCarousel() {
                 priority={index === 0}
                 loading={index === 0 ? "eager" : "lazy"}
                 fetchPriority={index === 0 ? "high" : "auto"}
-                quality={heroViewport === "mobile" ? 70 : 80}
+                quality={heroViewport === "mobile" ? 65 : 80}
                 className={`transform-gpu [backface-visibility:hidden] ${
                   heroViewport === "mobile" ? "object-contain" : "object-cover scale-[1.02]"
                 }`}
@@ -647,107 +706,108 @@ export default function HeroCarousel() {
              <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/40" />
              <div className="absolute inset-0 bg-black/20" />
            </div>
+        </motion.div>
+      );
+      })}
 
-           {/* Hero Text with slide-in animation */}
-           <div className="absolute inset-0 z-20 flex items-center justify-center w-full pt-[calc(var(--header-height)+var(--safe-area-top))] sm:pt-[var(--header-height)] translate-y-0 sm:-translate-y-4 px-6 sm:px-10">
-               <motion.div
-                 className="w-full max-w-3xl flex flex-col items-center justify-center text-center pb-12 sm:pb-20"
-                 initial="hidden"
-                 animate="visible"
-                 variants={{
-                   hidden: {},
-                   visible: { transition: { staggerChildren: 0.12, delayChildren: 0.1 } },
-                 }}
-               >
-                 <motion.h2
-                   className="text-2xl sm:text-4xl lg:text-5xl font-bold text-off-white drop-shadow-lg mb-3 sm:mb-4 leading-tight tracking-tight"
-                   style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-                   variants={{
-                     hidden: { opacity: 0, y: 20, filter: "blur(4px)" },
-                     visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
-                   }}
-                 >
-                   <span className="inline-grid items-center justify-items-center">
-                     <span className="invisible col-start-1 row-start-1">
-                       {HERO_COPY[1]?.title ?? slide.title}
-                     </span>
-                     <AnimatePresence mode="wait" initial={false}>
-                       <motion.span
-                         key={`${currentIndex}-${slide.title}`}
-                         className="col-start-1 row-start-1"
-                         initial={{ opacity: 0, y: 10, filter: "blur(3px)" }}
-                         animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                         exit={{ opacity: 0, y: -8, filter: "blur(3px)" }}
-                         transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-                       >
-                         {slide.title}
-                       </motion.span>
-                     </AnimatePresence>
-                   </span>
-                 </motion.h2>
-                 <motion.p
-                   className="text-sm sm:text-lg lg:text-xl text-off-white/90 drop-shadow-md max-w-xl mb-5 sm:mb-6 leading-relaxed"
-                   style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 500 }}
-                   variants={{
-                     hidden: { opacity: 0, y: 16, filter: "blur(3px)" },
-                     visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] } },
-                   }}
-                 >
-                   <span className="grid">
-                     <span className="invisible col-start-1 row-start-1">
-                       {HERO_COPY[2]?.description ?? slide.description}
-                     </span>
-                     <AnimatePresence mode="wait" initial={false}>
-                       <motion.span
-                         key={`${currentIndex}-${slide.description}`}
-                         className="col-start-1 row-start-1"
-                         initial={{ opacity: 0, y: 8, filter: "blur(2px)" }}
-                         animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                         exit={{ opacity: 0, y: -6, filter: "blur(2px)" }}
-                         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                       >
-                         {slide.description}
-                       </motion.span>
-                     </AnimatePresence>
-                   </span>
-                 </motion.p>
+      {/* Hero Text - transitions independently from image slides */}
+      <div className="absolute inset-0 z-20 flex items-center justify-center w-full pt-[var(--safe-area-top)] sm:pt-[var(--header-height)] translate-y-0 sm:-translate-y-4 px-6 sm:px-10 pointer-events-none">
+          <motion.div
+            className="w-full max-w-3xl flex flex-col items-center justify-center text-center pb-12 sm:pb-20"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: {},
+              visible: { transition: { staggerChildren: 0.12, delayChildren: 0.1 } },
+            }}
+          >
+            <motion.h2
+              className="text-2xl sm:text-4xl lg:text-5xl font-bold text-off-white drop-shadow-lg mb-3 sm:mb-4 leading-tight tracking-tight"
+              style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+              variants={{
+                hidden: { opacity: 0, y: 20, filter: "blur(4px)" },
+                visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
+              }}
+            >
+              <span className="inline-grid items-center justify-items-center">
+                <span className="invisible col-start-1 row-start-1">
+                  {HERO_COPY[1]?.title ?? currentTextSlide?.title}
+                </span>
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.span
+                    key={`text-${textIndex}`}
+                    className="col-start-1 row-start-1"
+                    initial={{ opacity: 0, y: 10, filter: "blur(3px)" }}
+                    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                    exit={{ opacity: 0, y: -8, filter: "blur(3px)" }}
+                    transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                  >
+                    {currentTextSlide?.title}
+                  </motion.span>
+                </AnimatePresence>
+              </span>
+            </motion.h2>
+            <motion.p
+              className="text-sm sm:text-lg lg:text-xl text-off-white/90 drop-shadow-md max-w-xl mb-5 sm:mb-6 leading-relaxed"
+              style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 500 }}
+              variants={{
+                hidden: { opacity: 0, y: 16, filter: "blur(3px)" },
+                visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] } },
+              }}
+            >
+              <span className="grid">
+                <span className="invisible col-start-1 row-start-1">
+                  {HERO_COPY[2]?.description ?? currentTextSlide?.description}
+                </span>
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.span
+                    key={`desc-${textIndex}`}
+                    className="col-start-1 row-start-1"
+                    initial={{ opacity: 0, y: 8, filter: "blur(2px)" }}
+                    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                    exit={{ opacity: 0, y: -6, filter: "blur(2px)" }}
+                    transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                  >
+                    {currentTextSlide?.description}
+                  </motion.span>
+                </AnimatePresence>
+              </span>
+            </motion.p>
 
-                 {/* Conditional CTA Button: Sign In for unauthenticated, Discover for authenticated */}
-                 <motion.div
-                   variants={{
-                     hidden: { opacity: 0, y: 12, scale: 0.97 },
-                     visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
-                   }}
-                   className="w-full flex justify-center"
-                 >
-                   {!user ? (
-                     <Link
-                       href="/login"
-                       className="mi-tap group relative inline-flex items-center justify-center rounded-full min-h-[48px] py-3 px-10 sm:px-12 text-base font-semibold text-white text-center bg-gradient-to-r from-coral to-coral/80 hover:from-sage hover:to-sage transition-all duration-300 shadow-lg hover:shadow-xl focus:outline-none focus-visible:ring-4 focus-visible:ring-sage/30 focus-visible:ring-offset-2 w-full max-w-[320px] sm:w-auto sm:min-w-[180px]"
-                       style={{
-                         fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                         fontWeight: 600,
-                       }}
-                     >
-                       <span className="relative z-10">Sign In</span>
-                     </Link>
-                   ) : (
-                     <Link
-                       href="/trending"
-                       className="mi-tap group relative inline-flex items-center justify-center rounded-full min-h-[48px] py-3 px-10 sm:px-12 text-base font-semibold text-white text-center bg-gradient-to-r from-coral to-coral/80 hover:from-sage hover:to-sage transition-all duration-300 shadow-lg hover:shadow-xl focus:outline-none focus-visible:ring-4 focus-visible:ring-sage/30 focus-visible:ring-offset-2 w-full max-w-[320px] sm:w-auto sm:min-w-[180px]"
-                       style={{
-                         fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-                         fontWeight: 600,
-                       }}
-                     >
-                       <span className="relative z-10">Discover</span>
-                     </Link>
-                   )}
-                 </motion.div>
-               </motion.div>
-           </div>
-        </div>
-      ))}
+            {/* Conditional CTA Button */}
+            <motion.div
+              variants={{
+                hidden: { opacity: 0, y: 12, scale: 0.97 },
+                visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
+              }}
+              className="w-full flex justify-center pointer-events-auto"
+            >
+              {!user ? (
+                <Link
+                  href="/login"
+                  className="mi-tap group relative inline-flex items-center justify-center rounded-full min-h-[48px] py-3 px-10 sm:px-12 text-base font-semibold text-white text-center bg-gradient-to-r from-coral to-coral/80 hover:from-sage hover:to-sage transition-all duration-300 shadow-lg hover:shadow-xl focus:outline-none focus-visible:ring-4 focus-visible:ring-sage/30 focus-visible:ring-offset-2 w-full max-w-[320px] sm:w-auto sm:min-w-[180px]"
+                  style={{
+                    fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                    fontWeight: 600,
+                  }}
+                >
+                  <span className="relative z-10">Sign In</span>
+                </Link>
+              ) : (
+                <Link
+                  href="/trending"
+                  className="mi-tap group relative inline-flex items-center justify-center rounded-full min-h-[48px] py-3 px-10 sm:px-12 text-base font-semibold text-white text-center bg-gradient-to-r from-coral to-coral/80 hover:from-sage hover:to-sage transition-all duration-300 shadow-lg hover:shadow-xl focus:outline-none focus-visible:ring-4 focus-visible:ring-sage/30 focus-visible:ring-offset-2 w-full max-w-[320px] sm:w-auto sm:min-w-[180px]"
+                  style={{
+                    fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                    fontWeight: 600,
+                  }}
+                >
+                  <span className="relative z-10">Discover</span>
+                </Link>
+              )}
+            </motion.div>
+          </motion.div>
+      </div>
 
       {/* Accessible live region (announces slide title) */}
       <div className="sr-only" aria-live="polite">

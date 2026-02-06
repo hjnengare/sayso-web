@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, use, useRef } from "react";
 import Link from "next/link";
@@ -38,6 +38,10 @@ interface EventDetailPageProps {
 export default function EventDetailPage({ params }: EventDetailPageProps) {
   const [event, setEvent] = useState<Event | null>(null);
   const [reviews, setReviews] = useState<EventReviewWithUser[]>([]);
+  const [occurrencesList, setOccurrencesList] = useState<
+    Array<{ id: string; start_date: string; end_date: string | null; booking_url?: string | null; location?: string | null }>
+  >([]);
+  const [occurrencesCount, setOccurrencesCount] = useState(1);
   const [loading, setLoading] = useState(true);
   const hasReviewed = false;
   const mapSectionRef = useRef<HTMLDivElement>(null);
@@ -54,7 +58,7 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
     const fetchEvent = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/events/${resolvedParams.id}`);
+        const response = await fetch(`/api/events-and-specials/${resolvedParams.id}`);
         
         if (!response.ok) {
           if (response.status === 404) {
@@ -66,93 +70,22 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
         }
 
         const data = await response.json();
-        const dbEvent = data.event;
 
-        if (!dbEvent) {
+        // Consolidated API: already returns the front-end Event shape
+        if (!data?.event || (data.event.type !== "event" && data.event.type !== "special")) {
           setEvent(null);
-          setLoading(false);
           return;
         }
 
-        // Transform database event to Event type
-        const formatDate = (dateString: string | null) => {
-          if (!dateString) return '';
-          const date = new Date(dateString);
-          return date.toLocaleDateString('en-US', { 
-            month: 'short', 
-            day: 'numeric',
-          });
-        };
-
-        const formatPrice = (priceRange: any) => {
-          if (!priceRange || !Array.isArray(priceRange) || priceRange.length === 0) {
-            return null;
-          }
-          const price = priceRange[0];
-          if (price.min && price.max) {
-            return `£${price.min} - £${price.max}`;
-          }
-          if (price.min) {
-            return `From £${price.min}`;
-          }
-          return null;
-        };
-
-        const getIcon = (segment: string | null, genre: string | null) => {
-          const segmentLower = (segment || '').toLowerCase();
-          const genreLower = (genre || '').toLowerCase();
-          
-          if (segmentLower.includes('music') || genreLower.includes('music')) {
-            return 'musical-notes-outline';
-          }
-          if (segmentLower.includes('sport')) {
-            return 'basketball-outline';
-          }
-          if (segmentLower.includes('art') || segmentLower.includes('theatre')) {
-            return 'brush-outline';
-          }
-          if (segmentLower.includes('comedy')) {
-            return 'happy-outline';
-          }
-          return 'calendar-outline';
-        };
-
-        const bookingUrl = dbEvent.ticket_url || dbEvent.booking_url || dbEvent.purchase_url || undefined;
-        const bookingContact = dbEvent.booking_contact || dbEvent.bookingContact || undefined;
-        const ticketmasterUrl = dbEvent.ticketmaster_url || dbEvent.url || undefined;
-        const venueAddress = dbEvent.venue_address || dbEvent.venueAddress || undefined;
-        const country = dbEvent.country || undefined;
-        const businessId = dbEvent.business_id || dbEvent.businessId || undefined;
-
-        const transformedEvent: Event = {
-          id: dbEvent.ticketmaster_id || dbEvent.id,
-          title: dbEvent.title || 'Untitled Event',
-          type: 'event' as const,
-          image: dbEvent.image_url || null,
-          alt: `${dbEvent.title} at ${dbEvent.venue_name || dbEvent.city || 'location'}`,
-          icon: getIcon(dbEvent.segment, dbEvent.genre),
-          location: dbEvent.venue_name || venueAddress || dbEvent.city || 'Location TBD',
-          rating: dbEvent.rating ?? null,
-          startDate: formatDate(dbEvent.start_date),
-          endDate: dbEvent.end_date ? formatDate(dbEvent.end_date) : undefined,
-          price: formatPrice(dbEvent.price_range),
-          description: dbEvent.description || undefined,
-          href: `/event/${dbEvent.ticketmaster_id || dbEvent.id}`,
-          bookingUrl,
-          bookingContact,
-          ticketmaster_url: ticketmasterUrl,
-          purchaseUrl: dbEvent.purchase_url || bookingUrl,
-          venueAddress,
-          venueName: dbEvent.venue_name || undefined,
-          country,
-          url: ticketmasterUrl,
-          segment: dbEvent.segment || undefined,
-          genre: dbEvent.genre || undefined,
-          subGenre: dbEvent.sub_genre || undefined,
-          businessId,
-        };
-
-        setEvent(transformedEvent);
+        setEvent(data.event as Event);
+        setOccurrencesList(Array.isArray(data?.occurrences_list) ? data.occurrences_list : []);
+        setOccurrencesCount(
+          Number.isFinite(Number(data?.occurrences))
+            ? Number(data.occurrences)
+            : Array.isArray(data?.occurrences_list)
+              ? data.occurrences_list.length
+              : 1,
+        );
 
         // Fetch reviews
         const reviewsResponse = await fetch(`/api/events/${resolvedParams.id}/reviews`);
@@ -269,6 +202,88 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
                       <EventInfo event={event} />
                       <EventDescription event={event} />
                       <EventDetailsCard event={event} />
+
+                      {(() => {
+                        // Compute the current event's date label to exclude from "More dates"
+                        const currentStart = new Date(event.startDateISO || event.startDate);
+                        const currentEnd = event.endDateISO || event.endDate ? new Date(event.endDateISO || event.endDate!) : null;
+                        const currentSameDay =
+                          currentEnd &&
+                          currentStart.getFullYear() === currentEnd.getFullYear() &&
+                          currentStart.getMonth() === currentEnd.getMonth() &&
+                          currentStart.getDate() === currentEnd.getDate();
+                        const currentStartLabel = Number.isFinite(currentStart.getTime())
+                          ? currentStart.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                          : event.startDate;
+                        const currentEndLabel =
+                          currentEnd && Number.isFinite(currentEnd.getTime())
+                            ? currentEnd.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                            : undefined;
+                        const currentDateLabel = currentEnd && !currentSameDay && currentEndLabel
+                          ? `${currentStartLabel}–${currentEndLabel}`
+                          : currentStartLabel;
+
+                        const otherDates = occurrencesList
+                          .reduce<Array<{ id: string; label: string }>>((unique, o) => {
+                            const start = new Date(o.start_date);
+                            const end = o.end_date ? new Date(o.end_date) : null;
+                            const sameDay =
+                              end &&
+                              start.getFullYear() === end.getFullYear() &&
+                              start.getMonth() === end.getMonth() &&
+                              start.getDate() === end.getDate();
+
+                            const startLabel = Number.isFinite(start.getTime())
+                              ? start.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                              : o.start_date;
+                            const endLabel =
+                              end && Number.isFinite(end.getTime())
+                                ? end.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                                : o.end_date;
+
+                            const label = end && !sameDay && endLabel ? `${startLabel}–${endLabel}` : startLabel;
+
+                            if (label !== currentDateLabel && !unique.some((u) => u.label === label)) {
+                              unique.push({ id: o.id, label });
+                            }
+                            return unique;
+                          }, []);
+
+                        if (otherDates.length === 0) return null;
+
+                        return (
+                          <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] ring-1 ring-white/30 shadow-md p-4 sm:p-6">
+                            <h3
+                              className="text-h3 font-semibold text-charcoal mb-3"
+                              style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                            >
+                              More dates
+                            </h3>
+                            <ul className="space-y-2">
+                              {otherDates.map((o) => {
+                                const hrefBase = event?.type === "special" ? "/special" : "/event";
+                                return (
+                                  <li key={o.id} className="flex items-center justify-between gap-3">
+                                    <span
+                                      className="text-body-sm text-charcoal/80"
+                                      style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                                    >
+                                      {o.label}
+                                    </span>
+                                    <Link
+                                      href={`${hrefBase}/${o.id}`}
+                                      className="text-body-sm font-semibold text-coral hover:underline"
+                                      style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                                    >
+                                      View
+                                    </Link>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          </div>
+                        );
+                      })()}
 
                       {/* Contact Info - Mobile Only (hide when direct booking is available) */}
                       {!((event.bookingUrl || event.purchaseUrl || (event as any).ticketmaster_url || (event as any).url)) && (

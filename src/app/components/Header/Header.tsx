@@ -3,7 +3,7 @@
 
 import { useCallback, useEffect, useState, useRef, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Menu, Bell, Settings, Bookmark, Search, X } from "lucide-react";
+import { Menu, Bell, Settings, Bookmark, Search, X, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Logo from "../Logo/Logo";
 import OptimizedLink from "../Navigation/OptimizedLink";
@@ -711,9 +711,9 @@ export default function Header({
                   )}
 
                   {/* Notifications */}
-                  {!isGuest && !isMobileSearchOpen && (
+                  {!isMobileSearchOpen && (
                     <OptimizedLink
-                      href="/notifications"
+                      href={isGuest ? "/login" : "/notifications"}
                       className={`relative w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
                         isNotificationsActive
                           ? "text-sage bg-sage/5"
@@ -721,14 +721,18 @@ export default function Header({
                             ? "text-white hover:text-white/80 hover:bg-white/10"
                             : "text-charcoal/80 hover:text-sage hover:bg-sage/5"
                       }`}
-                      aria-label="Notifications"
+                      aria-label={isGuest ? "Sign in for notifications" : "Notifications"}
                     >
                       <Bell className="w-5 h-5" fill={isNotificationsActive ? "currentColor" : "none"} />
-                      {unreadCount > 0 && (
+                      {isGuest ? (
+                        <span className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center w-4 h-4 text-charcoal/50">
+                          <Lock className="w-2.5 h-2.5" />
+                        </span>
+                      ) : unreadCount > 0 ? (
                         <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-white text-[10px] font-bold rounded-full bg-gradient-to-br from-coral to-coral/90 border border-white/20">
                           {unreadCount > 99 ? "99+" : unreadCount}
                         </span>
-                      )}
+                      ) : null}
                     </OptimizedLink>
                   )}
 
@@ -795,26 +799,28 @@ export default function Header({
               </div>
 
               <div className="flex lg:hidden items-center gap-2 ml-auto">
-                {!isGuest && (
-                  <OptimizedLink
-                    href="/notifications"
-                    className={`relative w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
-                      isNotificationsActive
-                        ? "text-sage bg-sage/5"
-                        : whiteText
-                          ? "text-white hover:text-white/80 hover:bg-white/10"
-                          : "text-charcoal/80 hover:text-sage hover:bg-sage/5"
-                    }`}
-                    aria-label="Notifications"
-                  >
-                    <Bell className="w-5 h-5" fill={isNotificationsActive ? "currentColor" : "none"} />
-                    {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-white text-[10px] font-bold rounded-full bg-gradient-to-br from-coral to-coral/90 border border-white/20">
-                        {unreadCount > 99 ? "99+" : unreadCount}
-                      </span>
-                    )}
-                  </OptimizedLink>
-                )}
+                <OptimizedLink
+                  href={isGuest ? "/login" : "/notifications"}
+                  className={`relative w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
+                    isNotificationsActive
+                      ? "text-sage bg-sage/5"
+                      : whiteText
+                        ? "text-white hover:text-white/80 hover:bg-white/10"
+                        : "text-charcoal/80 hover:text-sage hover:bg-sage/5"
+                  }`}
+                  aria-label={isGuest ? "Sign in for notifications" : "Notifications"}
+                >
+                  <Bell className="w-5 h-5" fill={isNotificationsActive ? "currentColor" : "none"} />
+                  {isGuest ? (
+                    <span className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center w-4 h-4 text-charcoal/50">
+                      <Lock className="w-2.5 h-2.5" />
+                    </span>
+                  ) : unreadCount > 0 ? (
+                    <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-white text-[10px] font-bold rounded-full bg-gradient-to-br from-coral to-coral/90 border border-white/20">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                  ) : null}
+                </OptimizedLink>
 
                 {!isBusinessAccountUser && !isGuest && (
                   <OptimizedLink
