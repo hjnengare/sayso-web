@@ -47,7 +47,7 @@ export default function MobileMenu({
       } transition-transform duration-300`}>
         <div className={`flex flex-col h-full overflow-hidden ${mobileModalRevealClass}`}>
           <div className="flex items-center justify-between px-4 py-4 border-b border-charcoal/10 flex-shrink-0 transition-all duration-500 ease-out">
-            <span className="sayso-wordmark text-white text-xl font-semibold leading-none select-none">
+            <span className="sayso-wordmark text-white text-xl font-normal leading-none select-none">
               <span className="text-[1.05em] sayso-wordmark">S</span>
               <span className="text-[0.9em] sayso-wordmark">ayso</span>
             </span>
@@ -307,7 +307,7 @@ export default function MobileMenu({
       >
         <div className={`flex flex-col h-full overflow-hidden ${mobileModalRevealClass}`}>
           <div className="flex items-center justify-between px-4 py-4 border-b border-charcoal/10 flex-shrink-0 transition-all duration-500 ease-out">
-            <span className="sayso-wordmark text-white text-xl font-semibold leading-none select-none">
+            <span className="sayso-wordmark text-white text-xl font-normal leading-none select-none">
               <span className="text-[1.05em] sayso-wordmark">S</span>
               <span className="text-[0.9em] sayso-wordmark">ayso</span>
             </span>
