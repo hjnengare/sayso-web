@@ -609,7 +609,7 @@ export default function HeroCarousel() {
         {/* Hero Section with rounded corners - 75vh responsive height */}
         <section
           ref={containerRef as React.RefObject<HTMLElement>}
-          className="relative h-[90dvh] md:h-[80dvh] w-full overflow-hidden outline-none rounded-none md:rounded-none lg:rounded-none min-h-[300px] shadow-md"
+          className="relative h-[78dvh] sm:h-[90dvh] md:h-[80dvh] w-full overflow-hidden outline-none rounded-none md:rounded-none lg:rounded-none min-h-[420px] sm:min-h-[520px] max-h-[820px] shadow-md"
           aria-label="Hero carousel"
           tabIndex={0}
           style={{ fontFamily: FONT_STACK }}
@@ -629,21 +629,21 @@ export default function HeroCarousel() {
         >
            {/* Full Background Image - All Screen Sizes; fallback to /hero when not loading */}
            <div className="absolute inset-0 rounded-none md:rounded-none lg:rounded-none overflow-hidden px-0 mx-0 transform-gpu [backface-visibility:hidden]">
-             <Image
-               src={failedImageUrls.has(slide.image) ? HERO_IMAGES[index % HERO_IMAGES.length] : slide.image}
-               alt={slide.title}
-               fill
-               priority={index === 0}
-               loading={index === 0 ? "eager" : "lazy"}
-               fetchPriority={index === 0 ? "high" : "auto"}
-               quality={80}
-               className="object-cover scale-[1.02] transform-gpu [backface-visibility:hidden]"
-               style={{ filter: "brightness(0.95) contrast(1.05) saturate(1.1)" }}
-               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 80vw"
-               onError={() => {
-                 setFailedImageUrls((prev) => new Set(prev).add(slide.image));
-               }}
-             />
+              <Image
+                src={failedImageUrls.has(slide.image) ? HERO_IMAGES[index % HERO_IMAGES.length] : slide.image}
+                alt={slide.title}
+                fill
+                priority={index === 0}
+                loading={index === 0 ? "eager" : "lazy"}
+                fetchPriority={index === 0 ? "high" : "auto"}
+                quality={heroViewport === "mobile" ? 70 : 80}
+                className="object-cover scale-[1.02] transform-gpu [backface-visibility:hidden]"
+                style={{ filter: "brightness(0.95) contrast(1.05) saturate(1.1)" }}
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 80vw"
+                onError={() => {
+                  setFailedImageUrls((prev) => new Set(prev).add(slide.image));
+                }}
+              />
              {/* Multi-layered overlay for optimal text readability */}
              <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent" />
              <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/40" />
@@ -651,9 +651,9 @@ export default function HeroCarousel() {
            </div>
 
            {/* Hero Text with slide-in animation */}
-           <div className="absolute inset-0 z-20 flex items-center justify-center w-full pt-[var(--header-height)] -translate-y-4">
+           <div className="absolute inset-0 z-20 flex items-center justify-center w-full pt-[calc(var(--header-height)+var(--safe-area-top))] sm:pt-[var(--header-height)] translate-y-0 sm:-translate-y-4 px-6 sm:px-10">
                <motion.div
-                 className="w-full flex flex-col items-center justify-center text-center pb-20"
+                 className="w-full max-w-3xl flex flex-col items-center justify-center text-center pb-12 sm:pb-20"
                  initial="hidden"
                  animate="visible"
                  variants={{
@@ -662,24 +662,24 @@ export default function HeroCarousel() {
                  }}
                >
                  <motion.h2
-                   className="text-3xl sm:text-4xl lg:text-5xl font-bold text-off-white drop-shadow-lg mb-4"
+                   className="text-2xl sm:text-4xl lg:text-5xl font-bold text-off-white drop-shadow-lg mb-3 sm:mb-4 leading-tight tracking-tight"
                    style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                    variants={{
                      hidden: { opacity: 0, y: 20, filter: "blur(4px)" },
                      visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
                    }}
                  >
-                   Discover Local Gems
+                   {slide.title}
                  </motion.h2>
                  <motion.p
-                   className="text-base sm:text-lg lg:text-xl text-off-white/90 drop-shadow-md max-w-xl mb-6"
+                   className="text-sm sm:text-lg lg:text-xl text-off-white/90 drop-shadow-md max-w-xl mb-5 sm:mb-6 leading-relaxed"
                    style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 500 }}
                    variants={{
                      hidden: { opacity: 0, y: 16, filter: "blur(3px)" },
                      visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] } },
                    }}
                  >
-                   From everyday essentials to hidden favourites
+                   {slide.description}
                  </motion.p>
 
                  {/* Conditional CTA Button: Sign In for unauthenticated, Discover for authenticated */}
@@ -688,11 +688,12 @@ export default function HeroCarousel() {
                      hidden: { opacity: 0, y: 12, scale: 0.97 },
                      visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
                    }}
+                   className="w-full flex justify-center"
                  >
                    {!user ? (
                      <Link
                        href="/login"
-                       className="group relative inline-block rounded-full py-3 px-12 text-base font-semibold text-white text-center bg-gradient-to-r from-coral to-coral/80 hover:from-sage hover:to-sage transition-all duration-300 shadow-lg hover:shadow-xl focus:outline-none focus-visible:ring-4 focus-visible:ring-sage/30 focus-visible:ring-offset-2 min-w-[180px]"
+                       className="mi-tap group relative inline-flex items-center justify-center rounded-full min-h-[48px] py-3 px-10 sm:px-12 text-base font-semibold text-white text-center bg-gradient-to-r from-coral to-coral/80 hover:from-sage hover:to-sage transition-all duration-300 shadow-lg hover:shadow-xl focus:outline-none focus-visible:ring-4 focus-visible:ring-sage/30 focus-visible:ring-offset-2 w-full max-w-[320px] sm:w-auto sm:min-w-[180px]"
                        style={{
                          fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
                          fontWeight: 600,
@@ -703,7 +704,7 @@ export default function HeroCarousel() {
                    ) : (
                      <Link
                        href="/trending"
-                       className="group relative inline-block rounded-full py-3 px-12 text-base font-semibold text-white text-center bg-gradient-to-r from-coral to-coral/80 hover:from-sage hover:to-sage transition-all duration-300 shadow-lg hover:shadow-xl focus:outline-none focus-visible:ring-4 focus-visible:ring-sage/30 focus-visible:ring-offset-2 min-w-[180px]"
+                       className="mi-tap group relative inline-flex items-center justify-center rounded-full min-h-[48px] py-3 px-10 sm:px-12 text-base font-semibold text-white text-center bg-gradient-to-r from-coral to-coral/80 hover:from-sage hover:to-sage transition-all duration-300 shadow-lg hover:shadow-xl focus:outline-none focus-visible:ring-4 focus-visible:ring-sage/30 focus-visible:ring-offset-2 w-full max-w-[320px] sm:w-auto sm:min-w-[180px]"
                        style={{
                          fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
                          fontWeight: 600,
