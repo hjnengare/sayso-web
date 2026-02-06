@@ -14,15 +14,28 @@ import {
   Reviewer,
   BusinessOfTheMonth,
 } from "../../types/community";
+import { BADGE_MAPPINGS } from "../../lib/badgeMappings";
 
-const badgePreviews = [
-  { label: "First Review", description: "Your first trusted review.", icon: "✍️" },
-  { label: "Local Legend", description: "A go-to voice in your area.", icon: "🏆" },
-  { label: "Hidden Gem", description: "Spotlight something underrated.", icon: "💎" },
-  { label: "Top Contributor", description: "Consistently helping others decide.", icon: "⚡" },
-  { label: "Verified Vibes", description: "Quality reviews with helpful detail.", icon: "✅" },
-  { label: "Weekend Explorer", description: "Always out finding new places.", icon: "🗺️" },
+const badgePreviewIds = [
+  { id: "milestone_new_voice", icon: "✍️" },
+  { id: "community_neighbourhood_plug", icon: "🏆" },
+  { id: "community_hidden_gem_hunter", icon: "💎" },
+  { id: "milestone_helpful_honeybee", icon: "⚡" },
+  { id: "milestone_consistency_star", icon: "✅" },
+  { id: "explorer_variety_voyager", icon: "🗺️" },
 ] as const;
+
+const badgePreviews = badgePreviewIds
+  .map(({ id, icon }) => {
+    const mapping = BADGE_MAPPINGS[id];
+    if (!mapping) return null;
+    return {
+      label: mapping.name,
+      description: mapping.name,
+      icon,
+    };
+  })
+  .filter(Boolean) as Array<{ label: string; description: string; icon: string }>;
 
 // Sample review texts for variety
 const sampleReviewTexts = [
