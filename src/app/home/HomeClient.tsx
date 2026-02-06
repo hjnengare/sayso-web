@@ -72,6 +72,19 @@ function isIOSBrowser(): boolean {
   return /iPad|iPhone|iPod/i.test(ua) || isIPadOS;
 }
 
+// Match the badge page (`/badges`) scroll-reveal animation exactly.
+const homeCardRevealVariants = {
+  hidden: { opacity: 0, y: 20, filter: "blur(4px)" },
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const },
+  },
+};
+
+const homeCardRevealViewport = { once: true, margin: "-50px" as const };
+
 
 export default function HomeClient() {
   // Events and Specials
@@ -517,7 +530,13 @@ export default function HomeClient() {
                 >
                   {/* For You Section - Only show when NOT filtered */}
                   {!isFiltered && (
-                    <div className="relative z-10 snap-start">
+                    <motion.div
+                      className="relative z-10 snap-start"
+                      variants={homeCardRevealVariants}
+                      initial="hidden"
+                      whileInView="visible"
+                      viewport={homeCardRevealViewport}
+                    >
                       {!user ? (
                         /* Not signed in: Show Locked For You Section (teaser only) */
                         <div className="mx-auto w-full max-w-[2000px] px-2">
@@ -580,12 +599,18 @@ export default function HomeClient() {
                           )}
                         </>
                       )}
-                    </div>
+                    </motion.div>
                   )}
 
                   {/* Filtered Results Section - Show when filters are active */}
                   {isFiltered && (
-                    <div className="relative z-10 snap-start">
+                    <motion.div
+                      className="relative z-10 snap-start"
+                      variants={homeCardRevealVariants}
+                      initial="hidden"
+                      whileInView="visible"
+                      viewport={homeCardRevealViewport}
+                    >
                       {allBusinessesLoading ? (
                         <BusinessRowSkeleton title="Filtered Results" />
                       ) : allBusinesses.length > 0 ? (
@@ -600,12 +625,18 @@ export default function HomeClient() {
                           No businesses match your filters. Try adjusting your selections.
                         </div>
                       )}
-                    </div>
+                    </motion.div>
                   )}
 
                   {/* Trending Section - Only show when not filtered */}
                   {!isFiltered && (
-                    <div className="relative z-10 snap-start">
+                    <motion.div
+                      className="relative z-10 snap-start"
+                      variants={homeCardRevealVariants}
+                      initial="hidden"
+                      whileInView="visible"
+                      viewport={homeCardRevealViewport}
+                    >
                       {trendingLoading && <BusinessRowSkeleton title="Trending Now" />}
                       {!trendingLoading && hasTrendingBusinesses && (
                         <MemoizedBusinessRow title="Trending Now" businesses={trendingBusinesses} cta="See More" href="/trending" />
@@ -622,19 +653,31 @@ export default function HomeClient() {
                           )}
                         </div>
                       )}
-                    </div>
+                    </motion.div>
                   )}
 
                   {/* Events & Specials */}
-                  <div className="relative z-10 snap-start">
+                  <motion.div
+                    className="relative z-10 snap-start"
+                    variants={homeCardRevealVariants}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={homeCardRevealViewport}
+                  >
                     <EventsSpecials
                       events={events.length > 0 ? events : []}
                       loading={eventsLoading}
                     />
-                  </div>
+                  </motion.div>
 
                   {/* Community Highlights (Featured by Category) */}
-                  <div className="relative z-10 snap-start">
+                  <motion.div
+                    className="relative z-10 snap-start"
+                    variants={homeCardRevealVariants}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={homeCardRevealViewport}
+                  >
                     {featuredError && !featuredLoading ? (
                       <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral space-y-1">
                         <p className="font-medium">Featured</p>
@@ -651,7 +694,7 @@ export default function HomeClient() {
                         variant="reviews"
                       />
                     )}
-                  </div>
+                  </motion.div>
                 </motion.div>
               )}
             </AnimatePresence>
