@@ -164,10 +164,7 @@ export default function RootLayout({
         <meta name="nightmode" content="enable/disable" />
         <meta name="layoutmode" content="fitscreen/standard" />
 
-        {/* PWA Manifest - Icons defined in manifest.json when available */}
-
-        {/* PWA Manifest */}
-        <link rel="manifest" href="/manifest.json" />
+        {/* PWA install prompt disabled: no manifest link */}
         <link rel="icon" href="/favicon.png" type="image/png" />
         <link rel="apple-touch-icon" href="/favicon.png" />
 
