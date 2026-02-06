@@ -1,13 +1,5 @@
 @import "tailwindcss";
 
-@font-face {
-  font-family: "MonarchParadox";
-  src: url("/fonts/monarchparadox.otf") format("opentype");
-  font-display: swap;
-  font-style: normal;
-  font-weight: 400;
-}
-
 @theme reference {
   /* sayso Color Palette */
   --color-page-bg: #E5E0E5;
@@ -125,7 +117,7 @@
   }
 
   html {
-    font-family: 'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-family: var(--font-urbanist), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
     font-size: 100%;
     /* Standard 16px base for accessibility */
     margin: 0;
@@ -147,7 +139,7 @@
   body {
     @apply text-base bg-off-white;
     /* Use token system: 16px with 1.6 line-height */
-    font-family: 'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-family: inherit;
     color: hsl(0, 0%, 0%);
     background-image: url('/bg.svg');
     background-size: cover;
@@ -220,7 +212,7 @@
   input:not([type="button"]):not([type="submit"]):not([type="reset"]),
   textarea,
   select {
-    font-family: 'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-family: var(--font-urbanist), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   }
   
   /* Card content text uses Urbanist */
@@ -236,7 +228,7 @@
   .card span,
   .card li,
   .card label {
-    font-family: 'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-family: var(--font-urbanist), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   }
 
   /* Reset default margins and paddings */
@@ -992,7 +984,7 @@
   }
 
   .sayso-wordmark {
-    font-family: "MonarchParadox", sans-serif;
+    font-family: var(--font-monarch-paradox), var(--font-urbanist), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
     letter-spacing: 0.05em;
     line-height: 1;
     font-synthesis: none;

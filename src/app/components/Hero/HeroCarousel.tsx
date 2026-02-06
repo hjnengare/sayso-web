@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import type { CSSProperties } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -25,20 +25,16 @@ type HeroViewport = "mobile" | "tablet" | "desktop";
 
 const HERO_COPY = [
   {
-    title: "Discover Local Gems",
-    description: "From everyday essentials to hidden favourites",
+    title: "Cape Town, in your pocket",
+    description: "Trusted local gems, rated by real people.",
   },
   {
-    title: "What's Trending Now",
-    description: "See what everyone is talking about right now",
+    title: "Rate the services you love (or don’t love)",
+    description: "Quick, honest reviews that help your community choose better.",
   },
   {
-    title: "Personalised For You",
-    description: "Get recommendations tailored to your interests",
-  },
-  {
-    title: "Connect with Locals",
-    description: "Support local businesses and discover hidden treasures",
+    title: "Discover events and experiences",
+    description: "Find what’s happening near you—today, this weekend, and beyond.",
   },
 ];
 
@@ -458,7 +454,7 @@ export default function HeroCarousel() {
         currentIndexRef.current = newIndex;
         return newIndex;
       });
-    }, 8000);
+    }, 5000);
 
     return () => {
       if (slideTimeoutRef.current != null) {
@@ -609,7 +605,7 @@ export default function HeroCarousel() {
         {/* Hero Section with rounded corners - 75vh responsive height */}
         <section
           ref={containerRef as React.RefObject<HTMLElement>}
-          className="relative h-[78dvh] sm:h-[90dvh] md:h-[80dvh] w-full overflow-hidden outline-none rounded-none md:rounded-none lg:rounded-none min-h-[420px] sm:min-h-[520px] max-h-[820px] shadow-md"
+          className="relative h-[90dvh] md:h-[80dvh] w-full overflow-hidden outline-none rounded-none md:rounded-none lg:rounded-none min-h-[420px] sm:min-h-[520px] max-h-[820px] shadow-md"
           aria-label="Hero carousel"
           tabIndex={0}
           style={{ fontFamily: FONT_STACK }}
@@ -628,7 +624,7 @@ export default function HeroCarousel() {
           }`}
         >
            {/* Full Background Image - All Screen Sizes; fallback to /hero when not loading */}
-           <div className="absolute inset-0 rounded-none md:rounded-none lg:rounded-none overflow-hidden px-0 mx-0 transform-gpu [backface-visibility:hidden]">
+           <div className="absolute inset-0 bg-black rounded-none md:rounded-none lg:rounded-none overflow-hidden px-0 mx-0 transform-gpu [backface-visibility:hidden]">
               <Image
                 src={failedImageUrls.has(slide.image) ? HERO_IMAGES[index % HERO_IMAGES.length] : slide.image}
                 alt={slide.title}
@@ -637,7 +633,9 @@ export default function HeroCarousel() {
                 loading={index === 0 ? "eager" : "lazy"}
                 fetchPriority={index === 0 ? "high" : "auto"}
                 quality={heroViewport === "mobile" ? 70 : 80}
-                className="object-cover scale-[1.02] transform-gpu [backface-visibility:hidden]"
+                className={`transform-gpu [backface-visibility:hidden] ${
+                  heroViewport === "mobile" ? "object-contain" : "object-cover scale-[1.02]"
+                }`}
                 style={{ filter: "brightness(0.95) contrast(1.05) saturate(1.1)" }}
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 80vw"
                 onError={() => {
@@ -669,7 +667,23 @@ export default function HeroCarousel() {
                      visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
                    }}
                  >
-                   {slide.title}
+                   <span className="inline-grid items-center justify-items-center">
+                     <span className="invisible col-start-1 row-start-1">
+                       {HERO_COPY[1]?.title ?? slide.title}
+                     </span>
+                     <AnimatePresence mode="wait" initial={false}>
+                       <motion.span
+                         key={`${currentIndex}-${slide.title}`}
+                         className="col-start-1 row-start-1"
+                         initial={{ opacity: 0, y: 10, filter: "blur(3px)" }}
+                         animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                         exit={{ opacity: 0, y: -8, filter: "blur(3px)" }}
+                         transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                       >
+                         {slide.title}
+                       </motion.span>
+                     </AnimatePresence>
+                   </span>
                  </motion.h2>
                  <motion.p
                    className="text-sm sm:text-lg lg:text-xl text-off-white/90 drop-shadow-md max-w-xl mb-5 sm:mb-6 leading-relaxed"
@@ -679,7 +693,23 @@ export default function HeroCarousel() {
                      visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] } },
                    }}
                  >
-                   {slide.description}
+                   <span className="grid">
+                     <span className="invisible col-start-1 row-start-1">
+                       {HERO_COPY[2]?.description ?? slide.description}
+                     </span>
+                     <AnimatePresence mode="wait" initial={false}>
+                       <motion.span
+                         key={`${currentIndex}-${slide.description}`}
+                         className="col-start-1 row-start-1"
+                         initial={{ opacity: 0, y: 8, filter: "blur(2px)" }}
+                         animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                         exit={{ opacity: 0, y: -6, filter: "blur(2px)" }}
+                         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                       >
+                         {slide.description}
+                       </motion.span>
+                     </AnimatePresence>
+                   </span>
                  </motion.p>
 
                  {/* Conditional CTA Button: Sign In for unauthenticated, Discover for authenticated */}

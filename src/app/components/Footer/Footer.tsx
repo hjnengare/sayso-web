@@ -5,7 +5,6 @@ import Link from "next/link";
 import { Facebook, Instagram, Linkedin, Twitter, Youtube } from "lucide-react";
 import { useState, useEffect } from "react";
 import Logo from "../Logo/Logo";
-import { motion, useReducedMotion } from "framer-motion";
 
 export default function Footer() {
   const [currentYear, setCurrentYear] = useState<number>(2025);
@@ -15,7 +14,6 @@ export default function Footer() {
     "idle" | "loading" | "success" | "error"
   >("idle");
   const [subscribeMessage, setSubscribeMessage] = useState<string>("");
-  const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
     setCurrentYear(new Date().getFullYear());
@@ -125,22 +123,7 @@ export default function Footer() {
   ];
 
   return (
-    <motion.footer
-      className="relative overflow-hidden bg-charcoal text-off-white mt-16 sm:mt-24 lg:mt-32"
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, amount: 0.25, margin: "0px 0px -80px 0px" }}
-      variants={{
-        hidden: { opacity: 0, y: prefersReducedMotion ? 0 : 16 },
-        visible: {
-          opacity: 1,
-          y: 0,
-          transition: prefersReducedMotion
-            ? { duration: 0 }
-            : { duration: 0.5, ease: [0.16, 1, 0.3, 1], when: "beforeChildren", staggerChildren: 0.08 },
-        },
-      }}
-    >
+    <footer className="relative overflow-hidden bg-charcoal text-off-white mt-16 sm:mt-24 lg:mt-32">
       <div aria-hidden className="pointer-events-none absolute inset-0">
         <div className="absolute -top-24 left-1/2 h-48 w-[520px] -translate-x-1/2 rounded-full bg-sage/10 blur-3xl" />
         <div className="absolute bottom-0 left-0 h-32 w-64 bg-off-white/5 blur-2xl" />
@@ -149,19 +132,7 @@ export default function Footer() {
       <div className="relative mx-auto w-full max-w-[2000px] px-4 sm:px-6 lg:px-8">
         <div className="border-t border-white/10 py-10 sm:py-12">
           {/* Subscribe */}
-          <motion.div
-            className="mb-10 sm:mb-12"
-            variants={{
-              hidden: { opacity: 0, y: prefersReducedMotion ? 0 : 10 },
-              visible: {
-                opacity: 1,
-                y: 0,
-                transition: prefersReducedMotion
-                  ? { duration: 0 }
-                  : { duration: 0.45, ease: [0.16, 1, 0.3, 1] },
-              },
-            }}
-          >
+          <div className="mb-10 sm:mb-12">
             <div className="relative overflow-hidden rounded-[20px] border border-white/10 bg-white/[0.04] px-5 py-6 sm:px-7 sm:py-7">
               <div aria-hidden className="pointer-events-none absolute inset-0">
                 <div className="absolute -top-20 left-10 h-40 w-72 rounded-full bg-off-white/10 blur-3xl" />
@@ -236,23 +207,13 @@ export default function Footer() {
                 </p>
               </div>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div
+          <div
             className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr_1fr_1fr] gap-10 lg:gap-12 items-start"
-            variants={{
-              hidden: { opacity: 0, y: prefersReducedMotion ? 0 : 10 },
-              visible: { opacity: 1, y: 0, transition: prefersReducedMotion ? { duration: 0 } : { duration: 0.45, ease: [0.16, 1, 0.3, 1] } },
-            }}
           >
             {/* Brand */}
-            <motion.div
-              className="flex flex-col items-start gap-4 text-left"
-              variants={{
-                hidden: { opacity: 0, y: prefersReducedMotion ? 0 : 8 },
-                visible: { opacity: 1, y: 0, transition: prefersReducedMotion ? { duration: 0 } : { duration: 0.4, ease: [0.16, 1, 0.3, 1] } },
-              }}
-            >
+            <div className="flex flex-col items-start gap-4 text-left">
               <Link href="/" className="flex-shrink-0 flex items-center hover:opacity-80 transition-opacity">
                 <Logo variant="footer" />
               </Link>
@@ -262,18 +223,14 @@ export default function Footer() {
               <p className="font-urbanist text-sm text-off-white/70 italic text-left">
                 Less guessing, more confessing
               </p>
-            </motion.div>
+            </div>
 
             {/* Link columns */}
             {linkColumns.map((column, columnIndex) => (
-              <motion.nav
+              <nav
                 key={`footer-column-${columnIndex}`}
                 aria-label={`Footer column ${columnIndex + 1}`}
                 className="flex flex-col gap-8"
-                variants={{
-                  hidden: { opacity: 0, y: prefersReducedMotion ? 0 : 8 },
-                  visible: { opacity: 1, y: 0, transition: prefersReducedMotion ? { duration: 0 } : { duration: 0.4, ease: [0.16, 1, 0.3, 1] } },
-                }}
               >
                 {column.map((section) => (
                     <div key={section.title} className="flex flex-col gap-2">
@@ -292,23 +249,13 @@ export default function Footer() {
                         </li>
                       ))}
                     </ul>
-                  </div>
+                    </div>
                 ))}
-              </motion.nav>
+              </nav>
             ))}
-          </motion.div>
+          </div>
 
-          <motion.div
-            className="mt-12 border-t border-white/10 pt-6"
-            variants={{
-              hidden: { opacity: 0, y: prefersReducedMotion ? 0 : 10 },
-              visible: {
-                opacity: 1,
-                y: 0,
-                transition: prefersReducedMotion ? { duration: 0 } : { duration: 0.45, ease: [0.16, 1, 0.3, 1], delay: 0.05 },
-              },
-            }}
-          >
+          <div className="mt-12 border-t border-white/10 pt-6">
             <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr_auto] items-center gap-4">
               <div className="flex items-center justify-center sm:justify-start gap-3">
                 {socialLinks.map(({ name, href, Icon }) => (
@@ -327,10 +274,10 @@ export default function Footer() {
                 &copy; {mounted ? currentYear : 2026} Sayso Reviews (Pty) Ltd 
               </p>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
 
-    </motion.footer>
+    </footer>
   );
 }

@@ -72,6 +72,19 @@ function isIOSBrowser(): boolean {
   return /iPad|iPhone|iPod/i.test(ua) || isIPadOS;
 }
 
+// Match the badge page (`/badges`) scroll-reveal animation exactly.
+const homeCardRevealVariants = {
+  hidden: { opacity: 0, y: 20, filter: "blur(4px)" },
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const },
+  },
+};
+
+const homeCardRevealViewport = { once: true, margin: "-50px" as const };
+
 
 export default function HomeClient() {
   // Events and Specials
@@ -84,7 +97,6 @@ export default function HomeClient() {
   const searchParams = useSearchParams();
   const searchQueryParam = searchParams.get('search') || "";
   const { user } = useAuth();
-  const isGuestMode = searchParams.get('guest') === 'true' && !user;
 
   const {
     query: liveQuery,
@@ -518,33 +530,43 @@ export default function HomeClient() {
                 >
                   {/* For You Section - Only show when NOT filtered */}
                   {!isFiltered && (
-                    <div className="relative z-10 snap-start">
+                    <motion.div
+                      className="relative z-10 snap-start"
+                      variants={homeCardRevealVariants}
+                      initial="hidden"
+                      whileInView="visible"
+                      viewport={homeCardRevealViewport}
+                    >
                       {!user ? (
                         /* Not signed in: Show Locked For You Section (teaser only) */
                         <div className="mx-auto w-full max-w-[2000px] px-2">
-                          <div className="relative border border-charcoal/10 rounded-[12px] p-6 sm:p-8 md:p-10 text-center space-y-3">
+                          <div className="relative border border-charcoal/10 bg-white/40 backdrop-blur-sm rounded-[14px] p-6 sm:p-8 md:p-10 text-center space-y-4 shadow-[0_1px_0_rgba(0,0,0,0.02)]">
                             <h3 className="text-lg sm:text-xl font-bold text-charcoal" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                               For You
                             </h3>
-                            <p className="text-body sm:text-base text-charcoal/60 max-w-[60ch] mx-auto" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                              Sign up to unlock personalised recommendations tailored to your interests.
-                              <br />
+                            <p
+                              className="text-body sm:text-base text-charcoal/60 max-w-[60ch] mx-auto"
+                              style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                            >
+                              Create an account to unlock personalised recommendations.
+                            </p>
+
+                            <div className="pt-2 w-full flex flex-col sm:flex-row items-stretch justify-center gap-3">
                               <Link
                                 href="/register"
-                                className="inline-block mt-2 font-semibold text-coral hover:underline"
+                                className="mi-tap inline-flex items-center justify-center rounded-full min-h-[48px] px-6 py-3 text-body font-semibold text-white bg-gradient-to-r from-coral to-coral/85 hover:opacity-95 transition-all duration-200 shadow-md w-full sm:w-auto sm:min-w-[180px]"
                                 style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                               >
-                                Create an account
+                                Create Account
                               </Link>
-                              {' '}or{' '}
                               <Link
                                 href="/login"
-                                className="inline-block font-semibold text-charcoal hover:underline"
+                                className="mi-tap inline-flex items-center justify-center rounded-full min-h-[48px] px-6 py-3 text-body font-semibold text-charcoal border border-charcoal/15 bg-white hover:bg-off-white transition-all duration-200 shadow-sm w-full sm:w-auto sm:min-w-[180px]"
                                 style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                               >
-                                sign in
+                                Sign In
                               </Link>
-                            </p>
+                            </div>
                           </div>
                         </div>
                       ) : (
@@ -577,12 +599,18 @@ export default function HomeClient() {
                           )}
                         </>
                       )}
-                    </div>
+                    </motion.div>
                   )}
 
                   {/* Filtered Results Section - Show when filters are active */}
                   {isFiltered && (
-                    <div className="relative z-10 snap-start">
+                    <motion.div
+                      className="relative z-10 snap-start"
+                      variants={homeCardRevealVariants}
+                      initial="hidden"
+                      whileInView="visible"
+                      viewport={homeCardRevealViewport}
+                    >
                       {allBusinessesLoading ? (
                         <BusinessRowSkeleton title="Filtered Results" />
                       ) : allBusinesses.length > 0 ? (
@@ -597,12 +625,18 @@ export default function HomeClient() {
                           No businesses match your filters. Try adjusting your selections.
                         </div>
                       )}
-                    </div>
+                    </motion.div>
                   )}
 
                   {/* Trending Section - Only show when not filtered */}
                   {!isFiltered && (
-                    <div className="relative z-10 snap-start">
+                    <motion.div
+                      className="relative z-10 snap-start"
+                      variants={homeCardRevealVariants}
+                      initial="hidden"
+                      whileInView="visible"
+                      viewport={homeCardRevealViewport}
+                    >
                       {trendingLoading && <BusinessRowSkeleton title="Trending Now" />}
                       {!trendingLoading && hasTrendingBusinesses && (
                         <MemoizedBusinessRow title="Trending Now" businesses={trendingBusinesses} cta="See More" href="/trending" />
@@ -619,19 +653,31 @@ export default function HomeClient() {
                           )}
                         </div>
                       )}
-                    </div>
+                    </motion.div>
                   )}
 
                   {/* Events & Specials */}
-                  <div className="relative z-10 snap-start">
+                  <motion.div
+                    className="relative z-10 snap-start"
+                    variants={homeCardRevealVariants}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={homeCardRevealViewport}
+                  >
                     <EventsSpecials
                       events={events.length > 0 ? events : []}
                       loading={eventsLoading}
                     />
-                  </div>
+                  </motion.div>
 
                   {/* Community Highlights (Featured by Category) */}
-                  <div className="relative z-10 snap-start">
+                  <motion.div
+                    className="relative z-10 snap-start"
+                    variants={homeCardRevealVariants}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={homeCardRevealViewport}
+                  >
                     {featuredError && !featuredLoading ? (
                       <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral space-y-1">
                         <p className="font-medium">Featured</p>
@@ -648,7 +694,7 @@ export default function HomeClient() {
                         variant="reviews"
                       />
                     )}
-                  </div>
+                  </motion.div>
                 </motion.div>
               )}
             </AnimatePresence>

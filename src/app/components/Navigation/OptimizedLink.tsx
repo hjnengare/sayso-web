@@ -101,16 +101,21 @@ export default function OptimizedLink({
       if (target === "_blank") return;
       if (!href.startsWith("/")) return;
 
-      const startViewTransition = (document as any)?.startViewTransition as
+      e.preventDefault();
+
+      const doc = document as any;
+      const startViewTransition = doc?.startViewTransition as
         | undefined
         | ((callback: () => void) => void);
 
-      if (!startViewTransition) return;
-
-      e.preventDefault();
-      startViewTransition(() => {
+      if (typeof startViewTransition === "function") {
+        // IMPORTANT: call with `document` as receiver to avoid "Illegal invocation" in some browsers.
+        startViewTransition.call(doc, () => {
+          router.push(href);
+        });
+      } else {
         router.push(href);
-      });
+      }
     },
     [href, onClick, router, target],
   );

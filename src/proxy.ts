@@ -388,8 +388,15 @@ export async function proxy(request: NextRequest) {
     return response;
   }
 
-  // CRITICAL (iOS crash fix): No user session — NEVER redirect to onboarding/complete. Only protect protected routes → /login; allow public.
+  // CRITICAL (iOS crash fix): No user session — avoid redirecting to onboarding/complete (except root "/" default landing). Only protect protected routes → /login; allow public.
   if (!user) {
+    // Guests should never land on /for-you (empty state can trap navigation on some webviews).
+    // Keep /home public; lock personalization to authenticated users only.
+    if (pathname === '/for-you' || pathname.startsWith('/for-you/')) {
+      const to = '/home';
+      edgeLog('REDIRECT', pathname, { hasUser: false, to, reason: 'guest_for_you' });
+      return redirectWithGuard(request, new URL(to, request.url));
+    }
     if (isPublicRoute) {
       edgeLog('ALLOW', pathname, { hasUser: false });
       return response;
@@ -403,7 +410,7 @@ export async function proxy(request: NextRequest) {
     }
     // CRITICAL: Guest hitting "/" — middleware must redirect here. Otherwise app/page.tsx runs and we get competing redirect sources (loop on iOS webview).
     if (pathname === '/') {
-      const to = '/home';
+      const to = '/onboarding';
       edgeLog('REDIRECT', pathname, { hasUser: false, to, reason: 'root_guest' });
       return redirectWithGuard(request, new URL(to, request.url));
     }

@@ -44,7 +44,7 @@ export default function Logo({
 
       {variant !== "footer" && (
         <span
-          className={`${wordmarkSpacingClass} inline-flex items-center whitespace-nowrap text-white italic text-xl sm:text-2xl md:text-3xl font-semibold tracking-tight leading-none select-none sayso-wordmark`}
+          className={`${wordmarkSpacingClass} inline-flex items-center whitespace-nowrap text-white text-xl sm:text-2xl md:text-3xl font-normal tracking-tight leading-none select-none sayso-wordmark`}
         >
           <span className="text-[1.05em] sayso-wordmark">S</span>
           <span className="text-[0.9em] sayso-wordmark">ayso</span>

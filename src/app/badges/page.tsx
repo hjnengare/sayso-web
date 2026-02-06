@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import Footer from "../components/Footer/Footer";
 import { BADGE_MAPPINGS, type BadgeMapping } from "../lib/badgeMappings";
+import { useAuth } from "../contexts/AuthContext";
 
 // Badge descriptions and how to earn them
 const BADGE_DETAILS: Record<string, { description: string; howToEarn: string }> = {
@@ -581,6 +582,8 @@ function BadgeSection({
 
 export default function BadgesPage() {
   const router = useRouter();
+  const { user } = useAuth();
+  const discoverBusinessesHref = user ? "/for-you" : "/home";
   const [searchQuery, setSearchQuery] = useState("");
 
   // Group badges by category
@@ -831,7 +834,7 @@ export default function BadgesPage() {
               Every badge tells a story. Begin your journey by sharing your experiences at local businesses.
             </p>
             <Link
-              href="/for-you"
+              href={discoverBusinessesHref}
               className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-white text-sage font-semibold hover:bg-white/90 transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
               style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
             >

@@ -10,6 +10,7 @@ import {
   Playfair_Display, 
   Barrio 
 } from "next/font/google";
+import localFont from "next/font/local";
 import dynamicImport from "next/dynamic";
 import Script from "next/script";
 import "./globals.css";
@@ -35,6 +36,20 @@ const urbanist = Urbanist({
   display: "swap",
   fallback: ["system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
   variable: "--font-urbanist",
+});
+
+// Wordmark font - MonarchParadox (preloaded, critical)
+const monarchParadox = localFont({
+  src: [
+    {
+      path: "../../public/fonts/monarchparadox.otf",
+      weight: "400",
+      style: "normal",
+    },
+  ],
+  display: "swap",
+  fallback: ["system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
+  variable: "--font-monarch-paradox",
 });
 
 // Display fonts - loaded with swap for non-blocking render
@@ -117,7 +132,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth bg-off-white">
+    <html
+      lang="en"
+      className={`${urbanist.variable} ${monarchParadox.variable} ${dancingScript.variable} ${permanentMarker.variable} ${changaOne.variable} ${cormorant.variable} ${livvic.variable} ${playfairDisplay.variable} ${barrio.variable} scroll-smooth bg-off-white`}
+    >
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, viewport-fit=cover, user-scalable=no, shrink-to-fit=no" />
         <meta name="mobile-web-app-capable" content="yes" />
@@ -146,10 +164,7 @@ export default function RootLayout({
         <meta name="nightmode" content="enable/disable" />
         <meta name="layoutmode" content="fitscreen/standard" />
 
-        {/* PWA Manifest - Icons defined in manifest.json when available */}
-
-        {/* PWA Manifest */}
-        <link rel="manifest" href="/manifest.json" />
+        {/* PWA install prompt disabled: no manifest link */}
         <link rel="icon" href="/favicon.png" type="image/png" />
         <link rel="apple-touch-icon" href="/favicon.png" />
 
@@ -160,7 +175,7 @@ export default function RootLayout({
         
         {/* Canonical tag removed - set per page via metadata */}
       </head>
-      <body className={`${urbanist.className} ${dancingScript.variable} ${permanentMarker.variable} ${changaOne.variable} ${cormorant.variable} ${livvic.variable} ${playfairDisplay.variable} ${barrio.variable} no-layout-shift scroll-smooth bg-off-white`}>
+      <body className="no-layout-shift scroll-smooth bg-off-white">
         <SchemaMarkup schemas={[generateOrganizationSchema(), generateWebSiteSchema()]} />
         <WebVitals />
         <ClientLayoutWrapper />
