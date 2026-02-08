@@ -67,14 +67,14 @@ export default function BusinessRow({
 
   return (
     <section
-      className="relative m-0 sm:px-2 w-full"
+      className="relative m-0 px-2 w-full"
       aria-label={title}
       style={{
         fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
       }}
     >
       <div className="mx-auto w-full relative z-10">
-        <div className="px-2 sm:px-0 pb-4 sm:pb-8 md:pb-10 flex flex-wrap items-center justify-between gap-2">
+        <div className="pb-4 sm:pb-8 md:pb-10 flex flex-wrap items-center justify-between gap-2">
           <WavyTypedTitle
             text={title}
             as="h2"

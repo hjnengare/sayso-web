@@ -61,6 +61,20 @@ export function mapEventsAndSpecialsRowToEventCard(
       ? opts!.startDates!.map((d) => ({ startDate: d, endDate: undefined, bookingUrl: bookingUrl || undefined }))
       : [{ startDate: startIso, endDate: endIso || undefined, bookingUrl: bookingUrl || undefined }];
 
+  // Parse composite location "venue • city • country" into separate fields
+  let venueName: string | undefined;
+  let city: string | undefined;
+  let country: string | undefined;
+  const locationStr = row.location ?? "";
+  if (locationStr.includes(" \u2022 ")) {
+    const parts = locationStr.split(" \u2022 ").map((s) => s.trim()).filter(Boolean);
+    if (parts.length >= 2) {
+      venueName = parts[0];
+      city = parts[1];
+      if (parts.length >= 3) country = parts[2];
+    }
+  }
+
   return {
     id: row.id,
     title: row.title,
@@ -79,6 +93,9 @@ export function mapEventsAndSpecialsRowToEventCard(
     bookingUrl: bookingUrl || undefined,
     bookingContact: (row.booking_contact ?? undefined) as any,
     businessId: row.business_id ?? undefined,
+    venueName,
+    city,
+    country,
     occurrences: occurrencesArray,
     ...(occurrencesCount != null ? { occurrencesCount } : null),
     ...(computedRange ? { date_range_label: computedRange } : null),

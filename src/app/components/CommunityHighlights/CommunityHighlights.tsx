@@ -168,7 +168,7 @@ export default function CommunityHighlights({
   if (loading) {
     return (
       <section className="relative m-0 w-full" aria-label={title}>
-        <div className="mx-auto w-full max-w-[2000px] relative z-10 sm:px-2 py-8">
+        <div className="mx-auto w-full max-w-[2000px] relative z-10 px-2 py-8">
           <div className="text-center text-charcoal/60">Loading community highlights...</div>
         </div>
       </section>
@@ -193,9 +193,9 @@ export default function CommunityHighlights({
       }}
     >
 
-      <div className="mx-auto w-full max-w-[2000px] relative z-10 sm:px-2">
+      <div className="mx-auto w-full max-w-[2000px] relative z-10 px-2">
         {/* Header */}
-        <div className="px-2 sm:px-0 pb-4 sm:pb-8 md:pb-10 flex flex-wrap items-center justify-between gap-2">
+        <div className="pb-4 sm:pb-8 md:pb-10 flex flex-wrap items-center justify-between gap-2">
           <WavyTypedTitle
             text={title}
             as="h2"

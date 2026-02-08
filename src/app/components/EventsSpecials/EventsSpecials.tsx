@@ -44,8 +44,8 @@ export default function EventsSpecials({
           fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
         }}
       >
-        <div className="mx-auto w-full max-w-[2000px] relative z-10 sm:px-2">
-          <div className="px-2 sm:px-0 pb-4 sm:pb-8 md:pb-10 flex flex-wrap items-center justify-between gap-2">
+        <div className="mx-auto w-full max-w-[2000px] relative z-10 px-2">
+          <div className="pb-4 sm:pb-8 md:pb-10 flex flex-wrap items-center justify-between gap-2">
             <div className="h-8 sm:h-10 w-48 sm:w-64 bg-charcoal/10 rounded-lg animate-pulse px-3 sm:px-4 py-1" />
             <div className="inline-flex items-center gap-1 px-4 py-2 -mx-2">
               <div className="h-4 w-16 bg-charcoal/10 rounded-full animate-pulse" />
@@ -58,7 +58,7 @@ export default function EventsSpecials({
               {Array.from({ length: 4 }).map((_, index) => (
                 <div
                   key={index}
-                  className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto min-w-[clamp(220px,18vw,320px)] list-none flex"
+                  className="snap-start snap-always flex-shrink-0 w-[85vw] sm:w-auto min-w-[clamp(220px,18vw,320px)] list-none flex"
                 >
                   <EventCardSkeleton />
                 </div>
@@ -79,8 +79,8 @@ export default function EventsSpecials({
         fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
       }}
     >
-      <div className="mx-auto w-full max-w-[2000px] relative z-10 sm:px-2">
-        <div className="px-2 sm:px-0 pb-4 sm:pb-8 md:pb-10 flex flex-wrap items-center justify-between gap-2">
+      <div className="mx-auto w-full max-w-[2000px] relative z-10 px-2">
+        <div className="pb-4 sm:pb-8 md:pb-10 flex flex-wrap items-center justify-between gap-2">
           <WavyTypedTitle
             text={title}
             as="h2"
@@ -118,7 +118,7 @@ export default function EventsSpecials({
               {displayEvents.map((event, index) => (
                 <div
                   key={event.id ?? `event-${index}`}
-                  className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto min-w-[clamp(220px,18vw,320px)] list-none flex"
+                  className="snap-start snap-always flex-shrink-0 w-[85vw] sm:w-auto min-w-[clamp(220px,18vw,320px)] list-none flex"
                 >
                   <EventCard event={event} index={index} />
                 </div>

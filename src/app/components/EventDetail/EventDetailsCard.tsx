@@ -105,7 +105,7 @@ export default function EventDetailsCard({ event }: EventDetailsCardProps) {
         {event.price && (
           <div className="flex items-center gap-2.5">
             <div className="w-10 h-10 bg-white/30 rounded-full flex items-center justify-center">
-              <span className="text-navbar-bg font-bold text-base">£</span>
+              <span className="text-navbar-bg font-bold text-base">R</span>
             </div>
             <div>
               <p
