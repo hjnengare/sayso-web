@@ -10,6 +10,9 @@ export const size = {
 export const contentType = 'image/png';
 
 export default async function Image() {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://sayso-nine.vercel.app';
+  const logoUrl = `${baseUrl}/logos/logo.png`;
+
   return new ImageResponse(
     (
       <div
@@ -32,6 +35,28 @@ export default async function Image() {
             gap: '24px',
           }}
         >
+          <div
+            style={{
+              width: 148,
+              height: 148,
+              borderRadius: 999,
+              background: 'rgba(255,255,255,0.14)',
+              border: '1px solid rgba(255,255,255,0.35)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <img
+              src={logoUrl}
+              alt="sayso logo"
+              width={120}
+              height={120}
+              style={{
+                objectFit: 'contain',
+              }}
+            />
+          </div>
           <div
             style={{
               fontSize: 96,

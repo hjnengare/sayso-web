@@ -68,12 +68,6 @@ const staticPages = [
     priority: 0.8,
   },
   {
-    url: '/deal-breakers',
-    lastModified: new Date(),
-    changeFrequency: 'weekly' as const,
-    priority: 0.7,
-  },
-  {
     url: '/discover/reviews',
     lastModified: new Date(),
     changeFrequency: 'daily' as const,
@@ -124,24 +118,21 @@ async function getCategories(): Promise<Array<{ slug: string }>> {
   try {
     const supabase = getSitemapSupabase();
     
-    // Get unique categories
+    // Get unique canonical category slugs
     const { data, error } = await supabase
       .from('businesses')
-      .select('category')
+      .select('primary_category_slug')
       .eq('status', 'active')
       .or('is_system.is.null,is_system.eq.false')
-      .not('category', 'is', null);
+      .not('primary_category_slug', 'is', null);
     
     if (error) {
       console.error('[Sitemap] Error fetching categories:', error);
       return [];
     }
     
-    // Get unique categories and create slugs
-    const uniqueCategories = [...new Set((data || []).map((b: any) => b.category))];
-    return uniqueCategories.map((cat: string) => ({
-      slug: cat.toLowerCase().replace(/\s+/g, '-'),
-    }));
+    const uniqueCategories = [...new Set((data || []).map((b: any) => b.primary_category_slug).filter(Boolean))];
+    return uniqueCategories.map((slug: string) => ({ slug }));
   } catch (error) {
     console.error('[Sitemap] Error fetching categories:', error);
     return [];
@@ -159,11 +150,11 @@ async function getCityCategorySlugs(): Promise<Array<{ slug: string }>> {
     // Get unique location-category combinations
     const { data, error } = await supabase
       .from('businesses')
-      .select('location, category')
+      .select('location, primary_subcategory_label')
       .eq('status', 'active')
       .or('is_system.is.null,is_system.eq.false')
       .not('location', 'is', null)
-      .not('category', 'is', null)
+      .not('primary_subcategory_label', 'is', null)
       .limit(200); // Limit to prevent sitemap from being too large
     
     if (error) {
@@ -174,9 +165,9 @@ async function getCityCategorySlugs(): Promise<Array<{ slug: string }>> {
     // Create unique city-category slugs
     const combinations = new Set<string>();
     (data || []).forEach((business: any) => {
-      if (business.location && business.category) {
+      if (business.location && business.primary_subcategory_label) {
         const city = business.location.toLowerCase().replace(/\s+/g, '-');
-        const category = business.category.toLowerCase().replace(/\s+/g, '-');
+        const category = String(business.primary_subcategory_label).toLowerCase().replace(/\s+/g, '-');
         // Generate common patterns like "cape-town-restaurants"
         combinations.add(`${city}-${category}`);
         // Also add "best" variations like "cape-town-best-food"
@@ -221,15 +212,44 @@ async function getEvents(): Promise<Array<{ id: string; updated_at: string }>> {
 }
 
 /**
+ * Fetch specials for sitemap
+ */
+async function getSpecials(): Promise<Array<{ id: string; updated_at: string }>> {
+  try {
+    const supabase = getSitemapSupabase();
+
+    const { data: specials, error } = await supabase
+      .from('events_and_specials')
+      .select('id, updated_at, created_at')
+      .eq('type', 'special')
+      .limit(5000);
+
+    if (error) {
+      console.error('[Sitemap] Error fetching specials:', error);
+      return [];
+    }
+
+    return (specials || []).map((special) => ({
+      id: special.id,
+      updated_at: special.updated_at || special.created_at || new Date().toISOString(),
+    }));
+  } catch (error) {
+    console.error('[Sitemap] Error fetching specials:', error);
+    return [];
+  }
+}
+
+/**
  * Generate sitemap
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Get all businesses, categories, city-category combinations, and events
-  const [businesses, categories, cityCategorySlugs, events] = await Promise.all([
+  const [businesses, categories, cityCategorySlugs, events, specials] = await Promise.all([
     getBusinesses(),
     getCategories(),
     getCityCategorySlugs(),
     getEvents(),
+    getSpecials(),
   ]);
 
   // Generate business URLs
@@ -264,6 +284,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
+  // Generate special URLs
+  const specialUrls = specials.map((special) => ({
+    url: `${baseUrl}/special/${special.id}`,
+    lastModified: new Date(special.updated_at),
+    changeFrequency: 'weekly' as const,
+    priority: 0.6,
+  }));
+
   // Combine static and dynamic pages
   const allPages = [
     ...staticPages.map((page) => ({
@@ -276,6 +304,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...categoryUrls,
     ...cityCategoryUrls,
     ...eventUrls,
+    ...specialUrls,
   ];
 
   return allPages;

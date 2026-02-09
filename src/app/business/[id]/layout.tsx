@@ -3,10 +3,20 @@ import { getServerSupabase } from '../../lib/supabase/server';
 import { generateSEOMetadata } from '../../lib/utils/seoMetadata';
 import SchemaMarkup from '../../components/SEO/SchemaMarkup';
 import { generateLocalBusinessSchema, generateBreadcrumbSchema } from '../../lib/utils/schemaMarkup';
+import Link from 'next/link';
 
 interface BusinessLayoutProps {
   children: React.ReactNode;
   params: Promise<{ id: string }>;
+}
+
+function toSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-');
 }
 
 /**
@@ -35,7 +45,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     // Fetch business data
     const { data } = await supabase
       .from('businesses')
-      .select('name, description, image_url, uploaded_images, slug, category')
+      .select('name, description, image_url, uploaded_images, slug, category, primary_category_slug, primary_category_label')
       .eq('id', actualId)
       .eq('status', 'active')
       .or('is_system.is.null,is_system.eq.false')
@@ -57,13 +67,14 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   }
 
   const businessSlug = business.slug || id;
+  const categoryLabel = business.primary_category_label || business.category || '';
   const image = (business.uploaded_images && business.uploaded_images.length > 0 ? business.uploaded_images[0] : null) || business.image_url || undefined;
   const description = business.description || `Discover ${business.name} - read reviews, view photos, and get all the information you need.`;
 
   return generateSEOMetadata({
     title: business.name,
     description,
-    keywords: [business.name, 'business', 'reviews', 'local business', business.category || ''],
+    keywords: [business.name, 'business', 'reviews', 'local business', categoryLabel],
     image,
     url: `/business/${businessSlug}`,
     type: 'article',
@@ -79,6 +90,7 @@ export default async function BusinessLayout({
   
   // Fetch business data for schema
   let schemas: any[] = [];
+  let relatedLinks: Array<{ href: string; label: string }> = [];
   try {
     const supabase = await getServerSupabase();
     
@@ -102,6 +114,8 @@ export default async function BusinessLayout({
         uploaded_images,
         slug,
         category,
+        primary_category_slug,
+        primary_category_label,
         phone,
         email,
         address,
@@ -118,11 +132,16 @@ export default async function BusinessLayout({
     
     if (business) {
       const businessSlug = business.slug || id;
+      const categoryLabel = business.primary_category_label || business.category || 'Business';
+      const categorySlug = business.primary_category_slug || toSlug(categoryLabel);
+      const citySlug = business.location
+        ? toSlug(String(business.location).split(',')[0])
+        : '';
       
       // Generate LocalBusiness schema
       const businessSchema = generateLocalBusinessSchema({
         name: business.name,
-        description: business.description || `${business.category || 'Business'} located in ${business.location || 'Cape Town'}`,
+        description: business.description || `${categoryLabel} located in ${business.location || 'Cape Town'}`,
         image: (business.uploaded_images && business.uploaded_images.length > 0 ? business.uploaded_images[0] : null) || business.image_url || undefined,
         url: `${baseUrl}/business/${businessSlug}`,
         telephone: business.phone || undefined,
@@ -143,17 +162,21 @@ export default async function BusinessLayout({
           bestRating: 5,
           worstRating: 1,
         } : undefined,
-        category: business.category || undefined,
+        category: categoryLabel || undefined,
       });
       
       // Generate Breadcrumb schema
       const breadcrumbSchema = generateBreadcrumbSchema([
         { name: 'Home', url: `${baseUrl}/home` },
-        { name: business.category || 'Business', url: `${baseUrl}/category/${(business.category || 'business').toLowerCase().replace(/\s+/g, '-')}` },
+        { name: categoryLabel, url: `${baseUrl}/category/${categorySlug}` },
         { name: business.name, url: `${baseUrl}/business/${businessSlug}` },
       ]);
       
       schemas = [businessSchema, breadcrumbSchema];
+      relatedLinks = [
+        { href: `/category/${categorySlug}`, label: `More in ${categoryLabel}` },
+        ...(citySlug ? [{ href: `/${citySlug}`, label: `More in ${business.location}` }] : []),
+      ];
     }
   } catch (error) {
     console.error('[Business Layout] Error generating schema:', error);
@@ -162,6 +185,17 @@ export default async function BusinessLayout({
   return (
     <>
       {schemas.length > 0 && <SchemaMarkup schemas={schemas} />}
+      {relatedLinks.length > 0 && (
+        <nav aria-label="Related links" className="sr-only">
+          <ul>
+            {relatedLinks.map((link) => (
+              <li key={link.href}>
+                <Link href={link.href}>{link.label}</Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
       {children}
     </>
   );

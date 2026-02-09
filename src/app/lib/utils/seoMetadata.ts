@@ -43,7 +43,9 @@ export function generateSEOMetadata(options: SEOOptions = {}): Metadata {
       : generatePageTitle(title, description)
     : PageTitles.home;
   const fullDescription = description || 'Find amazing local businesses, restaurants, and experiences in your area with personalized recommendations and trusted reviews.';
-  const ogImage = image || `${baseUrl}/opengraph-image`;
+  const brandedOgImage = `${baseUrl}/opengraph-image`;
+  const hasCustomImage = Boolean(image && image !== brandedOgImage);
+  const socialImage = (image && image.length > 0) ? image : brandedOgImage;
   const canonicalUrl = url ? `${baseUrl}${url}` : baseUrl;
 
   return {
@@ -63,11 +65,19 @@ export function generateSEOMetadata(options: SEOOptions = {}): Metadata {
       siteName,
       images: [
         {
-          url: ogImage,
+          url: brandedOgImage,
           width: 1200,
           height: 630,
-          alt: title || siteName,
+          alt: 'sayso logo and slogan',
         },
+        ...(hasCustomImage
+          ? [{
+              url: image as string,
+              width: 1200,
+              height: 630,
+              alt: title || siteName,
+            }]
+          : []),
       ],
       locale: 'en_ZA',
       type,
@@ -76,8 +86,16 @@ export function generateSEOMetadata(options: SEOOptions = {}): Metadata {
       card: 'summary_large_image',
       title: fullTitle,
       description: fullDescription,
-      images: [ogImage],
+      images: [socialImage],
       creator: '@sayso',
+      site: '@sayso',
+    },
+    other: {
+      'og:image:secure_url': brandedOgImage,
+      'og:image:type': 'image/png',
+      'og:image:width': '1200',
+      'og:image:height': '630',
+      'twitter:image:alt': 'sayso logo and slogan',
     },
     robots: {
       index: !noindex,

@@ -7,6 +7,8 @@ import { Urbanist } from "next/font/google";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
 import { usePrefersReducedMotion } from "../utils/hooks/usePrefersReducedMotion";
+import { getBrowserSupabase } from "../lib/supabase/client";
+import type { AuthUser } from "../lib/types/database";
 import { Mail, CheckCircle, ExternalLink, ArrowLeft, AlertCircle } from "lucide-react";
 import { Loader as AppLoader } from "../components/Loader";
 import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
@@ -166,6 +168,7 @@ export default function VerifyEmailPage() {
   const [isResending, setIsResending] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
   const [verificationSuccess, setVerificationSuccess] = useState(false);
+  const [verificationStatusMessage, setVerificationStatusMessage] = useState<string | null>(null);
 
   // Detect expired link from ?expired=1 synchronously to avoid flashes
   const [linkExpired, setLinkExpired] = useState(() => {
@@ -207,17 +210,29 @@ export default function VerifyEmailPage() {
     };
   }, []);
 
-  const getPostVerifyRedirect = useCallback((): string => {
-    if (!user) return "/login";
+  const getPostVerifyRedirect = useCallback((candidate?: AuthUser | null): string => {
+    const resolvedUser = candidate || user;
+    if (!resolvedUser) return "/verify-email";
 
-    const profileRole = user?.profile?.role;
-    const accountRole = user?.profile?.account_role;
-    const legacyCurrentRole = (user as any)?.current_role;
-    const resolvedRole = profileRole || accountRole || legacyCurrentRole;
+    const profile = resolvedUser.profile as (AuthUser["profile"] & { is_admin?: boolean }) | undefined;
+    const roleRaw =
+      profile?.account_role ||
+      profile?.role ||
+      (resolvedUser as any)?.current_role ||
+      "";
+    const role = String(roleRaw).toLowerCase();
 
-    if (resolvedRole === "business_owner") return "/my-businesses";
-    if (resolvedRole === "user") return "/interests";
-    return "/verify-email";
+    const isAdmin = profile?.is_admin === true || role === "admin" || role === "super_admin" || role === "superadmin";
+    if (isAdmin) return "/admin";
+
+    const isBusinessAccount =
+      role === "business_owner" ||
+      role === "business" ||
+      role === "owner";
+    if (isBusinessAccount) return "/my-businesses";
+
+    const onboardingDone = Boolean(profile?.onboarding_completed_at || profile?.onboarding_complete);
+    return onboardingDone ? "/home" : "/onboarding";
   }, [user]);
 
   // Handle verification success from URL flag (?verified=1)
@@ -247,8 +262,6 @@ export default function VerifyEmailPage() {
     }, 2500);
 
     return () => clearTimeout(t);
-    // Only run once on mount when verified=1 is present; user/role resolved by timeout
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // If user lands here already verified (no ?verified flag), redirect out
@@ -304,17 +317,66 @@ export default function VerifyEmailPage() {
   };
 
   const handleRefreshUser = async () => {
+    setVerificationStatusMessage(null);
     setIsChecking(true);
+    const supabase = getBrowserSupabase();
+    const notVerifiedMessage =
+      "We still can't detect verification. Please check your inbox and try again.";
+
     try {
-      await refreshUser();
-      // Give React a tick to process the state update and trigger the redirect effect
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      // If the redirect effect fired, redirectingRef is true — don't show error
-      if (!redirectingRef.current) {
-        showToast("Email not verified yet. Please click the link in your inbox first.", "error", 4000);
+      // 1) Revalidate session before checking verification status.
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (sessionData?.session) {
+        await supabase.auth.refreshSession();
       }
+
+      // 2) Explicitly re-fetch current auth user from Supabase.
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData?.user) {
+        setVerificationStatusMessage(notVerifiedMessage);
+        return;
+      }
+
+      const authUser = userData.user;
+      if (!authUser.email_confirmed_at) {
+        setVerificationStatusMessage(notVerifiedMessage);
+        return;
+      }
+
+      // 3) Email is verified: refresh local auth + route by user type.
+      await refreshUser();
+
+      let profile: AuthUser["profile"] | undefined = user?.profile;
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("role, account_role, onboarding_complete, onboarding_completed_at")
+        .eq("user_id", authUser.id)
+        .maybeSingle();
+
+      if (profileData) {
+        profile = {
+          ...(profile || {}),
+          role: profileData.role as any,
+          account_role: profileData.account_role as any,
+          onboarding_complete: Boolean(profileData.onboarding_complete),
+          onboarding_completed_at: profileData.onboarding_completed_at || undefined,
+        } as AuthUser["profile"];
+      }
+
+      const verifiedUser: AuthUser = {
+        id: authUser.id,
+        email: authUser.email || user?.email || "",
+        email_verified: true,
+        created_at: authUser.created_at,
+        updated_at: authUser.updated_at || authUser.created_at,
+        profile,
+      };
+
+      showToast("Email verified successfully", "sage", 2200);
+      redirectingRef.current = true;
+      router.replace(getPostVerifyRedirect(verifiedUser));
     } catch {
-      showToast("Could not check status. Please try again.", "error", 3000);
+      setVerificationStatusMessage("Could not check verification status. Please try again.");
     } finally {
       setIsChecking(false);
     }
@@ -585,7 +647,7 @@ export default function VerifyEmailPage() {
                 {isChecking ? (
                   <>
                     <AppLoader className="w-4 h-4 animate-spin" />
-                    Checking...
+                    Checking verification...
                   </>
                 ) : (
                   <>
@@ -596,6 +658,17 @@ export default function VerifyEmailPage() {
               </button>
             </div>
 
+            {verificationStatusMessage && (
+              <div className="mb-5 rounded-lg border border-coral/20 bg-coral/5 px-4 py-3">
+                <p
+                  className="text-sm text-charcoal/80"
+                  style={{ fontFamily: "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}
+                >
+                  {verificationStatusMessage}
+                </p>
+              </div>
+            )}
+
             <p className="text-xs text-charcoal/70 text-center">
               Didn&apos;t receive the email? Check your spam folder or try resending.
             </p>
@@ -605,3 +678,4 @@ export default function VerifyEmailPage() {
     </>
   );
 }
+
