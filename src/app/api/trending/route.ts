@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
     const { data: businessRows, error: businessError } = await supabase
       .from('businesses')
       .select(
-        'id, name, description, primary_subcategory_slug, primary_subcategory_label, primary_category_slug, location, address, image_url, verified, price_range, badge, slug, lat, lng, status',
+        'id, name, description, primary_subcategory_slug, primary_subcategory_label, primary_category_slug, location, address, image_url, verified, price_range, badge, slug, lat, lng, status, is_system',
       )
       .in('id', selectedIds);
 
@@ -151,7 +151,7 @@ export async function GET(request: NextRequest) {
     const businesses: Record<string, unknown>[] = [];
     for (const id of selectedIds) {
       const b = businessById.get(id) as Record<string, unknown> | undefined;
-      if (!b || (b.status as string) !== 'active') continue;
+      if (!b || (b.status as string) !== 'active' || b.is_system === true) continue;
       const stats = statsById.get(id) as
         | { total_reviews?: number; average_rating?: number; percentiles?: unknown }
         | undefined;

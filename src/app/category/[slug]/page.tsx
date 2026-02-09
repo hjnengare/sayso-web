@@ -47,6 +47,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     .select('id, name, slug, description, image_url, location, average_rating:business_stats(average_rating), business_images(id, url, type, sort_order, is_primary)')
     .eq('category', categoryName)
     .eq('status', 'active')
+    .or('is_system.is.null,is_system.eq.false')
     .limit(50)
     .order('created_at', { ascending: false });
 

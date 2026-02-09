@@ -195,6 +195,9 @@ export async function proxy(request: NextRequest) {
     '/leaderboard',
     '/for-you',
     '/notifications',
+    '/write-review',
+    '/write-review/',
+    '/events-specials',
     '/sitemap.xml',
     '/robots.txt',
   ];

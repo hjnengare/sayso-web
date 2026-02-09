@@ -55,10 +55,14 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
   const resolvedParams = use(params);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchEvent = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/events-and-specials/${resolvedParams.id}`);
+        const response = await fetch(`/api/events-and-specials/${resolvedParams.id}`, {
+          signal: controller.signal,
+        });
         
         if (!response.ok) {
           if (response.status === 404) {
@@ -87,14 +91,30 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
               : 1,
         );
 
-        // Fetch reviews
-        const reviewsResponse = await fetch(`/api/events/${resolvedParams.id}/reviews`);
-        if (reviewsResponse.ok) {
+        // Fetch reviews, but don't let review failures break the event detail page.
+        try {
+          const reviewsResponse = await fetch(`/api/events/${resolvedParams.id}/reviews`, {
+            signal: controller.signal,
+          });
+
+          if (!reviewsResponse.ok) {
+            setReviews([]);
+            return;
+          }
+
           const reviewsData = await reviewsResponse.json();
-          setReviews(reviewsData.reviews || []);
+          setReviews(Array.isArray(reviewsData?.reviews) ? reviewsData.reviews : []);
+        } catch (reviewError) {
+          if ((reviewError as Error)?.name !== "AbortError") {
+            setReviews([]);
+          }
         }
       } catch (err) {
-        console.error('[EventDetailPage] Error fetching event:', err);
+        if ((err as Error)?.name !== "AbortError") {
+          if (process.env.NODE_ENV !== "production") {
+            console.error("[EventDetailPage] Error fetching event:", err);
+          }
+        }
         setEvent(null);
       } finally {
         setLoading(false);
@@ -102,6 +122,10 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
     };
 
     fetchEvent();
+
+    return () => {
+      controller.abort();
+    };
   }, [resolvedParams.id]);
 
 
@@ -110,10 +134,15 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
       const response = await fetch(`/api/events/${resolvedParams.id}/reviews`);
       if (response.ok) {
         const data = await response.json();
-        setReviews(data.reviews || []);
+        setReviews(Array.isArray(data?.reviews) ? data.reviews : []);
+      } else {
+        setReviews([]);
       }
     } catch (error) {
-      console.error('Error refetching reviews:', error);
+      if (process.env.NODE_ENV !== "production") {
+        console.error("Error refetching reviews:", error);
+      }
+      setReviews([]);
     }
   };
 
@@ -347,7 +376,7 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
                   emptyMessage="No reviews yet. Be the first to review this event!"
                   emptyStateAction={{
                     label: hasReviewed ? 'Already Reviewed' : 'Write First Review',
-                    href: `/event/${event.id}/review`,
+                    href: `/write-review/event/${event.id}`,
                     disabled: hasReviewed,
                   }}
                 />

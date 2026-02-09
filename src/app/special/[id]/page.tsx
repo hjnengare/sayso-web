@@ -27,6 +27,7 @@ import {
 import type { Event } from "../../lib/types/Event";
 import { useToast } from "../../contexts/ToastContext";
 import { PageLoader } from "../../components/Loader";
+import { normalizeDescriptionText } from "../../lib/utils/descriptionText";
 // Extended type for special with business info
 interface SpecialWithBusiness extends Event {
   businessSlug?: string;
@@ -57,6 +58,9 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
   const router = useRouter();
   const { showToast } = useToast();
   const { user } = useAuth();
+  const normalizedDescription =
+    normalizeDescriptionText(special?.description) ||
+    "Don't miss out on this amazing special offer! This limited-time deal provides incredible value and a fantastic experience. Perfect for trying something new or treating yourself to something special.";
 
   // Unwrap the params Promise using React.use()
   const resolvedParams = use(params);
@@ -440,8 +444,8 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
                 className="bg-gradient-to-br from-white/50 via-white/40 to-white/30 backdrop-blur-xl border border-white/60 rounded-[12px] ring-1 ring-white/30 p-4"
               >
                 <h2 className="text-lg font-bold text-charcoal mb-3" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>About This Special</h2>
-                <p className="text-sm text-charcoal/80 leading-relaxed" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                  {special.description || "Don't miss out on this amazing special offer! This limited-time deal provides incredible value and a fantastic experience. Perfect for trying something new or treating yourself to something special."}
+                <p className="text-sm text-charcoal/80 leading-7 whitespace-pre-wrap break-words [overflow-wrap:anywhere]" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                  {normalizedDescription}
                 </p>
               </motion.div>
             </div>

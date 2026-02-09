@@ -1,0 +1,25 @@
+{
+  "name": "sayso-quicket-ingestor",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npx --yes tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "ingest:once": "npx --yes tsx src/index.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.75.0",
+    "dotenv": "^16.4.7",
+    "node-cron": "^3.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/node-cron": "^3.0.11",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

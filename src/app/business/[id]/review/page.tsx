@@ -19,6 +19,7 @@ import { TestimonialCarousel } from "../../../components/Business/TestimonialCar
 import Footer from "../../../components/Footer/Footer";
 import WavyTypedTitle from "../../../../components/Animations/WavyTypedTitle";
 import { isPlaceholderImage } from "../../../utils/subcategoryPlaceholders";
+import { useDealbreakerQuickTags } from "../../../hooks/useDealbreakerQuickTags";
 
 const urbanist = Urbanist({
   weight: ["400", "600", "700", "800"],
@@ -261,7 +262,7 @@ function WriteReviewContent() {
     verified: business?.verified || false,
   }), [businessName, business]);
 
-  const quickTags = ["Trustworthy", "On Time", "Friendly", "Good Value"];
+  const quickTags = useDealbreakerQuickTags();
 
   const handleSubmitReview = async () => {
     // Use the actual database ID from the business object, not the URL slug
@@ -508,6 +509,14 @@ function WriteReviewContent() {
                             <div className="relative z-10">
                               {/* Review Form */}
                               <div className="p-4 md:p-6">
+                                {!user && (
+                                  <div className="mb-4 rounded-lg border border-sage/20 bg-sage/5 p-3">
+                                    <p className="text-sm font-semibold text-charcoal">Posting as Anonymous</p>
+                                    <p className="mt-1 text-xs text-charcoal/70">
+                                      Sign in if you want this review tied to your profile identity.
+                                    </p>
+                                  </div>
+                                )}
                                 <ReviewForm
                                   businessName={businessName}
                                   businessRating={businessRating}

@@ -166,6 +166,10 @@ const BUSINESS_SELECT_FALLBACK = `
 
 type SupabaseClientInstance = Awaited<ReturnType<typeof getServerSupabase>>;
 
+function excludeSystemBusinesses<T extends { is_system?: boolean | null }>(rows: T[]): T[] {
+  return rows.filter((row) => row?.is_system !== true);
+}
+
 type DatabaseBusinessRow = {
   id: string;
   name: string;
@@ -584,7 +588,8 @@ export async function GET(req: Request) {
     const { count: visibleCount, error: countError } = await supabase
       .from('businesses')
       .select('id', { head: true, count: 'exact' })
-      .eq('status', 'active');
+      .eq('status', 'active')
+      .or('is_system.is.null,is_system.eq.false');
     console.log('[BUSINESSES API] Visible count duration ms:', Date.now() - countStart);
 
     if (visibleCount === 0 && !countError) {
@@ -762,6 +767,9 @@ export async function GET(req: Request) {
       // Only chain methods if they exist (defensive for test mocks)
       if (typeof (query as any).eq === 'function') {
         query = (query as any).eq('status', 'active');
+      }
+      if (typeof (query as any).or === 'function') {
+        query = (query as any).or('is_system.is.null,is_system.eq.false');
       }
 
       // Apply filters (only if methods exist)
@@ -992,7 +1000,7 @@ export async function GET(req: Request) {
       );
     }
 
-    const typedBusinesses = (businesses || []) as BusinessRPCResult[];
+    const typedBusinesses = excludeSystemBusinesses((businesses || []) as (BusinessRPCResult & { is_system?: boolean | null })[]);
 
     // Fetch user preferences for personalization
     const userPreferences = await fetchUserPreferences(supabase, userId);
@@ -1223,7 +1231,7 @@ export async function HEAD(req: Request) {
     }
 
     // Transform to card format; category = canonical slug, category_label = display
-    const transformedBusinesses = (data || []).map((business: any) => {
+    const transformedBusinesses = excludeSystemBusinesses((data || []) as any[]).map((business: any) => {
       const resolvedInterestId = resolveInterestId(business);
       return {
         id: business.id,
@@ -1948,7 +1956,8 @@ async function handleMixedFeedLegacy(options: MixedFeedOptions) {
   const { count: rawCount, error: countError } = await supabase
     .from('businesses')
     .select('id', { count: 'exact', head: true })
-    .eq('status', 'active');
+    .eq('status', 'active')
+    .or('is_system.is.null,is_system.eq.false');
 
   console.log('[BUSINESSES API] Raw active businesses count:', {
     count: rawCount,
@@ -1980,7 +1989,8 @@ async function handleMixedFeedLegacy(options: MixedFeedOptions) {
         const { count: adminCount, error: adminError } = await adminClient
           .from('businesses')
           .select('id', { count: 'exact', head: true })
-          .eq('status', 'active');
+          .eq('status', 'active')
+          .or('is_system.is.null,is_system.eq.false');
 
         console.log('[BUSINESSES API] Admin (service role) count:', {
           count: adminCount,
@@ -2414,7 +2424,8 @@ function buildBaseBusinessQuery(supabase: SupabaseClientInstance, select: string
   return supabase
     .from('businesses')
     .select(select)
-    .eq('status', 'active');
+    .eq('status', 'active')
+    .or('is_system.is.null,is_system.eq.false');
 }
 
 function shouldRetryWithoutJoins(error: any): boolean {
@@ -2912,6 +2923,7 @@ async function findSimilarBusinesses(
       `)
       .eq('primary_subcategory_slug', category)
       .eq('status', 'active')
+      .or('is_system.is.null,is_system.eq.false')
       .limit(limit + 1); // Get one extra to account for exclusion
 
     // Exclude the current business if provided and is a valid UUID

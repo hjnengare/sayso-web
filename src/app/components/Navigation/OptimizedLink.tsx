@@ -112,13 +112,13 @@ export default function OptimizedLink({
         try {
           // Call as a method to ensure the correct receiver (avoids "Illegal invocation" in some WebKit builds).
           doc.startViewTransition(() => {
-            router.push(href);
+            router.push(href, { scroll: false });
           });
         } catch {
-          router.push(href);
+          router.push(href, { scroll: false });
         }
       } else {
-        router.push(href);
+        router.push(href, { scroll: false });
       }
     },
     [href, onClick, router, target],

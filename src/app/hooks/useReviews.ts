@@ -26,7 +26,7 @@ interface ReviewFormData {
 // Error Code to Message Mapping (fallback if API doesn't provide message)
 // ============================================================================
 const REVIEW_ERROR_MESSAGES: Record<string, string> = {
-  NOT_AUTHENTICATED: "Please log in to submit your review.",
+  NOT_AUTHENTICATED: "You can post as Anonymous, or sign in for a verified profile review.",
   EMAIL_NOT_VERIFIED: "Please verify your email to submit reviews.",
   MISSING_FIELDS: "Please fill in all required fields.",
   INVALID_RATING: "Please select a rating (1-5 stars).",
@@ -39,6 +39,9 @@ const REVIEW_ERROR_MESSAGES: Record<string, string> = {
   EVENT_NOT_FOUND: "We couldn't find that event. It may have been removed.",
   SPECIAL_NOT_FOUND: "We couldn't find that special. It may have expired.",
   DUPLICATE_REVIEW: "You've already reviewed this. You can edit your existing review instead.",
+  DUPLICATE_ANON_REVIEW: "You already posted an anonymous review for this item on this device.",
+  RATE_LIMITED: "Too many anonymous reviews in a short time. Please try again later.",
+  SPAM_DETECTED: "This review was flagged as spam-like. Please adjust wording and try again.",
   RLS_BLOCKED: "We couldn't save your review right now. Please try again.",
   DB_ERROR: "We couldn't save your review. Please try again.",
   IMAGE_UPLOAD_FAILED: "Some images couldn't be uploaded. Your review was saved.",
@@ -92,20 +95,11 @@ export function useReviews(businessId?: string) {
           const profile = Array.isArray(review.profile) ? review.profile[0] : (review.profile || {});
           const displayName = profile?.display_name || profile?.username;
           
-          // Debug logging
-          if (!displayName) {
-            console.warn('Review missing user name:', {
-              review_id: review.id,
-              user_id: review.user_id,
-              profile: profile
-            });
-          }
-          
           return {
             ...review,
             user: {
               id: review.user_id || profile?.user_id || '',
-              name: displayName || 'Anonymous',
+              name: review.user_id ? (displayName || 'Anonymous') : 'Anonymous',
               avatar_url: profile?.avatar_url || undefined,
             },
             profile: profile, // Keep profile for backward compatibility
@@ -158,20 +152,11 @@ export function useReviews(businessId?: string) {
         const profile = Array.isArray(review.profile) ? review.profile[0] : (review.profile || {});
         const displayName = profile?.display_name || profile?.username;
         
-        // Debug logging
-        if (!displayName) {
-          console.warn('Review missing user name (refetch):', {
-            review_id: review.id,
-            user_id: review.user_id,
-            profile: profile
-          });
-        }
-        
         return {
           ...review,
           user: {
             id: review.user_id || profile?.user_id || '',
-            name: displayName || 'Anonymous',
+            name: review.user_id ? (displayName || 'Anonymous') : 'Anonymous',
             avatar_url: profile?.avatar_url || undefined,
           },
           profile: profile, // Keep profile for backward compatibility
@@ -308,8 +293,15 @@ export function useReviewSubmission() {
         });
       }
 
+      let anonymousId: string | null = null;
+      if (!currentUser) {
+        const { getOrCreateAnonymousId } = await import('../lib/utils/anonymousClient');
+        anonymousId = getOrCreateAnonymousId();
+      }
+
       const response = await fetch('/api/reviews', {
         method: 'POST',
+        headers: anonymousId ? { 'x-anonymous-id': anonymousId } : undefined,
         body: formData,
       });
 

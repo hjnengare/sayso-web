@@ -1,9 +1,17 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getServerSupabase } from '../../lib/supabase/server';
 import { ReviewValidator } from '../../lib/utils/validation';
 import { ContentModerator } from '../../lib/utils/contentModeration';
 import { invalidateBusinessCache } from '../../lib/utils/optimizedQueries';
+import {
+  applyAnonymousCookie,
+  detectSpamSignals,
+  getClientIp,
+  getRateLimitWindowStart,
+  getUserAgentHash,
+  resolveAnonymousId,
+} from '../../lib/utils/anonymousReviews';
 
 // ============================================================================
 // Structured Error Response Helpers
@@ -23,6 +31,9 @@ type ReviewErrorCode =
   | 'EVENT_NOT_FOUND'
   | 'SPECIAL_NOT_FOUND'
   | 'DUPLICATE_REVIEW'
+  | 'DUPLICATE_ANON_REVIEW'
+  | 'RATE_LIMITED'
+  | 'SPAM_DETECTED'
   | 'RLS_BLOCKED'
   | 'DB_ERROR'
   | 'IMAGE_UPLOAD_FAILED'
@@ -63,13 +74,16 @@ function sanitizeText(text: string): string {
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const supabase = await getServerSupabase(req);
 
-    // Auth: optional for legacy business reviews (anonymous allowed); required for event/special
+    // Auth: optional across business/event/special. Authenticated identity is preserved.
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     const isAnonymous = !user || authError;
+    const { anonymousId, setCookie } = resolveAnonymousId(req);
+    const clientIp = getClientIp(req);
+    const userAgentHash = getUserAgentHash(req);
 
     const formData = await req.formData();
     const businessIdentifier = formData.get('business_id')?.toString();
@@ -81,9 +95,6 @@ export async function POST(req: Request) {
     const content = formData.get('content')?.toString() || null;
     const tags = formData.getAll('tags').map(t => t.toString()).filter(Boolean);
 
-    // Guest fields for event/special reviews
-    const guestName = formData.get('guest_name')?.toString()?.trim() || null;
-    const guestEmail = formData.get('guest_email')?.toString()?.trim() || null;
     const honeypot = formData.get('website_url')?.toString() || '';
 
     const imageFiles = formData
@@ -140,54 +151,35 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true, message: 'Review created successfully', review: {} });
     }
 
-    // Guest validation for event/special reviews
-    if (isAnonymous && (isEventReview || isSpecialReview)) {
-      if (!guestName || guestName.length < 2 || guestName.length > 50) {
-        return errorResponse('MISSING_FIELDS', 'Please provide your name (2-50 characters).', 400);
-      }
-      if (!guestEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail)) {
-        return errorResponse('MISSING_FIELDS', 'Please provide a valid email address.', 400);
-      }
-    }
-
-    // IP-based rate limiting for guest event/special reviews (3 per hour per IP)
-    if (isAnonymous && (isEventReview || isSpecialReview)) {
-      const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-        || req.headers.get('x-real-ip')
-        || 'unknown';
-
-      const rateLimitAdmin = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        { auth: { autoRefreshToken: false, persistSession: false } }
+    // Basic anti-spam checks before DB work
+    const contentForSpamCheck = (content || '').toString();
+    const spamSignals = detectSpamSignals(contentForSpamCheck);
+    if (spamSignals.includes('contains_link') || spamSignals.includes('excessive_repetition')) {
+      return errorResponse(
+        'SPAM_DETECTED',
+        'Your review looks automated. Please revise and try again.',
+        400,
+        { signals: spamSignals }
       );
-
-      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-      const rateLimitTable = isEventReview ? 'event_reviews' : 'special_reviews';
-
-      const { count } = await rateLimitAdmin
-        .from(rateLimitTable)
-        .select('*', { count: 'exact', head: true })
-        .eq('ip_address', ip)
-        .gte('created_at', oneHourAgo);
-
-      if ((count ?? 0) >= 3) {
-        return errorResponse(
-          'VALIDATION_FAILED',
-          'Too many reviews submitted. Please try again later.',
-          429
-        );
-      }
     }
 
     // Resolve target + validate existence
+    // Use admin client for verification queries so anonymous users aren't blocked by RLS.
+    const verifyClient = isAnonymous
+      ? createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          { auth: { autoRefreshToken: false, persistSession: false } }
+        )
+      : supabase;
+
     let targetData: any = null;
 
-    // This is ONLY available for legacy business branch; for special/event we won’t assume it exists.
+    // This is ONLY available for legacy business branch; for special/event we won't assume it exists.
     let resolvedBusiness: { id: string; name: string; slug: string | null } | null = null;
 
     if (isEventReview) {
-      const { data: eventData, error: eventError } = await supabase
+      const { data: ticketmasterEvent, error: eventError } = await verifyClient
         .from('ticketmaster_events')
         .select('ticketmaster_id, name, business_name')
         .eq('ticketmaster_id', targetId)
@@ -201,17 +193,37 @@ export async function POST(req: Request) {
           500
         );
       }
-      if (!eventData) {
-        return errorResponse(
-          'EVENT_NOT_FOUND',
-          "We couldn't find that event. It may have been removed.",
-          404
-        );
-      }
+      if (ticketmasterEvent) {
+        targetData = ticketmasterEvent;
+      } else {
+        const { data: businessEvent, error: businessEventError } = await verifyClient
+          .from('events_and_specials')
+          .select('id, title, business_id')
+          .eq('id', targetId)
+          .eq('type', 'event')
+          .maybeSingle();
 
-      targetData = eventData;
+        if (businessEventError) {
+          console.error('[API] Error checking business event:', businessEventError);
+          return errorResponse(
+            'DB_ERROR',
+            "We couldn't verify the event. Please try again.",
+            500
+          );
+        }
+
+        if (!businessEvent) {
+          return errorResponse(
+            'EVENT_NOT_FOUND',
+            "We couldn't find that event. It may have been removed.",
+            404
+          );
+        }
+
+        targetData = businessEvent;
+      }
     } else if (isSpecialReview) {
-      const { data: specialData, error: specialError } = await supabase
+      const { data: specialData, error: specialError } = await verifyClient
         .from('events_and_specials')
         .select('id, title, business_id, businesses:business_id(name, slug)')
         .eq('id', targetId)
@@ -261,7 +273,7 @@ export async function POST(req: Request) {
       let business_id: string | null = null;
 
       // Try slug
-      const { data: slugData, error: slugError } = await supabase
+      const { data: slugData, error: slugError } = await verifyClient
         .from('businesses')
         .select('id, name, slug')
         .eq('slug', businessIdentifier)
@@ -280,7 +292,7 @@ export async function POST(req: Request) {
       } else {
         // Try uuid
         if (UUID_REGEX.test(businessIdentifier!)) {
-          const { data: idData, error: idError } = await supabase
+          const { data: idData, error: idError } = await verifyClient
             .from('businesses')
             .select('id, name, slug')
             .eq('id', businessIdentifier)
@@ -318,6 +330,58 @@ export async function POST(req: Request) {
       }
 
       targetData = resolvedBusiness;
+    }
+
+    // Anonymous protections: one review per target/device + cooldown (max 3/hour).
+    if (isAnonymous) {
+      // Reuse verifyClient (admin) for rate-limit queries
+      const rateLimitAdmin = verifyClient;
+
+      const targetIdentifier = isEventReview
+        ? targetId
+        : isSpecialReview
+          ? targetId
+          : (targetData as any)?.id;
+
+      const oneHourAgo = getRateLimitWindowStart();
+
+      const { count: recentCount, error: rateError } = await rateLimitAdmin
+        .from(targetTable)
+        .select('*', { count: 'exact', head: true })
+        .eq('anonymous_id', anonymousId)
+        .gte('created_at', oneHourAgo);
+
+      if (rateError) {
+        console.error('[Review API] Anonymous rate-limit query failed:', rateError);
+      }
+
+      if ((recentCount ?? 0) >= 3) {
+        return errorResponse(
+          'RATE_LIMITED',
+          'You reached the anonymous review limit. Try again in about an hour.',
+          429,
+        );
+      }
+
+      if (targetIdentifier) {
+        const { count: duplicateCount, error: duplicateError } = await rateLimitAdmin
+          .from(targetTable)
+          .select('*', { count: 'exact', head: true })
+          .eq(targetColumn, targetIdentifier)
+          .eq('anonymous_id', anonymousId);
+
+        if (duplicateError) {
+          console.error('[Review API] Anonymous duplicate check failed:', duplicateError);
+        }
+
+        if ((duplicateCount ?? 0) > 0) {
+          return errorResponse(
+            'DUPLICATE_ANON_REVIEW',
+            'You already posted an anonymous review for this item.',
+            409,
+          );
+        }
+      }
     }
 
     // Validate review content
@@ -382,10 +446,13 @@ export async function POST(req: Request) {
         content: finalContent,
         tags: tags.filter(t => t.trim().length > 0),
         helpful_count: 0,
-        // Guest fields (only for anonymous event/special reviews)
-        ...(isAnonymous && (isEventReview || isSpecialReview) && guestName ? { guest_name: guestName } : {}),
-        ...(isAnonymous && (isEventReview || isSpecialReview) && guestEmail ? { guest_email: guestEmail } : {}),
-        ...(isAnonymous && (isEventReview || isSpecialReview) ? { ip_address: req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || null } : {}),
+        ...(isAnonymous
+          ? {
+              anonymous_id: anonymousId,
+              ip_address: clientIp,
+              user_agent_hash: userAgentHash,
+            }
+          : {}),
       };
 
       let selectQuery = '';
@@ -425,8 +492,8 @@ export async function POST(req: Request) {
         `;
       }
 
-      // Use service role client for guest inserts (bypasses RLS)
-      const insertClient = isAnonymous && (isEventReview || isSpecialReview)
+      // Use service role client for anonymous inserts (bypasses any restrictive RLS)
+      const insertClient = isAnonymous
         ? createClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -656,7 +723,7 @@ export async function POST(req: Request) {
 
     let displayName: string;
     if (user_id == null) {
-      displayName = reviewInsertData?.guest_name || 'Guest';
+      displayName = 'Anonymous';
     } else {
       try {
         displayName = getDisplayUsername(profile.username, profile.display_name, null, user_id);
@@ -670,7 +737,7 @@ export async function POST(req: Request) {
       id: user_id,
       name: displayName,
       username: profile.username ?? null,
-      display_name: user_id == null ? (reviewInsertData?.guest_name || 'Guest') : (profile.display_name ?? null),
+      display_name: user_id == null ? 'Anonymous' : (profile.display_name ?? null),
       email: null,
       avatar_url: profile.avatar_url ?? null,
     };
@@ -730,7 +797,7 @@ export async function POST(req: Request) {
       resetAt: new Date(Date.now() + 60 * 60 * 1000),
     };
 
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         success: true,
         message: 'Review created successfully',
@@ -758,6 +825,10 @@ export async function POST(req: Request) {
         },
       }
     );
+    if (isAnonymous && setCookie) {
+      applyAnonymousCookie(response, anonymousId);
+    }
+    return response;
   } catch (error) {
     console.error('[Review API] Unexpected error:', error);
     return errorResponse(
@@ -781,7 +852,9 @@ export async function GET(req: Request) {
     const requestedOffset = parseInt(searchParams.get('offset') || '0', 10);
     const offset = Math.max(requestedOffset, 0);
 
-    console.log('[/api/reviews] GET request:', { businessIdentifier, userId, limit, offset });
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[/api/reviews] GET request:', { businessIdentifier, userId, limit, offset });
+    }
 
     // Resolve business identifier -> UUID
     let businessId: string | null = null;

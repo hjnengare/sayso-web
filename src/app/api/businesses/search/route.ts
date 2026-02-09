@@ -56,6 +56,7 @@ interface SearchBusinessesResult {
   fuzzy_similarity?: number;
   final_score?: number;
   matched_alias?: string;
+  is_system?: boolean | null;
   [key: string]: unknown;
 }
 
@@ -107,7 +108,7 @@ export async function GET(req: NextRequest) {
 
         const { data: fallbackData, error: fallbackError } = await supabase
           .from('businesses')
-          .select('id, name, primary_subcategory_slug, primary_subcategory_label, primary_category_slug, location, address, phone, email, website, image_url, verified, lat, lng, slug')
+          .select('id, name, primary_subcategory_slug, primary_subcategory_label, primary_category_slug, location, address, phone, email, website, image_url, verified, lat, lng, slug, is_system')
           .eq('status', 'active')
           .or(`name.ilike.%${query}%, description.ilike.%${query}%, primary_subcategory_slug.ilike.%${query}%, primary_subcategory_label.ilike.%${query}%`)
           .limit(limit);
@@ -153,6 +154,7 @@ export async function GET(req: NextRequest) {
           lat: row.lat ?? null,
           lng: row.lng ?? null,
           slug: row.slug ?? null,
+          is_system: (row as { is_system?: boolean | null }).is_system ?? null,
         }));
       } else {
         return NextResponse.json(
@@ -163,6 +165,8 @@ export async function GET(req: NextRequest) {
     } else {
       businesses = (rpcData || []) as SearchBusinessesResult[];
     }
+
+    businesses = businesses.filter((business) => business.is_system !== true);
 
     if (businesses.length === 0) {
       return NextResponse.json({

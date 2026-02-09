@@ -362,6 +362,7 @@ function ReviewCard({
   };
 
   const displayedImages = showAllImages ? review.images : review.images?.slice(0, 3);
+  const isAnonymousReview = !review.user_id;
 
   return (
     <motion.div
@@ -420,6 +421,15 @@ function ReviewCard({
                   review.user?.email,
                   review.user_id
                 )}
+              </span>
+              <span
+                className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
+                  isAnonymousReview
+                    ? "bg-charcoal/10 text-charcoal/70"
+                    : "bg-sage/15 text-sage"
+                }`}
+              >
+                {isAnonymousReview ? "Anonymous" : "Verified account"}
               </span>
               <div className="flex items-center space-x-1">
                 {[...Array(5)].map((_, i) => (

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import { usePathname } from "next/navigation";
 
 interface PageTransitionContextType {
@@ -28,6 +28,42 @@ export default function PageTransitionProvider({ children }: PageTransitionProvi
   const pathname = usePathname();
   const isFirstRender = useRef(true);
   const previousPathname = useRef(pathname);
+  const preserveScrollOnNextRouteRef = useRef(false);
+  const scrollRafOneRef = useRef<number | null>(null);
+  const scrollRafTwoRef = useRef<number | null>(null);
+
+  const cancelPendingScroll = useCallback(() => {
+    if (scrollRafOneRef.current) {
+      window.cancelAnimationFrame(scrollRafOneRef.current);
+      scrollRafOneRef.current = null;
+    }
+    if (scrollRafTwoRef.current) {
+      window.cancelAnimationFrame(scrollRafTwoRef.current);
+      scrollRafTwoRef.current = null;
+    }
+  }, []);
+
+  const scrollToTop = useCallback(() => {
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+    });
+  }, []);
+
+  // Preserve native restoration for browser back/forward navigation.
+  useEffect(() => {
+    const onPopState = () => {
+      preserveScrollOnNextRouteRef.current = true;
+    };
+
+    window.addEventListener("popstate", onPopState);
+    return () => {
+      window.removeEventListener("popstate", onPopState);
+    };
+  }, []);
 
   // Lightweight page-enter transitions keyed by pathname.
   // Avoid fixed-duration loaders; rely on route-level `loading.tsx` for slow segments.
@@ -39,11 +75,31 @@ export default function PageTransitionProvider({ children }: PageTransitionProvi
     }
 
     if (pathname !== previousPathname.current) {
+      const shouldPreserveScroll = preserveScrollOnNextRouteRef.current;
+      preserveScrollOnNextRouteRef.current = false;
       previousPathname.current = pathname;
       setIsTransitioning(true);
       setTransitionKey((k) => k + 1);
+
+      if (!shouldPreserveScroll) {
+        cancelPendingScroll();
+        scrollRafOneRef.current = window.requestAnimationFrame(() => {
+          scrollRafTwoRef.current = window.requestAnimationFrame(() => {
+            // Avoid unnecessary re-scrolls when already at top.
+            if (window.scrollY > 2) {
+              scrollToTop();
+            }
+          });
+        });
+      }
     }
-  }, [children, pathname]);
+  }, [cancelPendingScroll, pathname, scrollToTop]);
+
+  useEffect(() => {
+    return () => {
+      cancelPendingScroll();
+    };
+  }, [cancelPendingScroll]);
 
   // Clear transitioning flag on next paint(s) after route commit.
   useEffect(() => {

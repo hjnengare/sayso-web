@@ -4,7 +4,9 @@
 import Link from "next/link";
 import { Facebook, Instagram, Linkedin, Twitter, Youtube } from "lucide-react";
 import { useState, useEffect } from "react";
+import confetti from "canvas-confetti";
 import Logo from "../Logo/Logo";
+import { useToast } from "../../contexts/ToastContext";
 
 export default function Footer() {
   const [currentYear, setCurrentYear] = useState<number>(2025);
@@ -14,6 +16,7 @@ export default function Footer() {
     "idle" | "loading" | "success" | "error"
   >("idle");
   const [subscribeMessage, setSubscribeMessage] = useState<string>("");
+  const { showToast } = useToast();
 
   useEffect(() => {
     setCurrentYear(new Date().getFullYear());
@@ -45,8 +48,21 @@ export default function Footer() {
       }
 
       setSubscribeStatus("success");
-      setSubscribeMessage("You’re in. Watch your inbox.");
+      setSubscribeMessage("You're in. Watch your inbox.");
       setEmail("");
+      showToast("You're subscribed! Welcome aboard.", "success", 5000);
+
+      // Confetti burst from bottom-center
+      const duration = 2500;
+      const end = Date.now() + duration;
+      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+
+      const interval = setInterval(() => {
+        const timeLeft = end - Date.now();
+        if (timeLeft <= 0) return clearInterval(interval);
+        const count = 40 * (timeLeft / duration);
+        confetti({ ...defaults, particleCount: count, origin: { x: 0.2 + Math.random() * 0.6, y: 0.9 }, colors: ['#7D9B76', '#E88D67', '#FFFFFF', '#FFD700'] });
+      }, 200);
     } catch {
       setSubscribeStatus("error");
       setSubscribeMessage("Couldn’t sign you up. Check your connection.");

@@ -1,0 +1,546 @@
+sayso_subcategory_slug,fsq_category_id,fsq_category_name,count
+bars,4bf58dd8d48988d1e0931735,Coffee Shop,1
+bars,4bf58dd8d48988d143941735,Breakfast Spot,1
+bars,4bf58dd8d48988d1cc941735,Steakhouse,1
+bars,4def73e84765ae376e57713a,Portuguese Restaurant,1
+bars,4bf58dd8d48988d179941735,Bagel Shop,1
+bars,4bf58dd8d48988d16c941735,Burger Joint,1
+bars,4bf58dd8d48988d1fa931735,Hotel,1
+bars,4bf58dd8d48988d110941735,Italian Restaurant,2
+bars,4d4b7105d754a06374d81259,Restaurant,1
+bars,4bf58dd8d48988d129941735,City Hall,1
+bars,4bf58dd8d48988d1db931735,Tapas Restaurant,2
+bars,4bf58dd8d48988d137941735,Theater,1
+bars,4bf58dd8d48988d16d941735,Café,3
+bars,4bf58dd8d48988d1c8941735,African Restaurant,2
+bars,4bf58dd8d48988d117941735,Beer Garden,2
+bars,52e81612bcbc57f1066b7a06,Irish Pub,2
+bars,4bf58dd8d48988d121941735,Lounge,2
+bars,4bf58dd8d48988d1d8941735,Gay Bar,2
+bars,4bf58dd8d48988d119941735,Hookah Bar,1
+bars,4bf58dd8d48988d1d5941735,Hotel Bar,4
+bars,4bf58dd8d48988d123941735,Wine Bar,3
+bars,4bf58dd8d48988d1e8931735,Piano Bar,1
+bars,4bf58dd8d48988d11b941735,Pub,24
+bars,50327c8591d4c4b30a586d5d,Brewery,3
+bars,4bf58dd8d48988d122941735,Whisky Bar,1
+bars,4bf58dd8d48988d11e941735,Cocktail Bar,8
+bars,4bf58dd8d48988d116941735,Bar,6
+bars,4bf58dd8d48988d155941735,Gastropub,22
+books,4bf58dd8d48988d1fd941735,Shopping Mall,1
+books,4bf58dd8d48988d11f941735,Night Club,1
+books,4bf58dd8d48988d1df931735,BBQ Joint,1
+books,4bf58dd8d48988d1e0931735,Coffee Shop,1
+books,4bf58dd8d48988d149941735,Thai Restaurant,1
+books,4bf58dd8d48988d1ed941735,Spa,1
+books,52e81612bcbc57f1066b7a02,Belgian Restaurant,1
+books,4bf58dd8d48988d1d2941735,Sushi Restaurant,1
+books,4bf58dd8d48988d1c1941735,Mexican Restaurant,1
+books,4bf58dd8d48988d1d5941735,Hotel Bar,1
+books,52e81612bcbc57f1066b7a21,National Park,1
+books,4bf58dd8d48988d1f5931735,Dim Sum Restaurant,1
+books,4bf58dd8d48988d10c941735,French Restaurant,1
+books,4bf58dd8d48988d1ee931735,Hostel,2
+books,4bf58dd8d48988d1e8931735,Piano Bar,1
+books,4fceea171983d5d06c3e9823,Aquarium,1
+books,4bf58dd8d48988d1db931735,Tapas Restaurant,1
+books,4f4530164b9074f6e4fb00ff,Tourist Information and Service,1
+books,5744ccdfe4b0c0459246b4dc,Shopping Plaza,1
+books,4bf58dd8d48988d1cc941735,Steakhouse,1
+books,4bf58dd8d48988d17f941735,Movie Theater,1
+books,4bf58dd8d48988d175941735,Gym and Studio,1
+books,4bf58dd8d48988d137941735,Theater,1
+books,4d4b7105d754a06374d81259,Restaurant,3
+books,4bf58dd8d48988d122941735,Whisky Bar,1
+books,4bf58dd8d48988d1fa931735,Hotel,7
+books,4bf58dd8d48988d143941735,Breakfast Spot,1
+books,4bf58dd8d48988d155941735,Gastropub,2
+books,4bf58dd8d48988d1c8941735,African Restaurant,2
+books,4bf58dd8d48988d16c941735,Burger Joint,1
+books,4bf58dd8d48988d163941735,Park,2
+books,4bf58dd8d48988d11b941735,Pub,1
+books,4bf58dd8d48988d116941735,Bar,2
+books,4bf58dd8d48988d11e941735,Cocktail Bar,1
+books,4bf58dd8d48988d179941735,Bagel Shop,1
+books,4bf58dd8d48988d103941735,Home (private),1
+books,4bf58dd8d48988d129941735,City Hall,1
+books,4bf58dd8d48988d121951735,Office Supply Store,1
+books,4bf58dd8d48988d16d941735,Café,9
+books,52f2ab2ebcbc57f1066b8b30,Used Bookstore,2
+books,4bf58dd8d48988d1b1941735,College Bookstore,6
+books,4bf58dd8d48988d114951735,Bookstore,32
+cafes,4bf58dd8d48988d1ee931735,Hostel,1
+cafes,4d4b7105d754a06374d81259,Restaurant,1
+cafes,4bf58dd8d48988d1c8941735,African Restaurant,1
+cafes,4bf58dd8d48988d112941735,Juice Bar,1
+cafes,4bf58dd8d48988d1e0931735,Coffee Shop,27
+cafes,4bf58dd8d48988d122941735,Whisky Bar,1
+cafes,4bf58dd8d48988d157941735,New American Restaurant,1
+cafes,4bf58dd8d48988d11b941735,Pub,1
+cafes,4bf58dd8d48988d116941735,Bar,1
+cafes,5e18993feee47d000759b256,Coffee Roaster,1
+cafes,4bf58dd8d48988d16d941735,Café,64
+camping,52f2ab2ebcbc57f1066b8b22,Outdoor Supply Store,1
+camping,4bf58dd8d48988d1e5941735,Dog Park,1
+camping,4bf58dd8d48988d1b3941735,Medical School,1
+camping,56aa371be4b08b9a8d573552,Rental Service,1
+camping,52f2ab2ebcbc57f1066b8b48,Gymnastics Center,1
+camping,503288ae91d4c4b30a586d67,Afghan Restaurant,1
+camping,4bf58dd8d48988d15f941735,Field,1
+camping,4d954b06a243a5684965b473,Apartment or Condo,3
+camping,4bf58dd8d48988d116951735,Antique Store,1
+camping,4bf58dd8d48988d174941735,Coworking Space,2
+camping,52f2ab2ebcbc57f1066b8b21,Stationery Store,1
+camping,4bf58dd8d48988d11e941735,Cocktail Bar,1
+camping,4bf58dd8d48988d137941735,Theater,1
+camping,4bf58dd8d48988d1fa931735,Hotel,3
+camping,4bf58dd8d48988d1f8931735,Bed and Breakfast,3
+camping,4bf58dd8d48988d1fe931735,Bus Station,1
+camping,4bf58dd8d48988d19f941735,College Technology Building,1
+camping,4bf58dd8d48988d1a7941735,College Library,1
+camping,4bf58dd8d48988d198941735,College Academic Building,1
+camping,4bf58dd8d48988d13b941735,Education,1
+camping,5453de49498eade8af355881,Business Service,1
+camping,4bf58dd8d48988d1ae941735,University,4
+camping,4bf58dd8d48988d130941735,Structure,1
+camping,4d4b7105d754a06372d81259,College and University,4
+camping,4deefb944765f83613cdba6e,Historic and Protected Site,6
+camping,4bf58dd8d48988d1e4941735,Campground,1
+childcare,4f4532974b9074f6e4fb0104,Daycare,6
+cinemas,56aa371be4b08b9a8d573523,Film Studio,2
+cinemas,4bf58dd8d48988d1fd941735,Shopping Mall,1
+cinemas,4bf58dd8d48988d17e941735,Indie Movie Theater,2
+cinemas,4bf58dd8d48988d17f941735,Movie Theater,20
+comedy-clubs,4bf58dd8d48988d117941735,Beer Garden,1
+comedy-clubs,4bf58dd8d48988d1e0941735,Harbor or Marina,2
+comedy-clubs,4bf58dd8d48988d142941735,Asian Restaurant,1
+comedy-clubs,4bf58dd8d48988d121941735,Lounge,1
+comedy-clubs,4bf58dd8d48988d1f2931735,Performing Arts Venue,1
+comedy-clubs,4bf58dd8d48988d11f941735,Night Club,1
+comedy-clubs,4bf58dd8d48988d116941735,Bar,2
+comedy-clubs,4bf58dd8d48988d1e6941735,Golf Course,1
+comedy-clubs,4bf58dd8d48988d18e941735,Comedy Club,16
+comedy-clubs,4bf58dd8d48988d155941735,Gastropub,1
+concerts,4bf58dd8d48988d11f941735,Night Club,1
+concerts,4bf58dd8d48988d1e0931735,Coffee Shop,2
+concerts,4bf58dd8d48988d111941735,Japanese Restaurant,1
+concerts,4bf58dd8d48988d1e9931735,Rock Club,1
+concerts,50327c8591d4c4b30a586d5d,Brewery,2
+concerts,50be8ee891d4fa8dcc7199a7,Market,2
+concerts,4bf58dd8d48988d121941735,Lounge,2
+concerts,4bf58dd8d48988d1e5931735,Music Venue,1
+concerts,4bf58dd8d48988d1e7931735,Jazz and Blues Venue,1
+concerts,4bf58dd8d48988d1d5941735,Hotel Bar,2
+concerts,4bf58dd8d48988d11b941735,Pub,2
+concerts,4bf58dd8d48988d157941735,New American Restaurant,1
+concerts,4def73e84765ae376e57713a,Portuguese Restaurant,2
+concerts,4bf58dd8d48988d1ca941735,Pizzeria,2
+concerts,4bf58dd8d48988d1c8941735,African Restaurant,4
+concerts,4bf58dd8d48988d1fa931735,Hotel,1
+concerts,4bf58dd8d48988d155941735,Gastropub,4
+concerts,4bf58dd8d48988d1e8931735,Piano Bar,1
+concerts,4bf58dd8d48988d11e941735,Cocktail Bar,2
+concerts,4bf58dd8d48988d1ce941735,Seafood Restaurant,2
+concerts,4bf58dd8d48988d16d941735,Café,5
+concerts,4bf58dd8d48988d116941735,Bar,1
+concerts,4bf58dd8d48988d16e941735,Fast Food Restaurant,1
+concerts,4bf58dd8d48988d1ff931735,Convention Center,2
+concerts,4d4b7105d754a06374d81259,Restaurant,2
+concerts,4bf58dd8d48988d1f7941735,Flea Market,2
+concerts,4bf58dd8d48988d184941735,Stadium,2
+concerts,5032792091d4c4b30a586d5c,Concert Hall,7
+concerts,5744ccdfe4b0c0459246b4dc,Shopping Plaza,2
+concerts,4bf58dd8d48988d163941735,Park,2
+concerts,4bf58dd8d48988d129941735,City Hall,2
+concerts,4bf58dd8d48988d137941735,Theater,3
+cycling,4f2a25ac4b909258e854f55f,Neighborhood,1
+cycling,4bf58dd8d48988d16d941735,Café,1
+cycling,4bf58dd8d48988d175941735,Gym and Studio,1
+cycling,4bf58dd8d48988d163941735,Park,1
+cycling,4bf58dd8d48988d116941735,Bar,1
+cycling,56aa371be4b08b9a8d57355e,Bike Trail,1
+cycling,4e4c9077bd41f78e849722f9,Bike Rental,8
+cycling,4bf58dd8d48988d115951735,Bicycle Store,3
+education-learning,4d4b7105d754a06375d81259,Business and Professional Services,1
+education-learning,4bf58dd8d48988d1dc931735,Tea Room,1
+education-learning,4bf58dd8d48988d126941735,Government Building,1
+education-learning,4bf58dd8d48988d114951735,Bookstore,1
+education-learning,4bf58dd8d48988d1fa931735,Hotel,2
+education-learning,4bf58dd8d48988d12f941735,Library,9
+education-learning,4bf58dd8d48988d199941735,College Arts Building,1
+education-learning,4bf58dd8d48988d197941735,College Administrative Building,1
+education-learning,4bf58dd8d48988d1a7941735,College Library,9
+education-learning,4d4b7105d754a06372d81259,College and University,3
+education-learning,4bf58dd8d48988d1a0941735,College Classroom,2
+education-learning,4bf58dd8d48988d1ab941735,Student Center,1
+education-learning,4bf58dd8d48988d1ae941735,University,2
+education-learning,56aa371ce4b08b9a8d573570,Adult Education,1
+education-learning,4bf58dd8d48988d198941735,College Academic Building,3
+education-learning,554a5e17498efabeda6cc559,Photography Studio,1
+education-learning,52e81612bcbc57f1066b7a42,Driving School,2
+education-learning,52e81612bcbc57f1066b7a46,Private School,1
+education-learning,4bf58dd8d48988d13b941735,Education,2
+education-learning,4f04b10d2fb6e1c99f3db0be,Music School,1
+education-learning,4bf58dd8d48988d13d941735,High School,8
+education-learning,58daa1558bbb0b01f18ec200,Culinary School,2
+education-learning,4bf58dd8d48988d1b3941735,Medical School,4
+education-learning,4f4533814b9074f6e4fb0107,Nursery School,4
+education-learning,4f4533804b9074f6e4fb0105,Elementary School,5
+education-learning,52e81612bcbc57f1066b7a48,Language School,4
+education-learning,4bf58dd8d48988d1ad941735,Trade School,1
+electricians,545419b1498ea6ccd0202f58,Home Service,1
+electronics,4bf58dd8d48988d10b951735,Video Games Store,2
+electronics,4eb1bdf03b7b55596b4a7491,Camera Store,3
+electronics,4f04afc02fb6e1c99f3db0bc,Mobile Phone Store,31
+electronics,4eb1bdde3b7b55596b4a7490,Photography Lab,1
+electronics,4bf58dd8d48988d122951735,Electronics Store,26
+events-festivals,4bf58dd8d48988d1d8941735,Gay Bar,1
+events-festivals,52e81612bcbc57f1066b7a06,Irish Pub,1
+events-festivals,4bf58dd8d48988d1d2941735,Sushi Restaurant,1
+events-festivals,5267e4d9e4b0ec79466e48c8,Other Event,1
+events-festivals,4bf58dd8d48988d123941735,Wine Bar,1
+events-festivals,4bf58dd8d48988d10c941735,French Restaurant,1
+events-festivals,4bf58dd8d48988d1db931735,Tapas Restaurant,1
+events-festivals,4bf58dd8d48988d1c0941735,Mediterranean Restaurant,1
+events-festivals,4bf58dd8d48988d1ee931735,Hostel,1
+events-festivals,4bf58dd8d48988d184941735,Stadium,1
+events-festivals,4bf58dd8d48988d111941735,Japanese Restaurant,1
+events-festivals,4bf58dd8d48988d190941735,History Museum,1
+events-festivals,4bf58dd8d48988d107941735,Argentinian Restaurant,1
+events-festivals,4bf58dd8d48988d1fd941735,Shopping Mall,1
+events-festivals,4bf58dd8d48988d116941735,Bar,1
+events-festivals,4bf58dd8d48988d1d5941735,Hotel Bar,1
+events-festivals,4bf58dd8d48988d119941735,Hookah Bar,1
+events-festivals,4bf58dd8d48988d122941735,Whisky Bar,1
+events-festivals,4bf58dd8d48988d1ca941735,Pizzeria,1
+events-festivals,4bf58dd8d48988d11b941735,Pub,1
+events-festivals,4bf58dd8d48988d10e941735,Greek Restaurant,1
+events-festivals,4bf58dd8d48988d155941735,Gastropub,2
+events-festivals,4d4b7105d754a06374d81259,Restaurant,4
+events-festivals,4bf58dd8d48988d1cc941735,Steakhouse,2
+events-festivals,4bf58dd8d48988d1ce941735,Seafood Restaurant,2
+events-festivals,4bf58dd8d48988d110941735,Italian Restaurant,2
+events-festivals,4bf58dd8d48988d1c8941735,African Restaurant,3
+events-festivals,4bf58dd8d48988d10f941735,Indian Restaurant,2
+events-festivals,4bf58dd8d48988d10a941735,Ethiopian Restaurant,1
+events-festivals,4bf58dd8d48988d11e941735,Cocktail Bar,2
+events-festivals,4bf58dd8d48988d114951735,Bookstore,1
+events-festivals,4bf58dd8d48988d171941735,Event Space,6
+events-festivals,5032792091d4c4b30a586d5c,Concert Hall,1
+events-festivals,5267e4d9e4b0ec79466e48d1,Music Festival,1
+events-festivals,4def73e84765ae376e57713a,Portuguese Restaurant,3
+events-festivals,5744ccdfe4b0c0459246b4dc,Shopping Plaza,1
+events-festivals,4bf58dd8d48988d1fa931735,Hotel,1
+events-festivals,4bf58dd8d48988d129941735,City Hall,1
+family-activities,4bf58dd8d48988d1e7941735,Playground,2
+family-activities,4bf58dd8d48988d130941735,Structure,1
+family-activities,4bf58dd8d48988d105951735,Children's Clothing Store,1
+family-activities,52f2ab2ebcbc57f1066b8b57,Employment Agency,1
+family-activities,52f2ab2ebcbc57f1066b8b32,Baby Store,1
+family-activities,4bf58dd8d48988d104941735,Medical Center,1
+family-activities,63be6904847c3692a84b9bbe,Healthcare Clinic,1
+family-activities,4bf58dd8d48988d178941735,Dentist,1
+family-activities,4bf58dd8d48988d118951735,Grocery Store,1
+family-activities,4d954b06a243a5684965b473,Apartment or Condo,1
+family-activities,4bf58dd8d48988d1fa931735,Hotel,1
+family-activities,4bf58dd8d48988d177941735,Doctor's Office,1
+family-activities,4bf58dd8d48988d1f9931735,Road,1
+family-activities,4bf58dd8d48988d132941735,Church,1
+family-activities,52f2ab2ebcbc57f1066b8b3d,Pop-Up Store,1
+fashion,4bf58dd8d48988d106951735,Men's Store,1
+fashion,4bf58dd8d48988d101951735,Vintage and Thrift Store,1
+fashion,4bf58dd8d48988d108951735,Women's Store,5
+fashion,4bf58dd8d48988d1f1941735,Board Store,1
+fashion,4deefb944765f83613cdba6e,Historic and Protected Site,1
+fashion,4bf58dd8d48988d111951735,Jewelry Store,4
+fashion,4bf58dd8d48988d104951735,Boutique,1
+fashion,4bf58dd8d48988d107951735,Shoe Store,4
+fashion,4d954afda243a5684865b473,Eyecare Store,1
+fashion,4bf58dd8d48988d1f4941735,Design Studio,1
+fashion,4bf58dd8d48988d118951735,Grocery Store,1
+fashion,4bf58dd8d48988d102951735,Fashion Accessories Store,7
+fashion,4bf58dd8d48988d105951735,Children's Clothing Store,3
+fashion,4bf58dd8d48988d165941735,Scenic Lookout,1
+fashion,4bf58dd8d48988d1c8941735,African Restaurant,1
+fashion,4def73e84765ae376e57713a,Portuguese Restaurant,1
+fashion,5744ccdfe4b0c0459246b4dc,Shopping Plaza,1
+fashion,50be8ee891d4fa8dcc7199a7,Market,2
+fashion,4bf58dd8d48988d1f2941735,Sporting Goods Retail,4
+fashion,4d4b7105d754a06374d81259,Restaurant,2
+fashion,4bf58dd8d48988d103951735,Clothing Store,57
+fast-food,4def73e84765ae376e57713a,Portuguese Restaurant,1
+fast-food,4bf58dd8d48988d145941735,Chinese Restaurant,1
+fast-food,4bf58dd8d48988d110941735,Italian Restaurant,1
+fast-food,4edd64a0c7ddd24ca188df1a,Fish and Chips Shop,1
+fast-food,4bf58dd8d48988d118951735,Grocery Store,1
+fast-food,4bf58dd8d48988d1c3941735,Moroccan Restaurant,1
+fast-food,4bf58dd8d48988d1d2941735,Sushi Restaurant,1
+fast-food,4bf58dd8d48988d1a1941735,College Cafeteria,1
+fast-food,4bf58dd8d48988d1cb941735,Food Truck,1
+fast-food,4bf58dd8d48988d115941735,Middle Eastern Restaurant,1
+fast-food,4bf58dd8d48988d16c941735,Burger Joint,4
+fast-food,4d4ae6fc7a7b7dea34424761,Fried Chicken Joint,1
+fast-food,4bf58dd8d48988d1c5941735,Sandwich Spot,1
+fast-food,4bf58dd8d48988d16e941735,Fast Food Restaurant,50
+finance-insurance,4d4b7105d754a06378d81259,Retail,1
+finance-insurance,4d4b7105d754a06374d81259,Restaurant,1
+finance-insurance,58daa1558bbb0b01f18ec1f1,Insurance Agency,6
+finance-insurance,4bf58dd8d48988d113951735,Fuel Station,1
+finance-insurance,52f2ab2ebcbc57f1066b8b56,ATM,2
+finance-insurance,4bf58dd8d48988d130941735,Structure,2
+finance-insurance,5f2c43a65b4c177b9a6dcc62,Blood Bank,5
+finance-insurance,4bf58dd8d48988d10a951735,Bank,39
+fine-dining,4bf58dd8d48988d143941735,Breakfast Spot,1
+fine-dining,52e81612bcbc57f1066b79f1,Bistro,1
+fine-dining,4bf58dd8d48988d146941735,Deli,1
+fine-dining,4bf58dd8d48988d1f5931735,Dim Sum Restaurant,1
+fine-dining,4bf58dd8d48988d1c8941735,African Restaurant,1
+fine-dining,4bf58dd8d48988d10e941735,Greek Restaurant,1
+fine-dining,4bf58dd8d48988d1d3941735,Vegan and Vegetarian Restaurant,1
+fine-dining,4bf58dd8d48988d1ca941735,Pizzeria,3
+fine-dining,4bf58dd8d48988d1db931735,Tapas Restaurant,1
+fine-dining,4bf58dd8d48988d157941735,New American Restaurant,1
+fine-dining,4bf58dd8d48988d120951735,Food Court,1
+fine-dining,4bf58dd8d48988d1cc941735,Steakhouse,2
+fine-dining,4bf58dd8d48988d16c941735,Burger Joint,2
+fine-dining,4bf58dd8d48988d1d2941735,Sushi Restaurant,2
+fine-dining,4bf58dd8d48988d10c941735,French Restaurant,2
+fine-dining,4bf58dd8d48988d16a941735,Bakery,1
+fine-dining,4bf58dd8d48988d155941735,Gastropub,3
+fine-dining,4bf58dd8d48988d1df931735,BBQ Joint,1
+fine-dining,4d4b7105d754a06374d81259,Restaurant,6
+fine-dining,4bf58dd8d48988d10a941735,Ethiopian Restaurant,2
+fine-dining,4def73e84765ae376e57713a,Portuguese Restaurant,2
+fine-dining,4bf58dd8d48988d10f941735,Indian Restaurant,1
+fine-dining,4bf58dd8d48988d111941735,Japanese Restaurant,1
+fine-dining,4bf58dd8d48988d110941735,Italian Restaurant,3
+fine-dining,4bf58dd8d48988d16d941735,Café,8
+fine-dining,4bf58dd8d48988d179941735,Bagel Shop,1
+galleries,4bf58dd8d48988d18f941735,Art Museum,1
+galleries,50aaa49e4b90af0d42d5de11,Castle,2
+galleries,4bf58dd8d48988d163941735,Park,2
+galleries,4bf58dd8d48988d171941735,Event Space,2
+galleries,4bf58dd8d48988d1db931735,Tapas Restaurant,2
+galleries,4bf58dd8d48988d1e2931735,Art Gallery,85
+gyms,52e81612bcbc57f1066b7a2e,Sports Club,1
+gyms,52f2ab2ebcbc57f1066b8b48,Gymnastics Center,1
+gyms,4bf58dd8d48988d101941735,Martial Arts Dojo,1
+gyms,52f2ab2ebcbc57f1066b8b47,Boxing Gym,6
+gyms,4bf58dd8d48988d105941735,Gym Pool,1
+gyms,4bf58dd8d48988d176941735,Gym,25
+gyms,4bf58dd8d48988d175941735,Gym and Studio,38
+hiking,4f2a25ac4b909258e854f55f,Neighborhood,1
+hiking,4bf58dd8d48988d163941735,Park,1
+hiking,56aa371be4b08b9a8d57355e,Bike Trail,1
+hiking,52f2ab2ebcbc57f1066b8b50,Cable Car,1
+hiking,4bf58dd8d48988d1f2941735,Sporting Goods Retail,1
+hiking,4bf58dd8d48988d165941735,Scenic Lookout,2
+hiking,5bae9231bedf3950379f89cd,Hill,2
+hiking,52e81612bcbc57f1066b7a21,National Park,2
+hiking,4eb1d4d54b900d56c88a45fc,Mountain,5
+hiking,4bf58dd8d48988d159941735,Hiking Trail,24
+home-decor,63be6904847c3692a84b9bf2,Housewares Store,1
+home-decor,52f2ab2ebcbc57f1066b8b45,Organic Grocery,1
+home-decor,4bf58dd8d48988d1f8941735,Furniture and Home Store,38
+legal-services,4bf58dd8d48988d124941735,Office,1
+legal-services,52f2ab2ebcbc57f1066b8b3f,Law Office,3
+miscellaneous,63be6904847c3692a84b9b58,Home Improvement Service,1
+miscellaneous,4bf58dd8d48988d130941735,Structure,1
+miscellaneous,4bf58dd8d48988d13b941735,Education,1
+miscellaneous,52f2ab2ebcbc57f1066b8b28,Print Store,1
+miscellaneous,4d4b7105d754a06372d81259,College and University,1
+miscellaneous,4bf58dd8d48988d127941735,Meeting Room,1
+miscellaneous,52f2ab2ebcbc57f1066b8b36,IT Service,1
+miscellaneous,4f2a25ac4b909258e854f55f,Neighborhood,1
+miscellaneous,4bf58dd8d48988d124941735,Office,7
+miscellaneous,4bf58dd8d48988d198941735,College Academic Building,1
+miscellaneous,4bf58dd8d48988d12a951735,Train,3
+miscellaneous,4f04afc02fb6e1c99f3db0bc,Mobile Phone Store,1
+miscellaneous,4bf58dd8d48988d174941735,Coworking Space,4
+miscellaneous,56aa371be4b08b9a8d573517,Business Center,10
+miscellaneous,5453de49498eade8af355881,Business Service,11
+museums,4bf58dd8d48988d1e2931735,Art Gallery,2
+museums,50aaa49e4b90af0d42d5de11,Castle,1
+museums,4bf58dd8d48988d192941735,Planetarium,1
+museums,4bf58dd8d48988d191941735,Science Museum,2
+museums,4bf58dd8d48988d181941735,Museum,14
+museums,4bf58dd8d48988d18f941735,Art Museum,4
+museums,4bf58dd8d48988d190941735,History Museum,17
+nail-salons,54541900498ea6ccd0202697,Health and Beauty Service,1
+nail-salons,4bf58dd8d48988d110951735,Hair Salon,2
+nail-salons,4bf58dd8d48988d1ed941735,Spa,2
+nail-salons,4f04aa0c2fb6e1c99f3db0b8,Nail Salon,20
+nightlife,4bf58dd8d48988d12f951735,Resort,1
+nightlife,52e81612bcbc57f1066b7a2e,Sports Club,1
+nightlife,52e81612bcbc57f1066b79ec,Salsa Club,1
+nightlife,4bf58dd8d48988d18e941735,Comedy Club,4
+nightlife,52e81612bcbc57f1066b7a35,Club House,2
+nightlife,52e81612bcbc57f1066b79ef,Country Dance Club,1
+nightlife,4bf58dd8d48988d1e5931735,Music Venue,1
+nightlife,52e81612bcbc57f1066b7a33,Social Club,3
+nightlife,4bf58dd8d48988d1e9931735,Rock Club,2
+nightlife,4bf58dd8d48988d1d6941735,Strip Club,1
+nightlife,4bf58dd8d48988d122941735,Whisky Bar,1
+nightlife,4bf58dd8d48988d1d5941735,Hotel Bar,2
+nightlife,4bf58dd8d48988d120941735,Karaoke Bar,1
+nightlife,4bf58dd8d48988d1e8931735,Piano Bar,1
+nightlife,4bf58dd8d48988d1d8941735,Gay Bar,2
+nightlife,4bf58dd8d48988d121941735,Lounge,2
+nightlife,4bf58dd8d48988d11f941735,Night Club,39
+nightlife,4bf58dd8d48988d117941735,Beer Garden,1
+nightlife,50327c8591d4c4b30a586d5d,Brewery,1
+nightlife,4bf58dd8d48988d119941735,Hookah Bar,2
+nightlife,4bf58dd8d48988d123941735,Wine Bar,4
+nightlife,4bf58dd8d48988d11b941735,Pub,6
+nightlife,4bf58dd8d48988d155941735,Gastropub,5
+nightlife,4bf58dd8d48988d11e941735,Cocktail Bar,7
+nightlife,4bf58dd8d48988d116941735,Bar,9
+pet-services,5032897c91d4c4b30a586d69,Pet Service,5
+pet-services,4d954af4a243a5684765b473,Veterinarian,1
+pet-services,4bf58dd8d48988d100951735,Pet Supplies Store,17
+pet-services,4bf58dd8d48988d1fd941735,Shopping Mall,2
+plumbers,4bf58dd8d48988d1e0931735,Coffee Shop,1
+restaurants,4bf58dd8d48988d11b941735,Pub,1
+restaurants,4bf58dd8d48988d10d941735,German Restaurant,1
+restaurants,4bf58dd8d48988d1c0941735,Mediterranean Restaurant,2
+restaurants,4f04af1f2fb6e1c99f3db0bb,Turkish Restaurant,1
+restaurants,4bf58dd8d48988d14a941735,Vietnamese Restaurant,1
+restaurants,52e81612bcbc57f1066b7a02,Belgian Restaurant,2
+restaurants,4bf58dd8d48988d1d8941735,Gay Bar,2
+restaurants,4bf58dd8d48988d1c1941735,Mexican Restaurant,4
+restaurants,4bf58dd8d48988d142941735,Asian Restaurant,1
+restaurants,4bf58dd8d48988d1ce941735,Seafood Restaurant,6
+restaurants,4bf58dd8d48988d143941735,Breakfast Spot,1
+restaurants,52e81612bcbc57f1066b79f1,Bistro,2
+restaurants,4bf58dd8d48988d146941735,Deli,4
+restaurants,4bf58dd8d48988d1f5931735,Dim Sum Restaurant,1
+restaurants,4bf58dd8d48988d1c8941735,African Restaurant,7
+restaurants,4bf58dd8d48988d10e941735,Greek Restaurant,3
+restaurants,4bf58dd8d48988d1d3941735,Vegan and Vegetarian Restaurant,1
+restaurants,4bf58dd8d48988d1ca941735,Pizzeria,5
+restaurants,4bf58dd8d48988d1db931735,Tapas Restaurant,4
+restaurants,4bf58dd8d48988d157941735,New American Restaurant,3
+restaurants,4bf58dd8d48988d120951735,Food Court,1
+restaurants,4bf58dd8d48988d1cc941735,Steakhouse,6
+restaurants,4bf58dd8d48988d16c941735,Burger Joint,9
+restaurants,4bf58dd8d48988d1d2941735,Sushi Restaurant,5
+restaurants,4bf58dd8d48988d10c941735,French Restaurant,5
+restaurants,4bf58dd8d48988d16a941735,Bakery,2
+restaurants,4bf58dd8d48988d155941735,Gastropub,9
+restaurants,4bf58dd8d48988d1df931735,BBQ Joint,1
+restaurants,4d4b7105d754a06374d81259,Restaurant,11
+restaurants,4bf58dd8d48988d10a941735,Ethiopian Restaurant,6
+restaurants,4def73e84765ae376e57713a,Portuguese Restaurant,5
+restaurants,4bf58dd8d48988d10f941735,Indian Restaurant,6
+restaurants,4bf58dd8d48988d111941735,Japanese Restaurant,6
+restaurants,4bf58dd8d48988d110941735,Italian Restaurant,12
+restaurants,4bf58dd8d48988d16d941735,Café,13
+restaurants,4bf58dd8d48988d179941735,Bagel Shop,1
+salons,4bf58dd8d48988d1ed941735,Spa,1
+salons,4d1cf8421a97d635ce361c31,Tanning Salon,2
+salons,4f04aa0c2fb6e1c99f3db0b8,Nail Salon,8
+salons,4d4b7105d754a06374d81259,Restaurant,2
+salons,4bf58dd8d48988d1fa931735,Hotel,2
+salons,54541900498ea6ccd0202697,Health and Beauty Service,2
+salons,4bf58dd8d48988d110951735,Hair Salon,74
+spas,4bf58dd8d48988d1d5941735,Hotel Bar,1
+spas,4bf58dd8d48988d16d941735,Café,1
+spas,54541900498ea6ccd0202697,Health and Beauty Service,1
+spas,4bf58dd8d48988d110951735,Hair Salon,2
+spas,52f2ab2ebcbc57f1066b8b3c,Massage Clinic,4
+spas,4bf58dd8d48988d132951735,Hotel Pool,2
+spas,4bf58dd8d48988d1fa931735,Hotel,7
+spas,4bf58dd8d48988d1ed941735,Spa,82
+sports-recreation,4f2a25ac4b909258e854f55f,Neighborhood,1
+sports-recreation,4bf58dd8d48988d1f8931735,Bed and Breakfast,1
+sports-recreation,4e39a956bd410d7aed40cbc3,Tennis Court,5
+sports-recreation,4bf58dd8d48988d103941735,Home (private),1
+sports-recreation,56aa371be4b08b9a8d573556,Rugby Stadium,1
+sports-recreation,4bf58dd8d48988d1b4941735,College Stadium,1
+sports-recreation,4bf58dd8d48988d184941735,Stadium,2
+sports-recreation,4cce455aebf7b749d5e191f5,Soccer Field,1
+sports-recreation,4bf58dd8d48988d167941735,Skate Park,1
+sports-recreation,4bf58dd8d48988d134941735,Dance Studio,1
+sports-recreation,52e81612bcbc57f1066b7a26,Recreation Center,1
+sports-recreation,52e81612bcbc57f1066b7a2e,Sports Club,2
+sports-recreation,4bf58dd8d48988d115951735,Bicycle Store,4
+sports-recreation,4f4528bc4b90abdf24c9de85,Sports and Recreation,3
+sports-recreation,4bf58dd8d48988d1c1941735,Mexican Restaurant,1
+sports-recreation,4bf58dd8d48988d11d941735,Sports Bar,4
+sports-recreation,4bf58dd8d48988d101941735,Martial Arts Dojo,2
+sports-recreation,4bf58dd8d48988d155941735,Gastropub,1
+sports-recreation,4bf58dd8d48988d1f2941735,Sporting Goods Retail,4
+sports-recreation,4bf58dd8d48988d1e6941735,Golf Course,2
+sports-recreation,4bf58dd8d48988d15e941735,Swimming Pool,1
+sports-recreation,4bf58dd8d48988d105941735,Gym Pool,1
+sports-recreation,4bf58dd8d48988d102941735,Yoga Studio,2
+sports-recreation,4bf58dd8d48988d1fa931735,Hotel,2
+sports-recreation,4bf58dd8d48988d176941735,Gym,6
+sports-recreation,4bf58dd8d48988d175941735,Gym and Studio,13
+theaters,4bf58dd8d48988d17e941735,Indie Movie Theater,1
+theaters,4bf58dd8d48988d135941735,Indie Theater,4
+theaters,4bf58dd8d48988d136941735,Opera House,2
+theaters,4bf58dd8d48988d1ac941735,College Theater,2
+theaters,4bf58dd8d48988d17f941735,Movie Theater,16
+theaters,4bf58dd8d48988d137941735,Theater,31
+transport-travel,4bf58dd8d48988d1ef941735,Rental Car Location,15
+transport-travel,4f04b08c2fb6e1c99f3db0bd,Travel Agency,12
+transport-travel,4f04b25d2fb6e1c99f3db0c0,Travel Lounge,8
+veterinarians,4bf58dd8d48988d1fa931735,Hotel,1
+veterinarians,4d4b7105d754a06374d81259,Restaurant,1
+veterinarians,4bf58dd8d48988d100951735,Pet Supplies Store,2
+veterinarians,4bf58dd8d48988d1f8941735,Furniture and Home Store,1
+veterinarians,4d954af4a243a5684765b473,Veterinarian,10
+water-sports,4f4528bc4b90abdf24c9de85,Sports and Recreation,1
+water-sports,4bf58dd8d48988d1f0941735,Internet Cafe,1
+water-sports,4bf58dd8d48988d103951735,Clothing Store,1
+water-sports,4bf58dd8d48988d162941735,Other Great Outdoors,1
+water-sports,4bf58dd8d48988d118941735,Dive Bar,1
+water-sports,4bf58dd8d48988d12f951735,Resort,1
+water-sports,63be6904847c3692a84b9bf9,Surf Store,2
+water-sports,4bf58dd8d48988d1f2941735,Sporting Goods Retail,2
+water-sports,4bf58dd8d48988d1f1941735,Board Store,7
+water-sports,4bf58dd8d48988d1e3941735,Surf Spot,6
+water-sports,4bf58dd8d48988d1e2941735,Beach,3
+water-sports,4d954b06a243a5684965b473,Apartment or Condo,1
+water-sports,4bf58dd8d48988d1f8931735,Bed and Breakfast,1
+water-sports,4bf58dd8d48988d132951735,Hotel Pool,1
+water-sports,4bf58dd8d48988d15e941735,Swimming Pool,12
+water-sports,4bf58dd8d48988d1fa931735,Hotel,2
+wellness,4bf58dd8d48988d1e2941735,Beach,2
+wellness,4bf58dd8d48988d159941735,Hiking Trail,1
+wellness,4bf58dd8d48988d1fa941735,Farmers Market,1
+wellness,4bf58dd8d48988d175941735,Gym and Studio,3
+wellness,4bf58dd8d48988d102941735,Yoga Studio,7
+wellness,4bf58dd8d48988d1ce941735,Seafood Restaurant,1
+wellness,4bf58dd8d48988d1d2941735,Sushi Restaurant,1
+wellness,50327c8591d4c4b30a586d5d,Brewery,1
+wellness,4bf58dd8d48988d165941735,Scenic Lookout,1
+wellness,4bf58dd8d48988d110951735,Hair Salon,1
+wellness,4eb1d4d54b900d56c88a45fc,Mountain,1
+wellness,4bf58dd8d48988d1ee931735,Hostel,1
+wellness,52e81612bcbc57f1066b7a21,National Park,1
+wellness,50be8ee891d4fa8dcc7199a7,Market,1
+wellness,4def73e84765ae376e57713a,Portuguese Restaurant,1
+wellness,4fceea171983d5d06c3e9823,Aquarium,1
+wellness,4bf58dd8d48988d111941735,Japanese Restaurant,1
+wellness,4bf58dd8d48988d1e0931735,Coffee Shop,3
+wellness,4bf58dd8d48988d1e8931735,Piano Bar,1
+wellness,4bf58dd8d48988d1c1941735,Mexican Restaurant,2
+wellness,4bf58dd8d48988d1ca941735,Pizzeria,2
+wellness,4bf58dd8d48988d157941735,New American Restaurant,1
+wellness,4bf58dd8d48988d10f941735,Indian Restaurant,2
+wellness,4bf58dd8d48988d155941735,Gastropub,1
+wellness,4bf58dd8d48988d163941735,Park,3
+wellness,4bf58dd8d48988d11e941735,Cocktail Bar,1
+wellness,4bf58dd8d48988d1cc941735,Steakhouse,3
+wellness,4bf58dd8d48988d10a941735,Ethiopian Restaurant,1
+wellness,5e18993feee47d000759b256,Coffee Roaster,1
+wellness,4bf58dd8d48988d1c9941735,Ice Cream Parlor,1
+wellness,4d4b7105d754a06374d81259,Restaurant,4
+wellness,4bf58dd8d48988d16c941735,Burger Joint,2
+wellness,4bf58dd8d48988d1fa931735,Hotel,3
+wellness,4bf58dd8d48988d10c941735,French Restaurant,3
+wellness,4bf58dd8d48988d116941735,Bar,1
+wellness,4bf58dd8d48988d1c8941735,African Restaurant,1
+wellness,4bf58dd8d48988d16d941735,Café,3

@@ -63,7 +63,15 @@
       "Bash(npx next lint:*)",
       "Bash(npx eslint:*)",
       "Bash(git status:*)",
-      "Bash(del \"c:\\\\Users\\\\HilarioNengare\\\\Projects\\\\sayso\\\\src\\\\middleware.ts\")"
+      "Bash(del \"c:\\\\Users\\\\HilarioNengare\\\\Projects\\\\sayso\\\\src\\\\middleware.ts\")",
+      "Bash(npx supabase functions list:*)",
+      "Bash(npx supabase login:*)",
+      "WebFetch(domain:api.quicket.co.za)",
+      "WebFetch(domain:developer.quicket.co.za)",
+      "WebFetch(domain:docs.quicket.com)",
+      "WebFetch(domain:help.quicket.com)",
+      "Bash(git merge:*)",
+      "Bash(npx next build:*)"
     ],
     "deny": [],
     "ask": [],

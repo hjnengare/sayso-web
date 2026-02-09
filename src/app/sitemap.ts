@@ -93,6 +93,7 @@ async function getBusinesses(): Promise<Array<{ slug: string; updated_at: string
       .from('businesses')
       .select('slug, updated_at, created_at, status')
       .eq('status', 'active')
+      .or('is_system.is.null,is_system.eq.false')
       .not('slug', 'is', null)
       .limit(10000); // Limit to prevent sitemap from being too large
 
@@ -128,6 +129,7 @@ async function getCategories(): Promise<Array<{ slug: string }>> {
       .from('businesses')
       .select('category')
       .eq('status', 'active')
+      .or('is_system.is.null,is_system.eq.false')
       .not('category', 'is', null);
     
     if (error) {
@@ -159,6 +161,7 @@ async function getCityCategorySlugs(): Promise<Array<{ slug: string }>> {
       .from('businesses')
       .select('location, category')
       .eq('status', 'active')
+      .or('is_system.is.null,is_system.eq.false')
       .not('location', 'is', null)
       .not('category', 'is', null)
       .limit(200); // Limit to prevent sitemap from being too large

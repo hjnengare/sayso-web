@@ -130,6 +130,7 @@ async function getFeaturedFallback(
       )
     `)
     .eq('status', 'active')
+    .or('is_system.is.null,is_system.eq.false')
     .order('created_at', { ascending: false })
     .limit(poolSize);
 
@@ -157,6 +158,7 @@ async function getFeaturedFallback(
           total_reviews
         )
       `)
+      .or('is_system.is.null,is_system.eq.false')
       .order('created_at', { ascending: false })
       .limit(poolSize);
 
@@ -366,7 +368,7 @@ export async function GET(request: NextRequest) {
         const { data: businessRows } = await supabase
           .from('businesses')
           .select(
-            'id, name, description, primary_subcategory_slug, primary_subcategory_label, primary_category_slug, location, address, image_url, verified, slug, status',
+            'id, name, description, primary_subcategory_slug, primary_subcategory_label, primary_category_slug, location, address, image_url, verified, slug, status, is_system',
           )
           .in('id', selectedIds);
 
@@ -385,7 +387,7 @@ export async function GET(request: NextRequest) {
 
         for (const id of selectedIds) {
           const b = businessById.get(id);
-          if (!b || (b as any).status !== 'active') continue;
+          if (!b || (b as any).status !== 'active' || (b as any).is_system === true) continue;
           const st = statsById.get(id);
           const sub = (b as any).primary_subcategory_slug ?? '';
           const cat = (b as any).primary_category_slug ?? null;

@@ -93,7 +93,7 @@ export default function MenuModal({ isOpen, isVisible, onClose }: MenuModalProps
   // Navigate and close menu
   const handleNavigation = (href: string) => {
     onClose();
-    router.push(href);
+    router.push(href, { scroll: false });
   };
 
   if (!isVisible) return null;

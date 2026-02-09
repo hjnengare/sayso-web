@@ -51,6 +51,7 @@ export async function fetchBusinessOptimized(
         .from('businesses')
         .select('id, slug')
         .eq('slug', businessIdentifier)
+        .or('is_system.is.null,is_system.eq.false')
         .single();
       return { data, error };
     }
@@ -74,6 +75,7 @@ export async function fetchBusinessOptimized(
             .from('businesses')
             .select('*')
             .eq('id', actualBusinessId)
+            .or('is_system.is.null,is_system.eq.false')
             .single();
           return { data, error };
         }

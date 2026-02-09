@@ -79,7 +79,8 @@ export default async function CityPage({ params }: CityPageProps) {
     .from('businesses')
     .select('id, name, slug, description, image_url, location, category, average_rating:business_stats(average_rating), business_images(id, url, type, sort_order, is_primary)')
     .ilike('location', `%${displayCityName}%`)
-    .eq('status', 'active');
+    .eq('status', 'active')
+    .or('is_system.is.null,is_system.eq.false');
   
   if (categoryName) {
     query = query.eq('category', categoryName);

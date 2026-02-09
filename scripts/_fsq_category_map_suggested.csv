@@ -1,0 +1,250 @@
+fsq_category_id,fsq_category_name,sayso_subcategory_slug,sayso_category_slug,count
+4bf58dd8d48988d1e2931735,Art Gallery,galleries,,85
+4bf58dd8d48988d1ed941735,Spa,spas,,82
+4bf58dd8d48988d110951735,Hair Salon,salons,,74
+4bf58dd8d48988d16d941735,Café,cafes,,64
+4bf58dd8d48988d103951735,Clothing Store,fashion,,57
+4bf58dd8d48988d16e941735,Fast Food Restaurant,fast-food,,50
+4bf58dd8d48988d10a951735,Bank,finance-insurance,,39
+4bf58dd8d48988d11f941735,Night Club,nightlife,,39
+4bf58dd8d48988d175941735,Gym and Studio,gyms,,38
+4bf58dd8d48988d1f8941735,Furniture and Home Store,home-decor,,38
+4bf58dd8d48988d114951735,Bookstore,books,,32
+4bf58dd8d48988d137941735,Theater,theaters,,31
+4f04afc02fb6e1c99f3db0bc,Mobile Phone Store,electronics,,31
+4bf58dd8d48988d1e0931735,Coffee Shop,cafes,,27
+4bf58dd8d48988d122951735,Electronics Store,electronics,,26
+4bf58dd8d48988d176941735,Gym,gyms,,25
+4bf58dd8d48988d11b941735,Pub,bars,,24
+4bf58dd8d48988d159941735,Hiking Trail,hiking,,24
+4bf58dd8d48988d155941735,Gastropub,bars,,22
+4f04aa0c2fb6e1c99f3db0b8,Nail Salon,nail-salons,,20
+4bf58dd8d48988d17f941735,Movie Theater,cinemas,,20
+4bf58dd8d48988d190941735,History Museum,museums,,17
+4bf58dd8d48988d100951735,Pet Supplies Store,pet-services,,17
+4bf58dd8d48988d18e941735,Comedy Club,comedy-clubs,,16
+4bf58dd8d48988d1ef941735,Rental Car Location,transport-travel,,15
+4bf58dd8d48988d181941735,Museum,museums,,14
+4bf58dd8d48988d110941735,Italian Restaurant,restaurants,,12
+4f04b08c2fb6e1c99f3db0bd,Travel Agency,transport-travel,,12
+4bf58dd8d48988d15e941735,Swimming Pool,water-sports,,12
+4d4b7105d754a06374d81259,Restaurant,restaurants,,11
+5453de49498eade8af355881,Business Service,miscellaneous,,11
+4d954af4a243a5684765b473,Veterinarian,veterinarians,,10
+56aa371be4b08b9a8d573517,Business Center,miscellaneous,,10
+4bf58dd8d48988d16c941735,Burger Joint,restaurants,,9
+4bf58dd8d48988d116941735,Bar,nightlife,,9
+4bf58dd8d48988d1a7941735,College Library,education-learning,,9
+4bf58dd8d48988d12f941735,Library,education-learning,,9
+4bf58dd8d48988d11e941735,Cocktail Bar,bars,,8
+4bf58dd8d48988d13d941735,High School,education-learning,,8
+4f04b25d2fb6e1c99f3db0c0,Travel Lounge,transport-travel,,8
+4e4c9077bd41f78e849722f9,Bike Rental,cycling,,8
+4bf58dd8d48988d1c8941735,African Restaurant,restaurants,,7
+4bf58dd8d48988d1fa931735,Hotel,spas,,7
+4bf58dd8d48988d102941735,Yoga Studio,wellness,,7
+4bf58dd8d48988d124941735,Office,miscellaneous,,7
+4bf58dd8d48988d1f1941735,Board Store,water-sports,,7
+5032792091d4c4b30a586d5c,Concert Hall,concerts,,7
+4bf58dd8d48988d102951735,Fashion Accessories Store,fashion,,7
+4bf58dd8d48988d111941735,Japanese Restaurant,restaurants,,6
+4bf58dd8d48988d10f941735,Indian Restaurant,restaurants,,6
+4bf58dd8d48988d10a941735,Ethiopian Restaurant,restaurants,,6
+4bf58dd8d48988d1cc941735,Steakhouse,restaurants,,6
+4bf58dd8d48988d1ce941735,Seafood Restaurant,restaurants,,6
+52f2ab2ebcbc57f1066b8b47,Boxing Gym,gyms,,6
+58daa1558bbb0b01f18ec1f1,Insurance Agency,finance-insurance,,6
+4bf58dd8d48988d1e3941735,Surf Spot,water-sports,,6
+4deefb944765f83613cdba6e,Historic and Protected Site,camping,,6
+4bf58dd8d48988d171941735,Event Space,events-festivals,,6
+4f4532974b9074f6e4fb0104,Daycare,childcare,,6
+4bf58dd8d48988d1b1941735,College Bookstore,books,,6
+4def73e84765ae376e57713a,Portuguese Restaurant,restaurants,,5
+4bf58dd8d48988d10c941735,French Restaurant,restaurants,,5
+4bf58dd8d48988d1d2941735,Sushi Restaurant,restaurants,,5
+4bf58dd8d48988d1ca941735,Pizzeria,restaurants,,5
+4eb1d4d54b900d56c88a45fc,Mountain,hiking,,5
+4f4533804b9074f6e4fb0105,Elementary School,education-learning,,5
+5f2c43a65b4c177b9a6dcc62,Blood Bank,finance-insurance,,5
+4e39a956bd410d7aed40cbc3,Tennis Court,sports-recreation,,5
+5032897c91d4c4b30a586d69,Pet Service,pet-services,,5
+4bf58dd8d48988d108951735,Women's Store,fashion,,5
+4bf58dd8d48988d1db931735,Tapas Restaurant,restaurants,,4
+4bf58dd8d48988d146941735,Deli,restaurants,,4
+4bf58dd8d48988d1c1941735,Mexican Restaurant,restaurants,,4
+4bf58dd8d48988d123941735,Wine Bar,nightlife,,4
+4bf58dd8d48988d1d5941735,Hotel Bar,bars,,4
+52f2ab2ebcbc57f1066b8b3c,Massage Clinic,spas,,4
+52e81612bcbc57f1066b7a48,Language School,education-learning,,4
+4f4533814b9074f6e4fb0107,Nursery School,education-learning,,4
+4bf58dd8d48988d1b3941735,Medical School,education-learning,,4
+4bf58dd8d48988d1ae941735,University,camping,,4
+4d4b7105d754a06372d81259,College and University,camping,,4
+4bf58dd8d48988d1f2941735,Sporting Goods Retail,sports-recreation,,4
+4bf58dd8d48988d115951735,Bicycle Store,sports-recreation,,4
+4bf58dd8d48988d174941735,Coworking Space,miscellaneous,,4
+4bf58dd8d48988d11d941735,Sports Bar,sports-recreation,,4
+4bf58dd8d48988d18f941735,Art Museum,museums,,4
+4bf58dd8d48988d135941735,Indie Theater,theaters,,4
+4bf58dd8d48988d107951735,Shoe Store,fashion,,4
+4bf58dd8d48988d111951735,Jewelry Store,fashion,,4
+4bf58dd8d48988d157941735,New American Restaurant,restaurants,,3
+4bf58dd8d48988d10e941735,Greek Restaurant,restaurants,,3
+50327c8591d4c4b30a586d5d,Brewery,bars,,3
+4bf58dd8d48988d163941735,Park,wellness,,3
+4bf58dd8d48988d1e2941735,Beach,water-sports,,3
+4bf58dd8d48988d198941735,College Academic Building,education-learning,,3
+52f2ab2ebcbc57f1066b8b3f,Law Office,legal-services,,3
+4bf58dd8d48988d1f8931735,Bed and Breakfast,camping,,3
+4d954b06a243a5684965b473,Apartment or Condo,camping,,3
+4f4528bc4b90abdf24c9de85,Sports and Recreation,sports-recreation,,3
+52e81612bcbc57f1066b7a33,Social Club,nightlife,,3
+4bf58dd8d48988d105951735,Children's Clothing Store,fashion,,3
+4eb1bdf03b7b55596b4a7491,Camera Store,electronics,,3
+4bf58dd8d48988d12a951735,Train,miscellaneous,,3
+4bf58dd8d48988d16a941735,Bakery,restaurants,,2
+52e81612bcbc57f1066b79f1,Bistro,restaurants,,2
+4bf58dd8d48988d1d8941735,Gay Bar,restaurants,,2
+52e81612bcbc57f1066b7a02,Belgian Restaurant,restaurants,,2
+4bf58dd8d48988d1c0941735,Mediterranean Restaurant,restaurants,,2
+4bf58dd8d48988d1ee931735,Hostel,books,,2
+4bf58dd8d48988d119941735,Hookah Bar,nightlife,,2
+4bf58dd8d48988d121941735,Lounge,bars,,2
+52e81612bcbc57f1066b7a06,Irish Pub,bars,,2
+4bf58dd8d48988d117941735,Beer Garden,bars,,2
+4bf58dd8d48988d129941735,City Hall,concerts,,2
+4bf58dd8d48988d101941735,Martial Arts Dojo,sports-recreation,,2
+52e81612bcbc57f1066b7a2e,Sports Club,sports-recreation,,2
+4bf58dd8d48988d132951735,Hotel Pool,spas,,2
+54541900498ea6ccd0202697,Health and Beauty Service,salons,,2
+4d1cf8421a97d635ce361c31,Tanning Salon,salons,,2
+50be8ee891d4fa8dcc7199a7,Market,concerts,,2
+52e81612bcbc57f1066b7a21,National Park,hiking,,2
+4bf58dd8d48988d165941735,Scenic Lookout,hiking,,2
+58daa1558bbb0b01f18ec200,Culinary School,education-learning,,2
+4bf58dd8d48988d13b941735,Education,education-learning,,2
+52e81612bcbc57f1066b7a42,Driving School,education-learning,,2
+4bf58dd8d48988d1a0941735,College Classroom,education-learning,,2
+4bf58dd8d48988d130941735,Structure,finance-insurance,,2
+52f2ab2ebcbc57f1066b8b56,ATM,finance-insurance,,2
+5bae9231bedf3950379f89cd,Hill,hiking,,2
+63be6904847c3692a84b9bf9,Surf Store,water-sports,,2
+5744ccdfe4b0c0459246b4dc,Shopping Plaza,concerts,,2
+4bf58dd8d48988d1fd941735,Shopping Mall,pet-services,,2
+4bf58dd8d48988d184941735,Stadium,sports-recreation,,2
+4bf58dd8d48988d1e6941735,Golf Course,sports-recreation,,2
+4bf58dd8d48988d1e9931735,Rock Club,nightlife,,2
+52e81612bcbc57f1066b7a35,Club House,nightlife,,2
+4bf58dd8d48988d1e0941735,Harbor or Marina,comedy-clubs,,2
+4bf58dd8d48988d17e941735,Indie Movie Theater,cinemas,,2
+56aa371be4b08b9a8d573523,Film Studio,cinemas,,2
+4bf58dd8d48988d191941735,Science Museum,museums,,2
+50aaa49e4b90af0d42d5de11,Castle,galleries,,2
+4bf58dd8d48988d1ac941735,College Theater,theaters,,2
+4bf58dd8d48988d136941735,Opera House,theaters,,2
+4bf58dd8d48988d1f7941735,Flea Market,concerts,,2
+4bf58dd8d48988d1ff931735,Convention Center,concerts,,2
+4bf58dd8d48988d1e7941735,Playground,family-activities,,2
+4bf58dd8d48988d10b951735,Video Games Store,electronics,,2
+52f2ab2ebcbc57f1066b8b30,Used Bookstore,books,,2
+4bf58dd8d48988d179941735,Bagel Shop,restaurants,,1
+4bf58dd8d48988d1df931735,BBQ Joint,restaurants,,1
+4bf58dd8d48988d120951735,Food Court,restaurants,,1
+4bf58dd8d48988d1d3941735,Vegan and Vegetarian Restaurant,restaurants,,1
+4bf58dd8d48988d1f5931735,Dim Sum Restaurant,restaurants,,1
+4bf58dd8d48988d143941735,Breakfast Spot,restaurants,,1
+4bf58dd8d48988d142941735,Asian Restaurant,restaurants,,1
+4bf58dd8d48988d14a941735,Vietnamese Restaurant,restaurants,,1
+4f04af1f2fb6e1c99f3db0bb,Turkish Restaurant,restaurants,,1
+4bf58dd8d48988d10d941735,German Restaurant,restaurants,,1
+5e18993feee47d000759b256,Coffee Roaster,cafes,,1
+4bf58dd8d48988d122941735,Whisky Bar,cafes,,1
+4bf58dd8d48988d112941735,Juice Bar,cafes,,1
+4bf58dd8d48988d1e8931735,Piano Bar,bars,,1
+4bf58dd8d48988d1c5941735,Sandwich Spot,fast-food,,1
+4d4ae6fc7a7b7dea34424761,Fried Chicken Joint,fast-food,,1
+4bf58dd8d48988d115941735,Middle Eastern Restaurant,fast-food,,1
+4bf58dd8d48988d1cb941735,Food Truck,fast-food,,1
+4bf58dd8d48988d1a1941735,College Cafeteria,fast-food,,1
+4bf58dd8d48988d1c3941735,Moroccan Restaurant,fast-food,,1
+4bf58dd8d48988d118951735,Grocery Store,fast-food,,1
+4edd64a0c7ddd24ca188df1a,Fish and Chips Shop,fast-food,,1
+4bf58dd8d48988d145941735,Chinese Restaurant,fast-food,,1
+4bf58dd8d48988d105941735,Gym Pool,gyms,,1
+52f2ab2ebcbc57f1066b8b48,Gymnastics Center,gyms,,1
+4bf58dd8d48988d1c9941735,Ice Cream Parlor,wellness,,1
+4fceea171983d5d06c3e9823,Aquarium,wellness,,1
+4bf58dd8d48988d1fa941735,Farmers Market,wellness,,1
+4bf58dd8d48988d1ad941735,Trade School,education-learning,,1
+4f04b10d2fb6e1c99f3db0be,Music School,education-learning,,1
+52e81612bcbc57f1066b7a46,Private School,education-learning,,1
+554a5e17498efabeda6cc559,Photography Studio,education-learning,,1
+56aa371ce4b08b9a8d573570,Adult Education,education-learning,,1
+4bf58dd8d48988d1ab941735,Student Center,education-learning,,1
+4bf58dd8d48988d197941735,College Administrative Building,education-learning,,1
+4bf58dd8d48988d199941735,College Arts Building,education-learning,,1
+4bf58dd8d48988d126941735,Government Building,education-learning,,1
+4bf58dd8d48988d1dc931735,Tea Room,education-learning,,1
+4d4b7105d754a06375d81259,Business and Professional Services,education-learning,,1
+4bf58dd8d48988d113951735,Fuel Station,finance-insurance,,1
+4d4b7105d754a06378d81259,Retail,finance-insurance,,1
+545419b1498ea6ccd0202f58,Home Service,electricians,,1
+52f2ab2ebcbc57f1066b8b50,Cable Car,hiking,,1
+56aa371be4b08b9a8d57355e,Bike Trail,hiking,,1
+4f2a25ac4b909258e854f55f,Neighborhood,hiking,,1
+4bf58dd8d48988d12f951735,Resort,water-sports,,1
+4bf58dd8d48988d118941735,Dive Bar,water-sports,,1
+4bf58dd8d48988d162941735,Other Great Outdoors,water-sports,,1
+4bf58dd8d48988d1f0941735,Internet Cafe,water-sports,,1
+4bf58dd8d48988d1e4941735,Campground,camping,,1
+4bf58dd8d48988d19f941735,College Technology Building,camping,,1
+4bf58dd8d48988d1fe931735,Bus Station,camping,,1
+52f2ab2ebcbc57f1066b8b21,Stationery Store,camping,,1
+4bf58dd8d48988d116951735,Antique Store,camping,,1
+4bf58dd8d48988d15f941735,Field,camping,,1
+503288ae91d4c4b30a586d67,Afghan Restaurant,camping,,1
+56aa371be4b08b9a8d573552,Rental Service,camping,,1
+4bf58dd8d48988d1e5941735,Dog Park,camping,,1
+52f2ab2ebcbc57f1066b8b22,Outdoor Supply Store,camping,,1
+5267e4d9e4b0ec79466e48d1,Music Festival,events-festivals,,1
+4bf58dd8d48988d107941735,Argentinian Restaurant,events-festivals,,1
+5267e4d9e4b0ec79466e48c8,Other Event,events-festivals,,1
+52e81612bcbc57f1066b7a26,Recreation Center,sports-recreation,,1
+4bf58dd8d48988d134941735,Dance Studio,sports-recreation,,1
+4bf58dd8d48988d167941735,Skate Park,sports-recreation,,1
+4cce455aebf7b749d5e191f5,Soccer Field,sports-recreation,,1
+4bf58dd8d48988d1b4941735,College Stadium,sports-recreation,,1
+56aa371be4b08b9a8d573556,Rugby Stadium,sports-recreation,,1
+4bf58dd8d48988d103941735,Home (private),sports-recreation,,1
+4bf58dd8d48988d120941735,Karaoke Bar,nightlife,,1
+4bf58dd8d48988d1d6941735,Strip Club,nightlife,,1
+4bf58dd8d48988d1e5931735,Music Venue,nightlife,,1
+52e81612bcbc57f1066b79ef,Country Dance Club,nightlife,,1
+52e81612bcbc57f1066b79ec,Salsa Club,nightlife,,1
+4bf58dd8d48988d1f2931735,Performing Arts Venue,comedy-clubs,,1
+4bf58dd8d48988d192941735,Planetarium,museums,,1
+4bf58dd8d48988d1e7931735,Jazz and Blues Venue,concerts,,1
+52f2ab2ebcbc57f1066b8b3d,Pop-Up Store,family-activities,,1
+4bf58dd8d48988d132941735,Church,family-activities,,1
+4bf58dd8d48988d1f9931735,Road,family-activities,,1
+4bf58dd8d48988d177941735,Doctor's Office,family-activities,,1
+4bf58dd8d48988d178941735,Dentist,family-activities,,1
+63be6904847c3692a84b9bbe,Healthcare Clinic,family-activities,,1
+4bf58dd8d48988d104941735,Medical Center,family-activities,,1
+52f2ab2ebcbc57f1066b8b32,Baby Store,family-activities,,1
+52f2ab2ebcbc57f1066b8b57,Employment Agency,family-activities,,1
+4bf58dd8d48988d1f4941735,Design Studio,fashion,,1
+4d954afda243a5684865b473,Eyecare Store,fashion,,1
+4bf58dd8d48988d104951735,Boutique,fashion,,1
+4bf58dd8d48988d101951735,Vintage and Thrift Store,fashion,,1
+4bf58dd8d48988d106951735,Men's Store,fashion,,1
+4eb1bdde3b7b55596b4a7490,Photography Lab,electronics,,1
+52f2ab2ebcbc57f1066b8b45,Organic Grocery,home-decor,,1
+63be6904847c3692a84b9bf2,Housewares Store,home-decor,,1
+4bf58dd8d48988d121951735,Office Supply Store,books,,1
+4f4530164b9074f6e4fb00ff,Tourist Information and Service,books,,1
+4bf58dd8d48988d149941735,Thai Restaurant,books,,1
+52f2ab2ebcbc57f1066b8b36,IT Service,miscellaneous,,1
+4bf58dd8d48988d127941735,Meeting Room,miscellaneous,,1
+52f2ab2ebcbc57f1066b8b28,Print Store,miscellaneous,,1
+63be6904847c3692a84b9b58,Home Improvement Service,miscellaneous,,1

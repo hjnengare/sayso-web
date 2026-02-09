@@ -372,7 +372,7 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
                   emptyMessage="No reviews yet. Be the first to review this event!"
                   emptyStateAction={{
                     label: hasReviewed ? 'Already Reviewed' : 'Write First Review',
-                    href: `/event/${event.id}/review`,
+                    href: `/write-review/event/${event.id}`,
                     disabled: hasReviewed,
                   }}
                 />

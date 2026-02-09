@@ -38,7 +38,7 @@ export class BusinessService {
       if (error) throw error;
 
       // Transform the data to match our expected format
-      return (data || []).map(business => ({
+      return (data || []).filter((business: any) => business?.is_system !== true).map(business => ({
         ...business,
         stats: business.business_stats?.[0] || undefined
       }));
@@ -178,7 +178,7 @@ export class BusinessService {
 
       if (error) throw error;
 
-      return (data || []).map(business => ({
+      return (data || []).filter((business: any) => business?.is_system !== true).map(business => ({
         ...business,
         stats: business.business_stats?.[0] || undefined
       }));
@@ -208,7 +208,7 @@ export class BusinessService {
 
       if (error) throw error;
 
-      return (data || []).map(business => ({
+      return (data || []).filter((business: any) => business?.is_system !== true).map(business => ({
         ...business,
         stats: business.business_stats?.[0] || undefined
       }));
@@ -255,7 +255,7 @@ export class BusinessService {
 
       if (error) throw error;
 
-      return (data || []).map(business => ({
+      return (data || []).filter((business: any) => business?.is_system !== true).map(business => ({
         ...business,
         stats: business.business_stats?.[0] || undefined
       }));

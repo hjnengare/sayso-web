@@ -27,6 +27,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       .select('id, slug')
       .eq('slug', id)
       .eq('status', 'active')
+      .or('is_system.is.null,is_system.eq.false')
       .single();
     
     const actualId = slugData?.id || id;
@@ -37,6 +38,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       .select('name, description, image_url, uploaded_images, slug, category')
       .eq('id', actualId)
       .eq('status', 'active')
+      .or('is_system.is.null,is_system.eq.false')
       .single();
     
     if (data) {
@@ -86,6 +88,7 @@ export default async function BusinessLayout({
       .select('id, slug')
       .eq('slug', id)
       .eq('status', 'active')
+      .or('is_system.is.null,is_system.eq.false')
       .single();
     
     const actualId = slugData?.id || id;
@@ -110,6 +113,7 @@ export default async function BusinessLayout({
       `)
       .eq('id', actualId)
       .eq('status', 'active')
+      .or('is_system.is.null,is_system.eq.false')
       .single();
     
     if (business) {

@@ -1,0 +1,145 @@
+import * as dotenv from "dotenv";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
+import cron from "node-cron";
+import { fetchAndProcessAll, type FetchConfig } from "./ticketmaster.js";
+import { createSupabaseClient, cleanupOldEvents, upsertEvents } from "./db.js";
+import { log } from "./utils.js";
+
+// ---------------------------------------------------------------------------
+// Config from env
+// ---------------------------------------------------------------------------
+
+// Always resolve .env relative to the service root (one level up from src/)
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(__dirname, "..", ".env") });
+
+interface AppConfig extends FetchConfig {
+  supabaseUrl: string;
+  supabaseServiceRoleKey: string;
+  runOnStart: boolean;
+}
+
+function loadConfig(): AppConfig {
+  const apiKey = process.env.TICKETMASTER_API_KEY;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const systemBusinessId = process.env.SYSTEM_BUSINESS_ID;
+  const systemUserId = process.env.SYSTEM_USER_ID;
+
+  if (!apiKey) throw new Error("Missing TICKETMASTER_API_KEY");
+  if (!supabaseUrl) throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL");
+  if (!supabaseServiceRoleKey) throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY");
+  if (!systemBusinessId) throw new Error("Missing SYSTEM_BUSINESS_ID");
+  if (!systemUserId) throw new Error("Missing SYSTEM_USER_ID");
+
+  const cities = (process.env.CITIES || "Cape Town")
+    .split(",")
+    .map((c) => c.trim())
+    .filter(Boolean);
+
+  return {
+    apiKey,
+    supabaseUrl,
+    supabaseServiceRoleKey,
+    systemBusinessId,
+    systemUserId,
+    cities,
+    fetchWindowDays: 120,
+    pageSize: Math.min(Math.max(parseInt(process.env.PAGE_SIZE || "100", 10), 20), 200),
+    runOnStart: process.env.RUN_ON_START === "true",
+  };
+}
+
+// ---------------------------------------------------------------------------
+// The ingest job
+// ---------------------------------------------------------------------------
+
+let isRunning = false;
+
+async function runIngest(config: AppConfig): Promise<void> {
+  if (isRunning) {
+    log.warn("Previous ingest still running. Skipping this cycle.");
+    return;
+  }
+
+  isRunning = true;
+  const start = Date.now();
+
+  log.info("=== Ticketmaster ingest starting ===");
+  log.info(`Cities: ${config.cities.join(", ")}`);
+
+  const supabase = createSupabaseClient(config.supabaseUrl, config.supabaseServiceRoleKey);
+
+  try {
+    // 1. Test connectivity
+    log.info("Testing Supabase connection...");
+    const { error: testErr } = await supabase.from("events_and_specials").select("id").limit(1);
+    if (testErr) throw new Error(`Supabase connection test failed: ${testErr.message}`);
+    log.info("Supabase connected.");
+
+    // 2. Cleanup old events
+    await cleanupOldEvents(supabase);
+
+    // 3. Fetch, map, consolidate
+    const result = await fetchAndProcessAll(config);
+
+    log.info(
+      `Fetch complete: ${result.fetchedCount} fetched, ${result.mappedCount} mapped, ${result.consolidatedCount} consolidated.`
+    );
+
+    if (result.rows.length === 0) {
+      log.info("No events to upsert. Done.");
+      return;
+    }
+
+    // 4. Upsert into DB
+    const dbResult = await upsertEvents(supabase, result.rows);
+
+    log.info(
+      `DB result: ${dbResult.inserted} inserted, ${dbResult.updated} updated, ${dbResult.skipped} skipped.`
+    );
+  } catch (err) {
+    log.error(`Ingest failed: ${err}`);
+    if (err instanceof Error && err.stack) {
+      log.error(err.stack);
+    }
+  } finally {
+    isRunning = false;
+
+    const elapsed = ((Date.now() - start) / 1000).toFixed(1);
+    log.info(`=== Ingest complete in ${elapsed}s ===\n`);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Main
+// ---------------------------------------------------------------------------
+
+async function main(): Promise<void> {
+  const config = loadConfig();
+
+  log.info("Ticketmaster Ingestor started.");
+  log.info(`Schedule: every 6 hours (0 */6 * * *)`);
+  log.info(`Cities: ${config.cities.join(", ")}`);
+  log.info(`Fetch window: ${config.fetchWindowDays} days`);
+  log.info(`Page size: ${config.pageSize}`);
+
+  // Schedule the cron job
+  cron.schedule("0 */6 * * *", () => {
+    runIngest(config).catch((err) => log.error(`Cron job error: ${err}`));
+  });
+
+  // Optional immediate run on startup
+  if (config.runOnStart) {
+    log.info("RUN_ON_START=true — running immediate ingest...");
+    await runIngest(config);
+  } else {
+    log.info("Waiting for next scheduled run. Set RUN_ON_START=true for immediate execution.");
+  }
+}
+
+main().catch((err) => {
+  log.error(`Fatal: ${err}`);
+  process.exit(1);
+});

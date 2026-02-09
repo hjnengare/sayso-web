@@ -62,6 +62,7 @@ export async function GET(
       .select('id')
       .eq('slug', businessIdentifier)
       .eq('status', 'active')
+      .or('is_system.is.null,is_system.eq.false')
       .maybeSingle();
 
     if (slugError) {
@@ -80,6 +81,7 @@ export async function GET(
           .select('id')
           .eq('id', businessIdentifier)
           .eq('status', 'active')
+          .or('is_system.is.null,is_system.eq.false')
           .maybeSingle();
 
         if (idError) {
@@ -119,6 +121,7 @@ export async function GET(
       .from('businesses')
       .select('lat, lng')
       .eq('id', targetBusinessId)
+      .or('is_system.is.null,is_system.eq.false')
       .maybeSingle();
 
     const targetLat = (targetCoords as any)?.lat as number | null | undefined;
@@ -174,13 +177,15 @@ export async function GET(
       );
     }
 
-    if (!similarBusinesses || similarBusinesses.length === 0) {
+    const nonSystemBusinesses = (similarBusinesses || []).filter((business: any) => business?.is_system !== true);
+
+    if (nonSystemBusinesses.length === 0) {
       return NextResponse.json({ businesses: [] });
     }
 
     // Transform the results to match BusinessCard component format
     // RPC returns primary_subcategory_slug, primary_category_slug, primary_subcategory_label (no legacy category/sub_interest_id/interest_id)
-    const transformedBusinesses = similarBusinesses.map((business: any) => {
+    const transformedBusinesses = nonSystemBusinesses.map((business: any) => {
       const hasRating = business.average_rating && business.average_rating > 0;
       const hasReviews = business.total_reviews && business.total_reviews > 0;
       const shouldShowBadge = business.verified && business.badge;

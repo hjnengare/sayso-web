@@ -1,23 +1,64 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState, Suspense, useRef } from "react";
-import dynamic from "next/dynamic";
-import { motion, AnimatePresence } from "framer-motion";
-import { Star, ArrowLeft, Calendar, MapPin, Clock, AlertCircle } from "lucide-react";
+import { useEffect, useState, Suspense } from "react";
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useToast } from "../../../contexts/ToastContext";
 import { PageLoader } from "../../../components/Loader";
 import Footer from "../../../components/Footer/Footer";
-import RatingSelector from "../../../components/ReviewForm/RatingSelector";
-import ReviewTextForm from "../../../components/ReviewForm/ReviewTextForm";
-import ReviewSubmitButton from "../../../components/ReviewForm/ReviewSubmitButton";
+import ReviewForm from "../../../components/ReviewForm/ReviewForm";
 import OptimizedImage from "../../../components/Performance/OptimizedImage";
+import { useReviewForm } from "../../../hooks/useReviewForm";
+import { useDealbreakerQuickTags } from "../../../hooks/useDealbreakerQuickTags";
+
+function IconChevronRight({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="m9 18 6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconStar({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9L12 3Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconCalendar({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M8 3v4M16 3v4M3 10h18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconMapPin({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path d="M12 22s7-6 7-12a7 7 0 1 0-14 0c0 6 7 12 7 12Z" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="12" cy="10" r="2.5" stroke="currentColor" strokeWidth="1.8" />
+    </svg>
+  );
+}
+
+function IconClock({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M12 7v5l3 2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
 // Error code to message mapping
 const REVIEW_ERROR_MESSAGES: Record<string, string> = {
-  NOT_AUTHENTICATED: "Please log in to submit your review.",
+  NOT_AUTHENTICATED: "You can post as Anonymous, or sign in for a verified profile review.",
   MISSING_FIELDS: "Please fill in all required fields.",
   INVALID_RATING: "Please select a rating (1-5 stars).",
   CONTENT_TOO_SHORT: "Your review is too short. Please write at least 10 characters.",
@@ -25,6 +66,9 @@ const REVIEW_ERROR_MESSAGES: Record<string, string> = {
   CONTENT_MODERATION_FAILED: "Your review contains content that doesn't meet our guidelines.",
   EVENT_NOT_FOUND: "We couldn't find that event. It may have been removed.",
   SPECIAL_NOT_FOUND: "We couldn't find that special. It may have expired.",
+  DUPLICATE_ANON_REVIEW: "You already posted an anonymous review for this item on this device.",
+  RATE_LIMITED: "Too many anonymous reviews in a short time. Please try again later.",
+  SPAM_DETECTED: "This review was flagged as spam-like. Please adjust wording and try again.",
   DB_ERROR: "We couldn't save your review. Please try again.",
   SERVER_ERROR: "Something went wrong on our side. Please try again.",
 };
@@ -37,15 +81,6 @@ function getErrorMessage(result: { message?: string; code?: string; error?: stri
   if (result.error) return result.error;
   return "An error occurred. Please try again.";
 }
-
-const ImageUpload = dynamic(() => import("../../../components/ReviewForm/ImageUpload"), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-32 rounded-[12px] border-2 border-dashed border-charcoal/20 bg-charcoal/5 animate-pulse flex items-center justify-center">
-      <Star className="w-8 h-8 text-charcoal/20" />
-    </div>
-  ),
-});
 
 // Types
 interface Event {
@@ -90,49 +125,46 @@ function WriteReviewContent() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  const errorRef = useRef<HTMLDivElement>(null);
+  const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
 
-  // Form state
-  const [rating, setRating] = useState(0);
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [images, setImages] = useState<File[]>([]);
+  const {
+    overallRating,
+    selectedTags,
+    reviewText,
+    reviewTitle,
+    selectedImages,
+    isFormValid,
+    handleStarClick,
+    handleTagToggle,
+    setReviewText,
+    setReviewTitle,
+    setSelectedImages,
+    resetForm,
+  } = useReviewForm();
 
-  // Guest fields
-  const [guestName, setGuestName] = useState("");
-  const [guestEmail, setGuestEmail] = useState("");
-
-  const isGuest = !user;
-  const isFormValid = rating > 0 && content.trim().length >= 10
-    && (!isGuest || (guestName.trim().length >= 2 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail)));
+  const effectiveIsFormValid = isFormValid && reviewText.trim().length >= 10 && !submitting;
+  const quickTags = useDealbreakerQuickTags();
 
   // Clear error when form fields change
   const handleRatingChange = (newRating: number) => {
     setFormError(null);
-    setRating(newRating);
+    handleStarClick(newRating);
   };
 
   const handleTitleChange = (newTitle: string) => {
     setFormError(null);
-    setTitle(newTitle);
+    setReviewTitle(newTitle);
   };
 
   const handleContentChange = (newContent: string) => {
     setFormError(null);
-    setContent(newContent);
+    setReviewText(newContent);
   };
 
   const handleImagesChange = (newImages: File[]) => {
     setFormError(null);
-    setImages(newImages);
+    setSelectedImages(newImages);
   };
-
-  // Scroll error into view
-  useEffect(() => {
-    if (formError && errorRef.current) {
-      errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }, [formError]);
 
   // Fetch target data
   useEffect(() => {
@@ -157,7 +189,10 @@ function WriteReviewContent() {
         }
 
         const data = await response.json();
-        setTarget(data);
+        // APIs return wrapped objects: { event: {...} } or { special: {...} }
+        const extracted = type === "event" ? data.event : type === "special" ? data.special : data;
+        if (!extracted) throw new Error("Target not found");
+        setTarget(extracted);
       } catch (error) {
         console.error("Error fetching target:", error);
         showToast("Item not found", "sage");
@@ -171,7 +206,6 @@ function WriteReviewContent() {
   }, [type, id, router, showToast]);
 
   const handleSubmit = async () => {
-    // Clear previous error
     setFormError(null);
 
     if (!target) {
@@ -179,17 +213,16 @@ function WriteReviewContent() {
       return;
     }
 
-    if (rating === 0) {
+    if (overallRating === 0) {
       setFormError("Please select a rating (1-5 stars).");
       return;
     }
 
-    if (content.trim().length < 10) {
+    if (reviewText.trim().length < 10) {
       setFormError("Your review is too short. Please write at least 10 characters.");
       return;
     }
 
-    // Prevent double submission
     if (submitting) return;
 
     try {
@@ -198,30 +231,33 @@ function WriteReviewContent() {
       const formData = new FormData();
       formData.append("target_id", id);
       formData.append("type", type);
-      formData.append("rating", rating.toString());
-      if (title.trim()) {
-        formData.append("title", title.trim());
+      formData.append("rating", overallRating.toString());
+      if (reviewTitle.trim()) {
+        formData.append("title", reviewTitle.trim());
       }
-      formData.append("content", content.trim());
+      formData.append("content", reviewText.trim());
+      selectedTags.forEach((tag) => formData.append("tags", tag));
 
-      // Guest fields
-      if (!user) {
-        formData.append("guest_name", guestName.trim());
-        formData.append("guest_email", guestEmail.trim());
-      }
       // Honeypot
       const honeypotEl = document.querySelector('input[name="website_url"]') as HTMLInputElement;
       if (honeypotEl) {
         formData.append("website_url", honeypotEl.value);
       }
 
-      images.forEach((image, index) => {
+      selectedImages.forEach((image, index) => {
         const fileName = image.name && image.name.trim() ? image.name : `photo_${Date.now()}_${index}.jpg`;
         formData.append("images", image, fileName);
       });
 
+      let anonymousId: string | null = null;
+      if (!user) {
+        const mod = await import("../../../lib/utils/anonymousClient");
+        anonymousId = mod.getOrCreateAnonymousId();
+      }
+
       const response = await fetch("/api/reviews", {
         method: "POST",
+        headers: anonymousId ? { "x-anonymous-id": anonymousId } : undefined,
         body: formData,
       });
 
@@ -233,15 +269,14 @@ function WriteReviewContent() {
         return;
       }
 
-      // Handle error responses
       if (!response.ok || result.success === false) {
         const errorMessage = getErrorMessage(result);
         setFormError(errorMessage);
         return;
       }
 
-      // Success!
       showToast("Review submitted successfully!", "success");
+      resetForm();
       router.push(type === "event" ? `/event/${id}` : `/special/${id}`);
     } catch (error) {
       console.error("Error submitting review:", error);
@@ -257,17 +292,16 @@ function WriteReviewContent() {
 
   if (!target) {
     return (
-      <div className="min-h-screen bg-off-white">
+      <div className="min-h-dvh bg-off-white">
         <main className="pt-20 pb-12">
-          <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto w-full max-w-[2000px] px-3">
             <div className="text-center">
               <h1 className="text-2xl font-bold text-charcoal mb-4">Item Not Found</h1>
-              <p className="text-charcoal/70 mb-6">The item you're trying to review doesn't exist.</p>
+              <p className="text-charcoal/70 mb-6">The item you&apos;re trying to review doesn&apos;t exist.</p>
               <Link
                 href="/"
                 className="inline-flex items-center gap-2 bg-navbar-bg text-white px-6 py-3 rounded-full font-semibold hover:scale-105 transition-transform"
               >
-                <ArrowLeft className="w-4 h-4" />
                 Go Home
               </Link>
             </div>
@@ -279,211 +313,212 @@ function WriteReviewContent() {
   }
 
   const isEvent = type === "event";
-  const displayTitle = isEvent ? (target as Event).name : (target as Special).title;
-  const displayImage = target.image || (target.images && target.images[0]);
+  const displayTitle = isEvent
+    ? ((target as Event).name || (target as any).title)
+    : (target as Special).title;
+  const displayImage =
+    target.image || (target as any).image_url || (target.images && target.images[0]);
   const businessName = target.business_name;
+  const displayVenue = isEvent
+    ? ((target as Event).venue || (target as any).venue_name || (target as any).location)
+    : (target as any).location;
+  const displayDate = isEvent
+    ? ((target as Event).date || (target as any).start_date)
+    : null;
 
   return (
-    <div className="min-h-screen bg-off-white">
-      <main className="pt-20 pb-12">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Back Button */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="mb-6"
-          >
-            <Link
-              href={isEvent ? `/event/${id}` : `/special/${id}`}
-              className="inline-flex items-center gap-2 text-charcoal/70 hover:text-charcoal transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to {isEvent ? "Event" : "Special"}
-            </Link>
-          </motion.div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+      className="min-h-dvh bg-off-white relative overflow-x-hidden font-urbanist"
+      style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif' }}
+    >
+      <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
+        <main className="relative" id="main-content" role="main" aria-label="Write review content">
+          <div className="mx-auto w-full max-w-[2000px] px-3 relative z-10">
+            {/* Breadcrumb */}
+            <nav className="py-1" aria-label="Breadcrumb">
+              <ol className="flex items-center gap-1 sm:gap-2 text-sm sm:text-base flex-nowrap min-w-0">
+                <li className="shrink-0">
+                  <Link
+                    href="/events-specials"
+                    className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium whitespace-nowrap"
+                  >
+                    <span className="sm:hidden">{isEvent ? "Events" : "Specials"}</span>
+                    <span className="hidden sm:inline">Events & Specials</span>
+                  </Link>
+                </li>
+                <li className="flex items-center shrink-0">
+                  <IconChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-charcoal/60" />
+                </li>
+                <li className="min-w-0">
+                  <Link
+                    href={isEvent ? `/event/${id}` : `/special/${id}`}
+                    className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium block truncate"
+                    title={displayTitle}
+                  >
+                    {displayTitle}
+                  </Link>
+                </li>
+                <li className="flex items-center shrink-0">
+                  <IconChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-charcoal/60" />
+                </li>
+                <li className="shrink-0">
+                  <span className="text-charcoal font-semibold">Review</span>
+                </li>
+              </ol>
+            </nav>
 
-          {/* Header */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white rounded-[12px] p-6 mb-6 shadow-sm"
-          >
-            <div className="flex gap-4">
-              {/* Image */}
-              <div className="flex-shrink-0">
-                {displayImage ? (
-                  <OptimizedImage
-                    src={displayImage}
-                    alt={displayTitle}
-                    width={80}
-                    height={80}
-                    className="w-20 h-20 rounded-lg object-cover"
-                  />
-                ) : (
-                  <div className="w-20 h-20 rounded-lg bg-charcoal/10 flex items-center justify-center">
-                    <Star className="w-8 h-8 text-charcoal/40" />
-                  </div>
-                )}
-              </div>
-
-              {/* Info */}
-              <div className="flex-1 min-w-0">
-                <h1 className="text-xl font-bold text-charcoal mb-1">{displayTitle}</h1>
-
-                {businessName && (
-                  <p className="text-charcoal/70 text-sm mb-2">by {businessName}</p>
-                )}
-
-                <div className="flex items-center gap-4 text-sm text-charcoal/60">
-                  {isEvent ? (
-                    <>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
-                        <span>{new Date((target as Event).date).toLocaleDateString()}</span>
+            <div className="pt-2 pb-12 sm:pb-16 md:pb-20">
+              <div className="grid gap-6 lg:grid-cols-3 items-start">
+                {/* Main Content */}
+                <div className="lg:col-span-2 space-y-6">
+                  {/* Event/Special Info Header */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="bg-card-bg border border-white/60 rounded-[12px] p-4 md:p-6 shadow-lg"
+                  >
+                    <div className="flex gap-4">
+                      <div className="flex-shrink-0">
+                        {displayImage ? (
+                          <OptimizedImage
+                            src={displayImage}
+                            alt={displayTitle}
+                            width={80}
+                            height={80}
+                            className="w-20 h-20 rounded-lg object-cover"
+                          />
+                        ) : (
+                          <div className="w-20 h-20 rounded-lg bg-charcoal/10 flex items-center justify-center">
+                            <IconStar className="w-8 h-8 text-charcoal/40" />
+                          </div>
+                        )}
                       </div>
-                      {(target as Event).venue && (
-                        <div className="flex items-center gap-1">
-                          <MapPin className="w-4 h-4" />
-                          <span>{(target as Event).venue}</span>
+
+                      <div className="flex-1 min-w-0">
+                        <h1 className="text-lg sm:text-xl font-bold text-charcoal mb-1 line-clamp-2">{displayTitle}</h1>
+
+                        {businessName && (
+                          <p className="text-charcoal/70 text-sm mb-2">by {businessName}</p>
+                        )}
+
+                        <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-sm text-charcoal/60">
+                          {isEvent ? (
+                            <>
+                              {displayDate && (
+                                <div className="flex items-center gap-1">
+                                  <IconCalendar className="w-4 h-4 text-charcoal/70" />
+                                  <span>{new Date(displayDate).toLocaleDateString()}</span>
+                                </div>
+                              )}
+                              {displayVenue && (
+                                <div className="flex items-center gap-1">
+                                  <IconMapPin className="w-4 h-4 text-charcoal/70" />
+                                  <span className="truncate max-w-[200px]">{displayVenue}</span>
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              {(target as Special).valid_until && (
+                                <div className="flex items-center gap-1">
+                                  <IconClock className="w-4 h-4 text-charcoal/70" />
+                                  <span>Valid until {new Date((target as Special).valid_until!).toLocaleDateString()}</span>
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+
+                  {/* Review Form */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="bg-card-bg border-0 sm:border border-white/60 rounded-[12px] shadow-none sm:shadow-lg relative overflow-hidden"
+                  >
+                    <div className="p-4 md:p-6">
+                      {!user && (
+                        <div className="mb-4 rounded-lg border border-sage/20 bg-sage/5 p-3">
+                          <p className="text-sm font-semibold text-charcoal">Posting as Anonymous</p>
+                          <p className="mt-1 text-sm text-charcoal/70">
+                            Sign in if you want this review tied to your profile identity.
+                          </p>
                         </div>
                       )}
-                    </>
-                  ) : (
-                    <>
-                      {(target as Special).valid_until && (
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          <span>Valid until {new Date((target as Special).valid_until).toLocaleDateString()}</span>
-                        </div>
-                      )}
-                    </>
-                  )}
+
+                      {/* Honeypot field - hidden from real users */}
+                      <input
+                        type="text"
+                        name="website_url"
+                        defaultValue=""
+                        tabIndex={-1}
+                        autoComplete="off"
+                        style={{ position: "absolute", left: "-9999px", opacity: 0 }}
+                        aria-hidden="true"
+                      />
+
+                      <ReviewForm
+                        businessName={displayTitle}
+                        businessRating={0}
+                        businessImages={displayImage ? [displayImage] : []}
+                        overallRating={overallRating}
+                        selectedTags={selectedTags}
+                        reviewText={reviewText}
+                        reviewTitle={reviewTitle}
+                        selectedImages={selectedImages}
+                        isFormValid={effectiveIsFormValid}
+                        availableTags={quickTags}
+                        onRatingChange={handleRatingChange}
+                        onTagToggle={handleTagToggle}
+                        onTitleChange={handleTitleChange}
+                        onTextChange={handleContentChange}
+                        onImagesChange={handleImagesChange}
+                        onSubmit={handleSubmit}
+                        existingImages={existingImageUrls}
+                        onExistingImagesChange={setExistingImageUrls}
+                        isSubmitting={submitting}
+                        error={formError}
+                      />
+                    </div>
+                  </motion.div>
+                </div>
+
+                {/* Sidebar — context card (desktop only) */}
+                <div className="hidden lg:block space-y-6">
+                  <div className="bg-card-bg border border-white/60 rounded-[12px] p-5 shadow-lg sticky top-28">
+                    <h3 className="text-base font-semibold text-charcoal mb-3">
+                      {isEvent ? "About this Event" : "About this Special"}
+                    </h3>
+                    {displayImage && (
+                      <OptimizedImage
+                        src={displayImage}
+                        alt={displayTitle}
+                        width={400}
+                        height={220}
+                        className="w-full h-40 rounded-lg object-cover mb-3"
+                      />
+                    )}
+                    <p className="text-sm font-medium text-charcoal mb-1 line-clamp-2">{displayTitle}</p>
+                    {businessName && (
+                      <p className="text-sm text-charcoal/60 mb-3">by {businessName}</p>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
-          </motion.div>
-
-          {/* Review Form */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white rounded-[12px] p-6 shadow-sm"
-          >
-            <h2 className="text-lg font-semibold text-charcoal mb-6">
-              {user ? "Write Your Review" : "Write a Guest Review"}
-            </h2>
-
-            {/* Guest Info */}
-            {!user && (
-              <div className="mb-6 p-4 bg-sage/5 rounded-lg border border-sage/20 relative">
-                <p className="text-sm font-medium text-charcoal mb-4">
-                  Reviewing as a guest
-                </p>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-charcoal mb-2">
-                      Your Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={guestName}
-                      onChange={(e) => { setFormError(null); setGuestName(e.target.value); }}
-                      placeholder="Your name"
-                      className="w-full px-4 py-3 border border-charcoal/20 rounded-lg focus:ring-2 focus:ring-coral/20 focus:border-coral transition-colors"
-                      maxLength={50}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-charcoal mb-2">
-                      Email <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      value={guestEmail}
-                      onChange={(e) => { setFormError(null); setGuestEmail(e.target.value); }}
-                      placeholder="your@email.com"
-                      className="w-full px-4 py-3 border border-charcoal/20 rounded-lg focus:ring-2 focus:ring-coral/20 focus:border-coral transition-colors"
-                      required
-                    />
-                    <p className="text-sm text-charcoal/50 mt-1">Not displayed publicly</p>
-                  </div>
-                </div>
-                {/* Honeypot field — hidden from real users */}
-                <input
-                  type="text"
-                  name="website_url"
-                  defaultValue=""
-                  tabIndex={-1}
-                  autoComplete="off"
-                  style={{ position: 'absolute', left: '-9999px', opacity: 0 }}
-                  aria-hidden="true"
-                />
-              </div>
-            )}
-
-            {/* Rating */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-charcoal mb-3">
-                Rating <span className="text-red-500">*</span>
-              </label>
-              <RatingSelector
-                overallRating={rating}
-                onRatingChange={handleRatingChange}
-              />
-            </div>
-
-            {/* Title */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-charcoal mb-3">
-                Review Title <span className="text-charcoal/50">(optional)</span>
-              </label>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => handleTitleChange(e.target.value)}
-                placeholder="Sum up your experience..."
-                className="w-full px-4 py-3 border border-charcoal/20 rounded-lg focus:ring-2 focus:ring-coral/20 focus:border-coral transition-colors"
-                maxLength={100}
-              />
-            </div>
-
-            {/* Content */}
-            <div className="mb-6">
-              <ReviewTextForm
-                reviewTitle={title}
-                reviewText={content}
-                onTitleChange={handleTitleChange}
-                onTextChange={handleContentChange}
-              />
-            </div>
-
-            {/* Images */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-charcoal mb-3">
-                Photos <span className="text-charcoal/50">(optional)</span>
-              </label>
-              <ImageUpload
-                existingImages={images.map((file) => URL.createObjectURL(file))}
-                onImagesChange={handleImagesChange}
-                maxImages={5}
-              />
-            </div>
-
-            {/* Submit */}
-            <ReviewSubmitButton
-              onSubmit={handleSubmit}
-              isSubmitting={submitting}
-              isFormValid={isFormValid}
-              error={formError}
-            />
-          </motion.div>
-        </div>
-      </main>
+          </div>
+        </main>
+      </div>
       <Footer />
-    </div>
+    </motion.div>
   );
 }
 
