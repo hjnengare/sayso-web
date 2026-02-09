@@ -34,7 +34,7 @@ function sanitizeText(text: string): string {
 }
 
 function mapReviewRow(row: Record<string, unknown>) {
-  const profile = row.profiles as Record<string, unknown> | null;
+  const profile = row.profile as Record<string, unknown> | null;
   const isGuest = !row.user_id;
 
   return {
@@ -64,6 +64,30 @@ function mapReviewRow(row: Record<string, unknown>) {
   };
 }
 
+async function getProfilesByUserId(
+  req: NextRequest,
+  userIds: string[],
+): Promise<Map<string, Record<string, unknown>>> {
+  if (userIds.length === 0) return new Map();
+
+  const supabase = await getServerSupabase(req);
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("user_id, display_name, username, email, avatar_url")
+    .in("user_id", userIds);
+
+  if (error) {
+    logDevError("[events/[id]/reviews] profile query error:", error);
+    return new Map();
+  }
+
+  const map = new Map<string, Record<string, unknown>>();
+  for (const row of data || []) {
+    if (row?.user_id) map.set(row.user_id, row as Record<string, unknown>);
+  }
+  return map;
+}
+
 async function fetchEventReviews(req: NextRequest, eventId: string) {
   const supabase = await getServerSupabase(req);
   const { data, error } = await supabase
@@ -79,14 +103,7 @@ async function fetchEventReviews(req: NextRequest, eventId: string) {
       tags,
       helpful_count,
       created_at,
-      updated_at,
-      profiles:user_id (
-        id,
-        display_name,
-        username,
-        email,
-        avatar_url
-      )
+      updated_at
     `)
     .eq("event_id", eventId)
     .order("created_at", { ascending: false });
@@ -96,7 +113,21 @@ async function fetchEventReviews(req: NextRequest, eventId: string) {
     return [];
   }
 
-  return (data || []).map((row: Record<string, unknown>) => mapReviewRow(row));
+  const rows = (data || []) as Record<string, unknown>[];
+  const userIds = Array.from(
+    new Set(
+      rows
+        .map((row) => row.user_id)
+        .filter((id): id is string => typeof id === "string" && id.length > 0),
+    ),
+  );
+  const profilesByUserId = await getProfilesByUserId(req, userIds);
+
+  return rows.map((row) => {
+    const userId = typeof row.user_id === "string" ? row.user_id : null;
+    const profile = userId ? profilesByUserId.get(userId) ?? null : null;
+    return mapReviewRow({ ...row, profile });
+  });
 }
 
 export async function GET(
@@ -294,14 +325,7 @@ export async function POST(
         tags,
         helpful_count,
         created_at,
-        updated_at,
-        profiles:user_id (
-          id,
-          display_name,
-          username,
-          email,
-          avatar_url
-        )
+        updated_at
       `)
       .single();
 
@@ -327,7 +351,14 @@ export async function POST(
     const response = NextResponse.json(
       {
         success: true,
-        review: inserted ? mapReviewRow(inserted as unknown as Record<string, unknown>) : null,
+        review: inserted
+          ? mapReviewRow({
+              ...(inserted as unknown as Record<string, unknown>),
+              profile: user?.id
+                ? (await getProfilesByUserId(req, [user.id])).get(user.id) ?? null
+                : null,
+            })
+          : null,
       },
       { status: 201 },
     );

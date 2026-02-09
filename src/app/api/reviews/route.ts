@@ -179,10 +179,11 @@ export async function POST(req: NextRequest) {
     let resolvedBusiness: { id: string; name: string; slug: string | null } | null = null;
 
     if (isEventReview) {
-      const { data: ticketmasterEvent, error: eventError } = await verifyClient
-        .from('ticketmaster_events')
-        .select('ticketmaster_id, name, business_name')
-        .eq('ticketmaster_id', targetId)
+      const { data: eventData, error: eventError } = await verifyClient
+        .from('events_and_specials')
+        .select('id, title, business_id')
+        .eq('id', targetId)
+        .eq('type', 'event')
         .maybeSingle();
 
       if (eventError) {
@@ -193,35 +194,16 @@ export async function POST(req: NextRequest) {
           500
         );
       }
-      if (ticketmasterEvent) {
-        targetData = ticketmasterEvent;
-      } else {
-        const { data: businessEvent, error: businessEventError } = await verifyClient
-          .from('events_and_specials')
-          .select('id, title, business_id')
-          .eq('id', targetId)
-          .eq('type', 'event')
-          .maybeSingle();
 
-        if (businessEventError) {
-          console.error('[API] Error checking business event:', businessEventError);
-          return errorResponse(
-            'DB_ERROR',
-            "We couldn't verify the event. Please try again.",
-            500
-          );
-        }
-
-        if (!businessEvent) {
-          return errorResponse(
-            'EVENT_NOT_FOUND',
-            "We couldn't find that event. It may have been removed.",
-            404
-          );
-        }
-
-        targetData = businessEvent;
+      if (!eventData) {
+        return errorResponse(
+          'EVENT_NOT_FOUND',
+          "We couldn't find that event. It may have been removed.",
+          404
+        );
       }
+
+      targetData = eventData;
     } else if (isSpecialReview) {
       const { data: specialData, error: specialError } = await verifyClient
         .from('events_and_specials')
@@ -459,26 +441,10 @@ export async function POST(req: NextRequest) {
 
       if (isEventReview) {
         reviewInsertData.event_id = targetId;
-        selectQuery = `
-          *,
-          profile:profiles!event_reviews_user_id_fkey (
-            user_id,
-            display_name,
-            username,
-            avatar_url
-          )
-        `;
+        selectQuery = '*';
       } else if (isSpecialReview) {
         reviewInsertData.special_id = targetId;
-        selectQuery = `
-          *,
-          profile:profiles!special_reviews_user_id_fkey (
-            user_id,
-            display_name,
-            username,
-            avatar_url
-          )
-        `;
+        selectQuery = '*';
       } else {
         reviewInsertData.business_id = (targetData as any).id;
         selectQuery = `
@@ -587,7 +553,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Upload review images using service role client (bypasses RLS for anonymous reviews)
-    if (!isEventReview && !isSpecialReview && imageFiles.length > 0 && review?.id) {
+    if (imageFiles.length > 0 && review?.id) {
       const validImages = imageFiles
         .filter(f => ALLOWED_IMAGE_TYPES.includes(f.type) && f.size <= MAX_IMAGE_SIZE)
         .slice(0, MAX_REVIEW_IMAGES);
@@ -598,6 +564,14 @@ export async function POST(req: NextRequest) {
         { auth: { autoRefreshToken: false, persistSession: false } }
       );
 
+      // Each review type has its own images table
+      const imageTable = isEventReview
+        ? 'event_review_images'
+        : isSpecialReview
+          ? 'special_review_images'
+          : 'review_images';
+      const storageBucket = 'review_images';
+
       for (let i = 0; i < validImages.length; i++) {
         const file = validImages[i];
         try {
@@ -606,7 +580,7 @@ export async function POST(req: NextRequest) {
 
           const arrayBuffer = await file.arrayBuffer();
           const { error: storageError } = await adminClient.storage
-            .from('review_images')
+            .from(storageBucket)
             .upload(filePath, arrayBuffer, { contentType: file.type, upsert: false });
 
           if (storageError) {
@@ -616,11 +590,11 @@ export async function POST(req: NextRequest) {
           }
 
           const { data: urlData } = adminClient.storage
-            .from('review_images')
+            .from(storageBucket)
             .getPublicUrl(filePath);
 
           const { data: imageRecord, error: insertError } = await adminClient
-            .from('review_images')
+            .from(imageTable)
             .insert({
               review_id: review.id,
               image_url: urlData.publicUrl,
@@ -632,7 +606,7 @@ export async function POST(req: NextRequest) {
 
           if (insertError) {
             console.error('[Review API] Image record insert error:', insertError);
-            await adminClient.storage.from('review_images').remove([filePath]);
+            await adminClient.storage.from(storageBucket).remove([filePath]);
             uploadErrors.push({ file: file.name, error: insertError.message });
             continue;
           }
@@ -658,21 +632,25 @@ export async function POST(req: NextRequest) {
     const fetchSelect = isEventReview
       ? `
         *,
-        profile:profiles!event_reviews_user_id_fkey (
-          user_id,
-          display_name,
-          username,
-          avatar_url
+        event_review_images (
+          id,
+          review_id,
+          image_url,
+          storage_path,
+          alt_text,
+          created_at
         )
       `
       : isSpecialReview
       ? `
         *,
-        profile:profiles!special_reviews_user_id_fkey (
-          user_id,
-          display_name,
-          username,
-          avatar_url
+        special_review_images (
+          id,
+          review_id,
+          image_url,
+          storage_path,
+          alt_text,
+          created_at
         )
       `
       : `
@@ -693,7 +671,8 @@ export async function POST(req: NextRequest) {
         )
       `;
 
-    const { data: completeReviewData } = await supabase
+    // Use verifyClient so anonymous users can fetch the review they just created
+    const { data: completeReviewData } = await verifyClient
       .from(fetchTable)
       .select(fetchSelect)
       .eq('id', review.id)
@@ -742,12 +721,14 @@ export async function POST(req: NextRequest) {
       avatar_url: profile.avatar_url ?? null,
     };
 
-    // Images only exist on legacy reviews in this snippet
-    if (!isEventReview && !isSpecialReview) {
+    // Normalize images across all review types
+    if (isEventReview) {
+      serializableReview.images = serializableReview.event_review_images || uploadedImages;
+    } else if (isSpecialReview) {
+      serializableReview.images = serializableReview.special_review_images || uploadedImages;
+    } else {
       serializableReview.review_images = serializableReview.review_images || uploadedImages;
       serializableReview.images = serializableReview.review_images || uploadedImages;
-    } else {
-      serializableReview.images = [];
     }
 
     // Ensure serializable

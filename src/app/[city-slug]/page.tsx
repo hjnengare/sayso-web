@@ -77,13 +77,13 @@ export default async function CityPage({ params }: CityPageProps) {
   const supabase = await getServerSupabase();
   let query = supabase
     .from('businesses')
-    .select('id, name, slug, description, image_url, location, category, average_rating:business_stats(average_rating), business_images(id, url, type, sort_order, is_primary)')
+    .select('id, name, slug, description, image_url, location, primary_subcategory_slug, primary_subcategory_label, average_rating:business_stats(average_rating), business_images(id, url, type, sort_order, is_primary)')
     .ilike('location', `%${displayCityName}%`)
     .eq('status', 'active')
     .or('is_system.is.null,is_system.eq.false');
   
   if (categoryName) {
-    query = query.eq('category', categoryName);
+    query = query.ilike('primary_subcategory_label', `%${categoryName}%`);
   }
   
   const { data: businesses, error } = await query

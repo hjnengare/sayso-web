@@ -44,8 +44,8 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   const supabase = await getServerSupabase();
   const { data: businesses, error } = await supabase
     .from('businesses')
-    .select('id, name, slug, description, image_url, location, average_rating:business_stats(average_rating), business_images(id, url, type, sort_order, is_primary)')
-    .eq('category', categoryName)
+    .select('id, name, slug, description, image_url, location, primary_category_slug, average_rating:business_stats(average_rating), business_images(id, url, type, sort_order, is_primary)')
+    .eq('primary_category_slug', slug)
     .eq('status', 'active')
     .or('is_system.is.null,is_system.eq.false')
     .limit(50)
