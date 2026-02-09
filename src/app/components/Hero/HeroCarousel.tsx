@@ -580,11 +580,11 @@ export default function HeroCarousel() {
   return (
     <>
       {/* Hero Container with padding */}
-      <div className="relative w-full">
+      <div className="relative w-full px-0 py-0 md:pt-2 md:px-2">
         {/* Hero Section with rounded corners - 75vh responsive height */}
         <section
           ref={containerRef as React.RefObject<HTMLElement>}
-          className="relative h-[100dvh] sm:h-[90dvh] md:h-[80dvh] w-full overflow-hidden outline-none rounded-none min-h-[420px] sm:min-h-[520px] sm:max-h-[820px]"
+          className="relative h-[100dvh] sm:h-[90dvh] md:h-[80dvh] w-full overflow-hidden outline-none rounded-none md:rounded-[12px] min-h-[420px] sm:min-h-[520px] sm:max-h-[820px]"
           aria-label="Hero carousel"
           tabIndex={0}
           style={{ fontFamily: FONT_STACK, touchAction: "pan-x" }}

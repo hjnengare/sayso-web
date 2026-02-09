@@ -524,14 +524,14 @@ export default function HomeClient() {
               {heroReady ? (
                 <HeroCarousel />
               ) : (
-                <div className="h-[100dvh] sm:h-[90dvh] md:h-[80dvh] bg-gradient-to-b from-charcoal/5 to-transparent" />
+                <div className="h-[100dvh] sm:h-[90dvh] md:h-[80dvh] bg-gradient-to-b from-charcoal/5 to-transparent pt-20 md:pt-2 md:px-2" />
               )}
             </motion.div>
           )}
         </AnimatePresence>
 
         <main 
-          className={`bg-off-white relative pb-10 min-h-dvh transition-[padding] duration-300 ease-out ${isSearchActive ? 'pt-4' : 'pt-[var(--header-height)]'}`} 
+          className={`bg-off-white relative min-h-dvh transition-[padding] duration-300 ease-out ${isSearchActive ? 'pt-4' : 'pt-[var(--header-height)]'}`} 
           style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
         >
           <div ref={contentRef} className="mx-auto w-full max-w-[2000px]">
