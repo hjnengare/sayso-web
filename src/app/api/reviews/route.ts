@@ -81,6 +81,11 @@ export async function POST(req: Request) {
     const content = formData.get('content')?.toString() || null;
     const tags = formData.getAll('tags').map(t => t.toString()).filter(Boolean);
 
+    // Guest fields for event/special reviews
+    const guestName = formData.get('guest_name')?.toString()?.trim() || null;
+    const guestEmail = formData.get('guest_email')?.toString()?.trim() || null;
+    const honeypot = formData.get('website_url')?.toString() || '';
+
     const imageFiles = formData
       .getAll('images')
       .filter((file): file is File => file instanceof File && file.size > 0);
@@ -130,13 +135,49 @@ export async function POST(req: Request) {
       }
     }
 
-    // Event and special reviews require auth; business reviews allow anonymous
-    if ((isEventReview || isSpecialReview) && isAnonymous) {
-      return errorResponse(
-        'NOT_AUTHENTICATED',
-        'Please log in to submit this type of review.',
-        401
+    // Honeypot check — bots fill hidden fields, real users don't
+    if (honeypot) {
+      return NextResponse.json({ success: true, message: 'Review created successfully', review: {} });
+    }
+
+    // Guest validation for event/special reviews
+    if (isAnonymous && (isEventReview || isSpecialReview)) {
+      if (!guestName || guestName.length < 2 || guestName.length > 50) {
+        return errorResponse('MISSING_FIELDS', 'Please provide your name (2-50 characters).', 400);
+      }
+      if (!guestEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail)) {
+        return errorResponse('MISSING_FIELDS', 'Please provide a valid email address.', 400);
+      }
+    }
+
+    // IP-based rate limiting for guest event/special reviews (3 per hour per IP)
+    if (isAnonymous && (isEventReview || isSpecialReview)) {
+      const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+        || req.headers.get('x-real-ip')
+        || 'unknown';
+
+      const rateLimitAdmin = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        { auth: { autoRefreshToken: false, persistSession: false } }
       );
+
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const rateLimitTable = isEventReview ? 'event_reviews' : 'special_reviews';
+
+      const { count } = await rateLimitAdmin
+        .from(rateLimitTable)
+        .select('*', { count: 'exact', head: true })
+        .eq('ip_address', ip)
+        .gte('created_at', oneHourAgo);
+
+      if ((count ?? 0) >= 3) {
+        return errorResponse(
+          'VALIDATION_FAILED',
+          'Too many reviews submitted. Please try again later.',
+          429
+        );
+      }
     }
 
     // Resolve target + validate existence
@@ -341,6 +382,10 @@ export async function POST(req: Request) {
         content: finalContent,
         tags: tags.filter(t => t.trim().length > 0),
         helpful_count: 0,
+        // Guest fields (only for anonymous event/special reviews)
+        ...(isAnonymous && (isEventReview || isSpecialReview) && guestName ? { guest_name: guestName } : {}),
+        ...(isAnonymous && (isEventReview || isSpecialReview) && guestEmail ? { guest_email: guestEmail } : {}),
+        ...(isAnonymous && (isEventReview || isSpecialReview) ? { ip_address: req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || null } : {}),
       };
 
       let selectQuery = '';
@@ -380,7 +425,16 @@ export async function POST(req: Request) {
         `;
       }
 
-      const { data: reviewData, error: reviewError } = await supabase
+      // Use service role client for guest inserts (bypasses RLS)
+      const insertClient = isAnonymous && (isEventReview || isSpecialReview)
+        ? createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!,
+            { auth: { autoRefreshToken: false, persistSession: false } }
+          )
+        : supabase;
+
+      const { data: reviewData, error: reviewError } = await insertClient
         .from(targetTable)
         .insert(reviewInsertData)
         .select(selectQuery)
@@ -602,7 +656,7 @@ export async function POST(req: Request) {
 
     let displayName: string;
     if (user_id == null) {
-      displayName = 'Anonymous';
+      displayName = reviewInsertData?.guest_name || 'Guest';
     } else {
       try {
         displayName = getDisplayUsername(profile.username, profile.display_name, null, user_id);
@@ -616,7 +670,7 @@ export async function POST(req: Request) {
       id: user_id,
       name: displayName,
       username: profile.username ?? null,
-      display_name: user_id == null ? 'Anonymous' : (profile.display_name ?? null),
+      display_name: user_id == null ? (reviewInsertData?.guest_name || 'Guest') : (profile.display_name ?? null),
       email: null,
       avatar_url: profile.avatar_url ?? null,
     };

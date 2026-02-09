@@ -160,7 +160,9 @@ export interface ReviewWithUser extends Review {
 export interface EventReview {
   id: string;
   event_id: string;
-  user_id: string;
+  user_id: string | null;
+  guest_name?: string | null;
+  guest_email?: string | null;
   rating: number; // 1-5
   title?: string;
   content: string;
@@ -180,7 +182,7 @@ export interface EventReviewImage {
 
 export interface EventReviewWithUser extends EventReview {
   user: {
-    id: string;
+    id: string | null;
     name?: string;
     username?: string | null;
     display_name?: string | null;
@@ -194,7 +196,9 @@ export interface EventReviewWithUser extends EventReview {
 export interface SpecialReview {
   id: string;
   special_id: string;
-  user_id: string;
+  user_id: string | null;
+  guest_name?: string | null;
+  guest_email?: string | null;
   rating: number; // 1-5
   title?: string;
   content: string;
@@ -214,7 +218,7 @@ export interface SpecialReviewImage {
 
 export interface SpecialReviewWithUser extends SpecialReview {
   user: {
-    id: string;
+    id: string | null;
     name?: string;
     username?: string | null;
     display_name?: string | null;

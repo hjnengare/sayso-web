@@ -16,6 +16,7 @@ const GUEST_BROWSABLE_PREFIXES = [
   '/home', '/explore', '/business/', '/event/', '/special/', '/specials/',
   '/trending', '/for-you', '/events-specials', '/category/', '/discover/',
   '/leaderboard', '/reviewer/', '/terms', '/privacy', '/badges',
+  '/write-review/',
 ];
 
 function isSchemaCacheError(error: { message?: string } | null | undefined): boolean {

@@ -141,54 +141,51 @@ function EventCard({ event, index: _index = 0 }: EventCardProps) {
 
   return (
     <li
-      className="flex w-full"
+      className="flex w-full h-full"
       style={{
         fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
         fontWeight: 600,
       }}
     >
       <article
-        className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden group cursor-pointer w-full flex flex-col border border-white/60 backdrop-blur-xl shadow-md transition-all duration-300 hover:border-white/80 hover:-translate-y-1 hover:shadow-lg md:w-[340px] md:h-[416px]"
+        className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden group cursor-pointer w-full h-full flex flex-col border border-white/60 backdrop-blur-xl shadow-md transition-all duration-300 hover:border-white/80 hover:-translate-y-1 hover:shadow-lg md:w-[340px]"
         style={{ maxWidth: "540px" } as CSSProperties}
       >
-         
           {/* MEDIA - Full bleed with premium overlay */}
-          <div className="relative w-full h-[260px] lg:h-[260px] overflow-hidden rounded-[12px] z-10 flex-shrink-0 p-1">
-            <div className="relative w-full h-full overflow-hidden rounded-[12px]">
-              <div className="relative w-full h-full overflow-hidden rounded-[12px] flex items-center justify-center bg-gradient-to-br from-off-white/95 to-off-white/85">
-                {showLoadingOverlay && (
-                  <div className="absolute inset-0 bg-charcoal/5 animate-pulse z-10 flex items-center justify-center">
-                    <span className="w-10 h-10 border-2 border-white/50 border-t-navbar-bg rounded-full animate-spin" aria-hidden />
-                    <span className="sr-only">Loading image</span>
-                  </div>
-                )}
-                <Image
-                  src={mediaImage}
-                  alt={event.alt || event.title}
-                  fill
-                  sizes="(max-width: 640px) 92vw, 340px"
-                  className={hasRealImage ? 'object-cover rounded-[12px]' : 'object-contain w-32 h-32 sm:w-36 sm:h-36 md:w-32 md:h-32'}
-                  quality={hasRealImage ? 75 : 60}
-                  priority={false}
-                  onLoadingComplete={() => setImageLoaded(true)}
-                  onError={() => setImageLoaded(true)}
-                />
-              </div>
+          <div className="relative w-full flex-shrink-0 z-10 p-1">
+            <div className="relative w-full overflow-hidden rounded-[12px] flex items-center justify-center bg-gradient-to-br from-off-white/95 to-off-white/85" style={{ aspectRatio: '4 / 3' }}>
+              {showLoadingOverlay && (
+                <div className="absolute inset-0 bg-charcoal/5 animate-pulse z-10 flex items-center justify-center">
+                  <span className="w-10 h-10 border-2 border-white/50 border-t-navbar-bg rounded-full animate-spin" aria-hidden />
+                  <span className="sr-only">Loading image</span>
+                </div>
+              )}
+              <Image
+                src={mediaImage}
+                alt={event.alt || event.title}
+                fill
+                sizes="(max-width: 640px) 85vw, 340px"
+                className={hasRealImage ? 'object-cover' : 'object-contain w-32 h-32 sm:w-36 sm:h-36 md:w-32 md:h-32'}
+                quality={hasRealImage ? 75 : 60}
+                priority={false}
+                onLoadingComplete={() => setImageLoaded(true)}
+                onError={() => setImageLoaded(true)}
+              />
             </div>
 
-            {/* Premium glass badges */}
-            <EventBadge 
-              startDate={event.startDate} 
-              endDate={event.endDate} 
+            {/* Date ribbon badge */}
+            <EventBadge
+              startDate={event.startDate}
+              endDate={event.endDate}
               startDateISO={event.startDateISO}
               endDateISO={event.endDateISO}
               occurrences={event.occurrences}
-              eventId={event.id} 
+              eventId={event.id}
             />
           </div>
 
           {/* CONTENT - Minimal, premium spacing */}
-          <div className="px-4 py-4 bg-gradient-to-b from-card-bg/95 to-card-bg flex flex-col gap-2 rounded-b-[12px]">
+          <div className="px-4 py-4 bg-gradient-to-b from-card-bg/95 to-card-bg flex flex-col gap-2 rounded-b-[12px] flex-1">
             <div className="flex flex-col gap-2">
               <h3
                 className="text-base sm:text-lg font-bold text-charcoal leading-tight line-clamp-1 transition-colors duration-300 group-hover:text-navbar-bg/90"
@@ -228,7 +225,7 @@ function EventCard({ event, index: _index = 0 }: EventCardProps) {
 
             <button
               onClick={handlePrimaryAction}
-              className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-br from-navbar-bg to-navbar-bg/90 text-white rounded-full text-sm font-semibold hover:from-navbar-bg/90 hover:to-navbar-bg/80 active:scale-95 active:translate-y-[1px] transition-all duration-200 shadow-md border border-sage/50 focus:outline-none focus:ring-2 focus:ring-sage/40 transform-gpu touch-manipulation select-none"
+              className="mt-auto w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-br from-navbar-bg to-navbar-bg/90 text-white rounded-full text-sm font-semibold hover:from-navbar-bg/90 hover:to-navbar-bg/80 active:scale-95 active:translate-y-[1px] transition-all duration-200 shadow-md border border-sage/50 focus:outline-none focus:ring-2 focus:ring-sage/40 transform-gpu touch-manipulation select-none"
               aria-label="Learn more about this event"
               title="View event details"
               style={{

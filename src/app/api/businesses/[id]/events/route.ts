@@ -110,11 +110,15 @@ export async function GET(
     // Use request-scoped client to properly read cookies for RLS
     const supabase = await getServerSupabase(req);
 
+    // Filter out expired events: keep if end_date >= now, or if no end_date and start_date >= now
+    const now = new Date().toISOString();
+
     const { data, error } = await supabase
       .from('events_and_specials')
       .select('*')
       .eq('business_id', businessId)
-      .order('created_at', { ascending: false });
+      .or(`end_date.gte.${now},and(end_date.is.null,start_date.gte.${now})`)
+      .order('start_date', { ascending: true });
 
     if (error) {
       console.error('[Events API] Query error:', error);

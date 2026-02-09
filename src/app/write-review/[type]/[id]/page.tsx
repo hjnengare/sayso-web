@@ -98,7 +98,13 @@ function WriteReviewContent() {
   const [content, setContent] = useState("");
   const [images, setImages] = useState<File[]>([]);
 
-  const isFormValid = rating > 0 && content.trim().length >= 10;
+  // Guest fields
+  const [guestName, setGuestName] = useState("");
+  const [guestEmail, setGuestEmail] = useState("");
+
+  const isGuest = !user;
+  const isFormValid = rating > 0 && content.trim().length >= 10
+    && (!isGuest || (guestName.trim().length >= 2 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail)));
 
   // Clear error when form fields change
   const handleRatingChange = (newRating: number) => {
@@ -127,15 +133,6 @@ function WriteReviewContent() {
       errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }, [formError]);
-
-  // Redirect if not logged in
-  useEffect(() => {
-    if (!user && !loading) {
-      showToast("Please log in to write a review", "sage");
-      router.push("/login");
-      return;
-    }
-  }, [user, loading, router, showToast]);
 
   // Fetch target data
   useEffect(() => {
@@ -177,11 +174,6 @@ function WriteReviewContent() {
     // Clear previous error
     setFormError(null);
 
-    if (!user) {
-      setFormError("Please log in to submit your review.");
-      return;
-    }
-
     if (!target) {
       setFormError("Target not found. Please try again.");
       return;
@@ -211,6 +203,18 @@ function WriteReviewContent() {
         formData.append("title", title.trim());
       }
       formData.append("content", content.trim());
+
+      // Guest fields
+      if (!user) {
+        formData.append("guest_name", guestName.trim());
+        formData.append("guest_email", guestEmail.trim());
+      }
+      // Honeypot
+      const honeypotEl = document.querySelector('input[name="website_url"]') as HTMLInputElement;
+      if (honeypotEl) {
+        formData.append("website_url", honeypotEl.value);
+      }
+
       images.forEach((image, index) => {
         const fileName = image.name && image.name.trim() ? image.name : `photo_${Date.now()}_${index}.jpg`;
         formData.append("images", image, fileName);
@@ -367,7 +371,58 @@ function WriteReviewContent() {
             transition={{ delay: 0.2 }}
             className="bg-white rounded-[12px] p-6 shadow-sm"
           >
-            <h2 className="text-lg font-semibold text-charcoal mb-6">Write Your Review</h2>
+            <h2 className="text-lg font-semibold text-charcoal mb-6">
+              {user ? "Write Your Review" : "Write a Guest Review"}
+            </h2>
+
+            {/* Guest Info */}
+            {!user && (
+              <div className="mb-6 p-4 bg-sage/5 rounded-lg border border-sage/20 relative">
+                <p className="text-sm font-medium text-charcoal mb-4">
+                  Reviewing as a guest
+                </p>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-charcoal mb-2">
+                      Your Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={guestName}
+                      onChange={(e) => { setFormError(null); setGuestName(e.target.value); }}
+                      placeholder="Your name"
+                      className="w-full px-4 py-3 border border-charcoal/20 rounded-lg focus:ring-2 focus:ring-coral/20 focus:border-coral transition-colors"
+                      maxLength={50}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-charcoal mb-2">
+                      Email <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      value={guestEmail}
+                      onChange={(e) => { setFormError(null); setGuestEmail(e.target.value); }}
+                      placeholder="your@email.com"
+                      className="w-full px-4 py-3 border border-charcoal/20 rounded-lg focus:ring-2 focus:ring-coral/20 focus:border-coral transition-colors"
+                      required
+                    />
+                    <p className="text-sm text-charcoal/50 mt-1">Not displayed publicly</p>
+                  </div>
+                </div>
+                {/* Honeypot field — hidden from real users */}
+                <input
+                  type="text"
+                  name="website_url"
+                  defaultValue=""
+                  tabIndex={-1}
+                  autoComplete="off"
+                  style={{ position: 'absolute', left: '-9999px', opacity: 0 }}
+                  aria-hidden="true"
+                />
+              </div>
+            )}
 
             {/* Rating */}
             <div className="mb-6">
