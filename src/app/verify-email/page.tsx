@@ -233,7 +233,7 @@ export default function VerifyEmailPage() {
     if (isBusinessAccount) return "/my-businesses";
 
     const onboardingDone = Boolean(profile?.onboarding_completed_at || profile?.onboarding_complete);
-    return onboardingDone ? "/home" : "/onboarding";
+    return onboardingDone ? "/home" : "/interests";
   }, [user]);
 
   // Handle verification success from URL flag (?verified=1)
