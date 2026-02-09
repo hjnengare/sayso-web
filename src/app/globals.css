@@ -1055,23 +1055,21 @@
     opacity: 1;
   }
 
-  /* Premium reveal variant (subtle, Apple-like) */
+  /* Premium reveal variant (subtle, refined — GPU-friendly: transform + opacity only) */
   [data-reveal][data-reveal-variant="premium"] {
     opacity: 0;
-    transform: translate3d(var(--reveal-x, 0px), var(--reveal-y, 12px), 0)
-      scale(var(--reveal-scale, 0.985));
-    filter: blur(var(--reveal-blur, 4px));
-    transition-property: transform, opacity, filter;
-    transition-duration: var(--reveal-duration, 720ms);
+    transform: translate3d(var(--reveal-x, 0px), var(--reveal-y, 8px), 0)
+      scale(var(--reveal-scale, 0.998));
+    transition-property: transform, opacity;
+    transition-duration: var(--reveal-duration, 500ms);
     transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
     transition-delay: var(--reveal-delay, 0ms);
-    will-change: transform, opacity, filter;
+    will-change: transform, opacity;
   }
 
   [data-reveal][data-reveal-variant="premium"].active {
     opacity: 1;
     transform: translate3d(0, 0, 0) scale(1);
-    filter: blur(0px);
   }
 
   @media (prefers-reduced-motion: reduce) {

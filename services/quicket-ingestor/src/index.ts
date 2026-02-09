@@ -3,7 +3,12 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import cron from "node-cron";
 import { fetchAndProcessAll, type FetchConfig } from "./quicket.js";
-import { createSupabaseClient, cleanupOldEvents, upsertEvents } from "./db.js";
+import {
+  createSupabaseClient,
+  cleanupOldEvents,
+  resolveCreatedByUserId,
+  upsertEvents,
+} from "./db.js";
 import { log } from "./utils.js";
 
 // ---------------------------------------------------------------------------
@@ -13,9 +18,10 @@ import { log } from "./utils.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "..", ".env") });
 
-interface AppConfig extends FetchConfig {
+interface AppConfig extends Omit<FetchConfig, "systemUserId"> {
   supabaseUrl: string;
   supabaseServiceRoleKey: string;
+  preferredSystemUserId?: string;
   runOnStart: boolean;
 }
 
@@ -24,25 +30,21 @@ function loadConfig(): AppConfig {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const systemBusinessId = process.env.SYSTEM_BUSINESS_ID;
-  const systemUserId = process.env.SYSTEM_USER_ID;
+  const preferredSystemUserId = process.env.SYSTEM_USER_ID;
 
   if (!apiKey) throw new Error("Missing QUICKET_API_KEY");
   if (!supabaseUrl) throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL");
   if (!supabaseServiceRoleKey) throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY");
   if (!systemBusinessId) throw new Error("Missing SYSTEM_BUSINESS_ID");
-  if (!systemUserId) throw new Error("Missing SYSTEM_USER_ID");
 
-  const cities = (process.env.CITIES || "Cape Town")
-    .split(",")
-    .map((c) => c.trim())
-    .filter(Boolean);
+  const cities = ["Cape Town"];
 
   return {
     apiKey,
     supabaseUrl,
     supabaseServiceRoleKey,
     systemBusinessId,
-    systemUserId,
+    preferredSystemUserId,
     cities,
     pageSize: Math.min(Math.max(parseInt(process.env.PAGE_SIZE || "100", 10), 20), 200),
     runOnStart: process.env.RUN_ON_START === "true",
@@ -80,7 +82,18 @@ async function runIngest(config: AppConfig): Promise<void> {
     await cleanupOldEvents(supabase);
 
     // 3. Fetch, filter, map, consolidate
-    const result = await fetchAndProcessAll(config);
+    const resolvedCreatedBy = await resolveCreatedByUserId(
+      supabase,
+      config.systemBusinessId,
+      config.preferredSystemUserId
+    );
+
+    log.info(`Using created_by user id: ${resolvedCreatedBy}`);
+
+    const result = await fetchAndProcessAll({
+      ...config,
+      systemUserId: resolvedCreatedBy,
+    });
 
     log.info(
       `Fetch complete: ${result.fetchedCount} fetched, ${result.filteredCount} filtered, ${result.mappedCount} mapped, ${result.consolidatedCount} consolidated.`

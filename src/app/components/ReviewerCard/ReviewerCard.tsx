@@ -200,7 +200,7 @@ export default function ReviewerCard({
                       alt={reviewerData?.name || "User avatar"}
                       width={32}
                       height={32}
-                      className="w-8 h-8 object-cover rounded-full border-2 border-white ring-2 ring-white/50"
+                      className="w-8 h-8 object-cover rounded-full border-2 border-white ring-2 ring-white/50 transition-transform duration-500 ease-out group-hover:scale-[1.08] group-active:scale-[0.95] motion-reduce:transition-none"
                       priority={false}
                       onError={() => setImgError(true)}
                     />
@@ -321,8 +321,8 @@ export default function ReviewerCard({
           className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl rounded-[12px] group cursor-pointer h-[187px] flex flex-col relative overflow-visible border border-white/60 ring-1 ring-white/30 shadow-md"
         >
         {/* Glass depth overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-off-white/8 via-transparent to-transparent pointer-events-none z-0" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/5 via-transparent to-transparent pointer-events-none z-0" />
+        <div className="absolute inset-0 bg-gradient-to-br from-off-white/8 via-transparent to-transparent pointer-events-none z-0 transition-opacity duration-500 ease-out group-hover:opacity-0 motion-reduce:transition-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/5 via-transparent to-transparent pointer-events-none z-0 transition-opacity duration-500 ease-out group-hover:opacity-0 motion-reduce:transition-none" />
         <div className="flex items-start gap-1.5 mb-2 p-2">
           <div className="relative">
             <ProfilePicture

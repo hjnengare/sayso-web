@@ -10,6 +10,57 @@ export function createSupabaseClient(url: string, serviceRoleKey: string): Supab
   return createClient(url, serviceRoleKey);
 }
 
+async function authUserExists(supabase: SupabaseClient, userId: string): Promise<boolean> {
+  const { data, error } = await supabase.auth.admin.getUserById(userId);
+
+  if (error) {
+    log.warn(`Unable to verify auth user ${userId}: ${error.message}`);
+    return false;
+  }
+
+  return !!data?.user?.id;
+}
+
+export async function resolveCreatedByUserId(
+  supabase: SupabaseClient,
+  businessId: string,
+  preferredUserId?: string
+): Promise<string> {
+  if (preferredUserId) {
+    const validPreferred = await authUserExists(supabase, preferredUserId);
+    if (validPreferred) return preferredUserId;
+    log.warn(
+      `Configured SYSTEM_USER_ID (${preferredUserId}) was not found in auth.users. Falling back to business owner.`
+    );
+  }
+
+  const { data: business, error: businessErr } = await supabase
+    .from("businesses")
+    .select("owner_id")
+    .eq("id", businessId)
+    .maybeSingle();
+
+  if (businessErr) {
+    throw new Error(`Unable to load owner_id for business ${businessId}: ${businessErr.message}`);
+  }
+
+  const ownerId = business?.owner_id as string | null | undefined;
+  if (!ownerId) {
+    throw new Error(
+      `Business ${businessId} has no owner_id. Set SYSTEM_USER_ID to a valid auth.users.id or assign a business owner.`
+    );
+  }
+
+  const validOwner = await authUserExists(supabase, ownerId);
+  if (!validOwner) {
+    throw new Error(
+      `Business owner_id ${ownerId} is not present in auth.users. Update businesses.owner_id or set SYSTEM_USER_ID to a valid auth user id.`
+    );
+  }
+
+  return ownerId;
+}
+
 // ---------------------------------------------------------------------------
 // Cleanup: delete Quicket events that ended > 14 days ago
 // ---------------------------------------------------------------------------

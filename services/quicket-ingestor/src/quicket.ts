@@ -89,7 +89,7 @@ export interface EventRow {
   price: number | null;
   rating: number;
   booking_url: string | null;
-  booking_contact: null;
+  booking_contact: string | null;
 }
 
 export interface FetchConfig {
@@ -155,39 +155,33 @@ function buildDescription(event: QuicketEvent): string | null {
   return null;
 }
 
-/** Check if an event is in one of the target cities. */
-function matchesCity(event: QuicketEvent, cities: string[]): boolean {
-  const cityLower = cities.map((c) => c.toLowerCase());
+const CAPE_TOWN_CITY = "cape town";
 
-  const levelThree = event.locality?.levelThree?.toLowerCase()?.trim();
-  if (levelThree && cityLower.some((c) => levelThree.includes(c) || c.includes(levelThree))) {
+/** Restrict to Cape Town events only. */
+function isCapeTownEvent(event: QuicketEvent): boolean {
+  const city = event.locality?.levelThree?.toLowerCase()?.trim();
+  if (city && (city.includes(CAPE_TOWN_CITY) || CAPE_TOWN_CITY.includes(city))) {
     return true;
   }
 
-  // Also check venue address for city mention
-  const addr = (event.venue?.addressLine1 ?? "").toLowerCase();
-  if (cityLower.some((c) => addr.includes(c))) {
-    return true;
-  }
+  const addressParts = [
+    event.venue?.name,
+    event.venue?.addressLine1,
+    event.venue?.addressLine2,
+  ]
+    .filter((part): part is string => !!part && part.trim().length > 0)
+    .join(" ")
+    .toLowerCase();
 
-  return false;
+  return addressParts.includes(CAPE_TOWN_CITY);
 }
 
-/** Check if an event is upcoming (not expired). */
-function isUpcoming(event: QuicketEvent): boolean {
-  const now = new Date();
-  // If endDate exists and is in the past, skip
-  if (event.endDate) {
-    const end = new Date(event.endDate);
-    if (!isNaN(end.getTime()) && end < now) return false;
-  }
-  // If only startDate and it's more than 1 day in the past, skip
-  if (event.startDate && !event.endDate) {
-    const start = new Date(event.startDate);
-    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    if (!isNaN(start.getTime()) && start < oneDayAgo) return false;
-  }
-  return true;
+/** Keep only events starting now or in the future. */
+function startsFromNow(event: QuicketEvent): boolean {
+  if (!event.startDate) return false;
+  const start = new Date(event.startDate);
+  if (isNaN(start.getTime())) return false;
+  return start.getTime() >= Date.now();
 }
 
 // ---------------------------------------------------------------------------
@@ -292,10 +286,12 @@ function mapQuicketEvent(
     const title = event.name?.trim();
     if (!title) return null;
 
-    const startDate = event.startDate ? new Date(event.startDate).toISOString() : null;
-    if (!startDate) return null;
+    const startDate = event.startDate ? new Date(event.startDate) : null;
+    if (!startDate || isNaN(startDate.getTime())) return null;
 
-    const endDate = event.endDate ? new Date(event.endDate).toISOString() : null;
+    const endDate = event.endDate ? new Date(event.endDate) : null;
+    const endDateIso =
+      endDate && !isNaN(endDate.getTime()) ? endDate.toISOString() : null;
 
     const location = buildLocationString(
       event.venue?.name,
@@ -308,8 +304,8 @@ function mapQuicketEvent(
       type: "event",
       business_id: systemBusinessId,
       created_by: systemUserId,
-      start_date: startDate,
-      end_date: endDate,
+      start_date: startDate.toISOString(),
+      end_date: endDateIso,
       location,
       description: buildDescription(event),
       icon: "quicket",
@@ -402,11 +398,11 @@ export async function fetchAndProcessAll(config: FetchConfig): Promise<FetchResu
     const country = event.locality?.levelOne?.toLowerCase()?.trim();
     if (country && country !== "south africa") return false;
 
-    // Must be upcoming
-    if (!isUpcoming(event)) return false;
+    // Must start now or later
+    if (!startsFromNow(event)) return false;
 
-    // Must match one of the target cities
-    if (!matchesCity(event, config.cities)) return false;
+    // Must be in Cape Town
+    if (!isCapeTownEvent(event)) return false;
 
     return true;
   });

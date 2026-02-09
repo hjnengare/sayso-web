@@ -539,8 +539,8 @@ function BusinessCard({
                       aria-label={`View ${business.name} details`}
                     >
                       <h3
-                        className="text-h2 sm:text-h1 font-bold text-center leading-[1.3] truncate tracking-tight transition-all duration-300 group-hover:text-navbar-bg/90 group-hover:scale-[1.02] group-hover:translate-y-[-1px] w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap relative z-[1]"
-                        style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 700, WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale', textRendering: 'optimizeLegibility', letterSpacing: '0.03em', transform: 'translateY(0)', willChange: 'transform' }}
+                        className="text-h2 sm:text-h1 font-bold text-center leading-[1.3] truncate tracking-tight transition-colors duration-300 group-hover:text-navbar-bg/90 w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap relative z-[1]"
+                        style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 700, WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale', textRendering: 'optimizeLegibility', letterSpacing: '0.03em' }}
                       >
                         {business.name}
                       </h3>

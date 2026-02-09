@@ -35,11 +35,16 @@ const BusinessCardImage: React.FC<BusinessCardImageProps> = ({
             alt={displayAlt}
             fill
             sizes="(max-width: 640px) 92vw, (max-width: 1024px) 50vw, 340px"
-            className="object-cover"
+            className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02] group-active:scale-[0.98] motion-reduce:transition-none"
             quality={70}
             priority={priority}
             loading={priority ? "eager" : "lazy"}
             onError={onImageError}
+          />
+          <div
+            className="absolute inset-0 pointer-events-none transition-opacity duration-500 ease-out group-hover:opacity-0 motion-reduce:transition-none"
+            style={{ background: "hsla(0, 0%, 0%, 0.2)" }}
+            aria-hidden="true"
           />
         </div>
       ) : (

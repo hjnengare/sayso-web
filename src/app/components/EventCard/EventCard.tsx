@@ -118,7 +118,7 @@ interface EventCardProps {
   index?: number;
 }
 
-function EventCard({ event, index: _index = 0 }: EventCardProps) {
+function EventCard({ event, index = 0 }: EventCardProps) {
   const router = useRouter();
   const iconPng = getEventIconPng(event.icon);
   const mediaImage = getEventMediaImage(event);
@@ -165,11 +165,16 @@ function EventCard({ event, index: _index = 0 }: EventCardProps) {
                 alt={event.alt || event.title}
                 fill
                 sizes="(max-width: 640px) 85vw, 340px"
-                className={hasRealImage ? 'object-cover' : 'object-contain w-32 h-32 sm:w-36 sm:h-36 md:w-32 md:h-32'}
+                className={hasRealImage ? 'object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02] group-active:scale-[0.98] motion-reduce:transition-none' : 'object-contain w-32 h-32 sm:w-36 sm:h-36 md:w-32 md:h-32 transition-transform duration-500 ease-out group-hover:scale-[1.02] group-active:scale-[0.98] motion-reduce:transition-none'}
                 quality={hasRealImage ? 75 : 60}
                 priority={false}
                 onLoadingComplete={() => setImageLoaded(true)}
                 onError={() => setImageLoaded(true)}
+              />
+              <div
+                className="absolute inset-0 pointer-events-none z-[1] transition-opacity duration-500 ease-out group-hover:opacity-0 motion-reduce:transition-none"
+                style={{ background: "hsla(0, 0%, 0%, 0.2)" }}
+                aria-hidden="true"
               />
             </div>
 
@@ -222,17 +227,6 @@ function EventCard({ event, index: _index = 0 }: EventCardProps) {
                 {event.occurrencesCount} dates available
               </span>
             )}
-            {event.type === "event" && (
-              <span
-                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-medium w-fit ${
-                  event.businessId ? "bg-navbar-bg/10 text-navbar-bg" : "bg-coral/10 text-coral"
-                }`}
-                style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
-              >
-                {event.businessId ? "Business-linked event" : "Community-hosted event"}
-              </span>
-            )}
-
             <button
               onClick={handlePrimaryAction}
               className="mt-auto w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-br from-navbar-bg to-navbar-bg/90 text-white rounded-full text-sm font-semibold hover:from-navbar-bg/90 hover:to-navbar-bg/80 active:scale-95 active:translate-y-[1px] transition-all duration-200 shadow-md border border-sage/50 focus:outline-none focus:ring-2 focus:ring-sage/40 transform-gpu touch-manipulation select-none"

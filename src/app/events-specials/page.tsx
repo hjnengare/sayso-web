@@ -345,7 +345,7 @@ export default function EventsSpecialsPage() {
                 </div>
               </div>
             ) : shouldShowCta ? (
-              <div className="rounded-[24px] border border-charcoal/10 bg-gradient-to-br from-sage/10 to-sage/20 p-6 text-center space-y-4">
+              <div className="rounded-[24px] border border-charcoal/10 bg-off-white p-6 text-center space-y-4">
                 <p className="text-lg font-semibold text-charcoal">
                   We’re curating something special for you
                 </p>
@@ -353,9 +353,9 @@ export default function EventsSpecialsPage() {
                   Business owners are manually adding curated events and specials. Check back soon for the latest experiences.
                 </p>
                 <ul className="list-none space-y-1 text-sm text-charcoal/70">
-                  <li>• Explore businesses</li>
-                  <li>• Follow businesses</li>
-                  <li>• Check back later</li>
+                  <li>Explore businesses</li>
+                  <li>Follow businesses</li>
+                  <li>Check back later</li>
                 </ul>
                 <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
                   <Link
@@ -427,3 +427,4 @@ export default function EventsSpecialsPage() {
     </div>
   );
 }
+

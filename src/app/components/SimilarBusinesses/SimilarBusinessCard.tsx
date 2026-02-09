@@ -227,7 +227,7 @@ function SimilarBusinessCard({
                 src={usingFallback ? placeholderSrc : displayImage}
                 alt={name}
                 fill
-                className="object-contain"
+                className="object-contain transition-transform duration-500 ease-out group-hover:scale-[1.02] group-active:scale-[0.98] motion-reduce:transition-none"
                 sizes="(max-width: 768px) 540px, 340px"
                 priority={false}
                 quality={90}
@@ -235,6 +235,15 @@ function SimilarBusinessCard({
                 onError={handleImageError}
               />
             </div>
+            {/* Premium depth overlay */}
+            <div
+              className="absolute inset-0 pointer-events-none z-[1] transition-opacity duration-500 ease-out group-hover:opacity-0 motion-reduce:transition-none"
+              style={{
+                background:
+                  "linear-gradient(to top, rgba(0,0,0,0.06) 0%, rgba(0,0,0,0.02) 30%, transparent 60%)",
+              }}
+              aria-hidden="true"
+            />
           </div>
         ) : (
           <div
