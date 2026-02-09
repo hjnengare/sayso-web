@@ -564,12 +564,12 @@ export default function HomeClient() {
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1], delay: 0.1 } }}
                   exit={{ opacity: 0, y: -20, transition: { duration: 0.25, ease: [0.4, 0, 0.2, 1] } }}
-                  className="flex flex-col gap-8 sm:gap-10 md:gap-12 pt-8"
+                  className="flex flex-col gap-8 sm:gap-10 md:gap-12 pt-4 sm:pt-8"
                 >
                   {/* For You Section - Only show when NOT filtered */}
                   {!isFiltered && (
                     <motion.div
-                      className="relative z-10 snap-start"
+                      className="relative z-10 snap-start mb-2 sm:mb-0"
                       variants={homeCardRevealVariants}
                       initial="hidden"
                       whileInView="visible"

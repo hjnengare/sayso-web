@@ -580,19 +580,19 @@ export default function HeroCarousel() {
   return (
     <>
       {/* Hero Container with padding */}
-      <div className="relative w-full px-0 pb-0 pt-0 sm:px-0 sm:pb-0 sm:pt-0 md:pt-2 md:px-2 md:pb-2">
+      <div className="relative w-full">
         {/* Hero Section with rounded corners - 75vh responsive height */}
         <section
           ref={containerRef as React.RefObject<HTMLElement>}
-          className="relative h-[100dvh] sm:h-[90dvh] md:h-[80dvh] w-full overflow-hidden outline-none rounded-none sm:rounded-[12px] min-h-[420px] sm:min-h-[520px] sm:max-h-[820px] shadow-md"
+          className="relative h-[100dvh] sm:h-[90dvh] md:h-[80dvh] w-full overflow-hidden outline-none rounded-none min-h-[420px] sm:min-h-[520px] sm:max-h-[820px]"
           aria-label="Hero carousel"
           tabIndex={0}
-          style={{ fontFamily: FONT_STACK }}
+          style={{ fontFamily: FONT_STACK, touchAction: "pan-x" }}
         >
           {/* Liquid Glass Ambient Lighting */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-sage/10 pointer-events-none rounded-none sm:rounded-[12px]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(255,255,255,0.15)_0%,_transparent_70%)] pointer-events-none rounded-none sm:rounded-[12px]" />
-      <div className="absolute inset-0 backdrop-blur-[1px] bg-off-white/5 mix-blend-overlay pointer-events-none rounded-none sm:rounded-[12px]" />
+      <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-sage/10 pointer-events-none rounded-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(255,255,255,0.15)_0%,_transparent_70%)] pointer-events-none rounded-none" />
+      <div className="absolute inset-0 backdrop-blur-[1px] bg-off-white/5 mix-blend-overlay pointer-events-none rounded-none" />
       {/* Slides — all capped slides rendered; opacity driven by currentIndex. No mount/unmount flicker. */}
       {slides.map((slide, idx) => {
         const isActive = idx === currentIndex;
@@ -605,9 +605,9 @@ export default function HeroCarousel() {
           animate={{ opacity: isActive ? 1 : 0, zIndex: isActive ? 10 : 0 }}
           transition={{ opacity: { duration: 1.2, ease: "easeInOut" }, zIndex: { duration: 0 } }}
           aria-hidden={!isActive}
-          className="absolute inset-0 overflow-hidden will-change-[opacity] transform-gpu [backface-visibility:hidden] rounded-none sm:rounded-[12px]"
+          className="absolute inset-0 overflow-hidden will-change-[opacity] transform-gpu [backface-visibility:hidden] rounded-none"
         >
-           <div className="absolute inset-0 rounded-none sm:rounded-[12px] overflow-hidden transform-gpu [backface-visibility:hidden]">
+           <div className="absolute inset-0 rounded-none overflow-hidden transform-gpu [backface-visibility:hidden]">
               <Image
                 src={src}
                 alt={slide.title ?? "Sayso hero slide"}
@@ -616,9 +616,7 @@ export default function HeroCarousel() {
                 loading={idx === 0 ? "eager" : "lazy"}
                 fetchPriority={idx === 0 ? "high" : "auto"}
                 quality={heroViewport === "mobile" ? 65 : 80}
-                className={`transform-gpu [backface-visibility:hidden] ${
-                  heroViewport === "mobile" ? "object-cover object-center" : "object-cover scale-[1.02]"
-                }`}
+                className="transform-gpu [backface-visibility:hidden] object-cover object-center"
                 style={{ filter: "brightness(0.95) contrast(1.05) saturate(1.1)" }}
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 80vw"
                 onError={() => {
