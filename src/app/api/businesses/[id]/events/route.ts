@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSupabase } from '@/app/lib/supabase/server';
+import { createEventOrSpecial } from '@/app/lib/events/createEventSpecial';
 
 /**
  * POST /api/businesses/[id]/events
@@ -27,62 +28,19 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Verify business ownership
-    const { data: business, error: businessError } = await supabase
-      .from('businesses')
-      .select('id, owner_id')
-      .eq('id', businessId)
-      .single();
+    const body = (await req.json()) as Record<string, unknown>;
+    const result = await createEventOrSpecial({
+      supabase,
+      userId: user.id,
+      body,
+      forcedBusinessId: businessId,
+    });
 
-    if (businessError || !business) {
-      return NextResponse.json({ error: 'Business not found' }, { status: 404 });
+    if (result.ok === false) {
+      return NextResponse.json({ error: result.error }, { status: result.status });
     }
 
-    if (business.owner_id !== user.id) {
-      return NextResponse.json(
-        { error: 'You do not have permission to manage this business' },
-        { status: 403 }
-      );
-    }
-
-    // Parse event data
-    const body = await req.json();
-    const { title, type, startDate, endDate, location, description, icon, image, price } = body;
-
-    if (!title || !type || !startDate || !location) {
-      return NextResponse.json(
-        { error: 'Missing required fields: title, type, startDate, location' },
-        { status: 400 }
-      );
-    }
-
-    // Insert event
-    const { data, error } = await supabase
-      .from('events_and_specials')
-      .insert([
-        {
-          title,
-          type,
-          business_id: businessId,
-          start_date: startDate,
-          end_date: endDate,
-          location,
-          description,
-          icon,
-          image,
-          price,
-          created_by: user.id,
-          rating: 0,
-        }
-      ])
-      .select();
-
-    if (error) {
-      console.error('[Events API] Insert error:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json({ success: true, data: data?.[0] }, { status: 201 });
+    return NextResponse.json({ success: true, data: result.data }, { status: 201 });
   } catch (error) {
     console.error('[Events API] Error:', error);
     return NextResponse.json({ error: 'Failed to create event' }, { status: 500 });
@@ -107,23 +65,60 @@ export async function GET(
       );
     }
 
+    const ownerView = req.nextUrl.searchParams.get('owner_view') === 'true';
+
     // Use request-scoped client to properly read cookies for RLS
     const supabase = await getServerSupabase(req);
 
-    // Filter out expired events: keep if end_date >= now, or if no end_date and start_date >= now
-    const now = new Date().toISOString();
-
-    const { data, error } = await supabase
+    let listingsQuery = supabase
       .from('events_and_specials')
       .select('*')
-      .eq('business_id', businessId)
-      .or(`end_date.gte.${now},and(end_date.is.null,start_date.gte.${now})`)
-      .order('start_date', { ascending: true });
+      .eq('business_id', businessId);
+
+    if (ownerView) {
+      // Owner dashboard should show all listings, not only upcoming.
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      const user = authData?.user;
+      if (authError || !user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+
+      const [directOwner, verifiedOwner] = await Promise.all([
+        supabase
+          .from('businesses')
+          .select('id')
+          .eq('id', businessId)
+          .eq('owner_id', user.id)
+          .maybeSingle(),
+        supabase
+          .from('business_owners')
+          .select('id')
+          .eq('business_id', businessId)
+          .eq('user_id', user.id)
+          .maybeSingle(),
+      ]);
+
+      if (directOwner.error && directOwner.error.code !== 'PGRST116') {
+        console.error('[Events API] Owner check error (businesses):', directOwner.error);
+      }
+      if (verifiedOwner.error && verifiedOwner.error.code !== 'PGRST116') {
+        console.error('[Events API] Owner check error (business_owners):', verifiedOwner.error);
+      }
+
+      if (!directOwner.data && !verifiedOwner.data) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    } else {
+      // Public business listing view remains upcoming-only.
+      const now = new Date().toISOString();
+      listingsQuery = listingsQuery.or(`end_date.gte.${now},and(end_date.is.null,start_date.gte.${now})`);
+    }
+
+    const { data, error } = await listingsQuery.order('start_date', { ascending: true });
 
     if (error) {
       console.error('[Events API] Query error:', error);
-      // Gracefully return empty list on query error to avoid client fetch failures
-      return NextResponse.json({ success: true, data: [], error: error.message });
+      return NextResponse.json({ error: 'Failed to fetch events' }, { status: 500 });
     }
 
     // Fetch business images for context

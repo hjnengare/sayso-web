@@ -24,6 +24,19 @@ export default function EventInfo({ event }: EventInfoProps) {
       </h1>
 
       <div className="flex items-center gap-3 mb-4 flex-wrap">
+        {event.type === "event" && (
+          <div className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 border ${event.businessId ? "bg-navbar-bg/10 text-navbar-bg border-navbar-bg/20" : "bg-coral/10 text-coral border-coral/20"}`}>
+            <span
+              className="text-body-sm font-semibold"
+              style={{
+                fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                fontWeight: 600,
+              }}
+            >
+              {event.businessId ? "Business-linked event" : "Community-hosted event"}
+            </span>
+          </div>
+        )}
         {event.rating != null && (
           <div className="inline-flex items-center gap-1 rounded-full bg-off-white/95 backdrop-blur-xl px-3 py-1.5 text-charcoal border border-white/40">
             <Star className="w-3.5 h-3.5 text-coral fill-coral" aria-hidden />

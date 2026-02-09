@@ -28,6 +28,7 @@ import type { Event } from "../../lib/types/Event";
 import { useToast } from "../../contexts/ToastContext";
 import { PageLoader } from "../../components/Loader";
 import { normalizeDescriptionText } from "../../lib/utils/descriptionText";
+import { resolveCtaTarget } from "../../lib/events/cta";
 // Extended type for special with business info
 interface SpecialWithBusiness extends Event {
   businessSlug?: string;
@@ -235,6 +236,74 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
       showToast("Copied to clipboard", "sage", 2000);
     }
   };
+
+  const isLikelyPhone = (value?: string | null) => {
+    if (!value) return false;
+    const trimmed = value.trim();
+    if (!trimmed) return false;
+    const digits = trimmed.replace(/[^\d]/g, "");
+    return digits.length >= 7 && /^[\d+()\-\s]+$/.test(trimmed);
+  };
+
+  const logCtaClick = (payload: { ctaKind: "external_url" | "whatsapp"; ctaSource?: string | null; targetUrl: string }) => {
+    if (!special?.id) return;
+    void fetch(`/api/events-and-specials/${special.id}/cta-click`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      keepalive: true,
+      body: JSON.stringify(payload),
+    }).catch(() => {
+      // Intentionally ignore tracking failures.
+    });
+  };
+
+  const handlePrimaryCtaClick = () => {
+    if (!special || typeof window === "undefined") return;
+
+    const resolved = resolveCtaTarget({
+      event: special,
+      currentUrl: window.location.href,
+      ctaSource: special.ctaSource ?? null,
+      bookingUrl: special.bookingUrl ?? null,
+      whatsappNumber: special.whatsappNumber ?? null,
+      whatsappPrefillTemplate: special.whatsappPrefillTemplate ?? null,
+    });
+
+    let targetUrl = resolved.url;
+    let ctaKind: "external_url" | "whatsapp" = resolved.ctaKind;
+    let ctaSource = resolved.ctaSource;
+
+    if (!targetUrl && special.businessWebsite) {
+      targetUrl = special.businessWebsite.startsWith("http") ? special.businessWebsite : `https://${special.businessWebsite}`;
+      ctaKind = "external_url";
+      ctaSource = ctaSource ?? "website";
+    }
+
+    if (targetUrl) {
+      window.open(targetUrl, "_blank", "noopener,noreferrer");
+      logCtaClick({ ctaKind, ctaSource, targetUrl });
+      return;
+    }
+
+    showToast("Booking link not available yet.", "info");
+  };
+
+  const phoneContact = isLikelyPhone(special?.bookingContact) ? special?.bookingContact : special?.businessPhone;
+  const primaryCtaLabel = (() => {
+    if (special?.bookingContact && !isLikelyPhone(special.bookingContact)) {
+      return special.bookingContact.trim();
+    }
+    if ((special?.ctaSource ?? "").toLowerCase() === "whatsapp" || special?.whatsappNumber) {
+      return "WhatsApp Booking";
+    }
+    if (special?.bookingUrl) {
+      return "Book Now";
+    }
+    if (special?.businessWebsite) {
+      return "Visit Website";
+    }
+    return "Visit Venue";
+  })();
 
   if (loading) {
     return <PageLoader size="xl" variant="wavy" color="sage" />;
@@ -462,35 +531,18 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
                 <h3 className="text-lg font-bold text-charcoal mb-3" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>Claim This Special</h3>
 
                 <div className="space-y-3">
-                  {special.bookingUrl ? (
-                    <a
-                      href={special.bookingUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block w-full bg-gradient-to-r from-sage to-sage/90 hover:from-sage/90 hover:to-sage/80 text-white font-semibold py-3 px-5 rounded-full transition-all duration-300 hover:scale-105 border border-white/30 text-sm text-center"
-                      style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-                    >
-                      Book Now
-                    </a>
-                  ) : special.businessWebsite ? (
-                    <a
-                      href={special.businessWebsite.startsWith('http') ? special.businessWebsite : `https://${special.businessWebsite}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block w-full bg-gradient-to-r from-sage to-sage/90 hover:from-sage/90 hover:to-sage/80 text-white font-semibold py-3 px-5 rounded-full transition-all duration-300 hover:scale-105 border border-white/30 text-sm text-center"
-                      style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-                    >
-                      Visit Website
-                    </a>
-                  ) : (
-                    <button className="w-full bg-gradient-to-r from-sage to-sage/90 hover:from-sage/90 hover:to-sage/80 text-white font-semibold py-3 px-5 rounded-full transition-all duration-300 hover:scale-105 border border-white/30 text-sm" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                      Visit Venue
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={handlePrimaryCtaClick}
+                    className="w-full bg-gradient-to-r from-sage to-sage/90 hover:from-sage/90 hover:to-sage/80 text-white font-semibold py-3 px-5 rounded-full transition-all duration-300 hover:scale-105 border border-white/30 text-sm"
+                    style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                  >
+                    {primaryCtaLabel}
+                  </button>
 
-                  {(special.businessPhone || special.bookingContact) ? (
+                  {phoneContact ? (
                     <a
-                      href={`tel:${special.bookingContact || special.businessPhone}`}
+                      href={`tel:${phoneContact}`}
                       className="block w-full bg-gradient-to-r from-coral to-coral/90 hover:from-coral/90 hover:to-coral/80 text-white font-semibold py-3 px-5 rounded-full transition-all duration-300 hover:scale-105 border border-white/30 text-sm text-center"
                       style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                     >
@@ -648,7 +700,7 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
                       </span>
                     </div>
                   )}
-                  {special.bookingContact && (
+                  {special.bookingContact && isLikelyPhone(special.bookingContact) && (
                     <div className="flex items-center gap-2.5">
                       <Phone className="text-sage flex-shrink-0" size={16} />
                       <span className="text-sm text-charcoal/80" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>

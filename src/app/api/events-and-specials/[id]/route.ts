@@ -34,18 +34,18 @@ export async function GET(
 
     ({ data: representative, error: repError } = await supabase
       .from("events_and_specials")
-      .select(baseSelect + ",booking_url,booking_contact")
+      .select(baseSelect + ",booking_url,booking_contact,cta_source,whatsapp_number,whatsapp_prefill_template")
       .eq("id", id)
       .single());
 
     const repErrorMessage = String(repError?.message ?? "");
-    const isMissingBookingColumn =
+    const isMissingCtaOrBookingColumn =
       repError &&
       /does not exist/i.test(repErrorMessage) &&
-      /(events_and_specials\.)?booking_url/i.test(repErrorMessage);
+      /(events_and_specials\.)?(booking_url|cta_source|whatsapp_number|whatsapp_prefill_template)/i.test(repErrorMessage);
 
-    if (isMissingBookingColumn) {
-      console.warn("[events-and-specials/[id]] booking_url missing; retrying without booking fields.");
+    if (isMissingCtaOrBookingColumn) {
+      console.warn("[events-and-specials/[id]] booking/cta columns missing; retrying without optional fields.");
       ({ data: representative, error: repError } = await supabase
         .from("events_and_specials")
         .select(baseSelect)

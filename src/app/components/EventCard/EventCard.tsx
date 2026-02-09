@@ -222,6 +222,16 @@ function EventCard({ event, index: _index = 0 }: EventCardProps) {
                 {event.occurrencesCount} dates available
               </span>
             )}
+            {event.type === "event" && (
+              <span
+                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-medium w-fit ${
+                  event.businessId ? "bg-navbar-bg/10 text-navbar-bg" : "bg-coral/10 text-coral"
+                }`}
+                style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
+              >
+                {event.businessId ? "Business-linked event" : "Community-hosted event"}
+              </span>
+            )}
 
             <button
               onClick={handlePrimaryAction}

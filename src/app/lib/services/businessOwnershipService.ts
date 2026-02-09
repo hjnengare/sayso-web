@@ -157,67 +157,127 @@ export class BusinessOwnershipService {
     try {
       const supabase = this.getSupabase();
 
+      const businessSelectColumns = `
+        id,
+        name,
+        slug,
+        description,
+        primary_subcategory_slug,
+        primary_subcategory_label,
+        primary_category_slug,
+        location,
+        address,
+        phone,
+        email,
+        website,
+        image_url,
+        verified,
+        price_range,
+        created_at,
+        updated_at,
+        status,
+        owner_id,
+        owner_verified,
+        lat,
+        lng,
+        source,
+        source_id
+      `;
+
       type OwnerJoinRow = {
         business_id: string;
         businesses: Business | Business[] | null;
       };
+      type ClaimJoinRow = {
+        business_id: string;
+        businesses: Business | Business[] | null;
+      };
 
-      const { data, error } = await supabase
-        .from("business_owners")
-        .select(
+      const [ownerJoinResult, directOwnerResult, verifiedClaimsResult] = await Promise.all([
+        supabase
+          .from("business_owners")
+          .select(
+            `
+            business_id,
+            businesses!inner (
+              ${businessSelectColumns}
+            )
           `
-          business_id,
-          businesses!inner (
-            id,
-            name,
-            slug,
-            description,
-            primary_subcategory_slug,
-            primary_subcategory_label,
-            primary_category_slug,
-            location,
-            address,
-            phone,
-            email,
-            website,
-            image_url,
-            verified,
-            price_range,
-            created_at,
-            updated_at,
-            status,
-            owner_id,
-            owner_verified,
-            lat,
-            lng,
-            source,
-            source_id
           )
-        `
-        )
-        .eq("user_id", userId)
-        .eq("businesses.status", "active");
+          .eq("user_id", userId),
+        supabase
+          .from("businesses")
+          .select(businessSelectColumns)
+          .eq("owner_id", userId),
+        supabase
+          .from("business_claims")
+          .select(
+            `
+            business_id,
+            businesses!inner (
+              ${businessSelectColumns}
+            )
+          `
+          )
+          .eq("claimant_user_id", userId)
+          .eq("status", "verified"),
+      ]);
 
-      if (error) {
-        console.error("Error fetching businesses for owner:", error);
+      if (ownerJoinResult.error) {
+        console.error("Error fetching businesses for owner via business_owners:", ownerJoinResult.error);
+      }
+      if (directOwnerResult.error) {
+        console.error("Error fetching businesses for owner via businesses.owner_id:", directOwnerResult.error);
+      }
+      if (verifiedClaimsResult.error) {
+        console.error("Error fetching businesses for owner via verified claims:", verifiedClaimsResult.error);
+      }
 
-        // Handle network errors
-        if (error.message?.includes("fetch") || error.message?.includes("network")) {
+      const hasOwnerJoinError = Boolean(ownerJoinResult.error);
+      const hasDirectOwnerError = Boolean(directOwnerResult.error);
+      const hasVerifiedClaimsError = Boolean(verifiedClaimsResult.error);
+
+      if (hasOwnerJoinError && hasDirectOwnerError && hasVerifiedClaimsError) {
+        const ownerJoinMessage = ownerJoinResult.error?.message || "";
+        const directOwnerMessage = directOwnerResult.error?.message || "";
+        const verifiedClaimsMessage = verifiedClaimsResult.error?.message || "";
+        if (
+          ownerJoinMessage.includes("fetch") ||
+          ownerJoinMessage.includes("network") ||
+          directOwnerMessage.includes("fetch") ||
+          directOwnerMessage.includes("network") ||
+          verifiedClaimsMessage.includes("fetch") ||
+          verifiedClaimsMessage.includes("network")
+        ) {
           throw new Error(
             "Network error: Unable to fetch business data. Please check your connection."
           );
         }
-
         return [];
       }
 
-      const rows = (data ?? []) as unknown as OwnerJoinRow[];
+      const rows = ((ownerJoinResult.data ?? []) as unknown) as OwnerJoinRow[];
+      const claimRows = ((verifiedClaimsResult.data ?? []) as unknown) as ClaimJoinRow[];
+      const directlyOwnedBusinesses = ((directOwnerResult.data ?? []) as unknown) as Business[];
 
       // Normalize to flat list
-      const flattened: Business[] = [];
+      const flattened: Business[] = [...directlyOwnedBusinesses];
       for (const row of rows) {
         const joined = row.businesses;
 
+        if (!joined) continue;
+
+        if (Array.isArray(joined)) {
+          for (const b of joined) {
+            if (b && typeof (b as any).id === "string") flattened.push(b);
+          }
+        } else {
+          if (joined && typeof (joined as any).id === "string") flattened.push(joined);
+        }
+      }
+
+      for (const row of claimRows) {
+        const joined = row.businesses;
         if (!joined) continue;
 
         if (Array.isArray(joined)) {

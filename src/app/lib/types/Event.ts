@@ -14,6 +14,9 @@ export interface Event {
   description?: string;
   bookingUrl?: string;
   bookingContact?: string;
+  ctaSource?: "website" | "whatsapp" | "quicket" | "webtickets" | "other" | null;
+  whatsappNumber?: string;
+  whatsappPrefillTemplate?: string;
   source?: string;
   ticketmasterAttractionId?: string | null;
   ticketmaster_url?: string;
@@ -36,6 +39,7 @@ export interface Event {
   canonicalKey?: string;
   businessId?: string;
   businessName?: string;
+  isCommunityEvent?: boolean;
   createdBy?: string;
   createdAt?: string;
   isBusinessOwned?: boolean;

@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "../contexts/AuthContext";
 import { useSimpleBusinessSearch } from "../hooks/useSimpleBusinessSearch";
@@ -21,6 +21,7 @@ import { PageLoader, Loader } from "../components/Loader";
 import { ClaimModal } from "../components/BusinessClaim/ClaimModal";
 import Link from "next/link";
 import { Suspense } from "react";
+import { AnimatePresence } from "framer-motion";
 
 const Footer = dynamic(() => import("../components/Footer/Footer"), {
   loading: () => null,
@@ -45,32 +46,70 @@ function ClaimBusinessPageContent() {
     rejection_reason: string | null;
   }>>([]);
   const [claimsLoading, setClaimsLoading] = useState(false);
+  const [claimsError, setClaimsError] = useState<string | null>(null);
+  const [actionLoadingBusinessId, setActionLoadingBusinessId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const ownershipPricingNotice =
     "Please note: Business ownership on Sayso is currently free. However, within the coming months, business accounts may be subject to a subscription or ownership fee (pricing to be announced). We will communicate all details in advance.";
 
   const { results: businesses, isSearching } = useSimpleBusinessSearch(searchQuery, 300);
 
-  // Fetch current user's claims (business_claims) for "Your claims" section
-  useEffect(() => {
+  const fetchMyClaims = useCallback(async () => {
     if (!user) {
       setMyClaims([]);
+      setClaimsError(null);
+      setClaimsLoading(false);
       return;
     }
-    let cancelled = false;
+
     setClaimsLoading(true);
-    fetch("/api/business/claims")
-      .then((res) => (res.ok ? res.json() : { claims: [] }))
-      .then((data) => {
-        if (!cancelled && Array.isArray(data.claims)) setMyClaims(data.claims);
-      })
-      .catch(() => {
-        if (!cancelled) setMyClaims([]);
-      })
-      .finally(() => {
-        if (!cancelled) setClaimsLoading(false);
+    setClaimsError(null);
+
+    try {
+      const response = await fetch("/api/business/claims", {
+        method: "GET",
+        cache: "no-store",
+        headers: { Accept: "application/json" },
       });
-    return () => { cancelled = true; };
+
+      let payload: any = null;
+      try {
+        payload = await response.json();
+      } catch {
+        payload = null;
+      }
+
+      if (!response.ok) {
+        const message =
+          (typeof payload?.error === "string" && payload.error) ||
+          (typeof payload?.message === "string" && payload.message) ||
+          "Unable to load your claims right now.";
+        setMyClaims([]);
+        setClaimsError(message);
+        return;
+      }
+
+      if (!Array.isArray(payload?.claims)) {
+        setMyClaims([]);
+        setClaimsError("Unexpected claims response. Please refresh and try again.");
+        return;
+      }
+
+      setMyClaims(payload.claims);
+      setClaimsError(null);
+    } catch (error) {
+      console.error("[Claim business page] Failed to fetch claims:", error);
+      setMyClaims([]);
+      setClaimsError("Unable to load your claims right now. Please try again.");
+    } finally {
+      setClaimsLoading(false);
+    }
   }, [user]);
+
+  // Fetch current user's claims (business_claims) for "Your claims" section
+  useEffect(() => {
+    void fetchMyClaims();
+  }, [fetchMyClaims]);
 
   // Handle businessId from query params (after login redirect)
   useEffect(() => {
@@ -84,33 +123,39 @@ function ClaimBusinessPageContent() {
     }
   }, [searchParams, user, businesses]);
 
-  const handleClaimClick = (business: any) => {
-    if (!user) {
-      // Redirect to business login with redirect back to claim-business with businessId
-      router.push(`/login?redirect=/claim-business?businessId=${business.id}`);
-      return;
-    }
+  const handleClaimClick = async (business: any) => {
+    setActionError(null);
+    setActionLoadingBusinessId(business.id);
 
-    // Check claim status
-    if (business.claimed_by_user) {
-      // User already owns this business - go to dashboard
-      router.push(`/my-businesses/businesses/${business.id}`);
-      return;
-    }
+    try {
+      if (!user) {
+        router.push(`/login?redirect=/claim-business?businessId=${business.id}`);
+        return;
+      }
 
-    if (business.pending_by_user) {
-      // Already has pending claim - show message
-      return;
-    }
+      if (business.claimed_by_user) {
+        router.push(`/my-businesses/businesses/${business.id}`);
+        return;
+      }
 
-    if (business.claim_status === 'claimed' && !business.claimed_by_user) {
-      // Already claimed by someone else - show message
-      return;
-    }
+      if (business.pending_by_user) {
+        setActionError("You already have a claim pending for this business.");
+        return;
+      }
 
-    // Open claim modal
-    setSelectedBusiness(business);
-    setShowClaimModal(true);
+      if (business.claim_status === 'claimed' && !business.claimed_by_user) {
+        setActionError("This business is already claimed. Contact support if you need assistance.");
+        return;
+      }
+
+      setSelectedBusiness(business);
+      setShowClaimModal(true);
+    } catch (error) {
+      console.error("[Claim business page] Claim button error:", error);
+      setActionError("Unable to start claim flow. Please try again.");
+    } finally {
+      setActionLoadingBusinessId(null);
+    }
   };
 
   const handleClaimSuccess = () => {
@@ -118,10 +163,7 @@ function ClaimBusinessPageContent() {
     setSelectedBusiness(null);
     // Refresh "Your claims" list
     if (user) {
-      fetch("/api/business/claims")
-        .then((res) => (res.ok ? res.json() : { claims: [] }))
-        .then((data) => Array.isArray(data.claims) && setMyClaims(data.claims))
-        .catch(() => {});
+      void fetchMyClaims();
     }
     if (searchQuery.trim().length >= 2) {
       const event = new Event('input', { bubbles: true });
@@ -179,15 +221,25 @@ function ClaimBusinessPageContent() {
   };
 
   const getActionButton = (business: any) => {
+    const isActionLoading = actionLoadingBusinessId === business.id;
+
     if (!user) {
       return (
         <button
           onClick={() => handleClaimClick(business)}
+          disabled={isActionLoading}
           className="w-full sm:w-auto px-5 py-2.5 min-h-[44px] rounded-full text-sm font-semibold font-urbanist transition-all duration-200 flex-shrink-0
-            bg-gradient-to-br from-coral to-coral/90 text-white hover:from-coral/90 hover:to-coral/80 hover:shadow-lg active:scale-[0.98] touch-manipulation"
+            bg-gradient-to-br from-coral to-coral/90 text-white hover:from-coral/90 hover:to-coral/80 hover:shadow-lg active:scale-[0.98] touch-manipulation disabled:opacity-60 disabled:cursor-not-allowed"
           style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
         >
-          Log in to claim
+          {isActionLoading ? (
+            <span className="inline-flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Opening...
+            </span>
+          ) : (
+            "Log in to claim"
+          )}
         </button>
       );
     }
@@ -196,11 +248,19 @@ function ClaimBusinessPageContent() {
       return (
         <button
           onClick={() => handleClaimClick(business)}
+          disabled={isActionLoading}
           className="w-full sm:w-auto px-5 py-2.5 min-h-[44px] rounded-full text-sm font-semibold font-urbanist transition-all duration-200 flex-shrink-0
-            bg-gradient-to-br from-sage to-sage/90 text-white hover:from-sage/90 hover:to-sage/80 hover:shadow-lg active:scale-[0.98] touch-manipulation"
+            bg-gradient-to-br from-sage to-sage/90 text-white hover:from-sage/90 hover:to-sage/80 hover:shadow-lg active:scale-[0.98] touch-manipulation disabled:opacity-60 disabled:cursor-not-allowed"
           style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
         >
-          Go to dashboard
+          {isActionLoading ? (
+            <span className="inline-flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Opening...
+            </span>
+          ) : (
+            "Go to dashboard"
+          )}
         </button>
       );
     }
@@ -238,11 +298,19 @@ function ClaimBusinessPageContent() {
     return (
       <button
         onClick={() => handleClaimClick(business)}
+        disabled={isActionLoading}
         className="w-full sm:w-auto px-5 py-2.5 min-h-[44px] rounded-full text-sm font-semibold font-urbanist transition-all duration-200 flex-shrink-0
-          bg-gradient-to-br from-coral to-coral/90 text-white hover:from-coral/90 hover:to-coral/80 hover:shadow-lg active:scale-[0.98] touch-manipulation"
+          bg-gradient-to-br from-coral to-coral/90 text-white hover:from-coral/90 hover:to-coral/80 hover:shadow-lg active:scale-[0.98] touch-manipulation disabled:opacity-60 disabled:cursor-not-allowed"
         style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
       >
-        Claim this business
+        {isActionLoading ? (
+          <span className="inline-flex items-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Opening claim flow...
+          </span>
+        ) : (
+          "Claim this business"
+        )}
       </button>
     );
   };
@@ -312,7 +380,7 @@ function ClaimBusinessPageContent() {
                   </div>
 
                   {/* Your claims (status states: Pending Verification, Action Required, Under Review, Verified, Rejected) */}
-                  {user && (claimsLoading || myClaims.length > 0) && (
+                  {user && (claimsLoading || myClaims.length > 0 || Boolean(claimsError)) && (
                     <div className="mb-8">
                       <h3 className="font-urbanist text-base font-semibold text-charcoal mb-3" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                         Your claims
@@ -366,6 +434,15 @@ function ClaimBusinessPageContent() {
                           ))}
                         </ul>
                       )}
+                      {claimsError && !claimsLoading && (
+                        <div
+                          className="mt-3 p-3 rounded-[10px] bg-coral/10 border border-coral/30 text-coral text-sm font-medium"
+                          style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                          role="alert"
+                        >
+                          {claimsError}
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -391,6 +468,15 @@ function ClaimBusinessPageContent() {
 
                   {/* Business Results */}
                   <div className="space-y-3 sm:space-y-4 py-6">
+                    {actionError && (
+                      <div
+                        className="p-3 rounded-[10px] bg-coral/10 border border-coral/30 text-coral text-sm font-medium"
+                        style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                        role="alert"
+                      >
+                        {actionError}
+                      </div>
+                    )}
                     {isSearching && (
                       <div className="flex items-center justify-center py-8 sm:py-12">
                         <Loader size="md" variant="wavy" color="sage" />
@@ -489,16 +575,18 @@ function ClaimBusinessPageContent() {
       <Footer />
 
       {/* Claim Modal */}
-      {showClaimModal && selectedBusiness && (
-        <ClaimModal
-          business={selectedBusiness}
-          onClose={() => {
-            setShowClaimModal(false);
-            setSelectedBusiness(null);
-          }}
-          onSuccess={handleClaimSuccess}
-        />
-      )}
+      <AnimatePresence>
+        {showClaimModal && selectedBusiness && (
+          <ClaimModal
+            business={selectedBusiness}
+            onClose={() => {
+              setShowClaimModal(false);
+              setSelectedBusiness(null);
+            }}
+            onSuccess={handleClaimSuccess}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

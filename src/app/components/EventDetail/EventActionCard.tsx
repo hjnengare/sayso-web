@@ -4,6 +4,8 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useToast } from "../../contexts/ToastContext";
+import type { Event } from "../../lib/types/Event";
+import { resolveCtaTarget } from "../../lib/events/cta";
 
 interface EventActionCardProps {
   eventId?: string;
@@ -12,6 +14,7 @@ interface EventActionCardProps {
   ticketmasterUrl?: string;
   bookingContact?: string;
   purchaseUrl?: string;
+  eventData?: Event;
 }
 
 export default function EventActionCard({
@@ -21,15 +24,58 @@ export default function EventActionCard({
   ticketmasterUrl,
   bookingContact,
   purchaseUrl,
+  eventData,
 }: EventActionCardProps) {
   const { showToast } = useToast();
 
+  const isLikelyPhone = (value?: string) => {
+    if (!value) return false;
+    const trimmed = value.trim();
+    if (!trimmed) return false;
+    const digits = trimmed.replace(/[^\d]/g, "");
+    return digits.length >= 7 && /^[\d+()\-\s]+$/.test(trimmed);
+  };
+
+  const logCtaClick = (payload: { ctaKind: "external_url" | "whatsapp"; ctaSource?: string | null; targetUrl: string }) => {
+    if (!eventId) return;
+    void fetch(`/api/events-and-specials/${eventId}/cta-click`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      keepalive: true,
+      body: JSON.stringify(payload),
+    }).catch(() => {
+      // Never block CTA navigation for analytics failures.
+    });
+  };
+
   const handleReserveClick = () => {
     const cleanUrl = (value?: string) => value?.trim() || "";
-    const url = cleanUrl(ticketmasterUrl) || cleanUrl(bookingUrl) || cleanUrl(purchaseUrl);
+    const fallbackUrl = cleanUrl(ticketmasterUrl) || cleanUrl(bookingUrl) || cleanUrl(purchaseUrl);
 
-    if (url) {
-      window.open(url, "_blank", "noopener,noreferrer");
+    if (eventData && typeof window !== "undefined") {
+      const resolved = resolveCtaTarget({
+        event: eventData,
+        currentUrl: window.location.href,
+        ctaSource: eventData.ctaSource ?? null,
+        bookingUrl: cleanUrl(eventData.bookingUrl) || fallbackUrl,
+        whatsappNumber: eventData.whatsappNumber ?? null,
+        whatsappPrefillTemplate: eventData.whatsappPrefillTemplate ?? null,
+      });
+
+      if (resolved.url) {
+        window.open(resolved.url, "_blank", "noopener,noreferrer");
+        logCtaClick({
+          ctaKind: resolved.ctaKind,
+          ctaSource: resolved.ctaSource,
+          targetUrl: resolved.url,
+        });
+        return;
+      }
+    }
+
+    if (fallbackUrl) {
+      window.open(fallbackUrl, "_blank", "noopener,noreferrer");
+      logCtaClick({ ctaKind: "external_url", ctaSource: eventData?.ctaSource ?? null, targetUrl: fallbackUrl });
       return;
     }
 
@@ -68,7 +114,7 @@ export default function EventActionCard({
             className="w-full bg-gradient-to-br from-navbar-bg to-navbar-bg/90 text-white font-semibold py-3 px-5 rounded-full transition-all duration-300 hover:bg-navbar-bg border border-white/30 shadow-md text-body-sm"
             style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
           >
-            Reserve Your Spot
+            {!isLikelyPhone(bookingContact) && bookingContact?.trim() ? bookingContact.trim() : "Reserve Your Spot"}
           </motion.button>
 
           {eventId && (

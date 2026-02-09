@@ -45,6 +45,9 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
   const [loading, setLoading] = useState(true);
   const hasReviewed = false;
   const mapSectionRef = useRef<HTMLDivElement>(null);
+  const hasDirectCta =
+    Boolean(event?.bookingUrl || event?.purchaseUrl || (event as any)?.ticketmaster_url || (event as any)?.url) ||
+    (((event?.ctaSource ?? "").toLowerCase() === "whatsapp" || Boolean(event?.whatsappNumber)) && Boolean(event));
 
   const scrollToMap = () => {
     mapSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -318,7 +321,7 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
                       })()}
 
                       {/* Contact Info - Mobile Only (hide when direct booking is available) */}
-                      {!((event.bookingUrl || event.purchaseUrl || (event as any).ticketmaster_url || (event as any).url)) && (
+                      {!hasDirectCta && (
                         <div className="lg:hidden">
                           <EventContactInfo event={event} />
                         </div>
@@ -334,11 +337,12 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
                         purchaseUrl={event.purchaseUrl}
                         ticketmasterUrl={(event as any).ticketmaster_url || (event as any).url}
                         bookingContact={event.bookingContact}
+                        eventData={event}
                       />
                       <EventPersonalizationInsights event={{ id: event.id, rating: event.rating, totalReviews: reviews.length }} />
 
                       {/* Contact Info - Desktop Only (hide when direct booking is available) */}
-                      {!((event.bookingUrl || event.purchaseUrl || (event as any).ticketmaster_url || (event as any).url)) && (
+                      {!hasDirectCta && (
                         <div className="hidden lg:block">
                           <EventContactInfo event={event} />
                         </div>

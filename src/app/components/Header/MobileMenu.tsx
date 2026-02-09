@@ -1,5 +1,6 @@
-import { CSSProperties, MouseEvent } from "react";
-import { Lock, X } from "lucide-react";
+import { CSSProperties, MouseEvent, useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import { ChevronDown, Lock, X } from "lucide-react";
 import OptimizedLink from "../Navigation/OptimizedLink";
 import { NavLink } from "./DesktopNav";
 import { getMobileMenuActions, shouldShowLockIndicator } from "./headerActionsConfig";
@@ -27,6 +28,27 @@ export default function MobileMenu({
   handleNavClick,
   sf,
 }: MobileMenuProps) {
+  const pathname = usePathname();
+  const addMenuItems: readonly NavLink[] = [
+    { key: "add-business", label: "Add New Business", href: "/add-business", requiresAuth: true },
+    { key: "add-special", label: "Add Special", href: "/add-special", requiresAuth: true },
+    { key: "add-event", label: "Add Event", href: "/add-event", requiresAuth: true },
+  ] as const;
+  const businessTopLinks = businessLinks.filter((link) => link.key !== "add-business");
+  const isRouteActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+  const isAddRouteActive = addMenuItems.some((item) => isRouteActive(item.href));
+  const [isAddSectionOpen, setIsAddSectionOpen] = useState(isAddRouteActive);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setIsAddSectionOpen(false);
+      return;
+    }
+    if (isAddRouteActive) {
+      setIsAddSectionOpen(true);
+    }
+  }, [isOpen, isAddRouteActive]);
+
   const primaryCount = primaryLinks.length;
   const discoverCount = discoverLinks.length;
   // Use centralized mobile menu actions config
@@ -76,16 +98,14 @@ export default function MobileMenu({
     // Business account: Only business tools
     menuContent = (
       <div className="space-y-1">
-        {businessLinks.map(({ key, label, href }, index) => {
-          const pathname = typeof window !== "undefined" ? window.location.pathname : "";
-          const targetHref = key === "add-business" ? "/add-business" : href;
-          const isActive = pathname ? pathname === targetHref || pathname.startsWith(targetHref) : false;
+        {businessTopLinks.map(({ key, label, href }, index) => {
+          const isActive = isRouteActive(href);
           return (
             <OptimizedLink
               key={key}
-              href={targetHref}
+              href={href}
               onClick={(e) => {
-                handleNavClick(targetHref, e);
+                handleNavClick(href, e);
                 onClose();
               }}
               className={`px-3 py-2 rounded-[12px] text-base font-normal transition-all duration-200 relative min-h-[44px] flex items-center justify-start ${mobileRevealClass} ${isActive ? "text-sage bg-white/5" : "text-white hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5"}`}
@@ -98,6 +118,64 @@ export default function MobileMenu({
             </OptimizedLink>
           );
         })}
+
+        <div
+          className={`rounded-[12px] border border-white/10 bg-white/[0.04] transition-all duration-300 ${mobileRevealClass}`}
+          style={{
+            ...sf,
+            transitionDelay: `${businessTopLinks.length * 60}ms`,
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setIsAddSectionOpen((prev) => !prev)}
+            className={`w-full px-3 py-2 min-h-[44px] rounded-[12px] text-base font-normal flex items-center justify-between transition-all duration-200 ${
+              isAddRouteActive ? "text-sage" : "text-white hover:text-white hover:bg-white/5"
+            }`}
+            aria-expanded={isAddSectionOpen}
+            aria-controls="mobile-add-nav"
+          >
+            <span>Add</span>
+            <ChevronDown
+              className={`w-4 h-4 transition-transform duration-300 ${isAddSectionOpen ? "rotate-180" : ""}`}
+            />
+          </button>
+
+          <div
+            id="mobile-add-nav"
+            className={`grid transition-all duration-300 ease-out ${isAddSectionOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-70"}`}
+          >
+            <div className="overflow-hidden">
+              <div className="pl-3 pr-2 pb-2 space-y-1">
+                {addMenuItems.map((item) => {
+                  const itemActive = isRouteActive(item.href);
+                  const targetHref = shouldShowLockIndicator(isGuest, item.requiresAuth)
+                    ? "/login"
+                    : item.href;
+                  return (
+                    <OptimizedLink
+                      key={item.key}
+                      href={targetHref}
+                      onClick={(e) => {
+                        handleNavClick(item.href, e);
+                        onClose();
+                      }}
+                      className={`block rounded-lg px-3 py-2 text-sm font-semibold transition-all duration-200 ${
+                        itemActive
+                          ? "text-sage bg-gradient-to-r from-sage/15 to-sage/5"
+                          : "text-white/90 hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5"
+                      }`}
+                      style={sf}
+                    >
+                      {item.label}
+                    </OptimizedLink>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Business-only actions (e.g., settings) */}
         <div className="h-px bg-charcoal/10 my-2 mx-3" />
         {actionItems.map((item, idx) => {
@@ -110,7 +188,7 @@ export default function MobileMenu({
               className={`px-3 py-2 rounded-full text-base font-normal text-white hover:text-white flex items-center justify-start transition-colors duration-200 min-h-[44px] ${mobileRevealClass}`}
               style={{
                 ...sf,
-                transitionDelay: `${(businessLinks.length + (item.delay ?? idx)) * 60}ms`,
+                transitionDelay: `${(businessTopLinks.length + 1 + (item.delay ?? idx)) * 60}ms`,
               }}
             >
               <span className="text-left flex items-center gap-1.5">

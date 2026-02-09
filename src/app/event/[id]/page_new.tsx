@@ -332,6 +332,7 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
                         purchaseUrl={event.purchaseUrl}
                         ticketmasterUrl={(event as any).ticketmaster_url || (event as any).url}
                         bookingContact={event.bookingContact}
+                        eventData={event}
                       />
                       <EventPersonalizationInsights event={{ id: event.id, rating: event.rating, totalReviews: reviews.length }} />
                       

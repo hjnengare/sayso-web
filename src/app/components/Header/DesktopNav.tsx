@@ -4,9 +4,11 @@ import {
   Fragment,
   CSSProperties,
   RefObject,
-  MouseEvent,
+  MouseEvent as ReactMouseEvent,
   useState,
   useEffect,
+  useRef,
+  useCallback,
 } from "react";
 import { usePathname } from "next/navigation";
 import { createPortal } from "react-dom";
@@ -44,7 +46,7 @@ interface DesktopNavProps {
   isSettingsActive: boolean;
   savedCount: number;
   unreadCount: number;
-  handleNavClick: (href: string, e?: MouseEvent) => void;
+  handleNavClick: (href: string, e?: ReactMouseEvent) => void;
 
   discoverDropdownRef: RefObject<HTMLDivElement>;
   discoverMenuPortalRef: RefObject<HTMLDivElement>;
@@ -94,10 +96,93 @@ export default function DesktopNav(props: DesktopNavProps) {
   } = props;
 
   const pathname = usePathname();
+  const addMenuItems: readonly NavLink[] = [
+    { key: "add-business", label: "Add New Business", href: "/add-business", requiresAuth: true },
+    { key: "add-special", label: "Add Special", href: "/add-special", requiresAuth: true },
+    { key: "add-event", label: "Add Event", href: "/add-event", requiresAuth: true },
+  ] as const;
 
   const [mounted, setMounted] = useState(false);
+  const [isAddDropdownOpen, setIsAddDropdownOpen] = useState(false);
+  const [isAddDropdownClosing, setIsAddDropdownClosing] = useState(false);
+  const addDropdownRef = useRef<HTMLDivElement>(null);
+  const addCloseTimeoutRef = useRef<number | null>(null);
+  const addCloseAnimationTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => setMounted(true), []);
+
+  const clearAddHoverTimeout = useCallback(() => {
+    if (addCloseTimeoutRef.current) {
+      clearTimeout(addCloseTimeoutRef.current);
+      addCloseTimeoutRef.current = null;
+    }
+  }, []);
+
+  const clearAddCloseAnimationTimeout = useCallback(() => {
+    if (addCloseAnimationTimeoutRef.current) {
+      clearTimeout(addCloseAnimationTimeoutRef.current);
+      addCloseAnimationTimeoutRef.current = null;
+    }
+  }, []);
+
+  const openAddDropdown = useCallback(() => {
+    clearAddHoverTimeout();
+    clearAddCloseAnimationTimeout();
+    setIsAddDropdownClosing(false);
+    setIsAddDropdownOpen(true);
+  }, [clearAddHoverTimeout, clearAddCloseAnimationTimeout]);
+
+  const closeAddDropdown = useCallback(() => {
+    clearAddHoverTimeout();
+    clearAddCloseAnimationTimeout();
+    setIsAddDropdownClosing(true);
+    addCloseAnimationTimeoutRef.current = window.setTimeout(() => {
+      setIsAddDropdownOpen(false);
+      setIsAddDropdownClosing(false);
+      addCloseAnimationTimeoutRef.current = null;
+    }, 150);
+  }, [clearAddHoverTimeout, clearAddCloseAnimationTimeout]);
+
+  const scheduleAddDropdownClose = useCallback(() => {
+    clearAddHoverTimeout();
+    addCloseTimeoutRef.current = window.setTimeout(() => {
+      closeAddDropdown();
+    }, 120);
+  }, [clearAddHoverTimeout, closeAddDropdown]);
+
+  useEffect(() => {
+    return () => {
+      clearAddHoverTimeout();
+      clearAddCloseAnimationTimeout();
+    };
+  }, [clearAddHoverTimeout, clearAddCloseAnimationTimeout]);
+
+  useEffect(() => {
+    clearAddHoverTimeout();
+    clearAddCloseAnimationTimeout();
+    setIsAddDropdownOpen(false);
+    setIsAddDropdownClosing(false);
+  }, [pathname, clearAddHoverTimeout, clearAddCloseAnimationTimeout]);
+
+  useEffect(() => {
+    if (!isAddDropdownOpen) return;
+
+    const handleOutsideClick = (event: globalThis.MouseEvent) => {
+      const target = event.target as Node;
+      if (!addDropdownRef.current?.contains(target)) {
+        closeAddDropdown();
+      }
+    };
+
+    const timer = window.setTimeout(() => {
+      document.addEventListener("mousedown", handleOutsideClick);
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timer);
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [isAddDropdownOpen, closeAddDropdown]);
 
   const isSavedActive = pathname === "/saved";
 
@@ -136,6 +221,7 @@ export default function DesktopNav(props: DesktopNavProps) {
     if (href === "/") return pathname === "/";
     return pathname === href || (pathname?.startsWith(href) ?? false);
   };
+  const isAddGroupActive = addMenuItems.some((item) => isPathActive(item.href));
 
   // Keep runtime stable if account type isn't ready yet
   if (typeof isBusinessAccountUser === "undefined") return null;
@@ -150,6 +236,88 @@ export default function DesktopNav(props: DesktopNavProps) {
             const isActive =
               isPathActive(href) ||
               (isClaimBusinessActive && href === "/for-businesses");
+
+            if (key === "add-business") {
+              return (
+                <div
+                  key="add-dropdown"
+                  ref={addDropdownRef}
+                  className="relative"
+                  onMouseEnter={openAddDropdown}
+                  onMouseLeave={scheduleAddDropdownClose}
+                >
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (isAddDropdownOpen) closeAddDropdown();
+                      else openAddDropdown();
+                    }}
+                    className={`${baseLinkClass} ${
+                      isAddGroupActive ? activeTextClass : businessPalette
+                    }`}
+                    style={sf}
+                    aria-haspopup="true"
+                    aria-expanded={isAddDropdownOpen}
+                  >
+                    <span className="relative z-10 whitespace-nowrap">Add</span>
+                    <ChevronDown
+                      className={`w-4 h-4 transition-transform duration-300 relative z-10 ${
+                        isAddDropdownOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+
+                  {mounted && (isAddDropdownOpen || isAddDropdownClosing) && (
+                    <div
+                      className={`absolute left-0 top-full mt-2 z-[900] bg-off-white rounded-[12px] border border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.12),0_4px_16px_rgba(0,0,0,0.08)] overflow-hidden min-w-[250px] backdrop-blur-xl transition-all duration-150 ease-out ${
+                        isAddDropdownClosing
+                          ? "opacity-0 scale-95 -translate-y-1 pointer-events-none"
+                          : "opacity-100 scale-100 translate-y-0"
+                      }`}
+                      style={{
+                        fontFamily:
+                          "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                        transformOrigin: "top left",
+                      }}
+                      onMouseEnter={openAddDropdown}
+                      onMouseLeave={scheduleAddDropdownClose}
+                    >
+                      <div className="px-4 pt-3 pb-2 border-b border-charcoal/10 bg-off-white">
+                        <h3 className="text-sm font-semibold text-charcoal" style={sf}>
+                          Add
+                        </h3>
+                      </div>
+                      <div className="py-2">
+                        {addMenuItems.map((item) => {
+                          const itemActive = isPathActive(item.href);
+                          return (
+                            <OptimizedLink
+                              key={item.key}
+                              href={getLinkHref(item.href, item.requiresAuth, isGuest)}
+                              onClick={(e) => {
+                                handleNavClick(item.href, e);
+                                clearAddHoverTimeout();
+                                closeAddDropdown();
+                              }}
+                              className={`block px-4 py-2.5 text-sm font-semibold transition-all duration-200 mx-2 rounded-lg ${
+                                itemActive
+                                  ? "text-sage bg-gradient-to-r from-sage/10 to-sage/5"
+                                  : "text-charcoal hover:bg-gradient-to-r hover:from-sage/10 hover:to-coral/5 hover:text-coral"
+                              }`}
+                              style={sf}
+                            >
+                              {item.label}
+                            </OptimizedLink>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            }
 
             return (
               <OptimizedLink

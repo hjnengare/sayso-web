@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSupabase } from "@/app/lib/supabase/server";
 import { formatDateRangeLabel, mapEventsAndSpecialsRowToEventCard, type EventsAndSpecialsRow } from "@/app/lib/events/mapEvent";
+import { createEventOrSpecial } from "@/app/lib/events/createEventSpecial";
 
 export const dynamic = "force-dynamic";
 
 const MAX_RAW_ROWS = 4000;
-const BOOKING_SELECT_FRAGMENT = ",booking_url,booking_contact";
+const BOOKING_SELECT_FRAGMENT =
+  ",booking_url,booking_contact,cta_source,whatsapp_number,whatsapp_prefill_template";
 
 /**
  * Strip numbering, date tokens, and noise from a title to produce a canonical series key.
@@ -89,13 +91,13 @@ export async function GET(req: NextRequest) {
     ({ data, error } = await query);
 
     const errorMessage = String(error?.message ?? "");
-    const isMissingBookingColumn =
+    const isMissingCtaOrBookingColumn =
       error &&
       /does not exist/i.test(errorMessage) &&
-      /(events_and_specials\.)?booking_url/i.test(errorMessage);
+      /(events_and_specials\.)?(booking_url|cta_source|whatsapp_number|whatsapp_prefill_template)/i.test(errorMessage);
 
-    if (isMissingBookingColumn) {
-      console.warn("[events-and-specials] booking_url missing; retrying without booking fields.");
+    if (isMissingCtaOrBookingColumn) {
+      console.warn("[events-and-specials] booking/cta columns missing; retrying without optional fields.");
       let retryQuery = supabase
         .from("events_and_specials")
         .select(baseSelect)
@@ -132,6 +134,9 @@ export async function GET(req: NextRequest) {
           description: string | null;
           booking_url: string | null;
           booking_contact: string | null;
+          cta_source: string | null;
+          whatsapp_number: string | null;
+          whatsapp_prefill_template: string | null;
           price: number | null;
           rating: number | null;
         };
@@ -157,6 +162,9 @@ export async function GET(req: NextRequest) {
             description: row.description ?? null,
             booking_url: (row as any).booking_url ?? null,
             booking_contact: (row as any).booking_contact ?? null,
+            cta_source: (row as any).cta_source ?? null,
+            whatsapp_number: (row as any).whatsapp_number ?? null,
+            whatsapp_prefill_template: (row as any).whatsapp_prefill_template ?? null,
             price: row.price ?? null,
             rating: row.rating ?? null,
           },
@@ -185,6 +193,9 @@ export async function GET(req: NextRequest) {
       if (!existing.firstNonNull.description && row.description) existing.firstNonNull.description = row.description;
       if (!existing.firstNonNull.booking_url && (row as any).booking_url) existing.firstNonNull.booking_url = (row as any).booking_url;
       if (!existing.firstNonNull.booking_contact && (row as any).booking_contact) existing.firstNonNull.booking_contact = (row as any).booking_contact;
+      if (!existing.firstNonNull.cta_source && (row as any).cta_source) existing.firstNonNull.cta_source = (row as any).cta_source;
+      if (!existing.firstNonNull.whatsapp_number && (row as any).whatsapp_number) existing.firstNonNull.whatsapp_number = (row as any).whatsapp_number;
+      if (!existing.firstNonNull.whatsapp_prefill_template && (row as any).whatsapp_prefill_template) existing.firstNonNull.whatsapp_prefill_template = (row as any).whatsapp_prefill_template;
       if (existing.firstNonNull.price == null && row.price != null) existing.firstNonNull.price = row.price;
       if (existing.firstNonNull.rating == null && row.rating != null) existing.firstNonNull.rating = row.rating;
     }
@@ -202,6 +213,9 @@ export async function GET(req: NextRequest) {
           rating: s.firstNonNull.rating,
           booking_url: s.firstNonNull.booking_url,
           booking_contact: s.firstNonNull.booking_contact,
+          cta_source: s.firstNonNull.cta_source as any,
+          whatsapp_number: s.firstNonNull.whatsapp_number,
+          whatsapp_prefill_template: s.firstNonNull.whatsapp_prefill_template,
         };
 
         const dateRangeLabel =
@@ -226,5 +240,42 @@ export async function GET(req: NextRequest) {
   } catch (err) {
     console.error("[events-and-specials] error:", err);
     return NextResponse.json({ items: [], count: 0, limit: 20, offset: 0 }, { status: 200 });
+  }
+}
+
+/**
+ * POST /api/events-and-specials
+ * Create event/special with centralized permission checks.
+ */
+export async function POST(req: NextRequest) {
+  try {
+    const supabase = await getServerSupabase(req);
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized. Please log in first." }, { status: 401 });
+    }
+
+    const body = (await req.json()) as Record<string, unknown>;
+    const result = await createEventOrSpecial({
+      supabase,
+      userId: user.id,
+      body,
+    });
+
+    if (result.ok === false) {
+      return NextResponse.json({ error: result.error }, { status: result.status });
+    }
+
+    return NextResponse.json({ success: true, data: result.data }, { status: 201 });
+  } catch (error: any) {
+    console.error("[events-and-specials] create error:", error);
+    return NextResponse.json(
+      { error: "Failed to create listing", details: error?.message ?? "Unknown error" },
+      { status: 500 },
+    );
   }
 }

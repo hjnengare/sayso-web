@@ -342,7 +342,7 @@ export async function proxy(request: NextRequest) {
     // Event and special routes
     '/event', '/special',
     // User action routes
-    '/notifications', '/add-business', '/claim-business', '/settings',
+    '/notifications', '/add-business', '/add-event', '/add-special', '/claim-business', '/settings',
   ];
 
   // Business routes that require authentication
@@ -362,7 +362,7 @@ export async function proxy(request: NextRequest) {
 
   const isBusinessEditRoute = request.nextUrl.pathname.match(/^\/business\/[^\/]+\/edit/);
 
-  const businessAuthRoutes = ['/claim-business'];
+  const businessAuthRoutes = ['/claim-business', '/add-business', '/add-special'];
   const isBusinessAuthRoute = businessAuthRoutes.some(route =>
     request.nextUrl.pathname.startsWith(route)
   );
@@ -571,7 +571,7 @@ export async function proxy(request: NextRequest) {
     }
 
     // Business routes: Always allow
-    const isBusinessRoute = ['/claim-business', '/my-businesses', '/add-business', '/settings', '/dm'].some(route =>
+    const isBusinessRoute = ['/claim-business', '/my-businesses', '/add-business', '/add-event', '/add-special', '/settings', '/dm'].some(route =>
       pathname.startsWith(route)
     );
     if (isBusinessRoute) {
@@ -697,7 +697,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (isBusinessAuthRoute && !user) {
-    return redirectWithGuard(request, new URL('/login?redirect=/claim-business', request.url));
+    return redirectWithGuard(request, new URL(`/login?redirect=${encodeURIComponent(request.nextUrl.pathname)}`, request.url));
   }
 
   if (isBusinessAuthRoute && user && !user.email_confirmed_at) {

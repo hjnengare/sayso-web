@@ -40,6 +40,9 @@ export type EventsAndSpecialsRow = {
   rating: number | null;
   booking_url?: string | null;
   booking_contact?: string | null;
+  cta_source?: "website" | "whatsapp" | "quicket" | "webtickets" | "other" | null;
+  whatsapp_number?: string | null;
+  whatsapp_prefill_template?: string | null;
 };
 
 export function mapEventsAndSpecialsRowToEventCard(
@@ -97,7 +100,11 @@ export function mapEventsAndSpecialsRowToEventCard(
     description: row.description ?? undefined,
     bookingUrl: bookingUrl || undefined,
     bookingContact: (row.booking_contact ?? undefined) as any,
+    ctaSource: row.cta_source ?? null,
+    whatsappNumber: row.whatsapp_number ?? undefined,
+    whatsappPrefillTemplate: row.whatsapp_prefill_template ?? undefined,
     businessId: row.business_id ?? undefined,
+    isCommunityEvent: row.type === "event" ? row.business_id == null : false,
     venueName,
     city,
     country,
