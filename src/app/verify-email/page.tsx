@@ -184,6 +184,7 @@ export default function VerifyEmailPage() {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const redirectingRef = useRef(false);
+  const checkingRef = useRef(false);
   const prefersReduced = usePrefersReducedMotion();
 
   // Clean ?expired param from URL without re-render
@@ -316,9 +317,19 @@ export default function VerifyEmailPage() {
     window.open(inboxUrl, "_blank");
   };
 
-  const handleRefreshUser = async () => {
-    setVerificationStatusMessage(null);
-    setIsChecking(true);
+  const checkVerificationStatus = useCallback(async (options?: {
+    manual?: boolean;
+    showSuccessToast?: boolean;
+  }): Promise<boolean> => {
+    const { manual = false, showSuccessToast = true } = options || {};
+    if (redirectingRef.current || checkingRef.current) return false;
+
+    checkingRef.current = true;
+    if (manual) {
+      setVerificationStatusMessage(null);
+      setIsChecking(true);
+    }
+
     const supabase = getBrowserSupabase();
     const notVerifiedMessage =
       "We still can't detect verification. Please check your inbox and try again.";
@@ -333,14 +344,14 @@ export default function VerifyEmailPage() {
       // 2) Explicitly re-fetch current auth user from Supabase.
       const { data: userData, error: userError } = await supabase.auth.getUser();
       if (userError || !userData?.user) {
-        setVerificationStatusMessage(notVerifiedMessage);
-        return;
+        if (manual) setVerificationStatusMessage(notVerifiedMessage);
+        return false;
       }
 
       const authUser = userData.user;
       if (!authUser.email_confirmed_at) {
-        setVerificationStatusMessage(notVerifiedMessage);
-        return;
+        if (manual) setVerificationStatusMessage(notVerifiedMessage);
+        return false;
       }
 
       // 3) Email is verified: refresh local auth + route by user type.
@@ -372,15 +383,45 @@ export default function VerifyEmailPage() {
         profile,
       };
 
-      showToast("Email verified successfully", "sage", 2200);
+      if (showSuccessToast) {
+        showToast("Email verified successfully", "sage", 2200);
+      }
       redirectingRef.current = true;
       router.replace(getPostVerifyRedirect(verifiedUser));
+      return true;
     } catch {
-      setVerificationStatusMessage("Could not check verification status. Please try again.");
+      if (manual) {
+        setVerificationStatusMessage("Could not check verification status. Please try again.");
+      }
     } finally {
-      setIsChecking(false);
+      if (manual) setIsChecking(false);
+      checkingRef.current = false;
     }
+
+    return false;
+  }, [getPostVerifyRedirect, refreshUser, router, showToast, user?.email, user?.profile]);
+
+  const handleRefreshUser = async () => {
+    await checkVerificationStatus({ manual: true, showSuccessToast: true });
   };
+
+  // Auto-poll verification in the background and redirect immediately once confirmed.
+  useEffect(() => {
+    if (linkExpired || verificationSuccess || redirectingRef.current) return;
+    if (!user?.email && !pendingEmail) return;
+
+    const poll = () => {
+      void checkVerificationStatus({ manual: false, showSuccessToast: true });
+    };
+
+    const firstCheck = window.setTimeout(poll, 6000);
+    const interval = window.setInterval(poll, 8000);
+
+    return () => {
+      window.clearTimeout(firstCheck);
+      window.clearInterval(interval);
+    };
+  }, [checkVerificationStatus, linkExpired, pendingEmail, user?.email, verificationSuccess]);
 
   // Shared, consistent page shell for ALL branches (prevents hydration/layout mismatch)
   const PageShell: React.FC<{ children: React.ReactNode }> = ({ children }) => (

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "../contexts/ToastContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -40,6 +40,8 @@ export default function AddBusinessPage() {
     const router = useRouter();
     const { showToast } = useToast();
     const { user, isLoading: authLoading } = useAuth();
+    const ownershipPricingNotice =
+        "Please note: Business ownership on Sayso is currently free. However, within the coming months, business accounts may be subject to a subscription or ownership fee (pricing to be announced). We will communicate all details in advance.";
 
     // Form state
     const [formData, setFormData] = useState<BusinessFormData>({
@@ -484,7 +486,7 @@ export default function AddBusinessPage() {
             showToast('Your business has been created successfully! Redirecting to your business page...', 'success', 4000);
             setTimeout(() => {
                 router.push(`/business/my-businesses`);
-                router.refresh && router.refresh();
+                router.refresh();
             }, 1000);
         } catch (error: unknown) {
             console.error('Error creating business:', error);
@@ -629,6 +631,36 @@ export default function AddBusinessPage() {
                                             formData={formData}
                                             onHoursChange={handleHoursChange}
                                         />
+
+                                        {/* Ownership Pricing Disclaimer */}
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
+                                            className="rounded-[12px] border border-coral/20 bg-gradient-to-r from-coral/10 via-coral/5 to-white/90 p-4 sm:p-5 shadow-sm"
+                                            role="note"
+                                            aria-label="Business ownership pricing notice"
+                                        >
+                                            <div className="flex items-start gap-3">
+                                                <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-coral/15 text-coral">
+                                                    <AlertCircle className="h-4 w-4" />
+                                                </span>
+                                                <div>
+                                                    <p
+                                                        className="text-sm sm:text-base font-semibold text-charcoal"
+                                                        style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                                                    >
+                                                        Business Ownership Notice
+                                                    </p>
+                                                    <p
+                                                        className="mt-1 text-sm sm:text-base leading-relaxed text-charcoal/80"
+                                                        style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                                                    >
+                                                        {ownershipPricingNotice}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </motion.div>
 
                                         {/* Submit Button */}
                                         <motion.div
