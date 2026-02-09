@@ -587,7 +587,12 @@ export default function HeroCarousel() {
           className="relative h-[100dvh] sm:h-[90dvh] md:h-[80dvh] w-full overflow-hidden outline-none rounded-none md:rounded-[12px] min-h-[420px] sm:min-h-[520px] sm:max-h-[820px]"
           aria-label="Hero carousel"
           tabIndex={0}
-          style={{ fontFamily: FONT_STACK, touchAction: "pan-x" }}
+          style={{
+            fontFamily: FONT_STACK,
+            // Allow native vertical page scrolling on mobile while preserving
+            // horizontal swipe interactions for the carousel.
+            touchAction: "pan-y",
+          }}
         >
           {/* Liquid Glass Ambient Lighting */}
       <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-sage/10 pointer-events-none rounded-none" />
