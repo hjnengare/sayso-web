@@ -312,6 +312,12 @@ export default function CommunityHighlights({
                       will-change: transform;
                     }
 
+                    @media (max-width: 767px) {
+                      .badge-track {
+                        animation-duration: 6.67s;
+                      }
+                    }
+
                     /* Pause on touch (mobile) and hover (desktop) */
                     .badge-marquee:active .badge-track {
                       animation-play-state: paused;
