@@ -6,6 +6,7 @@ const FALLBACK_INTERESTS = [
   { id: 'food-drink', name: 'Food & Drink', description: 'Restaurants, cafes, and culinary experiences', icon: 'restaurant' },
   { id: 'beauty-wellness', name: 'Beauty & Wellness', description: 'Gyms, spas, and personal care services', icon: 'cut' },
   { id: 'professional-services', name: 'Professional Services', description: 'Home improvement and professional services', icon: 'home' },
+  { id: 'travel', name: 'Travel', description: 'Accommodation, transport, and travel services', icon: 'airplane' },
   { id: 'outdoors-adventure', name: 'Outdoors & Adventure', description: 'Outdoor activities and adventures', icon: 'bicycle' },
   { id: 'experiences-entertainment', name: 'Entertainment & Experiences', description: 'Movies, shows, and nightlife', icon: 'musical-notes' },
   { id: 'arts-culture', name: 'Arts & Culture', description: 'Museums, galleries, and cultural experiences', icon: 'color-palette' },
@@ -30,13 +31,35 @@ export async function GET() {
     
     // If database query succeeds and returns data, use it
     if (!error && dbInterests && dbInterests.length > 0) {
+      const normalizedDbInterests = dbInterests.map(interest => ({
+        id: interest.id,
+        name: interest.name,
+        description: interest.description || undefined,
+        icon: interest.icon || undefined,
+      }));
+
+      const dbById = new Map(normalizedDbInterests.map((interest) => [interest.id, interest]));
+      const fallbackIds = new Set(FALLBACK_INTERESTS.map((interest) => interest.id));
+
+      // Keep stable fallback order while preferring DB values when they exist.
+      const mergedInterests = FALLBACK_INTERESTS.map((fallbackInterest) => {
+        const fromDb = dbById.get(fallbackInterest.id);
+        if (!fromDb) return fallbackInterest;
+        return {
+          id: fromDb.id || fallbackInterest.id,
+          name: fromDb.name || fallbackInterest.name,
+          description: fromDb.description || fallbackInterest.description,
+          icon: fromDb.icon || fallbackInterest.icon,
+        };
+      });
+
+      // Preserve any DB-only interests after known fallback interests.
+      const extraDbInterests = normalizedDbInterests.filter(
+        (interest) => !fallbackIds.has(interest.id)
+      );
+
       return NextResponse.json({ 
-        interests: dbInterests.map(interest => ({
-          id: interest.id,
-          name: interest.name,
-          description: interest.description || undefined,
-          icon: interest.icon || undefined
-        }))
+        interests: [...mergedInterests, ...extraDbInterests]
       });
     }
     

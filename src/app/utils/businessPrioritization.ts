@@ -2,7 +2,7 @@
  * Business Prioritization System
  *
  * Tiered ranking to surface well-classified businesses first:
- * - Tier 1 (highest): Canonical sub_interest_id (one of the 39) + uploaded images bonus
+ * - Tier 1 (highest): Canonical sub_interest_id (one of the canonical taxonomy slugs) + uploaded images bonus
  * - Tier 2 (medium): Known interest slug but no canonical subcategory
  * - Tier 3 (lowest): Missing classification, "Miscellaneous", or category label only
  *
@@ -58,7 +58,7 @@ export function getBusinessTier(business: BusinessWithClassification): BusinessT
   const subInterestId = (business.sub_interest_id ?? business.subInterestId)?.trim().toLowerCase();
   const interestId = normalizeInterestId(business.interest_id ?? business.interestId);
 
-  // Tier 1: Has canonical sub_interest_id (one of the 39), excluding "miscellaneous"
+  // Tier 1: Has canonical sub_interest_id, excluding "miscellaneous"
   if (subInterestId && CANONICAL_SUBCATEGORY_SLUGS.includes(subInterestId as (typeof CANONICAL_SUBCATEGORY_SLUGS)[number])) {
     if (subInterestId === 'miscellaneous') return BusinessTier.TIER_3_MISCELLANEOUS;
     return BusinessTier.TIER_1_CANONICAL;

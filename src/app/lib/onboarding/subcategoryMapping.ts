@@ -21,6 +21,22 @@ export const SUBCATEGORY_TO_INTEREST: Record<string, string> = {
   electricians: 'professional-services',
   'legal-services': 'professional-services',
 
+  // Travel
+  accommodation: 'travel',
+  transport: 'travel',
+  airports: 'travel',
+  'train-stations': 'travel',
+  'bus-stations': 'travel',
+  'car-rental-businesses': 'travel',
+  'campervan-rentals': 'travel',
+  'shuttle-services': 'travel',
+  'chauffeur-services': 'travel',
+  'travel-services': 'travel',
+  'tour-guides': 'travel',
+  'travel-agencies': 'travel',
+  'luggage-shops': 'travel',
+  'travel-insurance-providers': 'travel',
+
   // Outdoors & Adventure
   hiking: 'outdoors-adventure',
   cycling: 'outdoors-adventure',

@@ -2,7 +2,7 @@
  * Canonical taxonomy-driven placeholder images for businesses.
  *
  * Rules:
- * - 39 canonical subcategory slugs (source of truth from api/subcategories).
+ * - 52 canonical subcategory slugs (source of truth from api/subcategories).
  * - 1:1 mapping: each slug maps to exactly one image under public/businessImagePlaceholders.
  * - No aliases, no fuzzy matching, no token parsing.
  * - Missing slug → dev warning + global default.
@@ -10,7 +10,7 @@
 
 const P = "/businessImagePlaceholders";
 
-/** All 39 canonical subcategory slugs (matches api/subcategories FALLBACK_SUBCATEGORIES) */
+/** All 52 canonical subcategory slugs (matches api/subcategories FALLBACK_SUBCATEGORIES) */
 export const CANONICAL_SUBCATEGORY_SLUGS = [
   "restaurants",
   "cafes",
@@ -28,6 +28,20 @@ export const CANONICAL_SUBCATEGORY_SLUGS = [
   "plumbers",
   "electricians",
   "legal-services",
+  "accommodation",
+  "transport",
+  "airports",
+  "train-stations",
+  "bus-stations",
+  "car-rental-businesses",
+  "campervan-rentals",
+  "shuttle-services",
+  "chauffeur-services",
+  "travel-services",
+  "tour-guides",
+  "travel-agencies",
+  "luggage-shops",
+  "travel-insurance-providers",
   "hiking",
   "cycling",
   "water-sports",
@@ -75,6 +89,20 @@ export const SUBCATEGORY_SLUG_TO_LABEL: Record<CanonicalSubcategorySlug, string>
   plumbers: "Plumbers",
   electricians: "Electricians",
   "legal-services": "Legal Services",
+  accommodation: "Accommodation",
+  transport: "Transport",
+  airports: "Airports",
+  "train-stations": "Train Stations",
+  "bus-stations": "Bus Stations",
+  "car-rental-businesses": "Car Rental Businesses",
+  "campervan-rentals": "Campervan Rentals",
+  "shuttle-services": "Shuttle Services",
+  "chauffeur-services": "Chauffeur Services",
+  "travel-services": "Travel Services",
+  "tour-guides": "Tour Guides",
+  "travel-agencies": "Travel Agencies",
+  "luggage-shops": "Luggage Shops",
+  "travel-insurance-providers": "Travel Insurance Providers",
   hiking: "Hiking",
   cycling: "Cycling",
   "water-sports": "Water Sports",
@@ -122,6 +150,18 @@ const SUBCATEGORY_ALIAS_TO_CANONICAL: Record<string, CanonicalSubcategorySlug> =
   concert: "concerts",
   cinema: "cinemas",
   bookstore: "books",
+  airport: "airports",
+  "train-station": "train-stations",
+  "bus-station": "bus-stations",
+  "car-rental": "car-rental-businesses",
+  "campervan-rental": "campervan-rentals",
+  "shuttle-service": "shuttle-services",
+  "chauffeur-service": "chauffeur-services",
+  "travel-service": "travel-services",
+  "tour-guide": "tour-guides",
+  "travel-agency": "travel-agencies",
+  "luggage-shop": "luggage-shops",
+  "travel-insurance-provider": "travel-insurance-providers",
 };
 
 /**
@@ -145,6 +185,18 @@ export const SUBCATEGORY_LABELS: Record<string, string> = {
   concert: "Concerts",
   cinema: "Cinemas",
   bookstore: "Books & Stationery",
+  airport: "Airports",
+  "train-station": "Train Stations",
+  "bus-station": "Bus Stations",
+  "car-rental": "Car Rental Businesses",
+  "campervan-rental": "Campervan Rentals",
+  "shuttle-service": "Shuttle Services",
+  "chauffeur-service": "Chauffeur Services",
+  "travel-service": "Travel Services",
+  "tour-guide": "Tour Guides",
+  "travel-agency": "Travel Agencies",
+  "luggage-shop": "Luggage Shops",
+  "travel-insurance-provider": "Travel Insurance Providers",
 };
 
 /**
@@ -154,6 +206,7 @@ export const INTEREST_LABELS: Record<string, string> = {
   "food-drink": "Food & Drink",
   "beauty-wellness": "Beauty & Wellness",
   "professional-services": "Professional Services",
+  travel: "Travel",
   "outdoors-adventure": "Outdoors & Adventure",
   "experiences-entertainment": "Entertainment & Experiences",
   "arts-culture": "Arts & Culture",
@@ -167,6 +220,7 @@ const INTEREST_TO_DEFAULT_SUBCATEGORY: Record<string, CanonicalSubcategorySlug> 
   "food-drink": "restaurants",
   "beauty-wellness": "salons",
   "professional-services": "finance-insurance",
+  travel: "accommodation",
   "outdoors-adventure": "hiking",
   "experiences-entertainment": "events-festivals",
   "arts-culture": "museums",
@@ -237,7 +291,7 @@ export type BusinessLikeForCategory = {
   sub_interest_slug?: string | null;
   interest_id?: string | null;
   interestId?: string | null;
-  /** Canonical slug (one of 39). */
+  /** Canonical slug (one of 52). */
   category?: string | null;
   /** Display label from DB; use when present to avoid "Miscellaneous" leakage. */
   category_label?: string | null;
@@ -318,6 +372,22 @@ export const SUBCATEGORY_PLACEHOLDER_MAP: Record<CanonicalSubcategorySlug, strin
   plumbers: `${P}/professional-services/plumbers.jpg`,
   electricians: `${P}/professional-services/electricians.jpg`,
   "legal-services": `${P}/professional-services/legal-services.jpg`,
+
+  // Travel
+  accommodation: `${P}/professional-services/transport-travel.jpg`,
+  transport: `${P}/professional-services/transport-travel.jpg`,
+  airports: `${P}/professional-services/transport-travel.jpg`,
+  "train-stations": `${P}/professional-services/transport-travel.jpg`,
+  "bus-stations": `${P}/professional-services/transport-travel.jpg`,
+  "car-rental-businesses": `${P}/professional-services/transport-travel.jpg`,
+  "campervan-rentals": `${P}/outdoors-adventure/camping.jpg`,
+  "shuttle-services": `${P}/professional-services/transport-travel.jpg`,
+  "chauffeur-services": `${P}/professional-services/transport-travel.jpg`,
+  "travel-services": `${P}/professional-services/transport-travel.jpg`,
+  "tour-guides": `${P}/professional-services/transport-travel.jpg`,
+  "travel-agencies": `${P}/professional-services/transport-travel.jpg`,
+  "luggage-shops": `${P}/shopping-lifestyle/fashion-clothing.jpg`,
+  "travel-insurance-providers": `${P}/professional-services/finance-insurance.jpg`,
 
   // Outdoors & Adventure
   hiking: `${P}/outdoors-adventure/hiking.jpg`,

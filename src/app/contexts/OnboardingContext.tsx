@@ -94,6 +94,7 @@ const FALLBACK_INTERESTS: Interest[] = [
   { id: 'food-drink', name: 'Food & Drink', description: 'Restaurants, cafes, and culinary experiences', icon: 'restaurant' },
   { id: 'beauty-wellness', name: 'Beauty & Wellness', description: 'Gyms, spas, and personal care services', icon: 'cut' },
   { id: 'professional-services', name: 'Professional Services', description: 'Home improvement and professional services', icon: 'home' },
+  { id: 'travel', name: 'Travel', description: 'Accommodation, transport, and travel services', icon: 'airplane' },
   { id: 'outdoors-adventure', name: 'Outdoors & Adventure', description: 'Outdoor activities and adventures', icon: 'bicycle' },
   { id: 'experiences-entertainment', name: 'Entertainment & Experiences', description: 'Movies, shows, and nightlife', icon: 'musical-notes' },
   { id: 'arts-culture', name: 'Arts & Culture', description: 'Museums, galleries, and cultural experiences', icon: 'color-palette' },

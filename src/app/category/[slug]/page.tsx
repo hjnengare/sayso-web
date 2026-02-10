@@ -16,6 +16,7 @@ const CATEGORY_MAP: Record<string, string> = {
   'food-drink': 'Food & Drink',
   'beauty-wellness': 'Beauty & Wellness',
   'professional-services': 'Professional Services',
+  travel: 'Travel',
   'outdoors-adventure': 'Outdoors & Adventure',
   'experiences-entertainment': 'Entertainment & Experiences',
   'arts-culture': 'Arts & Culture',

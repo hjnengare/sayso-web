@@ -50,6 +50,59 @@ export function getSubcategorySlugForOsmCategory(
     ) {
       return 'gyms';
     }
+    if (
+      nameLower.includes('airport')
+    ) {
+      return 'airports';
+    }
+    if (
+      nameLower.includes('train station') ||
+      nameLower.includes('railway station')
+    ) {
+      return 'train-stations';
+    }
+    if (
+      nameLower.includes('bus station') ||
+      nameLower.includes('bus terminal')
+    ) {
+      return 'bus-stations';
+    }
+    if (
+      nameLower.includes('car rental') ||
+      nameLower.includes('car hire')
+    ) {
+      return 'car-rental-businesses';
+    }
+    if (
+      nameLower.includes('campervan')
+    ) {
+      return 'campervan-rentals';
+    }
+    if (
+      nameLower.includes('travel agency')
+    ) {
+      return 'travel-agencies';
+    }
+    if (
+      nameLower.includes('tour guide')
+    ) {
+      return 'tour-guides';
+    }
+    if (
+      nameLower.includes('travel insurance')
+    ) {
+      return 'travel-insurance-providers';
+    }
+    if (
+      nameLower.includes('hotel') ||
+      nameLower.includes('hostel') ||
+      nameLower.includes('guest house') ||
+      nameLower.includes('guesthouse') ||
+      nameLower.includes('lodge') ||
+      nameLower.includes('motel')
+    ) {
+      return 'accommodation';
+    }
   }
 
   const categoryMap: Record<string, string> = {
@@ -67,6 +120,7 @@ export function getSubcategorySlugForOsmCategory(
     Spa: 'spas',
     Bank: 'finance-insurance',
     ATM: 'finance-insurance',
+    Insurance: 'finance-insurance',
     Pharmacy: 'finance-insurance',
     Dental: 'education-learning',
     Veterinary: 'veterinarians',
@@ -89,8 +143,25 @@ export function getSubcategorySlugForOsmCategory(
     Attraction: 'events-festivals',
     'Gas Station': 'transport-travel',
     Parking: 'transport-travel',
-    Hotel: 'transport-travel',
-    Hostel: 'transport-travel',
+    Hotel: 'accommodation',
+    Hostel: 'accommodation',
+    Accommodation: 'accommodation',
+    'Guest House': 'accommodation',
+    Guesthouse: 'accommodation',
+    Lodge: 'accommodation',
+    Motel: 'accommodation',
+    Airport: 'airports',
+    'Train Station': 'train-stations',
+    'Bus Station': 'bus-stations',
+    'Car Rental': 'car-rental-businesses',
+    'Campervan Rental': 'campervan-rentals',
+    'Shuttle Service': 'shuttle-services',
+    'Chauffeur Service': 'chauffeur-services',
+    'Travel Service': 'travel-services',
+    'Tour Guide': 'tour-guides',
+    'Travel Agency': 'travel-agencies',
+    'Luggage Shop': 'luggage-shops',
+    'Travel Insurance Provider': 'travel-insurance-providers',
     Business: 'electronics',
   };
 

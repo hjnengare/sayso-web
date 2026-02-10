@@ -43,6 +43,8 @@ export async function POST(req: Request) {
       'gyms', 'spas', 'salons', 'wellness', 'nail-salons',
       // Professional Services
       'education-learning', 'transport-travel', 'finance-insurance', 'plumbers', 'electricians', 'legal-services',
+      // Travel
+      'accommodation', 'transport', 'airports', 'train-stations', 'bus-stations', 'car-rental-businesses', 'campervan-rentals', 'shuttle-services', 'chauffeur-services', 'travel-services', 'tour-guides', 'travel-agencies', 'luggage-shops', 'travel-insurance-providers',
       // Outdoors & Adventure
       'hiking', 'cycling', 'water-sports', 'camping',
       // Entertainment & Experiences
@@ -426,6 +428,8 @@ export async function GET(req: Request) {
       'gyms', 'spas', 'salons', 'wellness', 'nail-salons',
       // Professional Services
       'education-learning', 'transport-travel', 'finance-insurance', 'plumbers', 'electricians', 'legal-services',
+      // Travel
+      'accommodation', 'transport', 'airports', 'train-stations', 'bus-stations', 'car-rental-businesses', 'campervan-rentals', 'shuttle-services', 'chauffeur-services', 'travel-services', 'tour-guides', 'travel-agencies', 'luggage-shops', 'travel-insurance-providers',
       // Outdoors & Adventure
       'hiking', 'cycling', 'water-sports', 'camping',
       // Entertainment & Experiences

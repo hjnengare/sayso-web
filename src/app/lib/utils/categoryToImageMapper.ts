@@ -24,6 +24,7 @@ const CATEGORY_TO_SUBCATEGORY: Record<string, string> = {
   // Professional Services
   'Bank': 'finance-insurance',
   'ATM': 'finance-insurance',
+  'Insurance': 'finance-insurance',
   'Pharmacy': 'finance-insurance',
   'Dental': 'education-learning',
   'Veterinary': 'veterinarians',
@@ -54,8 +55,25 @@ const CATEGORY_TO_SUBCATEGORY: Record<string, string> = {
   'Attraction': 'events-festivals',
   'Gas Station': 'transport-travel',
   'Parking': 'transport-travel',
-  'Hotel': 'transport-travel',
-  'Hostel': 'transport-travel',
+  'Hotel': 'accommodation',
+  'Hostel': 'accommodation',
+  'Accommodation': 'accommodation',
+  'Guest House': 'accommodation',
+  'Guesthouse': 'accommodation',
+  'Lodge': 'accommodation',
+  'Motel': 'accommodation',
+  'Airport': 'airports',
+  'Train Station': 'train-stations',
+  'Bus Station': 'bus-stations',
+  'Car Rental': 'car-rental-businesses',
+  'Campervan Rental': 'campervan-rentals',
+  'Shuttle Service': 'shuttle-services',
+  'Chauffeur Service': 'chauffeur-services',
+  'Travel Service': 'travel-services',
+  'Tour Guide': 'tour-guides',
+  'Travel Agency': 'travel-agencies',
+  'Luggage Shop': 'luggage-shops',
+  'Travel Insurance Provider': 'travel-insurance-providers',
   
   // Default fallback - use a generic shopping icon instead of restaurant
   'Business': 'electronics', // Generic fallback (shopping bag icon)
@@ -84,6 +102,22 @@ const SUBCATEGORY_TO_PNG: Record<string, string> = {
   'plumbers': '047-plunger.png',
   'electricians': '049-broken-cable.png',
   'legal-services': '050-balance.png',
+
+  // Travel
+  'accommodation': '036-summer.png',
+  'transport': '045-transportation.png',
+  'airports': '045-transportation.png',
+  'train-stations': '045-transportation.png',
+  'bus-stations': '045-transportation.png',
+  'car-rental-businesses': '045-transportation.png',
+  'campervan-rentals': '036-summer.png',
+  'shuttle-services': '045-transportation.png',
+  'chauffeur-services': '045-transportation.png',
+  'travel-services': '045-transportation.png',
+  'tour-guides': '035-tour-guide.png',
+  'travel-agencies': '045-transportation.png',
+  'luggage-shops': '023-shopping-bag.png',
+  'travel-insurance-providers': '046-insurance.png',
   
   // Outdoors & Adventure
   'hiking': '034-skydive.png', // Using skydive as adventure

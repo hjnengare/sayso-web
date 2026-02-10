@@ -13,6 +13,7 @@ const INTERESTS: Array<{ id: string; name: string }> = [
   { id: 'food-drink', name: 'Food & Drink' },
   { id: 'beauty-wellness', name: 'Beauty & Wellness' },
   { id: 'professional-services', name: 'Professional Services' },
+  { id: 'travel', name: 'Travel' },
   { id: 'outdoors-adventure', name: 'Outdoors & Adventure' },
   { id: 'experiences-entertainment', name: 'Entertainment & Experiences' },
   { id: 'arts-culture', name: 'Arts & Culture' },

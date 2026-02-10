@@ -28,8 +28,17 @@ export interface OverpassBusiness {
   tags: Record<string, string>;
 }
 
+interface OSMTagFilters {
+  amenity?: string[];
+  shop?: string[];
+  tourism?: string[];
+  railway?: string[];
+  aeroway?: string[];
+  office?: string[];
+}
+
 // Mapping from subcategories to OSM tags
-export const SUBCATEGORY_TO_OSM_TAGS: Record<string, { amenity?: string[], shop?: string[], tourism?: string[] }> = {
+export const SUBCATEGORY_TO_OSM_TAGS: Record<string, OSMTagFilters> = {
   // Food & Drink subcategories
   'restaurants': {
     amenity: ['restaurant', 'bistro'],
@@ -87,6 +96,55 @@ export const SUBCATEGORY_TO_OSM_TAGS: Record<string, { amenity?: string[], shop?
   },
   'legal-services': {
     amenity: ['lawyer'],
+  },
+
+  // Travel subcategories
+  'accommodation': {
+    tourism: ['hotel', 'hostel', 'guest_house', 'motel'],
+  },
+  'transport': {
+    amenity: ['taxi', 'bus_station', 'car_rental'],
+    railway: ['station'],
+    aeroway: ['aerodrome'],
+  },
+  'airports': {
+    aeroway: ['aerodrome', 'terminal'],
+  },
+  'train-stations': {
+    railway: ['station'],
+  },
+  'bus-stations': {
+    amenity: ['bus_station'],
+  },
+  'car-rental-businesses': {
+    amenity: ['car_rental'],
+  },
+  'campervan-rentals': {
+    tourism: ['caravan_site'],
+    amenity: ['car_rental'],
+  },
+  'shuttle-services': {
+    amenity: ['taxi', 'bus_station'],
+  },
+  'chauffeur-services': {
+    amenity: ['taxi'],
+  },
+  'travel-services': {
+    shop: ['travel_agency'],
+    tourism: ['information'],
+  },
+  'tour-guides': {
+    tourism: ['information'],
+  },
+  'travel-agencies': {
+    shop: ['travel_agency'],
+  },
+  'luggage-shops': {
+    shop: ['bag', 'luggage'],
+  },
+  'travel-insurance-providers': {
+    office: ['insurance'],
+    shop: ['insurance'],
   },
   
   // Outdoors & Adventure subcategories
@@ -206,10 +264,26 @@ const OSM_CATEGORY_MAP: Record<string, string> = {
   'veterinary': 'Veterinary',
   'bank': 'Bank',
   'atm': 'ATM',
+  'insurance': 'Insurance',
+  'travel_agency': 'Travel Agency',
+  'car_rental': 'Car Rental',
+  'bus_station': 'Bus Station',
+  'taxi': 'Chauffeur Service',
+  'station': 'Train Station',
+  'train_station': 'Train Station',
+  'aerodrome': 'Airport',
+  'airport': 'Airport',
+  'terminal': 'Airport',
+  'hotel': 'Accommodation',
+  'hostel': 'Accommodation',
+  'guest_house': 'Accommodation',
+  'motel': 'Accommodation',
+  'caravan_site': 'Campervan Rental',
+  'information': 'Travel Service',
+  'luggage': 'Luggage Shop',
+  'bag': 'Luggage Shop',
   'fuel': 'Gas Station',
   'parking': 'Parking',
-  'hotel': 'Hotel',
-  'hostel': 'Hostel',
   'tourist_attraction': 'Attraction',
   'park': 'Park',
   'zoo': 'Zoo',
@@ -313,28 +387,25 @@ export async function fetchCapeTownBusinesses(
       // Filter by specific subcategory
       const tags = SUBCATEGORY_TO_OSM_TAGS[subcategory];
       const queries: string[] = [];
-      
-      // Build queries for each tag type
-      if (tags.amenity && tags.amenity.length > 0) {
-        tags.amenity.forEach(tag => {
-          queries.push(`node["amenity"="${tag}"](${south},${west},${north},${east});`);
-          queries.push(`way["amenity"="${tag}"](${south},${west},${north},${east});`);
+
+      // Build queries for each supported tag key.
+      const keyMappings: Array<[keyof OSMTagFilters, string]> = [
+        ['amenity', 'amenity'],
+        ['shop', 'shop'],
+        ['tourism', 'tourism'],
+        ['railway', 'railway'],
+        ['aeroway', 'aeroway'],
+        ['office', 'office'],
+      ];
+
+      keyMappings.forEach(([property, overpassKey]) => {
+        const values = tags[property];
+        if (!values || values.length === 0) return;
+        values.forEach(tag => {
+          queries.push(`node["${overpassKey}"="${tag}"](${south},${west},${north},${east});`);
+          queries.push(`way["${overpassKey}"="${tag}"](${south},${west},${north},${east});`);
         });
-      }
-      
-      if (tags.shop && tags.shop.length > 0) {
-        tags.shop.forEach(tag => {
-          queries.push(`node["shop"="${tag}"](${south},${west},${north},${east});`);
-          queries.push(`way["shop"="${tag}"](${south},${west},${north},${east});`);
-        });
-      }
-      
-      if (tags.tourism && tags.tourism.length > 0) {
-        tags.tourism.forEach(tag => {
-          queries.push(`node["tourism"="${tag}"](${south},${west},${north},${east});`);
-          queries.push(`way["tourism"="${tag}"](${south},${west},${north},${east});`);
-        });
-      }
+      });
       
       if (queries.length === 0) {
         // Fallback to general query if no tags found
@@ -347,6 +418,12 @@ export async function fetchCapeTownBusinesses(
             way["shop"](${south},${west},${north},${east});
             node["tourism"](${south},${west},${north},${east});
             way["tourism"](${south},${west},${north},${east});
+            node["railway"](${south},${west},${north},${east});
+            way["railway"](${south},${west},${north},${east});
+            node["aeroway"](${south},${west},${north},${east});
+            way["aeroway"](${south},${west},${north},${east});
+            node["office"](${south},${west},${north},${east});
+            way["office"](${south},${west},${north},${east});
           );
           out center meta;
         `;
@@ -370,6 +447,12 @@ export async function fetchCapeTownBusinesses(
           way["shop"](${south},${west},${north},${east});
           node["tourism"](${south},${west},${north},${east});
           way["tourism"](${south},${west},${north},${east});
+          node["railway"](${south},${west},${north},${east});
+          way["railway"](${south},${west},${north},${east});
+          node["aeroway"](${south},${west},${north},${east});
+          way["aeroway"](${south},${west},${north},${east});
+          node["office"](${south},${west},${north},${east});
+          way["office"](${south},${west},${north},${east});
         );
         out center meta;
       `;
@@ -471,6 +554,21 @@ function determineCategory(tags: Record<string, string>, businessName?: string):
   // Check tourism tag
   if (tags.tourism && OSM_CATEGORY_MAP[tags.tourism]) {
     return OSM_CATEGORY_MAP[tags.tourism];
+  }
+
+  // Check railway tag
+  if (tags.railway && OSM_CATEGORY_MAP[tags.railway]) {
+    return OSM_CATEGORY_MAP[tags.railway];
+  }
+
+  // Check aeroway tag
+  if (tags.aeroway && OSM_CATEGORY_MAP[tags.aeroway]) {
+    return OSM_CATEGORY_MAP[tags.aeroway];
+  }
+
+  // Check office tag
+  if (tags.office && OSM_CATEGORY_MAP[tags.office]) {
+    return OSM_CATEGORY_MAP[tags.office];
   }
   
   // Check cuisine tag for restaurants
