@@ -267,15 +267,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
 
       if (authUser) {
+        const profileRole = String(authUser.profile?.role ?? '');
+        const profileAccountRole = String(authUser.profile?.account_role ?? '');
+
         // Check if user has the desired role
         if (desiredRole && authUser.profile) {
-          const userRole = authUser.profile.role;
+          const userRole = profileRole;
           const hasDesiredRole =
-            userRole === 'both' || userRole === desiredRole;
+            userRole === 'admin' || userRole === 'both' || userRole === desiredRole;
 
           if (!hasDesiredRole) {
             const accountTypeName = desiredRole === 'user' ? 'Personal' : 'Business';
-            const existingTypeName = userRole === 'user' ? 'Personal' : 'Business';
+            const existingTypeName =
+              userRole === 'admin'
+                ? 'Admin'
+                : userRole === 'user'
+                  ? 'Personal'
+                  : 'Business';
             setError(`This email only has a ${existingTypeName} account. Please select ${existingTypeName} to log in, or register a new ${accountTypeName} account.`);
             setIsLoading(false);
             // Sign out since login was incorrect
@@ -297,9 +305,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         // Optionally switch role if user selected a different mode and they have access
         if (desiredRole && authUser.profile) {
+          const isAdminAccount =
+            profileRole === 'admin' ||
+            profileAccountRole === 'admin';
           const hasDesiredRole =
-            authUser.profile.role === 'both' || authUser.profile.role === desiredRole;
-          const needsSwitch = authUser.profile.account_role !== desiredRole;
+            profileRole === 'both' || profileRole === desiredRole;
+          const needsSwitch =
+            !isAdminAccount && profileAccountRole !== desiredRole;
 
           if (hasDesiredRole && needsSwitch) {
             try {
@@ -338,11 +350,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
 
         // Step 2: Determine account type
-        const userCurrentRole = activeUser.profile?.account_role || 'user';
-        const isBusinessAccount = userCurrentRole === 'business_owner';
+        const userCurrentRole =
+          String(activeUser.profile?.account_role || activeUser.profile?.role || 'user');
+        const isAdminAccount =
+          userCurrentRole === 'admin' || String(activeUser.profile?.role ?? '') === 'admin';
+        const isBusinessAccount = !isAdminAccount && userCurrentRole === 'business_owner';
 
         // Step 3: Route based on account type and onboarding status
-        if (isBusinessAccount) {
+        if (isAdminAccount) {
+          router.push('/admin');
+        } else if (isBusinessAccount) {
           // Business accounts NEVER need personal onboarding
           router.push('/my-businesses');
         } else if (activeUser.profile?.onboarding_completed_at) {
