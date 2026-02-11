@@ -468,10 +468,14 @@ export default function Header({
     }
   };
 
+  useEffect(() => {
+    if (isAdminUser) {
+      void router.prefetch('/login');
+    }
+  }, [isAdminUser, router]);
+
   const handleAdminSignOut = useCallback(() => {
-    void (async () => {
-      await logout();
-    })();
+    void logout();
   }, [logout]);
 
   // Cleanup debounce on unmount

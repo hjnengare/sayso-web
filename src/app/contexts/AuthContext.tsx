@@ -467,6 +467,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const logout = async (): Promise<void> => {
     setIsLoading(true);
     setError(null);
+    // Optimistic local clear keeps admin sign-out visually instant.
+    setUser(null);
 
     try {
       const { error: signOutError } = await AuthService.signOut();
@@ -475,8 +477,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setError(signOutError.message);
         return;
       }
-
-      setUser(null);
 
       // Use hard navigation so stale in-memory state cannot keep admin UI mounted.
       if (typeof window !== 'undefined') {
