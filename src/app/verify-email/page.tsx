@@ -166,7 +166,6 @@ export default function VerifyEmailPage() {
   const searchParams = useSearchParams();
 
   const [isResending, setIsResending] = useState(false);
-  const [isChecking, setIsChecking] = useState(false);
   const [verificationSuccess, setVerificationSuccess] = useState(false);
   const [verificationStatusMessage, setVerificationStatusMessage] = useState<string | null>(null);
 
@@ -291,7 +290,6 @@ export default function VerifyEmailPage() {
     checkingRef.current = true;
     if (manual) {
       setVerificationStatusMessage(null);
-      setIsChecking(true);
     }
 
     const supabase = getBrowserSupabase();
@@ -398,7 +396,6 @@ export default function VerifyEmailPage() {
       }
       return false;
     } finally {
-      if (manual) setIsChecking(false);
       checkingRef.current = false;
     }
   }, [
@@ -411,13 +408,6 @@ export default function VerifyEmailPage() {
     user?.email,
     user?.profile,
   ]);
-
-  const handleRefreshUser = async () => {
-    await checkVerificationStatus({
-      manual: true,
-      showSuccessToast: true,
-    });
-  };
 
   // Handle callback returns such as /verify-email?verified=1 from email links.
   useEffect(() => {
@@ -698,24 +688,6 @@ export default function VerifyEmailPage() {
               >
                 <Mail className="w-4 h-4" />
                 Resend Verification Email
-              </button>
-
-              <button
-                onClick={handleRefreshUser}
-                disabled={isChecking}
-                className="w-full bg-gradient-to-r from-sage to-sage/80 text-white text-sm font-600 py-4 px-4 rounded-full hover:from-sage/90 hover:to-sage transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 btn-target btn-press"
-              >
-                {isChecking ? (
-                  <>
-                    <AppLoader className="w-4 h-4 animate-spin" />
-                    Checking verification...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="w-4 h-4" />
-                    I&apos;ve Verified My Email
-                  </>
-                )}
               </button>
             </div>
 
