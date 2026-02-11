@@ -9,6 +9,7 @@ interface OptimizedLinkProps {
   children: React.ReactNode;
   className?: string;
   prefetch?: boolean;
+  useNativeViewTransition?: boolean;
   onClick?: (e?: React.MouseEvent) => void;
   [key: string]: any;
 }
@@ -18,6 +19,7 @@ export default function OptimizedLink({
   children, 
   className, 
   prefetch = true,
+  useNativeViewTransition = false,
   onClick,
   ...props 
 }: OptimizedLinkProps) {
@@ -108,7 +110,7 @@ export default function OptimizedLink({
         | undefined
         | ((callback: () => void) => void);
 
-      if (typeof startViewTransition === "function") {
+      if (useNativeViewTransition && typeof startViewTransition === "function") {
         try {
           // Call as a method to ensure the correct receiver (avoids "Illegal invocation" in some WebKit builds).
           doc.startViewTransition(() => {

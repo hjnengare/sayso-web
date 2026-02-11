@@ -235,6 +235,9 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
     );
   }
 
+  const eventMediaLayoutId = `event-media-${event.id}`;
+  const eventTitleLayoutId = `event-title-${event.id}`;
+
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -284,8 +287,8 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8">
                     {/* Left Column - Main Content */}
                     <div className="lg:col-span-2 space-y-4 sm:space-y-6 lg:space-y-8">
-                      <EventHeroImage event={event} />
-                      <EventInfo event={event} />
+                      <EventHeroImage event={event} sharedLayoutId={eventMediaLayoutId} />
+                      <EventInfo event={event} sharedTitleLayoutId={eventTitleLayoutId} />
                       <EventDescription event={event} />
                       <EventDetailsCard event={event} />
 

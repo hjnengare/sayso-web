@@ -3,6 +3,7 @@
 import { memo, useMemo, useState } from "react";
 import { BookmarkCheck, Filter } from "lucide-react";
 import BusinessCard, { Business } from "../BusinessCard/BusinessCard";
+import LocationPromptBanner from "../Location/LocationPromptBanner";
 
 interface SavedBusinessesGridProps {
   savedBusinesses: Business[];
@@ -22,6 +23,15 @@ function SavedBusinessesGrid({ savedBusinesses }: SavedBusinessesGridProps) {
     if (selectedCategory === "All") return savedBusinesses;
     return savedBusinesses.filter(b => b.category === selectedCategory);
   }, [savedBusinesses, selectedCategory]);
+  const hasCoordinateBusinesses = useMemo(
+    () =>
+      filteredBusinesses.some(
+        (business) =>
+          typeof business.lat === "number" && Number.isFinite(business.lat) &&
+          typeof business.lng === "number" && Number.isFinite(business.lng)
+      ),
+    [filteredBusinesses]
+  );
 
   // Memoize the business cards to prevent unnecessary re-renders
   const businessCards = useMemo(() => {
@@ -44,6 +54,7 @@ function SavedBusinessesGrid({ savedBusinesses }: SavedBusinessesGridProps) {
 
   return (
     <div className="space-y-6">
+      <LocationPromptBanner hasCoordinateBusinesses={hasCoordinateBusinesses} />
       {/* Category filters */}
       {categories.length > 2 && (
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">

@@ -1,10 +1,12 @@
 // src/components/Saved/SavedBusinessRow.tsx
 "use client";
 
+import { useMemo } from "react";
 import { BookmarkCheck } from "lucide-react";
 import BusinessCard, { Business } from "../BusinessCard/BusinessCard";
 import ScrollableSection from "../ScrollableSection/ScrollableSection";
 import { useSavedItems } from "../../contexts/SavedItemsContext";
+import LocationPromptBanner from "../Location/LocationPromptBanner";
 
 export default function SavedBusinessRow({
   title,
@@ -16,6 +18,15 @@ export default function SavedBusinessRow({
   showCount?: boolean;
 }) {
   const { savedCount } = useSavedItems();
+  const hasCoordinateBusinesses = useMemo(
+    () =>
+      businesses.some(
+        (business) =>
+          typeof business.lat === "number" && Number.isFinite(business.lat) &&
+          typeof business.lng === "number" && Number.isFinite(business.lng)
+      ),
+    [businesses]
+  );
 
   if (!businesses || businesses.length === 0) return null;
 
@@ -28,6 +39,7 @@ export default function SavedBusinessRow({
         fontFamily: '"Urbanist", -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
       }}
     >
+      <LocationPromptBanner hasCoordinateBusinesses={hasCoordinateBusinesses} />
       <div className="mx-auto w-full max-w-[2000px] px-2 relative z-10">
         <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">

@@ -88,6 +88,8 @@ function mvRowToFeaturedShape(b: any, scoreKey: 'quality_score' | null): any {
     sub_interest_id: b.sub_interest_id ?? null,
     bucket: b.category ?? b.bucket ?? '',
     description: b.description ?? null,
+    lat: typeof b.lat === 'number' ? b.lat : null,
+    lng: typeof b.lng === 'number' ? b.lng : null,
   };
 }
 
@@ -119,6 +121,8 @@ async function getFeaturedFallback(
       sub_interest_id,
       description,
       location,
+      lat,
+      lng,
       verified,
       slug,
       last_activity_at,
@@ -148,6 +152,8 @@ async function getFeaturedFallback(
         sub_interest_id,
         description,
         location,
+        lat,
+        lng,
         verified,
         slug,
         last_activity_at,
@@ -245,6 +251,8 @@ async function getFeaturedFallback(
         sub_interest_id: business.sub_interest_id,
         description: business.description,
         location: business.location,
+        lat: typeof business.lat === 'number' ? business.lat : null,
+        lng: typeof business.lng === 'number' ? business.lng : null,
         average_rating: averageRating,
         total_reviews: totalReviews,
         verified: business.verified,
@@ -299,6 +307,8 @@ async function getFeaturedFallback(
     sub_interest_id: b.sub_interest_id,
     description: b.description,
     location: b.location,
+    lat: typeof b.lat === 'number' ? b.lat : null,
+    lng: typeof b.lng === 'number' ? b.lng : null,
     average_rating: b.average_rating || 0,
     total_reviews: b.total_reviews || 0,
     verified: b.verified,
@@ -368,7 +378,7 @@ export async function GET(request: NextRequest) {
         const { data: businessRows } = await supabase
           .from('businesses')
           .select(
-            'id, name, description, primary_subcategory_slug, primary_subcategory_label, primary_category_slug, location, address, image_url, verified, slug, status, is_system',
+            'id, name, description, primary_subcategory_slug, primary_subcategory_label, primary_category_slug, location, address, image_url, lat, lng, verified, slug, status, is_system',
           )
           .in('id', selectedIds);
 
@@ -401,6 +411,8 @@ export async function GET(request: NextRequest) {
             sub_interest_id: sub,
             description: (b as any).description ?? null,
             location: (b as any).location ?? '',
+            lat: (b as any).lat ?? null,
+            lng: (b as any).lng ?? null,
             slug: (b as any).slug ?? b.id,
             verified: Boolean((b as any).verified),
             average_rating: st?.average_rating ?? 0,
@@ -503,6 +515,41 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    const missingCoordinateIds = featuredData
+      .filter(
+        (business: any) =>
+          typeof business?.lat !== 'number' || typeof business?.lng !== 'number'
+      )
+      .map((business: any) => business.id)
+      .filter(Boolean);
+
+    if (missingCoordinateIds.length > 0) {
+      const { data: coordinateRows } = await supabase
+        .from('businesses')
+        .select('id, lat, lng')
+        .in('id', missingCoordinateIds);
+
+      const coordinatesById = new Map<string, { lat: number | null; lng: number | null }>(
+        (coordinateRows || []).map((row: any) => [
+          row.id,
+          {
+            lat: typeof row.lat === 'number' ? row.lat : null,
+            lng: typeof row.lng === 'number' ? row.lng : null,
+          },
+        ])
+      );
+
+      featuredData = featuredData.map((business: any) => {
+        const coordinates = coordinatesById.get(business.id);
+        if (!coordinates) return business;
+        return {
+          ...business,
+          lat: typeof business.lat === 'number' ? business.lat : coordinates.lat,
+          lng: typeof business.lng === 'number' ? business.lng : coordinates.lng,
+        };
+      });
+    }
+
     const featuredEtag = buildFeaturedEtag(seed, featuredData);
     const ifNoneMatch = request.headers.get('if-none-match');
     if (ifNoneMatch && ifNoneMatch === featuredEtag) {
@@ -571,6 +618,8 @@ export async function GET(request: NextRequest) {
         rank: index + 1,
         href: `/business/${business.slug || business.id}`,
         monthAchievement: `Sayso Select for ${categoryLabel || 'our community'}`,
+        lat: typeof business.lat === 'number' ? business.lat : null,
+        lng: typeof business.lng === 'number' ? business.lng : null,
         ui_hints: {
           badge: "featured",
           rank: index + 1,

@@ -1,9 +1,38 @@
 import { CSSProperties, MouseEvent, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { ChevronDown, Lock, X } from "lucide-react";
+import {
+  ChevronDown,
+  Facebook,
+  Instagram,
+  Lock,
+  Youtube,
+  type LucideIcon,
+} from "lucide-react";
 import OptimizedLink from "../Navigation/OptimizedLink";
 import { NavLink } from "./DesktopNav";
+import MobileMenuToggleIcon from "./MobileMenuToggleIcon";
 import { getMobileMenuActions, shouldShowLockIndicator } from "./headerActionsConfig";
+
+interface SocialLink {
+  key: "instagram" | "facebook" | "youtube";
+  href: string;
+  label: string;
+  Icon: LucideIcon;
+}
+
+const hasUsableExternalHref = (value: string | undefined): value is string => {
+  if (!value || !value.trim()) return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:";
+  } catch {
+    return false;
+  }
+};
+
+const resolveSocialHref = (value: string | undefined, fallback: string): string => {
+  return hasUsableExternalHref(value) ? value : fallback;
+};
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -49,10 +78,21 @@ export default function MobileMenu({
     }
   }, [isOpen, isAddRouteActive]);
 
-  const primaryCount = primaryLinks.length;
-  const discoverCount = discoverLinks.length;
   // Use centralized mobile menu actions config
   const actionItems = getMobileMenuActions(isBusinessAccountUser);
+  const profileAction = actionItems.find((item) => item.href === "/profile");
+
+  const orderedPrimaryLinks: readonly NavLink[] = [
+    primaryLinks.find((link) => link.href === "/home"),
+    discoverLinks.find((link) => link.href === "/for-you"),
+    discoverLinks.find((link) => link.href === "/trending"),
+    discoverLinks.find((link) => link.href === "/events-specials"),
+  ].filter(Boolean) as NavLink[];
+
+  const orderedSecondaryLinks: readonly NavLink[] = [
+    primaryLinks.find((link) => link.href === "/leaderboard"),
+    { key: "saved", label: "Saved", href: "/saved", requiresAuth: true },
+  ].filter(Boolean) as NavLink[];
   
   const mobileRevealClass = `transform transition-all duration-500 ease-out ${
     isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
@@ -62,6 +102,31 @@ export default function MobileMenu({
   }`;
   const mobileTapFeedbackClass =
     "active:scale-[0.98] active:opacity-95 transition-[transform,opacity,color,background-color] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]";
+  const protectedLabelStyle: CSSProperties = {
+    textDecorationLine: "line-through",
+    textDecorationColor: "rgba(255,255,255,0.5)",
+    textDecorationThickness: "1px",
+  };
+  const socialLinks: SocialLink[] = [
+    {
+      key: "instagram",
+      href: resolveSocialHref(process.env.NEXT_PUBLIC_SOCIAL_INSTAGRAM, "https://www.instagram.com"),
+      label: "Visit us on Instagram",
+      Icon: Instagram,
+    },
+    {
+      key: "facebook",
+      href: resolveSocialHref(process.env.NEXT_PUBLIC_SOCIAL_FACEBOOK, "https://www.facebook.com"),
+      label: "Visit us on Facebook",
+      Icon: Facebook,
+    },
+    {
+      key: "youtube",
+      href: resolveSocialHref(process.env.NEXT_PUBLIC_SOCIAL_YOUTUBE, "https://www.youtube.com"),
+      label: "Visit us on YouTube",
+      Icon: Youtube,
+    },
+  ];
 
   // Always render nav links, but show skeleton/placeholder if loading
   if (typeof isBusinessAccountUser === 'undefined') {
@@ -80,7 +145,7 @@ export default function MobileMenu({
               className="w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center text-off-white hover:text-off-white/80 transition-colors focus:outline-none focus:ring-0"
               aria-label="Close menu"
             >
-              <X className="w-6 h-6 sm:w-7 sm:h-7" strokeWidth={2.8} />
+              <MobileMenuToggleIcon isOpen={isOpen} />
             </button>
           </div>
           <div className="flex flex-col items-center justify-center flex-1 gap-4">
@@ -207,7 +272,7 @@ export default function MobileMenu({
     menuContent = (
       <>
         <div className="space-y-1">
-          {primaryLinks.map(({ key, label, href, requiresAuth }, index) => {
+          {orderedPrimaryLinks.map(({ key, label, href, requiresAuth }, index) => {
             const showLockIndicator = shouldShowLockIndicator(isGuest, requiresAuth);
             return (
               <OptimizedLink
@@ -217,15 +282,19 @@ export default function MobileMenu({
                   handleNavClick(href, e);
                   onClose();
                 }}
-                className={`px-3 py-2 rounded-[12px] text-base font-normal text-white hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 relative min-h-[44px] flex items-center justify-start ${mobileTapFeedbackClass} ${mobileRevealClass}`}
+                className={`px-3 py-2 rounded-[12px] text-base font-normal text-white hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 relative min-h-[44px] flex items-center justify-center ${mobileTapFeedbackClass} ${mobileRevealClass}`}
                 style={{
                   ...sf,
                   transitionDelay: `${index * 60}ms`,
                 }}
+                aria-label={showLockIndicator ? `${label.toUpperCase()} (sign in required)` : label.toUpperCase()}
               >
-                <span className="text-left flex items-center gap-1.5">
+                <span
+                  className={`text-center uppercase flex items-center gap-1.5 ${showLockIndicator ? "opacity-85" : ""}`}
+                  style={showLockIndicator ? protectedLabelStyle : undefined}
+                >
                   {label}
-                  {showLockIndicator && <Lock className="w-3 h-3 text-coral" />}
+                  {showLockIndicator && <Lock className="w-3 h-3 text-white/80" strokeWidth={1.9} aria-hidden="true" />}
                 </span>
               </OptimizedLink>
             );
@@ -233,7 +302,7 @@ export default function MobileMenu({
         </div>
         <div className="h-px bg-charcoal/10 my-2 mx-3" />
         <div className="space-y-1">
-          {discoverLinks.map(({ key, label, href, requiresAuth }, index) => {
+          {orderedSecondaryLinks.map(({ key, label, href, requiresAuth }, index) => {
             const showLockIndicator = shouldShowLockIndicator(isGuest, requiresAuth);
             return (
               <OptimizedLink
@@ -243,43 +312,45 @@ export default function MobileMenu({
                   handleNavClick(href, e);
                   onClose();
                 }}
-                className={`px-3 py-2 rounded-[12px] text-base font-normal text-white/90 hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 min-h-[44px] flex items-center justify-start ${mobileTapFeedbackClass} ${mobileRevealClass}`}
+                className={`px-3 py-2 rounded-[12px] text-base font-normal text-white/90 hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 min-h-[44px] flex items-center justify-center ${mobileTapFeedbackClass} ${mobileRevealClass}`}
                 style={{
                   ...sf,
-                  transitionDelay: `${(primaryCount + index) * 60}ms`,
+                  transitionDelay: `${(orderedPrimaryLinks.length + index) * 60}ms`,
                 }}
+                aria-label={showLockIndicator ? `${label.toUpperCase()} (sign in required)` : label.toUpperCase()}
               >
-                <span className="text-left flex items-center gap-1.5">
+                <span
+                  className={`text-center uppercase flex items-center gap-1.5 ${showLockIndicator ? "opacity-85" : ""}`}
+                  style={showLockIndicator ? protectedLabelStyle : undefined}
+                >
                   {label}
-                  {showLockIndicator && <Lock className="w-3 h-3 text-coral" />}
+                  {showLockIndicator && <Lock className="w-3 h-3 text-white/80" strokeWidth={1.9} aria-hidden="true" />}
                 </span>
               </OptimizedLink>
             );
           })}
         </div>
-        <div className="h-px bg-charcoal/10 my-2 mx-3" />
-        <div className="space-y-1">
-          {actionItems.map((item, idx) => {
-            const showLockIndicator = shouldShowLockIndicator(isGuest, item.requiresAuth);
-            return (
+        {profileAction && (
+          <>
+            <div className="h-px bg-charcoal/10 my-2 mx-3" />
+            <div className="space-y-1">
               <OptimizedLink
-                key={item.href}
-                href={showLockIndicator ? "/login" : item.href}
+                key={profileAction.href}
+                href={profileAction.href}
                 onClick={() => onClose()}
-                className={`px-3 py-2 rounded-lg text-base font-normal text-white hover:text-white flex items-center justify-start min-h-[44px] ${mobileTapFeedbackClass} ${mobileRevealClass}`}
+                className={`px-3 py-2 rounded-lg text-base font-normal text-white hover:text-white flex items-center justify-center min-h-[44px] ${mobileTapFeedbackClass} ${mobileRevealClass}`}
                 style={{
                   ...sf,
-                  transitionDelay: `${(primaryCount + discoverCount + (item.delay ?? idx)) * 60}ms`,
+                  transitionDelay: `${(orderedPrimaryLinks.length + orderedSecondaryLinks.length + 1) * 60}ms`,
                 }}
               >
-                <span className="text-left flex items-center gap-1.5">
-                  {item.label}
-                  {showLockIndicator && <Lock className="w-3 h-3 text-coral" />}
+                <span className="text-center uppercase flex items-center gap-1.5">
+                  {profileAction.label}
                 </span>
               </OptimizedLink>
-            );
-          })}
-        </div>
+            </div>
+          </>
+        )}
       </>
     );
   } else {
@@ -287,7 +358,7 @@ export default function MobileMenu({
     menuContent = (
       <>
         <div className="space-y-1">
-          {primaryLinks.map(({ key, label, href, requiresAuth }, index) => {
+          {orderedPrimaryLinks.map(({ key, label, href, requiresAuth }, index) => {
             const showLockIndicator = shouldShowLockIndicator(isGuest, requiresAuth);
             return (
               <OptimizedLink
@@ -297,13 +368,13 @@ export default function MobileMenu({
                   handleNavClick(href, e);
                   onClose();
                 }}
-                className={`px-3 py-2 rounded-[12px] text-base font-normal text-white hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 relative min-h-[44px] flex items-center justify-start ${mobileTapFeedbackClass} ${mobileRevealClass}`}
+                className={`px-3 py-2 rounded-[12px] text-base font-normal text-white hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 relative min-h-[44px] flex items-center justify-center ${mobileTapFeedbackClass} ${mobileRevealClass}`}
                 style={{
                   ...sf,
                   transitionDelay: `${index * 60}ms`,
                 }}
               >
-                <span className="text-left flex items-center gap-1.5">
+                <span className="text-center uppercase flex items-center gap-1.5">
                   {label}
                   {showLockIndicator && <Lock className="w-3 h-3 text-coral" />}
                 </span>
@@ -313,7 +384,7 @@ export default function MobileMenu({
         </div>
         <div className="h-px bg-charcoal/10 my-2 mx-3" />
         <div className="space-y-1">
-          {discoverLinks.map(({ key, label, href, requiresAuth }, index) => {
+          {orderedSecondaryLinks.map(({ key, label, href, requiresAuth }, index) => {
             const showLockIndicator = shouldShowLockIndicator(isGuest, requiresAuth);
             return (
               <OptimizedLink
@@ -323,37 +394,19 @@ export default function MobileMenu({
                   handleNavClick(href, e);
                   onClose();
                 }}
-                className={`px-3 py-2 rounded-[12px] text-base font-normal text-white/90 hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 min-h-[44px] flex items-center justify-start ${mobileTapFeedbackClass} ${mobileRevealClass}`}
+                className={`px-3 py-2 rounded-[12px] text-base font-normal text-white/90 hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 min-h-[44px] flex items-center justify-center ${mobileTapFeedbackClass} ${mobileRevealClass}`}
                 style={{
                   ...sf,
-                  transitionDelay: `${(primaryCount + index) * 60}ms`,
+                  transitionDelay: `${(orderedPrimaryLinks.length + index) * 60}ms`,
                 }}
               >
-                <span className="text-left flex items-center gap-1.5">
+                <span className="text-center uppercase flex items-center gap-1.5">
                   {label}
                   {showLockIndicator && <Lock className="w-3 h-3 text-coral" />}
                 </span>
               </OptimizedLink>
             );
           })}
-        </div>
-        <div className="h-px bg-charcoal/10 my-2 mx-3" />
-        {/* Guest-visible actions with locks */}
-        <div className="space-y-1">
-          <OptimizedLink
-            href="/login"
-            onClick={() => onClose()}
-            className={`px-3 py-2 rounded-lg text-base font-normal text-white hover:text-white flex items-center justify-start min-h-[44px] ${mobileTapFeedbackClass} ${mobileRevealClass}`}
-            style={{
-              ...sf,
-              transitionDelay: `${(primaryCount + discoverCount) * 60}ms`,
-            }}
-          >
-            <span className="text-left flex items-center gap-1.5">
-              Saved
-              <Lock className="w-3 h-3 text-coral" />
-            </span>
-          </OptimizedLink>
         </div>
         <div className="h-px bg-charcoal/10 my-2 mx-3" />
         <OptimizedLink
@@ -363,7 +416,7 @@ export default function MobileMenu({
           className={`px-3 py-2 rounded-full text-base font-bold text-charcoal bg-sage hover:bg-sage/90 flex items-center justify-center min-h-[44px] ${mobileTapFeedbackClass} ${mobileRevealClass}`}
           style={{
             ...sf,
-            transitionDelay: `${(primaryCount + discoverCount + 1) * 60}ms`,
+            transitionDelay: `${(orderedPrimaryLinks.length + orderedSecondaryLinks.length + 1) * 60}ms`,
           }}
         >
           <span className="text-center w-full">Sign in</span>
@@ -396,12 +449,30 @@ export default function MobileMenu({
               className="w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center text-off-white hover:text-off-white/80 transition-colors focus:outline-none focus:ring-0"
               aria-label="Close menu"
             >
-              <X className="w-6 h-6 sm:w-7 sm:h-7" strokeWidth={2.8} />
+              <MobileMenuToggleIcon isOpen={isOpen} />
             </button>
           </div>
-          <nav className="flex flex-col py-2 px-3 overflow-y-auto flex-1 min-h-0">
-            {menuContent}
+          <nav className="px-3 py-2 overflow-y-auto flex-1 min-h-0">
+            <div className="flex min-h-full flex-col justify-center">
+              {menuContent}
+            </div>
           </nav>
+          {isOpen && socialLinks.length > 0 && (
+            <div className="px-3 pt-2 pb-[calc(env(safe-area-inset-bottom)+12px)] border-t border-charcoal/10 flex items-center justify-center gap-5">
+              {socialLinks.map(({ key, href, label, Icon }) => (
+                <a
+                  key={key}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  className="w-10 h-10 flex items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-colors duration-200"
+                >
+                  <Icon className="w-5 h-5" />
+                </a>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </>

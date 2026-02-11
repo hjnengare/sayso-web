@@ -53,8 +53,8 @@ export async function GET(req: NextRequest) {
         .from("businesses")
         .select(
           `id, slug, name, primary_subcategory_slug, primary_subcategory_label, primary_category_slug, location, address, phone, email,
-           website, hours, image_url, description, price_range, verified, badge,
-           business_stats (average_rating)`
+           website, hours, image_url, description, price_range, verified, badge, lat, lng,
+           business_stats (average_rating, total_reviews)`
         )
         .eq("status", "active")
         .or(
@@ -73,7 +73,7 @@ export async function GET(req: NextRequest) {
 
       results = (data || []).map((business: Record<string, unknown>) => {
         const stats = business.business_stats as
-          | Array<{ average_rating: number }>
+          | Array<{ average_rating: number; total_reviews: number }>
           | undefined;
         const categoryLabel = getCategoryLabelFromBusiness(business);
         const subInterestId = (business.primary_subcategory_slug as string) ?? (business.sub_interest_id as string) ?? undefined;
@@ -98,6 +98,9 @@ export async function GET(req: NextRequest) {
           price_range: business.price_range,
           verified: business.verified,
           badge: business.badge,
+          lat: (business.lat as number) ?? null,
+          lng: (business.lng as number) ?? null,
+          reviews: stats?.[0]?.total_reviews ?? 0,
           rating: stats?.[0]?.average_rating ?? null,
           stats: {
             average_rating: stats?.[0]?.average_rating ?? 0,
@@ -130,6 +133,12 @@ export async function GET(req: NextRequest) {
           price_range: business.price_range,
           verified: business.verified,
           badge: business.badge,
+          lat: ((business.lat as number) ?? (business.latitude as number) ?? null),
+          lng: ((business.lng as number) ?? (business.longitude as number) ?? null),
+          reviews:
+            (business.total_reviews as number) ??
+            (business.review_count as number) ??
+            0,
           rating: (business.average_rating as number) ?? null,
           stats: {
             average_rating: (business.average_rating as number) ?? 0,

@@ -7,21 +7,23 @@ import type { Event } from "../../lib/types/Event";
 
 interface EventInfoProps {
   event: Event;
+  sharedTitleLayoutId?: string;
 }
 
-export default function EventInfo({ event }: EventInfoProps) {
+export default function EventInfo({ event, sharedTitleLayoutId }: EventInfoProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2, duration: 0.6 }}
     >
-      <h1
+      <motion.h1
+        layoutId={sharedTitleLayoutId}
         className="text-h1 font-semibold text-charcoal mb-3"
         style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
       >
         {event.title}
-      </h1>
+      </motion.h1>
 
       <div className="flex items-center gap-3 mb-4 flex-wrap">
         {event.type === "event" && (

@@ -10,6 +10,7 @@ import ReviewerCard from "../ReviewerCard/ReviewerCard";
 import BusinessOfTheMonthCard from "../BusinessCard/BusinessOfTheMonthCard";
 import ScrollableSection from "../ScrollableSection/ScrollableSection";
 import WavyTypedTitle from "../../../components/Animations/WavyTypedTitle";
+import LocationPromptBanner from "../Location/LocationPromptBanner";
 import {
   Review,
   Reviewer,
@@ -125,6 +126,11 @@ export default function CommunityHighlights({
 
   const hasReviewers = !!topReviewers && topReviewers.length > 0;
   const hasBusinesses = Array.isArray(businessesOfTheMonth) && businessesOfTheMonth.length > 0;
+  const hasCoordinateBusinesses = (Array.isArray(businessesOfTheMonth) ? businessesOfTheMonth : []).some(
+    (business) =>
+      typeof business.lat === "number" && Number.isFinite(business.lat) &&
+      typeof business.lng === "number" && Number.isFinite(business.lng)
+  );
   const isStage1 = reviewersMode !== 'normal';
 
   const contributorsHeadingMobile = isStage1 ? 'Early Voices' : 'Top Contributors';
@@ -364,6 +370,7 @@ export default function CommunityHighlights({
               fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
             }}
           >
+            <LocationPromptBanner hasCoordinateBusinesses={hasCoordinateBusinesses} />
             <div className="mx-auto w-full max-w-[2000px] relative z-10">
               <div className="pb-4 sm:pb-8 md:pb-10 flex flex-wrap items-center justify-between gap-2">
                 <h3

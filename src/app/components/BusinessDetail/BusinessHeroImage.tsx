@@ -17,6 +17,7 @@ interface BusinessHeroImageProps {
   uploaded_images?: string[]; // Uploaded images array
   /** Canonical subcategory slug for placeholder when no photos (e.g. sub_interest_id) */
   subcategorySlug?: string | null;
+  sharedLayoutId?: string;
 }
 
 export default function BusinessHeroImage({
@@ -27,6 +28,7 @@ export default function BusinessHeroImage({
   images = [],
   uploaded_images = [],
   subcategorySlug,
+  sharedLayoutId,
 }: BusinessHeroImageProps) {
   // Combine all available images (exclude placeholders so we show real photos only)
   const allImages = useMemo(() => {
@@ -76,6 +78,7 @@ export default function BusinessHeroImage({
 
   return (
     <motion.div
+      layoutId={sharedLayoutId}
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.6 }}

@@ -60,4 +60,11 @@ export interface BusinessOfTheMonth {
   };
   verified?: boolean;
   address?: string;
+  lat?: number | null;
+  lng?: number | null;
+  top_review_preview?: {
+    content: string;
+    rating?: number | null;
+    createdAt?: string | null;
+  } | null;
 }

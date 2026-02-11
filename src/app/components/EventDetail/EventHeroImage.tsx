@@ -10,6 +10,7 @@ interface EventHeroImageProps {
   event: Event;
   isLiked?: boolean;
   onLike?: () => void;
+  sharedLayoutId?: string;
 }
 
 // Helper to get optimized image URL with width parameter
@@ -47,12 +48,14 @@ export default function EventHeroImage({
   event,
   isLiked = false,
   onLike,
+  sharedLayoutId,
 }: EventHeroImageProps) {
   // Get optimized image URL with width parameter
   const imageUrl = getOptimizedImageUrl(event.image, 1080);
 
   return (
     <motion.div
+      layoutId={sharedLayoutId}
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.6 }}

@@ -20,6 +20,13 @@ const DEBUG_MIDDLEWARE = process.env.NODE_ENV === 'development' || process.env.D
 const REDIRECT_GUARD_MAX_AGE_SEC = 5;
 const REDIRECT_GUARD_COOKIE = '_sg';
 
+interface RedirectGuardState {
+  t: number;
+  n: number;
+  from?: string;
+  to?: string;
+}
+
 function debugLog(context: string, data: Record<string, unknown>) {
   if (DEBUG_MIDDLEWARE) {
     console.log(`[Middleware:${context}]`, JSON.stringify(data, null, 2));
@@ -31,33 +38,45 @@ function edgeLog(decision: string, pathname: string, meta: { hasUser?: boolean; 
   console.log(`[Edge] ${decision} pathname=${pathname} hasUser=${!!meta.hasUser} emailOk=${!!meta.emailConfirmed} business=${!!meta.isBusiness} onboardingOk=${!!meta.onboardingComplete}${meta.to ? ` to=${meta.to}` : ''}${meta.reason ? ` reason=${meta.reason}` : ''}`);
 }
 
-/** Redirect loop guard: if we already redirected 2+ times within REDIRECT_GUARD_MAX_AGE_SEC, allow next() to break loop. */
-function checkRedirectLoop(request: NextRequest): boolean {
+function parseRedirectGuard(request: NextRequest): RedirectGuardState | null {
   const raw = request.cookies.get(REDIRECT_GUARD_COOKIE)?.value;
-  if (!raw) return false;
+  if (!raw) return null;
   try {
-    const { t, n } = JSON.parse(decodeURIComponent(raw)) as { t: number; n: number };
-    const ageSec = (Date.now() - t) / 1000;
-    if (ageSec <= REDIRECT_GUARD_MAX_AGE_SEC && n >= 2) return true;
+    return JSON.parse(decodeURIComponent(raw)) as RedirectGuardState;
   } catch {
-    // ignore
+    return null;
   }
-  return false;
 }
 
-function setRedirectGuard(req: NextRequest, response: NextResponse): NextResponse {
-  const raw = req.cookies.get(REDIRECT_GUARD_COOKIE)?.value;
+function isPrefetchRequest(request: NextRequest): boolean {
+  return (
+    request.headers.get('next-router-prefetch') === '1' ||
+    request.headers.get('x-middleware-prefetch') === '1' ||
+    request.headers.get('purpose') === 'prefetch'
+  );
+}
+
+/** Redirect loop guard: if we already redirected 2+ times within REDIRECT_GUARD_MAX_AGE_SEC, allow next() to break loop. */
+function shouldBypassRedirectForLoop(request: NextRequest): boolean {
+  const state = parseRedirectGuard(request);
+  if (!state) return false;
+  const ageSec = (Date.now() - state.t) / 1000;
+  return ageSec <= REDIRECT_GUARD_MAX_AGE_SEC && state.n >= 2;
+}
+
+function setRedirectGuard(req: NextRequest, response: NextResponse, target: URL): NextResponse {
+  const current = parseRedirectGuard(req);
   let n = 1;
-  try {
-    if (raw) {
-      const parsed = JSON.parse(decodeURIComponent(raw)) as { t: number; n: number };
-      const ageSec = (Date.now() - parsed.t) / 1000;
-      if (ageSec <= REDIRECT_GUARD_MAX_AGE_SEC) n = parsed.n + 1;
-    }
-  } catch {
-    // ignore
+  if (current) {
+    const ageSec = (Date.now() - current.t) / 1000;
+    if (ageSec <= REDIRECT_GUARD_MAX_AGE_SEC) n = current.n + 1;
   }
-  response.cookies.set(REDIRECT_GUARD_COOKIE, encodeURIComponent(JSON.stringify({ t: Date.now(), n })), {
+  response.cookies.set(REDIRECT_GUARD_COOKIE, encodeURIComponent(JSON.stringify({
+    t: Date.now(),
+    n,
+    from: req.nextUrl.pathname,
+    to: target.pathname,
+  } satisfies RedirectGuardState)), {
     path: '/',
     maxAge: REDIRECT_GUARD_MAX_AGE_SEC,
     httpOnly: true,
@@ -74,8 +93,21 @@ function clearRedirectGuard(response: NextResponse): NextResponse {
 
 /** Redirect with loop-guard cookie set (so we can detect 2+ redirects in 5s). */
 function redirectWithGuard(req: NextRequest, url: URL): NextResponse {
+  if (isPrefetchRequest(req)) {
+    return NextResponse.redirect(url);
+  }
+
+  if (shouldBypassRedirectForLoop(req)) {
+    console.warn('[Middleware] Redirect loop guard triggered, allowing request through', {
+      pathname: req.nextUrl.pathname,
+      to: url.pathname,
+    });
+    const allowResponse = NextResponse.next({ request: { headers: req.headers } });
+    return clearRedirectGuard(allowResponse);
+  }
+
   const res = NextResponse.redirect(url);
-  return setRedirectGuard(req, res);
+  return setRedirectGuard(req, res, url);
 }
 
 function isSchemaCacheError(error: { message?: string } | null | undefined): boolean {
@@ -102,14 +134,6 @@ export async function proxy(request: NextRequest) {
 
   if (isPublicAuthRoute) {
     return NextResponse.next();
-  }
-
-  // Redirect loop guard: if we already redirected 2+ times in last 5s, allow through to prevent iOS tab crash
-  if (checkRedirectLoop(request)) {
-    console.warn('[Middleware] Redirect loop guard triggered, allowing request through', { pathname });
-    const allowResponse = NextResponse.next({ request: { headers: request.headers } });
-    clearRedirectGuard(allowResponse);
-    return allowResponse;
   }
 
   debugLog('START', {

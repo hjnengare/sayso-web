@@ -4,6 +4,7 @@ import type { MouseEvent, CSSProperties } from "react";
 import type { Event } from "../../lib/types/Event";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { getEventIconPng } from "../../utils/eventIconToPngMapping";
 import EventBadge from "./EventBadge";
@@ -120,6 +121,8 @@ interface EventCardProps {
 
 function EventCard({ event, index = 0 }: EventCardProps) {
   const router = useRouter();
+  const eventMediaLayoutId = `event-media-${event.id}`;
+  const eventTitleLayoutId = `event-title-${event.id}`;
   const iconPng = getEventIconPng(event.icon);
   const mediaImage = getEventMediaImage(event);
   const hasRealImage = Boolean(event.image?.trim() || (event as any).businessImages?.length);
@@ -153,7 +156,11 @@ function EventCard({ event, index = 0 }: EventCardProps) {
       >
           {/* MEDIA - Full bleed with premium overlay */}
           <div className="relative w-full flex-shrink-0 z-10 p-1">
-            <div className="relative w-full overflow-hidden rounded-[12px] flex items-center justify-center bg-gradient-to-br from-off-white/95 to-off-white/85" style={{ aspectRatio: '4 / 3' }}>
+            <motion.div
+              layoutId={eventMediaLayoutId}
+              className="relative w-full overflow-hidden rounded-[12px] flex items-center justify-center bg-gradient-to-br from-off-white/95 to-off-white/85"
+              style={{ aspectRatio: '4 / 3' }}
+            >
               {showLoadingOverlay && (
                 <div className="absolute inset-0 bg-charcoal/5 animate-pulse z-10 flex items-center justify-center">
                   <span className="w-10 h-10 border-2 border-white/50 border-t-navbar-bg rounded-full animate-spin" aria-hidden />
@@ -176,7 +183,7 @@ function EventCard({ event, index = 0 }: EventCardProps) {
                 style={{ background: "hsla(0, 0%, 0%, 0.2)" }}
                 aria-hidden="true"
               />
-            </div>
+            </motion.div>
 
             {/* Date ribbon badge */}
             <EventBadge
@@ -192,7 +199,8 @@ function EventCard({ event, index = 0 }: EventCardProps) {
           {/* CONTENT - Minimal, premium spacing */}
           <div className="px-4 py-4 bg-gradient-to-b from-card-bg/95 to-card-bg flex flex-col gap-2 rounded-b-[12px] flex-1">
             <div className="flex flex-col gap-2">
-              <h3
+              <motion.h3
+                layoutId={eventTitleLayoutId}
                 className="text-base sm:text-lg font-bold text-charcoal leading-tight line-clamp-1 transition-colors duration-300 group-hover:text-navbar-bg/90"
                 style={{
                   fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
@@ -203,7 +211,7 @@ function EventCard({ event, index = 0 }: EventCardProps) {
                 }}
               >
                 {event.title}
-              </h3>
+              </motion.h3>
 
               <div className="w-full">
                 <p

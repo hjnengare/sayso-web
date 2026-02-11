@@ -36,6 +36,13 @@ export interface FeaturedBusiness {
   recent_reviews_30d?: number;
   recent_reviews_7d?: number;
   bayesian_rating?: number | null;
+  lat?: number | null;
+  lng?: number | null;
+  top_review_preview?: {
+    content: string;
+    rating?: number | null;
+    createdAt?: string | null;
+  } | null;
 }
 
 export interface UseFeaturedBusinessesOptions {

@@ -2,7 +2,8 @@
 
 import BusinessCard from "../BusinessCard/BusinessCard";
 import type { LiveSearchFilters, LiveSearchResult } from "@/app/hooks/useLiveSearch";
-import { Fragment } from "react";
+import { Fragment, useMemo } from "react";
+import LocationPromptBanner from "../Location/LocationPromptBanner";
 
 const DISTANCE_FILTERS: { label: string; value: number }[] = [
   { label: "1 km", value: 1 },
@@ -40,6 +41,15 @@ export default function SearchResultsPanel({
   onResetFilters,
 }: SearchResultsPanelProps) {
   const hasFilters = Boolean(filters.distanceKm || filters.minRating);
+  const hasCoordinateBusinesses = useMemo(
+    () =>
+      results.some(
+        (business) =>
+          typeof business.lat === "number" && Number.isFinite(business.lat) &&
+          typeof business.lng === "number" && Number.isFinite(business.lng)
+      ),
+    [results]
+  );
 
   const renderPill = (
     label: string,
@@ -63,6 +73,7 @@ export default function SearchResultsPanel({
       className="relative w-full transition-opacity duration-300 ease-in-out"
       aria-live="polite"
     >
+      <LocationPromptBanner hasCoordinateBusinesses={hasCoordinateBusinesses} />
       <div className="rounded-[20px] border border-white/[0.12] bg-off-white/80 shadow-inner p-6 sm:p-8 backdrop-blur-xl">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
@@ -153,7 +164,7 @@ export default function SearchResultsPanel({
                 business={{
                   ...business,
                   percentiles: undefined,
-                  reviews: 0,
+                  reviews: typeof business.reviews === "number" ? business.reviews : 0,
                   alt: business.name,
                   rating: business.rating ?? business.stats?.average_rating ?? 0,
                   hasRating: Boolean(business.stats?.average_rating),

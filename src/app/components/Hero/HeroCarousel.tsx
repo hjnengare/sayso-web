@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import nextDynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
@@ -30,16 +30,23 @@ const HERO_COPY = [
     description: "Trusted local gems, rated by real people.",
   },
   {
-    title: "Rate the services you love (or don’t love)",
+    title: "Rate the services you love (or don't love)",
     description: "Quick, honest reviews that help your community choose better.",
   },
   {
     title: "Discover events and experiences",
-    description: "Find what’s happening near you—today, this weekend, and beyond.",
+    description: "Find what's happening near you - today, this weekend, and beyond.",
   },
 ];
+const FALLBACK_HERO_TEXT = {
+  title: "Cape Town, in your pocket",
+  description: "Trusted local gems, rated by real people.",
+} as const;
 
 const HERO_SEED_STORAGE_KEY = "sayso.hero.seed.v1";
+const HERO_PARALLAX_MOBILE_MAX_PX = 8;
+const HERO_PARALLAX_TABLET_MAX_PX = 10;
+const HERO_PARALLAX_DESKTOP_MAX_PX = 12;
 
 function getOrCreateSessionSeed(): string {
   if (typeof window === "undefined") return "server";
@@ -96,13 +103,6 @@ function selectStableSubset(images: string[], cap: number, seed: string): string
   if (cap >= images.length) return images;
   // Shuffle once deterministically, then take the first N.
   return seededShuffle(images, seed).slice(0, cap);
-}
-
-function getViewportFromWindow(): HeroViewport {
-  if (typeof window === "undefined" || !window.matchMedia) return "desktop";
-  if (window.matchMedia("(max-width: 767px)").matches) return "mobile";
-  if (window.matchMedia("(min-width: 768px) and (max-width: 1024px)").matches) return "tablet";
-  return "desktop";
 }
 
 const FONT_STACK = "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif";
@@ -280,12 +280,16 @@ export default function HeroCarousel() {
   const [textIndex, setTextIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [heroImages] = useState<string[]>(() => HERO_IMAGES);
-  const [heroViewport, setHeroViewport] = useState<HeroViewport>(() => getViewportFromWindow());
-  const [heroSeed] = useState<string>(() => getOrCreateSessionSeed());
+  const [heroViewport, setHeroViewport] = useState<HeroViewport>("desktop");
+  const [heroSeed, setHeroSeed] = useState<string>("server");
   const [failedImageUrls, setFailedImageUrls] = useState<Set<string>>(new Set());
   const slideTimeoutRef = useRef<number | null>(null);
   const containerRef = useRef<HTMLElement>(null);
   const currentIndexRef = useRef(currentIndex);
+  const isHeroInViewRef = useRef(true);
+  const isScrollTickingRef = useRef(false);
+  const parallaxMediaOffsetRef = useRef(0);
+  const parallaxOverlayOffsetRef = useRef(0);
   const isIOS = useMemo(() => {
     if (typeof navigator === "undefined") return false;
     const ua = navigator.userAgent || "";
@@ -338,6 +342,11 @@ export default function HeroCarousel() {
   }, []);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    setHeroSeed(getOrCreateSessionSeed());
+  }, []);
+
+  useEffect(() => {
     slidesRef.current = slides;
   }, [slides]);
 
@@ -360,11 +369,104 @@ export default function HeroCarousel() {
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  // respect reduced motion
-  const prefersReduced =
-    typeof window !== "undefined" &&
-    window.matchMedia &&
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // Respect reduced motion for carousel timing and text animation intensity.
+  const prefersReduced = useReducedMotion() ?? false;
+  const prefersDataSaver =
+    typeof navigator !== "undefined" &&
+    Boolean((navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData);
+
+  // Micro-parallax is applied only to hero media + one decorative overlay.
+  // Foreground text/CTAs remain static for readability and touch stability.
+  const applyParallaxOffsets = useCallback((mediaOffsetPx: number, overlayOffsetPx: number) => {
+    const container = containerRef.current;
+    if (!container) return;
+    const roundedMediaOffset = Math.round(mediaOffsetPx * 100) / 100;
+    const roundedOverlayOffset = Math.round(overlayOffsetPx * 100) / 100;
+    const mediaChanged = Math.abs(parallaxMediaOffsetRef.current - roundedMediaOffset) >= 0.1;
+    const overlayChanged = Math.abs(parallaxOverlayOffsetRef.current - roundedOverlayOffset) >= 0.1;
+    if (!mediaChanged && !overlayChanged) return;
+
+    parallaxMediaOffsetRef.current = roundedMediaOffset;
+    parallaxOverlayOffsetRef.current = roundedOverlayOffset;
+    container.style.setProperty("--hero-media-parallax-y", `${roundedMediaOffset}px`);
+    container.style.setProperty("--hero-overlay-parallax-y", `${roundedOverlayOffset}px`);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const heroEl = containerRef.current;
+    if (!heroEl) return;
+
+    const disableParallax = prefersReduced || prefersDataSaver || isIOSMobile;
+    if (disableParallax) {
+      applyParallaxOffsets(0, 0);
+      return;
+    }
+
+    const maxMediaOffset =
+      heroViewport === "mobile"
+        ? HERO_PARALLAX_MOBILE_MAX_PX
+        : heroViewport === "tablet"
+          ? HERO_PARALLAX_TABLET_MAX_PX
+          : HERO_PARALLAX_DESKTOP_MAX_PX;
+    const maxOverlayOffset = maxMediaOffset * 0.5;
+    const mediaFactor = heroViewport === "mobile" ? 0.08 : heroViewport === "tablet" ? 0.09 : 0.1;
+    const overlayFactor = heroViewport === "mobile" ? 0.04 : heroViewport === "tablet" ? 0.045 : 0.05;
+
+    let rafId: number | null = null;
+
+    const updateParallax = () => {
+      isScrollTickingRef.current = false;
+      if (!isHeroInViewRef.current) return;
+      const currentHero = containerRef.current;
+      if (!currentHero) return;
+      const rect = currentHero.getBoundingClientRect();
+      if (rect.bottom <= 0 || rect.top >= window.innerHeight) return;
+
+      const scrollWithinHero = Math.max(0, -rect.top);
+      const mediaOffset = Math.min(maxMediaOffset, scrollWithinHero * mediaFactor);
+      const overlayOffset = Math.min(maxOverlayOffset, scrollWithinHero * overlayFactor);
+      applyParallaxOffsets(mediaOffset, overlayOffset);
+    };
+
+    const scheduleParallaxUpdate = () => {
+      if (!isHeroInViewRef.current) return;
+      if (isScrollTickingRef.current) return;
+      isScrollTickingRef.current = true;
+      rafId = window.requestAnimationFrame(updateParallax);
+    };
+
+    const visibilityObserver = new IntersectionObserver(
+      ([entry]) => {
+        isHeroInViewRef.current = Boolean(entry?.isIntersecting);
+        if (!isHeroInViewRef.current) {
+          if (rafId !== null) {
+            window.cancelAnimationFrame(rafId);
+            rafId = null;
+          }
+          isScrollTickingRef.current = false;
+          return;
+        }
+        scheduleParallaxUpdate();
+      },
+      { threshold: 0 },
+    );
+
+    visibilityObserver.observe(heroEl);
+    scheduleParallaxUpdate();
+    window.addEventListener("scroll", scheduleParallaxUpdate, { passive: true });
+    window.addEventListener("resize", scheduleParallaxUpdate, { passive: true });
+
+    return () => {
+      visibilityObserver.disconnect();
+      window.removeEventListener("scroll", scheduleParallaxUpdate);
+      window.removeEventListener("resize", scheduleParallaxUpdate);
+      if (rafId !== null) window.cancelAnimationFrame(rafId);
+      isScrollTickingRef.current = false;
+      isHeroInViewRef.current = true;
+      applyParallaxOffsets(0, 0);
+    };
+  }, [applyParallaxOffsets, heroViewport, isIOSMobile, prefersDataSaver, prefersReduced]);
 
   // Prefetch a small set of upcoming hero images once first paint settles.
   useEffect(() => {
@@ -563,6 +665,95 @@ export default function HeroCarousel() {
   // Opacity is controlled purely via the animate prop keyed to currentIndex.
 
   const currentTextSlide = slides[textIndex % slides.length] ?? slides[0];
+  const currentTitle =
+    typeof currentTextSlide?.title === "string" && currentTextSlide.title.trim().length > 0
+      ? currentTextSlide.title.trim()
+      : FALLBACK_HERO_TEXT.title;
+  const currentDescription =
+    typeof currentTextSlide?.description === "string" && currentTextSlide.description.trim().length > 0
+      ? currentTextSlide.description.trim()
+      : FALLBACK_HERO_TEXT.description;
+  const titleLayoutFallback = HERO_COPY.find((copy) => copy.title)?.title ?? FALLBACK_HERO_TEXT.title;
+  const descriptionLayoutFallback =
+    HERO_COPY.find((copy) => copy.description)?.description ?? FALLBACK_HERO_TEXT.description;
+  const textMotionKey = currentTextSlide?.id ?? `hero-text-${textIndex}`;
+  const heroTextStaggerVariants = prefersReduced
+    ? {
+        hidden: {},
+        visible: { transition: { staggerChildren: 0.06, delayChildren: 0.04 } },
+      }
+    : {
+        hidden: {},
+        visible: { transition: { staggerChildren: 0.1, delayChildren: 0.08 } },
+      };
+  const heroTitleEntranceVariants = prefersReduced
+    ? {
+        hidden: { opacity: 0 },
+        visible: { opacity: 1, transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] as const } },
+      }
+    : {
+        hidden: { opacity: 0, y: 10, filter: "blur(2px)" },
+        visible: {
+          opacity: 1,
+          y: 0,
+          filter: "blur(0px)",
+          transition: { duration: 0.32, ease: [0.22, 1, 0.36, 1] as const },
+        },
+      };
+  const heroSubtitleEntranceVariants = prefersReduced
+    ? {
+        hidden: { opacity: 0 },
+        visible: { opacity: 1, transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] as const } },
+      }
+    : {
+        hidden: { opacity: 0, y: 8, filter: "blur(1.5px)" },
+        visible: {
+          opacity: 1,
+          y: 0,
+          filter: "blur(0px)",
+          transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] as const },
+        },
+      };
+  const heroCtaEntranceVariants = prefersReduced
+    ? {
+        hidden: { opacity: 0 },
+        visible: { opacity: 1, transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] as const } },
+      }
+    : {
+        hidden: { opacity: 0, y: 6, filter: "blur(1px)" },
+        visible: {
+          opacity: 1,
+          y: 0,
+          filter: "blur(0px)",
+          transition: { duration: 0.28, ease: [0.22, 1, 0.36, 1] as const },
+        },
+      };
+  const heroTitleSwapMotion = prefersReduced
+    ? {
+        initial: { opacity: 0 },
+        animate: { opacity: 1 },
+        exit: { opacity: 0 },
+        transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] as const },
+      }
+    : {
+        initial: { opacity: 0, y: 8, filter: "blur(2px)" },
+        animate: { opacity: 1, y: 0, filter: "blur(0px)" },
+        exit: { opacity: 0, y: -6, filter: "blur(2px)" },
+        transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] as const },
+      };
+  const heroSubtitleSwapMotion = prefersReduced
+    ? {
+        initial: { opacity: 0 },
+        animate: { opacity: 1 },
+        exit: { opacity: 0 },
+        transition: { duration: 0.18, ease: [0.22, 1, 0.36, 1] as const },
+      }
+    : {
+        initial: { opacity: 0, y: 6, filter: "blur(1.5px)" },
+        animate: { opacity: 1, y: 0, filter: "blur(0px)" },
+        exit: { opacity: 0, y: -4, filter: "blur(1.5px)" },
+        transition: { duration: 0.26, ease: [0.22, 1, 0.36, 1] as const },
+      };
 
   return (
     <>
@@ -582,9 +773,12 @@ export default function HeroCarousel() {
           }}
         >
           {/* Liquid Glass Ambient Lighting */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-sage/10 pointer-events-none rounded-none" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(255,255,255,0.15)_0%,_transparent_70%)] pointer-events-none rounded-none" />
-      <div className="absolute inset-0 backdrop-blur-[1px] bg-off-white/5 mix-blend-overlay pointer-events-none rounded-none" />
+      <div
+        className="absolute inset-0 z-0 bg-gradient-to-br from-white/20 via-transparent to-sage/10 pointer-events-none rounded-none will-change-transform"
+        style={{ transform: "translate3d(0, var(--hero-overlay-parallax-y, 0px), 0)" }}
+      />
+      <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_center,_rgba(255,255,255,0.15)_0%,_transparent_70%)] pointer-events-none rounded-none" />
+      <div className="absolute inset-0 z-0 backdrop-blur-[1px] bg-off-white/5 mix-blend-overlay pointer-events-none rounded-none" />
       {/* Slides — all capped slides rendered; opacity driven by currentIndex. No mount/unmount flicker. */}
       {slides.map((slide, idx) => {
         const isActive = idx === currentIndex;
@@ -597,12 +791,15 @@ export default function HeroCarousel() {
           animate={{ opacity: isActive ? 1 : 0, zIndex: isActive ? 10 : 0 }}
           transition={{ opacity: { duration: 1.2, ease: "easeInOut" }, zIndex: { duration: 0 } }}
           aria-hidden={!isActive}
-          className="absolute inset-0 overflow-hidden will-change-[opacity] transform-gpu [backface-visibility:hidden] rounded-none"
+          className="absolute inset-0 z-10 overflow-hidden will-change-[opacity] transform-gpu [backface-visibility:hidden] rounded-none"
         >
-           <div className="absolute inset-0 rounded-none overflow-hidden transform-gpu [backface-visibility:hidden]">
+           <div
+             className="absolute inset-0 rounded-none overflow-hidden transform-gpu [backface-visibility:hidden] will-change-transform"
+             style={{ transform: "translate3d(0, var(--hero-media-parallax-y, 0px), 0)" }}
+           >
               <Image
                 src={src}
-                alt={slide.title ?? "Sayso hero slide"}
+                alt={slide.title?.trim() || FALLBACK_HERO_TEXT.title}
                 fill
                 priority={idx === 0}
                 loading={idx === 0 ? "eager" : "lazy"}
@@ -616,76 +813,67 @@ export default function HeroCarousel() {
                 }}
               />
              <div
-               className="absolute inset-0"
+               className="absolute inset-0 pointer-events-none"
                style={{ background: "hsla(0, 0%, 0%, 0.3)" }}
              />
-             <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent" />
-             <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/40" />
-             <div className="absolute inset-0 bg-black/20" />
+             <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-black/60 via-black/40 to-transparent" />
+             <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-black/30 via-transparent to-black/40" />
+             <div className="absolute inset-0 pointer-events-none bg-black/20" />
            </div>
         </motion.div>
       );
       })}
 
       {/* Hero Text - transitions independently from image slides */}
-      <div className="absolute inset-0 z-20 flex items-center justify-center w-full pt-[var(--safe-area-top)] sm:pt-[var(--header-height)] translate-y-0 sm:-translate-y-4 px-6 sm:px-10 pointer-events-none">
+      <div data-testid="hero-text" className="absolute inset-0 z-30 flex items-center justify-center w-full pt-[var(--safe-area-top)] sm:pt-[var(--header-height)] translate-y-0 sm:-translate-y-4 px-6 sm:px-10 pointer-events-none">
           <motion.div
             className="w-full max-w-3xl flex flex-col items-center justify-center text-center pb-12 sm:pb-20"
-            initial="hidden"
+            initial={false}
             animate="visible"
-            variants={{
-              hidden: {},
-              visible: { transition: { staggerChildren: 0.12, delayChildren: 0.1 } },
-            }}
+            variants={heroTextStaggerVariants}
           >
             <motion.h2
-              className="text-2xl sm:text-4xl lg:text-5xl font-bold text-off-white drop-shadow-lg mb-3 sm:mb-4 leading-tight tracking-tight"
+              className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-off-white drop-shadow-lg mb-3 sm:mb-4 leading-tight tracking-tight"
               style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-              variants={{
-                hidden: { opacity: 0, y: 20, filter: "blur(4px)" },
-                visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
-              }}
+              variants={heroTitleEntranceVariants}
             >
               <span className="inline-grid items-center justify-items-center">
                 <span className="invisible col-start-1 row-start-1">
-                  {HERO_COPY[1]?.title ?? currentTextSlide?.title}
+                  {titleLayoutFallback}
                 </span>
-                <AnimatePresence mode="wait" initial={false}>
+                <AnimatePresence mode="sync" initial={false}>
                   <motion.span
-                    key={`text-${textIndex}`}
+                    key={`text-${textMotionKey}`}
                     className="col-start-1 row-start-1"
-                    initial={{ opacity: 0, y: 10, filter: "blur(3px)" }}
-                    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                    exit={{ opacity: 0, y: -8, filter: "blur(3px)" }}
-                    transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                    initial={heroTitleSwapMotion.initial}
+                    animate={heroTitleSwapMotion.animate}
+                    exit={heroTitleSwapMotion.exit}
+                    transition={heroTitleSwapMotion.transition}
                   >
-                    {currentTextSlide?.title}
+                    {currentTitle}
                   </motion.span>
                 </AnimatePresence>
               </span>
             </motion.h2>
             <motion.p
-              className="text-sm sm:text-lg lg:text-xl text-off-white/90 drop-shadow-md max-w-xl mb-5 sm:mb-6 leading-relaxed"
+              className="text-base sm:text-lg lg:text-xl text-off-white/90 drop-shadow-md max-w-xl mb-5 sm:mb-6 leading-relaxed"
               style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 500 }}
-              variants={{
-                hidden: { opacity: 0, y: 16, filter: "blur(3px)" },
-                visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] } },
-              }}
+              variants={heroSubtitleEntranceVariants}
             >
               <span className="grid">
                 <span className="invisible col-start-1 row-start-1">
-                  {HERO_COPY[2]?.description ?? currentTextSlide?.description}
+                  {descriptionLayoutFallback}
                 </span>
-                <AnimatePresence mode="wait" initial={false}>
+                <AnimatePresence mode="sync" initial={false}>
                   <motion.span
-                    key={`desc-${textIndex}`}
+                    key={`desc-${textMotionKey}`}
                     className="col-start-1 row-start-1"
-                    initial={{ opacity: 0, y: 8, filter: "blur(2px)" }}
-                    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                    exit={{ opacity: 0, y: -6, filter: "blur(2px)" }}
-                    transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                    initial={heroSubtitleSwapMotion.initial}
+                    animate={heroSubtitleSwapMotion.animate}
+                    exit={heroSubtitleSwapMotion.exit}
+                    transition={heroSubtitleSwapMotion.transition}
                   >
-                    {currentTextSlide?.description}
+                    {currentDescription}
                   </motion.span>
                 </AnimatePresence>
               </span>
@@ -693,10 +881,7 @@ export default function HeroCarousel() {
 
             {/* Conditional CTA Button */}
             <motion.div
-              variants={{
-                hidden: { opacity: 0, y: 12, scale: 0.97 },
-                visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
-              }}
+              variants={heroCtaEntranceVariants}
               className="w-full flex justify-center pointer-events-auto"
             >
               {!user ? (
@@ -749,3 +934,4 @@ export default function HeroCarousel() {
     </>
   );
 }
+

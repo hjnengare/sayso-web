@@ -261,15 +261,20 @@ export class AuthService {
   static async signOut(): Promise<{ error: AuthError | null }> {
     const supabase = this.getClient();
     try {
-      const { error } = await supabase.auth.signOut({ scope: 'global' });
+      // Start global revoke in background to avoid blocking UI on slow networks.
+      const globalSignOutPromise = supabase.auth.signOut({ scope: 'global' })
+        .catch((err: unknown) => {
+          console.warn('AuthService: Background global sign out failed:', err);
+          return { error: null };
+        });
 
-      if (error) {
-        // Fallback: clear local session even if global revoke fails (network/offline).
-        const { error: localError } = await supabase.auth.signOut({ scope: 'local' });
-        if (localError) {
-          return { error: this.handleSupabaseError(localError) };
-        }
+      // Always clear local session immediately for fast route transitions.
+      const { error: localError } = await supabase.auth.signOut({ scope: 'local' });
+      if (localError && !this.isAuthSessionMissingError(localError.message)) {
+        return { error: this.handleSupabaseError(localError) };
       }
+
+      void globalSignOutPromise;
 
       return { error: null };
     } catch (error: unknown) {
@@ -582,6 +587,15 @@ export class AuthService {
   private static isStrongPassword(password: string): boolean {
     // Relaxed validation: minimum 6 characters, allows letters only, numbers only, or mix
     return password.length >= 6;
+  }
+
+  private static isAuthSessionMissingError(message?: string): boolean {
+    const normalized = message?.toLowerCase() || '';
+    return (
+      normalized.includes('auth session missing') ||
+      normalized.includes('session missing') ||
+      normalized.includes('refresh token not found')
+    );
   }
 
   private static handleSupabaseError(error: { message: string; error_code?: string }): AuthError {
