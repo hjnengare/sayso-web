@@ -3,6 +3,7 @@
 import React, { useMemo, useState, useEffect, useRef, memo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { Image as ImageIcon, Star, Share2, Bookmark, Info, ChevronLeft, ChevronRight, TrendingUp, Zap, Scissors, Coffee, UtensilsCrossed, Wine, Dumbbell, Activity, Heart, Book, ShoppingBag, Home, Briefcase, MapPin, Music, Film, Camera, Car, GraduationCap, CreditCard, Tag, Flame, Store, Eye } from "lucide-react";
 import Image from "next/image";
 import PercentileChip from "../PercentileChip/PercentileChip";
@@ -23,6 +24,13 @@ import BusinessCardCategory from "./parts/BusinessCardCategory";
 import BusinessCardActions from "./parts/BusinessCardActions";
 import BusinessCardPercentiles from "./parts/BusinessCardPercentiles";
 import BusinessCardReviews from "./parts/BusinessCardReviews";
+import { useBusinessReviewPreview } from "../../hooks/useBusinessReviewPreview";
+import {
+  formatDistanceAway,
+  isValidCoordinate,
+  useBusinessDistanceLocation,
+} from "../../hooks/useBusinessDistanceLocation";
+import { normalizeReviewPreviewText } from "../../lib/utils/reviewPreview";
 
 type Percentiles = {
   punctuality?: number;
@@ -60,7 +68,7 @@ type Business = {
   href?: string;
   percentiles?: Percentiles;
   verified?: boolean;
-  distance?: string;
+  distance?: number | string;
   priceRange?: string;
   hasRating?: boolean;
   stats?: {
@@ -74,6 +82,11 @@ type Business = {
   tags?: string[];
   lat?: number; // Latitude for map display
   lng?: number; // Longitude for map display
+  top_review_preview?: {
+    content: string;
+    rating?: number | null;
+    createdAt?: string | null;
+  } | null;
 };
 
 
@@ -180,6 +193,8 @@ function BusinessCard({
   const { user } = useAuth();
   const hasReviewed = false;
   const idForSnap = useMemo(() => `business-${business.id}`, [business.id]);
+  const businessImageLayoutId = useMemo(() => `business-media-${business.id}`, [business.id]);
+  const businessTitleLayoutId = useMemo(() => `business-title-${business.id}`, [business.id]);
   const revealStyle = useMemo(() => {
     const bucket = Math.abs(index) % 6;
     const x = bucket === 1 ? -6 : bucket === 2 ? 6 : bucket === 4 ? -3 : bucket === 5 ? 3 : 0;
@@ -218,6 +233,34 @@ function BusinessCard({
   const [usingFallback, setUsingFallback] = useState(false);
   const [showInfoPopup, setShowInfoPopup] = useState(false);
   const infoPopupRef = useRef<HTMLDivElement>(null);
+  const hasCoordinates = isValidCoordinate(business.lat) && isValidCoordinate(business.lng);
+  const { preview: fetchedReviewPreview } = useBusinessReviewPreview(
+    business.reviews > 0 ? business.id : null
+  );
+  const { status: locationStatus, getDistanceKm } = useBusinessDistanceLocation();
+  const reviewPreviewText = useMemo(() => {
+    const fallbackPreview = normalizeReviewPreviewText(
+      business.top_review_preview?.content
+    );
+    const fetchedPreview = normalizeReviewPreviewText(fetchedReviewPreview?.content);
+    return fetchedPreview || fallbackPreview || "";
+  }, [business.top_review_preview?.content, fetchedReviewPreview?.content]);
+  const shouldReserveReviewPreviewSpace = business.reviews > 0;
+  const distanceLabel = useMemo(() => {
+    if (!hasCoordinates) return null;
+    const distanceKm = getDistanceKm(business.lat, business.lng);
+    if (distanceKm === null) return null;
+    return formatDistanceAway(distanceKm);
+  }, [business.lat, business.lng, getDistanceKm, hasCoordinates]);
+  const distanceHint = useMemo(() => {
+    if (!hasCoordinates) return null;
+    if (locationStatus === "loading") return "Calculating...";
+    if (distanceLabel) return distanceLabel;
+    if (locationStatus === "denied") {
+      return "Location is off. Enable it in browser settings.";
+    }
+    return "Enable location to see distance";
+  }, [distanceLabel, hasCoordinates, locationStatus]);
 
 
   // Use slug for SEO-friendly URLs, fallback to ID
@@ -487,6 +530,7 @@ function BusinessCard({
             categoryKey={categoryKey}
             businessName={business.name}
             verified={business.verified}
+            sharedLayoutId={businessImageLayoutId}
           />
           {/* Premium glass badges */}
           {business.verified && (
@@ -536,12 +580,13 @@ function BusinessCard({
                       className="group w-full max-w-full min-w-0 text-charcoal transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-coral/40 rounded-lg px-2 py-1 flex items-center justify-center relative"
                       aria-label={`View ${business.name} details`}
                     >
-                      <h3
+                      <motion.h3
+                        layoutId={businessTitleLayoutId}
                         className="text-h2 sm:text-h1 font-bold text-center leading-[1.3] truncate tracking-tight transition-colors duration-300 group-hover:text-navbar-bg/90 w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap relative z-[1]"
                         style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 700, WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale', textRendering: 'optimizeLegibility', letterSpacing: '0.03em' }}
                       >
                         {business.name}
-                      </h3>
+                      </motion.h3>
                     </button>
                   </Tooltip>
                 </div>
@@ -554,6 +599,20 @@ function BusinessCard({
                     displayCategoryLabel={displayCategoryLabel}
                   />
                 </div>
+                {hasCoordinates && (
+                  <div className="w-full min-h-[1.1rem] px-2">
+                    <p
+                      className="text-center text-[11px] text-charcoal/65 truncate"
+                      title={distanceHint || ""}
+                      style={{
+                        fontFamily:
+                          "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                      }}
+                    >
+                      {distanceHint}
+                    </p>
+                  </div>
+                )}
                 {/* Reviews - Refined */}
                 <BusinessCardReviews
                   hasRating={hasRating}
@@ -564,6 +623,30 @@ function BusinessCard({
                   onWriteReview={(e) => { e.preventDefault(); e.stopPropagation(); if (!hasReviewed) handleWriteReview(); }}
                   compact={compact}
                 />
+                {shouldReserveReviewPreviewSpace && (
+                  <div className="w-full px-3 pb-1 min-h-[2.9rem]">
+                    <p
+                      className="text-[10px] uppercase tracking-[0.08em] text-charcoal/55 text-center"
+                      style={{
+                        fontFamily:
+                          "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                      }}
+                    >
+                      Top review
+                    </p>
+                    {reviewPreviewText ? (
+                      <p
+                        className="mt-0.5 text-xs sm:text-sm leading-snug text-charcoal/75 line-clamp-2 text-center"
+                        style={{
+                          fontFamily:
+                            "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                        }}
+                      >
+                        "{reviewPreviewText}"
+                      </p>
+                    ) : null}
+                  </div>
+                )}
                 {/* Percentile chips - Inside wrapper */}
                 <BusinessCardPercentiles percentiles={business.percentiles} />
               </div>

@@ -1,12 +1,13 @@
 // src/components/BusinessRow/BusinessRow.tsx
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import BusinessCard, { Business } from "../BusinessCard/BusinessCard";
 import ScrollableSection from "../ScrollableSection/ScrollableSection";
 import WavyTypedTitle from "../../../components/Animations/WavyTypedTitle";
+import LocationPromptBanner from "../Location/LocationPromptBanner";
 
 export default function BusinessRow({
   title,
@@ -20,6 +21,15 @@ export default function BusinessRow({
   href?: string;
 }) {
   const router = useRouter();
+  const hasCoordinateBusinesses = useMemo(
+    () =>
+      businesses.some(
+        (business) =>
+          typeof business.lat === "number" && Number.isFinite(business.lat) &&
+          typeof business.lng === "number" && Number.isFinite(business.lng)
+      ),
+    [businesses]
+  );
 
   useEffect(() => {
     if (!href || !href.startsWith("/")) return;
@@ -73,6 +83,7 @@ export default function BusinessRow({
         fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
       }}
     >
+      <LocationPromptBanner hasCoordinateBusinesses={hasCoordinateBusinesses} />
       <div className="mx-auto w-full relative z-10">
         <div className="pb-4 sm:pb-8 md:pb-10 flex flex-wrap items-center justify-between gap-2">
           <WavyTypedTitle

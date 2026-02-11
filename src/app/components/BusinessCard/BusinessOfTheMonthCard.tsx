@@ -19,6 +19,13 @@ import {
 } from "../../utils/subcategoryPlaceholders";
 import { useSavedItems } from "../../contexts/SavedItemsContext";
 import { useToast } from "../../contexts/ToastContext";
+import { useBusinessReviewPreview } from "../../hooks/useBusinessReviewPreview";
+import {
+  formatDistanceAway,
+  isValidCoordinate,
+  useBusinessDistanceLocation,
+} from "../../hooks/useBusinessDistanceLocation";
+import { normalizeReviewPreviewText } from "../../lib/utils/reviewPreview";
 
 // Map categories to lucide-react icons (normalize only for icon selection)
 const getCategoryIcon = (category: string): React.ComponentType<React.SVGProps<SVGSVGElement>> => {
@@ -73,6 +80,35 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
   const isSaved = isItemSaved(business.id);
 
   const hasReviews = business.reviewCount > 0;
+  const hasCoordinates = isValidCoordinate(business.lat) && isValidCoordinate(business.lng);
+  const { preview: fetchedReviewPreview } = useBusinessReviewPreview(
+    hasReviews ? business.id : null
+  );
+  const { status: locationStatus, getDistanceKm } = useBusinessDistanceLocation();
+  const reviewPreviewText = useMemo(() => {
+    const fallbackPreview = normalizeReviewPreviewText(
+      business.top_review_preview?.content
+    );
+    const fetchedPreview = normalizeReviewPreviewText(fetchedReviewPreview?.content);
+    return fetchedPreview || fallbackPreview || "";
+  }, [business.top_review_preview?.content, fetchedReviewPreview?.content]);
+  const shouldReserveReviewPreviewSpace = hasReviews;
+  const distanceLabel = useMemo(() => {
+    if (!hasCoordinates) return null;
+    const distanceKm = getDistanceKm(business.lat, business.lng);
+    if (distanceKm === null) return null;
+    return formatDistanceAway(distanceKm);
+  }, [business.lat, business.lng, getDistanceKm, hasCoordinates]);
+  const distanceHint = useMemo(() => {
+    if (!hasCoordinates) return null;
+    if (locationStatus === "loading") return "Calculating...";
+    if (distanceLabel) return distanceLabel;
+    if (locationStatus === "denied") {
+      return "Location is off. Enable it in browser settings.";
+    }
+    return "Enable location to see distance";
+  }, [distanceLabel, hasCoordinates, locationStatus]);
+
   const ribbonText = useMemo(() => {
     const reasonLabel = (business as any).ui_hints?.reason?.label;
     const monthAchievement = (business as any).monthAchievement;
@@ -426,6 +462,20 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
                     })()}
                   </div>
                 </div>
+                {hasCoordinates && (
+                  <div className="w-full min-h-[1.1rem] px-2">
+                    <p
+                      className="text-center text-[11px] text-charcoal/65 truncate"
+                      title={distanceHint || ""}
+                      style={{
+                        fontFamily:
+                          "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                      }}
+                    >
+                      {distanceHint}
+                    </p>
+                  </div>
+                )}
 
                 {/* Reviews - Refined */}
                 <div className="flex flex-col items-center gap-2 mb-2">
@@ -506,6 +556,30 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
                     <Stars value={hasReviews && displayTotal > 0 ? displayTotal : 0} color="charcoal" size={18} spacing={2.5} />
                   </div>
                 </div>
+                {shouldReserveReviewPreviewSpace && (
+                  <div className="w-full px-3 pb-1 min-h-[2.9rem]">
+                    <p
+                      className="text-[10px] uppercase tracking-[0.08em] text-charcoal/55 text-center"
+                      style={{
+                        fontFamily:
+                          "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                      }}
+                    >
+                      Top review
+                    </p>
+                    {reviewPreviewText ? (
+                      <p
+                        className="mt-0.5 text-xs sm:text-sm leading-snug text-charcoal/75 line-clamp-2 text-center"
+                        style={{
+                          fontFamily:
+                            "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                        }}
+                      >
+                        "{reviewPreviewText}"
+                      </p>
+                    ) : null}
+                  </div>
+                )}
 
               </div>
             </div>

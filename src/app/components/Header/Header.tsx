@@ -3,12 +3,13 @@
 
 import { useCallback, useEffect, useState, useRef, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Menu, Bell, Settings, Bookmark, Search, X, Lock, Shield, FileCheck, Database, LogOut } from "lucide-react";
+import { Bell, Settings, Bookmark, Search, X, Lock, Shield, FileCheck, Database, LogOut } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Logo from "../Logo/Logo";
 import OptimizedLink from "../Navigation/OptimizedLink";
 import DesktopNav from "./DesktopNav";
 import MobileMenu from "./MobileMenu";
+import MobileMenuToggleIcon from "./MobileMenuToggleIcon";
 import HeaderSkeleton from "./HeaderSkeleton";
 import { useHeaderState } from "./useHeaderState";
 import { PRIMARY_LINKS, DISCOVER_LINKS, getLogoHref } from "./headerActionsConfig";
@@ -973,8 +974,12 @@ export default function Header({
                     >
                       <Bell className="w-5 h-5" fill={isNotificationsActive ? "currentColor" : "none"} />
                       {isGuest ? (
-                        <span className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center w-4 h-4 text-coral">
-                          <Lock className="w-2.5 h-2.5" />
+                        <span
+                          className="pointer-events-none absolute -top-0.5 -right-0.5 flex items-center justify-center w-3.5 h-3.5 text-white/85"
+                          role="img"
+                          aria-label="Requires sign in"
+                        >
+                          <Lock className="w-2.5 h-2.5" strokeWidth={1.9} />
                         </span>
                       ) : unreadCount > 0 ? (
                         <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-white text-[10px] font-bold rounded-full bg-gradient-to-br from-coral to-coral/90 border border-white/20">
@@ -985,24 +990,32 @@ export default function Header({
                   )}
 
                   {/* Saved */}
-                  {!isBusinessAccountUser && !isGuest && !isMobileSearchOpen && (
+                  {!isBusinessAccountUser && !isMobileSearchOpen && (
                     <OptimizedLink
-                      href="/saved"
+                      href={isGuest ? "/login" : "/saved"}
                       className={`relative w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
-                        isSavedActive
+                        !isGuest && isSavedActive
                           ? "text-sage bg-sage/5"
                           : whiteText
                             ? "text-white hover:text-white/80 hover:bg-white/10"
                             : "text-charcoal/80 hover:text-sage hover:bg-sage/5"
                       }`}
-                      aria-label="Saved"
+                      aria-label={isGuest ? "Sign in for saved items" : "Saved"}
                     >
-                      <Bookmark className="w-5 h-5" fill={isSavedActive ? "currentColor" : "none"} />
-                      {savedCount > 0 && (
+                      <Bookmark className="w-5 h-5" fill={!isGuest && isSavedActive ? "currentColor" : "none"} />
+                      {isGuest ? (
+                        <span
+                          className="pointer-events-none absolute -top-0.5 -right-0.5 flex items-center justify-center w-3.5 h-3.5 text-white/85"
+                          role="img"
+                          aria-label="Requires sign in"
+                        >
+                          <Lock className="w-2.5 h-2.5" strokeWidth={1.9} />
+                        </span>
+                      ) : savedCount > 0 ? (
                         <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-white text-[10px] font-bold rounded-full bg-gradient-to-br from-coral to-coral/90 border border-white/20">
                           {savedCount > 99 ? "99+" : savedCount}
                         </span>
-                      )}
+                      ) : null}
                     </OptimizedLink>
                   )}
 
@@ -1019,7 +1032,7 @@ export default function Header({
                       aria-label="Open menu"
                       aria-expanded={isMobileMenuOpen}
                     >
-                      <Menu className="w-6 h-6" />
+                      <MobileMenuToggleIcon isOpen={isMobileMenuOpen} />
                     </button>
                   )}
                 </div>
@@ -1060,8 +1073,12 @@ export default function Header({
                 >
                   <Bell className="w-5 h-5" fill={isNotificationsActive ? "currentColor" : "none"} />
                   {isGuest ? (
-                    <span className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center w-4 h-4 text-coral">
-                      <Lock className="w-2.5 h-2.5" />
+                    <span
+                      className="pointer-events-none absolute -top-0.5 -right-0.5 flex items-center justify-center w-3.5 h-3.5 text-white/85"
+                      role="img"
+                      aria-label="Requires sign in"
+                    >
+                      <Lock className="w-2.5 h-2.5" strokeWidth={1.9} />
                     </span>
                   ) : unreadCount > 0 ? (
                     <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-white text-[10px] font-bold rounded-full bg-gradient-to-br from-coral to-coral/90 border border-white/20">
@@ -1118,7 +1135,7 @@ export default function Header({
                   aria-label="Open menu"
                   aria-expanded={isMobileMenuOpen}
                 >
-                  <Menu className="w-6 h-6" />
+                  <MobileMenuToggleIcon isOpen={isMobileMenuOpen} />
                 </button>
               </div>
             </div>

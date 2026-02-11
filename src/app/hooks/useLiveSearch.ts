@@ -27,6 +27,9 @@ export interface LiveSearchResult {
   };
   badge?: string;
   rating?: number;
+  reviews?: number;
+  lat?: number | null;
+  lng?: number | null;
 }
 
 interface UseLiveSearchOptions {

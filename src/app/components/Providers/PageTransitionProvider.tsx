@@ -1,7 +1,19 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useRef, useState, ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { usePathname } from "next/navigation";
+import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "framer-motion";
+
+type NavigationDirection = -1 | 0 | 1;
 
 interface PageTransitionContextType {
   isTransitioning: boolean;
@@ -22,34 +34,74 @@ interface PageTransitionProviderProps {
   children: ReactNode;
 }
 
+const getTransitionDurationMs = (
+  direction: NavigationDirection,
+  prefersReducedMotion: boolean,
+) => {
+  if (prefersReducedMotion) return 180;
+  return direction === 0 ? 250 : 210;
+};
+
+const getMotionFrames = (
+  direction: NavigationDirection,
+  prefersReducedMotion: boolean,
+) => {
+  if (prefersReducedMotion) {
+    return {
+      initial: { opacity: 0, x: 0, y: 0, pointerEvents: "auto" as const },
+      animate: { opacity: 1, x: 0, y: 0, pointerEvents: "auto" as const },
+      exit: { opacity: 0, x: 0, y: 0, pointerEvents: "none" as const },
+    };
+  }
+
+  if (direction === 1) {
+    // Forward navigation: subtle contextual leftward slide.
+    return {
+      initial: { opacity: 0, x: 16, y: 0, pointerEvents: "auto" as const },
+      animate: { opacity: 1, x: 0, y: 0, pointerEvents: "auto" as const },
+      exit: { opacity: 0, x: -12, y: 0, pointerEvents: "none" as const },
+    };
+  }
+
+  if (direction === -1) {
+    // Back navigation: subtle contextual rightward slide.
+    return {
+      initial: { opacity: 0, x: -16, y: 0, pointerEvents: "auto" as const },
+      animate: { opacity: 1, x: 0, y: 0, pointerEvents: "auto" as const },
+      exit: { opacity: 0, x: 12, y: 0, pointerEvents: "none" as const },
+    };
+  }
+
+  // Default transition: smart crossfade + micro vertical shift.
+  return {
+    initial: { opacity: 0, x: 0, y: 10, pointerEvents: "auto" as const },
+    animate: { opacity: 1, x: 0, y: 0, pointerEvents: "auto" as const },
+    exit: { opacity: 0, x: 0, y: -8, pointerEvents: "none" as const },
+  };
+};
+
 export default function PageTransitionProvider({ children }: PageTransitionProviderProps) {
+  const pathname = usePathname() ?? "/";
+  const prefersReducedMotion = useReducedMotion() ?? false;
+
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [enterClassName, setEnterClassName] = useState("page-enter");
-  const pathname = usePathname();
+  const [navigationDirection, setNavigationDirection] = useState<NavigationDirection>(0);
+  const [hasMounted, setHasMounted] = useState(false);
+
   const isFirstRender = useRef(true);
   const previousPathname = useRef(pathname);
   const preserveScrollOnNextRouteRef = useRef(false);
-  const animationRafRef = useRef<number | null>(null);
-
-  const retriggerEnterAnimation = useCallback(() => {
-    setEnterClassName("");
-    if (animationRafRef.current != null) {
-      window.cancelAnimationFrame(animationRafRef.current);
-    }
-    animationRafRef.current = window.requestAnimationFrame(() => {
-      setEnterClassName("page-enter");
-      animationRafRef.current = null;
-    });
-  }, []);
+  const transitionTimeoutRef = useRef<number | null>(null);
 
   const scrollToTop = useCallback(() => {
-    // Use 'instant' to override CSS scroll-smooth on <html> and avoid
-    // animation races with page content rendering.
+    // Use "instant" to bypass global smooth-scroll and avoid transition/scroll races.
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, []);
 
   // Preserve native restoration for browser back/forward navigation.
   useEffect(() => {
+    setHasMounted(true);
+
     const onPopState = () => {
       preserveScrollOnNextRouteRef.current = true;
     };
@@ -60,8 +112,6 @@ export default function PageTransitionProvider({ children }: PageTransitionProvi
     };
   }, []);
 
-  // Lightweight page-enter transitions keyed by pathname.
-  // Avoid fixed-duration loaders; rely on route-level `loading.tsx` for slow segments.
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
@@ -69,61 +119,85 @@ export default function PageTransitionProvider({ children }: PageTransitionProvi
       return;
     }
 
-    if (pathname !== previousPathname.current) {
-      const shouldPreserveScroll = preserveScrollOnNextRouteRef.current;
-      preserveScrollOnNextRouteRef.current = false;
-      previousPathname.current = pathname;
-      setIsTransitioning(true);
-      retriggerEnterAnimation();
+    if (pathname === previousPathname.current) return;
 
-      if (!shouldPreserveScroll) {
-        // Scroll immediately so the new page always starts at the top.
-        scrollToTop();
-      }
+    const shouldPreserveScroll = preserveScrollOnNextRouteRef.current;
+    preserveScrollOnNextRouteRef.current = false;
+    previousPathname.current = pathname;
+
+    // Back/forward can be derived from popstate; otherwise default to crossfade + micro shift.
+    const nextDirection: NavigationDirection = shouldPreserveScroll ? -1 : 0;
+    setNavigationDirection(nextDirection);
+    setIsTransitioning(true);
+
+    if (!shouldPreserveScroll) {
+      // Maintain existing behavior: new push navigation starts from top.
+      scrollToTop();
     }
-  }, [pathname, retriggerEnterAnimation, scrollToTop]);
 
-  // Clear transitioning flag on next paint(s) after route commit.
-  useEffect(() => {
-    if (!isTransitioning) return;
+    if (transitionTimeoutRef.current != null) {
+      window.clearTimeout(transitionTimeoutRef.current);
+    }
 
-    let raf1 = 0;
-    let raf2 = 0;
-
-    raf1 = window.requestAnimationFrame(() => {
-      raf2 = window.requestAnimationFrame(() => {
-        setIsTransitioning(false);
-      });
-    });
-
-    return () => {
-      if (raf1) window.cancelAnimationFrame(raf1);
-      if (raf2) window.cancelAnimationFrame(raf2);
-    };
-  }, [isTransitioning, pathname]);
+    const nextDurationMs = getTransitionDurationMs(nextDirection, prefersReducedMotion);
+    transitionTimeoutRef.current = window.setTimeout(() => {
+      setIsTransitioning(false);
+      transitionTimeoutRef.current = null;
+    }, nextDurationMs + 60);
+  }, [pathname, prefersReducedMotion, scrollToTop]);
 
   useEffect(() => {
     return () => {
-      if (animationRafRef.current != null) {
-        window.cancelAnimationFrame(animationRafRef.current);
+      if (transitionTimeoutRef.current != null) {
+        window.clearTimeout(transitionTimeoutRef.current);
       }
     };
   }, []);
 
-  const value = {
-    isTransitioning,
-    setTransitioning: setIsTransitioning,
-  };
+  const motionFrames = useMemo(
+    () => getMotionFrames(navigationDirection, prefersReducedMotion),
+    [navigationDirection, prefersReducedMotion],
+  );
+  const durationSeconds = getTransitionDurationMs(navigationDirection, prefersReducedMotion) / 1000;
+
+  const value = useMemo(
+    () => ({
+      isTransitioning,
+      setTransitioning: setIsTransitioning,
+    }),
+    [isTransitioning],
+  );
 
   return (
     <PageTransitionContext.Provider value={value}>
-      <div
-        className="min-h-screen w-full"
-        data-page-transition={isTransitioning ? "1" : "0"}
-      >
-        <div className={`${enterClassName} min-h-screen w-full`}>
-          {children}
-        </div>
+      <div className="min-h-screen w-full" data-page-transition={isTransitioning ? "1" : "0"}>
+        <LayoutGroup id="app-page-layout-group">
+          {/* Animate only route body content; header/navbar is outside this provider. */}
+          <div className="relative grid min-h-screen w-full">
+            {hasMounted ? (
+              <AnimatePresence initial={false} mode="sync">
+                <motion.div
+                  key={pathname}
+                  initial={motionFrames.initial}
+                  animate={motionFrames.animate}
+                  exit={motionFrames.exit}
+                  transition={{
+                    duration: durationSeconds,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
+                  className="min-h-screen w-full [grid-area:1/1] will-change-[opacity,transform]"
+                >
+                  {children}
+                </motion.div>
+              </AnimatePresence>
+            ) : (
+              // Hydration-safe fallback: keep SSR and initial client tree identical.
+              <div className="min-h-screen w-full [grid-area:1/1]">
+                {children}
+              </div>
+            )}
+          </div>
+        </LayoutGroup>
       </div>
     </PageTransitionContext.Provider>
   );

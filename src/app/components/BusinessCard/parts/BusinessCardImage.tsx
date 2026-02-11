@@ -1,6 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import { ImageIcon } from "lucide-react";
+import { motion } from "framer-motion";
 import { getCategoryPlaceholder } from "../../../utils/categoryToPngMapping";
 
 interface BusinessCardImageProps {
@@ -15,6 +16,7 @@ interface BusinessCardImageProps {
   verified?: boolean;
   /** Set to true for above-fold images (first ~3 cards) to improve LCP */
   priority?: boolean;
+  sharedLayoutId?: string;
 }
 
 const BusinessCardImage: React.FC<BusinessCardImageProps> = ({
@@ -25,9 +27,10 @@ const BusinessCardImage: React.FC<BusinessCardImageProps> = ({
   onImageError,
   categoryKey,
   priority = false,
+  sharedLayoutId,
 }) => {
   return (
-    <div className="relative w-full h-full">
+    <motion.div layoutId={sharedLayoutId} className="relative w-full h-full">
       {!imgError && displayImage ? (
         <div className="relative w-full h-full overflow-hidden">
           <Image
@@ -55,7 +58,7 @@ const BusinessCardImage: React.FC<BusinessCardImageProps> = ({
           <ImageIcon className="w-16 h-16 text-charcoal/20" aria-hidden="true" />
         </div>
       )}
-    </div>
+    </motion.div>
   );
 };
 

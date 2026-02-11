@@ -493,6 +493,8 @@ export default function BusinessProfilePage() {
 
     // Use slug for URLs, fallback to ID for SEO-friendly URLs
     const businessSlug = businessData.slug || businessData.id;
+    const businessImageLayoutId = `business-media-${businessData.id}`;
+    const businessTitleLayoutId = `business-title-${businessData.id}`;
 
     const businessInfo: BusinessInfo = {
         name: businessData.name,
@@ -557,12 +559,14 @@ export default function BusinessProfilePage() {
                                                 images={businessData.images}
                                                 uploaded_images={businessData.uploaded_images}
                                                 subcategorySlug={business?.primary_subcategory_slug ?? business?.sub_interest_id ?? (business as { subInterestId?: string })?.subInterestId}
+                                                sharedLayoutId={businessImageLayoutId}
                                             />
                                             <BusinessInfoComponent
                                                 name={businessData.name}
                                                 rating={businessData.rating}
                                                 location={businessData.location}
                                                 category={businessData.category}
+                                                sharedTitleLayoutId={businessTitleLayoutId}
                                             />
                                             <BusinessDescription description={businessData.description} />
                                             <BusinessDetailsCard

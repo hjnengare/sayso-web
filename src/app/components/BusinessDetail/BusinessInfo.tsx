@@ -9,21 +9,23 @@ interface BusinessInfoProps {
   rating: number;
   location: string;
   category?: string;
+  sharedTitleLayoutId?: string;
 }
 
-export default function BusinessInfo({ name, rating, location, category }: BusinessInfoProps) {
+export default function BusinessInfo({ name, rating, location, category, sharedTitleLayoutId }: BusinessInfoProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2, duration: 0.6 }}
     >
-      <h1
+      <motion.h1
+        layoutId={sharedTitleLayoutId}
         className="text-h1 font-semibold text-charcoal mb-3"
         style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
       >
         {name}
-      </h1>
+      </motion.h1>
 
       <div className="flex items-center gap-3 mb-4 flex-wrap">
         {/* Rating Badge - matching BusinessCard style */}

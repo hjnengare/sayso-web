@@ -1000,7 +1000,7 @@ function ProfileContent() {
 
                           <div className="relative z-10 p-6 sm:p-8">
                             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-                              <div className="relative flex-shrink-0">
+                              <motion.div layoutId="profile-avatar" className="relative flex-shrink-0">
                                 {!imgError && profile.avatar_url && profile.avatar_url.trim() !== "" ? (
                                   <div className="relative">
                                     <Image
@@ -1026,7 +1026,7 @@ function ProfileContent() {
                                     <User className="text-navbar-bg" size={44} strokeWidth={2.5} />
                                   </div>
                                 )}
-                              </div>
+                              </motion.div>
 
                               <div className="flex-1 min-w-0 w-full">
                                 <div className="flex items-center gap-2 mb-2 flex-wrap">
