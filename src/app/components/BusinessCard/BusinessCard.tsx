@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState, useEffect, useRef, memo } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Image as ImageIcon, Star, Share2, Bookmark, Info, ChevronLeft, ChevronRight, TrendingUp, Zap, Scissors, Coffee, UtensilsCrossed, Wine, Dumbbell, Activity, Heart, Book, ShoppingBag, Home, Briefcase, MapPin, Music, Film, Camera, Car, GraduationCap, CreditCard, Tag, Flame, Store, Eye } from "lucide-react";
 import Image from "next/image";
 import PercentileChip from "../PercentileChip/PercentileChip";
@@ -468,15 +469,12 @@ function BusinessCard({
       data-reveal-variant="premium"
       style={{ ...revealStyle, fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
     >
-      <div
+      <Link
+        href={businessProfileRoute}
         className={`px-1 pt-1 pb-0 rounded-[12px] ${compact ? "lg:py-1 lg:pb-1 lg:min-h-[200px]" : "flex-1"} relative flex-shrink-0 flex flex-col justify-between bg-sage z-10 shadow-md group cursor-pointer w-full sm:h-auto`}
         style={{ maxWidth: compact ? "100%" : "540px" } as React.CSSProperties}
-        role="link"
-        tabIndex={0}
-        onClick={handleCardClick}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleCardClick(); } }}
       >
         <div className={mediaClass} onClick={handleCardClick}>
           <BusinessCardImage
@@ -514,10 +512,10 @@ function BusinessCard({
               hasReviewed={hasReviewed}
               isItemSaved={isItemSaved(business.id)}
               isBusinessAccount={isBusinessAccount}
-              onWriteReview={(e) => { e.stopPropagation(); handleWriteReview(); }}
-              onViewProfile={(e) => { e.stopPropagation(); handleCardClick(); }}
-              onBookmark={(e) => { e.stopPropagation(); handleBookmark(); }}
-              onShare={(e) => { e.stopPropagation(); handleShare(); }}
+              onWriteReview={(e) => { e.preventDefault(); e.stopPropagation(); handleWriteReview(); }}
+              onViewProfile={(e) => { e.preventDefault(); e.stopPropagation(); handleCardClick(); }}
+              onBookmark={(e) => { e.preventDefault(); e.stopPropagation(); handleBookmark(); }}
+              onShare={(e) => { e.preventDefault(); e.stopPropagation(); handleShare(); }}
               businessName={business.name}
             />
           )}
@@ -534,7 +532,7 @@ function BusinessCard({
                   <Tooltip content={business.name} position="top">
                     <button
                       type="button"
-                      onClick={handleCardClick}
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleCardClick(); }}
                       className="group w-full max-w-full min-w-0 text-charcoal transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-coral/40 rounded-lg px-2 py-1 flex items-center justify-center relative"
                       aria-label={`View ${business.name} details`}
                     >
@@ -562,8 +560,8 @@ function BusinessCard({
                   displayRating={displayRating}
                   reviews={business.reviews}
                   hasReviewed={hasReviewed}
-                  onCardClick={(e) => { e.stopPropagation(); handleCardClick(); }}
-                  onWriteReview={(e) => { e.stopPropagation(); if (!hasReviewed) handleWriteReview(); }}
+                  onCardClick={(e) => { e.preventDefault(); e.stopPropagation(); handleCardClick(); }}
+                  onWriteReview={(e) => { e.preventDefault(); e.stopPropagation(); if (!hasReviewed) handleWriteReview(); }}
                   compact={compact}
                 />
                 {/* Percentile chips - Inside wrapper */}
@@ -576,6 +574,7 @@ function BusinessCard({
             <button
               className="flex-1 flex items-center justify-center gap-1.5 px-4 py-3 rounded-full text-caption sm:text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-sage/40 border transition-all duration-200 min-h-[48px] shadow-md bg-gradient-to-br from-navbar-bg to-navbar-bg/90 text-white border-sage/50 active:scale-95 active:translate-y-[1px] transform-gpu touch-manipulation select-none"
               onClick={(e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 handleCardClick();
               }}
@@ -587,7 +586,7 @@ function BusinessCard({
             </button>
           </div>
         </div>
-      </div>
+      </Link>
     </li>
   );
 }

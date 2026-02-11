@@ -2,6 +2,7 @@
 
 import React, { memo } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { ArrowRight, Star } from "lucide-react";
 import Image from "next/image";
 import { Scissors, Coffee, UtensilsCrossed, Wine, Dumbbell, Activity, Heart, Book, ShoppingBag, Home, Briefcase, MapPin, Music, Film, Camera, Car, GraduationCap, CreditCard, Tag } from "lucide-react";
@@ -169,20 +170,12 @@ function SimilarBusinessCard({
   };
 
   return (
-    <div
+    <Link
+      href={`/business/${businessIdentifier}`}
       className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden group cursor-pointer w-full flex flex-col border border-white/60 backdrop-blur-xl shadow-md transition-all duration-300 hover:border-white/80 hover:-translate-y-1 hover:shadow-lg md:w-[340px] md:h-[416px]"
       style={{
         maxWidth: "540px",
       } as React.CSSProperties}
-      role="link"
-      tabIndex={0}
-      onClick={handleCardClick}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          handleCardClick();
-        }
-      }}
     >
       {/* Image Section */}
       <div className="relative w-full h-[300px] lg:h-[260px] overflow-hidden rounded-t-[12px]">
@@ -325,6 +318,7 @@ function SimilarBusinessCard({
         {/* Go to Business Button */}
         <button
           onClick={(e) => {
+            e.preventDefault();
             e.stopPropagation();
             handleCardClick();
           }}
@@ -338,7 +332,7 @@ function SimilarBusinessCard({
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>
-    </div>
+    </Link>
   );
 }
 

@@ -21,8 +21,6 @@ import { authStyles } from "./Shared/authStyles";
 import { EmailInput } from "./Shared/EmailInput";
 import { PasswordInput } from "./Shared/PasswordInput";
 import { SocialLoginButtons } from "./Shared/SocialLoginButtons";
-import { AuthAlert } from "./Shared/AuthAlert";
-import { authCopy, existingAccountMessage, formatAuthMessage } from "./Shared/authCopy";
 
 import { UsernameInput } from "./Register/UsernameInput";
 import { RegistrationProgress } from "./Register/RegistrationProgress";
@@ -49,7 +47,6 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
 
   const [personalUsername, setPersonalUsername] = useState("");
   const [businessUsername, setBusinessUsername] = useState("");
-  const [publicBusinessName, setPublicBusinessName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -59,7 +56,6 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
   const [consent, setConsent] = useState(false);
 
   const [usernameTouched, setUsernameTouched] = useState(false);
-  const [publicBusinessNameTouched, setPublicBusinessNameTouched] = useState(false);
   const [emailTouched, setEmailTouched] = useState(false);
   const [passwordTouched, setPasswordTouched] = useState(false);
 
@@ -121,7 +117,6 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
   const resetFormState = () => {
     setPersonalUsername("");
     setBusinessUsername("");
-    setPublicBusinessName("");
     setEmail("");
     setPassword("");
     setConsent(false);
@@ -129,47 +124,36 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
     setExistingAccountError(false);
     setExistingAccountLabel("Personal");
     setUsernameTouched(false);
-    setPublicBusinessNameTouched(false);
     setEmailTouched(false);
     setPasswordTouched(false);
   };
 
   const validateUsername = (value: string) => /^[a-zA-Z0-9_]{3,20}$/.test(value);
-  const validatePublicBusinessName = (value: string) => value.trim().length >= 2 && value.trim().length <= 80;
   const validateEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
   const getUsernameError = () => {
     if (!usernameTouched) return "";
     const usernameValue = isBusiness ? businessUsername : personalUsername;
-    if (!usernameValue) return authCopy.usernameRequired;
-    if (usernameValue.length < 3) return authCopy.usernameMin;
-    if (usernameValue.length > 20) return authCopy.usernameMax;
+    if (!usernameValue) return "Username is required";
+    if (usernameValue.length < 3) return "Username must be at least 3 characters";
+    if (usernameValue.length > 20) return "Username must be less than 20 characters";
     if (!validateUsername(usernameValue)) {
-      return authCopy.usernameFormat;
-    }
-    return "";
-  };
-
-  const getPublicBusinessNameError = () => {
-    if (!isBusiness || !publicBusinessNameTouched) return "";
-    if (!publicBusinessName) return authCopy.publicBusinessNameRequired;
-    if (!validatePublicBusinessName(publicBusinessName)) {
-      return authCopy.publicBusinessNameInvalid;
+      return "Username can only contain letters, numbers, and underscores";
     }
     return "";
   };
 
   const getEmailError = () => {
     if (!emailTouched) return "";
-    if (!email) return authCopy.emailRequired;
-    if (!validateEmail(email)) return authCopy.emailInvalid;
+    if (!email) return "Email is required";
+    if (!validateEmail(email)) return "Please enter a valid email address";
     return "";
   };
 
   const getPasswordError = () => {
     if (!passwordTouched) return "";
-    if (!password) return authCopy.passwordRequired;
-    if (password.length < 6) return authCopy.passwordMin;
+    if (!password) return "Password is required";
+    if (password.length < 6) return "Password must be at least 6 characters";
     return "";
   };
 
@@ -185,9 +169,7 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
           !validateEmail(email) ||
           (isBusiness
             ? !businessUsername ||
-              !validateUsername(businessUsername) ||
-              !publicBusinessName ||
-              !validatePublicBusinessName(publicBusinessName)
+              !validateUsername(businessUsername)
             : !personalUsername || !validateUsername(personalUsername))
         : !email ||
           !password ||
@@ -214,13 +196,13 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
 
   const handleLogin = async () => {
     if (!email?.trim() || !password?.trim()) {
-      setError(authCopy.requiredFields);
-      showToast(authCopy.requiredFields, "warning", 2500);
+      setError("Complete all fields");
+      showToast("All fields required", "warning", 2500);
       return;
     }
 
     if (!validateEmail(email.trim())) {
-      const errorMsg = authCopy.emailInvalid;
+      const errorMsg = "Email invalid";
       setError(errorMsg);
       showToast(errorMsg, "warning", 2500);
       return;
@@ -230,7 +212,7 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
     const rateLimitResult = await RateLimiter.checkRateLimit(normalizedEmail, "login");
 
     if (!rateLimitResult.allowed) {
-      const errorMsg = formatAuthMessage(rateLimitResult.message || "", authCopy.rateLimited);
+      const errorMsg = rateLimitResult.message || "Too many attempts. Try again later.";
       setError(errorMsg);
       showToast(errorMsg, "error", 3500);
       return;
@@ -245,7 +227,7 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
       return;
     }
 
-    const errorMsg = formatAuthMessage(authError || "", authCopy.loginInvalidCredentials);
+    const errorMsg = authError || "Incorrect email or password. Please try again.";
     setError(errorMsg);
     showToast(errorMsg, "error", 3000);
   };
@@ -253,48 +235,42 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
   const handleRegister = async () => {
     const usernameValue = isBusiness ? businessUsername : personalUsername;
 
-    if (!usernameValue?.trim() || !email?.trim() || !password?.trim() || (isBusiness && !publicBusinessName?.trim())) {
-      setError(authCopy.requiredFields);
-      showToast(authCopy.requiredFields, "warning", 3000);
+    if (!usernameValue?.trim() || !email?.trim() || !password?.trim()) {
+      setError("Please fill in all fields");
+      showToast("Please fill in all fields", "warning", 3000);
       return;
     }
 
     if (!validateUsername(usernameValue.trim())) {
-      setError(authCopy.usernameFormat);
-      showToast(authCopy.usernameFormat, "warning", 3000);
-      return;
-    }
-
-    if (isBusiness && !validatePublicBusinessName(publicBusinessName.trim())) {
-      setError(authCopy.publicBusinessNameInvalid);
-      showToast(authCopy.publicBusinessNameInvalid, "warning", 3000);
+      setError("Please enter a valid username");
+      showToast("Please enter a valid username", "warning", 3000);
       return;
     }
 
     if (!validateEmail(email.trim())) {
-      const msg = authCopy.emailInvalid;
+      const msg = "Please enter a valid email address (e.g. name@example.com).";
       setError(msg);
-      showToast(msg, "warning", 3000);
+      showToast("Please enter a valid email address.", "warning", 3000);
       return;
     }
 
     if (email.trim().length > 254) {
-      const msg = authCopy.emailTooLong;
+      const msg = "Email address is too long (maximum 254 characters).";
       setError(msg);
-      showToast(msg, "warning", 3000);
+      showToast("Email address is too long.", "warning", 3000);
       return;
     }
 
     if (email.trim().includes("..") || email.trim().startsWith(".") || email.trim().endsWith(".")) {
-      const msg = authCopy.emailFormatInvalid;
+      const msg = "Email address format is invalid.";
       setError(msg);
-      showToast(msg, "warning", 3000);
+      showToast("Email address format is invalid.", "warning", 3000);
       return;
     }
 
     if (!consent) {
-      setError(authCopy.consentRequired);
-      showToast(authCopy.consentRequired, "warning", 3000);
+      setError("Please accept the Terms and Privacy Policy");
+      showToast("Please accept the Terms and Privacy Policy", "warning", 3000);
       return;
     }
 
@@ -306,14 +282,14 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
     }
 
     if (passwordStrength.score < 3) {
-      const msg = authCopy.passwordStrength;
+      const msg = "Please create a stronger password";
       setError(msg);
       showToast(msg, "warning", 3000);
       return;
     }
 
     if (!isOnline) {
-      const msg = authCopy.offline;
+      const msg = "You're offline. Please check your connection and try again.";
       setError(msg);
       showToast(msg, "error", 4000);
       return;
@@ -323,7 +299,9 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
     const rateLimitResult = await RateLimiter.checkRateLimit(normalizedEmail, "register");
 
     if (!rateLimitResult.allowed) {
-      const msg = formatAuthMessage(rateLimitResult.message || "", authCopy.rateLimited);
+      const msg =
+        rateLimitResult.message ||
+        "Too many registration attempts. Please try again later.";
       setError(msg);
       showToast(msg, "error", 5000);
       return;
@@ -332,7 +310,8 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
     const emailCheck = await checkEmailExists(normalizedEmail);
 
     if (emailCheck === null) {
-      const msg = authCopy.authRequestFailed;
+      const msg =
+        "We couldn't confirm whether this email already exists. Please try again or log in.";
       setError(msg);
       showToast(msg, "error", 4000);
       return;
@@ -347,7 +326,7 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
             : "Personal";
       setExistingAccountLabel(accountLabel);
       setExistingAccountError(true);
-      const msg = existingAccountMessage(accountLabel);
+      const msg = `Email already registered for a ${accountLabel} account. Log in or use a different email.`;
       setError(msg);
       showToast(msg, "error", 4000);
       return;
@@ -358,8 +337,7 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
       normalizedEmail,
       password,
       usernameValue.trim(),
-      desiredRole,
-      isBusiness ? publicBusinessName.trim() : undefined
+      desiredRole
     );
 
     if (success) {
@@ -368,8 +346,8 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
       resetFormState();
       showToast(
         isBusiness
-          ? "Business account created. Please check your email to confirm your account."
-          : "Account created. Please check your email to confirm your account.",
+          ? "Business account created! Check your email to confirm your account."
+          : "Account created! Check your email to confirm your account.",
         "success",
         5000
       );
@@ -379,7 +357,8 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
     if (authError) {
       const lower = authError.toLowerCase();
       if (lower.includes("fetch") || lower.includes("network")) {
-        const msg = authCopy.connectionIssue;
+        const msg =
+          "Connection error. Please check your internet and try again.";
         setError(msg);
         showToast(msg, "error", 4000);
       } else if (
@@ -392,34 +371,34 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
         lower.includes("user_exists")
       ) {
         setExistingAccountError(true);
-        const msg = existingAccountMessage("Personal");
+        const msg = "Email already exists. Please log in.";
         setError(msg);
         showToast(msg, "error", 4000);
       } else if (
         lower.includes("invalid email") ||
         (lower.includes("email address") && lower.includes("invalid"))
       ) {
-        const msg = authCopy.emailInvalid;
+        const msg =
+          "Email address is invalid. Please use a valid address like name@example.com.";
         setError(msg);
         showToast(msg, "error", 4000);
       } else if (
         lower.includes("password") &&
         (lower.includes("weak") || lower.includes("requirements"))
       ) {
-        const msg = authCopy.passwordMin;
+        const msg = "Password must be at least 6 characters long.";
         setError(msg);
         showToast(msg, "error", 4000);
       } else if (lower.includes("too many requests") || lower.includes("rate limit")) {
-        const msg = authCopy.rateLimited;
+        const msg = "Too many attempts. Please wait a moment and try again.";
         setError(msg);
         showToast(msg, "error", 4000);
       } else {
-        const msg = formatAuthMessage(authError, authCopy.registrationFailed);
-        setError(msg);
-        showToast(msg, "error", 4000);
+        setError(authError);
+        showToast(authError, "error", 4000);
       }
     } else {
-      const msg = authCopy.registrationFailed;
+      const msg = "Registration failed. Please try again.";
       setError(msg);
       showToast(msg, "error", 4000);
     }
@@ -441,7 +420,7 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
       }
     } catch (err: unknown) {
       console.error("Auth error:", err);
-      const msg = formatAuthMessage(err instanceof Error ? err.message : "", authCopy.authRequestFailed);
+      const msg = err instanceof Error ? err.message : "Something went wrong. Please try again.";
       setError(msg);
       showToast(msg, "error", 4000);
     } finally {
@@ -462,7 +441,7 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
       ? "Register your business to manage your presence and connect with customers."
       : "Sign in to manage your business presence and respond to reviews."
     : isRegisterMode
-      ? "Sign up to share honest reviews, climb leaderboards, and rate any business."
+      ? "Sign up today - share honest reviews, climb leaderboards, and rate any business!"
       : "Sign in to continue discovering sayso";
 
   const motionVariants = prefersReduced
@@ -619,7 +598,7 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
                           fontFamily: "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
                         }}
                       >
-                        Account already exists
+                        Account Already Exists
                       </h3>
 
                       <p
@@ -628,7 +607,7 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
                           fontFamily: "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
                         }}
                       >
-                        {existingAccountMessage(existingAccountLabel)}
+                        Email already registered for a {existingAccountLabel} account. Log in or use a different email.
                       </p>
 
                       <div className="space-y-3">
@@ -674,11 +653,31 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
                     >
                       <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
                         {error && (
-                          <AuthAlert message={error} tone="error" />
+                          <div className="bg-error-50 border border-error-100 rounded-[12px] p-4 text-center">
+                            <p
+                              className="text-caption font-semibold text-error-600"
+                              style={{
+                                fontFamily:
+                                  "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                              }}
+                            >
+                              {error}
+                            </p>
+                          </div>
                         )}
 
                         {!isOnline && !error && isRegisterMode && (
-                          <AuthAlert message={authCopy.offline} tone="warning" />
+                          <div className="bg-orange-50 border border-orange-200 rounded-[12px] p-4 text-center">
+                            <p
+                              className="text-caption font-semibold text-orange-600"
+                              style={{
+                                fontFamily:
+                                  "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                              }}
+                            >
+                              You&apos;re offline. We&apos;ll try again when you&apos;re back online.
+                            </p>
+                          </div>
                         )}
 
                         {isRegisterMode && (
@@ -689,7 +688,6 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
                                   value={businessUsername}
                                   onChange={(value) => {
                                     setBusinessUsername(value);
-                                    setPublicBusinessName(value);
                                     if (!usernameTouched) setUsernameTouched(true);
                                   }}
                                   onBlur={() => setUsernameTouched(true)}
@@ -697,6 +695,15 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
                                   touched={usernameTouched}
                                   disabled={isFormDisabled}
                                 />
+                                <p
+                                  className="text-xs text-white/80 mt-1"
+                                  style={{
+                                    fontFamily:
+                                      "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                                  }}
+                                >
+                                  This is your account username.
+                                </p>
                               </>
                             ) : (
                               <UsernameInput
@@ -739,8 +746,7 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
                           showStrength={isRegisterMode}
                           strength={passwordStrength}
                           touched={passwordTouched}
-                          error={getPasswordError()}
-                          autoComplete={isRegisterMode ? "new-password" : "current-password"}
+                          error={!isRegisterMode ? getPasswordError() : undefined}
                           placeholder={isRegisterMode ? "Create a password" : "Enter your password"}
                         />
 
