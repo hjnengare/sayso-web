@@ -3,10 +3,11 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Image as ImageIcon, Star, Edit, Bookmark, Share2, Award } from "lucide-react";
 import { Scissors, Coffee, UtensilsCrossed, Wine, Dumbbell, Activity, Heart, Book, ShoppingBag, Home, Briefcase, MapPin, Music, Film, Camera, Car, GraduationCap, CreditCard, Tag } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Stars from "../Stars/Stars";
 import VerifiedBadge from "../VerifiedBadge/VerifiedBadge";
 import Tooltip from "../Tooltip/Tooltip";
@@ -19,13 +20,11 @@ import {
 } from "../../utils/subcategoryPlaceholders";
 import { useSavedItems } from "../../contexts/SavedItemsContext";
 import { useToast } from "../../contexts/ToastContext";
-import { useBusinessReviewPreview } from "../../hooks/useBusinessReviewPreview";
 import {
   formatDistanceAway,
   isValidCoordinate,
   useBusinessDistanceLocation,
 } from "../../hooks/useBusinessDistanceLocation";
-import { normalizeReviewPreviewText } from "../../lib/utils/reviewPreview";
 
 // Map categories to lucide-react icons (normalize only for icon selection)
 const getCategoryIcon = (category: string): React.ComponentType<React.SVGProps<SVGSVGElement>> => {
@@ -72,6 +71,9 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
   }, [index]);
   const [imgError, setImgError] = useState(false);
   const [usingFallback, setUsingFallback] = useState(false);
+  const [isMediaHovered, setIsMediaHovered] = useState(false);
+  const [showDistanceOnCycle, setShowDistanceOnCycle] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
 
   // Get business identifier for routing (slug or ID)
   const businessIdentifier = (business as any).slug || business.id;
@@ -81,18 +83,7 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
 
   const hasReviews = business.reviewCount > 0;
   const hasCoordinates = isValidCoordinate(business.lat) && isValidCoordinate(business.lng);
-  const { preview: fetchedReviewPreview } = useBusinessReviewPreview(
-    hasReviews ? business.id : null
-  );
   const { status: locationStatus, getDistanceKm } = useBusinessDistanceLocation();
-  const reviewPreviewText = useMemo(() => {
-    const fallbackPreview = normalizeReviewPreviewText(
-      business.top_review_preview?.content
-    );
-    const fetchedPreview = normalizeReviewPreviewText(fetchedReviewPreview?.content);
-    return fetchedPreview || fallbackPreview || "";
-  }, [business.top_review_preview?.content, fetchedReviewPreview?.content]);
-  const shouldReserveReviewPreviewSpace = hasReviews;
   const distanceLabel = useMemo(() => {
     if (!hasCoordinates) return null;
     const distanceKm = getDistanceKm(business.lat, business.lng);
@@ -108,6 +99,12 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
     }
     return "Enable location to see distance";
   }, [distanceLabel, hasCoordinates, locationStatus]);
+  const distanceBadgeText = useMemo(() => {
+    if (!hasCoordinates) return null;
+    if (distanceLabel) return distanceLabel;
+    if (locationStatus === "loading") return "Calculating...";
+    return null;
+  }, [distanceLabel, hasCoordinates, locationStatus]);
 
   const ribbonText = useMemo(() => {
     const reasonLabel = (business as any).ui_hints?.reason?.label;
@@ -122,6 +119,95 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
     }
     return raw;
   }, [(business as any).monthAchievement, (business as any).ui_hints?.reason?.label, business.badge, business]);
+
+  const selectBadgeText = useMemo(() => {
+    const normalized = ribbonText?.trim();
+    return normalized || null;
+  }, [ribbonText]);
+  const distanceSwitchText = useMemo(() => {
+    const normalized = distanceBadgeText?.trim();
+    return normalized || null;
+  }, [distanceBadgeText]);
+  const distanceFallbackText = useMemo(() => {
+    if (distanceSwitchText || selectBadgeText) return null;
+    const normalizedHint = distanceHint?.trim();
+    return normalizedHint || null;
+  }, [distanceHint, distanceSwitchText, selectBadgeText]);
+  const distanceDisplayText = distanceSwitchText || distanceFallbackText;
+  const hasSelectBadge = Boolean(selectBadgeText);
+  const hasDistanceBadge = Boolean(distanceDisplayText);
+  const canSwitchBadges = Boolean(hasSelectBadge && distanceSwitchText);
+  const shouldShowDistance = canSwitchBadges
+    ? isMediaHovered || showDistanceOnCycle
+    : !hasSelectBadge && hasDistanceBadge;
+  const activeOverlayBadge = useMemo(() => {
+    if (shouldShowDistance && distanceDisplayText) {
+      return {
+        key: "distance",
+        label: distanceDisplayText,
+        Icon: MapPin,
+        title: distanceHint ?? distanceDisplayText,
+        ariaLabel: `Distance: ${distanceDisplayText}`,
+      };
+    }
+    if (hasSelectBadge && selectBadgeText) {
+      return {
+        key: "select",
+        label: selectBadgeText,
+        Icon: Award,
+        title: `${selectBadgeText} - ${business.badge}`,
+        ariaLabel: selectBadgeText,
+      };
+    }
+    if (distanceDisplayText) {
+      return {
+        key: "distance-fallback",
+        label: distanceDisplayText,
+        Icon: MapPin,
+        title: distanceHint ?? distanceDisplayText,
+        ariaLabel: `Distance: ${distanceDisplayText}`,
+      };
+    }
+    return null;
+  }, [
+    business.badge,
+    distanceDisplayText,
+    distanceHint,
+    hasSelectBadge,
+    selectBadgeText,
+    shouldShowDistance,
+  ]);
+  const badgeTransition = useMemo(
+    () => ({
+      duration: prefersReducedMotion ? 0.18 : 0.22,
+      ease: "easeOut" as const,
+    }),
+    [prefersReducedMotion]
+  );
+
+  useEffect(() => {
+    if (!canSwitchBadges) {
+      setShowDistanceOnCycle(false);
+      return;
+    }
+    setShowDistanceOnCycle(false);
+    const firstSwapDelayMs = 2800;
+    const cycleIntervalMs = 5600;
+    let cycleTimer: number | null = null;
+    const firstSwapTimer = window.setTimeout(() => {
+      setShowDistanceOnCycle(true);
+      cycleTimer = window.setInterval(() => {
+        setShowDistanceOnCycle((previous) => !previous);
+      }, cycleIntervalMs);
+    }, firstSwapDelayMs);
+
+    return () => {
+      window.clearTimeout(firstSwapTimer);
+      if (cycleTimer !== null) {
+        window.clearInterval(cycleTimer);
+      }
+    };
+  }, [business.id, canSwitchBadges]);
 
   // Image fallback logic with edge case handling
   const getDisplayImage = useMemo(() => {
@@ -177,23 +263,6 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
       setImgError(true);
     }
   };
-
-  const badgeStyle = (badge: string) => {
-    switch (badge) {
-      case "winner":
-        return "bg-gradient-to-r from-amber-500 to-yellow-600 text-white";
-      case "runner-up":
-        return "bg-gradient-to-r from-gray-400 to-gray-500 text-white";
-      case "featured":
-        return "bg-gradient-to-r from-sage to-sage/80 text-white";
-      default:
-        return "bg-sage/10 text-sage";
-    }
-  };
-
-  const badgeIcon = () => (
-    <Award className="w-4 h-4 text-white" strokeWidth={2.5} aria-hidden />
-  );
 
   // Handle save/bookmark
   const handleBookmark = async (e: React.MouseEvent) => {
@@ -274,7 +343,13 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
        
         {/* MEDIA - Full bleed with premium overlay */}
         <div
-          className="relative overflow-hidden z-10 cursor-pointer backdrop-blur-xl h-[280px] sm:h-[220px] md:h-[240px]"
+          className="relative overflow-hidden rounded-[12px] z-10 cursor-pointer backdrop-blur-xl h-[280px] sm:h-[300px] md:h-[220px]"
+          onMouseEnter={() => {
+            if (canSwitchBadges) setIsMediaHovered(true);
+          }}
+          onMouseLeave={() => {
+            if (canSwitchBadges) setIsMediaHovered(false);
+          }}
           onClick={handleCardClick}
         >
           <div 
@@ -322,19 +397,40 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
             </div>
           )}
 
-          {/* Achievement badge */}
-          <div className="absolute left-4 bottom-4 z-20">
-            <span
-              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold shadow-md ${badgeStyle(
-                business.badge
-              )}`}
-              aria-label={`${ribbonText} ${business.badge}`}
-              title={`${ribbonText} — ${business.badge}`}
-            >
-              {badgeIcon()}
-              <span>{ribbonText}</span>
-            </span>
-          </div>
+          {/* Single overlay badge: smoothly switches between Sayso Select and distance */}
+          {activeOverlayBadge && (
+            <div className="absolute left-3 bottom-3 z-20 w-[calc(100%-1.5rem)] max-w-[230px] sm:max-w-[250px]">
+              <div className="relative h-[30px] overflow-hidden rounded-full border border-white/40 bg-off-white/90 backdrop-blur-[2px] shadow-[0_2px_8px_rgba(0,0,0,0.12)]">
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.div
+                    key={activeOverlayBadge.key}
+                    initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: prefersReducedMotion ? 0 : -6 }}
+                    transition={badgeTransition}
+                    className="absolute inset-0 flex items-center gap-1.5 px-2.5"
+                    aria-label={activeOverlayBadge.ariaLabel}
+                    title={activeOverlayBadge.title}
+                  >
+                    <activeOverlayBadge.Icon
+                      className="w-3.5 h-3.5 flex-shrink-0 text-charcoal/80"
+                      strokeWidth={2.4}
+                      aria-hidden
+                    />
+                    <span
+                      className="truncate text-[11px] font-medium leading-none text-charcoal"
+                      style={{
+                        fontFamily:
+                          "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                      }}
+                    >
+                      {activeOverlayBadge.label}
+                    </span>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            </div>
+          )}
 
           {hasReviews && displayTotal > 0 ? (
             <div className="absolute right-4 top-4 z-20 inline-flex items-center gap-1 rounded-full bg-off-white/95 backdrop-blur-xl px-3 py-1.5 text-charcoal border border-white/40">
@@ -400,13 +496,13 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
 
         {/* CONTENT - Minimal, premium spacing */}
         <div
-          className="px-4 py-3 sm:px-5 sm:pt-1 md:pt-2 lg:pt-3 pb-0 flex-1 relative flex-shrink-0 flex flex-col md:justify-start justify-between bg-sage/10 z-10 rounded-b-[12px]"
+          className="px-4 pt-2.5 sm:px-5 sm:pt-1 md:pt-2 lg:pt-2.5 pb-2.5 flex-1 relative flex-shrink-0 flex flex-col justify-start bg-sage/10 z-10 rounded-b-[12px]"
         >
-          <div className="flex-1 flex flex-col">
+          <div className="flex flex-col">
             {/* Info Wrapper */}
             <div className="relative overflow-hidden">
               {/* Content - Centered */}
-              <div className="flex flex-col items-center text-center relative z-10 space-y-1">
+              <div className="flex flex-col items-center text-center relative z-10 space-y-0.5">
                 {/* Business Name - Inside wrapper */}
                 <div className="flex items-center justify-center w-full min-w-0">
                   <Tooltip content={business.name} position="top">
@@ -433,9 +529,9 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
                   </Tooltip>
                 </div>
                 {/* Category with icon */}
-                <div className="flex flex-col items-center gap-1.5 w-full">
+                <div className="flex flex-col items-center gap-1 w-full">
                   {/* Category row with icon - Pill badge style */}
-                  <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5">
+                  <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1">
                     {(() => {
                       const categoryLabel = getCategoryLabelFromBusiness(business as any);
                       const CategoryIcon = getCategoryIcon(categoryLabel);
@@ -462,23 +558,8 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
                     })()}
                   </div>
                 </div>
-                {hasCoordinates && (
-                  <div className="w-full min-h-[1.1rem] px-2">
-                    <p
-                      className="text-center text-[11px] text-charcoal/65 truncate"
-                      title={distanceHint || ""}
-                      style={{
-                        fontFamily:
-                          "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                      }}
-                    >
-                      {distanceHint}
-                    </p>
-                  </div>
-                )}
-
                 {/* Reviews - Refined */}
-                <div className="flex flex-col items-center gap-2 mb-2">
+                <div className="flex flex-col items-center gap-1 mb-1">
                   <div className="inline-flex items-center justify-center gap-1 min-h-[12px]">
                     {hasReviews ? (
                       <>
@@ -556,37 +637,12 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
                     <Stars value={hasReviews && displayTotal > 0 ? displayTotal : 0} color="charcoal" size={18} spacing={2.5} />
                   </div>
                 </div>
-                {shouldReserveReviewPreviewSpace && (
-                  <div className="w-full px-3 pb-1 min-h-[2.9rem]">
-                    <p
-                      className="text-[10px] uppercase tracking-[0.08em] text-charcoal/55 text-center"
-                      style={{
-                        fontFamily:
-                          "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                      }}
-                    >
-                      Top review
-                    </p>
-                    {reviewPreviewText ? (
-                      <p
-                        className="mt-0.5 text-xs sm:text-sm leading-snug text-charcoal/75 line-clamp-2 text-center"
-                        style={{
-                          fontFamily:
-                            "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                        }}
-                      >
-                        "{reviewPreviewText}"
-                      </p>
-                    ) : null}
-                  </div>
-                )}
-
               </div>
             </div>
           </div>
 
           {/* Mobile actions - Minimal */}
-          <div className="flex md:hidden items-center justify-center pt-4 border-t border-off-white/30">
+          <div className="flex md:hidden items-center justify-center pt-1.5 border-t border-off-white/30">
             <button
               className="flex-1 flex items-center justify-center gap-1.5 px-4 py-3 rounded-full text-caption sm:text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-sage/40 border transition-all duration-200 min-h-[48px] bg-gradient-to-br from-navbar-bg to-navbar-bg/90 text-white border-sage/50 active:scale-95 active:translate-y-[1px] shadow-md transform-gpu touch-manipulation select-none"
               onClick={(e) => {

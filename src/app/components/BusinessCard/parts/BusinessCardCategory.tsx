@@ -16,7 +16,7 @@ const BusinessCardCategory: React.FC<BusinessCardCategoryProps> = ({
 }) => {
   const CategoryIcon = getCategoryIcon(category, subInterestId, subInterestLabel);
   return (
-    <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5">
+    <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1">
       <div className="w-8 h-8 rounded-full bg-off-white/20 flex items-center justify-center flex-shrink-0">
         <CategoryIcon className="w-4 h-4 text-charcoal/70" strokeWidth={2.5} />
       </div>

@@ -259,7 +259,7 @@ export default function CommunityHighlights({
               </div>
 
               {/* Badge preview strip — pure CSS marquee at all breakpoints */}
-                <div className="pt-5">
+                <div className="pt-5 w-[100vw] relative left-1/2 -translate-x-1/2 sm:w-auto sm:left-auto sm:translate-x-0">
                   <div className="relative badge-marquee" aria-label="Badge previews">
                     <div className="badge-track">
                       {[...badgePreviews, ...badgePreviews].map((badge, idx) => (

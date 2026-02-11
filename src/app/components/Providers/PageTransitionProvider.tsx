@@ -11,7 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { usePathname } from "next/navigation";
-import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 type NavigationDirection = -1 | 0 | 1;
 
@@ -55,20 +55,20 @@ const getMotionFrames = (
   }
 
   if (direction === 1) {
-    // Forward navigation: subtle contextual leftward slide.
+    // Forward navigation: keep movement vertical-only to avoid horizontal layout drift.
     return {
-      initial: { opacity: 0, x: 16, y: 0, pointerEvents: "auto" as const },
+      initial: { opacity: 0, x: 0, y: 10, pointerEvents: "auto" as const },
       animate: { opacity: 1, x: 0, y: 0, pointerEvents: "auto" as const },
-      exit: { opacity: 0, x: -12, y: 0, pointerEvents: "none" as const },
+      exit: { opacity: 0, x: 0, y: -8, pointerEvents: "none" as const },
     };
   }
 
   if (direction === -1) {
-    // Back navigation: subtle contextual rightward slide.
+    // Back navigation: keep movement vertical-only to avoid horizontal layout drift.
     return {
-      initial: { opacity: 0, x: -16, y: 0, pointerEvents: "auto" as const },
+      initial: { opacity: 0, x: 0, y: 10, pointerEvents: "auto" as const },
       animate: { opacity: 1, x: 0, y: 0, pointerEvents: "auto" as const },
-      exit: { opacity: 0, x: 12, y: 0, pointerEvents: "none" as const },
+      exit: { opacity: 0, x: 0, y: -8, pointerEvents: "none" as const },
     };
   }
 
@@ -171,33 +171,31 @@ export default function PageTransitionProvider({ children }: PageTransitionProvi
   return (
     <PageTransitionContext.Provider value={value}>
       <div className="min-h-screen w-full" data-page-transition={isTransitioning ? "1" : "0"}>
-        <LayoutGroup id="app-page-layout-group">
-          {/* Animate only route body content; header/navbar is outside this provider. */}
-          <div className="relative grid min-h-screen w-full">
-            {hasMounted ? (
-              <AnimatePresence initial={false} mode="sync">
-                <motion.div
-                  key={pathname}
-                  initial={motionFrames.initial}
-                  animate={motionFrames.animate}
-                  exit={motionFrames.exit}
-                  transition={{
-                    duration: durationSeconds,
-                    ease: [0.22, 1, 0.36, 1],
-                  }}
-                  className="min-h-screen w-full [grid-area:1/1] will-change-[opacity,transform]"
-                >
-                  {children}
-                </motion.div>
-              </AnimatePresence>
-            ) : (
-              // Hydration-safe fallback: keep SSR and initial client tree identical.
-              <div className="min-h-screen w-full [grid-area:1/1]">
+        {/* Animate only route body content; header/navbar is outside this provider. */}
+        <div className="relative min-h-screen w-full overflow-x-clip">
+          {hasMounted ? (
+            <AnimatePresence initial={false} mode="wait">
+              <motion.div
+                key={pathname}
+                initial={motionFrames.initial}
+                animate={motionFrames.animate}
+                exit={motionFrames.exit}
+                transition={{
+                  duration: durationSeconds,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+                className="min-h-screen w-full will-change-[opacity,transform]"
+              >
                 {children}
-              </div>
-            )}
-          </div>
-        </LayoutGroup>
+              </motion.div>
+            </AnimatePresence>
+          ) : (
+            // Hydration-safe fallback: keep SSR and initial client tree identical.
+            <div className="min-h-screen w-full">
+              {children}
+            </div>
+          )}
+        </div>
       </div>
     </PageTransitionContext.Provider>
   );

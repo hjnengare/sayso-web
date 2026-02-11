@@ -413,13 +413,13 @@ export default function MobileMenu({
           key="sign-in"
           href="/login"
           onClick={() => onClose()}
-          className={`px-3 py-2 rounded-full text-base font-bold text-charcoal bg-sage hover:bg-sage/90 flex items-center justify-center min-h-[44px] ${mobileTapFeedbackClass} ${mobileRevealClass}`}
+          className={`px-3 py-2 rounded-[12px] text-base font-normal text-white/90 hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 min-h-[44px] flex items-center justify-center ${mobileTapFeedbackClass} ${mobileRevealClass}`}
           style={{
             ...sf,
             transitionDelay: `${(orderedPrimaryLinks.length + orderedSecondaryLinks.length + 1) * 60}ms`,
           }}
         >
-          <span className="text-center w-full">Sign in</span>
+          <span className="text-center uppercase flex items-center gap-1.5">Sign in</span>
         </OptimizedLink>
       </>
     );

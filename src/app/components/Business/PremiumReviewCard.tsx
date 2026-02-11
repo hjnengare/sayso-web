@@ -505,7 +505,7 @@ export function PremiumReviewCard({
                                 </span>
                                 {highlight && !compact && (
                                     <span
-                                        className="inline-flex items-center gap-1 rounded-full border px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] border-sage/20 bg-sage/10 text-sage"
+                                        className="inline-flex items-center gap-1 rounded-full border px-1.5 sm:px-2 py-0.5 text-[12px] sm:text-[10px] border-sage/20 bg-sage/10 text-sage"
                                     >
                                         <ShieldCheck className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                                         <span className="hidden xs:inline">{highlight}</span>
@@ -587,7 +587,7 @@ export function PremiumReviewCard({
                                 <span
                                     key={t}
                                     className={`inline-flex items-center gap-0.5 sm:gap-1 rounded-full border px-1.5 sm:px-2 py-0.5 border-sage/25 bg-sage/10 text-sage ${
-                                        compact ? 'text-[9px] sm:text-[10px]' : 'text-[10px] sm:text-[11px]'
+                                        compact ? 'text-[12px] sm:text-[10px]' : 'text-[10px] sm:text-[11px]'
                                     }`}
                                 >
                                     @ {t}

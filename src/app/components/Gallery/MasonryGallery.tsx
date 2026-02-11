@@ -52,7 +52,7 @@ export default function MasonryGallery({ images, businessName }: MasonryGalleryP
   return (
     <>
       {/* Masonry Gallery - Square Container */}
-      <div className="w-full aspect-square rounded-[6px] overflow-hidden bg-gradient-to-br from-white/80 to-white/50">
+      <div className="w-full aspect-square rounded-[12px] overflow-hidden bg-gradient-to-br from-white/80 to-white/50">
         <div className="w-full h-full p-3 grid grid-cols-2 md:grid-cols-3 gap-3 auto-rows-min overflow-y-auto scrollbar-hide">
           {images.map((image, index) => (
             <motion.div
@@ -60,7 +60,7 @@ export default function MasonryGallery({ images, businessName }: MasonryGalleryP
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: index * 0.1, duration: 0.4 }}
-              className={`${getImageClasses(index)} cursor-pointer group relative overflow-hidden rounded-[6px] shadow-sm hover:shadow-md transition-shadow duration-300`}
+              className={`${getImageClasses(index)} cursor-pointer group relative overflow-hidden rounded-[12px] shadow-sm hover:shadow-md transition-shadow duration-300`}
               onClick={() => openLightbox(index)}
             >
               <Image

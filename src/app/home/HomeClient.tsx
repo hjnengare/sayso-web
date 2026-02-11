@@ -556,7 +556,7 @@ export default function HomeClient() {
               {heroReady ? (
                 <HeroCarousel />
               ) : (
-                <div className="h-[100dvh] sm:h-[90dvh] md:h-[80dvh] bg-gradient-to-b from-charcoal/5 to-transparent pt-20 md:pt-2 md:px-2" />
+                <div className="h-[100dvh] sm:h-[90dvh] md:h-[80dvh] bg-gradient-to-b from-charcoal/5 to-transparent pt-0 md:pt-2 md:px-2" />
               )}
             </motion.div>
           )}

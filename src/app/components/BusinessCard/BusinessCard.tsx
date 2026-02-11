@@ -24,13 +24,11 @@ import BusinessCardCategory from "./parts/BusinessCardCategory";
 import BusinessCardActions from "./parts/BusinessCardActions";
 import BusinessCardPercentiles from "./parts/BusinessCardPercentiles";
 import BusinessCardReviews from "./parts/BusinessCardReviews";
-import { useBusinessReviewPreview } from "../../hooks/useBusinessReviewPreview";
 import {
   formatDistanceAway,
   isValidCoordinate,
   useBusinessDistanceLocation,
 } from "../../hooks/useBusinessDistanceLocation";
-import { normalizeReviewPreviewText } from "../../lib/utils/reviewPreview";
 
 type Percentiles = {
   punctuality?: number;
@@ -234,18 +232,7 @@ function BusinessCard({
   const [showInfoPopup, setShowInfoPopup] = useState(false);
   const infoPopupRef = useRef<HTMLDivElement>(null);
   const hasCoordinates = isValidCoordinate(business.lat) && isValidCoordinate(business.lng);
-  const { preview: fetchedReviewPreview } = useBusinessReviewPreview(
-    business.reviews > 0 ? business.id : null
-  );
   const { status: locationStatus, getDistanceKm } = useBusinessDistanceLocation();
-  const reviewPreviewText = useMemo(() => {
-    const fallbackPreview = normalizeReviewPreviewText(
-      business.top_review_preview?.content
-    );
-    const fetchedPreview = normalizeReviewPreviewText(fetchedReviewPreview?.content);
-    return fetchedPreview || fallbackPreview || "";
-  }, [business.top_review_preview?.content, fetchedReviewPreview?.content]);
-  const shouldReserveReviewPreviewSpace = business.reviews > 0;
   const distanceLabel = useMemo(() => {
     if (!hasCoordinates) return null;
     const distanceKm = getDistanceKm(business.lat, business.lng);
@@ -260,6 +247,12 @@ function BusinessCard({
       return "Location is off. Enable it in browser settings.";
     }
     return "Enable location to see distance";
+  }, [distanceLabel, hasCoordinates, locationStatus]);
+  const distanceBadgeText = useMemo(() => {
+    if (!hasCoordinates) return null;
+    if (distanceLabel) return distanceLabel;
+    if (locationStatus === "loading") return "Calculating...";
+    return null;
   }, [distanceLabel, hasCoordinates, locationStatus]);
 
 
@@ -550,6 +543,20 @@ function BusinessCard({
               <span className="text-sm font-semibold text-charcoal" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>New</span>
             </div>
           )}
+          {distanceBadgeText && (
+            <div className="absolute left-3 bottom-3 z-20 inline-flex items-center rounded-full bg-off-white/90 backdrop-blur-[2px] px-2.5 py-1 text-[11px] font-medium text-charcoal shadow-[0_2px_8px_rgba(0,0,0,0.12)]">
+              <span
+                className="leading-none"
+                style={{
+                  fontFamily:
+                    "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                }}
+                title={distanceHint ?? distanceBadgeText}
+              >
+                {distanceBadgeText}
+              </span>
+            </div>
+          )}
           {/* Premium floating actions - desktop only */}
           {showActions && (
             <BusinessCardActions
@@ -565,14 +572,14 @@ function BusinessCard({
           )}
         </div>
         {/* CONTENT - Minimal, premium spacing */}
-        <div className={`px-4 py-3 sm:px-5 sm:pt-1 md:pt-2 lg:pt-3 pb-0 ${compact ? "lg:py-1 lg:pt-2 lg:pb-0 lg:min-h-[160px]" : "flex-1"} relative flex-shrink-0 flex flex-col md:justify-start justify-between bg-sage/10 z-10 rounded-b-[12px]`}>
-          <div className={`${compact ? "flex flex-col" : "flex-1 flex flex-col"}`}>
+        <div className={`px-4 pt-2.5 sm:px-5 sm:pt-1 md:pt-2 lg:pt-2.5 pb-2.5 ${compact ? "lg:py-1 lg:pt-2 lg:pb-0 lg:min-h-[160px]" : "flex-1"} relative flex-shrink-0 flex flex-col justify-start bg-sage/10 z-10 rounded-b-[12px]`}>
+          <div className="flex flex-col">
             {/* Info Wrapper */}
             <div className="relative overflow-hidden">
               {/* Content - Centered */}
               <div className="flex flex-col items-center text-center relative z-10 space-y-0.5">
                 {/* Business Name - Inside wrapper */}
-                <div className="flex items-center justify-center w-full min-w-0 h-[2rem] sm:h-[2.5rem] relative">
+                <div className="flex items-center justify-center w-full min-w-0 relative">
                   <Tooltip content={business.name} position="top">
                     <button
                       type="button"
@@ -591,7 +598,7 @@ function BusinessCard({
                   </Tooltip>
                 </div>
                 {/* Category with icon - Stacked layout */}
-                <div className="flex flex-col items-center gap-1.5 w-full">
+                <div className="flex flex-col items-center gap-1 w-full">
                   <BusinessCardCategory
                     category={displayCategoryLabel}
                     subInterestId={categoryKey === "default" ? undefined : categoryKey}
@@ -599,20 +606,6 @@ function BusinessCard({
                     displayCategoryLabel={displayCategoryLabel}
                   />
                 </div>
-                {hasCoordinates && (
-                  <div className="w-full min-h-[1.1rem] px-2">
-                    <p
-                      className="text-center text-[11px] text-charcoal/65 truncate"
-                      title={distanceHint || ""}
-                      style={{
-                        fontFamily:
-                          "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                      }}
-                    >
-                      {distanceHint}
-                    </p>
-                  </div>
-                )}
                 {/* Reviews - Refined */}
                 <BusinessCardReviews
                   hasRating={hasRating}
@@ -623,37 +616,13 @@ function BusinessCard({
                   onWriteReview={(e) => { e.preventDefault(); e.stopPropagation(); if (!hasReviewed) handleWriteReview(); }}
                   compact={compact}
                 />
-                {shouldReserveReviewPreviewSpace && (
-                  <div className="w-full px-3 pb-1 min-h-[2.9rem]">
-                    <p
-                      className="text-[10px] uppercase tracking-[0.08em] text-charcoal/55 text-center"
-                      style={{
-                        fontFamily:
-                          "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                      }}
-                    >
-                      Top review
-                    </p>
-                    {reviewPreviewText ? (
-                      <p
-                        className="mt-0.5 text-xs sm:text-sm leading-snug text-charcoal/75 line-clamp-2 text-center"
-                        style={{
-                          fontFamily:
-                            "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                        }}
-                      >
-                        "{reviewPreviewText}"
-                      </p>
-                    ) : null}
-                  </div>
-                )}
                 {/* Percentile chips - Inside wrapper */}
                 <BusinessCardPercentiles percentiles={business.percentiles} />
               </div>
             </div>
           </div>
           {/* Mobile actions - Minimal */}
-          <div className="flex md:hidden items-center justify-center pt-2 pb-2">
+          <div className="flex md:hidden items-center justify-center pt-1.5 pb-1.5">
             <button
               className="flex-1 flex items-center justify-center gap-1.5 px-4 py-3 rounded-full text-caption sm:text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-sage/40 border transition-all duration-200 min-h-[48px] shadow-md bg-gradient-to-br from-navbar-bg to-navbar-bg/90 text-white border-sage/50 active:scale-95 active:translate-y-[1px] transform-gpu touch-manipulation select-none"
               onClick={(e) => {

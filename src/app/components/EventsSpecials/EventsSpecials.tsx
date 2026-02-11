@@ -58,7 +58,7 @@ export default function EventsSpecials({
               {Array.from({ length: 4 }).map((_, index) => (
                 <div
                   key={index}
-                  className="snap-start snap-always flex-shrink-0 w-[85vw] sm:w-auto min-w-[clamp(220px,18vw,320px)] list-none flex"
+                  className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto min-w-[clamp(220px,18vw,320px)] list-none flex justify-center"
                 >
                   <EventCardSkeleton />
                 </div>
@@ -118,7 +118,7 @@ export default function EventsSpecials({
               {displayEvents.map((event, index) => (
                 <div
                   key={event.id ?? `event-${index}`}
-                  className="snap-start snap-always flex-shrink-0 w-[85vw] sm:w-auto min-w-[clamp(220px,18vw,320px)] list-none flex"
+                  className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto min-w-[clamp(220px,18vw,320px)] list-none flex justify-center"
                 >
                   <EventCard event={event} index={index} />
                 </div>

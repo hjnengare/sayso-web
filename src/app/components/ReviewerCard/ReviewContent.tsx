@@ -26,7 +26,7 @@ export default function ReviewContent({
           <h4 className="font-urbanist text-[10px] font-600 text-charcoal truncate">{businessName}</h4>
         </div>
         <div className="flex items-center justify-center mb-0.5">
-          <span className="text-[9px] text-charcoal/60 font-urbanist">{date}</span>
+          <span className="text-[12px] text-charcoal/60 font-urbanist">{date}</span>
         </div>
 
         <div className="flex items-center justify-center gap-1 mb-0.5">

@@ -5,7 +5,7 @@ import type { Event } from "../../lib/types/Event";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Briefcase } from "lucide-react";
 import { getEventIconPng } from "../../utils/eventIconToPngMapping";
 import EventBadge from "./EventBadge";
 import { useState, memo } from "react";
@@ -183,6 +183,25 @@ function EventCard({ event, index = 0 }: EventCardProps) {
                 style={{ background: "hsla(0, 0%, 0%, 0.2)" }}
                 aria-hidden="true"
               />
+
+              {event.type === "event" && event.businessId && (
+                <div className="absolute left-3 bottom-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-off-white/90 backdrop-blur-[2px] px-2.5 py-1 text-[11px] font-medium text-charcoal shadow-[0_2px_8px_rgba(0,0,0,0.12)]">
+                  <Briefcase
+                    className="w-3.5 h-3.5 text-charcoal/80"
+                    strokeWidth={2.4}
+                    aria-hidden
+                  />
+                  <span
+                    className="leading-none"
+                    style={{
+                      fontFamily:
+                        "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                    }}
+                  >
+                    Business-linked event
+                  </span>
+                </div>
+              )}
             </motion.div>
 
             {/* Date ribbon badge */}
@@ -235,19 +254,19 @@ function EventCard({ event, index = 0 }: EventCardProps) {
                 {event.occurrencesCount} dates available
               </span>
             )}
-            {event.type === "event" && (
+            {event.type === "event" && !event.businessId && (
               <span
                 className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-medium w-fit ${
-                  event.businessId ? "bg-navbar-bg/10 text-navbar-bg" : "bg-coral/10 text-coral"
+                  "bg-coral/10 text-coral"
                 }`}
                 style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
               >
-                {event.businessId ? "Business-linked event" : "Community-hosted event"}
+                Community-hosted event
               </span>
             )}
             <button
               onClick={handlePrimaryAction}
-              className="mt-auto w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-br from-navbar-bg to-navbar-bg/90 text-white rounded-full text-sm font-semibold hover:from-navbar-bg/90 hover:to-navbar-bg/80 active:scale-95 active:translate-y-[1px] transition-all duration-200 shadow-md border border-sage/50 focus:outline-none focus:ring-2 focus:ring-sage/40 transform-gpu touch-manipulation select-none"
+              className="mt-1 w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-br from-navbar-bg to-navbar-bg/90 text-white rounded-full text-sm font-semibold hover:from-navbar-bg/90 hover:to-navbar-bg/80 active:scale-95 active:translate-y-[1px] transition-all duration-200 shadow-md border border-sage/50 focus:outline-none focus:ring-2 focus:ring-sage/40 transform-gpu touch-manipulation select-none"
               aria-label="Learn more about this event"
               title="View event details"
               style={{

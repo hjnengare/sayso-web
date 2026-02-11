@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 // Default visible card count - matches BusinessRowSkeleton default
 // This represents the typical number of cards visible in the viewport before scrolling
@@ -19,6 +20,9 @@ export default function ScrollableSection({
   showArrows = true,
   arrowColor = "text-charcoal/60"
 }: ScrollableSectionProps) {
+  const pathname = usePathname();
+  const isHomeRoute = pathname === "/" || pathname.startsWith("/home");
+  const enableMobilePeek = isHomeRoute;
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showRightArrow, setShowRightArrow] = useState(false);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
@@ -108,7 +112,7 @@ export default function ScrollableSection({
     <div className="relative">
       <div
         ref={scrollRef}
-        className={`horizontal-scroll scrollbar-hide flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory sm:snap-mandatory ${className}`}
+        className={`horizontal-scroll scrollbar-hide flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory sm:snap-mandatory ${enableMobilePeek ? "home-mobile-peek pr-4 sm:pr-0" : ""} ${className}`}
         style={{
           scrollbarWidth: 'none',
           msOverflowStyle: 'none',
@@ -117,10 +121,22 @@ export default function ScrollableSection({
           overscrollBehaviorY: 'auto',
           touchAction: 'pan-x pan-y',
           scrollSnapType: 'x mandatory',
+          scrollPaddingRight: enableMobilePeek ? '1rem' : undefined,
         } as React.CSSProperties}
       >
         {children}
       </div>
+
+      {enableMobilePeek && (
+        <style jsx>{`
+          @media (max-width: 639px) {
+            .home-mobile-peek [class*="w-[100vw]"] {
+              width: calc(100vw - 1rem) !important;
+              max-width: calc(100vw - 1rem) !important;
+            }
+          }
+        `}</style>
+      )}
 
       {showArrows && (
         <>
@@ -133,7 +149,7 @@ export default function ScrollableSection({
                 w-14 h-14 sm:w-12 sm:h-12
                 bg-navbar-bg
                 rounded-full
-                flex items-center justify-center
+                ${enableMobilePeek ? "hidden sm:flex" : "flex"} items-center justify-center
                 transition-all duration-300 ease-out
                 active:scale-95
                 text-white
@@ -173,7 +189,7 @@ export default function ScrollableSection({
                 w-14 h-14 sm:w-12 sm:h-12
                 bg-navbar-bg
                 rounded-full
-                flex items-center justify-center
+                ${enableMobilePeek ? "hidden sm:flex" : "flex"} items-center justify-center
                 transition-all duration-300 ease-out
                 active:scale-95
                 text-white
