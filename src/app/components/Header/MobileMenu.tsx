@@ -60,6 +60,8 @@ export default function MobileMenu({
   const mobileModalRevealClass = `transition-all duration-500 ease-out ${
     isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
   }`;
+  const mobileTapFeedbackClass =
+    "active:scale-[0.98] active:opacity-95 transition-[transform,opacity,color,background-color] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]";
 
   // Always render nav links, but show skeleton/placeholder if loading
   if (typeof isBusinessAccountUser === 'undefined') {
@@ -108,7 +110,7 @@ export default function MobileMenu({
                 handleNavClick(href, e);
                 onClose();
               }}
-              className={`px-3 py-2 rounded-[12px] text-base font-normal transition-all duration-200 relative min-h-[44px] flex items-center justify-start ${mobileRevealClass} ${isActive ? "text-sage bg-white/5" : "text-white hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5"}`}
+              className={`px-3 py-2 rounded-[12px] text-base font-normal relative min-h-[44px] flex items-center justify-start ${mobileTapFeedbackClass} ${mobileRevealClass} ${isActive ? "text-sage bg-white/5" : "text-white hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5"}`}
               style={{
                 ...sf,
                 transitionDelay: `${index * 60}ms`,
@@ -129,7 +131,7 @@ export default function MobileMenu({
           <button
             type="button"
             onClick={() => setIsAddSectionOpen((prev) => !prev)}
-            className={`w-full px-3 py-2 min-h-[44px] rounded-[12px] text-base font-normal flex items-center justify-between transition-all duration-200 ${
+            className={`w-full px-3 py-2 min-h-[44px] rounded-[12px] text-base font-normal flex items-center justify-between ${mobileTapFeedbackClass} ${
               isAddRouteActive ? "text-sage" : "text-white hover:text-white hover:bg-white/5"
             }`}
             aria-expanded={isAddSectionOpen}
@@ -160,7 +162,7 @@ export default function MobileMenu({
                         handleNavClick(item.href, e);
                         onClose();
                       }}
-                      className={`block rounded-lg px-3 py-2 text-sm font-semibold transition-all duration-200 ${
+                      className={`block rounded-lg px-3 py-2 text-sm font-semibold ${mobileTapFeedbackClass} ${
                         itemActive
                           ? "text-sage bg-gradient-to-r from-sage/15 to-sage/5"
                           : "text-white/90 hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5"
@@ -185,7 +187,7 @@ export default function MobileMenu({
               key={item.href}
               href={showLockIndicator ? "/login" : item.href}
               onClick={() => onClose()}
-              className={`px-3 py-2 rounded-full text-base font-normal text-white hover:text-white flex items-center justify-start transition-colors duration-200 min-h-[44px] ${mobileRevealClass}`}
+              className={`px-3 py-2 rounded-full text-base font-normal text-white hover:text-white flex items-center justify-start min-h-[44px] ${mobileTapFeedbackClass} ${mobileRevealClass}`}
               style={{
                 ...sf,
                 transitionDelay: `${(businessTopLinks.length + 1 + (item.delay ?? idx)) * 60}ms`,
@@ -215,7 +217,7 @@ export default function MobileMenu({
                   handleNavClick(href, e);
                   onClose();
                 }}
-                className={`px-3 py-2 rounded-[12px] text-base font-normal text-white hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-200 relative min-h-[44px] flex items-center justify-start ${mobileRevealClass}`}
+                className={`px-3 py-2 rounded-[12px] text-base font-normal text-white hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 relative min-h-[44px] flex items-center justify-start ${mobileTapFeedbackClass} ${mobileRevealClass}`}
                 style={{
                   ...sf,
                   transitionDelay: `${index * 60}ms`,
@@ -241,7 +243,7 @@ export default function MobileMenu({
                   handleNavClick(href, e);
                   onClose();
                 }}
-                className={`px-3 py-2 rounded-[12px] text-base font-normal text-white/90 hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-200 min-h-[44px] flex items-center justify-start ${mobileRevealClass}`}
+                className={`px-3 py-2 rounded-[12px] text-base font-normal text-white/90 hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 min-h-[44px] flex items-center justify-start ${mobileTapFeedbackClass} ${mobileRevealClass}`}
                 style={{
                   ...sf,
                   transitionDelay: `${(primaryCount + index) * 60}ms`,
@@ -264,7 +266,7 @@ export default function MobileMenu({
                 key={item.href}
                 href={showLockIndicator ? "/login" : item.href}
                 onClick={() => onClose()}
-                className={`px-3 py-2 rounded-lg text-base font-normal text-white hover:text-white flex items-center justify-start transition-colors duration-200 min-h-[44px] ${mobileRevealClass}`}
+                className={`px-3 py-2 rounded-lg text-base font-normal text-white hover:text-white flex items-center justify-start min-h-[44px] ${mobileTapFeedbackClass} ${mobileRevealClass}`}
                 style={{
                   ...sf,
                   transitionDelay: `${(primaryCount + discoverCount + (item.delay ?? idx)) * 60}ms`,
@@ -295,7 +297,7 @@ export default function MobileMenu({
                   handleNavClick(href, e);
                   onClose();
                 }}
-                className={`px-3 py-2 rounded-[12px] text-base font-normal text-white hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-200 relative min-h-[44px] flex items-center justify-start ${mobileRevealClass}`}
+                className={`px-3 py-2 rounded-[12px] text-base font-normal text-white hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 relative min-h-[44px] flex items-center justify-start ${mobileTapFeedbackClass} ${mobileRevealClass}`}
                 style={{
                   ...sf,
                   transitionDelay: `${index * 60}ms`,
@@ -321,7 +323,7 @@ export default function MobileMenu({
                   handleNavClick(href, e);
                   onClose();
                 }}
-                className={`px-3 py-2 rounded-[12px] text-base font-normal text-white/90 hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 transition-all duration-200 min-h-[44px] flex items-center justify-start ${mobileRevealClass}`}
+                className={`px-3 py-2 rounded-[12px] text-base font-normal text-white/90 hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 min-h-[44px] flex items-center justify-start ${mobileTapFeedbackClass} ${mobileRevealClass}`}
                 style={{
                   ...sf,
                   transitionDelay: `${(primaryCount + index) * 60}ms`,
@@ -341,7 +343,7 @@ export default function MobileMenu({
           <OptimizedLink
             href="/login"
             onClick={() => onClose()}
-            className={`px-3 py-2 rounded-lg text-base font-normal text-white hover:text-white flex items-center justify-start transition-colors duration-200 min-h-[44px] ${mobileRevealClass}`}
+            className={`px-3 py-2 rounded-lg text-base font-normal text-white hover:text-white flex items-center justify-start min-h-[44px] ${mobileTapFeedbackClass} ${mobileRevealClass}`}
             style={{
               ...sf,
               transitionDelay: `${(primaryCount + discoverCount) * 60}ms`,
@@ -358,7 +360,7 @@ export default function MobileMenu({
           key="sign-in"
           href="/login"
           onClick={() => onClose()}
-          className={`px-3 py-2 rounded-full text-base font-bold text-charcoal bg-sage hover:bg-sage/90 flex items-center justify-center transition-colors duration-200 min-h-[44px] ${mobileRevealClass}`}
+          className={`px-3 py-2 rounded-full text-base font-bold text-charcoal bg-sage hover:bg-sage/90 flex items-center justify-center min-h-[44px] ${mobileTapFeedbackClass} ${mobileRevealClass}`}
           style={{
             ...sf,
             transitionDelay: `${(primaryCount + discoverCount + 1) * 60}ms`,

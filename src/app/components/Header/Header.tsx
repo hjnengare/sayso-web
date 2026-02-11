@@ -14,6 +14,8 @@ import { useHeaderState } from "./useHeaderState";
 import { PRIMARY_LINKS, DISCOVER_LINKS, getLogoHref } from "./headerActionsConfig";
 import { useLiveSearch, type LiveSearchResult } from "../../hooks/useLiveSearch";
 
+const NAV_SCROLLED_THRESHOLD = 20;
+
 export default function Header({
   showSearch = true,
   variant = "white",
@@ -97,6 +99,10 @@ export default function Header({
   const [isDesktopSearchExpanded, setIsDesktopSearchExpanded] = useState(false);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState<number>(-1);
   const [desktopSearchExpandedWidth, setDesktopSearchExpandedWidth] = useState(280);
+  const [isNavScrolled, setIsNavScrolled] = useState(false);
+  const latestScrollYRef = useRef(0);
+  const isScrollTickingRef = useRef(false);
+  const isNavScrolledRef = useRef(false);
 
   const {
     query: suggestionQuery,
@@ -130,7 +136,10 @@ export default function Header({
   }, [suggestionResults]);
 
   const headerClassName =
-    "sticky top-0 left-0 right-0 w-full z-50 bg-navbar-bg shadow-md transition-all duration-300 pt-[var(--safe-area-top)]";
+    "sticky top-0 left-0 right-0 w-full z-50 pt-[var(--safe-area-top)] transition-[background-color,box-shadow,backdrop-filter] duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)]";
+  const headerSurfaceClass = isNavScrolled
+    ? "bg-navbar-bg/95 backdrop-blur-sm shadow-[0_6px_18px_rgba(0,0,0,0.14)]"
+    : "bg-navbar-bg shadow-md";
     
 
   const isPersonalLayout = !isBusinessAccountUser && !isAdminUser;
@@ -167,6 +176,49 @@ export default function Header({
     window.addEventListener("resize", setByViewport);
     return () => window.removeEventListener("resize", setByViewport);
   }, []);
+
+  useEffect(() => {
+    isNavScrolledRef.current = isNavScrolled;
+  }, [isNavScrolled]);
+
+  useEffect(() => {
+    let rafId: number | null = null;
+
+    const updateScrolledState = () => {
+      isScrollTickingRef.current = false;
+      const nextScrolled = latestScrollYRef.current > NAV_SCROLLED_THRESHOLD;
+      if (nextScrolled === isNavScrolledRef.current) return;
+      isNavScrolledRef.current = nextScrolled;
+      setIsNavScrolled(nextScrolled);
+    };
+
+    const handleScroll = () => {
+      latestScrollYRef.current = window.scrollY;
+      if (isScrollTickingRef.current) return;
+      isScrollTickingRef.current = true;
+      rafId = window.requestAnimationFrame(updateScrolledState);
+    };
+
+    latestScrollYRef.current = window.scrollY;
+    const initialScrolled = latestScrollYRef.current > NAV_SCROLLED_THRESHOLD;
+    isNavScrolledRef.current = initialScrolled;
+    setIsNavScrolled(initialScrolled);
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (rafId !== null) window.cancelAnimationFrame(rafId);
+      isScrollTickingRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const currentY = typeof window !== "undefined" ? window.scrollY : 0;
+    const nextScrolled = currentY > NAV_SCROLLED_THRESHOLD;
+    latestScrollYRef.current = currentY;
+    isNavScrolledRef.current = nextScrolled;
+    setIsNavScrolled(nextScrolled);
+  }, [pathname]);
 
   // Keep home desktop nav links perfectly centered by capping search expansion
   // to the right-side space that remains after center nav + icons.
@@ -725,21 +777,30 @@ export default function Header({
     return <HeaderSkeleton showSearch={showSearch} />;
   }
 
+  const wrapperSizeClass = isNavScrolled
+    ? "py-2.5 min-h-[60px] lg:min-h-[64px]"
+    : "py-4 min-h-[72px] lg:min-h-[80px]";
+  const logoScaleClass = isNavScrolled ? "scale-95" : "scale-100";
+
   return (
     <>
-      <header ref={headerRef} className={headerClassName} style={sf}>
+      <header ref={headerRef} className={`${headerClassName} ${headerSurfaceClass}`} style={sf}>
         <div
-          className={`relative py-4 z-[1] w-full ${horizontalPaddingClass} flex items-center h-full min-h-[72px] lg:min-h-[80px]`}
+          className={`relative z-[1] w-full ${horizontalPaddingClass} flex items-center h-full transition-[min-height,padding] duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${wrapperSizeClass}`}
         >
           {isAdminUser ? (
             /* Admin Layout */
             <div className="w-full">
               {/* Desktop: brand left, nav center, sign out right */}
               <div className="hidden sm:flex items-center justify-between w-full">
-                <OptimizedLink href="/admin" className="group flex items-center gap-1" aria-label="Admin Dashboard">
-                  <Logo variant="default" showMark={false} className="transition-all duration-300" />
-                  <span className="text-sage text-sm font-semibold" style={sf}>admin</span>
-                </OptimizedLink>
+                  <OptimizedLink href="/admin" className="group flex items-center gap-1" aria-label="Admin Dashboard">
+                    <Logo
+                      variant="default"
+                      showMark={false}
+                      className={`transition-all duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${logoScaleClass}`}
+                    />
+                    <span className="text-sage text-sm font-semibold" style={sf}>admin</span>
+                  </OptimizedLink>
 
                 <div className="flex items-center gap-1">
                   {ADMIN_NAV.map((item) => {
@@ -777,7 +838,11 @@ export default function Header({
               <div className="flex sm:hidden flex-col w-full gap-1">
                 <div className="flex items-center justify-between">
                   <OptimizedLink href="/admin" className="group flex items-center gap-1" aria-label="Admin Dashboard">
-                    <Logo variant="mobile" showMark={false} className="transition-all duration-300" />
+                    <Logo
+                      variant="mobile"
+                      showMark={false}
+                      className={`transition-all duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${logoScaleClass}`}
+                    />
                     <span className="text-sage text-sm font-semibold" style={sf}>admin</span>
                   </OptimizedLink>
                   <button
@@ -828,7 +893,7 @@ export default function Header({
                     <Logo
                       variant="default"
                       showMark={false}
-                      className="transition-all duration-300"
+                      className={`transition-all duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${logoScaleClass}`}
                     />
                   </OptimizedLink>
                 </div>
@@ -863,7 +928,7 @@ export default function Header({
                         <Logo
                           variant="default"
                           showMark={false}
-                          className="transition-all duration-300"
+                          className={`transition-all duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${logoScaleClass}`}
                         />
                       </OptimizedLink>
                     </motion.div>
@@ -968,7 +1033,7 @@ export default function Header({
                   <Logo
                     variant="default"
                     showMark={false}
-                    className="relative transition-all duration-300"
+                    className={`relative transition-all duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${logoScaleClass}`}
                   />
                 </div>
               </OptimizedLink>

@@ -187,9 +187,13 @@ export default function DesktopNav(props: DesktopNavProps) {
   const isSavedActive = pathname === "/saved";
 
   const baseLinkClass =
-    "group capitalize px-2.5 lg:px-3.5 py-1.5 rounded-lg text-sm sm:text-xs md:text-sm font-semibold transition-colors duration-200 relative flex items-center gap-1.5";
+    "group capitalize px-2.5 lg:px-3.5 py-1.5 rounded-lg text-sm sm:text-xs md:text-sm font-semibold relative flex items-center gap-1.5 transition-[color,opacity] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]";
+  const navLabelHoverClass =
+    "relative z-10 inline-block whitespace-nowrap transition-[transform,text-shadow,opacity] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform lg:group-hover:-translate-y-[2px] lg:group-hover:[text-shadow:0_4px_10px_rgba(15,23,42,0.14)]";
+  const activeIndicatorClass =
+    "after:content-[''] after:absolute after:left-2.5 after:right-2.5 after:bottom-[3px] after:h-px after:rounded-full after:bg-current after:opacity-55";
 
-  const activeTextClass = "text-sage";
+  const activeTextClass = `text-sage ${activeIndicatorClass}`;
   const idleTextClass = whiteText
     ? "text-white/75 hover:text-white"
     : "text-charcoal/70 md:text-charcoal/80 hover:text-charcoal/95";
@@ -261,7 +265,7 @@ export default function DesktopNav(props: DesktopNavProps) {
                     aria-haspopup="true"
                     aria-expanded={isAddDropdownOpen}
                   >
-                    <span className="relative z-10 whitespace-nowrap">Add</span>
+                    <span className={navLabelHoverClass}>Add</span>
                     <ChevronDown
                       className={`w-4 h-4 transition-transform duration-300 relative z-10 ${
                         isAddDropdownOpen ? "rotate-180" : ""
@@ -329,7 +333,7 @@ export default function DesktopNav(props: DesktopNavProps) {
                 }`}
                 style={sf}
               >
-                <span className="relative z-10 whitespace-nowrap">{label}</span>
+                <span className={navLabelHoverClass}>{label}</span>
               </OptimizedLink>
             );
           })}
@@ -350,7 +354,7 @@ export default function DesktopNav(props: DesktopNavProps) {
                   }`}
                   style={sf}
                 >
-                  <span className="relative z-10 whitespace-nowrap">{label}</span>
+                  <span className={navLabelHoverClass}>{label}</span>
                   {showLockIndicator && (
                     <Lock
                       className="w-3.5 h-3.5 text-coral"
@@ -382,7 +386,7 @@ export default function DesktopNav(props: DesktopNavProps) {
                       aria-expanded={isDiscoverDropdownOpen}
                       aria-haspopup="true"
                     >
-                      <span className="whitespace-nowrap relative z-10">
+                      <span className={navLabelHoverClass}>
                         Discover
                       </span>
                       <ChevronDown
