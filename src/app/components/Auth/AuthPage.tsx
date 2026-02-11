@@ -21,7 +21,6 @@ import { authStyles } from "./Shared/authStyles";
 import { EmailInput } from "./Shared/EmailInput";
 import { PasswordInput } from "./Shared/PasswordInput";
 import { SocialLoginButtons } from "./Shared/SocialLoginButtons";
-import { BusinessNameInput } from "./Shared/BusinessNameInput";
 
 import { UsernameInput } from "./Register/UsernameInput";
 import { RegistrationProgress } from "./Register/RegistrationProgress";
@@ -48,7 +47,6 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
 
   const [personalUsername, setPersonalUsername] = useState("");
   const [businessUsername, setBusinessUsername] = useState("");
-  const [publicBusinessName, setPublicBusinessName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -58,7 +56,6 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
   const [consent, setConsent] = useState(false);
 
   const [usernameTouched, setUsernameTouched] = useState(false);
-  const [publicBusinessNameTouched, setPublicBusinessNameTouched] = useState(false);
   const [emailTouched, setEmailTouched] = useState(false);
   const [passwordTouched, setPasswordTouched] = useState(false);
 
@@ -120,7 +117,6 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
   const resetFormState = () => {
     setPersonalUsername("");
     setBusinessUsername("");
-    setPublicBusinessName("");
     setEmail("");
     setPassword("");
     setConsent(false);
@@ -128,13 +124,11 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
     setExistingAccountError(false);
     setExistingAccountLabel("Personal");
     setUsernameTouched(false);
-    setPublicBusinessNameTouched(false);
     setEmailTouched(false);
     setPasswordTouched(false);
   };
 
   const validateUsername = (value: string) => /^[a-zA-Z0-9_]{3,20}$/.test(value);
-  const validatePublicBusinessName = (value: string) => value.trim().length >= 2 && value.trim().length <= 80;
   const validateEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
   const getUsernameError = () => {
@@ -145,15 +139,6 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
     if (usernameValue.length > 20) return "Username must be less than 20 characters";
     if (!validateUsername(usernameValue)) {
       return "Username can only contain letters, numbers, and underscores";
-    }
-    return "";
-  };
-
-  const getPublicBusinessNameError = () => {
-    if (!isBusiness || !publicBusinessNameTouched) return "";
-    if (!publicBusinessName) return "Public business name is required";
-    if (!validatePublicBusinessName(publicBusinessName)) {
-      return "Public business name must be 2-80 characters";
     }
     return "";
   };
@@ -184,9 +169,7 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
           !validateEmail(email) ||
           (isBusiness
             ? !businessUsername ||
-              !validateUsername(businessUsername) ||
-              !publicBusinessName ||
-              !validatePublicBusinessName(publicBusinessName)
+              !validateUsername(businessUsername)
             : !personalUsername || !validateUsername(personalUsername))
         : !email ||
           !password ||
@@ -252,7 +235,7 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
   const handleRegister = async () => {
     const usernameValue = isBusiness ? businessUsername : personalUsername;
 
-    if (!usernameValue?.trim() || !email?.trim() || !password?.trim() || (isBusiness && !publicBusinessName?.trim())) {
+    if (!usernameValue?.trim() || !email?.trim() || !password?.trim()) {
       setError("Please fill in all fields");
       showToast("Please fill in all fields", "warning", 3000);
       return;
@@ -261,12 +244,6 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
     if (!validateUsername(usernameValue.trim())) {
       setError("Please enter a valid username");
       showToast("Please enter a valid username", "warning", 3000);
-      return;
-    }
-
-    if (isBusiness && !validatePublicBusinessName(publicBusinessName.trim())) {
-      setError("Please enter a valid public business name");
-      showToast("Please enter a valid public business name", "warning", 3000);
       return;
     }
 
@@ -360,8 +337,7 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
       normalizedEmail,
       password,
       usernameValue.trim(),
-      desiredRole,
-      isBusiness ? publicBusinessName.trim() : undefined
+      desiredRole
     );
 
     if (success) {
@@ -726,22 +702,8 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
                                       "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
                                   }}
                                 >
-                                  This is your account username (not your public business name).
+                                  This is your account username.
                                 </p>
-                                <BusinessNameInput
-                                  value={publicBusinessName}
-                                  onChange={(value) => {
-                                    setPublicBusinessName(value);
-                                    if (!publicBusinessNameTouched) setPublicBusinessNameTouched(true);
-                                  }}
-                                  onBlur={() => setPublicBusinessNameTouched(true)}
-                                  error={getPublicBusinessNameError()}
-                                  touched={publicBusinessNameTouched}
-                                  disabled={isFormDisabled}
-                                  label="Public Business Name"
-                                  placeholder="Your public business name"
-                                  successMessage="Public business name looks good!"
-                                />
                               </>
                             ) : (
                               <UsernameInput

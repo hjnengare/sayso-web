@@ -181,10 +181,6 @@ export default function VerifyEmailPage() {
     if (typeof window === "undefined") return null;
     return sessionStorage.getItem("pendingVerificationEmail");
   });
-  const [pendingAccountType] = useState<string | null>(() => {
-    if (typeof window === "undefined") return null;
-    return sessionStorage.getItem("pendingVerificationAccountType");
-  });
 
   const containerRef = useRef<HTMLDivElement>(null);
   const redirectingRef = useRef(false);
@@ -240,86 +236,6 @@ export default function VerifyEmailPage() {
     return onboardingDone ? "/home" : "/interests";
   }, [user]);
 
-  const getLoginRouteForRole = useCallback((roleRaw?: string | null): string => {
-    const role = String(roleRaw || "").toLowerCase();
-    const isBusiness =
-      role === "business_owner" ||
-      role === "business" ||
-      role === "owner";
-    return isBusiness ? "/business/login" : "/login";
-  }, []);
-
-  const resolvePreferredLoginRoute = useCallback(async (): Promise<string> => {
-    const roleFromUser =
-      user?.profile?.account_role ||
-      user?.profile?.role ||
-      null;
-    if (roleFromUser) {
-      return getLoginRouteForRole(roleFromUser);
-    }
-
-    if (pendingAccountType) {
-      return getLoginRouteForRole(pendingAccountType);
-    }
-
-    const email = user?.email || pendingEmail;
-    if (!email) return "/login";
-
-    try {
-      const supabase = getBrowserSupabase();
-      const { data } = await supabase
-        .from("profiles")
-        .select("account_role, role")
-        .eq("email", email.toLowerCase())
-        .limit(1)
-        .maybeSingle();
-
-      const roleFromProfile = (data as { account_role?: string | null; role?: string | null } | null)?.account_role
-        || (data as { account_role?: string | null; role?: string | null } | null)?.role
-        || null;
-      return getLoginRouteForRole(roleFromProfile);
-    } catch {
-      return "/login";
-    }
-  }, [
-    getLoginRouteForRole,
-    pendingAccountType,
-    pendingEmail,
-    user?.email,
-    user?.profile?.account_role,
-    user?.profile?.role,
-  ]);
-
-  const redirectToLoginAfterVerification = useCallback(async (message?: string) => {
-    const loginRoute = await resolvePreferredLoginRoute();
-    const safeMessage = encodeURIComponent(
-      message || "Email verified. Please log in to continue."
-    );
-    redirectingRef.current = true;
-    router.replace(`${loginRoute}?message=${safeMessage}`);
-  }, [resolvePreferredLoginRoute, router]);
-
-  // If user lands here already verified (no ?verified flag), redirect out
-  useEffect(() => {
-    if (redirectingRef.current) return;
-    if (searchParams.get("verified") === "1") return;
-    if (!user || !user.email_verified) return;
-    if (verificationSuccess) return; // Already handled by the effect above
-
-    if (typeof window !== "undefined") {
-      sessionStorage.removeItem("pendingVerificationEmail");
-      sessionStorage.removeItem("pendingVerificationAccountType");
-    }
-
-    redirectingRef.current = true;
-
-    const t = setTimeout(() => {
-      router.push(getPostVerifyRedirect());
-    }, 1200);
-
-    return () => clearTimeout(t);
-  }, [user, verificationSuccess, router, getPostVerifyRedirect, searchParams]);
-
   const handleResendVerification = async () => {
     const email = user?.email || pendingEmail;
     if (!email) return;
@@ -359,14 +275,14 @@ export default function VerifyEmailPage() {
   const checkVerificationStatus = useCallback(async (options?: {
     manual?: boolean;
     showSuccessToast?: boolean;
-    redirectToLoginIfNoSession?: boolean;
+    fromVerificationCallback?: boolean;
     successToastMessage?: string;
     successToastOnceKey?: string;
   }): Promise<boolean> => {
     const {
       manual = false,
       showSuccessToast = true,
-      redirectToLoginIfNoSession = false,
+      fromVerificationCallback = false,
       successToastMessage = "Email verified successfully",
       successToastOnceKey,
     } = options || {};
@@ -381,29 +297,53 @@ export default function VerifyEmailPage() {
     const supabase = getBrowserSupabase();
     const notVerifiedMessage =
       "We still can't detect verification. Please check your inbox and try again.";
-    const loginFallbackMessage = "Email verified. Please log in to continue.";
+    const verificationSessionMessage =
+      "Verification completed. Please open the verification link in the same browser to continue automatically.";
 
     try {
-      // Always re-check and refresh auth state before reading verification fields.
-      const { data: sessionBeforeRefresh } = await supabase.auth.getSession();
-      await supabase.auth.refreshSession().catch(() => undefined);
-      const { data: sessionAfterRefresh } = await supabase.auth.getSession();
-      const hasSession = Boolean(sessionAfterRefresh?.session || sessionBeforeRefresh?.session);
+      // Only attempt PKCE exchange during the explicit verification callback flow.
+      if (fromVerificationCallback) {
+        const code = searchParams.get("code");
+        if (code) {
+          await supabase.auth.exchangeCodeForSession(code).catch(() => undefined);
+        }
+      }
+
+      // Ensure a valid active session exists before checking confirmed state.
+      let { data: sessionData } = await supabase.auth.getSession();
+      let session = sessionData.session;
+
+      if (!session) {
+        await supabase.auth.refreshSession().catch(() => undefined);
+        ({ data: sessionData } = await supabase.auth.getSession());
+        session = sessionData.session;
+      }
+
+      if (!session) {
+        if (manual || fromVerificationCallback) {
+          setVerificationStatusMessage(verificationSessionMessage);
+        }
+        return false;
+      }
+
+      if (!session.user?.email_confirmed_at) {
+        if (manual || fromVerificationCallback) {
+          setVerificationStatusMessage(notVerifiedMessage);
+        }
+        return false;
+      }
 
       const { data: userData, error: userError } = await supabase.auth.getUser();
       if (userError || !userData?.user) {
-        if (manual || redirectToLoginIfNoSession || !hasSession) {
-          setVerificationStatusMessage(loginFallbackMessage);
-          await redirectToLoginAfterVerification(loginFallbackMessage);
-        } else if (manual) {
-          setVerificationStatusMessage(notVerifiedMessage);
+        if (manual || fromVerificationCallback) {
+          setVerificationStatusMessage(verificationSessionMessage);
         }
         return false;
       }
 
       const authUser = userData.user;
       if (!authUser.email_confirmed_at) {
-        if (manual) setVerificationStatusMessage(notVerifiedMessage);
+        if (manual || fromVerificationCallback) setVerificationStatusMessage(notVerifiedMessage);
         return false;
       }
 
@@ -463,9 +403,9 @@ export default function VerifyEmailPage() {
     }
   }, [
     getPostVerifyRedirect,
-    redirectToLoginAfterVerification,
     refreshUser,
     router,
+    searchParams,
     showToast,
     showToastOnce,
     user?.email,
@@ -476,7 +416,6 @@ export default function VerifyEmailPage() {
     await checkVerificationStatus({
       manual: true,
       showSuccessToast: true,
-      redirectToLoginIfNoSession: true,
     });
   };
 
@@ -494,32 +433,15 @@ export default function VerifyEmailPage() {
     const timeout = window.setTimeout(() => {
       void checkVerificationStatus({
         manual: false,
+        fromVerificationCallback: true,
         showSuccessToast: true,
         successToastMessage: "Email verified. Account secured.",
         successToastOnceKey: "email-verified-v1",
-        redirectToLoginIfNoSession: true,
       });
     }, 500);
 
     return () => window.clearTimeout(timeout);
   }, [checkVerificationStatus, searchParams]);
-  // Auto-poll verification in the background and redirect immediately once confirmed.
-  useEffect(() => {
-    if (linkExpired || verificationSuccess || redirectingRef.current) return;
-    if (!user?.email && !pendingEmail) return;
-
-    const poll = () => {
-      void checkVerificationStatus({ manual: false, showSuccessToast: true });
-    };
-
-    const firstCheck = window.setTimeout(poll, 6000);
-    const interval = window.setInterval(poll, 8000);
-
-    return () => {
-      window.clearTimeout(firstCheck);
-      window.clearInterval(interval);
-    };
-  }, [checkVerificationStatus, linkExpired, pendingEmail, user?.email, verificationSuccess]);
 
   // Shared, consistent page shell for ALL branches (prevents hydration/layout mismatch)
   const PageShell: React.FC<{ children: React.ReactNode }> = ({ children }) => (

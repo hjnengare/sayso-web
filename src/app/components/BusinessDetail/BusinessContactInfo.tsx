@@ -15,6 +15,8 @@ interface BusinessContactInfoProps {
 }
 
 export default function BusinessContactInfo({ phone, website, address, email, location }: BusinessContactInfoProps) {
+  const websiteHref = website ? (website.startsWith("http") ? website : `https://${website}`) : "";
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -73,13 +75,14 @@ export default function BusinessContactInfo({ phone, website, address, email, lo
             <Globe className="text-navbar-bg" size={16} />
             {website ? (
               <a
-                href={website.startsWith("http") ? website : `https://${website}`}
+                href={websiteHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-body-sm text-charcoal/70 hover:text-charcoal transition-colors break-all"
+                className="inline-flex items-center rounded-full bg-navbar-bg px-3 py-1.5 text-body-sm text-white hover:bg-navbar-bg/90 transition-colors"
                 style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                aria-label="View business website (opens in a new tab)"
               >
-                {website}
+                View Website
               </a>
             ) : (
               <span

@@ -615,8 +615,8 @@ export async function GET(request: NextRequest) {
 
     // CROSS-BROWSER FIX: If this is a signup verification and the code exchange failed
     // (e.g., PKCE code_verifier missing because user opened link in a different browser),
-    // Supabase has ALREADY verified the email server-side before redirecting here.
-    // Don't show a confusing error — redirect to login with a success message instead.
+    // Supabase may have already verified the email server-side before redirecting here.
+    // Route back to verify-email callback handling so we can auto-redirect without /login.
     const callbackType = requestUrl.searchParams.get('type');
     if (callbackType === 'signup' && code) {
       const errorLower = exchangeErrorMsg.toLowerCase();
@@ -629,10 +629,10 @@ export async function GET(request: NextRequest) {
         errorLower.includes('session');
 
       if (isPkceOrSessionError) {
-        console.log('[Auth Callback] PKCE/session error on cross-browser signup verification — email is verified, redirecting to login');
-        const loginUrl = new URL('/login', request.url);
-        loginUrl.searchParams.set('message', 'Email verified! Please log in to continue.');
-        return NextResponse.redirect(loginUrl);
+        console.log('[Auth Callback] PKCE/session error on cross-browser signup verification - redirecting to /verify-email?verified=1');
+        const verifyUrl = new URL('/verify-email', request.url);
+        verifyUrl.searchParams.set('verified', '1');
+        return NextResponse.redirect(verifyUrl);
       }
     }
   }
@@ -640,4 +640,5 @@ export async function GET(request: NextRequest) {
   // Return the user to an error page with instructions
   return NextResponse.redirect(new URL('/auth/auth-code-error', request.url));
 }
+
 
