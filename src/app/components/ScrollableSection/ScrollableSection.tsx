@@ -35,6 +35,26 @@ export default function ScrollableSection({
   const [isMobileViewport, setIsMobileViewport] = useState(false);
   const previousScrollLeftRef = useRef(0);
 
+  const syncMobileSnapTargets = () => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const snapTargets = Array.from(container.querySelectorAll<HTMLElement>(".snap-start"));
+    if (snapTargets.length === 0) return;
+
+    for (const target of snapTargets) {
+      target.removeAttribute("data-mobile-snap-target");
+    }
+
+    for (const target of snapTargets) {
+      const ancestorSnapTarget = target.parentElement?.closest(".snap-start");
+      const isTopLevelSnapTarget = !ancestorSnapTarget || !container.contains(ancestorSnapTarget);
+      if (isTopLevelSnapTarget) {
+        target.setAttribute("data-mobile-snap-target", "true");
+      }
+    }
+  };
+
   const checkScrollPosition = () => {
     if (!scrollRef.current) return;
 
@@ -72,16 +92,23 @@ export default function ScrollableSection({
     if (!scrollElement) return;
 
     previousScrollLeftRef.current = scrollElement.scrollLeft;
+    syncMobileSnapTargets();
 
     checkScrollPosition();
 
     const handleScroll = () => checkScrollPosition();
-    const handleResize = () => checkScrollPosition();
+    const handleResize = () => {
+      syncMobileSnapTargets();
+      checkScrollPosition();
+    };
 
     scrollElement.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('resize', handleResize);
 
-    const observer = new ResizeObserver(() => checkScrollPosition());
+    const observer = new ResizeObserver(() => {
+      syncMobileSnapTargets();
+      checkScrollPosition();
+    });
     observer.observe(scrollElement);
 
     return () => {
@@ -98,12 +125,15 @@ export default function ScrollableSection({
     if (!scrollElement || typeof window === "undefined") return;
 
     const rafId = window.requestAnimationFrame(() => {
+      syncMobileSnapTargets();
       checkScrollPosition();
     });
     const timeoutId = window.setTimeout(() => {
+      syncMobileSnapTargets();
       checkScrollPosition();
     }, 120);
     const lateTimeoutId = window.setTimeout(() => {
+      syncMobileSnapTargets();
       checkScrollPosition();
     }, 360);
 
@@ -202,8 +232,14 @@ export default function ScrollableSection({
               scroll-padding-right: 1rem;
             }
 
-            .home-mobile-peek :global(.snap-start) {
+            .home-mobile-peek :global(.snap-start[data-mobile-snap-target="true"]) {
               scroll-snap-align: center !important;
+              scroll-snap-stop: always !important;
+            }
+
+            .home-mobile-peek :global(.snap-start:not([data-mobile-snap-target="true"])) {
+              scroll-snap-align: none !important;
+              scroll-snap-stop: normal !important;
             }
 
             .home-mobile-peek [class*="w-[100vw]"] {

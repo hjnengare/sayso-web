@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../contexts/ToastContext";
 import { getBrowserSupabase } from "../../lib/supabase/client";
+import PhoneOtpModal, { type PhoneOtpSessionState } from "../../components/BusinessClaim/PhoneOtpModal";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -36,6 +37,13 @@ const ERROR_CODE_MESSAGES: Record<string, string> = {
   SERVER_ERROR: "Something went wrong on our side. Please try again.",
 };
 
+const OTP_SEND_ERROR_MESSAGES: Record<string, string> = {
+  OTP_SEND_RATE_LIMITED: "Too many OTP requests. Please try again later.",
+  PHONE_VERIFICATION_UNAVAILABLE: "Business phone verification is not available.",
+  CLAIM_NOT_FOUND: "Claim not found. Please restart the claim flow.",
+  FORBIDDEN: "You can only verify your own claim.",
+};
+
 function getErrorMessage(result: { message?: string; code?: string; error?: string }): string {
   if (result.message) return result.message;
   if (result.code && ERROR_CODE_MESSAGES[result.code]) {
@@ -43,6 +51,14 @@ function getErrorMessage(result: { message?: string; code?: string; error?: stri
   }
   if (result.error) return result.error;
   return "An error occurred. Please try again.";
+}
+
+function getOtpSendErrorMessage(result: { code?: string; error?: string }): string {
+  if (result.code && OTP_SEND_ERROR_MESSAGES[result.code]) {
+    return OTP_SEND_ERROR_MESSAGES[result.code];
+  }
+  if (result.error) return result.error;
+  return "Unable to send OTP right now. Please try again.";
 }
 
 interface BusinessData {
@@ -53,6 +69,40 @@ interface BusinessData {
   phone?: string;
   email?: string;
   website?: string;
+}
+
+type ClaimSubmitResponse = {
+  success?: boolean;
+  status?: string;
+  method_attempted?: string | null;
+  claim_id?: string;
+  message?: string;
+  display_status?: string;
+  code?: string;
+  error?: string;
+};
+
+type OtpSendResponse = {
+  ok?: boolean;
+  status?: string;
+  autoVerified?: boolean;
+  maskedPhone?: string | null;
+  expiresAt?: string | null;
+  expiresInSeconds?: number;
+  resendCooldownSeconds?: number;
+  message?: string;
+  code?: string;
+  error?: string;
+};
+
+function buildAutoOtpSession(claimId: string, maskedPhone: string | null): PhoneOtpSessionState {
+  return {
+    claimId,
+    maskedPhone,
+    expiresAt: null,
+    resendCooldownSeconds: 0,
+    autoMode: true,
+  };
 }
 
 export default function ClaimBusinessFormPage() {
@@ -67,8 +117,12 @@ export default function ClaimBusinessFormPage() {
   const [notFound, setNotFound] = useState(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [claimStateMessage, setClaimStateMessage] = useState<string | null>(null);
   const errorRef = useRef<HTMLDivElement>(null);
+  const [otpSession, setOtpSession] = useState<PhoneOtpSessionState | null>(null);
+  const [otpModalOpen, setOtpModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     role: "owner" as "owner" | "manager",
@@ -140,13 +194,76 @@ export default function ClaimBusinessFormPage() {
 
   const updateFormData = (updates: Partial<typeof formData>) => {
     setFormError(null);
+    setClaimStateMessage(null);
     setFormData((prev) => ({ ...prev, ...updates }));
+  };
+
+  const triggerPhoneOtpFlow = async (claimId: string): Promise<boolean> => {
+    setIsSendingOtp(true);
+    setFormError(null);
+
+    try {
+      const response = await fetch("/api/verification/otp/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ claimId }),
+      });
+
+      let payload: OtpSendResponse | null = null;
+      try {
+        payload = (await response.json()) as OtpSendResponse;
+      } catch {
+        payload = null;
+      }
+
+      if (!response.ok || payload?.ok === false) {
+        const message = getOtpSendErrorMessage({
+          code: payload?.code,
+          error: payload?.error,
+        });
+        setFormError(message);
+        return false;
+      }
+
+      if (payload?.autoVerified && payload?.status === "under_review") {
+        // TEMPORARY: Auto-verification mode until Twilio integration.
+        setOtpSession(buildAutoOtpSession(claimId, payload?.maskedPhone ?? null));
+        setOtpModalOpen(true);
+        setClaimStateMessage("Completing phone verification...");
+        return true;
+      }
+
+      const expiresAt =
+        payload?.expiresAt ??
+        new Date(
+          Date.now() + Number(payload?.expiresInSeconds ?? 600) * 1000
+        ).toISOString();
+      const resendCooldownSeconds = Number(payload?.resendCooldownSeconds ?? 30);
+
+      setOtpSession({
+        claimId,
+        maskedPhone: payload?.maskedPhone ?? null,
+        expiresAt,
+        resendCooldownSeconds,
+        autoMode: false,
+      });
+      setOtpModalOpen(true);
+      showToast("OTP sent. Enter the 6-digit code to continue.", "success", 4000);
+      return true;
+    } catch (error) {
+      console.error("Error sending OTP:", error);
+      setFormError("Unable to send OTP right now. Please try again.");
+      return false;
+    } finally {
+      setIsSendingOtp(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting || !business) return;
     setFormError(null);
+    setClaimStateMessage(null);
 
     if (!user) {
       setFormError("Please log in to claim this business.");
@@ -180,9 +297,9 @@ export default function ClaimBusinessFormPage() {
         }),
       });
 
-      let result: Record<string, unknown>;
+      let result: ClaimSubmitResponse;
       try {
-        result = await response.json();
+        result = (await response.json()) as ClaimSubmitResponse;
       } catch {
         setFormError("Something went wrong. Please try again.");
         return;
@@ -194,9 +311,13 @@ export default function ClaimBusinessFormPage() {
         return;
       }
 
-      if (result.status === "verified") {
+      const claimStatus = String(result.status ?? "").toLowerCase();
+      const methodAttempted = String(result.method_attempted ?? "").toLowerCase();
+      const claimId = typeof result.claim_id === "string" ? result.claim_id : null;
+
+      if (claimStatus === "verified") {
         showToast(
-          (result.message as string) || "Business verified. You can now manage your listing.",
+          result.message || "Business verified. You can now manage your listing.",
           "success",
           5000,
         );
@@ -204,8 +325,36 @@ export default function ClaimBusinessFormPage() {
         return;
       }
 
+      if (methodAttempted === "phone" && claimId) {
+        if (claimStatus === "under_review") {
+          // TEMPORARY: Auto-verification mode until Twilio integration.
+          setOtpSession(buildAutoOtpSession(claimId, business.phone ?? null));
+          setOtpModalOpen(true);
+          setClaimStateMessage("Completing phone verification...");
+          return;
+        }
+
+        const otpStarted = await triggerPhoneOtpFlow(claimId);
+        if (!otpStarted) return;
+
+        setClaimStateMessage(
+          result.message ||
+            "OTP sent successfully. Enter the code to move your claim to under review."
+        );
+        return;
+      }
+
+      if (claimStatus === "under_review") {
+        const successMessage =
+          result.message || "Claim submitted. Your claim is now under review.";
+        setClaimStateMessage(successMessage);
+        showToast(successMessage, "success", 5000);
+        router.push("/claim-business");
+        return;
+      }
+
       showToast(
-        (result.message as string) || (result.display_status as string) || "Claim submitted. Complete the requested verification step.",
+        result.message || result.display_status || "Claim submitted. Complete the requested verification step.",
         "success",
         5000,
       );
@@ -461,6 +610,31 @@ export default function ClaimBusinessFormPage() {
               />
             </div>
 
+            {claimStateMessage && (
+              <div
+                className="flex items-start gap-3 p-4 rounded-[10px] bg-sage/10 border border-sage/25 text-sage"
+                style={{ fontFamily: FONT }}
+                role="status"
+                aria-live="polite"
+              >
+                <Store className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold">Claim in progress</p>
+                  <p className="text-sm text-sage/90">{claimStateMessage}</p>
+                  {otpSession && !otpModalOpen && (
+                    <button
+                      type="button"
+                      onClick={() => setOtpModalOpen(true)}
+                      className="mt-2 inline-flex items-center gap-2 rounded-full bg-sage px-3 py-1.5 text-xs font-semibold text-white hover:bg-sage/90 transition-colors"
+                      style={{ fontFamily: FONT }}
+                    >
+                      Continue OTP verification
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Error */}
             {formError && (
               <div
@@ -486,14 +660,14 @@ export default function ClaimBusinessFormPage() {
               </Link>
               <button
                 type="submit"
-                disabled={isSubmitting || !hasValidContact}
+                disabled={isSubmitting || isSendingOtp || !hasValidContact}
                 className="flex-1 px-4 py-3 rounded-full bg-gradient-to-br from-coral to-coral/90 text-white text-sm font-semibold hover:from-coral/90 hover:to-coral/80 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 style={{ fontFamily: FONT }}
               >
-                {isSubmitting ? (
+                {isSubmitting || isSendingOtp ? (
                   <>
                     <Loader size="sm" variant="wavy" color="white" />
-                    Starting claim...
+                    {isSendingOtp ? "Sending OTP..." : "Starting claim..."}
                   </>
                 ) : (
                   "Submit Claim"
@@ -503,6 +677,19 @@ export default function ClaimBusinessFormPage() {
           </form>
         </div>
       </main>
+
+      <PhoneOtpModal
+        open={otpModalOpen}
+        session={otpSession}
+        onClose={() => setOtpModalOpen(false)}
+        onSessionUpdate={(next) => setOtpSession(next)}
+        onVerified={(message) => {
+          setClaimStateMessage(message);
+          setOtpSession(null);
+          setOtpModalOpen(false);
+          showToast(message, "success", 5000);
+        }}
+      />
     </div>
   );
 }

@@ -220,7 +220,7 @@ export class BusinessOwnershipService {
           `
           )
           .eq("claimant_user_id", userId)
-          .eq("status", "verified"),
+          .in("status", ["verified", "under_review"]),
       ]);
 
       if (ownerJoinResult.error) {

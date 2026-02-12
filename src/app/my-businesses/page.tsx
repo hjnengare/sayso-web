@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -35,6 +35,23 @@ interface OwnerListingsFetchResult {
 }
 
 const FONT_STACK = "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif";
+const LISTINGS_REQUEST_TIMEOUT_MS = 7000;
+const OWNER_DATA_REQUEST_TIMEOUT_MS = 7600;
+const LOADING_WATCHDOG_TIMEOUT_MS = 8000;
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, timeoutMessage: string): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+  const timeoutPromise = new Promise<T>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error(timeoutMessage));
+    }, timeoutMs);
+  });
+
+  return Promise.race([promise, timeoutPromise]).finally(() => {
+    if (timeoutId) clearTimeout(timeoutId);
+  });
+}
 
 function toBusinessCardData(ownedBusinesses: any[]): Business[] {
   return ownedBusinesses.map((business) => ({
@@ -86,37 +103,54 @@ export default function MyBusinessesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [listingsWarning, setListingsWarning] = useState<string | null>(null);
+  const fetchCallCountRef = useRef(0);
+  const isFetchingRef = useRef(false);
 
   const fetchOwnerListings = useCallback(async (ownedBusinesses: Business[]): Promise<OwnerListingsFetchResult> => {
     if (ownedBusinesses.length === 0) return { items: [], failedCount: 0 };
 
     const results = await Promise.allSettled(
       ownedBusinesses.map(async (business) => {
-        const response = await fetch(`/api/businesses/${business.id}/events?owner_view=true`, { cache: "no-store" });
-        if (!response.ok) {
-          throw new Error(`Failed to fetch listings for business ${business.id}`);
-        }
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), LISTINGS_REQUEST_TIMEOUT_MS);
 
-        const payload = (await response.json()) as { data?: any[]; error?: string };
-        if (payload?.error) {
-          throw new Error(payload.error);
-        }
-        const entries = Array.isArray(payload?.data) ? payload.data : [];
+        try {
+          const response = await fetch(`/api/businesses/${business.id}/events?owner_view=true`, {
+            cache: "no-store",
+            signal: controller.signal,
+          });
+          if (!response.ok) {
+            throw new Error(`Failed to fetch listings for business ${business.id}`);
+          }
 
-        return entries.map((entry: any): OwnerListing => ({
-          id: String(entry.id),
-          title: typeof entry.title === "string" && entry.title.trim() ? entry.title.trim() : "Untitled listing",
-          type: entry.type === "special" ? "special" : "event",
-          businessId: business.id,
-          businessName: business.name,
-          startDate: typeof entry.startDate === "string" ? entry.startDate : null,
-          endDate: typeof entry.endDate === "string" ? entry.endDate : null,
-          location:
-            typeof entry.location === "string" && entry.location.trim()
-              ? entry.location
-              : business.location || "Location TBD",
-          description: typeof entry.description === "string" ? entry.description : null,
-        }));
+          const payload = (await response.json()) as { data?: any[]; error?: string };
+          if (payload?.error) {
+            throw new Error(payload.error);
+          }
+          const entries = Array.isArray(payload?.data) ? payload.data : [];
+
+          return entries.map((entry: any): OwnerListing => ({
+            id: String(entry.id),
+            title: typeof entry.title === "string" && entry.title.trim() ? entry.title.trim() : "Untitled listing",
+            type: entry.type === "special" ? "special" : "event",
+            businessId: business.id,
+            businessName: business.name,
+            startDate: typeof entry.startDate === "string" ? entry.startDate : null,
+            endDate: typeof entry.endDate === "string" ? entry.endDate : null,
+            location:
+              typeof entry.location === "string" && entry.location.trim()
+                ? entry.location
+                : business.location || "Location TBD",
+            description: typeof entry.description === "string" ? entry.description : null,
+          }));
+        } catch (error) {
+          if (error instanceof DOMException && error.name === "AbortError") {
+            throw new Error(`Listings request timed out for business ${business.id}`);
+          }
+          throw error;
+        } finally {
+          clearTimeout(timeoutId);
+        }
       }),
     );
 
@@ -142,16 +176,38 @@ export default function MyBusinessesPage() {
 
   const loadOwnerDashboardData = useCallback(
     async (ownerId: string, showLoading = true) => {
+      if (!ownerId) {
+        setError("Couldn't load businesses. Please try again.");
+        setIsLoading(false);
+        return;
+      }
+      if (isFetchingRef.current && !showLoading) {
+        return;
+      }
+      isFetchingRef.current = true;
+      fetchCallCountRef.current += 1;
+      if (process.env.NODE_ENV !== "production") {
+        console.debug(`[my-businesses] fetch call #${fetchCallCountRef.current}`, { ownerId, showLoading });
+      }
+
       if (showLoading) setIsLoading(true);
       setError(null);
       setListingsWarning(null);
 
       try {
-        const ownedBusinesses = await BusinessOwnershipService.getBusinessesForOwner(ownerId);
+        const ownedBusinesses = await withTimeout(
+          BusinessOwnershipService.getBusinessesForOwner(ownerId),
+          OWNER_DATA_REQUEST_TIMEOUT_MS,
+          "Timed out while loading businesses",
+        );
         const transformedBusinesses = toBusinessCardData(ownedBusinesses);
         setBusinesses(transformedBusinesses);
 
-        const { items, failedCount } = await fetchOwnerListings(transformedBusinesses);
+        const { items, failedCount } = await withTimeout(
+          fetchOwnerListings(transformedBusinesses),
+          OWNER_DATA_REQUEST_TIMEOUT_MS,
+          "Timed out while loading listings",
+        );
         setOwnerListings(items);
 
         if (failedCount > 0) {
@@ -159,8 +215,11 @@ export default function MyBusinessesPage() {
         }
       } catch (err) {
         console.error("Error fetching owner dashboard data:", err);
-        setError("Failed to load your businesses");
+        setBusinesses([]);
+        setOwnerListings([]);
+        setError("Couldn't load businesses. Please try again.");
       } finally {
+        isFetchingRef.current = false;
         if (showLoading) setIsLoading(false);
       }
     },
@@ -205,6 +264,26 @@ export default function MyBusinessesPage() {
       window.removeEventListener("focus", handleFocus);
     };
   }, [user?.id, loadOwnerDashboardData]);
+
+  useEffect(() => {
+    const isBlockingState = authLoading || isLoading;
+    if (!isBlockingState) return;
+
+    const timeoutId = window.setTimeout(() => {
+      console.error("[my-businesses] loading watchdog exceeded", {
+        userId: user?.id ?? null,
+        authLoading,
+        isLoading,
+        fetchCalls: fetchCallCountRef.current,
+      });
+      setError("Couldn't load businesses. Please try again.");
+      setIsLoading(false);
+    }, LOADING_WATCHDOG_TIMEOUT_MS);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [authLoading, isLoading, user?.id]);
 
   // Keep business filter valid if a business is removed
   useEffect(() => {
@@ -262,7 +341,15 @@ export default function MyBusinessesPage() {
     return businesses.find((business) => business.id === listingsBusinessFilter)?.name || "selected business";
   }, [businesses, listingsBusinessFilter]);
 
-  if (authLoading || isLoading) {
+  const handleRetry = useCallback(() => {
+    if (!user?.id) {
+      router.push("/login");
+      return;
+    }
+    void loadOwnerDashboardData(user.id, true);
+  }, [loadOwnerDashboardData, router, user?.id]);
+
+  if ((authLoading || isLoading) && !error) {
     return (
       <div className="min-h-dvh bg-off-white">
         <main>
@@ -295,6 +382,13 @@ export default function MyBusinessesPage() {
           <div className="mx-auto w-full max-w-[2000px] px-4 sm:px-6 lg:px-8">
             <div className="max-w-4xl mx-auto text-center py-12">
               <p className="text-charcoal/70">{error}</p>
+              <button
+                type="button"
+                onClick={handleRetry}
+                className="inline-flex items-center gap-2 mt-4 px-5 py-2.5 bg-sage text-white text-body font-semibold rounded-full hover:bg-sage/90 transition-all duration-300"
+              >
+                Retry
+              </button>
             </div>
           </div>
         </main>

@@ -10,6 +10,37 @@ export const runtime = 'nodejs';
 
 const MAX_ATTEMPTS = 5;
 
+type OtpVerifyErrorCode =
+  | 'UNAUTHORIZED'
+  | 'CLAIM_ID_REQUIRED'
+  | 'OTP_CODE_REQUIRED'
+  | 'OTP_CODE_INVALID_FORMAT'
+  | 'CLAIM_NOT_FOUND'
+  | 'FORBIDDEN'
+  | 'OTP_NOT_FOUND_OR_EXPIRED'
+  | 'OTP_TOO_MANY_ATTEMPTS'
+  | 'OTP_INVALID'
+  | 'OTP_AUTO_VERIFY_FAILED'
+  | 'OTP_VERIFICATION_FAILED'
+  | 'OTP_VERIFY_UNKNOWN_ERROR';
+
+function otpVerifyError(
+  status: number,
+  code: OtpVerifyErrorCode,
+  message: string,
+  details?: Record<string, unknown>
+) {
+  return NextResponse.json(
+    {
+      ok: false,
+      error: message,
+      code,
+      ...(details ? { details } : {}),
+    },
+    { status }
+  );
+}
+
 function hashOtp(code: string): string {
   const pepper = process.env.OTP_PEPPER || 'dev-pepper-do-not-use-in-production';
   return crypto.createHash('sha256').update(pepper + code).digest('hex');
@@ -20,7 +51,7 @@ export async function POST(req: NextRequest) {
     const supabase = await getServerSupabase(req);
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return otpVerifyError(401, 'UNAUTHORIZED', 'Unauthorized');
     }
 
     const autoMode = isPhoneOtpAutoMode();
@@ -29,15 +60,15 @@ export async function POST(req: NextRequest) {
     const code = body.code?.toString().trim();
 
     if (!claimId) {
-      return NextResponse.json({ error: 'claimId is required' }, { status: 400 });
+      return otpVerifyError(400, 'CLAIM_ID_REQUIRED', 'claimId is required');
     }
 
     if (!autoMode) {
       if (!code) {
-        return NextResponse.json({ error: 'claimId and code are required' }, { status: 400 });
+        return otpVerifyError(400, 'OTP_CODE_REQUIRED', 'claimId and code are required');
       }
       if (!/^\d{6}$/.test(code)) {
-        return NextResponse.json({ error: 'Code must be 6 digits' }, { status: 400 });
+        return otpVerifyError(400, 'OTP_CODE_INVALID_FORMAT', 'Code must be 6 digits');
       }
     }
 
@@ -50,11 +81,11 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (claimError || !claim) {
-      return NextResponse.json({ error: 'Claim not found' }, { status: 404 });
+      return otpVerifyError(404, 'CLAIM_NOT_FOUND', 'Claim not found');
     }
     const claimRow = claim as { claimant_user_id: string; status: string; business_id: string };
     if (claimRow.claimant_user_id !== user.id) {
-      return NextResponse.json({ error: 'You can only verify OTP for your own claim' }, { status: 403 });
+      return otpVerifyError(403, 'FORBIDDEN', 'You can only verify OTP for your own claim');
     }
 
     if (autoMode) {
@@ -73,14 +104,16 @@ export async function POST(req: NextRequest) {
             : autoResult.code === 'INVALID_STATUS'
               ? 409
               : 500;
-        return NextResponse.json(
-          { error: autoResult.message ?? 'Failed to auto-verify phone OTP.' },
-          { status }
+        return otpVerifyError(
+          status,
+          'OTP_AUTO_VERIFY_FAILED',
+          autoResult.message ?? 'Failed to auto-verify phone OTP.'
         );
       }
 
       return NextResponse.json({
         ok: true,
+        code: 'OTP_AUTO_VERIFIED',
         autoVerified: true,
         status: 'under_review',
         message: 'Phone verification completed automatically. Your claim is under review.',
@@ -98,13 +131,22 @@ export async function POST(req: NextRequest) {
       .maybeSingle();
 
     if (otpError || !otpData) {
-      return NextResponse.json({ error: 'No valid verification code. Please request a new one.' }, { status: 400 });
+      return otpVerifyError(
+        400,
+        'OTP_NOT_FOUND_OR_EXPIRED',
+        'No valid verification code. Please request a new one.'
+      );
     }
     const otpRow = otpData as { id: string; attempts: number; code_hash: string };
 
     const currentAttempts = otpRow.attempts ?? 0;
     if (currentAttempts >= MAX_ATTEMPTS) {
-      return NextResponse.json({ error: 'Too many attempts. Please request a new code.' }, { status: 429 });
+      return otpVerifyError(
+        429,
+        'OTP_TOO_MANY_ATTEMPTS',
+        'Too many attempts. Please request a new code.',
+        { maxAttempts: MAX_ATTEMPTS, attemptsUsed: currentAttempts }
+      );
     }
     const newAttempts = currentAttempts + 1;
 
@@ -115,7 +157,16 @@ export async function POST(req: NextRequest) {
 
     const codeHash = hashOtp(code as string);
     if (otpRow.code_hash !== codeHash) {
-      return NextResponse.json({ error: 'Invalid code' }, { status: 400 });
+      return otpVerifyError(
+        400,
+        'OTP_INVALID',
+        'Invalid code',
+        {
+          maxAttempts: MAX_ATTEMPTS,
+          attemptsUsed: newAttempts,
+          remainingAttempts: Math.max(0, MAX_ATTEMPTS - newAttempts),
+        }
+      );
     }
 
     await (service as any)
@@ -138,15 +189,16 @@ export async function POST(req: NextRequest) {
           : moveResult.code === 'INVALID_STATUS'
             ? 409
             : 500;
-      return NextResponse.json(
-        { error: moveResult.message ?? 'Failed to complete phone verification.' },
-        { status }
+      return otpVerifyError(
+        status,
+        'OTP_VERIFICATION_FAILED',
+        moveResult.message ?? 'Failed to complete phone verification.'
       );
     }
 
-    return NextResponse.json({ ok: true, status: 'under_review' });
+    return NextResponse.json({ ok: true, code: 'OTP_VERIFIED', status: 'under_review' });
   } catch (err) {
     console.error('OTP verify error:', err);
-    return NextResponse.json({ error: 'Something went wrong' }, { status: 500 });
+    return otpVerifyError(500, 'OTP_VERIFY_UNKNOWN_ERROR', 'Something went wrong');
   }
 }

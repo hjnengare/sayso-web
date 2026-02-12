@@ -14,7 +14,37 @@ export const runtime = 'nodejs';
 
 const OTP_EXPIRY_SECONDS = 600; // 10 min
 const MAX_SENDS_PER_30_MIN = 3;
+const RESEND_COOLDOWN_SECONDS = 30;
 const OTP_LENGTH = 6;
+
+type OtpSendErrorCode =
+  | 'UNAUTHORIZED'
+  | 'CLAIM_ID_REQUIRED'
+  | 'CLAIM_NOT_FOUND'
+  | 'FORBIDDEN'
+  | 'PHONE_VERIFICATION_UNAVAILABLE'
+  | 'OTP_SEND_RATE_LIMITED'
+  | 'OTP_CREATE_FAILED'
+  | 'OTP_SMS_SEND_FAILED'
+  | 'OTP_AUTO_VERIFY_FAILED'
+  | 'OTP_SEND_UNKNOWN_ERROR';
+
+function otpSendError(
+  status: number,
+  code: OtpSendErrorCode,
+  message: string,
+  details?: Record<string, unknown>
+) {
+  return NextResponse.json(
+    {
+      ok: false,
+      error: message,
+      code,
+      ...(details ? { details } : {}),
+    },
+    { status }
+  );
+}
 
 function generateOtp(): string {
   const digits = '0123456789';
@@ -35,13 +65,13 @@ export async function POST(req: NextRequest) {
     const supabase = await getServerSupabase(req);
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return otpSendError(401, 'UNAUTHORIZED', 'Unauthorized');
     }
 
     const body = await req.json().catch(() => ({}));
     const claimId = body.claimId ?? body.claim_id;
     if (!claimId || typeof claimId !== 'string') {
-      return NextResponse.json({ error: 'claimId is required' }, { status: 400 });
+      return otpSendError(400, 'CLAIM_ID_REQUIRED', 'claimId is required');
     }
 
     const service = getServiceSupabase();
@@ -53,14 +83,14 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (claimError || !claim) {
-      return NextResponse.json({ error: 'Claim not found' }, { status: 404 });
+      return otpSendError(404, 'CLAIM_NOT_FOUND', 'Claim not found');
     }
     const claimRow = claim as { claimant_user_id: string; business_id: string };
 
     const isClaimant = claimRow.claimant_user_id === user.id;
     const userIsAdmin = await isAdmin(user.id);
     if (!isClaimant && !userIsAdmin) {
-      return NextResponse.json({ error: 'You can only send OTP for your own claim' }, { status: 403 });
+      return otpSendError(403, 'FORBIDDEN', 'You can only send OTP for your own claim');
     }
 
     if (isPhoneOtpAutoMode()) {
@@ -79,18 +109,22 @@ export async function POST(req: NextRequest) {
             : autoResult.code === 'INVALID_STATUS'
               ? 409
               : 500;
-        return NextResponse.json(
-          { error: autoResult.message ?? 'Failed to auto-verify phone OTP.' },
-          { status }
+        return otpSendError(
+          status,
+          'OTP_AUTO_VERIFY_FAILED',
+          autoResult.message ?? 'Failed to auto-verify phone OTP.'
         );
       }
 
       return NextResponse.json({
         ok: true,
+        code: 'OTP_AUTO_VERIFIED',
         autoVerified: true,
         status: 'under_review',
         maskedPhone: null,
         expiresInSeconds: 0,
+        expiresAt: null,
+        resendCooldownSeconds: 0,
         message: 'Phone verification completed automatically. Your claim is under review.',
       });
     }
@@ -102,16 +136,18 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (bizError || !business) {
-      return NextResponse.json(
-        { error: 'Business phone number is required for phone verification' },
-        { status: 400 }
+      return otpSendError(
+        400,
+        'PHONE_VERIFICATION_UNAVAILABLE',
+        'Business phone number is required for phone verification'
       );
     }
     const businessRow = business as { id: string; name: string; phone: string };
     if (!businessRow.phone?.trim()) {
-      return NextResponse.json(
-        { error: 'Business phone number is required for phone verification' },
-        { status: 400 }
+      return otpSendError(
+        400,
+        'PHONE_VERIFICATION_UNAVAILABLE',
+        'Business phone number is required for phone verification'
       );
     }
     const phoneE164 = businessRow.phone.trim();
@@ -124,9 +160,11 @@ export async function POST(req: NextRequest) {
       .gte('last_sent_at', since);
 
     if ((count ?? 0) >= MAX_SENDS_PER_30_MIN) {
-      return NextResponse.json(
-        { error: 'Too many OTP requests. Please try again in 30 minutes.' },
-        { status: 429 }
+      return otpSendError(
+        429,
+        'OTP_SEND_RATE_LIMITED',
+        'Too many OTP requests. Please try again in 30 minutes.',
+        { windowMinutes: 30, maxSends: MAX_SENDS_PER_30_MIN }
       );
     }
 
@@ -146,7 +184,11 @@ export async function POST(req: NextRequest) {
 
     if (insertError) {
       console.error('OTP insert error:', insertError);
-      return NextResponse.json({ error: 'Failed to create verification code' }, { status: 500 });
+      return otpSendError(
+        500,
+        'OTP_CREATE_FAILED',
+        'Failed to create verification code'
+      );
     }
 
     const smsResult = await sendSms({
@@ -154,9 +196,10 @@ export async function POST(req: NextRequest) {
       body: `Your SaySo verification code is ${code}. It expires in 10 minutes.`,
     });
     if (!smsResult.success) {
-      return NextResponse.json(
-        { error: 'Failed to send SMS. Please try again later.' },
-        { status: 502 }
+      return otpSendError(
+        502,
+        'OTP_SMS_SEND_FAILED',
+        'Failed to send SMS. Please try again later.'
       );
     }
 
@@ -206,11 +249,14 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       ok: true,
+      code: 'OTP_SENT',
       maskedPhone,
       expiresInSeconds: OTP_EXPIRY_SECONDS,
+      expiresAt,
+      resendCooldownSeconds: RESEND_COOLDOWN_SECONDS,
     });
   } catch (err) {
     console.error('OTP send error:', err);
-    return NextResponse.json({ error: 'Something went wrong' }, { status: 500 });
+    return otpSendError(500, 'OTP_SEND_UNKNOWN_ERROR', 'Something went wrong');
   }
 }
