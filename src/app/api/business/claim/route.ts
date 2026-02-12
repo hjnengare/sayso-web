@@ -570,13 +570,82 @@ export async function POST(req: NextRequest) {
 
     if (!start.success || !start.claim_id) {
       const errorMsg = start.error || '';
-      const mappedFailure = mapStartClaimFailure(errorMsg);
-      if (mappedFailure) {
-        return errorResponse(mappedFailure.code, mappedFailure.message, mappedFailure.status);
+      const normalizedError = errorMsg.toLowerCase();
+
+      // If RPC blocks because business listing has no stored contact details,
+      // but the claimant provided contact/CIPC data in this request, continue via fallback.
+      if (
+        normalizedError.includes('no contact information') &&
+        (Boolean(trimmedEmail) || Boolean(trimmedPhone) || Boolean(hasCipc))
+      ) {
+        const fallbackStart = await startClaimWithoutRpc(supabase, business_id, user.id);
+        if (fallbackStart.error) {
+          console.error('[Claim API] fallback start claim (no-contact bypass) error:', fallbackStart.error);
+          console.log('CLAIM ERROR:', fallbackStart.error);
+
+          if (fallbackStart.error.code === '42501') {
+            return errorResponse(
+              'RLS_BLOCKED',
+              "You don't have permission to create a claim for this account.",
+              403,
+              {
+                db_code: fallbackStart.error.code,
+                db_message: fallbackStart.error.message,
+              }
+            );
+          }
+
+          if (fallbackStart.error.code === '23505') {
+            return errorResponse(
+              'DUPLICATE_CLAIM',
+              'You already have a claim in progress for this business.',
+              409,
+              {
+                db_code: fallbackStart.error.code,
+                db_message: fallbackStart.error.message,
+              }
+            );
+          }
+
+          return errorResponse(
+            'DB_ERROR',
+            "We couldn't start your claim right now. Please try again.",
+            500,
+            {
+              db_code: fallbackStart.error.code,
+              db_message: fallbackStart.error.message,
+            }
+          );
+        }
+
+        if (fallbackStart.data?.success && fallbackStart.data.claim_id) {
+          start = fallbackStart.data;
+        } else {
+          console.error('[Claim API] fallback start claim (no-contact bypass) failed:', fallbackStart.data);
+          console.log('CLAIM ERROR:', fallbackStart.data);
+          return errorResponse(
+            'DB_ERROR',
+            "We couldn't start your claim right now. Please try again.",
+            500
+          );
+        }
+      } else {
+        const mappedFailure = mapStartClaimFailure(errorMsg);
+        if (mappedFailure) {
+          return errorResponse(mappedFailure.code, mappedFailure.message, mappedFailure.status);
+        }
+
+        console.error('[Claim API] RPC returned failure:', start);
+        console.log('CLAIM ERROR:', start);
+        return errorResponse(
+          'DB_ERROR',
+          "We couldn't start your claim right now. Please try again.",
+          500
+        );
       }
-      
-      console.error('[Claim API] RPC returned failure:', start);
-      console.log('CLAIM ERROR:', start);
+    }
+
+    if (!start.success || !start.claim_id) {
       return errorResponse(
         'DB_ERROR',
         "We couldn't start your claim right now. Please try again.",
