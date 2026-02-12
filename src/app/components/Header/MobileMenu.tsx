@@ -133,13 +133,13 @@ export default function MobileMenu({
                 handleNavClick(href, e);
                 onClose();
               }}
-              className={`px-3 py-2 rounded-[12px] text-base font-normal relative min-h-[44px] flex items-center justify-start ${mobileTapFeedbackClass} ${mobileRevealClass} ${isActive ? "text-sage bg-white/5" : "text-white hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5"}`}
+              className={`px-3 py-2 rounded-[12px] text-base font-normal relative min-h-[44px] flex items-center justify-center ${mobileTapFeedbackClass} ${mobileRevealClass} ${isActive ? "text-sage bg-white/5" : "text-white hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5"}`}
               style={{
                 ...sf,
                 transitionDelay: `${index * 60}ms`,
               }}
             >
-              <span className="text-left">{label}</span>
+              <span className="text-center uppercase tracking-wide">{label}</span>
             </OptimizedLink>
           );
         })}
@@ -151,20 +151,20 @@ export default function MobileMenu({
             transitionDelay: `${businessTopLinks.length * 60}ms`,
           }}
         >
-          <button
-            type="button"
-            onClick={() => setIsAddSectionOpen((prev) => !prev)}
-            className={`w-full px-3 py-2 min-h-[44px] rounded-[12px] text-base font-normal flex items-center justify-between ${mobileTapFeedbackClass} ${
-              isAddRouteActive ? "text-sage" : "text-white hover:text-white hover:bg-white/5"
-            }`}
-            aria-expanded={isAddSectionOpen}
-            aria-controls="mobile-add-nav"
-          >
-            <span>Add</span>
-            <ChevronDown
-              className={`w-4 h-4 transition-transform duration-300 ${isAddSectionOpen ? "rotate-180" : ""}`}
-            />
-          </button>
+            <button
+              type="button"
+              onClick={() => setIsAddSectionOpen((prev) => !prev)}
+              className={`relative w-full px-3 py-2 min-h-[44px] rounded-[12px] text-base font-normal flex items-center justify-center ${mobileTapFeedbackClass} ${
+                isAddRouteActive ? "text-sage" : "text-white hover:text-white hover:bg-white/5"
+              }`}
+              aria-expanded={isAddSectionOpen}
+              aria-controls="mobile-add-nav"
+            >
+              <span className="text-center uppercase tracking-wide">Add</span>
+              <ChevronDown
+                className={`absolute right-3 w-4 h-4 transition-transform duration-300 ${isAddSectionOpen ? "rotate-180" : ""}`}
+              />
+            </button>
 
           <div
             id="mobile-add-nav"
@@ -192,7 +192,7 @@ export default function MobileMenu({
                       }`}
                       style={sf}
                     >
-                      {item.label}
+                      <span className="block text-center uppercase tracking-wide">{item.label}</span>
                     </OptimizedLink>
                   );
                 })}
@@ -210,13 +210,13 @@ export default function MobileMenu({
               key={item.href}
               href={showLockIndicator ? "/login" : item.href}
               onClick={() => onClose()}
-              className={`px-3 py-2 rounded-full text-base font-normal text-white hover:text-white flex items-center justify-start min-h-[44px] ${mobileTapFeedbackClass} ${mobileRevealClass}`}
+              className={`px-3 py-2 rounded-full text-base font-normal text-white hover:text-white flex items-center justify-center min-h-[44px] ${mobileTapFeedbackClass} ${mobileRevealClass}`}
               style={{
                 ...sf,
                 transitionDelay: `${(businessTopLinks.length + 1 + (item.delay ?? idx)) * 60}ms`,
               }}
             >
-              <span className="text-left flex items-center gap-1.5">
+              <span className="text-center uppercase tracking-wide flex items-center gap-1.5">
                 {item.label}
                 {showLockIndicator && <Lock className="w-3 h-3 text-coral" />}
               </span>
