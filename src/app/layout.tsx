@@ -32,7 +32,8 @@ const ClientLayoutWrapper = dynamicImport(() => import("./components/Performance
 // Primary font - Urbanist (preloaded, critical)
 const urbanist = Urbanist({
   subsets: ["latin"],
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  // Only include weights that are actually used across the app.
+  weight: ["400", "500", "600", "700", "800", "900"],
   display: "swap",
   fallback: ["system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
   variable: "--font-urbanist",
@@ -137,6 +138,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   return (
     <html
       lang="en"
@@ -175,7 +177,12 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/favicon.png" />
 
         {/* Preconnect to external domains for faster resource loading */}
-        <link rel="dns-prefetch" href={process.env.NEXT_PUBLIC_SUPABASE_URL} />
+        {supabaseUrl ? (
+          <>
+            <link rel="preconnect" href={supabaseUrl} />
+            <link rel="dns-prefetch" href={supabaseUrl} />
+          </>
+        ) : null}
         <link rel="preconnect" href="https://api.mapbox.com" />
         <link rel="dns-prefetch" href="https://api.mapbox.com" />
         

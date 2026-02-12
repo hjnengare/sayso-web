@@ -76,7 +76,11 @@ export default function ForYouClient({
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isMapMode, setIsMapMode] = useState(false);
   const searchWrapRef = useRef<HTMLDivElement>(null);
+  const resultsContainerRef = useRef<HTMLDivElement>(null);
   const previousPageRef = useRef(currentPage);
+  const hasClientLoadingCycleRef = useRef(false);
+  const [hasClientFetchSettled, setHasClientFetchSettled] = useState(hasInitialBusinesses);
+  const showDebugInfo = process.env.NODE_ENV !== "production";
 
   // Debounce search query for real-time filtering (300ms delay)
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
@@ -159,7 +163,25 @@ export default function ForYouClient({
     }
   );
 
-  const combinedError = error ?? initialError;
+  useEffect(() => {
+    if (hasInitialBusinesses) {
+      if (!hasClientFetchSettled) {
+        setHasClientFetchSettled(true);
+      }
+      return;
+    }
+
+    if (loading) {
+      hasClientLoadingCycleRef.current = true;
+      return;
+    }
+
+    if (hasClientLoadingCycleRef.current && !loading && !hasClientFetchSettled) {
+      setHasClientFetchSettled(true);
+    }
+  }, [hasClientFetchSettled, hasInitialBusinesses, loading]);
+
+  const combinedError = error ?? (hasClientFetchSettled ? null : initialError);
   const shouldShowSkeleton = !hasInitialBusinesses && (loading || prefsLoading || simpleSearchLoading);
   const canRenderResults = !simpleSearchLoading && (!prefsLoading || hasInitialBusinesses);
   const canShowError = !!combinedError && !loading && canRenderResults;
@@ -187,6 +209,46 @@ export default function ForYouClient({
   const totalCount = useMemo(() => {
     return isSearchActive ? prioritizedSearchResults.length : prioritizedBusinesses.length;
   }, [prioritizedBusinesses.length, prioritizedSearchResults.length, isSearchActive]);
+
+  useEffect(() => {
+    if (!showDebugInfo) return;
+    console.info("[FOR_YOU UI]", {
+      items: totalCount,
+      loading,
+      prefsLoading,
+      simpleSearchLoading,
+      error: combinedError,
+      shouldShowSkeleton,
+      canRenderResults,
+      canShowError,
+      isMapMode,
+    });
+  }, [
+    canRenderResults,
+    canShowError,
+    combinedError,
+    isMapMode,
+    loading,
+    prefsLoading,
+    showDebugInfo,
+    shouldShowSkeleton,
+    simpleSearchLoading,
+    totalCount,
+  ]);
+
+  useEffect(() => {
+    if (!showDebugInfo) return;
+    const el = resultsContainerRef.current;
+    if (!el) return;
+
+    const styles = window.getComputedStyle(el);
+    console.info("[FOR_YOU UI CONTAINER]", {
+      height: Math.round(el.getBoundingClientRect().height),
+      overflow: styles.overflow,
+      overflowY: styles.overflowY,
+      transform: styles.transform,
+    });
+  }, [canRenderResults, canShowError, isMapMode, showDebugInfo, shouldShowSkeleton, totalCount]);
 
   // Convert all businesses to map format (filter out null coords) — use lat/lng only
   // Map shows ALL businesses from the full result set, not just current page
@@ -455,7 +517,12 @@ export default function ForYouClient({
           />
 
           <div className="py-3 sm:py-4">
-            <div className="pt-4 sm:pt-6 md:pt-10">
+            <div ref={resultsContainerRef} className="pt-4 sm:pt-6 md:pt-10">
+          {showDebugInfo && (
+            <p className="px-2 pb-2 text-xs text-charcoal/60">
+              items: {totalCount}, loading: {String(loading || prefsLoading || simpleSearchLoading)}, error: {combinedError ?? "none"}
+            </p>
+          )}
           {/* ✅ Show skeleton loader while prefs are loading OR businesses are loading OR simple search is loading */}
           {shouldShowSkeleton && (
             <BusinessGridSkeleton />

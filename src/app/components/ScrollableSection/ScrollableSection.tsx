@@ -178,7 +178,7 @@ export default function ScrollableSection({
     <div className="relative">
       <div
         ref={scrollRef}
-        className={`horizontal-scroll scrollbar-hide flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory sm:snap-mandatory ${shouldEnableMobilePeek ? "home-mobile-peek pr-4 sm:pr-0" : ""} ${className}`}
+        className={`horizontal-scroll scrollbar-hide flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory sm:snap-mandatory ${shouldEnableMobilePeek ? "home-mobile-peek" : ""} ${className}`}
         style={{
           scrollbarWidth: 'none',
           msOverflowStyle: 'none',
@@ -187,6 +187,7 @@ export default function ScrollableSection({
           overscrollBehaviorY: 'auto',
           touchAction: 'pan-x pan-y',
           scrollSnapType: 'x mandatory',
+          scrollPaddingLeft: shouldEnableMobilePeek ? '1rem' : undefined,
           scrollPaddingRight: shouldEnableMobilePeek ? '1rem' : undefined,
         } as React.CSSProperties}
       >
@@ -196,6 +197,15 @@ export default function ScrollableSection({
       {shouldEnableMobilePeek && (
         <style jsx>{`
           @media (max-width: 639px) {
+            .home-mobile-peek {
+              scroll-padding-left: 1rem;
+              scroll-padding-right: 1rem;
+            }
+
+            .home-mobile-peek :global(.snap-start) {
+              scroll-snap-align: center !important;
+            }
+
             .home-mobile-peek [class*="w-[100vw]"] {
               width: calc(100vw - 1rem) !important;
               max-width: calc(100vw - 1rem) !important;

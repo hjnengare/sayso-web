@@ -264,11 +264,39 @@ function BusinessCard({
     [businessIdentifier, ownerView]
   );
 
-  // Prefetch routes on mount
+  // Prefetch routes on mount (limit to first few cards to avoid flooding)
   useEffect(() => {
-    router.prefetch(reviewRoute);
-    router.prefetch(businessProfileRoute);
-  }, [router, reviewRoute, businessProfileRoute]);
+    if (index > 2) return;
+    if (typeof window === "undefined") return;
+
+    let idleId: number | null = null;
+    let timeoutId: number | null = null;
+
+    const prefetch = () => {
+      try {
+        router.prefetch(reviewRoute);
+        router.prefetch(businessProfileRoute);
+      } catch {
+        // ignore prefetch failures
+      }
+    };
+
+    const idleCallback = (window as any).requestIdleCallback;
+    if (typeof idleCallback === "function") {
+      idleId = idleCallback(prefetch, { timeout: 1200 });
+    } else {
+      timeoutId = window.setTimeout(prefetch, 200);
+    }
+
+    return () => {
+      if (idleId !== null && typeof (window as any).cancelIdleCallback === "function") {
+        (window as any).cancelIdleCallback(idleId);
+      }
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, [index, router, reviewRoute, businessProfileRoute]);
 
   // Prefetch on hover with debouncing
   const hoverTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);

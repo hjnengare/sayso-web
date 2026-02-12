@@ -84,6 +84,109 @@ async function fetchUserPreferences(
   }
 }
 
+type ForYouErrorDetails = {
+  code: string | null;
+  message: string;
+  details: string | null;
+  hint: string | null;
+};
+
+function normalizeForYouError(error: any): ForYouErrorDetails {
+  return {
+    code: typeof error?.code === 'string' ? error.code : null,
+    message: typeof error?.message === 'string' ? error.message : 'Unknown error',
+    details: typeof error?.details === 'string' ? error.details : null,
+    hint: typeof error?.hint === 'string' ? error.hint : null,
+  };
+}
+
+function isRlsOrPermissionError(error: any): boolean {
+  const normalized = normalizeForYouError(error);
+  const haystack = `${normalized.message} ${normalized.details ?? ''}`.toLowerCase();
+  return (
+    normalized.code === '42501' ||
+    normalized.code === 'PGRST301' ||
+    haystack.includes('row-level security') ||
+    haystack.includes('permission denied')
+  );
+}
+
+type ForYouErrorStatus = 401 | 403 | 422 | 500;
+
+function createForYouErrorResponse(args: {
+  status: ForYouErrorStatus;
+  code: string;
+  message: string;
+  requestId: string;
+  details?: ForYouErrorDetails | null;
+}): NextResponse {
+  const payload: {
+    error: string;
+    code: string;
+    meta: {
+      requestId: string;
+      feed: 'for-you';
+    };
+    details?: ForYouErrorDetails;
+  } = {
+    error: args.message,
+    code: args.code,
+    meta: {
+      requestId: args.requestId,
+      feed: 'for-you',
+    },
+  };
+
+  if (args.details) {
+    payload.details = args.details;
+  }
+
+  const response = NextResponse.json(payload, { status: args.status });
+  response.headers.set('X-Feed-Path', 'for_you_error');
+  return applySharedResponseHeaders(response);
+}
+
+type PreferenceReadError = {
+  source: 'user_interests' | 'user_subcategories' | 'user_dealbreakers';
+  details: ForYouErrorDetails;
+};
+
+async function fetchUserPreferencesWithDiagnostics(
+  supabase: Awaited<ReturnType<typeof getServerSupabase>>,
+  userId: string
+): Promise<{
+  preferences: UserPreferences;
+  error: PreferenceReadError | null;
+}> {
+  const [interestsResult, subcategoriesResult, dealbreakersResult] = await Promise.all([
+    supabase.from('user_interests').select('interest_id').eq('user_id', userId),
+    supabase.from('user_subcategories').select('subcategory_id').eq('user_id', userId),
+    supabase.from('user_dealbreakers').select('dealbreaker_id').eq('user_id', userId),
+  ]);
+
+  const interestIds = (interestsResult.data || []).map((row: { interest_id: string }) => row.interest_id);
+  const subcategoryIds = (subcategoriesResult.data || []).map((row: { subcategory_id: string }) => row.subcategory_id);
+  const dealbreakerIds = (dealbreakersResult.data || []).map((row: { dealbreaker_id: string }) => row.dealbreaker_id);
+
+  const preferenceReadError =
+    interestsResult.error
+      ? ({ source: 'user_interests', details: normalizeForYouError(interestsResult.error) } as const)
+      : subcategoriesResult.error
+        ? ({ source: 'user_subcategories', details: normalizeForYouError(subcategoriesResult.error) } as const)
+        : dealbreakersResult.error
+          ? ({ source: 'user_dealbreakers', details: normalizeForYouError(dealbreakersResult.error) } as const)
+          : null;
+
+  return {
+    preferences: {
+      interestIds,
+      subcategoryIds,
+      dealbreakerIds,
+    },
+    error: preferenceReadError,
+  };
+}
+
 /**
  * Log search history (non-blocking, doesn't fail main request)
  */
@@ -562,6 +665,28 @@ export async function GET(req: Request) {
             ? 'server'
             : 'none';
 
+      console.log('FOR_YOU USER', {
+        authUid: userId,
+        requestId,
+        preferenceSource,
+      });
+
+      if (!userId) {
+        const authErrorResponse = createForYouErrorResponse({
+          status: 401,
+          code: 'FOR_YOU_UNAUTHORIZED',
+          message: 'Authentication required for For You feed.',
+          requestId,
+        });
+        console.error('FOR_YOU ERROR', {
+          status: 401,
+          code: 'FOR_YOU_UNAUTHORIZED',
+          requestId,
+          message: 'No authenticated user for mixed feed request.',
+        });
+        return withDuration(authErrorResponse);
+      }
+
       const etagKey = JSON.stringify({
         v: 1,
         strategy: 'mixed',
@@ -605,10 +730,35 @@ export async function GET(req: Request) {
       let resolvedSubInterestIds = subInterestIds.length > 0 ? subInterestIds : subcategoriesToFilter;
       let resolvedDealbreakerIds = dealbreakerIds;
 
-      if (userId && interestIds.length === 0 && subInterestIds.length === 0) {
+      if (interestIds.length === 0 && subInterestIds.length === 0) {
         const prefsStart = Date.now();
-        const userPrefs = await fetchUserPreferences(feedSupabase, userId);
+        const userPrefsResult = await fetchUserPreferencesWithDiagnostics(supabase, userId);
         console.log('[BUSINESSES API] Server-side prefs fetch ms:', Date.now() - prefsStart);
+        if (userPrefsResult.error) {
+          const status: ForYouErrorStatus = isRlsOrPermissionError(userPrefsResult.error.details) ? 403 : 500;
+          const code = status === 403 ? 'FOR_YOU_RLS_BLOCKED' : 'FOR_YOU_PREFS_QUERY_FAILED';
+          const message =
+            status === 403
+              ? 'For You preferences are blocked by RLS or account mismatch.'
+              : 'Failed to load For You preferences.';
+          console.error('FOR_YOU ERROR', {
+            status,
+            code,
+            requestId,
+            source: userPrefsResult.error.source,
+            ...userPrefsResult.error.details,
+          });
+          const preferenceErrorResponse = createForYouErrorResponse({
+            status,
+            code,
+            message,
+            requestId,
+            details: userPrefsResult.error.details,
+          });
+          return withDuration(preferenceErrorResponse);
+        }
+
+        const userPrefs = userPrefsResult.preferences;
         resolvedInterestIds = userPrefs.interestIds;
         resolvedDealbreakerIds = dealbreakerIds.length > 0 ? dealbreakerIds : userPrefs.dealbreakerIds;
 
@@ -622,6 +772,44 @@ export async function GET(req: Request) {
           ? userPrefs.subcategoryIds
           : mappedSubcategories;
       }
+
+      console.log('FOR_YOU PREFS COUNT', {
+        requestId,
+        interests: resolvedInterestIds.length,
+        subcategories: resolvedSubInterestIds.length,
+        dealbreakers: resolvedDealbreakerIds.length,
+      });
+
+      if (resolvedInterestIds.length === 0 && resolvedSubInterestIds.length === 0) {
+        console.error('FOR_YOU ERROR', {
+          status: 422,
+          code: 'FOR_YOU_PREFS_MISSING',
+          requestId,
+          message: 'No interest or subcategory preferences available for this user.',
+        });
+        const missingPrefsResponse = createForYouErrorResponse({
+          status: 422,
+          code: 'FOR_YOU_PREFS_MISSING',
+          message: 'No onboarding preferences found. Please complete onboarding to personalize For You.',
+          requestId,
+        });
+        return withDuration(missingPrefsResponse);
+      }
+
+      console.log('FOR_YOU QUERY FILTERS', {
+        requestId,
+        categorySlugs: resolvedInterestIds,
+        subcategorySlugs: resolvedSubInterestIds,
+        dealbreakerIds: resolvedDealbreakerIds,
+        category,
+        badge,
+        verified,
+        priceRange,
+        preferredPriceRanges,
+        minRating,
+        latitude: lat,
+        longitude: lng,
+      });
 
       // For You: zero-stats only (preference + quality; no reviews, views, clicks)
       const response = await handleForYouZeroStats({
@@ -646,6 +834,16 @@ export async function GET(req: Request) {
         seed: seedWindow.seed,
         seedExpiresAtMs: seedWindow.expiresAtMs,
         cacheEtag: etag,
+      });
+
+      if (!response.ok) {
+        return withDuration(response);
+      }
+
+      const resultsCount = Number(response.headers.get('X-For-You-Results-Count') ?? '0');
+      console.log('FOR_YOU RESULTS COUNT', {
+        requestId,
+        count: Number.isFinite(resultsCount) ? resultsCount : 0,
       });
 
       applyFeedCachingHeaders(response, {
@@ -1555,11 +1753,36 @@ async function handleForYouZeroStats(options: MixedFeedOptions): Promise<NextRes
     seed,
   });
 
-  if (rpcError || !rpcData || rpcData.length === 0) {
-    console.warn('[BUSINESSES API] For You zero-stats empty or error:', rpcError?.message ?? 'no data');
+  if (rpcError) {
+    const normalizedRpcError = normalizeForYouError(rpcError);
+    const status: ForYouErrorStatus = isRlsOrPermissionError(normalizedRpcError) ? 403 : 500;
+    const code = status === 403 ? 'FOR_YOU_RLS_BLOCKED' : 'FOR_YOU_DB_ERROR';
+    const message =
+      status === 403
+        ? 'For You query blocked by RLS or account mismatch.'
+        : 'For You recommendation query failed.';
+    console.error('FOR_YOU ERROR', {
+      status,
+      code,
+      requestId: requestId ?? null,
+      ...normalizedRpcError,
+    });
+    const rpcErrorResponse = createForYouErrorResponse({
+      status,
+      code,
+      message,
+      requestId: requestId ?? 'unknown',
+      details: normalizedRpcError,
+    });
+    rpcErrorResponse.headers.set('X-Feed-Path', 'for_you_zero_stats_error');
+    return rpcErrorResponse;
+  }
+
+  if (!rpcData || rpcData.length === 0) {
+    console.warn('[BUSINESSES API] For You zero-stats empty or error:', 'no data');
     const fallback = await fetchTopPicksFallback(options, {
       reason: 'for_you_zero_stats_empty',
-      details: rpcError?.message ?? null,
+      details: null,
     });
     fallback.headers.set('X-Feed-Path', 'for_you_zero_stats_fallback');
     return fallback;
@@ -1631,6 +1854,10 @@ async function handleForYouZeroStats(options: MixedFeedOptions): Promise<NextRes
   }
 
   const transformedBusinesses = filteredBusinesses.map(transformBusinessForCard);
+  console.log('FOR_YOU RESULTS COUNT', {
+    requestId: requestId ?? null,
+    count: transformedBusinesses.length,
+  });
 
   const response = NextResponse.json({
     businesses: transformedBusinesses,
@@ -1645,6 +1872,7 @@ async function handleForYouZeroStats(options: MixedFeedOptions): Promise<NextRes
     },
   });
   response.headers.set('X-Feed-Path', 'for_you_zero_stats');
+  response.headers.set('X-For-You-Results-Count', String(transformedBusinesses.length));
   return applySharedResponseHeaders(response);
 }
 
@@ -2031,6 +2259,8 @@ async function fetchTopPicksFallback(
       durationMs: Date.now() - start,
     },
   });
+
+  response.headers.set('X-For-You-Results-Count', String(transformed.length));
 
   return applySharedResponseHeaders(response);
 }

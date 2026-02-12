@@ -37,7 +37,7 @@ const BusinessCardImage: React.FC<BusinessCardImageProps> = ({
             src={usingFallback ? getCategoryPlaceholder(categoryKey) : displayImage}
             alt={displayAlt}
             fill
-            sizes="(max-width: 640px) 92vw, (max-width: 1024px) 50vw, 340px"
+            sizes="(max-width: 640px) 100vw, (max-width: 768px) 260px, (max-width: 1024px) 340px, 340px"
             className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02] group-active:scale-[0.98] motion-reduce:transition-none"
             quality={70}
             priority={priority}

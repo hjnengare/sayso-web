@@ -101,7 +101,8 @@ export default function BusinessHeroImage({
                 alt=""
                 fill
                 className="object-cover"
-                priority={currentImageIndex === 0}
+                priority={false}
+                loading="lazy"
                 quality={20}
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 900px"
                 style={{

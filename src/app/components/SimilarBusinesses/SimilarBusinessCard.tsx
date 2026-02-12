@@ -201,7 +201,7 @@ function SimilarBusinessCard({
                 alt=""
                 fill
                 className="object-cover"
-                sizes="(max-width: 768px) 540px, 340px"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 340px, 340px"
                 priority={false}
                 quality={50}
                 loading="lazy"
@@ -221,7 +221,7 @@ function SimilarBusinessCard({
                 alt={name}
                 fill
                 className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02] group-active:scale-[0.98] motion-reduce:transition-none"
-                sizes="(max-width: 768px) 540px, 340px"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 340px, 340px"
                 priority={false}
                 quality={90}
                 loading="lazy"
