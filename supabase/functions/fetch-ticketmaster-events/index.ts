@@ -83,6 +83,8 @@ const PAGE_CAP = 5;
 const BATCH_SIZE = 200;
 const CLEANUP_DAYS = 14;
 const FETCH_WINDOW_DAYS = 120;
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 // ==========================================================================
 // Utilities
@@ -128,6 +130,85 @@ function jsonError(message: string, status = 500): Response {
     status,
     headers: { "Content-Type": "application/json" },
   });
+}
+
+function isUuid(value: string | null | undefined): value is string {
+  return typeof value === "string" && UUID_PATTERN.test(value.trim());
+}
+
+async function userExists(supabase: SupabaseClient, userId: string): Promise<boolean> {
+  if (!isUuid(userId)) return false;
+
+  try {
+    const { data, error } = await supabase
+      .schema("auth")
+      .from("users")
+      .select("id")
+      .eq("id", userId)
+      .maybeSingle();
+    if (!error && data?.id) return true;
+  } catch (error) {
+    console.warn("[Ingest] Could not validate user via auth.users; falling back to profiles:", error);
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("user_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (profileError) return false;
+  return !!profile?.user_id;
+}
+
+async function resolveCreatedByUserId(
+  supabase: SupabaseClient,
+  businessId: string,
+  configuredUserId?: string | null
+): Promise<string> {
+  if (configuredUserId && (await userExists(supabase, configuredUserId))) {
+    return configuredUserId;
+  }
+
+  if (configuredUserId) {
+    console.warn(
+      `[Ingest] SYSTEM_USER_ID is invalid or missing in auth.users: ${configuredUserId}. Falling back.`
+    );
+  }
+
+  const { data: business, error: businessError } = await supabase
+    .from("businesses")
+    .select("owner_id")
+    .eq("id", businessId)
+    .maybeSingle();
+
+  if (!businessError && isUuid((business as { owner_id?: string | null } | null)?.owner_id) &&
+    (await userExists(supabase, (business as { owner_id: string }).owner_id))) {
+    return (business as { owner_id: string }).owner_id;
+  }
+
+  const ownerCandidate = (business as { owner_id?: string | null } | null)?.owner_id;
+  if (isUuid(ownerCandidate)) {
+    console.warn(
+      `[Ingest] businesses.owner_id is set but invalid for FK: ${ownerCandidate}. Falling back.`
+    );
+  }
+
+  const { data: fallbackProfile, error: profileError } = await supabase
+    .from("profiles")
+    .select("user_id")
+    .not("user_id", "is", null)
+    .limit(1)
+    .maybeSingle();
+
+  const fallbackUserId = (fallbackProfile as { user_id?: string | null } | null)?.user_id;
+  if (!profileError && isUuid(fallbackUserId)) {
+    return fallbackUserId;
+  }
+
+  throw new Error(
+    "Unable to resolve a valid created_by user. Set SYSTEM_USER_ID to an existing auth.users UUID or set businesses.owner_id on SYSTEM_BUSINESS_ID."
+  );
 }
 
 // ==========================================================================
@@ -465,7 +546,7 @@ Deno.serve(async (req: Request) => {
     // @ts-ignore
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     // @ts-ignore
-    const systemUserId = Deno.env.get("SYSTEM_USER_ID");
+    const configuredSystemUserId = Deno.env.get("SYSTEM_USER_ID");
     // @ts-ignore
     const systemBusinessId = Deno.env.get("SYSTEM_BUSINESS_ID");
     // @ts-ignore
@@ -473,8 +554,7 @@ Deno.serve(async (req: Request) => {
 
     if (!apiKey) return jsonError("TICKETMASTER_API_KEY not configured");
     if (!supabaseUrl || !supabaseServiceKey) return jsonError("Supabase credentials not configured");
-    if (!systemUserId || !systemBusinessId)
-      return jsonError("SYSTEM_USER_ID / SYSTEM_BUSINESS_ID not configured");
+    if (!systemBusinessId) return jsonError("SYSTEM_BUSINESS_ID not configured");
 
     // Allow query-param overrides (useful for manual testing)
     const reqUrl = new URL(req.url);
@@ -491,6 +571,11 @@ Deno.serve(async (req: Request) => {
 
     // ---- Supabase client (service_role) ----
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const createdByUserId = await resolveCreatedByUserId(
+      supabase,
+      systemBusinessId,
+      configuredSystemUserId
+    );
 
     // ---- 1. Cleanup old events ----
     const cleanedUp = await cleanupOldEvents(supabase);
@@ -500,7 +585,7 @@ Deno.serve(async (req: Request) => {
       apiKey,
       cities,
       systemBusinessId,
-      systemUserId,
+      createdByUserId,
       pageSize,
     );
 

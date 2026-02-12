@@ -66,6 +66,8 @@ const CITIES = ["Cape Town", "Johannesburg", "Durban"];
 const PAGE_SIZE = 200;
 const FETCH_WINDOW_DAYS = 120;
 const BATCH_SIZE = 200;
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -97,6 +99,84 @@ function pickBestImage(images?: TmImage[]): string | null {
   let best = images[0];
   for (const img of images) if ((img.width ?? 0) > (best.width ?? 0)) best = img;
   return best.url || null;
+}
+
+function isUuid(value: string | null | undefined): value is string {
+  return typeof value === "string" && UUID_PATTERN.test(value.trim());
+}
+
+async function userExists(supabase: any, userId: string): Promise<boolean> {
+  if (!isUuid(userId)) return false;
+
+  try {
+    const { data, error } = await (supabase as any)
+      .schema("auth")
+      .from("users")
+      .select("id")
+      .eq("id", userId)
+      .maybeSingle();
+    if (!error && data?.id) return true;
+  } catch (error) {
+    console.warn("[Cron] Could not validate user via auth.users; falling back to profiles:", error);
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("user_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (profileError) return false;
+  return !!(profile as { user_id?: string } | null)?.user_id;
+}
+
+async function resolveCreatedByUserId(
+  supabase: any,
+  businessId: string,
+  configuredUserId?: string
+): Promise<string> {
+  if (configuredUserId && (await userExists(supabase, configuredUserId))) {
+    return configuredUserId;
+  }
+
+  if (configuredUserId) {
+    console.warn(
+      `[Cron] SYSTEM_USER_ID is invalid or missing in auth.users: ${configuredUserId}. Falling back.`
+    );
+  }
+
+  const { data: business, error: businessError } = await supabase
+    .from("businesses")
+    .select("owner_id")
+    .eq("id", businessId)
+    .maybeSingle();
+
+  const ownerId = (business as { owner_id?: string | null } | null)?.owner_id;
+  if (!businessError && isUuid(ownerId) && (await userExists(supabase, ownerId))) {
+    return ownerId;
+  }
+
+  if (isUuid(ownerId)) {
+    console.warn(
+      `[Cron] businesses.owner_id is set but invalid for FK: ${ownerId}. Falling back.`
+    );
+  }
+
+  const { data: fallbackProfile, error: profileError } = await supabase
+    .from("profiles")
+    .select("user_id")
+    .not("user_id", "is", null)
+    .limit(1)
+    .maybeSingle();
+
+  const fallbackUserId = (fallbackProfile as { user_id?: string | null } | null)?.user_id;
+  if (!profileError && isUuid(fallbackUserId)) {
+    return fallbackUserId;
+  }
+
+  throw new Error(
+    "Unable to resolve a valid created_by user. Set SYSTEM_USER_ID to an existing auth.users UUID or set businesses.owner_id on SYSTEM_BUSINESS_ID."
+  );
 }
 
 function resolveStart(dates?: TmEvent["dates"]): string | null {
@@ -222,13 +302,14 @@ export async function GET(req: NextRequest) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     const bizId = process.env.SYSTEM_BUSINESS_ID;
-    const userId = process.env.SYSTEM_USER_ID;
+    const configuredUserId = process.env.SYSTEM_USER_ID;
 
-    if (!apiKey || !supabaseUrl || !serviceKey || !bizId || !userId) {
+    if (!apiKey || !supabaseUrl || !serviceKey || !bizId) {
       return NextResponse.json({ error: "Missing env vars" }, { status: 500 });
     }
 
     const supabase = createClient(supabaseUrl, serviceKey);
+    const createdByUserId = await resolveCreatedByUserId(supabase, bizId, configuredUserId);
 
     // 1. Cleanup expired events
     const cutoff = new Date(Date.now() - 1 * 86_400_000).toISOString();
@@ -262,7 +343,7 @@ export async function GET(req: NextRequest) {
 
     // 3. Map + consolidate
     const mapped = allEvents
-      .map((e) => mapEvent(e, bizId, userId))
+      .map((e) => mapEvent(e, bizId, createdByUserId))
       .filter((r): r is EventRow => r !== null);
     const rows = consolidate(mapped);
 
