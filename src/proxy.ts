@@ -205,6 +205,9 @@ export async function proxy(request: NextRequest) {
   // Include both /path and /path/ so "/business" and "/business/slug" both match
   const publicRoutes = [
     '/home',
+    '/search',
+    '/events',
+    '/events/',
     '/business',
     '/business/',
     '/event',
@@ -213,10 +216,15 @@ export async function proxy(request: NextRequest) {
     '/special/',
     '/category',
     '/category/',
+    '/categories',
+    '/categories/',
     '/explore',
     '/explore/',
     '/trending',
     '/leaderboard',
+    '/reviewer',
+    '/reviewer/',
+    '/profile/',
     '/for-you',
     '/notifications',
     '/write-review',
@@ -292,10 +300,10 @@ export async function proxy(request: NextRequest) {
         }
 
         // Only redirect protected routes, allow public routes (/home is public)
-        const protectedRoutesFatal = ['/interests', '/subcategories', '/deal-breakers', '/complete', '/profile', '/reviews', '/write-review', '/saved', '/dm', '/reviewer'];
+        const protectedRoutesFatal = ['/interests', '/subcategories', '/deal-breakers', '/complete', '/reviews', '/write-review', '/saved', '/dm'];
         const isProtectedRoute = protectedRoutesFatal.some(route =>
           request.nextUrl.pathname.startsWith(route)
-        );
+        ) || request.nextUrl.pathname === '/profile';
 
         if (isProtectedRoute) {
           return redirectWithGuard(request, new URL('/login', request.url));
@@ -358,13 +366,11 @@ export async function proxy(request: NextRequest) {
     // Onboarding routes
     '/interests', '/subcategories', '/deal-breakers', '/complete',
     // Main app routes (no /home — public)
-    '/dashboard', '/profile', '/saved', '/dm', '/reviewer',
+    '/dashboard', '/saved', '/dm',
     // Content discovery routes
     '/explore', '/for-you', '/trending', '/events-specials',
     // Review routes
     '/write-review', '/reviews',
-    // Event and special routes
-    '/event', '/special',
     // User action routes
     '/notifications', '/add-business', '/add-event', '/add-special', '/claim-business', '/settings', '/admin',
   ];
@@ -374,9 +380,10 @@ export async function proxy(request: NextRequest) {
   const isBusinessViewRoute = request.nextUrl.pathname.match(/^\/business\/[^\/]+$/);
 
   // Check if route is protected
+  const isPrivateProfileRoute = pathname === '/profile';
   const isProtectedRoute = protectedRoutes.some(route =>
     request.nextUrl.pathname.startsWith(route)
-  ) || isBusinessReviewRoute;
+  ) || isBusinessReviewRoute || isPrivateProfileRoute;
 
   // Business Owner Routes
   const ownersRoutes = ['/my-businesses', '/owners'];
@@ -444,7 +451,7 @@ export async function proxy(request: NextRequest) {
     }
     // CRITICAL: Guest hitting "/" — middleware must redirect here. Otherwise app/page.tsx runs and we get competing redirect sources (loop on iOS webview).
     if (pathname === '/') {
-      const to = '/onboarding';
+      const to = '/home';
       edgeLog('REDIRECT', pathname, { hasUser: false, to, reason: 'root_guest' });
       return redirectWithGuard(request, new URL(to, request.url));
     }
@@ -664,9 +671,9 @@ export async function proxy(request: NextRequest) {
     }
 
     // Personal discovery routes: redirect business owners to /my-businesses (/home is public; page can show switch if desired)
-    const isPersonalRoute = ['/home', '/for-you', '/trending', '/explore', '/events-specials', '/profile', '/saved', '/write-review', '/reviewer'].some(route =>
+    const isPersonalRoute = ['/home', '/for-you', '/trending', '/explore', '/events-specials', '/saved', '/write-review'].some(route =>
       pathname === route || pathname.startsWith(route + '/')
-    );
+    ) || pathname === '/profile';
     if (isPersonalRoute) {
       debugLog('REDIRECT', { requestId, reason: 'business_on_personal_route', to: '/my-businesses' });
       edgeLog('REDIRECT', pathname, { hasUser: true, emailConfirmed: true, isBusiness: true, to: '/my-businesses' });

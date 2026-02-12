@@ -1,13 +1,13 @@
-/**
- * SEO Metadata Utility
- * Generates consistent SEO metadata for all pages with beautiful titles
- */
+import type { Metadata } from 'next';
 
-import { Metadata } from 'next';
-import { generatePageTitle, PageTitles, getBusinessPageTitle, getReviewPageTitle, getCategoryPageTitle, getCityPageTitle, getReviewerPageTitle, getEventPageTitle } from './pageTitle';
+export const SITE_URL = 'https://sayso.co.za';
+export const SITE_NAME = 'Sayso';
+export const SITE_TAGLINE = 'Less guessing,and more confessing.';
+export const BRAND_POSITIONING = 'Hyper-local reviews & discovery for Cape Town';
+export const DEFAULT_SITE_DESCRIPTION =
+  'Sayso is a hyper-local reviews and discovery app for Cape Town. Explore restaurants, salons, gyms, events, and more - with real community ratings.';
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://sayso-nine.vercel.app';
-const siteName = 'sayso';
+const DEFAULT_OG_IMAGE = `${SITE_URL}/opengraph-image`;
 
 export interface SEOOptions {
   title?: string;
@@ -20,8 +20,59 @@ export interface SEOOptions {
   nofollow?: boolean;
 }
 
+function normalizePath(path: string): string {
+  if (!path) return '/';
+
+  if (/^https?:\/\//i.test(path)) {
+    try {
+      const url = new URL(path);
+      return `${url.pathname}${url.search}${url.hash}` || '/';
+    } catch {
+      return '/';
+    }
+  }
+
+  return path.startsWith('/') ? path : `/${path}`;
+}
+
+export function getCanonicalUrl(path?: string): string {
+  if (!path) return SITE_URL;
+
+  if (/^https?:\/\//i.test(path)) {
+    return path;
+  }
+
+  return `${SITE_URL}${normalizePath(path)}`;
+}
+
+export function toAbsoluteUrl(url?: string | null): string | undefined {
+  if (!url) return undefined;
+
+  if (/^https?:\/\//i.test(url)) {
+    return url;
+  }
+
+  if (url.startsWith('//')) {
+    return `https:${url}`;
+  }
+
+  if (url.startsWith('/')) {
+    return `${SITE_URL}${url}`;
+  }
+
+  return `${SITE_URL}/${url}`;
+}
+
+function withBrandInTitle(title?: string): string {
+  if (!title) {
+    return `${SITE_NAME} | ${BRAND_POSITIONING}`;
+  }
+
+  return /sayso/i.test(title) ? title : `${title} | ${SITE_NAME}`;
+}
+
 /**
- * Generate SEO metadata for a page
+ * Generate SEO metadata for a page.
  */
 export function generateSEOMetadata(options: SEOOptions = {}): Metadata {
   const {
@@ -35,67 +86,35 @@ export function generateSEOMetadata(options: SEOOptions = {}): Metadata {
     nofollow = false,
   } = options;
 
-  // Use beautiful title format if title is provided, otherwise use default
-  // Use title as-is if it already includes SAYSO, otherwise format it
-  const fullTitle = title 
-    ? (title.includes(siteName) || title.includes("SAYSO"))
-      ? title 
-      : generatePageTitle(title, description)
-    : PageTitles.home;
-  const fullDescription = description || 'Find amazing local businesses, restaurants, and experiences in your area with personalized recommendations and trusted reviews.';
-  const brandedOgImage = `${baseUrl}/opengraph-image`;
-  const hasCustomImage = Boolean(image && image !== brandedOgImage);
-  const socialImage = (image && image.length > 0) ? image : brandedOgImage;
-  const canonicalUrl = url ? `${baseUrl}${url}` : baseUrl;
+  const canonicalUrl = getCanonicalUrl(url);
+  const fullTitle = withBrandInTitle(title);
+  const ogTitle = fullTitle.includes(SITE_TAGLINE) ? fullTitle : `${fullTitle} | ${SITE_TAGLINE}`;
+  const fullDescription = description || DEFAULT_SITE_DESCRIPTION;
+  const ogImageUrl = toAbsoluteUrl(image) || DEFAULT_OG_IMAGE;
 
   return {
+    metadataBase: new URL(SITE_URL),
     title: fullTitle,
     description: fullDescription,
     keywords: keywords.length > 0 ? keywords.join(', ') : undefined,
-    authors: [{ name: siteName }],
-    creator: siteName,
-    publisher: siteName,
     alternates: {
       canonical: canonicalUrl,
     },
     openGraph: {
-      title: fullTitle,
+      title: ogTitle,
       description: fullDescription,
       url: canonicalUrl,
-      siteName,
+      siteName: SITE_NAME,
       images: [
         {
-          url: brandedOgImage,
+          url: ogImageUrl,
           width: 1200,
           height: 630,
-          alt: 'sayso logo and slogan',
+          alt: `${SITE_NAME} logo with slogan: ${SITE_TAGLINE}`,
         },
-        ...(hasCustomImage
-          ? [{
-              url: image as string,
-              width: 1200,
-              height: 630,
-              alt: title || siteName,
-            }]
-          : []),
       ],
       locale: 'en_ZA',
       type,
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: fullTitle,
-      description: fullDescription,
-      images: [socialImage],
-      creator: '@sayso',
-      site: '@sayso',
-    },
-    other: {
-      'og:image:secure_url': brandedOgImage,
-      'og:image:type': 'image/png',
-      'og:image:width': '1200',
-      'og:image:height': '630',
-      'twitter:image:alt': 'sayso logo and slogan',
     },
     robots: {
       index: !noindex,
@@ -112,207 +131,289 @@ export function generateSEOMetadata(options: SEOOptions = {}): Metadata {
 }
 
 /**
- * Predefined metadata for common pages
+ * Predefined metadata for common pages.
  */
 export const PageMetadata = {
-  home: (): Metadata => generateSEOMetadata({
-    title: PageTitles.home,
-    description: 'Discover personalized local business recommendations tailored to your interests. Find the best restaurants, services, and experiences in your area.',
-    keywords: ['home', 'discover', 'local businesses', 'recommendations', 'personalized'],
-    url: '/home',
-  }),
+  home: (): Metadata =>
+    generateSEOMetadata({
+      title: `${SITE_NAME} | ${BRAND_POSITIONING}`,
+      description: DEFAULT_SITE_DESCRIPTION,
+      keywords: [
+        'sayso',
+        'sayso reviews',
+        'cape town reviews',
+        'cape town restaurants',
+        'hyper-local discovery',
+      ],
+      url: '/home',
+      type: 'website',
+    }),
 
-  explore: (): Metadata => generateSEOMetadata({
-    title: PageTitles.explore,
-    description: 'Browse and discover amazing local businesses in your area. Filter by category, rating, distance, and more to find exactly what you\'re looking for.',
-    keywords: ['explore', 'browse', 'local businesses', 'search', 'filter'],
-    url: '/explore',
-  }),
+  explore: (): Metadata =>
+    generateSEOMetadata({
+      title: `Search Cape Town businesses and reviews | ${SITE_NAME}`,
+      description:
+        'Search Sayso to discover Cape Town restaurants, salons, gyms, events, and more with trusted hyper-local reviews.',
+      keywords: ['search cape town businesses', 'cape town reviews', 'sayso search'],
+      url: '/explore',
+      type: 'website',
+    }),
 
-  forYou: (): Metadata => generateSEOMetadata({
-    title: PageTitles.forYou,
-    description: 'Personalized business recommendations based on your interests and preferences. Discover businesses tailored just for you.',
-    keywords: ['for you', 'personalized', 'recommendations', 'tailored', 'interests'],
-    url: '/for-you',
-  }),
+  forYou: (): Metadata =>
+    generateSEOMetadata({
+      title: `Personalized recommendations | ${SITE_NAME}`,
+      description:
+        'Personalized recommendations on Sayso based on your preferences and local Cape Town activity.',
+      keywords: ['personalized recommendations', 'sayso'],
+      url: '/for-you',
+      noindex: true,
+      nofollow: true,
+      type: 'website',
+    }),
 
-  trending: (): Metadata => generateSEOMetadata({
-    title: PageTitles.trending,
-    description: 'Discover the most popular and trending local businesses in your area. See what\'s hot right now.',
-    keywords: ['trending', 'popular', 'hot', 'trending businesses', 'popular places'],
-    url: '/trending',
-  }),
+  trending: (): Metadata =>
+    generateSEOMetadata({
+      title: `Trending places in Cape Town | ${SITE_NAME}`,
+      description:
+        'See trending Cape Town businesses and community favorites on Sayso.',
+      keywords: ['trending cape town', 'cape town businesses', 'sayso'],
+      url: '/trending',
+      type: 'website',
+    }),
 
-  leaderboard: (): Metadata => generateSEOMetadata({
-    title: PageTitles.leaderboard,
-    description: 'See the top reviewers and businesses in your community. Discover the most active contributors and highest-rated establishments.',
-    keywords: ['leaderboard', 'top reviewers', 'top businesses', 'community', 'rankings'],
-    url: '/leaderboard',
-  }),
+  leaderboard: (): Metadata =>
+    generateSEOMetadata({
+      title: `Top reviewers and businesses in Cape Town | ${SITE_NAME}`,
+      description:
+        'See top contributors and standout local businesses in Cape Town on Sayso.',
+      keywords: ['cape town leaderboard', 'top reviewers', 'sayso community'],
+      url: '/leaderboard',
+      type: 'website',
+    }),
 
-  eventsSpecials: (): Metadata => generateSEOMetadata({
-    title: PageTitles.events,
-    description: 'Discover upcoming events, special offers, and promotions from local businesses. Never miss out on great deals and experiences.',
-    keywords: ['events', 'specials', 'promotions', 'deals', 'offers', 'local events'],
-    url: '/events-specials',
-  }),
+  eventsSpecials: (): Metadata =>
+    generateSEOMetadata({
+      title: `Cape Town events and specials | ${SITE_NAME}`,
+      description:
+        'Discover upcoming Cape Town events and specials in one hyper-local feed on Sayso.',
+      keywords: ['cape town events', 'cape town specials', 'sayso events'],
+      url: '/events',
+      type: 'website',
+    }),
 
-  dealBreakers: (): Metadata => generateSEOMetadata({
-    title: PageTitles.dealBreakers,
-    description: 'Customize your preferences and set deal breakers to filter out businesses that don\'t meet your criteria.',
-    keywords: ['deal breakers', 'preferences', 'filters', 'customize'],
-    url: '/deal-breakers',
-  }),
+  dealBreakers: (): Metadata =>
+    generateSEOMetadata({
+      title: `Deal breakers and preferences | ${SITE_NAME}`,
+      description: 'Set your content and recommendation preferences in Sayso.',
+      keywords: ['preferences', 'deal breakers', 'sayso'],
+      url: '/deal-breakers',
+      noindex: true,
+      nofollow: true,
+      type: 'website',
+    }),
 
-  profile: (): Metadata => generateSEOMetadata({
-    title: PageTitles.profile,
-    description: 'View and manage your profile, reviews, and saved businesses.',
-    keywords: ['profile', 'account', 'reviews', 'saved'],
-    url: '/profile',
-    noindex: true, // User profiles should not be indexed
-  }),
+  profile: (): Metadata =>
+    generateSEOMetadata({
+      title: `My profile | ${SITE_NAME}`,
+      description: 'Manage your Sayso profile, saved places, and activity.',
+      keywords: ['sayso profile', 'account'],
+      url: '/profile',
+      noindex: true,
+      nofollow: true,
+      type: 'profile',
+    }),
 
-  saved: (): Metadata => generateSEOMetadata({
-    title: PageTitles.saved,
-    description: 'View your saved businesses and bookmarks.',
-    keywords: ['saved', 'bookmarks', 'favorites'],
-    url: '/saved',
-    noindex: true, // User-specific pages should not be indexed
-  }),
+  saved: (): Metadata =>
+    generateSEOMetadata({
+      title: `Saved places | ${SITE_NAME}`,
+      description: 'View your saved businesses and bookmarks on Sayso.',
+      keywords: ['saved businesses', 'bookmarks', 'sayso'],
+      url: '/saved',
+      noindex: true,
+      nofollow: true,
+      type: 'website',
+    }),
 
-  login: (): Metadata => generateSEOMetadata({
-    title: PageTitles.login,
-    description: 'Sign in to your SAYSO account to access personalized recommendations and manage your reviews.',
-    keywords: ['login', 'sign in', 'account'],
-    url: '/login',
-    noindex: true,
-  }),
+  login: (): Metadata =>
+    generateSEOMetadata({
+      title: `Log in | ${SITE_NAME}`,
+      description: 'Log in to Sayso to manage your account and activity.',
+      keywords: ['sayso login', 'sign in'],
+      url: '/login',
+      noindex: true,
+      nofollow: true,
+      type: 'website',
+    }),
 
-  register: (): Metadata => generateSEOMetadata({
-    title: PageTitles.register,
-    description: 'Create a new SAYSO account to start discovering and reviewing local businesses.',
-    keywords: ['register', 'sign up', 'create account'],
-    url: '/register',
-    noindex: true,
-  }),
+  register: (): Metadata =>
+    generateSEOMetadata({
+      title: `Create an account | ${SITE_NAME}`,
+      description: 'Create your Sayso account to review and discover Cape Town businesses.',
+      keywords: ['sayso register', 'create account'],
+      url: '/register',
+      noindex: true,
+      nofollow: true,
+      type: 'website',
+    }),
 
-  business: (businessName: string, description?: string, image?: string, slug?: string): Metadata => generateSEOMetadata({
-    title: getBusinessPageTitle(businessName, description || `Read reviews, view photos, and get all the information you need about ${businessName}`),
-    description: description || `Discover ${businessName} - read reviews, view photos, and get all the information you need.`,
-    keywords: [businessName, 'business', 'reviews', 'local business'],
-    image,
-    url: slug ? `/business/${slug}` : undefined,
-    type: 'article',
-  }),
+  business: (businessName: string, description?: string, image?: string, slug?: string): Metadata =>
+    generateSEOMetadata({
+      title: `${businessName} reviews in Cape Town | ${SITE_NAME}`,
+      description:
+        description ||
+        `${businessName} on Sayso: hyper-local reviews, ratings, photos, and business details for Cape Town discovery.`,
+      keywords: [businessName, 'sayso reviews', 'cape town business reviews', 'hyper-local reviews'],
+      image,
+      url: slug ? `/business/${slug}` : undefined,
+      type: 'article',
+    }),
 
-  event: (eventTitle: string, description?: string, image?: string, id?: string): Metadata => generateSEOMetadata({
-    title: getEventPageTitle(eventTitle),
-    description: description || `Join us for ${eventTitle} - discover event details, location, and more.`,
-    keywords: [eventTitle, 'event', 'local event', 'special'],
-    image,
-    url: id ? `/event/${id}` : undefined,
-    type: 'article',
-  }),
+  event: (eventTitle: string, description?: string, image?: string, id?: string): Metadata =>
+    generateSEOMetadata({
+      title: `${eventTitle} in Cape Town | ${SITE_NAME}`,
+      description:
+        description ||
+        `${eventTitle} on Sayso: discover dates, details, and community insights for Cape Town events.`,
+      keywords: [eventTitle, 'cape town events', 'sayso events'],
+      image,
+      url: id ? `/event/${id}` : undefined,
+      type: 'article',
+    }),
 
-  reviewer: (reviewerName: string, id?: string): Metadata => generateSEOMetadata({
-    title: getReviewerPageTitle(reviewerName),
-    description: `View ${reviewerName}'s reviews and contributions to the sayso community.`,
-    keywords: [reviewerName, 'reviewer', 'profile', 'reviews'],
-    url: id ? `/reviewer/${id}` : undefined,
-    type: 'profile',
-  }),
+  reviewer: (reviewerName: string, id?: string): Metadata =>
+    generateSEOMetadata({
+      title: `${reviewerName}'s reviews | ${SITE_NAME}`,
+      description: `Browse ${reviewerName}'s Cape Town review activity and community contributions on Sayso.`,
+      keywords: [reviewerName, 'reviewer profile', 'sayso'],
+      url: id ? `/reviewer/${id}` : undefined,
+      type: 'profile',
+    }),
 
-  review: (businessName: string, slug?: string): Metadata => generateSEOMetadata({
-    title: getReviewPageTitle(businessName),
-    description: `Write a review for ${businessName} and share your experience with the community.`,
-    keywords: [businessName, 'review', 'write review', 'rate business'],
-    url: slug ? `/business/${slug}/review` : undefined,
-    noindex: true, // Review forms should not be indexed
-  }),
+  review: (businessName: string, slug?: string): Metadata =>
+    generateSEOMetadata({
+      title: `Write a review for ${businessName} | ${SITE_NAME}`,
+      description: `Write and publish a community review for ${businessName} on Sayso.`,
+      keywords: [businessName, 'write review', 'sayso'],
+      url: slug ? `/business/${slug}/review` : undefined,
+      noindex: true,
+      nofollow: true,
+      type: 'website',
+    }),
 
-  category: (categoryName: string, slug?: string): Metadata => generateSEOMetadata({
-    title: getCategoryPageTitle(categoryName),
-    description: `Explore ${categoryName} businesses in your area. Find the best rated and most reviewed establishments.`,
-    keywords: [categoryName, 'category', 'businesses', 'local businesses'],
-    url: slug ? `/category/${slug}` : undefined,
-  }),
+  category: (categoryName: string, slug?: string): Metadata =>
+    generateSEOMetadata({
+      title: `${categoryName} in Cape Town | ${SITE_NAME}`,
+      description: `Discover top-rated ${categoryName.toLowerCase()} in Cape Town with hyper-local reviews on Sayso.`,
+      keywords: [categoryName, 'cape town businesses', 'sayso'],
+      url: slug ? `/categories/${slug}` : undefined,
+      type: 'website',
+    }),
 
-  city: (cityName: string, slug?: string): Metadata => generateSEOMetadata({
-    title: getCityPageTitle(cityName),
-    description: `Discover the best local businesses in ${cityName}. Find restaurants, services, and experiences near you.`,
-    keywords: [cityName, 'city', 'local businesses', 'location'],
-    url: slug ? `/${slug}` : undefined,
-  }),
+  city: (cityName: string, slug?: string): Metadata =>
+    generateSEOMetadata({
+      title: `${cityName} business reviews | ${SITE_NAME}`,
+      description: `Explore hyper-local reviews and discovery guides for ${cityName} on Sayso.`,
+      keywords: [cityName, 'business reviews', 'sayso'],
+      url: slug ? `/${slug}` : undefined,
+      type: 'website',
+    }),
 
-  notifications: (): Metadata => generateSEOMetadata({
-    title: PageTitles.notifications,
-    description: 'Stay updated with your latest notifications, reviews, and activity.',
-    keywords: ['notifications', 'updates', 'activity'],
-    url: '/notifications',
-    noindex: true,
-  }),
+  notifications: (): Metadata =>
+    generateSEOMetadata({
+      title: `Notifications | ${SITE_NAME}`,
+      description: 'View your account notifications on Sayso.',
+      keywords: ['notifications', 'sayso'],
+      url: '/notifications',
+      noindex: true,
+      nofollow: true,
+      type: 'website',
+    }),
 
-  achievements: (): Metadata => generateSEOMetadata({
-    title: generatePageTitle('Achievements', 'Your badges and milestones'),
-    description: 'View your badges, achievements, and milestones on sayso.',
-    keywords: ['achievements', 'badges', 'milestones'],
-    url: '/achievements',
-    noindex: true,
-  }),
+  achievements: (): Metadata =>
+    generateSEOMetadata({
+      title: `Achievements | ${SITE_NAME}`,
+      description: 'Track your badges and milestones in the Sayso community.',
+      keywords: ['achievements', 'badges', 'sayso'],
+      url: '/achievements',
+      noindex: true,
+      nofollow: true,
+      type: 'website',
+    }),
 
-  discoverReviews: (): Metadata => generateSEOMetadata({
-    title: PageTitles.discoverReviews,
-    description: 'Read authentic reviews from real customers. Discover what people are saying about local businesses in your area.',
-    keywords: ['reviews', 'discover reviews', 'local business reviews', 'authentic reviews'],
-    url: '/discover/reviews',
-  }),
+  discoverReviews: (): Metadata =>
+    generateSEOMetadata({
+      title: `Cape Town community reviews | ${SITE_NAME}`,
+      description: 'Read real Cape Town community reviews for local businesses on Sayso.',
+      keywords: ['cape town community reviews', 'sayso reviews'],
+      url: '/discover/reviews',
+      type: 'website',
+    }),
 
-  writeReview: (): Metadata => generateSEOMetadata({
-    title: PageTitles.writeReview,
-    description: 'Share your experience and write a review for a local business.',
-    keywords: ['write review', 'share experience', 'rate business'],
-    url: '/write-review',
-    noindex: true,
-  }),
+  writeReview: (): Metadata =>
+    generateSEOMetadata({
+      title: `Write a review | ${SITE_NAME}`,
+      description: 'Write a hyper-local review and share your experience on Sayso.',
+      keywords: ['write review', 'sayso'],
+      url: '/write-review',
+      noindex: true,
+      nofollow: true,
+      type: 'website',
+    }),
 
-  dm: (): Metadata => generateSEOMetadata({
-    title: PageTitles.dm,
-    description: 'View and manage your messages on sayso.',
-    keywords: ['messages', 'direct messages', 'chat'],
-    url: '/dm',
-    noindex: true,
-  }),
+  dm: (): Metadata =>
+    generateSEOMetadata({
+      title: `Messages | ${SITE_NAME}`,
+      description: 'Read and send direct messages on Sayso.',
+      keywords: ['messages', 'sayso'],
+      url: '/dm',
+      noindex: true,
+      nofollow: true,
+      type: 'website',
+    }),
 
-  settings: (): Metadata => generateSEOMetadata({
-    title: generatePageTitle('Settings', 'Manage your account settings'),
-    description: 'Manage your account settings, preferences, and profile information on sayso.',
-    keywords: ['settings', 'account settings', 'preferences'],
-    url: '/settings',
-    noindex: true,
-  }),
+  settings: (): Metadata =>
+    generateSEOMetadata({
+      title: `Account settings | ${SITE_NAME}`,
+      description: 'Manage your account settings and preferences in Sayso.',
+      keywords: ['settings', 'sayso'],
+      url: '/settings',
+      noindex: true,
+      nofollow: true,
+      type: 'website',
+    }),
 
-  addBusiness: (): Metadata => generateSEOMetadata({
-    title: generatePageTitle('Add Business', 'Create a new business listing'),
-    description: 'Create a new business listing on sayso and start reaching customers in your area.',
-    keywords: ['add business', 'create listing', 'business registration'],
-    url: '/add-business',
-    noindex: true,
-  }),
+  addBusiness: (): Metadata =>
+    generateSEOMetadata({
+      title: `Add a business | ${SITE_NAME}`,
+      description: 'Submit a business listing to Sayso.',
+      keywords: ['add business', 'sayso'],
+      url: '/add-business',
+      noindex: true,
+      nofollow: true,
+      type: 'website',
+    }),
 
-  claimBusiness: (): Metadata => generateSEOMetadata({
-    title: PageTitles.claimBusiness,
-    description: 'Claim your business listing on sayso and start managing your business profile today.',
-    keywords: ['claim business', 'business verification', 'business listing'],
-    url: '/claim-business',
-    noindex: true,
-  }),
+  claimBusiness: (): Metadata =>
+    generateSEOMetadata({
+      title: `Claim your business | ${SITE_NAME}`,
+      description: 'Start or continue your business claim on Sayso.',
+      keywords: ['claim business', 'sayso'],
+      url: '/claim-business',
+      noindex: true,
+      nofollow: true,
+      type: 'website',
+    }),
 
-  myBusinesses: (): Metadata => generateSEOMetadata({
-    title: PageTitles.manageBusiness,
-    description: 'Manage your business listings, view analytics, and respond to reviews on sayso.',
-    keywords: ['my businesses', 'business management', 'business dashboard'],
-    url: '/my-businesses',
-    noindex: true,
-  }),
+  myBusinesses: (): Metadata =>
+    generateSEOMetadata({
+      title: `My businesses dashboard | ${SITE_NAME}`,
+      description: 'Manage your verified businesses, events, and specials on Sayso.',
+      keywords: ['my businesses', 'business dashboard', 'sayso'],
+      url: '/my-businesses',
+      noindex: true,
+      nofollow: true,
+      type: 'website',
+    }),
 };
+
 

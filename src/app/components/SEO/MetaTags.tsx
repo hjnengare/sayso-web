@@ -9,10 +9,10 @@ interface MetaTagsProps {
 }
 
 export function generateMetadata({
-  title = "sayso - Discover Amazing Local Businesses",
-  description = "Find and review the best local businesses in your area. Discover hidden gems, read authentic reviews, and connect with your local community.",
-  keywords = ["local business", "reviews", "community", "discover", "restaurants", "services"],
-  ogImage = "/og-image.jpg",
+  title = "Sayso | Hyper-local reviews & discovery for Cape Town",
+  description = "Sayso is a hyper-local reviews and discovery app for Cape Town.",
+  keywords = ["sayso", "cape town reviews", "hyper-local discovery"],
+  ogImage = "https://sayso.co.za/opengraph-image",
   canonical,
 }: MetaTagsProps = {}): Metadata {
   // Ensure keywords is always an array
@@ -29,12 +29,6 @@ export function generateMetadata({
       images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
       type: "website",
       siteName: "sayso",
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: [ogImage],
     },
     robots: {
       index: true,

@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import { getServerSupabase } from '../../lib/supabase/server';
-import { generateSEOMetadata } from '../../lib/utils/seoMetadata';
+import { DEFAULT_SITE_DESCRIPTION, generateSEOMetadata, SITE_URL } from '../../lib/utils/seoMetadata';
 import SchemaMarkup from '../../components/SEO/SchemaMarkup';
 import { generateLocalBusinessSchema, generateBreadcrumbSchema } from '../../lib/utils/schemaMarkup';
 import Link from 'next/link';
@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     // Fetch business data
     const { data } = await supabase
       .from('businesses')
-      .select('name, description, image_url, uploaded_images, slug, category, primary_category_slug, primary_category_label')
+      .select('name, description, image_url, uploaded_images, business_images(url, is_primary, sort_order), slug, category, primary_category_slug, primary_category_label')
       .eq('id', actualId)
       .eq('status', 'active')
       .or('is_system.is.null,is_system.eq.false')
@@ -60,21 +60,35 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
   if (!business) {
     return generateSEOMetadata({
-      title: 'Business',
-      description: 'View business details, reviews, and information.',
+      title: 'Business details | Sayso',
+      description: DEFAULT_SITE_DESCRIPTION,
       url: `/business/${id}`,
+      noindex: true,
+      nofollow: true,
     });
   }
 
   const businessSlug = business.slug || id;
   const categoryLabel = business.primary_category_label || business.category || '';
-  const image = (business.uploaded_images && business.uploaded_images.length > 0 ? business.uploaded_images[0] : null) || business.image_url || undefined;
-  const description = business.description || `Discover ${business.name} - read reviews, view photos, and get all the information you need.`;
+  const businessImages = Array.isArray(business.business_images) ? business.business_images : [];
+  const orderedBusinessImages = [...businessImages].sort((a: any, b: any) => {
+    if (a?.is_primary && !b?.is_primary) return -1;
+    if (!a?.is_primary && b?.is_primary) return 1;
+    return Number(a?.sort_order || 0) - Number(b?.sort_order || 0);
+  });
+  const image =
+    (Array.isArray(business.uploaded_images) ? business.uploaded_images[0] : undefined) ||
+    orderedBusinessImages[0]?.url ||
+    business.image_url ||
+    undefined;
+  const description =
+    business.description ||
+    `${business.name} on Sayso. Hyper-local reviews, ratings, and discovery details for Cape Town locals.`;
 
   return generateSEOMetadata({
-    title: business.name,
+    title: `${business.name} reviews in Cape Town | Sayso`,
     description,
-    keywords: [business.name, 'business', 'reviews', 'local business', categoryLabel],
+    keywords: [business.name, 'sayso reviews', 'cape town business reviews', categoryLabel],
     image,
     url: `/business/${businessSlug}`,
     type: 'article',
@@ -86,7 +100,6 @@ export default async function BusinessLayout({
   params,
 }: BusinessLayoutProps) {
   const { id } = await params;
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://sayso-nine.vercel.app';
   
   // Fetch business data for schema
   let schemas: any[] = [];
@@ -143,7 +156,7 @@ export default async function BusinessLayout({
         name: business.name,
         description: business.description || `${categoryLabel} located in ${business.location || 'Cape Town'}`,
         image: (business.uploaded_images && business.uploaded_images.length > 0 ? business.uploaded_images[0] : null) || business.image_url || undefined,
-        url: `${baseUrl}/business/${businessSlug}`,
+        url: `${SITE_URL}/business/${businessSlug}`,
         telephone: business.phone || undefined,
         email: business.email || undefined,
         address: business.address ? {
@@ -156,7 +169,7 @@ export default async function BusinessLayout({
           longitude: business.longitude,
         } : undefined,
         priceRange: business.price_range || undefined,
-        aggregateRating: business.business_stats?.[0]?.average_rating ? {
+        aggregateRating: business.business_stats?.[0]?.average_rating && (business.business_stats?.[0]?.total_reviews || 0) > 0 ? {
           ratingValue: business.business_stats[0].average_rating,
           reviewCount: business.business_stats[0].total_reviews || 0,
           bestRating: 5,
@@ -167,14 +180,14 @@ export default async function BusinessLayout({
       
       // Generate Breadcrumb schema
       const breadcrumbSchema = generateBreadcrumbSchema([
-        { name: 'Home', url: `${baseUrl}/home` },
-        { name: categoryLabel, url: `${baseUrl}/category/${categorySlug}` },
-        { name: business.name, url: `${baseUrl}/business/${businessSlug}` },
+        { name: 'Home', url: `${SITE_URL}/home` },
+        { name: categoryLabel, url: `${SITE_URL}/categories/${categorySlug}` },
+        { name: business.name, url: `${SITE_URL}/business/${businessSlug}` },
       ]);
       
       schemas = [businessSchema, breadcrumbSchema];
       relatedLinks = [
-        { href: `/category/${categorySlug}`, label: `More in ${categoryLabel}` },
+        { href: `/categories/${categorySlug}`, label: `More in ${categoryLabel}` },
         ...(citySlug ? [{ href: `/${citySlug}`, label: `More in ${business.location}` }] : []),
       ];
     }

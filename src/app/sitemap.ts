@@ -1,21 +1,12 @@
 import { MetadataRoute } from 'next';
 import { createClient } from '@supabase/supabase-js';
+import { SITE_URL } from './lib/utils/seoMetadata';
 
-/**
- * Dynamic XML Sitemap Generator
- * Generates sitemap with all static pages and dynamic business pages
- * 
- * Note: This sitemap is dynamic and uses direct Supabase connection
- * to avoid cookie dependencies during static generation
- */
-
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://sayso-nine.vercel.app';
-
-// Force dynamic rendering for sitemap
 export const dynamic = 'force-dynamic';
-export const revalidate = 3600; // Revalidate every hour
+export const revalidate = 3600;
 
-// Create a direct Supabase client for sitemap (no cookies needed)
+const MAX_ROWS = 10000;
+
 function getSitemapSupabase() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -23,177 +14,142 @@ function getSitemapSupabase() {
   );
 }
 
-// Static pages with their priorities and change frequencies
-const staticPages = [
-  {
-    url: '/',
-    lastModified: new Date(),
-    changeFrequency: 'daily' as const,
-    priority: 1.0,
-  },
-  {
-    url: '/home',
-    lastModified: new Date(),
-    changeFrequency: 'daily' as const,
-    priority: 1.0,
-  },
-  {
-    url: '/explore',
-    lastModified: new Date(),
-    changeFrequency: 'hourly' as const,
-    priority: 0.9,
-  },
-  {
-    url: '/for-you',
-    lastModified: new Date(),
-    changeFrequency: 'hourly' as const,
-    priority: 0.9,
-  },
-  {
-    url: '/trending',
-    lastModified: new Date(),
-    changeFrequency: 'hourly' as const,
-    priority: 0.9,
-  },
-  {
-    url: '/leaderboard',
-    lastModified: new Date(),
-    changeFrequency: 'daily' as const,
-    priority: 0.8,
-  },
-  {
-    url: '/events-specials',
-    lastModified: new Date(),
-    changeFrequency: 'daily' as const,
-    priority: 0.8,
-  },
-  {
-    url: '/discover/reviews',
-    lastModified: new Date(),
-    changeFrequency: 'daily' as const,
-    priority: 0.7,
-  },
+const staticPublicPages: Array<{
+  url: string;
+  priority: number;
+  changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency'];
+}> = [
+  { url: '/home', priority: 1.0, changeFrequency: 'daily' },
+  { url: '/search', priority: 0.9, changeFrequency: 'daily' },
+  { url: '/events', priority: 0.9, changeFrequency: 'daily' },
+  { url: '/leaderboard', priority: 0.8, changeFrequency: 'daily' },
+  { url: '/discover/reviews', priority: 0.7, changeFrequency: 'daily' },
 ];
 
-/**
- * Fetch all businesses from the database for sitemap
- */
-async function getBusinesses(): Promise<Array<{ slug: string; updated_at: string }>> {
+async function getBusinesses(): Promise<Array<{ slug: string; updated_at: string | null; created_at: string | null }>> {
   try {
     const supabase = getSitemapSupabase();
-    
-    // Fetch only active businesses with slugs
-    const { data: businesses, error } = await supabase
+    const { data, error } = await supabase
       .from('businesses')
-      .select('slug, updated_at, created_at, status')
+      .select('slug, updated_at, created_at')
       .eq('status', 'active')
       .or('is_system.is.null,is_system.eq.false')
       .not('slug', 'is', null)
-      .limit(10000); // Limit to prevent sitemap from being too large
+      .limit(MAX_ROWS);
 
     if (error) {
       console.error('[Sitemap] Error fetching businesses:', error);
       return [];
     }
 
-    if (!businesses) {
-      return [];
-    }
-
-    // Map to sitemap format
-    return businesses.map((business) => ({
-      slug: business.slug,
-      updated_at: business.updated_at || business.created_at || new Date().toISOString(),
-    }));
+    return (data || []) as Array<{ slug: string; updated_at: string | null; created_at: string | null }>;
   } catch (error) {
-    console.error('[Sitemap] Error fetching businesses:', error);
+    console.error('[Sitemap] Unexpected business fetch error:', error);
     return [];
   }
 }
 
-/**
- * Get categories for sitemap
- */
-async function getCategories(): Promise<Array<{ slug: string }>> {
+async function getCategoriesAndSubcategories(): Promise<
+  Array<{
+    primary_category_slug: string | null;
+    primary_subcategory_slug: string | null;
+    updated_at: string | null;
+    created_at: string | null;
+  }>
+> {
   try {
     const supabase = getSitemapSupabase();
-    
-    // Get unique canonical category slugs
     const { data, error } = await supabase
       .from('businesses')
-      .select('primary_category_slug')
+      .select('primary_category_slug, primary_subcategory_slug, updated_at, created_at')
       .eq('status', 'active')
       .or('is_system.is.null,is_system.eq.false')
-      .not('primary_category_slug', 'is', null);
-    
+      .limit(MAX_ROWS);
+
     if (error) {
-      console.error('[Sitemap] Error fetching categories:', error);
+      console.error('[Sitemap] Error fetching categories/subcategories:', error);
       return [];
     }
-    
-    const uniqueCategories = [...new Set((data || []).map((b: any) => b.primary_category_slug).filter(Boolean))];
-    return uniqueCategories.map((slug: string) => ({ slug }));
+
+    return (data || []) as Array<{
+      primary_category_slug: string | null;
+      primary_subcategory_slug: string | null;
+      updated_at: string | null;
+      created_at: string | null;
+    }>;
   } catch (error) {
-    console.error('[Sitemap] Error fetching categories:', error);
+    console.error('[Sitemap] Unexpected category fetch error:', error);
     return [];
   }
 }
 
-/**
- * Get city-category combinations for sitemap
- * Returns URLs like /cape-town-restaurants, /parow-salons
- */
-async function getCityCategorySlugs(): Promise<Array<{ slug: string }>> {
+async function getCityLongTailSlugs(): Promise<Array<{ slug: string; updated_at: string | null; created_at: string | null }>> {
   try {
     const supabase = getSitemapSupabase();
-    
-    // Get unique location-category combinations
     const { data, error } = await supabase
       .from('businesses')
-      .select('location, primary_subcategory_label')
+      .select('location, primary_subcategory_label, updated_at, created_at')
       .eq('status', 'active')
       .or('is_system.is.null,is_system.eq.false')
       .not('location', 'is', null)
       .not('primary_subcategory_label', 'is', null)
-      .limit(200); // Limit to prevent sitemap from being too large
-    
+      .limit(2000);
+
     if (error) {
-      console.error('[Sitemap] Error fetching city categories:', error);
+      console.error('[Sitemap] Error fetching city long-tail slugs:', error);
       return [];
     }
-    
-    // Create unique city-category slugs
-    const combinations = new Set<string>();
-    (data || []).forEach((business: any) => {
-      if (business.location && business.primary_subcategory_label) {
-        const city = business.location.toLowerCase().replace(/\s+/g, '-');
-        const category = String(business.primary_subcategory_label).toLowerCase().replace(/\s+/g, '-');
-        // Generate common patterns like "cape-town-restaurants"
-        combinations.add(`${city}-${category}`);
-        // Also add "best" variations like "cape-town-best-food"
-        if (category.includes('restaurant') || category.includes('food')) {
-          combinations.add(`${city}-best-food`);
-        }
+
+    const toSlug = (value: string) =>
+      value
+        .toLowerCase()
+        .replace(/&/g, ' and ')
+        .replace(/[^a-z0-9\s-]/g, '')
+        .trim()
+        .replace(/\s+/g, '-');
+
+    const map = new Map<string, { updated_at: string | null; created_at: string | null }>();
+
+    for (const row of data || []) {
+      const location = typeof row.location === 'string' ? row.location : '';
+      const category = typeof row.primary_subcategory_label === 'string' ? row.primary_subcategory_label : '';
+      const city = location.split(',')[0]?.trim();
+
+      if (!city || !category) continue;
+
+      const citySlug = toSlug(city);
+      const categorySlug = toSlug(category);
+      if (!citySlug || !categorySlug) continue;
+
+      const slug = `${citySlug}-${categorySlug}`;
+      const existing = map.get(slug);
+      if (!existing) {
+        map.set(slug, {
+          updated_at: row.updated_at || null,
+          created_at: row.created_at || null,
+        });
       }
-    });
-    
-    return Array.from(combinations).map((slug) => ({ slug }));
+    }
+
+    return Array.from(map.entries()).map(([slug, dates]) => ({
+      slug,
+      updated_at: dates.updated_at,
+      created_at: dates.created_at,
+    }));
   } catch (error) {
-    console.error('[Sitemap] Error fetching city categories:', error);
+    console.error('[Sitemap] Unexpected city slug fetch error:', error);
     return [];
   }
 }
 
-/**
- * Fetch events for sitemap
- */
-async function getEvents(): Promise<Array<{ id: string; updated_at: string }>> {
+async function getEvents(): Promise<Array<{ id: string; updated_at: string | null; created_at: string | null }>> {
   try {
     const supabase = getSitemapSupabase();
 
-    const { data: events, error } = await supabase
-      .from('ticketmaster_events')
+    const { data, error } = await supabase
+      .from('events_and_specials')
       .select('id, updated_at, created_at')
+      .eq('type', 'event')
       .limit(5000);
 
     if (error) {
@@ -201,112 +157,139 @@ async function getEvents(): Promise<Array<{ id: string; updated_at: string }>> {
       return [];
     }
 
-    return (events || []).map((event) => ({
-      id: event.id,
-      updated_at: event.updated_at || event.created_at || new Date().toISOString(),
-    }));
+    return (data || []) as Array<{ id: string; updated_at: string | null; created_at: string | null }>;
   } catch (error) {
-    console.error('[Sitemap] Error fetching events:', error);
+    console.error('[Sitemap] Unexpected event fetch error:', error);
     return [];
   }
 }
 
-/**
- * Fetch specials for sitemap
- */
-async function getSpecials(): Promise<Array<{ id: string; updated_at: string }>> {
+async function getPublicProfiles(): Promise<Array<{ username: string; updated_at: string | null; created_at: string | null }>> {
   try {
     const supabase = getSitemapSupabase();
 
-    const { data: specials, error } = await supabase
-      .from('events_and_specials')
-      .select('id, updated_at, created_at')
-      .eq('type', 'special')
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('username, updated_at, created_at, reviews_count')
+      .not('username', 'is', null)
+      .gt('reviews_count', 0)
       .limit(5000);
 
     if (error) {
-      console.error('[Sitemap] Error fetching specials:', error);
+      console.error('[Sitemap] Error fetching public profiles:', error);
       return [];
     }
 
-    return (specials || []).map((special) => ({
-      id: special.id,
-      updated_at: special.updated_at || special.created_at || new Date().toISOString(),
-    }));
+    return (data || [])
+      .filter((row: any) => typeof row.username === 'string' && row.username.trim().length > 0)
+      .map((row: any) => ({
+        username: String(row.username).toLowerCase(),
+        updated_at: row.updated_at || null,
+        created_at: row.created_at || null,
+      }));
   } catch (error) {
-    console.error('[Sitemap] Error fetching specials:', error);
+    console.error('[Sitemap] Unexpected profile fetch error:', error);
     return [];
   }
 }
 
-/**
- * Generate sitemap
- */
+function toDate(value?: string | null): Date {
+  if (!value) return new Date();
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? new Date() : date;
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // Get all businesses, categories, city-category combinations, and events
-  const [businesses, categories, cityCategorySlugs, events, specials] = await Promise.all([
+  const [businesses, categoryRows, events, citySlugs, profiles] = await Promise.all([
     getBusinesses(),
-    getCategories(),
-    getCityCategorySlugs(),
+    getCategoriesAndSubcategories(),
     getEvents(),
-    getSpecials(),
+    getCityLongTailSlugs(),
+    getPublicProfiles(),
   ]);
 
-  // Generate business URLs
-  const businessUrls = businesses.map((business) => ({
-    url: `${baseUrl}/business/${business.slug}`,
-    lastModified: new Date(business.updated_at),
-    changeFrequency: 'weekly' as const,
+  const now = new Date();
+
+  const staticUrls: MetadataRoute.Sitemap = staticPublicPages.map((page) => ({
+    url: `${SITE_URL}${page.url}`,
+    lastModified: now,
+    changeFrequency: page.changeFrequency,
+    priority: page.priority,
+  }));
+
+  const businessUrls: MetadataRoute.Sitemap = businesses.map((business) => ({
+    url: `${SITE_URL}/business/${business.slug}`,
+    lastModified: toDate(business.updated_at || business.created_at),
+    changeFrequency: 'weekly',
     priority: 0.8,
   }));
 
-  // Generate category URLs
-  const categoryUrls = categories.map((category) => ({
-    url: `${baseUrl}/category/${category.slug}`,
-    lastModified: new Date(),
-    changeFrequency: 'daily' as const,
+  const categoryMap = new Map<string, Date>();
+  const subcategoryMap = new Map<string, Date>();
+
+  for (const row of categoryRows) {
+    const lastModified = toDate(row.updated_at || row.created_at);
+
+    if (row.primary_category_slug) {
+      const categoryPath = `/categories/${row.primary_category_slug}`;
+      const existing = categoryMap.get(categoryPath);
+      if (!existing || existing < lastModified) {
+        categoryMap.set(categoryPath, lastModified);
+      }
+    }
+
+    if (row.primary_category_slug && row.primary_subcategory_slug) {
+      const subcategoryPath = `/categories/${row.primary_category_slug}/${row.primary_subcategory_slug}`;
+      const existing = subcategoryMap.get(subcategoryPath);
+      if (!existing || existing < lastModified) {
+        subcategoryMap.set(subcategoryPath, lastModified);
+      }
+    }
+  }
+
+  const categoryUrls: MetadataRoute.Sitemap = Array.from(categoryMap.entries()).map(([path, lastModified]) => ({
+    url: `${SITE_URL}${path}`,
+    lastModified,
+    changeFrequency: 'daily',
+    priority: 0.75,
+  }));
+
+  const subcategoryUrls: MetadataRoute.Sitemap = Array.from(subcategoryMap.entries()).map(([path, lastModified]) => ({
+    url: `${SITE_URL}${path}`,
+    lastModified,
+    changeFrequency: 'daily',
     priority: 0.7,
   }));
 
-  // Generate city-category URLs (like /cape-town-restaurants)
-  const cityCategoryUrls = cityCategorySlugs.map(({ slug }) => ({
-    url: `${baseUrl}/${slug}`,
-    lastModified: new Date(),
-    changeFrequency: 'daily' as const,
-    priority: 0.6,
+  const eventUrls: MetadataRoute.Sitemap = events.map((event) => ({
+    url: `${SITE_URL}/event/${event.id}`,
+    lastModified: toDate(event.updated_at || event.created_at),
+    changeFrequency: 'weekly',
+    priority: 0.7,
   }));
 
-  // Generate event URLs
-  const eventUrls = events.map((event) => ({
-    url: `${baseUrl}/event/${event.id}`,
-    lastModified: new Date(event.updated_at),
-    changeFrequency: 'weekly' as const,
-    priority: 0.6,
+  const cityUrls: MetadataRoute.Sitemap = citySlugs.map((row) => ({
+    url: `${SITE_URL}/${row.slug}`,
+    lastModified: toDate(row.updated_at || row.created_at),
+    changeFrequency: 'daily',
+    priority: 0.65,
   }));
 
-  // Generate special URLs
-  const specialUrls = specials.map((special) => ({
-    url: `${baseUrl}/special/${special.id}`,
-    lastModified: new Date(special.updated_at),
-    changeFrequency: 'weekly' as const,
-    priority: 0.6,
+  const profileUrls: MetadataRoute.Sitemap = profiles.map((profile) => ({
+    url: `${SITE_URL}/profile/${profile.username}`,
+    lastModified: toDate(profile.updated_at || profile.created_at),
+    changeFrequency: 'weekly',
+    priority: 0.55,
   }));
 
-  // Combine static and dynamic pages
-  const allPages = [
-    ...staticPages.map((page) => ({
-      url: `${baseUrl}${page.url}`,
-      lastModified: page.lastModified,
-      changeFrequency: page.changeFrequency,
-      priority: page.priority,
-    })),
-    ...businessUrls,
+  return [
+    ...staticUrls,
     ...categoryUrls,
-    ...cityCategoryUrls,
+    ...subcategoryUrls,
+    ...businessUrls,
     ...eventUrls,
-    ...specialUrls,
+    ...cityUrls,
+    ...profileUrls,
   ];
-
-  return allPages;
 }
 

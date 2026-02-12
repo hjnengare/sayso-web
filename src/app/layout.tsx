@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { generateSEOMetadata } from "./lib/utils/seoMetadata";
+import { BRAND_POSITIONING, DEFAULT_SITE_DESCRIPTION, generateSEOMetadata, SITE_NAME } from "./lib/utils/seoMetadata";
 import { 
   Urbanist, 
   Dancing_Script, 
@@ -22,7 +22,7 @@ import { NotificationsProvider } from "./contexts/NotificationsContext";
 import PageTransitionProvider from "./components/Providers/PageTransitionProvider";
 import GlobalHeader from "./components/Header/GlobalHeader";
 import SchemaMarkup from "./components/SEO/SchemaMarkup";
-import { generateOrganizationSchema, generateWebSiteSchema } from "./lib/utils/schemaMarkup";
+import { generateOrganizationSchema } from "./lib/utils/schemaMarkup";
 
 // Lazy load non-critical components for faster initial load
 const WebVitals = dynamicImport(() => import("./components/Performance/WebVitals"));
@@ -115,9 +115,9 @@ const barrio = Barrio({
 
 export const metadata: Metadata = {
   ...generateSEOMetadata({
-    title: "SAYSO (Home) | Discover trusted local gems near you",
-    description: "Find amazing local businesses, restaurants, and experiences in your area with personalized recommendations and trusted reviews.",
-    keywords: ["local business", "restaurants", "reviews", "recommendations", "sayso"],
+    title: `${SITE_NAME} | ${BRAND_POSITIONING}`,
+    description: DEFAULT_SITE_DESCRIPTION,
+    keywords: ["sayso", "sayso reviews", "cape town business reviews", "cape town events", "hyper-local discovery"],
     url: "/",
   }),
   icons: {
@@ -147,7 +147,7 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="sayso" />
+        <meta name="apple-mobile-web-app-title" content="Sayso" />
         {/* Theme color - matches navbar background for browser UI */}
         {/* Locked to light mode: brand controls color, not OS */}
         <meta name="theme-color" content="#722F37" />
@@ -162,8 +162,8 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-orientation" content="portrait" />
 
         {/* Enhanced mobile experience meta tags */}
-        <meta name="mobile-web-app-title" content="sayso" />
-        <meta name="application-name" content="sayso" />
+        <meta name="mobile-web-app-title" content="Sayso" />
+        <meta name="application-name" content="Sayso" />
         <meta name="apple-touch-fullscreen" content="yes" />
         <meta name="full-screen" content="yes" />
         <meta name="browsermode" content="application" />
@@ -182,7 +182,7 @@ export default function RootLayout({
         {/* Canonical tag removed - set per page via metadata */}
       </head>
       <body className="no-layout-shift scroll-smooth bg-off-white">
-        <SchemaMarkup schemas={[generateOrganizationSchema(), generateWebSiteSchema()]} />
+        <SchemaMarkup schemas={[generateOrganizationSchema()]} />
         <WebVitals />
         <ClientLayoutWrapper />
         {/* Service Worker Registration - deferred to not block initial render */}

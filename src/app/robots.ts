@@ -1,45 +1,45 @@
 import { MetadataRoute } from 'next';
-
-/**
- * Robots.txt Generator
- * Controls search engine crawler access
- */
-
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://sayso-nine.vercel.app';
+import { SITE_URL } from './lib/utils/seoMetadata';
 
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
         userAgent: '*',
-        allow: '/',
+        allow: [
+          '/',
+        ],
         disallow: [
           '/api/',
           '/admin/',
           '/auth/',
-          '/dashboard/',
-          '/test-',
-          '/debug-',
-          '/manage-business',
           '/my-businesses',
+          '/claim-business',
+          '/business/claim',
           '/settings',
-          '/business/*/edit',
-          '/business/*/review',
-          '/dm/',
-          '/profile',
+          '/dm',
           '/saved',
           '/write-review',
           '/verify-email',
           '/reset-password',
           '/forgot-password',
+          '/login',
+          '/register',
           '/onboarding',
           '/interests',
           '/subcategories',
+          '/deal-breakers',
           '/complete',
+          '/notifications',
+          '/add-business',
+          '/add-event',
+          '/add-special',
+          '/business/*/edit',
+          '/business/*/review',
         ],
       },
     ],
-    sitemap: `${baseUrl}/sitemap.xml`,
+    sitemap: `${SITE_URL}/sitemap.xml`,
   };
 }
 

@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { generateSEOMetadata } from '../../lib/utils/seoMetadata';
+import { DEFAULT_SITE_DESCRIPTION, generateSEOMetadata, SITE_URL } from '../../lib/utils/seoMetadata';
 import { getServerSupabase } from '../../lib/supabase/server';
 import SchemaMarkup from '../../components/SEO/SchemaMarkup';
 import { generateBreadcrumbSchema } from '../../lib/utils/schemaMarkup';
@@ -72,16 +72,18 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
   if (!event) {
     return generateSEOMetadata({
-      title: 'Event',
-      description: 'View event details and information.',
+      title: 'Event details | Sayso',
+      description: DEFAULT_SITE_DESCRIPTION,
       url: `/event/${id}`,
+      noindex: true,
+      nofollow: true,
     });
   }
 
   return generateSEOMetadata({
-    title: event.title,
-    description: event.description || `Join us for ${event.title} - discover event details, location, and more.`,
-    keywords: [event.title, 'event', 'local event', 'special'],
+    title: `${event.title} in Cape Town | Sayso`,
+    description: event.description || `Discover ${event.title} on Sayso, Cape Town's hyper-local reviews and discovery app.`,
+    keywords: [event.title, 'cape town events', 'sayso events'],
     image: event.image_url || event.image,
     url: `/event/${id}`,
     type: 'article',
@@ -93,14 +95,13 @@ export default async function EventLayout({
   params,
 }: EventLayoutProps) {
   const { id } = await params;
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://sayso-nine.vercel.app';
   const event = await getEventData(id);
 
   let schemas: object[] = [];
   let relatedLinks: Array<{ href: string; label: string }> = [];
 
   if (event) {
-    const eventUrl = `${baseUrl}/event/${id}`;
+    const eventUrl = `${SITE_URL}/event/${id}`;
     const location = event.location || '';
     const citySlug = location ? toSlug(String(location).split(',')[0]) : '';
     const startDate = event.start_date || event.starts_at || undefined;
@@ -124,8 +125,8 @@ export default async function EventLayout({
       startDate: startDate || undefined,
       organizer: {
         '@type': 'Organization',
-        name: 'sayso',
-        url: baseUrl,
+        name: 'Sayso',
+        url: SITE_URL,
       },
     };
 
@@ -136,14 +137,14 @@ export default async function EventLayout({
     });
 
     const breadcrumbSchema = generateBreadcrumbSchema([
-      { name: 'Home', url: `${baseUrl}/home` },
-      { name: 'Events & Specials', url: `${baseUrl}/events-specials` },
+      { name: 'Home', url: `${SITE_URL}/home` },
+      { name: 'Events', url: `${SITE_URL}/events` },
       { name: event.title, url: eventUrl },
     ]);
 
     schemas = [eventSchema, breadcrumbSchema];
     relatedLinks = [
-      { href: '/events-specials', label: 'More events and specials' },
+      { href: '/events', label: 'More events and specials' },
       ...(citySlug ? [{ href: `/${citySlug}`, label: `More events in ${location}` }] : []),
     ];
   }

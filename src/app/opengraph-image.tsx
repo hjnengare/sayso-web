@@ -2,7 +2,7 @@ import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
 
-export const alt = 'sayso - Discover trusted local gems near you';
+export const alt = 'Sayso - Hyper-local reviews & discovery for Cape Town';
 export const size = {
   width: 1200,
   height: 630,
@@ -10,7 +10,7 @@ export const size = {
 export const contentType = 'image/png';
 
 export default async function Image() {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://sayso-nine.vercel.app';
+  const baseUrl = 'https://sayso.co.za';
   const logoUrl = `${baseUrl}/logos/logo.png`;
 
   return new ImageResponse(
@@ -65,17 +65,27 @@ export default async function Image() {
               letterSpacing: '-2px',
             }}
           >
-            sayso
+            Sayso
           </div>
           <div
             style={{
-              fontSize: 32,
+              fontSize: 38,
+              fontWeight: 600,
+              color: '#f8f4f4',
+              opacity: 0.95,
+            }}
+          >
+            Less guessing,and more confessing.
+          </div>
+          <div
+            style={{
+              fontSize: 28,
               fontWeight: 400,
               color: '#e5e0e5',
               opacity: 0.9,
             }}
           >
-            Discover trusted local gems near you
+            Hyper-local reviews and discovery for Cape Town
           </div>
           <div
             style={{
@@ -106,7 +116,7 @@ export default async function Image() {
                 fontWeight: 500,
               }}
             >
-              Restaurants
+              Cape Town
             </div>
             <div
               style={{
@@ -118,7 +128,7 @@ export default async function Image() {
                 fontWeight: 500,
               }}
             >
-              Experiences
+              Events
             </div>
           </div>
         </div>

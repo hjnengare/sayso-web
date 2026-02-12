@@ -1,7 +1,6 @@
 import { Metadata } from 'next';
 import { createClient } from '@supabase/supabase-js';
 import { generateSEOMetadata } from '../../lib/utils/seoMetadata';
-import { getReviewerPageTitle } from '../../lib/utils/pageTitle';
 
 function getSupabase() {
   return createClient(
@@ -25,13 +24,14 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     if (profile) {
       const name = profile.display_name || profile.username || 'Reviewer';
       const reviewCount = profile.reviews_count || 0;
+      const canonicalPath = profile.username ? `/profile/${profile.username}` : `/reviewer/${id}`;
 
       return generateSEOMetadata({
-        title: getReviewerPageTitle(name),
-        description: `${name} has written ${reviewCount} review${reviewCount !== 1 ? 's' : ''} on sayso. View their reviews and contributions to the community.`,
-        keywords: [name, 'reviewer', 'reviews', 'sayso community'],
+        title: `${name}'s Cape Town reviews | Sayso`,
+        description: `${name} has written ${reviewCount} review${reviewCount !== 1 ? 's' : ''} on Sayso, Cape Town's hyper-local reviews and discovery app.`,
+        keywords: [name, 'reviewer profile', 'cape town reviews', 'sayso community'],
         image: profile.avatar_url || undefined,
-        url: `/reviewer/${id}`,
+        url: canonicalPath,
         type: 'profile',
       });
     }
@@ -40,9 +40,11 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   }
 
   return generateSEOMetadata({
-    title: getReviewerPageTitle('Reviewer'),
-    description: 'View this reviewer\'s reviews and contributions to the sayso community.',
+    title: 'Reviewer profile | Sayso',
+    description: 'View this reviewer\'s activity on Sayso, Cape Town\'s hyper-local reviews and discovery app.',
     url: `/reviewer/${id}`,
+    noindex: true,
+    nofollow: true,
     type: 'profile',
   });
 }

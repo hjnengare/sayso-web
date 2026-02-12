@@ -1,20 +1,14 @@
 import type { Metadata } from "next";
-import Logo from "../components/Logo/Logo";
+import { generateSEOMetadata } from "../lib/utils/seoMetadata";
 
-export const metadata: Metadata = {
-  title: "Onboarding - sayso",
-  description: "Discover local gems near you! Explore trusted businesses, leave reviews and see what's trending around you.",
-  openGraph: {
-    title: "Onboarding - sayso",
-    description: "Discover local gems near you! Explore trusted businesses, leave reviews and see what's trending around you.",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Onboarding - sayso",
-    description: "Discover local gems near you! Explore trusted businesses, leave reviews and see what's trending around you.",
-  },
-};
+export const metadata: Metadata = generateSEOMetadata({
+  title: "Onboarding | Sayso",
+  description: "Set up your Sayso preferences.",
+  url: "/onboarding",
+  noindex: true,
+  nofollow: true,
+  type: "website",
+});
 
 export default function OnboardingLayout({
   children,

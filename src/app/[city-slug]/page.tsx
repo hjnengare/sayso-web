@@ -1,8 +1,7 @@
 import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import { getServerSupabase } from '../lib/supabase/server';
-import { generateSEOMetadata } from '../lib/utils/seoMetadata';
-import { generateItemListSchema } from '../lib/utils/schemaMarkup';
+import { DEFAULT_SITE_DESCRIPTION, generateSEOMetadata, SITE_URL } from '../lib/utils/seoMetadata';
+import { generateBreadcrumbSchema, generateCollectionPageSchema, generateItemListSchema } from '../lib/utils/schemaMarkup';
 import { normalizeBusinessImages } from '../lib/utils/businessImages';
 import CityPageClient from './CityPageClient';
 import SchemaMarkup from '../components/SEO/SchemaMarkup';
@@ -40,18 +39,19 @@ export async function generateMetadata({ params }: CityPageProps): Promise<Metad
   }
   
   const displayCityName = cityName.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-  const title = categoryName 
-    ? `Best ${categoryName}s in ${displayCityName} - Local Reviews`
-    : `Best Businesses in ${displayCityName} - Local Reviews`;
+  const title = categoryName
+    ? `Best ${categoryName}s in ${displayCityName} | Sayso`
+    : `${displayCityName} business reviews | Sayso`;
   const description = categoryName
-    ? `Find the best ${categoryName.toLowerCase()}s in ${displayCityName}. Read reviews, view photos, and discover top-rated local businesses.`
-    : `Discover the best local businesses in ${displayCityName}. Browse restaurants, services, and experiences with reviews from real customers.`;
+    ? `Find top ${categoryName.toLowerCase()} options in ${displayCityName} on Sayso. ${DEFAULT_SITE_DESCRIPTION}`
+    : `Discover the best local businesses in ${displayCityName} with Sayso's hyper-local community reviews.`;
 
   return generateSEOMetadata({
     title,
     description,
-    keywords: [displayCityName, categoryName?.toLowerCase() || '', 'near me', 'local businesses', 'reviews'],
+    keywords: [displayCityName, categoryName?.toLowerCase() || 'businesses', 'cape town reviews', 'sayso'],
     url: `/${slug}`,
+    type: 'website',
   });
 }
 
@@ -103,7 +103,7 @@ export default async function CityPage({ params }: CityPageProps) {
     };
   });
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://sayso-nine.vercel.app';
+  const canonicalUrl = `${SITE_URL}/${slug}`;
   
   // Generate ItemList schema
   const itemListSchema = generateItemListSchema(
@@ -111,15 +111,26 @@ export default async function CityPage({ params }: CityPageProps) {
     `Discover the top-rated ${categoryName?.toLowerCase() || 'businesses'} in ${displayCityName}.`,
     normalizedBusinesses.map((business: any) => ({
       name: business.name,
-      url: `${baseUrl}/business/${business.slug || business.id}`,
+      url: `${SITE_URL}/business/${business.slug || business.id}`,
       image: (business.uploaded_images && business.uploaded_images.length > 0 ? business.uploaded_images[0] : null) || business.image_url,
       rating: business.average_rating?.[0]?.average_rating || 0,
     }))
   );
 
+  const collectionSchema = generateCollectionPageSchema({
+    name: categoryName ? `Best ${categoryName}s in ${displayCityName}` : `${displayCityName} businesses`,
+    description: `Hyper-local discovery and community reviews for ${displayCityName}.`,
+    url: canonicalUrl,
+  });
+
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: 'Home', url: `${SITE_URL}/home` },
+    { name: displayCityName, url: canonicalUrl },
+  ]);
+
   return (
     <>
-      <SchemaMarkup schemas={[itemListSchema]} />
+      <SchemaMarkup schemas={[collectionSchema, itemListSchema, breadcrumbSchema]} />
       <CityPageClient 
         cityName={displayCityName}
         categoryName={categoryName}

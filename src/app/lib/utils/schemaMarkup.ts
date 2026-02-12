@@ -3,6 +3,8 @@
  * Generates JSON-LD schema markup for SEO and rich results
  */
 
+import { SITE_NAME, SITE_URL } from './seoMetadata';
+
 export interface BusinessSchema {
   name: string;
   description: string;
@@ -171,14 +173,12 @@ export function generateBreadcrumbSchema(items: Array<{ name: string; url: strin
  * Generate Organization schema for the site
  */
 export function generateOrganizationSchema(): object {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://sayso-nine.vercel.app';
-  
   return {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'sayso',
-    url: baseUrl,
-    logo: `${baseUrl}/logo.png`,
+    name: SITE_NAME,
+    url: SITE_URL,
+    logo: `${SITE_URL}/logos/logo.png`,
     sameAs: [
       // Add social media links here when available
     ],
@@ -258,20 +258,44 @@ function parseCloses(hours: string): string {
  * Generate WebSite schema with SearchAction for Google sitelinks search box
  */
 export function generateWebSiteSchema(): object {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://sayso-nine.vercel.app';
-
   return {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'sayso',
-    url: baseUrl,
+    name: SITE_NAME,
+    url: SITE_URL,
     potentialAction: {
       '@type': 'SearchAction',
       target: {
         '@type': 'EntryPoint',
-        urlTemplate: `${baseUrl}/explore?q={search_term_string}`,
+        urlTemplate: `${SITE_URL}/search?q={search_term_string}`,
       },
       'query-input': 'required name=search_term_string',
+    },
+  };
+}
+
+/**
+ * Generate CollectionPage schema markup for category/listing pages.
+ */
+export function generateCollectionPageSchema({
+  name,
+  description,
+  url,
+}: {
+  name: string;
+  description: string;
+  url: string;
+}): object {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name,
+    description,
+    url,
+    isPartOf: {
+      '@type': 'WebSite',
+      name: SITE_NAME,
+      url: SITE_URL,
     },
   };
 }
