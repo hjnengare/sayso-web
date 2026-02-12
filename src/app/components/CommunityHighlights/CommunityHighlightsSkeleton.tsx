@@ -75,7 +75,7 @@ export default function CommunityHighlightsSkeleton({
                   }
                 }
               `}} />
-              <div className="flex gap-2 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2 items-stretch pt-2 list-none">
+              <div className="flex gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2 items-stretch pt-2 list-none">
                 {Array.from({ length: businessCount }).map((_, idx) => (
                   <div
                     key={idx}

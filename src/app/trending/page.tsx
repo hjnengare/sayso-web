@@ -5,7 +5,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import BusinessCard from "../components/BusinessCard/BusinessCard";
 import Footer from "../components/Footer/Footer";
-import { ChevronRight, ChevronUp } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import Pagination from "../components/EventsPage/Pagination";
 import { useBusinesses } from "../hooks/useBusinesses";
 import { useTrendingBusinesses } from "../hooks/useTrendingBusinesses";
@@ -21,6 +21,7 @@ import { usePredefinedPageTitle } from "../hooks/usePageTitle";
 import { useScrollReveal } from "../hooks/useScrollReveal";
 import BusinessGridSkeleton from "../components/Explore/BusinessGridSkeleton";
 import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
+import ScrollToTopButton from "../components/Navigation/ScrollToTopButton";
 // Trending = cold-start API (/api/trending): metadata-only score, diversity-first selection, deterministic rotation.
 
 // Note: dynamic and revalidate cannot be exported from client components
@@ -33,9 +34,7 @@ export default function TrendingPage() {
   useScrollReveal({ threshold: 0.12, rootMargin: "0px 0px -120px 0px", once: true });
   const [currentPage, setCurrentPage] = useState(1);
 
-  const [showScrollTop, setShowScrollTop] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const [isPaginationLoading, setIsPaginationLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filters, setFilters] = useState<FilterState>({ minRating: null, distance: null });
@@ -205,27 +204,12 @@ export default function TrendingPage() {
     setCurrentPage(1); // Reset to first page
   };
 
-  const scrollToTop = () => {
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  };
-
   // Detect desktop breakpoint (lg and above)
   useEffect(() => {
     const updateIsDesktop = () => setIsDesktop(typeof window !== "undefined" && window.innerWidth >= 1024);
     updateIsDesktop();
     window.addEventListener("resize", updateIsDesktop);
     return () => window.removeEventListener("resize", updateIsDesktop);
-  }, []);
-
-  // Set mounted state on client side
-  useEffect(() => {
-    setMounted(true);
-    // Check initial scroll position
-    if (typeof window !== 'undefined') {
-      setShowScrollTop(window.scrollY > 100);
-    }
   }, []);
 
   // Handle pagination with loader and transitions
@@ -249,22 +233,6 @@ export default function TrendingPage() {
       }, 300);
     }, 150);
   };
-
-  // Handle scroll to top button visibility
-  useEffect(() => {
-    if (!mounted) return;
-
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 100);
-    };
-
-    // Check initial position
-    handleScroll();
-
-    const options: AddEventListenerOptions = { passive: true };
-    window.addEventListener("scroll", handleScroll, options);
-    return () => window.removeEventListener("scroll", handleScroll, options);
-  }, [mounted]);
 
   return (
     <div className="min-h-dvh bg-off-white">
@@ -564,16 +532,7 @@ export default function TrendingPage() {
         `}</style>
       )}
 
-      {/* Scroll to Top Button */}
-      {showScrollTop && (
-        <button
-          onClick={scrollToTop}
-          className="fixed bottom-6 right-6 z-40 w-12 h-12 bg-navbar-bg hover:bg-navbar-bg backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg border border-white/20 hover:scale-110 transition-all duration-300"
-          aria-label="Scroll to top"
-        >
-          <ChevronUp className="w-6 h-6 text-white" strokeWidth={2.5} />
-        </button>
-      )}
+      <ScrollToTopButton threshold={360} />
 
       <Footer />
     </div>

@@ -10,7 +10,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 type NavigationDirection = -1 | 0 | 1;
@@ -82,20 +82,36 @@ const getMotionFrames = (
 
 export default function PageTransitionProvider({ children }: PageTransitionProviderProps) {
   const pathname = usePathname() ?? "/";
+  const searchParams = useSearchParams();
   const prefersReducedMotion = useReducedMotion() ?? false;
+  const routeKey = useMemo(() => {
+    const query = searchParams?.toString();
+    return query ? `${pathname}?${query}` : pathname;
+  }, [pathname, searchParams]);
 
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [navigationDirection, setNavigationDirection] = useState<NavigationDirection>(0);
   const [hasMounted, setHasMounted] = useState(false);
 
   const isFirstRender = useRef(true);
-  const previousPathname = useRef(pathname);
+  const previousRouteKey = useRef(routeKey);
   const preserveScrollOnNextRouteRef = useRef(false);
   const transitionTimeoutRef = useRef<number | null>(null);
 
   const scrollToTop = useCallback(() => {
-    // Use "instant" to bypass global smooth-scroll and avoid transition/scroll races.
-    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    // Reset all common scroll roots to avoid browser/platform-specific misses.
+    const resetScroll = () => {
+      if (typeof document === "undefined") return;
+      const scrollingRoot = document.scrollingElement ?? document.documentElement;
+      scrollingRoot.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      window.scrollTo(0, 0);
+    };
+
+    resetScroll();
+    // Run once more after layout settles to avoid transition timing races.
+    window.requestAnimationFrame(resetScroll);
   }, []);
 
   // Preserve native restoration for browser back/forward navigation.
@@ -115,15 +131,15 @@ export default function PageTransitionProvider({ children }: PageTransitionProvi
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
-      previousPathname.current = pathname;
+      previousRouteKey.current = routeKey;
       return;
     }
 
-    if (pathname === previousPathname.current) return;
+    if (routeKey === previousRouteKey.current) return;
 
     const shouldPreserveScroll = preserveScrollOnNextRouteRef.current;
     preserveScrollOnNextRouteRef.current = false;
-    previousPathname.current = pathname;
+    previousRouteKey.current = routeKey;
 
     // Back/forward can be derived from popstate; otherwise default to crossfade + micro shift.
     const nextDirection: NavigationDirection = shouldPreserveScroll ? -1 : 0;
@@ -144,7 +160,7 @@ export default function PageTransitionProvider({ children }: PageTransitionProvi
       setIsTransitioning(false);
       transitionTimeoutRef.current = null;
     }, nextDurationMs + 60);
-  }, [pathname, prefersReducedMotion, scrollToTop]);
+  }, [prefersReducedMotion, routeKey, scrollToTop]);
 
   useEffect(() => {
     return () => {
@@ -176,7 +192,7 @@ export default function PageTransitionProvider({ children }: PageTransitionProvi
           {hasMounted ? (
             <AnimatePresence initial={false} mode="wait">
               <motion.div
-                key={pathname}
+                key={routeKey}
                 initial={motionFrames.initial}
                 animate={motionFrames.animate}
                 exit={motionFrames.exit}

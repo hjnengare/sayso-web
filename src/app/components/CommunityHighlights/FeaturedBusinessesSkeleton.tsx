@@ -24,7 +24,7 @@ export default function FeaturedBusinessesSkeleton({ count = 4 }: FeaturedBusine
         </div>
 
         <ScrollableSection enableMobilePeek>
-          <div className="flex gap-2 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2 items-stretch pt-2 list-none">
+          <div className="flex gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2 items-stretch pt-2 list-none">
             {Array.from({ length: count }).map((_, index) => (
               <div key={index} className="list-none flex">
                 <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-visible w-[100vw] sm:w-auto sm:min-w-[25%] md:min-w-[25%] lg:min-w-[20%] xl:min-w-[18%] 2xl:min-w-[16%] h-[650px] sm:h-auto md:w-[340px] md:h-[416px] flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-md animate-pulse">

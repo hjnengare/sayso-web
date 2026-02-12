@@ -12,16 +12,16 @@ import EmptyState from "../components/EventsPage/EmptyState";
 import SearchInput from "../components/SearchInput/SearchInput";
 import type { Event } from "../lib/types/Event";
 import { useDebounce } from "../hooks/useDebounce";
-import { ChevronUp, ChevronRight, ChevronDown } from "lucide-react";
+import { ChevronRight, ChevronDown } from "lucide-react";
 import { Loader } from "../components/Loader/Loader";
 import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
+import ScrollToTopButton from "../components/Navigation/ScrollToTopButton";
 
 const ITEMS_PER_PAGE = 20;
 
 export default function EventsSpecialsPage() {
   const [selectedFilter, setSelectedFilter] = useState<"all" | "event" | "special">("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [showScrollTop, setShowScrollTop] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
   const [items, setItems] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,7 +73,6 @@ export default function EventsSpecialsPage() {
   useEffect(() => {
     setOffset(0);
     fetchPage(0, false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedFilter]);
 
   // Merge events and specials for unified display
@@ -132,15 +131,6 @@ export default function EventsSpecialsPage() {
     return () => window.removeEventListener("resize", updateIsDesktop);
   }, []);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 100);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   const handleFilterChange = (filter: "all" | "event" | "special") => {
     setSelectedFilter(filter);
   };
@@ -151,11 +141,6 @@ export default function EventsSpecialsPage() {
 
   const handleSubmitQuery = (query: string) => {
     setSearchQuery(query);
-  };
-
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // Handle load more button click
@@ -413,15 +398,7 @@ export default function EventsSpecialsPage() {
         </div>
       </main>
 
-      {showScrollTop && (
-        <button
-          onClick={scrollToTop}
-          className="fixed bottom-6 right-6 z-40 w-12 h-12 bg-navbar-bg hover:bg-navbar-bg backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg border border-white/20 transition-all duration-300"
-          aria-label="Scroll to top"
-        >
-          <ChevronUp className="w-6 h-6 text-white" strokeWidth={2.5} />
-        </button>
-      )}
+      <ScrollToTopButton threshold={360} />
 
       <Footer />
     </div>

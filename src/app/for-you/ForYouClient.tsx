@@ -15,7 +15,7 @@ import { FilterState } from "../components/FilterModal/FilterModal";
 import ActiveFilterBadges from "../components/FilterActiveBadges/ActiveFilterBadges";
 import InlineFilters from "../components/Home/InlineFilters";
 import { List, Map as MapIcon } from "lucide-react";
-import { ChevronRight, ChevronUp } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { Loader } from "../components/Loader/Loader";
 import { usePredefinedPageTitle } from "../hooks/usePageTitle";
 import Pagination from "../components/EventsPage/Pagination";
@@ -26,6 +26,7 @@ import type { UserPreferences } from "../hooks/useUserPreferences";
 import type { BusinessMapItem } from "../components/maps/BusinessesMap";
 import { sortBusinessesByPriority } from "../utils/businessPrioritization";
 import { getCategoryLabelFromBusiness } from "../utils/subcategoryPlaceholders";
+import ScrollToTopButton from "../components/Navigation/ScrollToTopButton";
 
 
 // Note: dynamic and revalidate cannot be exported from client components
@@ -64,7 +65,6 @@ export default function ForYouClient({
   );
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [showScrollTop, setShowScrollTop] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
   const [isPaginationLoading, setIsPaginationLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -316,10 +316,6 @@ export default function ForYouClient({
     setCurrentPage(1); // Reset to first page when filter changes
   };
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
   // Handle pagination with loader and transitions
   const handlePageChange = (newPage: number) => {
     if (newPage === currentPage) return;
@@ -348,16 +344,6 @@ export default function ForYouClient({
     updateIsDesktop();
     window.addEventListener("resize", updateIsDesktop);
     return () => window.removeEventListener("resize", updateIsDesktop);
-  }, []);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 100);
-    };
-
-    const options: AddEventListenerOptions = { passive: true };
-    window.addEventListener("scroll", handleScroll, options);
-    return () => window.removeEventListener("scroll", handleScroll, options);
   }, []);
 
   return (
@@ -680,16 +666,7 @@ export default function ForYouClient({
         `}</style>
       )}
 
-      {/* Scroll to Top Button */}
-      {showScrollTop && (
-        <button
-          onClick={scrollToTop}
-          className="fixed bottom-6 right-6 z-40 w-12 h-12 bg-navbar-bg hover:bg-navbar-bg backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg border border-white/20 hover:scale-110 transition-all duration-300"
-          aria-label="Scroll to top"
-        >
-          <ChevronUp className="w-6 h-6 text-white" strokeWidth={2.5} />
-        </button>
-      )}
+      <ScrollToTopButton threshold={360} />
 
       <Footer />
     </div>
