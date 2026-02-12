@@ -160,13 +160,29 @@ const styles = `
 `;
 const RESEND_COOLDOWN_SECONDS = 60;
 
+function isExpiredVerificationError(message: string): boolean {
+  const lower = message.toLowerCase();
+  return (
+    lower.includes("expired") ||
+    lower.includes("invalid") ||
+    lower.includes("otp has expired") ||
+    lower.includes("token has expired") ||
+    lower.includes("email link is invalid")
+  );
+}
+
 export default function VerifyEmailPage() {
   const { user, resendVerificationEmail, refreshUser, isLoading } = useAuth();
   const { showToast, showToastOnce } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const isDev = process.env.NODE_ENV !== "production";
+  const codeInUrl = searchParams.get("code");
+  const hasCodeInUrl = Boolean(codeInUrl);
 
   const [isResending, setIsResending] = useState(false);
+  const [isProcessingCodeExchange, setIsProcessingCodeExchange] = useState(false);
+  const [verificationLinkError, setVerificationLinkError] = useState<string | null>(null);
   const [resendCooldownSeconds, setResendCooldownSeconds] = useState(0);
   const [resendRateLimitMessage, setResendRateLimitMessage] = useState<string | null>(null);
   const [verificationSuccess, setVerificationSuccess] = useState(false);
@@ -196,7 +212,16 @@ export default function VerifyEmailPage() {
   const checkingRef = useRef(false);
   const resendSubmittingRef = useRef(false);
   const verificationCallbackHandledRef = useRef(false);
+  const verificationCodeHandledRef = useRef(false);
   const prefersReduced = usePrefersReducedMotion();
+  const debugLog = useCallback((message: string, payload?: Record<string, unknown>) => {
+    if (!isDev) return;
+    if (payload) {
+      console.log(`[VerifyEmail] ${message}`, payload);
+      return;
+    }
+    console.log(`[VerifyEmail] ${message}`);
+  }, [isDev]);
 
   // Clean ?expired param from URL without re-render
   useEffect(() => {
@@ -371,11 +396,25 @@ export default function VerifyEmailPage() {
       "Verification completed. Please open the verification link in the same browser to continue automatically.";
 
     try {
-      // Only attempt PKCE exchange during the explicit verification callback flow.
+      debugLog("checkVerificationStatus started", {
+        manual,
+        fromVerificationCallback,
+      });
+
+      // Backward compatibility path for legacy /verify-email?verified=1 callbacks.
       if (fromVerificationCallback) {
-        const code = searchParams.get("code");
-        if (code) {
-          await supabase.auth.exchangeCodeForSession(code).catch(() => undefined);
+        const currentUrl = typeof window !== "undefined" ? new URL(window.location.href) : null;
+        const callbackCode = currentUrl?.searchParams.get("code") || searchParams.get("code");
+        debugLog("legacy callback verification detected", {
+          hasCode: Boolean(callbackCode),
+        });
+        if (callbackCode) {
+          const { error: callbackExchangeError } = await supabase.auth.exchangeCodeForSession(callbackCode);
+          if (callbackExchangeError) {
+            debugLog("legacy callback exchange failed", {
+              error: callbackExchangeError.message,
+            });
+          }
         }
       }
 
@@ -383,10 +422,17 @@ export default function VerifyEmailPage() {
       let { data: sessionData } = await supabase.auth.getSession();
       let session = sessionData.session;
 
+      debugLog("session lookup completed", {
+        hasSession: Boolean(session),
+      });
+
       if (!session) {
         await supabase.auth.refreshSession().catch(() => undefined);
         ({ data: sessionData } = await supabase.auth.getSession());
         session = sessionData.session;
+        debugLog("session refresh attempted", {
+          hasSessionAfterRefresh: Boolean(session),
+        });
       }
 
       if (!session) {
@@ -404,6 +450,10 @@ export default function VerifyEmailPage() {
       }
 
       const { data: userData, error: userError } = await supabase.auth.getUser();
+      debugLog("getUser completed", {
+        hasUser: Boolean(userData?.user),
+        hasEmailConfirmedAt: Boolean(userData?.user?.email_confirmed_at),
+      });
       if (userError || !userData?.user) {
         if (manual || fromVerificationCallback) {
           setVerificationStatusMessage(verificationSessionMessage);
@@ -460,7 +510,9 @@ export default function VerifyEmailPage() {
         }
       }
       redirectingRef.current = true;
-      router.replace(getPostVerifyRedirect(verifiedUser));
+      const redirectTarget = getPostVerifyRedirect(verifiedUser);
+      debugLog("redirect chosen", { redirectTarget });
+      router.replace(redirectTarget);
       return true;
     } catch {
       if (manual) {
@@ -471,6 +523,7 @@ export default function VerifyEmailPage() {
       checkingRef.current = false;
     }
   }, [
+    debugLog,
     getPostVerifyRedirect,
     refreshUser,
     router,
@@ -481,9 +534,119 @@ export default function VerifyEmailPage() {
     user?.profile,
   ]);
 
+  // PKCE flow: exchange auth code for session when verification link lands on /verify-email.
+  useEffect(() => {
+    if (!hasCodeInUrl) return;
+    if (redirectingRef.current || verificationCodeHandledRef.current) return;
+    verificationCodeHandledRef.current = true;
+
+    let cancelled = false;
+
+    const runCodeExchange = async () => {
+      setIsProcessingCodeExchange(true);
+      setVerificationLinkError(null);
+      setVerificationStatusMessage(null);
+
+      try {
+        const supabase = getBrowserSupabase();
+        const currentUrl = new URL(window.location.href);
+        const callbackCode = currentUrl.searchParams.get("code");
+
+        debugLog("URL contains code", {
+          hasCode: Boolean(callbackCode),
+        });
+
+        if (!callbackCode) {
+          if (!cancelled) {
+            setVerificationLinkError("Verification link invalid or expired. Please request a new link.");
+          }
+          return;
+        }
+
+        debugLog("exchangeCodeForSession ran", {
+          path: currentUrl.pathname,
+        });
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(callbackCode);
+
+        if (exchangeError) {
+          debugLog("exchangeCodeForSession failed", {
+            error: exchangeError.message,
+          });
+          if (!cancelled) {
+            if (isExpiredVerificationError(exchangeError.message || "")) {
+              setLinkExpired(true);
+            } else {
+              setVerificationLinkError("Verification link invalid or expired. Please request a new link.");
+            }
+          }
+          return;
+        }
+
+        const { data: sessionData } = await supabase.auth.getSession();
+        debugLog("session exists", {
+          hasSession: Boolean(sessionData.session),
+        });
+        if (!sessionData.session) {
+          if (!cancelled) {
+            setVerificationLinkError("Verification succeeded but we could not establish a session. Please log in.");
+          }
+          return;
+        }
+
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        debugLog("email_confirmed_at exists", {
+          hasUser: Boolean(userData?.user),
+          hasEmailConfirmedAt: Boolean(userData?.user?.email_confirmed_at),
+          userError: userError?.message,
+        });
+        if (userError || !userData?.user?.email_confirmed_at) {
+          if (!cancelled) {
+            setVerificationLinkError("Verification link invalid or expired. Please request a new link.");
+          }
+          return;
+        }
+
+        // Remove verification params so the effect doesn't rerun on refresh.
+        currentUrl.searchParams.delete("code");
+        currentUrl.searchParams.delete("token");
+        currentUrl.searchParams.delete("token_hash");
+        currentUrl.searchParams.delete("verified");
+        window.history.replaceState({}, "", currentUrl.pathname + (currentUrl.search || ""));
+
+        const verified = await checkVerificationStatus({
+          manual: false,
+          showSuccessToast: true,
+          successToastMessage: "Email verified. Account secured.",
+          successToastOnceKey: "email-verified-v2",
+        });
+        if (!verified && !cancelled && !redirectingRef.current) {
+          setVerificationLinkError("Could not confirm verification. Please log in or request a new link.");
+        }
+      } catch (error) {
+        if (isDev) {
+          console.error("[VerifyEmail] unexpected code exchange error", error);
+        }
+        if (!cancelled) {
+          setVerificationLinkError("Could not complete verification automatically. Please try again.");
+        }
+      } finally {
+        if (!cancelled) {
+          setIsProcessingCodeExchange(false);
+        }
+      }
+    };
+
+    void runCodeExchange();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [checkVerificationStatus, debugLog, hasCodeInUrl, isDev]);
+
   // Handle callback returns such as /verify-email?verified=1 from email links.
   // Retry a few times because session cookies can arrive slightly after navigation.
   useEffect(() => {
+    if (hasCodeInUrl) return;
     if (redirectingRef.current) return;
     if (verificationCallbackHandledRef.current) return;
     if (searchParams.get("verified") !== "1") return;
@@ -531,7 +694,7 @@ export default function VerifyEmailPage() {
         window.clearTimeout(timeoutId);
       }
     };
-  }, [checkVerificationStatus, searchParams]);
+  }, [checkVerificationStatus, hasCodeInUrl, searchParams]);
 
   // Shared, consistent page shell for ALL branches (prevents hydration/layout mismatch)
   const PageShell: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -682,23 +845,62 @@ export default function VerifyEmailPage() {
     );
   }
 
-  // Single unified loading/empty state - prevents layout shift
-  if (isLoading || !displayEmail) {
+  // Unified loading state: includes pending PKCE exchange.
+  if (isLoading || isProcessingCodeExchange || (hasCodeInUrl && !verificationLinkError)) {
     return (
       <>
         <style dangerouslySetInnerHTML={{ __html: styles }} />
         <PageShell>
           <div className="flex-1 flex items-center justify-center">
-            {isLoading ? (
+            <div className="text-center max-w-md mx-auto p-6 space-y-3">
               <AppLoader size="lg" variant="wavy" color="sage" />
-            ) : (
-              <div className="text-center max-w-md mx-auto p-6">
-                <p className="text-lg text-charcoal mb-4">No verification pending.</p>
-                <Link href={useDifferentEmailHref} className="text-sage hover:text-sage/80 underline">
-                  Go to registration
+              {(isProcessingCodeExchange || hasCodeInUrl) && (
+                <p className="text-sm text-charcoal/70">
+                  Verifying your link and signing you in...
+                </p>
+              )}
+            </div>
+          </div>
+        </PageShell>
+      </>
+    );
+  }
+
+  if (verificationLinkError) {
+    return (
+      <>
+        <style dangerouslySetInnerHTML={{ __html: styles }} />
+        <PageShell>
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center max-w-md mx-auto p-6 space-y-4">
+              <p className="text-lg text-charcoal">{verificationLinkError}</p>
+              <Link href={useDifferentEmailHref} className="text-sage hover:text-sage/80 underline">
+                Go to registration
+              </Link>
+              <div>
+                <Link href="/login" className="text-charcoal/70 hover:text-charcoal underline">
+                  Go to login
                 </Link>
               </div>
-            )}
+            </div>
+          </div>
+        </PageShell>
+      </>
+    );
+  }
+
+  if (!displayEmail && !hasCodeInUrl) {
+    return (
+      <>
+        <style dangerouslySetInnerHTML={{ __html: styles }} />
+        <PageShell>
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center max-w-md mx-auto p-6 space-y-4">
+              <p className="text-lg text-charcoal">Verification link invalid or expired.</p>
+              <Link href={useDifferentEmailHref} className="text-sage hover:text-sage/80 underline">
+                Go to registration
+              </Link>
+            </div>
           </div>
         </PageShell>
       </>
