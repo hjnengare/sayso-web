@@ -122,6 +122,7 @@ export async function proxy(request: NextRequest) {
   const PUBLIC_AUTH_ROUTES = [
     '/login',
     '/register',
+    '/verify-email',
     '/business/login',
     '/business/register',
     '/auth/callback',

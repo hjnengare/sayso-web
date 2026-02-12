@@ -10,14 +10,20 @@ export class AuthService {
   }
 
   /**
-   * Get the base URL for redirects - uses NEXT_PUBLIC_BASE_URL if available,
-   * otherwise falls back to window.location.origin or Vercel production URL
+   * Resolve site URL used for auth redirects.
+   * Priority: NEXT_PUBLIC_SITE_URL -> NEXT_PUBLIC_BASE_URL -> runtime origin.
    */
-  private static getBaseUrl(): string {
-    if (typeof window === 'undefined') {
-      return process.env.NEXT_PUBLIC_BASE_URL || 'https://sayso-nine.vercel.app';
+  private static getSiteUrl(): string {
+    const configured = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_BASE_URL;
+    if (configured?.trim()) {
+      return configured.replace(/\/+$/, '');
     }
-    return process.env.NEXT_PUBLIC_BASE_URL || window.location.origin;
+
+    if (typeof window !== 'undefined') {
+      return window.location.origin.replace(/\/+$/, '');
+    }
+
+    return 'http://localhost:3000';
   }
 
   static async signUp({
@@ -107,12 +113,12 @@ export class AuthService {
         };
       }
 
-      const baseUrl = this.getBaseUrl();
+      const siteUrl = this.getSiteUrl();
       const { data, error } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
         password: password,
         options: {
-          emailRedirectTo: `${baseUrl}/auth/callback?type=signup`,
+          emailRedirectTo: `${siteUrl}/auth/callback`,
           data: {
             username: username.trim(),
             account_type: accountType, // Store account type in user metadata for profile creation
@@ -712,23 +718,23 @@ export class AuthService {
         };
       }
 
-      const baseUrl = this.getBaseUrl().replace(/\/+$/, '');
-      const emailRedirectTo = `${baseUrl}/auth/callback?type=signup`;
+      const siteUrl = this.getSiteUrl();
+      const emailRedirectTo = `${siteUrl}/auth/callback`;
 
       // Helpful runtime diagnostics for local-vs-prod URL mismatches.
-      if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_BASE_URL) {
+      if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_SITE_URL) {
         try {
-          const configuredOrigin = new URL(process.env.NEXT_PUBLIC_BASE_URL).origin;
+          const configuredOrigin = new URL(process.env.NEXT_PUBLIC_SITE_URL).origin;
           const runtimeOrigin = window.location.origin;
           if (configuredOrigin !== runtimeOrigin) {
-            console.warn('[AuthService.resendVerificationEmail] NEXT_PUBLIC_BASE_URL origin differs from runtime origin', {
+            console.warn('[AuthService.resendVerificationEmail] NEXT_PUBLIC_SITE_URL origin differs from runtime origin', {
               configuredOrigin,
               runtimeOrigin,
             });
           }
         } catch (urlError) {
-          console.warn('[AuthService.resendVerificationEmail] NEXT_PUBLIC_BASE_URL is invalid', {
-            value: process.env.NEXT_PUBLIC_BASE_URL,
+          console.warn('[AuthService.resendVerificationEmail] NEXT_PUBLIC_SITE_URL is invalid', {
+            value: process.env.NEXT_PUBLIC_SITE_URL,
             error: urlError,
           });
         }
@@ -781,7 +787,7 @@ export class AuthService {
     const supabase = this.getClient();
 
     try {
-      const baseUrl = this.getBaseUrl();
+      const baseUrl = this.getSiteUrl();
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -827,7 +833,7 @@ export class AuthService {
         };
       }
 
-      const baseUrl = this.getBaseUrl();
+      const baseUrl = this.getSiteUrl();
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
         redirectTo: `${baseUrl}/reset-password`,
       });
@@ -904,7 +910,7 @@ export class AuthService {
         };
       }
 
-      const baseUrl = this.getBaseUrl();
+      const baseUrl = this.getSiteUrl();
       const { error } = await supabase.auth.updateUser({
         email: newEmail.trim().toLowerCase(),
       }, {

@@ -397,21 +397,21 @@ export default function HeroCarousel() {
     const heroEl = containerRef.current;
     if (!heroEl) return;
 
-    const disableParallax = prefersReduced || prefersDataSaver || isIOSMobile;
+    // Keep mobile hero flush with the sticky header: avoid vertical media offset on mobile.
+    const disableParallax =
+      prefersReduced || prefersDataSaver || isIOSMobile || heroViewport === "mobile";
     if (disableParallax) {
       applyParallaxOffsets(0, 0);
       return;
     }
 
     const maxMediaOffset =
-      heroViewport === "mobile"
-        ? HERO_PARALLAX_MOBILE_MAX_PX
-        : heroViewport === "tablet"
-          ? HERO_PARALLAX_TABLET_MAX_PX
-          : HERO_PARALLAX_DESKTOP_MAX_PX;
+      heroViewport === "tablet"
+        ? HERO_PARALLAX_TABLET_MAX_PX
+        : HERO_PARALLAX_DESKTOP_MAX_PX;
     const maxOverlayOffset = maxMediaOffset * 0.5;
-    const mediaFactor = heroViewport === "mobile" ? 0.08 : heroViewport === "tablet" ? 0.09 : 0.1;
-    const overlayFactor = heroViewport === "mobile" ? 0.04 : heroViewport === "tablet" ? 0.045 : 0.05;
+    const mediaFactor = heroViewport === "tablet" ? 0.09 : 0.1;
+    const overlayFactor = heroViewport === "tablet" ? 0.045 : 0.05;
 
     let rafId: number | null = null;
 
