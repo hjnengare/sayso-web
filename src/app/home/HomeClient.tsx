@@ -601,7 +601,7 @@ export default function HomeClient() {
                   {/* For You Section - Only show when NOT filtered */}
                   {!isFiltered && (
                     <motion.div
-                      className="relative z-10 snap-start mb-2 sm:mb-0"
+                      className="relative z-10 snap-start mt-2 mb-2 sm:mt-0 sm:mb-0"
                       variants={homeCardRevealVariants}
                       initial="hidden"
                       whileInView="visible"

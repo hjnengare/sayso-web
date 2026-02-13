@@ -3129,12 +3129,12 @@ function transformBusinessForCard(business: BusinessRPCResult) {
     priceRange: business.price_range || '$$',
     distance: business.distance_km,
     hasRating,
-    percentiles: business.percentiles
+    percentiles: hasReviews && business.percentiles
       ? {
-          punctuality: business.percentiles.punctuality || 100,
-          friendliness: business.percentiles.friendliness || 100,
-          trustworthiness: business.percentiles.trustworthiness || 100,
-          'cost-effectiveness': business.percentiles['cost-effectiveness'] || 100,
+          punctuality: business.percentiles.punctuality ?? 0,
+          friendliness: business.percentiles.friendliness ?? 0,
+          trustworthiness: business.percentiles.trustworthiness ?? 0,
+          'cost-effectiveness': business.percentiles['cost-effectiveness'] ?? 0,
         }
       : undefined,
   };

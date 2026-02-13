@@ -221,7 +221,7 @@ function LeaderboardPage() {
 
                     {/* Title and Description Block */}
                     <motion.div 
-                      className="mb-6 sm:mb-8 px-4 sm:px-6 text-center pt-4"
+                      className="mb-10 sm:mb-12 px-4 sm:px-6 text-center pt-4"
                       variants={itemVariants}
                     >
                       <div className="my-4 relative">
@@ -330,8 +330,8 @@ function LeaderboardPage() {
                                 ) : topReviewers.length === 0 ? (
                                   <div className="text-center py-12">
                                     <div className="flex flex-col items-center gap-4">
-                                      <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-sage/20 to-sage/10 rounded-full flex items-center justify-center border border-sage/30">
-                                        <Award className="w-8 h-8 sm:w-10 sm:h-10 text-navbar-bg" strokeWidth={2} />
+                                      <div className="w-16 h-16 sm:w-20 sm:h-20 bg-off-white rounded-xl flex items-center justify-center p-4">
+                                        <Award className="w-8 h-8 sm:w-10 sm:h-10 text-charcoal/60" strokeWidth={2} />
                                       </div>
                                       <p className="text-charcoal/70 text-body-sm sm:text-body">No contributors yet. Be the first to write a review!</p>
                                     </div>
