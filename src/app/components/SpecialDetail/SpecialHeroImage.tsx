@@ -25,7 +25,7 @@ export default function SpecialHeroImage({ special, isLiked = false, onLike }: S
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6 }}
-            className="relative w-full aspect-[16/10] sm:aspect-[16/9] bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden border border-white/60 backdrop-blur-xl shadow-md"
+            className="relative w-full aspect-[16/10] sm:aspect-[16/9] bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-none overflow-hidden border border-white/60 backdrop-blur-xl shadow-md"
         >
             <Image
                 src={imageSrc}

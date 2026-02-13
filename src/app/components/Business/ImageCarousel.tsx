@@ -76,17 +76,17 @@ export function ImageCarousel({
     }, [isModalOpen, handleKeyDown]);
 
     return (
-        <div className="relative w-full mx-auto overflow-visible sm:overflow-hidden border-0 sm:border border-sage/10 bg-card-bg rounded-[12px] sm:rounded-[12px]">
+        <div className="relative w-full mx-auto overflow-visible sm:overflow-hidden border-0 sm:border border-sage/10 bg-card-bg rounded-none">
             {/* Slides */}
             <div
-                className="relative h-[80dvh] sm:h-[40vh] overflow-visible sm:overflow-hidden cursor-pointer group bg-card-bg flex items-center justify-center rounded-[12px] sm:rounded-[12px]"
+                className="relative h-[80dvh] sm:h-[40vh] overflow-visible sm:overflow-hidden cursor-pointer group bg-card-bg flex items-center justify-center rounded-none"
                 onClick={hasImages ? openModal : undefined}
             >
                 {hasImages ? (
                     displayImages.map((src, i) => (
                         <div
                             key={src || i}
-                            className={`absolute inset-0 transition-opacity duration-300 bg-card-bg rounded-[12px] sm:rounded-[12px] overflow-hidden ${
+                            className={`absolute inset-0 transition-opacity duration-300 bg-card-bg rounded-none overflow-hidden ${
                                 i === index ? 'opacity-100' : 'opacity-0'
                             }`}
                         >
@@ -136,7 +136,7 @@ export function ImageCarousel({
                     ))
                 ) : (
                     // Subcategory placeholder (full photo, same treatment as real images)
-                    <div className="absolute inset-0 bg-card-bg rounded-[12px] overflow-hidden">
+                    <div className="absolute inset-0 bg-card-bg rounded-none overflow-hidden">
                         <Image
                             src={fallbackPlaceholder}
                             alt={`${altBase} placeholder`}

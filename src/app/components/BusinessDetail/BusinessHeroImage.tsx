@@ -82,7 +82,7 @@ export default function BusinessHeroImage({
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.6 }}
-      className="relative w-full h-[50vh] sm:h-auto sm:aspect-[16/9] lg:aspect-[21/9] rounded-[12px] overflow-hidden border border-white/60 ring-1 ring-white/30"
+      className="relative w-full h-[50vh] sm:h-auto sm:aspect-[16/9] lg:aspect-[21/9] rounded-none overflow-hidden border border-white/60 ring-1 ring-white/30"
     >
       {hasImage ? (
         <>
