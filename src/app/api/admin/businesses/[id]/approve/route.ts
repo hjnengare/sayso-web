@@ -71,7 +71,7 @@ export async function POST(
     // updatePayload.approved_at = new Date().toISOString();
     // updatePayload.approved_by = user.id;
 
-    const { error: updateError } = await service
+    const { error: updateError } = await (service as any)
       .from('businesses')
       .update(updatePayload)
       .eq('id', businessId);

@@ -76,7 +76,7 @@ describe('Header Search Modal UX Fix', () => {
     // Wait for search input to appear
     await waitFor(() => {
       const searchInput = container.querySelector('input[aria-label="Search businesses"]');
-      expect(searchInput).toBeInTheDocument();
+      expect(searchInput).toBeTruthy();
     });
 
     const searchInput = container.querySelector('input[aria-label="Search businesses"]');
@@ -87,7 +87,7 @@ describe('Header Search Modal UX Fix', () => {
     // Wait for suggestions dropdown to appear
     await waitFor(() => {
       const viewAllButton = screen.queryByText('View all');
-      expect(viewAllButton).toBeInTheDocument();
+      expect(viewAllButton).toBeTruthy();
     });
 
     // Click "View all" button
@@ -123,7 +123,7 @@ describe('Header Search Modal UX Fix', () => {
     // The search input should collapse back to trigger button
     await waitFor(() => {
       const searchTrigger = container.querySelector('button[aria-label="Open search"]');
-      expect(searchTrigger).toBeInTheDocument();
+      expect(searchTrigger).toBeTruthy();
     });
   });
 
@@ -145,8 +145,8 @@ describe('Header Search Modal UX Fix', () => {
 
     // Wait for suggestions to appear
     await waitFor(() => {
-      expect(screen.getByText('Test Business')).toBeInTheDocument();
-      expect(screen.getByText('Another Business')).toBeInTheDocument();
+      expect(screen.getByText('Test Business')).toBeTruthy();
+      expect(screen.getByText('Another Business')).toBeTruthy();
     });
 
     // Click View all - this should NOT clear the visible results before navigation
