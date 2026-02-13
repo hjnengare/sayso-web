@@ -606,12 +606,12 @@ export default function AddBusinessPage() {
             }
 
             if (announcement) {
-                announcement.textContent = 'Business created successfully! Redirecting...';
+                announcement.textContent = 'Business submitted for review. Redirecting...';
             }
 
-            showToast('Your business has been created successfully! Redirecting to your business page...', 'success', 4000);
+            showToast("Your business has been submitted for review. You'll be notified once approved.", 'success', 5000);
             setTimeout(() => {
-                router.push(`/business/my-businesses`);
+                router.push('/my-businesses');
                 router.refresh();
             }, 1000);
         } catch (error: unknown) {

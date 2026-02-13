@@ -217,7 +217,7 @@ function EventCard({ event, index = 0 }: EventCardProps) {
           </div>
 
           {/* CONTENT - Minimal, premium spacing */}
-          <div className="px-4 pt-3 pb-0 bg-gradient-to-b from-card-bg/95 to-card-bg flex flex-col gap-2 rounded-b-[12px]">
+          <div className="px-4 pt-3 pb-0 bg-gradient-to-b from-card-bg/95 to-card-bg  gap-2 rounded-b-[12px]">
             <div className="flex flex-col gap-2">
               <motion.h3
                 layoutId={eventTitleLayoutId}

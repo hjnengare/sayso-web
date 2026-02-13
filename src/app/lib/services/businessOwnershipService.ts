@@ -56,12 +56,12 @@ export class BusinessOwnershipService {
         // It's already a UUID, use it directly
         businessId = businessIdentifier;
       } else {
-        // Try to resolve slug to UUID
+        // Try to resolve slug to UUID (include pending_approval for owner checks)
         const { data: slugData, error: slugError } = await supabase
           .from("businesses")
           .select("id")
           .eq("slug", businessIdentifier)
-          .eq("status", "active")
+          .in("status", ["active", "pending_approval"])
           .maybeSingle();
 
         if (slugError) {
@@ -333,12 +333,12 @@ export class BusinessOwnershipService {
       if (isUUID) {
         businessId = businessIdentifier;
       } else {
-        // Resolve slug to UUID
+        // Resolve slug to UUID (include pending_approval so owner can view their own pending business)
         const { data: slugData, error: slugError } = await supabase
           .from("businesses")
           .select("id")
           .eq("slug", businessIdentifier)
-          .eq("status", "active")
+          .in("status", ["active", "pending_approval"])
           .maybeSingle();
 
         if (slugError || !slugData?.id) {

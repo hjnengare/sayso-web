@@ -1,11 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { FileCheck, Database } from "lucide-react";
+import { FileCheck, Database, Store } from "lucide-react";
 
 const FONT = "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif";
 
 const SECTIONS = [
+  {
+    href: "/admin/pending-businesses",
+    label: "Pending Businesses",
+    description: "Approve new businesses before they go live",
+    icon: Store,
+    color: "sage" as const,
+  },
   {
     href: "/admin/claims",
     label: "Business Claims",

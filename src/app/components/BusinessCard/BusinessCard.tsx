@@ -78,6 +78,8 @@ type Business = {
   address?: string;
   amenity?: string;
   tags?: string[];
+  /** DB status: active | pending_approval; used for owner dashboard badge */
+  status?: string;
   lat?: number; // Latitude for map display
   lng?: number; // Longitude for map display
   top_review_preview?: {
@@ -613,6 +615,11 @@ function BusinessCard({
                       </motion.h3>
                     </button>
                   </Tooltip>
+                  {ownerView && (business as { status?: string }).status === 'pending_approval' && (
+                    <span className="mt-1.5 inline-flex items-center rounded-full bg-off-white border border-charcoal/15 px-2.5 py-1 text-xs font-semibold text-charcoal" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                      Pending Approval
+                    </span>
+                  )}
                 </div>
                 {/* Category with icon - Stacked layout */}
                 <div className="flex flex-col items-center gap-1 w-full">

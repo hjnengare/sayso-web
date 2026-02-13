@@ -3532,7 +3532,7 @@ export async function POST(req: Request) {
       owner_id: user.id,
       slug: finalSlug,
       verified: false, // New businesses start unverified
-      status: 'active',
+      status: 'pending_approval', // Requires admin approval before public visibility
       lat: lat || null,
       lng: lng || null,
       // Note: businessType is used for validation but not stored in DB

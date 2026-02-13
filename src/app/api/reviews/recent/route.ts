@@ -12,7 +12,8 @@ export const runtime = 'nodejs';
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const limit = parseInt(searchParams.get('limit') || '10');
+    const requestedLimit = parseInt(searchParams.get('limit') || '10', 10);
+    const limit = Math.min(20, Math.max(10, Number.isNaN(requestedLimit) ? 10 : requestedLimit));
 
     // Validate environment variables
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -34,15 +35,13 @@ export async function GET(req: Request) {
 
     // Fetch recent reviews with related data - try simpler query first
     let reviews: any[] = [];
-    let queryError: any = null;
 
-    // Try full query with joins - use FK notation for explicit relationship
+    // Slim query: only fields needed for UI; no review_images (fetched separately, capped to 2 per review)
     const { data, error } = await supabase
       .from('reviews')
       .select(`
         id,
         rating,
-        title,
         content,
         created_at,
         helpful_count,
@@ -51,20 +50,14 @@ export async function GET(req: Request) {
         business_id,
         profiles!reviews_user_id_fkey (
           user_id,
-          username,
           display_name,
           avatar_url
         ),
         businesses!reviews_business_id_fkey (
           id,
           name,
-          category,
-          location,
-          image_url
-        ),
-        review_images (
-          image_url,
-          alt_text
+          primary_category_slug,
+          primary_subcategory_slug
         )
       `)
       .order('created_at', { ascending: false })
@@ -73,16 +66,14 @@ export async function GET(req: Request) {
     if (error) {
       console.warn('[Recent Reviews] Full query failed, trying simple query:', error.message);
 
-      // Fallback to simple query without joins
       const { data: simpleData, error: simpleError } = await supabase
         .from('reviews')
-        .select('id, rating, title, content, created_at, helpful_count, tags, user_id, business_id')
+        .select('id, rating, content, created_at, helpful_count, tags, user_id, business_id')
         .order('created_at', { ascending: false })
         .limit(limit);
 
       if (simpleError) {
         console.error('[Recent Reviews] Simple query also failed:', simpleError);
-        // Return empty array instead of error
         return NextResponse.json({ ok: true, reviews: [], total: 0 });
       }
 
@@ -91,12 +82,32 @@ export async function GET(req: Request) {
       reviews = data || [];
     }
 
-    // Transform to match expected format
+    // Fetch at most 2 image URLs per review (ordered by created_at asc)
+    const reviewIds = (reviews || []).map((r: any) => r.id).filter(Boolean);
+    let imagesByReviewId: Record<string, string[]> = {};
+    if (reviewIds.length > 0) {
+      const { data: imageRows } = await supabase
+        .from('review_images')
+        .select('review_id, image_url, created_at')
+        .in('review_id', reviewIds)
+        .order('created_at', { ascending: true });
+
+      if (imageRows?.length) {
+        const map: Record<string, string[]> = {};
+        for (const row of imageRows) {
+          const id = row.review_id;
+          if (!map[id]) map[id] = [];
+          if (map[id].length < 2 && row.image_url) map[id].push(row.image_url);
+        }
+        imagesByReviewId = map;
+      }
+    }
+
+    // Transform to match expected format; images capped to 2 per review
     const transformedReviews = (reviews || []).map((review: any) => {
-      // Handle both joined data and simple data
       const profile = review.profiles;
       const business = review.businesses;
-      const displayName = profile?.display_name || profile?.username || 'Anonymous';
+      const displayName = profile?.display_name || 'Anonymous';
 
       return {
         id: review.id,
@@ -109,7 +120,7 @@ export async function GET(req: Request) {
         }),
         likes: review.helpful_count || 0,
         tags: review.tags || [],
-        images: review.review_images?.map((img: any) => img.image_url) || [],
+        images: (imagesByReviewId[review.id] || []).slice(0, 2),
         reviewer: {
           id: profile?.user_id || review.user_id,
           name: displayName,
@@ -120,7 +131,7 @@ export async function GET(req: Request) {
           location: 'Cape Town'
         },
         businessName: business?.name || 'Unknown Business',
-        businessType: business?.category || 'Local Business',
+        businessType: business?.primary_category_slug || 'Local Business',
         businessId: business?.id || review.business_id
       };
     });
