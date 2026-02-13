@@ -772,7 +772,6 @@ export default function BusinessProfilePage() {
                             />
                         </section>
 
-                        <div className="border-t border-charcoal/10"></div>
                         <Footer />
                     </div>
                 </div>

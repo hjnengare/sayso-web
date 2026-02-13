@@ -111,6 +111,18 @@ export default function BusinessLocation({
         }
     }, [hasCoordinates, latitude, longitude]);
 
+    const getUberUrl = () => {
+        if (latitude == null || longitude == null) return "#";
+        const params = new URLSearchParams({
+            action: "setPickup",
+            pickup: "my_location",
+            "dropoff[latitude]": String(latitude),
+            "dropoff[longitude]": String(longitude),
+            "dropoff[nickname]": name,
+        });
+        return `https://m.uber.com/ul/?${params.toString()}`;
+    };
+
     const getDirectionsUrl = (mode: 'driving' | 'walking' = 'driving') => {
         if (latitude && longitude) {
             if (typeof navigator !== 'undefined' && navigator.userAgent.includes("iPhone") || navigator.userAgent.includes("iPad")) {
@@ -372,7 +384,7 @@ export default function BusinessLocation({
                         </div>
 
                         {/* Actions */}
-                        <div className="px-4 sm:px-6 py-3 border-t border-white/20">
+                        <div className="px-4 sm:px-6 py-3 border-t border-white/20 space-y-2">
                             <div className="flex items-center gap-2">
                                 <motion.a
                                     whileHover={{ scale: 1.02 }}
@@ -399,6 +411,17 @@ export default function BusinessLocation({
                                     <Footprints className="w-4 h-4 text-charcoal" />
                                 </motion.a>
                             </div>
+                            <motion.a
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                href={getUberUrl()}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="block w-full text-center px-4 py-2.5 rounded-full text-sm font-semibold bg-white/30 text-charcoal hover:bg-white/50 transition-colors"
+                                style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 600 }}
+                            >
+                                Get an Uber
+                            </motion.a>
                         </div>
                     </>
                 ) : (
