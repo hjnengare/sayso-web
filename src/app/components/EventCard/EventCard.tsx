@@ -188,7 +188,7 @@ function EventCard({ event, index = 0 }: EventCardProps) {
     >
       <Link href={eventDetailHref} className="block w-full">
       <article
-        className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden group cursor-pointer w-full flex flex-col border border-white/60 backdrop-blur-xl shadow-md card-hover-lift md:w-[340px]"
+        className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden group cursor-pointer w-full flex flex-col border border-white/60 backdrop-blur-xl shadow-md card-hover-lift md:w-[340px] pb-2"
         style={{ maxWidth: "540px" } as CSSProperties}
       >
           {/* MEDIA - Full bleed with premium overlay */}
