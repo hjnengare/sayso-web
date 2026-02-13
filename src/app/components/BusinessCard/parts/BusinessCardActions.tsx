@@ -1,5 +1,5 @@
 import React from "react";
-import { Edit, Bookmark, Share2, Eye } from "lucide-react";
+import { Edit, Bookmark, Share2 } from "lucide-react";
 
 interface BusinessCardActionsProps {
   hasReviewed: boolean;
@@ -31,7 +31,6 @@ const BusinessCardActions: React.FC<BusinessCardActionsProps> = ({
         aria-label={`View ${businessName} profile`}
         title="View Business Profile"
       >
-        <Eye className="w-4 h-4 text-white" strokeWidth={2.5} />
       </button>
     ) : (
       // Consumer account: Show "Write Review" button

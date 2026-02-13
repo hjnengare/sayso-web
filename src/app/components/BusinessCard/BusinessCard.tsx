@@ -4,7 +4,7 @@ import React, { useMemo, useState, useEffect, useRef, memo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Image as ImageIcon, Star, Share2, Bookmark, Info, ChevronLeft, ChevronRight, TrendingUp, Zap, Scissors, Coffee, UtensilsCrossed, Wine, Dumbbell, Activity, Heart, Book, ShoppingBag, Home, Briefcase, MapPin, Music, Film, Camera, Car, GraduationCap, CreditCard, Tag, Flame, Store, Eye } from "lucide-react";
+import { Image as ImageIcon, Star, Share2, Bookmark, Info, ChevronLeft, ChevronRight, TrendingUp, Zap, Scissors, Coffee, UtensilsCrossed, Wine, Dumbbell, Activity, Heart, Book, ShoppingBag, Home, Briefcase, MapPin, Music, Film, Camera, Car, GraduationCap, CreditCard, Tag, Flame, Store } from "lucide-react";
 import Image from "next/image";
 import PercentileChip from "../PercentileChip/PercentileChip";
 import VerifiedBadge from "../VerifiedBadge/VerifiedBadge";
@@ -650,7 +650,6 @@ function BusinessCard({
               aria-label={`View ${business.name} details`}
               style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
             >
-              <Eye className="w-3.5 h-3.5" strokeWidth={2.5} />
               <span>{isBusinessAccount ? 'View Business Profile' : 'View Details'}</span>
             </button>
           </div>
