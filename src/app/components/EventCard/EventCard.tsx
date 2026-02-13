@@ -385,14 +385,13 @@ function EventCard({ event, index = 0 }: EventCardProps) {
                 )}
               </div>
             </div>
-            {/* Mobile-only View Details - no icons */}
-            <div className="flex md:hidden items-center justify-center pt-1.5 pb-1.5 px-1">
+            <div className="md:hidden flex items-center justify-center pt-1.5 pb-1 px-1">
               <button
                 type="button"
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(eventDetailHref); }}
-                className="w-full flex items-center justify-center px-4 py-3 rounded-full text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-sage/40 border transition-all duration-200 min-h-[48px] shadow-md bg-gradient-to-br from-navbar-bg to-navbar-bg/90 text-white border-sage/50 active:scale-95 active:translate-y-[1px] transform-gpu touch-manipulation select-none"
-                aria-label="View event details"
+                className="w-full flex items-center justify-center px-4 py-3 rounded-full text-caption sm:text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-sage/40 border transition-all duration-200 min-h-[48px] shadow-md bg-gradient-to-br from-navbar-bg to-navbar-bg/90 text-white border-sage/50 active:scale-95 active:translate-y-[1px] transform-gpu touch-manipulation select-none"
                 style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
+                aria-label="View event details"
               >
                 View Details
               </button>
