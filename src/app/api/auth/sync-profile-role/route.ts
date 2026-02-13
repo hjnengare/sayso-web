@@ -2,6 +2,27 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+type NormalizedRole = 'admin' | 'business_owner' | 'user';
+
+function normalizeRole(value: string | null | undefined): NormalizedRole | null {
+  const role = String(value || '').toLowerCase().trim();
+  if (!role) return null;
+
+  if (role === 'admin' || role === 'super_admin' || role === 'superadmin') {
+    return 'admin';
+  }
+
+  if (role === 'business_owner' || role === 'business' || role === 'owner') {
+    return 'business_owner';
+  }
+
+  if (role === 'user' || role === 'personal') {
+    return 'user';
+  }
+
+  return null;
+}
+
 /**
  * API endpoint to sync profile role with user metadata
  * This is a fallback for cases where the profile was created with default 'user' role
@@ -39,23 +60,23 @@ export async function POST() {
       );
     }
 
-    // Get account_type from user metadata
-    const userMetadataAccountType = user.user_metadata?.account_type as string | undefined;
+    // Get account_type/role from user metadata
+    let userMetadataAccountType = normalizeRole(
+      (user.user_metadata?.account_type as string | undefined) ||
+      (user.user_metadata?.role as string | undefined) ||
+      (user.app_metadata?.role as string | undefined)
+    );
 
     if (!userMetadataAccountType) {
-      return NextResponse.json({
-        message: 'No account_type in user metadata',
-        synced: false,
-        metadataAccountType: null
-      });
+      userMetadataAccountType = 'user';
     }
 
     // Get current profile
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('role, account_role')
+      .select('role, account_role, onboarding_completed_at')
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
     if (profileError) {
       console.error('Error fetching profile:', profileError);
@@ -65,8 +86,41 @@ export async function POST() {
       );
     }
 
+    if (!profile) {
+      // Profile race condition fix: create profile if missing right after session establishment.
+      const insertPayload: Record<string, unknown> = {
+        user_id: user.id,
+        role: userMetadataAccountType,
+        account_role: userMetadataAccountType,
+        updated_at: new Date().toISOString(),
+      };
+
+      if (userMetadataAccountType === 'business_owner') {
+        insertPayload.onboarding_step = 'business_setup';
+      }
+
+      const { error: insertError } = await supabase
+        .from('profiles')
+        .upsert(insertPayload, { onConflict: 'user_id' });
+
+      if (insertError) {
+        console.error('Error creating missing profile:', insertError);
+        return NextResponse.json(
+          { error: 'Failed to create profile', synced: false },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({
+        message: 'Profile created and role synced successfully',
+        synced: true,
+        previousRole: null,
+        newRole: userMetadataAccountType
+      });
+    }
+
     // Check if sync is needed
-    if (profile.role === userMetadataAccountType) {
+    if (normalizeRole(profile.role) === userMetadataAccountType && normalizeRole(profile.account_role) === userMetadataAccountType) {
       return NextResponse.json({
         message: 'Profile already synced',
         synced: false,
@@ -75,13 +129,10 @@ export async function POST() {
       });
     }
 
-    // Sync profile role with metadata
-    console.log('Syncing profile role:', {
-      userId: user.id,
-      currentRole: profile.role,
-      newRole: userMetadataAccountType
-    });
-
+    // Sync profile role with metadata.
+    // CRITICAL: Only update role/account_role. NEVER touch onboarding fields during sync:
+    // onboarding_step, interests_count, subcategories_count, onboarding_completed_at.
+    // This endpoint is idempotent for role sync and must not reset onboarding progress.
     const { error: updateError } = await supabase
       .from('profiles')
       .update({

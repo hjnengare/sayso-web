@@ -163,13 +163,13 @@ export async function POST(req: Request) {
       );
     }
 
-    const { error: subcategoriesError } = await supabase.rpc('replace_user_subcategories', {
+    const rpcResult = await supabase.rpc('replace_user_subcategories', {
       p_user_id: user.id,
       p_subcategory_data: subcategoryData
     });
 
-    if (subcategoriesError) {
-      console.warn('[Subcategories API] RPC failed, falling back to direct writes:', subcategoriesError);
+    if (rpcResult.error) {
+      console.warn('[Subcategories API] RPC failed, falling back to direct writes:', rpcResult.error.message);
 
       const { error: deleteError } = await supabase
         .from('user_subcategories')
@@ -178,7 +178,8 @@ export async function POST(req: Request) {
 
       if (deleteError) {
         console.error('[Subcategories API] Error clearing subcategories:', deleteError);
-        throw deleteError;
+        const errResponse = NextResponse.json({ error: 'Failed to save subcategories', message: deleteError.message }, { status: 500 });
+        return addNoCacheHeaders(errResponse);
       }
 
       const rows = subcategoryData.map((item) => ({
@@ -193,26 +194,29 @@ export async function POST(req: Request) {
 
       if (insertError) {
         console.error('[Subcategories API] Error inserting subcategories:', insertError);
-        throw insertError;
+        const errResponse = NextResponse.json({ error: 'Failed to save subcategories', message: insertError.message }, { status: 500 });
+        return addNoCacheHeaders(errResponse);
+      }
+
+      // CRITICAL: When RPC fails, we must atomically update profile with subcategories_count AND onboarding_step.
+      // The RPC normally does this; fallback must not forget subcategories_count.
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          subcategories_count: subcategoryData.length,
+          onboarding_step: 'deal-breakers',
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id);
+
+      if (updateError) {
+        console.error('[Subcategories API] Error updating profile:', updateError);
+        const errResponse = NextResponse.json({ error: 'Failed to save subcategories', message: updateError.message }, { status: 500 });
+        return addNoCacheHeaders(errResponse);
       }
     }
 
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({
-        onboarding_step: 'deal-breakers',
-        updated_at: new Date().toISOString()
-      })
-      .eq('user_id', user.id);
-
-    if (updateError) {
-      console.error('[Subcategories API] Error updating profile:', updateError);
-      throw updateError;
-    }
-
-    const response = NextResponse.json({
-      ok: true
-    });
+    const response = NextResponse.json({ ok: true });
     return addNoCacheHeaders(response);
 
   } catch (error: any) {

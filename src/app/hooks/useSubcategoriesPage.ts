@@ -7,6 +7,7 @@ import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useOnboarding } from '../contexts/OnboardingContext';
 import { useToast } from '../contexts/ToastContext';
+import { useAuth } from '../contexts/AuthContext';
 
 interface SubcategoryItem {
   id: string;
@@ -107,6 +108,7 @@ export interface UseSubcategoriesPageReturn {
 export function useSubcategoriesPage(): UseSubcategoriesPageReturn {
   const router = useRouter();
   const { showToast } = useToast();
+  const { refreshUser } = useAuth();
   const {
     selectedInterests,
     selectedSubInterests,
@@ -210,8 +212,9 @@ export function useSubcategoriesPage(): UseSubcategoriesPageReturn {
         throw new Error(error.message || 'Failed to save subcategories');
       }
 
-      // Navigate immediately - no toast needed since navigation is the success indicator
-      // The toast was appearing on the next page due to timing issues
+      // Refresh profile so AuthContext has latest onboarding_step and subcategories_count
+      await refreshUser();
+
       router.replace('/deal-breakers');
     } catch (error) {
       console.error('[Subcategories] Error saving:', error);
@@ -219,7 +222,7 @@ export function useSubcategoriesPage(): UseSubcategoriesPageReturn {
       showToast(errorMessage, 'sage', 4000);
       setIsNavigating(false);
     }
-  }, [selectedSubInterests, showToast, router]);
+  }, [selectedSubInterests, showToast, router, refreshUser]);
 
   // Check if can proceed
   const canProceed = useMemo(() => {

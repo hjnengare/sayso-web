@@ -482,6 +482,9 @@ export async function proxy(request: NextRequest) {
   interface ProfileStatus {
     found: boolean;
     onboarding_completed_at: string | null;
+    onboarding_step: string | null;
+    interests_count: number;
+    subcategories_count: number;
     account_role: string | null;
     role: string | null;
   }
@@ -492,8 +495,8 @@ export async function proxy(request: NextRequest) {
   // If email is not confirmed, skip profile fetch entirely - user needs to verify first.
   if (user && user.email_confirmed_at) {
     try {
-      const selectWithCompletedAt = 'role, account_role, onboarding_completed_at';
-      const selectWithoutCompletedAt = 'role, account_role';
+      const selectWithCompletedAt = 'role, account_role, onboarding_completed_at, onboarding_step, interests_count, subcategories_count';
+      const selectMinimal = 'role, account_role';
 
       let { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -504,22 +507,15 @@ export async function proxy(request: NextRequest) {
       if (profileError && isSchemaCacheError(profileError)) {
         ({ data: profileData, error: profileError } = await supabase
           .from('profiles')
-          .select(selectWithoutCompletedAt)
+          .select(selectMinimal)
           .eq('user_id', user.id)
           .maybeSingle());
       }
 
       if (profileError) {
         console.error('[Middleware] Error fetching profile status:', profileError.message);
-        // Race-safe behavior: if profile can't be read, do not force onboarding redirects.
-        // This is critical for RLS read failures - allow request to continue so profile sync can run.
         profileStatus = null;
       } else if (!profileData) {
-        // CRITICAL FIX: Profile missing for authenticated user.
-        // This can happen due to race condition where:
-        // 1. User just verified email and got redirected
-        // 2. Profile trigger hasn't completed yet OR sync-profile-role hasn't run
-        // DO NOT redirect to onboarding - allow request to proceed so profile bootstrap can complete.
         console.warn('[Middleware] Profile missing for authenticated user (race condition likely); allowing request to proceed.');
         profileStatus = null;
       } else {
@@ -529,13 +525,15 @@ export async function proxy(request: NextRequest) {
             'onboarding_completed_at' in profileData
               ? (profileData.onboarding_completed_at as string | null)
               : null,
+          onboarding_step: 'onboarding_step' in profileData ? (profileData.onboarding_step as string | null) : null,
+          interests_count: typeof (profileData as any).interests_count === 'number' ? (profileData as any).interests_count : 0,
+          subcategories_count: typeof (profileData as any).subcategories_count === 'number' ? (profileData as any).subcategories_count : 0,
           account_role: profileData.account_role ?? null,
           role: profileData.role ?? null,
         };
       }
     } catch (error) {
       console.error('[Middleware] Error fetching profile status:', error);
-      // Race-safe behavior: if profile lookup fails, allow request to continue.
       profileStatus = null;
     }
   }
@@ -683,7 +681,6 @@ export async function proxy(request: NextRequest) {
   if (!isBusinessAccount && !isAdminAccount && user && user.email_confirmed_at) {
     // CRITICAL SAFETY GUARD: If profileStatus is null (profile missing or couldn't be read),
     // DO NOT redirect to onboarding. Allow request to continue so profile sync/bootstrap can complete.
-    // This prevents redirect loops when profile hasn't been created yet or RLS blocks the read.
     if (profileStatus === null) {
       debugLog('ALLOW', { requestId, reason: 'profile_status_unknown_race_guard', pathname });
       edgeLog('ALLOW', pathname, {
@@ -692,6 +689,15 @@ export async function proxy(request: NextRequest) {
         onboardingComplete: null,
         reason: 'profile_status_unknown',
       });
+      return response;
+    }
+
+    // EXPLICIT: Already on valid onboarding path → allow. Never bounce backward to /interests.
+    // Exclude /complete — incomplete users on /complete get redirected to /interests below.
+    const allowedIncompletePaths = ['/interests', '/subcategories', '/deal-breakers', '/onboarding'];
+    const isOnAllowedIncompletePath = allowedIncompletePaths.some(p => pathname === p || pathname.startsWith(p + '/'));
+    if (isOnAllowedIncompletePath && !isOnboardingComplete) {
+      debugLog('ALLOW', { requestId, reason: 'on_allowed_incomplete_path', pathname });
       return response;
     }
 
