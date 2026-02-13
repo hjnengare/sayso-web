@@ -678,7 +678,7 @@ export default function ForYouClient({
                           key={currentPage}
                           initial={{ opacity: 0, y: 20, scale: 0.98, filter: "blur(8px)" }}
                           animate={{ 
-                            opacity: 1, 
+                            opacity: isPaginationLoading ? 0.3 : 1, 
                             y: 0, 
                             scale: 1, 
                             filter: "blur(0px)" 
@@ -687,10 +687,6 @@ export default function ForYouClient({
                           transition={{
                             duration: 0.4,
                             ease: [0.16, 1, 0.3, 1],
-                          }}
-                          style={{ 
-                            opacity: isPaginationLoading ? 0.3 : 1,
-                            transition: 'opacity 0.2s ease-out'
                           }}
                         >
                           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2 justify-items-center">
