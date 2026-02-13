@@ -9,6 +9,7 @@ import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useOnboarding } from '../contexts/OnboardingContext';
 import { useToast } from '../contexts/ToastContext';
+import { useAuth } from '../contexts/AuthContext';
 
 interface DealBreaker {
   id: string;
@@ -39,6 +40,7 @@ export interface UseDealBreakersPageReturn {
 export function useDealBreakersPage(): UseDealBreakersPageReturn {
   const router = useRouter();
   const { showToast } = useToast();
+  const { refreshUser } = useAuth();
   const onboarding = useOnboarding();
   const {
     selectedDealbreakers,
@@ -125,6 +127,10 @@ export function useDealBreakersPage(): UseDealBreakersPageReturn {
         localStorage.removeItem('onboarding_dealbreakers');
       }
 
+      // CRITICAL: Refresh user profile to get latest onboarding completion status
+      // This prevents ProtectedRoute from seeing stale data and redirecting back to /interests
+      await refreshUser();
+
       // Navigate to celebration page
       router.replace('/complete');
     } catch (error) {
@@ -133,7 +139,7 @@ export function useDealBreakersPage(): UseDealBreakersPageReturn {
       showToast(errorMessage, 'sage', 4000);
       setIsNavigating(false);
     }
-  }, [selectedDealbreakers, showToast, router]);
+  }, [selectedDealbreakers, showToast, router, refreshUser]);
 
   // Check if can proceed
   const canProceed = useMemo(() => {
