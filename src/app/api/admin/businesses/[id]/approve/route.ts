@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSupabase } from '@/app/lib/supabase/server';
 import { getServiceSupabase } from '@/app/lib/admin';
 import { isAdmin } from '@/app/lib/admin';
+import type { Database } from '@/app/types/supabase';
+
+type BusinessesUpdate = Database['public']['Tables']['businesses']['Update'];
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -60,7 +63,7 @@ export async function POST(
       );
     }
 
-    const updatePayload: Record<string, unknown> = {
+    const updatePayload: BusinessesUpdate = {
       status: 'active',
       updated_at: new Date().toISOString(),
     };
