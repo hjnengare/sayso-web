@@ -521,7 +521,7 @@ function BusinessCard({
   };
 
   const mediaBaseClass =
-    "relative overflow-hidden z-10 cursor-pointer rounded-[12px] bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl";
+    "relative overflow-hidden z-10 cursor-pointer bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl";
   const mediaClass = compact
     ? `${mediaBaseClass} h-[280px] sm:h-[300px] md:h-[220px]`
     : `${mediaBaseClass} h-[280px] sm:h-[300px] md:h-[220px]`;
@@ -536,7 +536,7 @@ function BusinessCard({
     >
       <Link
         href={businessProfileRoute}
-        className={`px-1 pt-1 pb-0 rounded-[12px] ${compact ? "lg:py-1 lg:pb-1 lg:min-h-[200px]" : "flex-1"} relative flex-shrink-0 flex flex-col justify-between bg-sage z-10 shadow-md group cursor-pointer w-full sm:h-auto`}
+        className={`rounded-[12px] ${compact ? "lg:min-h-[200px]" : "flex-1"} relative flex-shrink-0 flex flex-col justify-between bg-sage z-10 shadow-md group cursor-pointer w-full sm:h-auto overflow-hidden`}
         style={{ maxWidth: compact ? "100%" : "540px" } as React.CSSProperties}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -553,6 +553,7 @@ function BusinessCard({
             businessName={business.name}
             verified={business.verified}
             sharedLayoutId={businessImageLayoutId}
+            priority={index < 3}
           />
           {/* Premium glass badges */}
           {business.verified && (
@@ -601,7 +602,7 @@ function BusinessCard({
           )}
         </div>
         {/* CONTENT - Minimal, premium spacing */}
-        <div className={`px-4 pt-2.5 sm:px-5 sm:pt-1 md:pt-2 lg:pt-2.5 pb-2.5 ${compact ? "lg:py-1 lg:pt-2 lg:pb-0 lg:min-h-[160px]" : "flex-1"} relative flex-shrink-0 flex flex-col justify-start bg-sage/10 z-10 rounded-b-[12px]`}>
+        <div className={`px-5 pt-2.5 sm:px-6 sm:pt-1 md:pt-2 lg:pt-2.5 pb-2.5 ${compact ? "lg:py-1 lg:pt-2 lg:pb-0 lg:min-h-[160px]" : "flex-1"} relative flex-shrink-0 flex flex-col justify-start bg-sage/10 z-10 rounded-b-[12px]`}>
           <div className="flex flex-col">
             {/* Info Wrapper */}
             <div className="relative overflow-hidden">
@@ -651,7 +652,7 @@ function BusinessCard({
             </div>
           </div>
           {/* Mobile actions - Minimal */}
-          <div className="flex md:hidden items-center justify-center pt-1.5 pb-1.5">
+          <div className="flex md:hidden items-center justify-center pt-1.5 pb-1.5 px-1">
             <button
               className="flex-1 flex items-center justify-center gap-1.5 px-4 py-3 rounded-full text-caption sm:text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-sage/40 border transition-all duration-200 min-h-[48px] shadow-md bg-gradient-to-br from-navbar-bg to-navbar-bg/90 text-white border-sage/50 active:scale-95 active:translate-y-[1px] transform-gpu touch-manipulation select-none"
               onClick={(e) => {

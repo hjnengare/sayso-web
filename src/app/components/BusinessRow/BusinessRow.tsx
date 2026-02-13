@@ -89,7 +89,7 @@ export default function BusinessRow({
           <WavyTypedTitle
             text={title}
             as="h2"
-            className="font-urbanist text-h2 sm:text-h1 font-700 text-charcoal hover:text-sage transition-all duration-300 px-3 sm:px-4 py-1 hover:bg-sage/5 rounded-lg cursor-default"
+            className="font-urbanist text-h2 sm:text-h1 font-800 text-charcoal hover:text-sage transition-all duration-300 px-3 sm:px-4 py-1 hover:bg-sage/5 rounded-lg cursor-default"
             typingSpeedMs={40}
             startDelayMs={300}
             waveVariant="subtle"
@@ -98,22 +98,22 @@ export default function BusinessRow({
             disableWave={true}
             style={{ 
               fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-              fontWeight: 700,
+              fontWeight: 800,
             }}
           />
 
           <button
             onClick={() => router.push(href)}
-            className="group inline-flex items-center gap-1 text-body-sm sm:text-caption font-normal text-charcoal transition-all duration-300 hover:text-sage focus:outline-none px-4 py-2 -mx-2 relative"
+            className="group inline-flex items-center gap-1 text-body-sm sm:text-caption font-normal text-charcoal transition-colors duration-200 ease-[cubic-bezier(0.25,0.1,0.25,1)] hover:text-sage focus:outline-none px-4 py-2 -mx-2 relative motion-reduce:transition-none"
             aria-label={`${cta}: ${title}`}
           >
             <span
-              className="relative z-10 transition-transform duration-300 group-hover:-translate-x-0.5 text-charcoal group-hover:text-sage"
-              style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
+              className="relative z-10 transition-[color] duration-200 ease-[cubic-bezier(0.25,0.1,0.25,1)] text-charcoal group-hover:text-sage after:content-[''] after:absolute after:-bottom-px after:left-0 after:h-px after:w-full after:bg-current after:origin-left after:scale-x-0 after:transition-transform after:duration-200 after:ease-[cubic-bezier(0.25,0.1,0.25,1)] group-hover:after:scale-x-100 motion-reduce:transition-none motion-reduce:after:transition-none"
+              style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 400 }}
             >
               {cta.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')}
             </span>
-            <ArrowRight className="relative z-10 w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5 text-charcoal group-hover:text-sage" />
+            <ArrowRight className="relative z-10 w-4 h-4 transition-transform duration-200 ease-[cubic-bezier(0.25,0.1,0.25,1)] group-hover:translate-x-[3px] text-charcoal group-hover:text-sage motion-reduce:transition-none" />
           </button>
         </div>
 

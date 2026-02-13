@@ -268,8 +268,8 @@ export default function VerifyEmailPage() {
       role === "owner";
     if (isBusinessAccount) return "/my-businesses";
 
-    const onboardingDone = Boolean(profile?.onboarding_completed_at || profile?.onboarding_complete);
-    return onboardingDone ? "/home" : "/interests";
+    const onboardingDone = Boolean(profile?.onboarding_completed_at);
+    return onboardingDone ? "/profile" : "/interests";
   }, [user]);
 
   useEffect(() => {
@@ -467,6 +467,21 @@ export default function VerifyEmailPage() {
         return false;
       }
 
+      // Ensure profile exists and role/account_type are synced before redirect decisions.
+      try {
+        const syncResponse = await fetch('/api/auth/sync-profile-role', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          cache: 'no-store',
+        });
+
+        if (!syncResponse.ok) {
+          debugLog('sync-profile-role failed', { status: syncResponse.status });
+        }
+      } catch (syncError) {
+        debugLog('sync-profile-role error', { error: String(syncError) });
+      }
+
       if (typeof window !== "undefined") {
         sessionStorage.removeItem("pendingVerificationEmail");
         sessionStorage.removeItem("pendingVerificationAccountType");
@@ -477,7 +492,7 @@ export default function VerifyEmailPage() {
       let profile: AuthUser["profile"] | undefined = user?.profile;
       const { data: profileData } = await supabase
         .from("profiles")
-        .select("role, account_role, onboarding_complete, onboarding_completed_at")
+        .select("role, account_role, onboarding_completed_at")
         .eq("user_id", authUser.id)
         .maybeSingle();
 
@@ -486,7 +501,6 @@ export default function VerifyEmailPage() {
           ...(profile || {}),
           role: profileData.role as any,
           account_role: profileData.account_role as any,
-          onboarding_complete: Boolean(profileData.onboarding_complete),
           onboarding_completed_at: profileData.onboarding_completed_at || undefined,
         } as AuthUser["profile"];
       }

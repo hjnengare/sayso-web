@@ -247,8 +247,12 @@ export default function ForYouClient({
       overflow: styles.overflow,
       overflowY: styles.overflowY,
       transform: styles.transform,
+      opacity: styles.opacity,
+      visibility: styles.visibility,
+      zIndex: styles.zIndex,
+      isPaginationLoading,
     });
-  }, [canRenderResults, canShowError, isMapMode, showDebugInfo, shouldShowSkeleton, totalCount]);
+  }, [canRenderResults, canShowError, isMapMode, showDebugInfo, shouldShowSkeleton, totalCount, isPaginationLoading]);
 
   // Convert all businesses to map format (filter out null coords) — use lat/lng only
   // Map shows ALL businesses from the full result set, not just current page
@@ -407,6 +411,20 @@ export default function ForYouClient({
     window.addEventListener("resize", updateIsDesktop);
     return () => window.removeEventListener("resize", updateIsDesktop);
   }, []);
+
+  // Safety mechanism: Reset pagination loading after timeout to prevent stuck state
+  useEffect(() => {
+    if (!isPaginationLoading) return;
+    
+    const timeout = setTimeout(() => {
+      if (showDebugInfo) {
+        console.warn("[FOR_YOU] Pagination loading stuck, force clearing");
+      }
+      setIsPaginationLoading(false);
+    }, 2000); // Clear after 2 seconds max
+    
+    return () => clearTimeout(timeout);
+  }, [isPaginationLoading, showDebugInfo]);
 
   return (
     <div className="min-h-dvh bg-off-white">
@@ -586,7 +604,7 @@ export default function ForYouClient({
 
                   {/* Loading Spinner Overlay for Pagination */}
                   {isPaginationLoading && (
-                    <div className="fixed inset-0 z-[9998] bg-off-white/95 backdrop-blur-sm flex items-center justify-center min-h-screen">
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
                       <Loader size="lg" variant="wavy" color="sage"  />
                     </div>
                   )}
@@ -659,11 +677,20 @@ export default function ForYouClient({
                         <motion.div
                           key={currentPage}
                           initial={{ opacity: 0, y: 20, scale: 0.98, filter: "blur(8px)" }}
-                          animate={{ opacity: isPaginationLoading ? 0 : 1, y: 0, scale: 1, filter: "blur(0px)" }}
+                          animate={{ 
+                            opacity: 1, 
+                            y: 0, 
+                            scale: 1, 
+                            filter: "blur(0px)" 
+                          }}
                           exit={{ opacity: 0, y: -20, scale: 0.98, filter: "blur(8px)" }}
                           transition={{
                             duration: 0.4,
                             ease: [0.16, 1, 0.3, 1],
+                          }}
+                          style={{ 
+                            opacity: isPaginationLoading ? 0.3 : 1,
+                            transition: 'opacity 0.2s ease-out'
                           }}
                         >
                           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2 justify-items-center">

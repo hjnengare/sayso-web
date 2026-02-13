@@ -1,6 +1,10 @@
 {
   "crons": [
     {
+      "path": "/api/cron/ingest-ticketmaster",
+      "schedule": "0 */6 * * *"
+    },
+    {
       "path": "/api/cron/ingest-quicket",
       "schedule": "0 1,7,13,19 * * *"
     }

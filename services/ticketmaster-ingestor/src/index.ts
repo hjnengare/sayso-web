@@ -22,13 +22,15 @@ dotenv.config({ path: path.resolve(__dirname, "..", ".env") });
 interface AppConfig extends Omit<FetchConfig, "systemUserId"> {
   supabaseUrl: string;
   supabaseServiceRoleKey: string;
-  preferredSystemUserId?: string;
+  preferredSystemUserId: string;
   runOnStart: boolean;
 }
 
 function isTicketmasterIngestEnabled(): boolean {
   const raw = process.env.ENABLE_TICKETMASTER_INGEST;
-  return raw === "1" || raw?.toLowerCase() === "true";
+  if (!raw || !raw.trim()) return true;
+  const normalized = raw.trim().toLowerCase();
+  return normalized === "1" || normalized === "true";
 }
 
 function loadConfig(): AppConfig {
@@ -42,6 +44,7 @@ function loadConfig(): AppConfig {
   if (!supabaseUrl) throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL");
   if (!supabaseServiceRoleKey) throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY");
   if (!systemBusinessId) throw new Error("Missing SYSTEM_BUSINESS_ID");
+  if (!preferredSystemUserId) throw new Error("Missing SYSTEM_USER_ID");
 
   const cities = (process.env.CITIES || "Cape Town")
     .split(",")
@@ -110,16 +113,40 @@ async function runIngest(config: AppConfig): Promise<void> {
     );
 
     if (result.rows.length === 0) {
-      log.info("No events to upsert. Done.");
+      log.info("[Ingest] Ticketmaster ingest complete:", {
+        source: "ticketmaster",
+        fetched: result.fetchedCount,
+        mapped: result.mappedCount,
+        consolidated: result.consolidatedCount,
+        inserted: 0,
+        updated: 0,
+        failed: 0,
+        created_by: resolvedCreatedBy,
+      });
       return;
     }
 
     // 4. Upsert into DB
     const dbResult = await upsertEvents(supabase, result.rows);
 
-    log.info(
-      `DB result: ${dbResult.inserted} inserted, ${dbResult.updated} updated, ${dbResult.skipped} skipped.`
-    );
+    const ingestMetrics = {
+      source: "ticketmaster",
+      fetched: result.fetchedCount,
+      mapped: result.mappedCount,
+      consolidated: result.consolidatedCount,
+      inserted: dbResult.inserted,
+      updated: dbResult.updated,
+      failed: dbResult.failed,
+      created_by: resolvedCreatedBy,
+    };
+
+    if (dbResult.batchFailures.length > 0) {
+      log.error("[Ingest] Ticketmaster upsert failed with batch errors:", ingestMetrics);
+      log.error("[Ingest] Ticketmaster batch failure details:", dbResult.batchFailures);
+      throw new Error(`Ticketmaster upsert failed with ${dbResult.batchFailures.length} batch error(s).`);
+    }
+
+    log.info("[Ingest] Ticketmaster ingest complete:", ingestMetrics);
   } catch (err) {
     log.error(`Ingest failed: ${err}`);
     if (err instanceof Error && err.stack) {

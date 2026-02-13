@@ -563,7 +563,7 @@ export default function HomeClient() {
         </AnimatePresence>
 
         <main 
-          className={`bg-off-white relative min-h-dvh transition-[padding] duration-300 ease-out ${isSearchActive ? 'pt-4' : 'pt-[var(--header-height)]'}`} 
+          className={`bg-off-white relative min-h-dvh transition-[padding] duration-300 ease-out ${isSearchActive ? 'pt-4' : 'pt-0'}`} 
           style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
         >
           <div ref={contentRef} className="mx-auto w-full max-w-[2000px]">
@@ -596,7 +596,7 @@ export default function HomeClient() {
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1], delay: 0.1 } }}
                   exit={{ opacity: 0, y: -20, transition: { duration: 0.25, ease: [0.4, 0, 0.2, 1] } }}
-                  className="flex flex-col gap-8 sm:gap-10 md:gap-12 pt-4 sm:pt-8"
+                  className="flex flex-col gap-8 sm:gap-10 md:gap-12 pt-0"
                 >
                   {/* For You Section - Only show when NOT filtered */}
                   {!isFiltered && (
@@ -611,7 +611,7 @@ export default function HomeClient() {
                         /* Not signed in: Show Locked For You Section (teaser only) */
                         <div className="mx-auto w-full max-w-[2000px] px-2">
                           <div className="relative border border-charcoal/10 bg-off-white rounded-[14px] p-6 sm:p-8 md:p-10 text-center space-y-4 shadow-[0_1px_0_rgba(0,0,0,0.02)]">
-                            <h3 className="text-lg sm:text-xl font-bold text-charcoal" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                            <h3 className="text-lg sm:text-xl font-extrabold text-charcoal" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                               For You
                             </h3>
                             <p
@@ -737,6 +737,9 @@ export default function HomeClient() {
                     <EventsSpecials
                       events={eventsAndSpecials}
                       loading={eventsAndSpecialsLoading}
+                      titleFontWeight={800}
+                      ctaFontWeight={400}
+                      premiumCtaHover
                     />
                   </motion.div>
 

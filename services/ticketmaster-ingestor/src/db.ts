@@ -29,8 +29,8 @@ export async function resolveCreatedByUserId(
   if (preferredUserId) {
     const validPreferred = await authUserExists(supabase, preferredUserId);
     if (validPreferred) return preferredUserId;
-    log.warn(
-      `Configured SYSTEM_USER_ID (${preferredUserId}) was not found in auth.users. Falling back to business owner.`
+    throw new Error(
+      `Configured SYSTEM_USER_ID (${preferredUserId}) was not found in auth.users. Update SYSTEM_USER_ID to a valid auth user id.`
     );
   }
 
@@ -93,6 +93,15 @@ export async function cleanupOldEvents(supabase: SupabaseClient): Promise<number
 
 const BATCH_SIZE = 200;
 
+type BatchFailure = {
+  batch: number;
+  rows: number;
+  message: string;
+  code: string | null;
+  details: string | null;
+  hint: string | null;
+};
+
 /**
  * Upsert rows into events_and_specials using the existing
  * `upsert_events_and_specials_consolidated` RPC function.
@@ -102,18 +111,19 @@ const BATCH_SIZE = 200;
  *  - On conflict: keeps earliest start_date, latest end_date
  *  - Only updates rows with matching business_id (safety)
  *
- * Returns { inserted, updated, skipped }.
+ * Returns { inserted, updated, failed, batchFailures }.
  */
 export async function upsertEvents(
   supabase: SupabaseClient,
   rows: EventRow[]
-): Promise<{ inserted: number; updated: number; skipped: number }> {
+): Promise<{ inserted: number; updated: number; failed: number; batchFailures: BatchFailure[] }> {
   if (rows.length === 0) {
-    return { inserted: 0, updated: 0, skipped: 0 };
+    return { inserted: 0, updated: 0, failed: 0, batchFailures: [] };
   }
 
   let totalInserted = 0;
   let totalUpdated = 0;
+  const batchFailures: BatchFailure[] = [];
 
   for (let i = 0; i < rows.length; i += BATCH_SIZE) {
     const batch = rows.slice(i, i + BATCH_SIZE);
@@ -125,7 +135,16 @@ export async function upsertEvents(
       });
 
       if (error) {
-        log.error(`  Batch ${batchNum} failed: ${error.message}`);
+        const failure: BatchFailure = {
+          batch: batchNum,
+          rows: batch.length,
+          message: error.message,
+          code: error.code ?? null,
+          details: error.details ?? null,
+          hint: error.hint ?? null,
+        };
+        batchFailures.push(failure);
+        log.error(`  Batch ${batchNum} failed:`, failure);
         continue;
       }
 
@@ -140,15 +159,25 @@ export async function upsertEvents(
         `  Batch ${batchNum}: ${inserted} inserted, ${updated} updated (of ${batch.length} rows).`
       );
     } catch (err) {
-      log.error(`  Batch ${batchNum} failed: ${err}`);
+      const failure: BatchFailure = {
+        batch: batchNum,
+        rows: batch.length,
+        message: err instanceof Error ? err.message : String(err),
+        code: null,
+        details: null,
+        hint: null,
+      };
+      batchFailures.push(failure);
+      log.error(`  Batch ${batchNum} failed:`, failure);
     }
   }
 
-  const skipped = rows.length - totalInserted - totalUpdated;
+  const failed = rows.length - totalInserted - totalUpdated;
 
   return {
     inserted: totalInserted,
     updated: totalUpdated,
-    skipped: Math.max(0, skipped),
+    failed: Math.max(0, failed),
+    batchFailures,
   };
 }

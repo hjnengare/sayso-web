@@ -323,7 +323,7 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
       data-reveal-variant="premium"
     >
       <div
-        className="relative px-1 pt-1 pb-2 sm:pb-0 bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-visible group cursor-pointer w-full flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-md sm:h-auto"
+        className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden group cursor-pointer w-full flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-md sm:h-auto"
         style={{
           maxWidth: "540px",
         } as React.CSSProperties}
@@ -340,7 +340,7 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
        
         {/* MEDIA - Full bleed with premium overlay */}
         <div
-          className="relative overflow-hidden rounded-[12px] z-10 cursor-pointer backdrop-blur-xl h-[280px] sm:h-[300px] md:h-[220px]"
+          className="relative overflow-hidden z-10 cursor-pointer backdrop-blur-xl h-[280px] sm:h-[300px] md:h-[220px]"
           onMouseEnter={() => {
             if (canSwitchBadges) setIsMediaHovered(true);
           }}
@@ -353,7 +353,7 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
             className="relative w-full h-full"
           >
             {!imgError && displayImage ? (
-              <div className="relative w-full h-full overflow-hidden rounded-[12px] shadow-sm">
+              <div className="relative w-full h-full overflow-hidden shadow-sm">
                 <Image
                   src={usingFallback ? getSubcategoryPlaceholderFromCandidates([
                     (business as any).sub_interest_id,
@@ -364,10 +364,13 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
                   ]) : displayImage}
                   alt={displayAlt}
                   fill
-                  sizes="(max-width: 640px) 92vw, (max-width: 1024px) 50vw, 340px"
+                  sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 340px"
                   className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02] group-active:scale-[0.98] motion-reduce:transition-none"
-                  priority={false}
-                  quality={75}
+                  priority={index < 2}
+                  loading={index < 2 ? "eager" : "lazy"}
+                  fetchPriority={index < 2 ? "high" : "auto"}
+                  quality={index < 2 ? 85 : 80}
+                  style={{ aspectRatio: '4/3' }}
                   onError={handleImageError}
                 />
                 <div
@@ -378,7 +381,7 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
               </div>
             ) : (
               <div
-                className="relative w-full h-full flex items-center justify-center rounded-[12px]"
+                className="relative w-full h-full flex items-center justify-center"
                 style={{ backgroundColor: '#E5E0E5' }}
               >
                 <ImageIcon className="w-16 h-16 text-charcoal/20" aria-hidden="true" />
@@ -488,7 +491,7 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
 
         {/* CONTENT - Minimal, premium spacing */}
         <div
-          className="px-4 pt-2.5 sm:px-5 sm:pt-1 md:pt-2 lg:pt-2.5 pb-2.5 flex-1 relative flex-shrink-0 flex flex-col justify-start bg-sage/10 z-10 rounded-b-[12px]"
+          className="px-5 pt-2.5 sm:px-6 sm:pt-1 md:pt-2 lg:pt-2.5 pb-2.5 flex-1 relative flex-shrink-0 flex flex-col justify-start bg-sage/10 z-10 rounded-b-[12px]"
         >
           <div className="flex flex-col">
             {/* Info Wrapper */}
@@ -634,7 +637,7 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
           </div>
 
           {/* Mobile actions - Minimal */}
-          <div className="flex md:hidden items-center justify-center pt-1.5 border-t border-off-white/30">
+          <div className="flex md:hidden items-center justify-center pt-1.5 px-1 border-t border-off-white/30">
             <button
               className="flex-1 flex items-center justify-center gap-1.5 px-4 py-3 rounded-full text-caption sm:text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-sage/40 border transition-all duration-200 min-h-[48px] bg-gradient-to-br from-navbar-bg to-navbar-bg/90 text-white border-sage/50 active:scale-95 active:translate-y-[1px] shadow-md transform-gpu touch-manipulation select-none"
               onClick={(e) => {

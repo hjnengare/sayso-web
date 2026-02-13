@@ -57,6 +57,15 @@ interface EventRow {
   booking_contact: null;
 }
 
+interface BatchFailure {
+  batch: number;
+  rows: number;
+  message: string;
+  code: string | null;
+  details: string | null;
+  hint: string | null;
+}
+
 // ---------------------------------------------------------------------------
 // Config
 // ---------------------------------------------------------------------------
@@ -107,7 +116,22 @@ function isUuid(value: string | null | undefined): value is string {
 
 function isTicketmasterIngestEnabled(): boolean {
   const raw = process.env.ENABLE_TICKETMASTER_INGEST;
-  return raw === "1" || raw?.toLowerCase() === "true";
+  if (!raw || !raw.trim()) return true;
+  const normalized = raw.trim().toLowerCase();
+  return normalized === "1" || normalized === "true";
+}
+
+function toBatchFailure(batch: number, rows: number, error: unknown): BatchFailure {
+  const fallbackMessage = error instanceof Error ? error.message : String(error);
+  const e = error as { message?: string; code?: string; details?: string; hint?: string } | null;
+  return {
+    batch,
+    rows,
+    message: e?.message ?? fallbackMessage,
+    code: e?.code ?? null,
+    details: e?.details ?? null,
+    hint: e?.hint ?? null,
+  };
 }
 
 async function userExists(supabase: any, userId: string): Promise<boolean> {
@@ -137,50 +161,11 @@ async function userExists(supabase: any, userId: string): Promise<boolean> {
 
 async function resolveCreatedByUserId(
   supabase: any,
-  businessId: string,
-  configuredUserId?: string
+  configuredUserId: string
 ): Promise<string> {
-  if (configuredUserId && (await userExists(supabase, configuredUserId))) {
-    return configuredUserId;
-  }
-
-  if (configuredUserId) {
-    console.warn(
-      `[Cron] SYSTEM_USER_ID is invalid or missing in auth.users: ${configuredUserId}. Falling back.`
-    );
-  }
-
-  const { data: business, error: businessError } = await supabase
-    .from("businesses")
-    .select("owner_id")
-    .eq("id", businessId)
-    .maybeSingle();
-
-  const ownerId = (business as { owner_id?: string | null } | null)?.owner_id;
-  if (!businessError && isUuid(ownerId) && (await userExists(supabase, ownerId))) {
-    return ownerId;
-  }
-
-  if (isUuid(ownerId)) {
-    console.warn(
-      `[Cron] businesses.owner_id is set but invalid for FK: ${ownerId}. Falling back.`
-    );
-  }
-
-  const { data: fallbackProfile, error: profileError } = await supabase
-    .from("profiles")
-    .select("user_id")
-    .not("user_id", "is", null)
-    .limit(1)
-    .maybeSingle();
-
-  const fallbackUserId = (fallbackProfile as { user_id?: string | null } | null)?.user_id;
-  if (!profileError && isUuid(fallbackUserId)) {
-    return fallbackUserId;
-  }
-
+  if (await userExists(supabase, configuredUserId)) return configuredUserId;
   throw new Error(
-    "Unable to resolve a valid created_by user. Set SYSTEM_USER_ID to an existing auth.users UUID or set businesses.owner_id on SYSTEM_BUSINESS_ID."
+    `SYSTEM_USER_ID is configured but invalid in auth.users/profiles: ${configuredUserId}.`
   );
 }
 
@@ -309,6 +294,12 @@ export async function GET(req: NextRequest) {
         source: "ticketmaster",
         disabled: true,
         message: "Ticketmaster ingest disabled via ENABLE_TICKETMASTER_INGEST",
+        fetched: 0,
+        mapped: 0,
+        consolidated: 0,
+        inserted: 0,
+        updated: 0,
+        failed: 0,
       });
     }
 
@@ -318,12 +309,13 @@ export async function GET(req: NextRequest) {
     const bizId = process.env.SYSTEM_BUSINESS_ID;
     const configuredUserId = process.env.SYSTEM_USER_ID;
 
-    if (!apiKey || !supabaseUrl || !serviceKey || !bizId) {
+    if (!apiKey || !supabaseUrl || !serviceKey || !bizId || !configuredUserId) {
       return NextResponse.json({ error: "Missing env vars" }, { status: 500 });
     }
 
     const supabase = createClient(supabaseUrl, serviceKey);
-    const createdByUserId = await resolveCreatedByUserId(supabase, bizId, configuredUserId);
+    const createdByUserId = await resolveCreatedByUserId(supabase, configuredUserId);
+    console.log(`[Cron] Using created_by user id: ${createdByUserId}`);
 
     // 1. Cleanup expired events
     const cutoff = new Date(Date.now() - 1 * 86_400_000).toISOString();
@@ -364,14 +356,18 @@ export async function GET(req: NextRequest) {
     // 4. Upsert
     let inserted = 0;
     let updated = 0;
+    const batchFailures: BatchFailure[] = [];
 
     for (let i = 0; i < rows.length; i += BATCH_SIZE) {
       const batch = rows.slice(i, i + BATCH_SIZE);
+      const batchNum = Math.floor(i / BATCH_SIZE) + 1;
       const { data, error } = await supabase.rpc("upsert_events_and_specials_consolidated", {
         p_rows: batch,
       });
       if (error) {
-        console.error(`Batch ${Math.floor(i / BATCH_SIZE) + 1} failed:`, error.message);
+        const failure = toBatchFailure(batchNum, batch.length, error);
+        batchFailures.push(failure);
+        console.error("[Cron] Ticketmaster upsert batch failed:", failure);
         continue;
       }
       const first = Array.isArray(data) ? data[0] : data;
@@ -379,20 +375,33 @@ export async function GET(req: NextRequest) {
       updated += Number(first?.updated ?? 0);
     }
 
+    const failed = Math.max(0, rows.length - inserted - updated);
     const result = {
       source: "ticketmaster",
+      created_by: createdByUserId,
       fetched: allEvents.length,
       mapped: mapped.length,
       consolidated: rows.length,
       inserted,
       updated,
+      failed,
     };
+
+    if (batchFailures.length > 0) {
+      const failureResult = {
+        ...result,
+        error: "Ticketmaster upsert failed",
+        batch_failures: batchFailures,
+      };
+      console.error("[Cron] Ticketmaster ingest failed during upsert:", failureResult);
+      return NextResponse.json(failureResult, { status: 500 });
+    }
 
     console.log("[Cron] Ticketmaster ingest complete:", result);
     return NextResponse.json(result);
   } catch (error: unknown) {
+    console.error("[Cron] Ticketmaster ingest failed:", error);
     const msg = error instanceof Error ? error.message : String(error);
-    console.error("[Cron] Ticketmaster ingest failed:", msg);
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

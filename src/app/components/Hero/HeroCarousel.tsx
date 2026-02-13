@@ -364,6 +364,35 @@ export default function HeroCarousel() {
     }
   }, [authLoading]);
 
+  // Preload first hero image for mobile-first LCP optimization
+  useEffect(() => {
+    if (typeof window === 'undefined' || slides.length === 0) return;
+    
+    const firstSlide = slides[0];
+    if (!firstSlide?.image) return;
+
+    // Create preload link for first hero image
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'image';
+    link.href = firstSlide.image;
+    link.fetchPriority = 'high';
+    
+    // Add mobile-first media query for better bandwidth management
+    if (heroViewport === 'mobile') {
+      link.media = '(max-width: 768px)';
+    }
+    
+    document.head.appendChild(link);
+
+    return () => {
+      // Cleanup preload link
+      if (document.head.contains(link)) {
+        document.head.removeChild(link);
+      }
+    };
+  }, [slides, heroViewport]);
+
   // Filter state
   const [filters, setFilters] = useState<FilterState>({ minRating: null, distance: null });
   const [isFilterVisible, setIsFilterVisible] = useState(false);
@@ -804,10 +833,10 @@ export default function HeroCarousel() {
                 priority={idx === 0}
                 loading={idx === 0 ? "eager" : "lazy"}
                 fetchPriority={idx === 0 ? "high" : "auto"}
-                quality={heroViewport === "mobile" ? 65 : 80}
+                quality={heroViewport === "mobile" ? 75 : 85}
                 className="transform-gpu [backface-visibility:hidden] object-cover object-center"
                 style={{ filter: "brightness(0.95) contrast(1.05) saturate(1.1)" }}
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 80vw"
+                sizes="(max-width: 640px) 100vw, (max-width: 768px) 100vw, (max-width: 1200px) 90vw, 80vw"
                 onError={() => {
                   setFailedImageUrls((prev) => new Set(prev).add(slide.image));
                 }}

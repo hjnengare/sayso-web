@@ -37,12 +37,14 @@ const BusinessCardImage: React.FC<BusinessCardImageProps> = ({
             src={usingFallback ? getCategoryPlaceholder(categoryKey) : displayImage}
             alt={displayAlt}
             fill
-            sizes="(max-width: 640px) 100vw, (max-width: 768px) 260px, (max-width: 1024px) 340px, 340px"
+            sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 340px, 340px"
             className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02] group-active:scale-[0.98] motion-reduce:transition-none"
-            quality={70}
+            quality={priority ? 85 : 75}
             priority={priority}
             loading={priority ? "eager" : "lazy"}
+            fetchPriority={priority ? "high" : "auto"}
             onError={onImageError}
+            style={{ aspectRatio: '4/3' }}
           />
           <div
             className="absolute inset-0 pointer-events-none transition-opacity duration-500 ease-out group-hover:opacity-0 motion-reduce:transition-none"

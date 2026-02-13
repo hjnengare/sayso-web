@@ -153,7 +153,7 @@ export default function CommunityHighlights({
           <WavyTypedTitle
             text={title}
             as="h2"
-            className="font-urbanist text-h2 sm:text-h1 font-700 text-charcoal hover:text-sage transition-all duration-300 px-3 sm:px-4 py-1 hover:bg-sage/5 rounded-lg cursor-default"
+            className="font-urbanist text-h2 sm:text-h1 font-800 text-charcoal hover:text-sage transition-all duration-300 px-3 sm:px-4 py-1 hover:bg-sage/5 rounded-lg cursor-default"
             typingSpeedMs={40}
             startDelayMs={300}
             waveVariant="subtle"
@@ -162,7 +162,7 @@ export default function CommunityHighlights({
             disableWave={true}
             style={{ 
               fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-              fontWeight: 700,
+              fontWeight: 800,
             }}
           />
         </div>
@@ -172,22 +172,22 @@ export default function CommunityHighlights({
           <div className="mt-1">
             <div className="pb-4 sm:pb-8 md:pb-10 flex flex-wrap items-center justify-between gap-2">
                 <h3
-                  className="font-urbanist text-base font-700 text-charcoal transition-all duration-300 px-3 sm:px-4 py-1 rounded-lg cursor-none"
-                  style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif", fontWeight: 700 }}
+                  className="font-urbanist text-base font-800 text-charcoal transition-all duration-300 px-3 sm:px-4 py-1 rounded-lg cursor-none"
+                  style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif", fontWeight: 800 }}
                 >
                   <span className="sm:hidden">{contributorsHeadingMobile}</span>
                   <span className="hidden sm:inline">{contributorsHeadingDesktop}</span>
                 </h3>
                 <button
                   onClick={() => router.push('/leaderboard?tab=contributors')}
-                  className="group inline-flex items-center gap-1 text-body-sm sm:text-caption font-normal text-charcoal transition-all duration-300 hover:text-sage focus:outline-none px-4 py-2 -mx-2 relative"
+                  className="group inline-flex items-center gap-1 text-body-sm sm:text-caption font-normal text-charcoal transition-colors duration-200 ease-[cubic-bezier(0.25,0.1,0.25,1)] hover:text-sage focus:outline-none px-4 py-2 -mx-2 relative motion-reduce:transition-none"
                   aria-label="See More: Top Contributors"
-                  style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
+                  style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 400 }}
                 >
-                  <span className="relative z-10 transition-transform duration-300 group-hover:-translate-x-0.5 text-charcoal group-hover:text-sage" style={{ fontWeight: 600 }}>
+                  <span className="relative z-10 transition-[color] duration-200 ease-[cubic-bezier(0.25,0.1,0.25,1)] text-charcoal group-hover:text-sage after:content-[''] after:absolute after:-bottom-px after:left-0 after:h-px after:w-full after:bg-current after:origin-left after:scale-x-0 after:transition-transform after:duration-200 after:ease-[cubic-bezier(0.25,0.1,0.25,1)] group-hover:after:scale-x-100 motion-reduce:transition-none motion-reduce:after:transition-none" style={{ fontWeight: 400 }}>
                     See More
                   </span>
-                  <ArrowRight className="relative z-10 w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5 text-charcoal group-hover:text-sage" />
+                  <ArrowRight className="relative z-10 w-4 h-4 transition-transform duration-200 ease-[cubic-bezier(0.25,0.1,0.25,1)] group-hover:translate-x-[3px] text-charcoal group-hover:text-sage motion-reduce:transition-none" />
                 </button>
               </div>
 
@@ -232,8 +232,8 @@ export default function CommunityHighlights({
           <div className="mt-1">
             <div className="pb-4 sm:pb-8 md:pb-10 flex flex-wrap items-center justify-between gap-2">
               <h3
-                className="font-urbanist text-base font-700 text-charcoal transition-all duration-300 px-3 sm:px-4 py-1 rounded-lg cursor-none"
-                style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif", fontWeight: 700 }}
+                className="font-urbanist text-base font-800 text-charcoal transition-all duration-300 px-3 sm:px-4 py-1 rounded-lg cursor-none"
+                style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif", fontWeight: 800 }}
               >
                 <span className="sm:hidden">{contributorsHeadingMobile}</span>
                 <span className="hidden sm:inline">{contributorsHeadingDesktop}</span>
@@ -374,22 +374,22 @@ export default function CommunityHighlights({
             <div className="mx-auto w-full max-w-[2000px] relative z-10">
               <div className="pb-4 sm:pb-8 md:pb-10 flex flex-wrap items-center justify-between gap-2">
                 <h3
-                  className="font-urbanist text-base font-700 text-charcoal transition-all duration-300 px-3 sm:px-4 py-1 rounded-lg cursor-default"
-                  style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif", fontWeight: 700 }}
+                  className="font-urbanist text-base font-800 text-charcoal transition-all duration-300 px-3 sm:px-4 py-1 rounded-lg cursor-default"
+                  style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif", fontWeight: 800 }}
                 >
                   <span className="sm:hidden">Featured Businesses</span>
                   <span className="hidden sm:inline">Featured Businesses of the Month by Category</span>
                 </h3>
                 <button
                   onClick={() => router.push('/leaderboard?tab=businesses')}
-                  className="group inline-flex items-center gap-1 text-body-sm sm:text-caption font-normal text-charcoal transition-all duration-300 hover:text-sage focus:outline-none px-4 py-2 -mx-2 relative"
+                  className="group inline-flex items-center gap-1 text-body-sm sm:text-caption font-normal text-charcoal transition-colors duration-200 ease-[cubic-bezier(0.25,0.1,0.25,1)] hover:text-sage focus:outline-none px-4 py-2 -mx-2 relative motion-reduce:transition-none"
                   aria-label="See More: Featured Businesses"
-                  style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
+                  style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 400 }}
                 >
-                  <span className="relative z-10 transition-transform duration-300 group-hover:-translate-x-0.5 text-charcoal group-hover:text-sage" style={{ fontWeight: 600 }}>
+                  <span className="relative z-10 transition-[color] duration-200 ease-[cubic-bezier(0.25,0.1,0.25,1)] text-charcoal group-hover:text-sage after:content-[''] after:absolute after:-bottom-px after:left-0 after:h-px after:w-full after:bg-current after:origin-left after:scale-x-0 after:transition-transform after:duration-200 after:ease-[cubic-bezier(0.25,0.1,0.25,1)] group-hover:after:scale-x-100 motion-reduce:transition-none motion-reduce:after:transition-none" style={{ fontWeight: 400 }}>
                     See More
                   </span>
-                  <ArrowRight className="relative z-10 w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5 text-charcoal group-hover:text-sage" />
+                  <ArrowRight className="relative z-10 w-4 h-4 transition-transform duration-200 ease-[cubic-bezier(0.25,0.1,0.25,1)] group-hover:translate-x-[3px] text-charcoal group-hover:text-sage motion-reduce:transition-none" />
                 </button>
               </div>
 
@@ -430,8 +430,8 @@ export default function CommunityHighlights({
             <div className="mx-auto w-full max-w-[2000px] relative z-10">
               <div className="pb-4 sm:pb-8 md:pb-10 flex flex-wrap items-center justify-between gap-2">
                 <h3
-                  className="font-urbanist text-base font-700 text-charcoal transition-all duration-300 px-3 sm:px-4 py-1 rounded-lg cursor-default"
-                  style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif", fontWeight: 700 }}
+                  className="font-urbanist text-base font-800 text-charcoal transition-all duration-300 px-3 sm:px-4 py-1 rounded-lg cursor-default"
+                  style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif", fontWeight: 800 }}
                 >
                   <span className="sm:hidden">Featured</span>
                   <span className="hidden sm:inline">Featured Businesses</span>

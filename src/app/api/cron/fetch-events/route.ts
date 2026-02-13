@@ -7,7 +7,9 @@ export const maxDuration = 60; // 60 seconds max duration
 
 function isTicketmasterIngestEnabled(): boolean {
   const raw = process.env.ENABLE_TICKETMASTER_INGEST;
-  return raw === "1" || raw?.toLowerCase() === "true";
+  if (!raw || !raw.trim()) return true;
+  const normalized = raw.trim().toLowerCase();
+  return normalized === "1" || normalized === "true";
 }
 
 /**

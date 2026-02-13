@@ -71,6 +71,15 @@ interface EventRow {
   booking_contact: null;
 }
 
+interface BatchFailure {
+  batch: number;
+  rows: number;
+  message: string;
+  code: string | null;
+  details: string | null;
+  hint: string | null;
+}
+
 // ==========================================================================
 // Constants
 // ==========================================================================
@@ -139,7 +148,9 @@ function isUuid(value: string | null | undefined): value is string {
 function isTicketmasterIngestEnabled(): boolean {
   // @ts-ignore
   const raw = Deno.env.get("ENABLE_TICKETMASTER_INGEST");
-  return raw === "1" || raw?.toLowerCase() === "true";
+  if (!raw || !raw.trim()) return true;
+  const normalized = raw.trim().toLowerCase();
+  return normalized === "1" || normalized === "true";
 }
 
 async function userExists(supabase: SupabaseClient, userId: string): Promise<boolean> {
@@ -169,51 +180,11 @@ async function userExists(supabase: SupabaseClient, userId: string): Promise<boo
 
 async function resolveCreatedByUserId(
   supabase: SupabaseClient,
-  businessId: string,
-  configuredUserId?: string | null
+  configuredUserId: string
 ): Promise<string> {
-  if (configuredUserId && (await userExists(supabase, configuredUserId))) {
-    return configuredUserId;
-  }
-
-  if (configuredUserId) {
-    console.warn(
-      `[Ingest] SYSTEM_USER_ID is invalid or missing in auth.users: ${configuredUserId}. Falling back.`
-    );
-  }
-
-  const { data: business, error: businessError } = await supabase
-    .from("businesses")
-    .select("owner_id")
-    .eq("id", businessId)
-    .maybeSingle();
-
-  if (!businessError && isUuid((business as { owner_id?: string | null } | null)?.owner_id) &&
-    (await userExists(supabase, (business as { owner_id: string }).owner_id))) {
-    return (business as { owner_id: string }).owner_id;
-  }
-
-  const ownerCandidate = (business as { owner_id?: string | null } | null)?.owner_id;
-  if (isUuid(ownerCandidate)) {
-    console.warn(
-      `[Ingest] businesses.owner_id is set but invalid for FK: ${ownerCandidate}. Falling back.`
-    );
-  }
-
-  const { data: fallbackProfile, error: profileError } = await supabase
-    .from("profiles")
-    .select("user_id")
-    .not("user_id", "is", null)
-    .limit(1)
-    .maybeSingle();
-
-  const fallbackUserId = (fallbackProfile as { user_id?: string | null } | null)?.user_id;
-  if (!profileError && isUuid(fallbackUserId)) {
-    return fallbackUserId;
-  }
-
+  if (await userExists(supabase, configuredUserId)) return configuredUserId;
   throw new Error(
-    "Unable to resolve a valid created_by user. Set SYSTEM_USER_ID to an existing auth.users UUID or set businesses.owner_id on SYSTEM_BUSINESS_ID."
+    `SYSTEM_USER_ID is configured but invalid in auth.users/profiles: ${configuredUserId}.`
   );
 }
 
@@ -506,9 +477,10 @@ async function cleanupOldEvents(supabase: SupabaseClient): Promise<number> {
 async function upsertEvents(
   supabase: SupabaseClient,
   rows: EventRow[],
-): Promise<{ inserted: number; updated: number }> {
+): Promise<{ inserted: number; updated: number; failed: number; batchFailures: BatchFailure[] }> {
   let totalInserted = 0;
   let totalUpdated = 0;
+  const batchFailures: BatchFailure[] = [];
 
   for (let i = 0; i < rows.length; i += BATCH_SIZE) {
     const batch = rows.slice(i, i + BATCH_SIZE);
@@ -519,7 +491,16 @@ async function upsertEvents(
     });
 
     if (error) {
-      console.error(`[DB] Batch ${batchNum} failed: ${error.message}`);
+      const failure: BatchFailure = {
+        batch: batchNum,
+        rows: batch.length,
+        message: error.message,
+        code: error.code ?? null,
+        details: error.details ?? null,
+        hint: error.hint ?? null,
+      };
+      batchFailures.push(failure);
+      console.error("[DB] Ticketmaster upsert batch failed:", failure);
       continue;
     }
 
@@ -532,7 +513,8 @@ async function upsertEvents(
     console.log(`[DB] Batch ${batchNum}: ${ins} inserted, ${upd} updated (of ${batch.length}).`);
   }
 
-  return { inserted: totalInserted, updated: totalUpdated };
+  const failed = Math.max(0, rows.length - totalInserted - totalUpdated);
+  return { inserted: totalInserted, updated: totalUpdated, failed, batchFailures };
 }
 
 // ==========================================================================
@@ -551,6 +533,12 @@ Deno.serve(async (req: Request) => {
         source: "ticketmaster",
         disabled: true,
         message: "Ticketmaster ingest disabled via ENABLE_TICKETMASTER_INGEST",
+        fetched: 0,
+        mapped: 0,
+        consolidated: 0,
+        inserted: 0,
+        updated: 0,
+        failed: 0,
         elapsed_ms: Date.now() - startMs,
       });
     }
@@ -572,6 +560,7 @@ Deno.serve(async (req: Request) => {
     if (!apiKey) return jsonError("TICKETMASTER_API_KEY not configured");
     if (!supabaseUrl || !supabaseServiceKey) return jsonError("Supabase credentials not configured");
     if (!systemBusinessId) return jsonError("SYSTEM_BUSINESS_ID not configured");
+    if (!configuredSystemUserId) return jsonError("SYSTEM_USER_ID not configured");
 
     // Allow query-param overrides (useful for manual testing)
     const reqUrl = new URL(req.url);
@@ -590,9 +579,9 @@ Deno.serve(async (req: Request) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const createdByUserId = await resolveCreatedByUserId(
       supabase,
-      systemBusinessId,
       configuredSystemUserId
     );
+    console.log(`[Ingest] Using created_by user id: ${createdByUserId}`);
 
     // ---- 1. Cleanup old events ----
     const cleanedUp = await cleanupOldEvents(supabase);
@@ -609,36 +598,57 @@ Deno.serve(async (req: Request) => {
     if (rows.length === 0) {
       return jsonOk({
         success: true,
+        source: "ticketmaster",
+        created_by: createdByUserId,
         message: "No events to upsert",
         fetched: fetchedCount,
         mapped: mappedCount,
         consolidated: 0,
         inserted: 0,
         updated: 0,
+        failed: 0,
         cleaned_up: cleanedUp,
         elapsed_ms: Date.now() - startMs,
       });
     }
 
     // ---- 3. Upsert into events_and_specials ----
-    const { inserted, updated } = await upsertEvents(supabase, rows);
+    const upsertResult = await upsertEvents(supabase, rows);
+    const { inserted, updated, failed, batchFailures } = upsertResult;
 
     const elapsed = Date.now() - startMs;
-    console.log(
-      `[Ingest] Done in ${elapsed}ms. Fetched: ${fetchedCount}, Mapped: ${mappedCount}, ` +
-        `Consolidated: ${rows.length}, Inserted: ${inserted}, Updated: ${updated}, Cleaned: ${cleanedUp}.`,
-    );
-
-    return jsonOk({
-      success: true,
+    const ingestMetrics = {
+      source: "ticketmaster",
+      created_by: createdByUserId,
       fetched: fetchedCount,
       mapped: mappedCount,
       consolidated: rows.length,
       inserted,
       updated,
+      failed,
       cleaned_up: cleanedUp,
       elapsed_ms: elapsed,
       timestamp: new Date().toISOString(),
+    };
+
+    if (batchFailures.length > 0) {
+      const failurePayload = {
+        ...ingestMetrics,
+        error: "Ticketmaster upsert failed",
+        batch_failures: batchFailures,
+      };
+      console.error("[Ingest] Ticketmaster ingest failed during upsert:", failurePayload);
+      return new Response(JSON.stringify(failurePayload), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    console.log("[Ingest] Ticketmaster ingest complete:", ingestMetrics);
+
+    return jsonOk({
+      success: true,
+      ...ingestMetrics,
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
