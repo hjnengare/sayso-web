@@ -47,12 +47,25 @@ type ReviewErrorCode =
   | 'RLS_BLOCKED'
   | 'DB_ERROR'
   | 'IMAGE_UPLOAD_FAILED'
-  | 'SERVER_ERROR';
+  | 'SERVER_ERROR'
+  | 'SERVER_MISCONFIG';
+
+type ReviewStep =
+  | 'env_check'
+  | 'business_resolution_start'
+  | 'resolve_by_slug'
+  | 'resolve_by_id'
+  | 'resolve_by_old_slug'
+  | 'rate_limit_check'
+  | 'insert_review'
+  | 'update_business_stats'
+  | 'image_upload';
 
 interface ReviewErrorResponse {
   success: false;
   code: ReviewErrorCode;
   message: string;
+  step?: ReviewStep;
   details?: Record<string, unknown>;
 }
 
@@ -60,12 +73,30 @@ function errorResponse(
   code: ReviewErrorCode,
   message: string,
   status: number,
-  details?: Record<string, unknown>
+  details?: Record<string, unknown>,
+  step?: ReviewStep
 ): NextResponse<ReviewErrorResponse> {
-  return NextResponse.json(
-    { success: false, code, message, details },
-    { status }
-  );
+  const body: ReviewErrorResponse = { success: false, code, message };
+  if (step !== undefined) body.step = step;
+  if (details !== undefined) body.details = details;
+  return NextResponse.json(body, { status });
+}
+
+function logStepError(
+  step: ReviewStep,
+  error: any,
+  isAnonymous: boolean
+) {
+  console.error(`[Review API] Step failed: ${step}`, {
+    step,
+    message: error?.message,
+    code: error?.code,
+    details: error?.details,
+    hint: error?.hint,
+    status: error?.status,
+    hasServiceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    isAnonymous,
+  });
 }
 
 // Simple text sanitization function (strips HTML tags and decodes basic entities)
@@ -84,38 +115,24 @@ function sanitizeText(text: string): string {
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-// Structured logging helper
-function logStepError(
-  step: 'business_resolution' | 'rate_limit' | 'insert' | 'stats_update' | 'image_upload',
-  error: any,
-  isAnonymous: boolean
-) {
-  console.error(`[Review API] Step failed: ${step}`, {
-    step,
-    message: error?.message,
-    code: error?.code,
-    details: error?.details,
-    hint: error?.hint,
-    hasServiceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-    isAnonymous,
-  });
-}
-
 export async function POST(req: NextRequest) {
   try {
     const supabase = await getServerSupabase(req);
 
-    // Auth: optional across business/event/special. Authenticated identity is preserved.
+    // Auth: server-trusted; only treat as authenticated if user exists and no auth error
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     const isAnonymous = !user || !!authError;
-    
-    // Fail fast if service role key is missing and we're in anonymous mode
-    if (isAnonymous && !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      console.error('[Review API] CRITICAL: SUPABASE_SERVICE_ROLE_KEY missing in anonymous mode');
+
+    // Fail-fast when service role is required (anonymous mode) and key is missing
+    const hasServiceRoleKey = !!(process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.SUPABASE_SERVICE_ROLE_KEY.trim());
+    if (isAnonymous && !hasServiceRoleKey) {
+      console.error('[Review API] env_check: SUPABASE_SERVICE_ROLE_KEY missing or empty (required for anonymous)', { hasServiceRoleKey: false });
       return errorResponse(
-        'SERVER_ERROR',
+        'SERVER_MISCONFIG',
         'Server configuration issue. Please contact support.',
-        500
+        500,
+        undefined,
+        'env_check'
       );
     }
     
@@ -216,7 +233,7 @@ export async function POST(req: NextRequest) {
     // This is ONLY available for legacy business branch; for special/event we won't assume it exists.
     let resolvedBusiness: { id: string; name: string; slug: string | null } | null = null;
 
-    console.log('[Review API] Starting business resolution', {
+    console.log('[Review API] business_resolution_start', {
       isAnonymous,
       reviewType: isEventReview ? 'event' : isSpecialReview ? 'special' : 'business',
       hasServiceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -231,11 +248,13 @@ export async function POST(req: NextRequest) {
         .maybeSingle();
 
       if (eventError) {
-        logStepError('business_resolution', eventError, isAnonymous);
+        logStepError('business_resolution_start', eventError, isAnonymous);
         return errorResponse(
           'DB_ERROR',
           "We couldn't verify the event. Please try again.",
-          500
+          500,
+          undefined,
+          'business_resolution_start'
         );
       }
 
@@ -257,11 +276,13 @@ export async function POST(req: NextRequest) {
         .maybeSingle();
 
       if (specialError) {
-        logStepError('business_resolution', specialError, isAnonymous);
+        logStepError('business_resolution_start', specialError, isAnonymous);
         return errorResponse(
           'DB_ERROR',
           "We couldn't verify the special. Please try again.",
-          500
+          500,
+          undefined,
+          'business_resolution_start'
         );
       }
       if (!specialData) {
@@ -307,8 +328,16 @@ export async function POST(req: NextRequest) {
         .maybeSingle();
 
       if (slugError) {
-        logStepError('business_resolution', slugError, isAnonymous);
-      } else if (slugData?.id) {
+        logStepError('resolve_by_slug', slugError, isAnonymous);
+        return errorResponse(
+          'DB_ERROR',
+          "We couldn't find that business. Please try again.",
+          500,
+          undefined,
+          'resolve_by_slug'
+        );
+      }
+      if (slugData?.id) {
         business_id = slugData.id;
         resolvedBusiness = {
           id: slugData.id,
@@ -326,8 +355,16 @@ export async function POST(req: NextRequest) {
             .maybeSingle();
 
           if (idError) {
-            logStepError('business_resolution', idError, isAnonymous);
-          } else if (idData?.id) {
+            logStepError('resolve_by_id', idError, isAnonymous);
+            return errorResponse(
+              'DB_ERROR',
+              "We couldn't find that business. Please try again.",
+              500,
+              undefined,
+              'resolve_by_id'
+            );
+          }
+          if (idData?.id) {
             business_id = idData.id;
             resolvedBusiness = {
               id: idData.id,
@@ -379,7 +416,14 @@ export async function POST(req: NextRequest) {
         .gte('created_at', oneHourAgo);
 
       if (rateError) {
-        logStepError('rate_limit', rateError, isAnonymous);
+        logStepError('rate_limit_check', rateError, isAnonymous);
+        return errorResponse(
+          'DB_ERROR',
+          "We couldn't complete your request. Please try again.",
+          500,
+          undefined,
+          'rate_limit_check'
+        );
       }
 
       if ((recentCount ?? 0) >= 3) {
@@ -398,7 +442,14 @@ export async function POST(req: NextRequest) {
           .eq('anonymous_id', anonymousId);
 
         if (duplicateError) {
-          logStepError('rate_limit', duplicateError, isAnonymous);
+          logStepError('rate_limit_check', duplicateError, isAnonymous);
+          return errorResponse(
+            'DB_ERROR',
+            "We couldn't complete your request. Please try again.",
+            500,
+            undefined,
+            'rate_limit_check'
+          );
         }
 
         if ((duplicateCount ?? 0) > 0) {
@@ -472,17 +523,17 @@ export async function POST(req: NextRequest) {
         hasServiceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
       });
       reviewInsertData = {
-        user_id: !isAnonymous && user ? user.id : null,
+        user_id: isAnonymous ? null : (user?.id ?? null),
         rating: rating!,
-        title: sanitizedTitle,
+        title: sanitizedTitle ?? null,
         content: finalContent,
         tags: tags.filter(t => t.trim().length > 0),
         helpful_count: 0,
         ...(isAnonymous
           ? {
               anonymous_id: anonymousId,
-              ip_address: clientIp,
-              user_agent_hash: userAgentHash,
+              ip_address: clientIp ?? null,
+              user_agent_hash: userAgentHash ?? null,
             }
           : {}),
       };
@@ -524,18 +575,18 @@ export async function POST(req: NextRequest) {
         .single();
 
       if (reviewError) {
-        logStepError('insert', reviewError, isAnonymous);
-        
-        // Check for RLS/permission errors
+        logStepError('insert_review', reviewError, isAnonymous);
+
         if (reviewError.message?.includes('permission') || reviewError.code === '42501') {
           return errorResponse(
             'RLS_BLOCKED',
             "We couldn't save your review right now. Please try again.",
-            403
+            403,
+            undefined,
+            'insert_review'
           );
         }
-        
-        // Check for duplicate/unique constraint errors
+
         if (reviewError.code === '23505' || reviewError.message?.includes('duplicate')) {
           return errorResponse(
             'DUPLICATE_REVIEW',
@@ -543,11 +594,13 @@ export async function POST(req: NextRequest) {
             409
           );
         }
-        
+
         return errorResponse(
           'DB_ERROR',
           "We couldn't save your review. Please try again.",
-          500
+          500,
+          undefined,
+          'insert_review'
         );
       }
 
@@ -555,7 +608,9 @@ export async function POST(req: NextRequest) {
         return errorResponse(
           'DB_ERROR',
           "We couldn't save your review. Please try again.",
-          500
+          500,
+          undefined,
+          'insert_review'
         );
       }
 
@@ -563,9 +618,11 @@ export async function POST(req: NextRequest) {
     } catch (error) {
       console.error('[Review API] Unexpected error creating review:', error);
       return errorResponse(
-        'SERVER_ERROR',
-        'Something went wrong. Please try again.',
-        500
+        'DB_ERROR',
+        "We couldn't save your review. Please try again.",
+        500,
+        undefined,
+        'insert_review'
       );
     }
 
@@ -599,10 +656,10 @@ export async function POST(req: NextRequest) {
           statsError = statsUpdateError;
         }
         if (statsError) {
-          logStepError('stats_update', statsError, isAnonymous);
+          logStepError('update_business_stats', statsError, isAnonymous);
         }
       } catch (err) {
-        logStepError('stats_update', err, isAnonymous);
+        logStepError('update_business_stats', err, isAnonymous);
         statsError = err;
       }
     }
