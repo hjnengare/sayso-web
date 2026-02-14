@@ -19,6 +19,7 @@ import {
 import Footer from "../components/Footer/Footer";
 import { BADGE_MAPPINGS, type BadgeMapping } from "../lib/badgeMappings";
 import { useAuth } from "../contexts/AuthContext";
+import { useIsDesktop } from "../hooks/useIsDesktop";
 
 // Badge descriptions and how to earn them
 const BADGE_DETAILS: Record<string, { description: string; howToEarn: string }> = {
@@ -406,11 +407,14 @@ const itemVariants = {
 
 // Badge Card Component
 function BadgeCard({ badge, index }: { badge: BadgeMapping; index: number }) {
+  const isDesktop = useIsDesktop();
   const details = BADGE_DETAILS[badge.id];
   
   return (
     <motion.div
-      variants={itemVariants}
+      variants={isDesktop ? itemVariants : undefined}
+      initial={isDesktop ? "hidden" : false}
+      animate={isDesktop ? "visible" : undefined}
       className="group relative bg-white rounded-2xl border border-black/5 shadow-premium hover:shadow-premiumHover transition-all duration-300 overflow-hidden"
     >
       {/* Card Content */}
@@ -473,6 +477,7 @@ function BadgeSection({
   groupKey: "explorer" | "specialist" | "milestone" | "community";
   badges: BadgeMapping[];
 }) {
+  const isDesktop = useIsDesktop();
   const meta = CATEGORY_META[groupKey];
   const IconComponent = meta.icon;
 
@@ -492,6 +497,7 @@ function BadgeSection({
   return (
     <section className="mb-16 sm:mb-24">
       {/* Section Header */}
+      {isDesktop ? (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -521,6 +527,31 @@ function BadgeSection({
           {meta.description}
         </p>
       </motion.div>
+      ) : (
+      <div className="mb-8 sm:mb-12">
+        <div className={`inline-flex items-center gap-3 px-4 py-2 rounded-full bg-gradient-to-r ${meta.gradient} border ${meta.borderColor} mb-4`}>
+          <IconComponent className={`w-5 h-5 ${meta.accentColor}`} />
+          <span 
+            className={`text-sm font-semibold ${meta.accentColor}`}
+            style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+          >
+            {meta.subtitle}
+          </span>
+        </div>
+        <h2 
+          className="text-2xl sm:text-3xl md:text-4xl font-bold text-charcoal mb-3"
+          style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+        >
+          {meta.title}
+        </h2>
+        <p 
+          className="text-base sm:text-lg text-charcoal/70 max-w-2xl"
+          style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+        >
+          {meta.description}
+        </p>
+      </div>
+      )}
 
       {/* Badge Grid */}
       {groupKey === "specialist" ? (
@@ -532,38 +563,59 @@ function BadgeSection({
             
             return (
               <div key={categoryKey}>
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  className="flex items-center gap-3 mb-6"
-                >
-                  <span className="text-2xl">{categoryMeta.emoji}</span>
-                  <h3 
-                    className="text-xl font-semibold text-charcoal"
-                    style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                {isDesktop ? (
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    className="flex items-center gap-3 mb-6"
                   >
-                    {categoryMeta.title}
-                  </h3>
-                  <div className="flex-1 h-px bg-charcoal/10" />
-                </motion.div>
-                <motion.div
-                  variants={containerVariants}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true, margin: "-50px" }}
-                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6"
-                >
-                  {categoryBadges.map((badge, index) => (
-                    <BadgeCard key={badge.id} badge={badge} index={index} />
-                  ))}
-                </motion.div>
+                    <span className="text-2xl">{categoryMeta.emoji}</span>
+                    <h3 
+                      className="text-xl font-semibold text-charcoal"
+                      style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                    >
+                      {categoryMeta.title}
+                    </h3>
+                    <div className="flex-1 h-px bg-charcoal/10" />
+                  </motion.div>
+                ) : (
+                  <div className="flex items-center gap-3 mb-6">
+                    <span className="text-2xl">{categoryMeta.emoji}</span>
+                    <h3 
+                      className="text-xl font-semibold text-charcoal"
+                      style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                    >
+                      {categoryMeta.title}
+                    </h3>
+                    <div className="flex-1 h-px bg-charcoal/10" />
+                  </div>
+                )}
+                {isDesktop ? (
+                  <motion.div
+                    variants={containerVariants}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, margin: "-50px" }}
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6"
+                  >
+                    {categoryBadges.map((badge, index) => (
+                      <BadgeCard key={badge.id} badge={badge} index={index} />
+                    ))}
+                  </motion.div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                    {categoryBadges.map((badge, index) => (
+                      <BadgeCard key={badge.id} badge={badge} index={index} />
+                    ))}
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
-      ) : (
-        // Other badge groups
+      ) : isDesktop ? (
+        // Other badge groups (desktop: animated)
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -575,6 +627,13 @@ function BadgeSection({
             <BadgeCard key={badge.id} badge={badge} index={index} />
           ))}
         </motion.div>
+      ) : (
+        // Other badge groups (mobile: no animation)
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+          {badges.map((badge, index) => (
+            <BadgeCard key={badge.id} badge={badge} index={index} />
+          ))}
+        </div>
       )}
     </section>
   );
@@ -583,6 +642,7 @@ function BadgeSection({
 export default function BadgesPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const isDesktop = useIsDesktop();
   const discoverBusinessesHref = user ? "/for-you" : "/home";
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -631,9 +691,9 @@ export default function BadgesPage() {
         <div className="relative mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-8 pt-8 pb-16 sm:pt-12 sm:pb-24">
           {/* Back Link */}
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.4 }}
+            initial={isDesktop ? { opacity: 0, x: -20 } : false}
+            animate={isDesktop ? { opacity: 1, x: 0 } : undefined}
+            transition={isDesktop ? { duration: 0.4 } : undefined}
           >
             <button
               type="button"
@@ -655,9 +715,9 @@ export default function BadgesPage() {
           {/* Hero Content */}
           <div className="max-w-3xl">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
+              initial={isDesktop ? { opacity: 0, y: 20 } : false}
+              animate={isDesktop ? { opacity: 1, y: 0 } : undefined}
+              transition={isDesktop ? { duration: 0.6, delay: 0.1 } : undefined}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 backdrop-blur-sm border border-sage/20 shadow-sm mb-6"
             >
               <Sparkles className="w-4 h-4 text-sage" />
@@ -670,9 +730,9 @@ export default function BadgesPage() {
             </motion.div>
 
             <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
+              initial={isDesktop ? { opacity: 0, y: 20 } : false}
+              animate={isDesktop ? { opacity: 1, y: 0 } : undefined}
+              transition={isDesktop ? { duration: 0.6, delay: 0.2 } : undefined}
               className="text-4xl sm:text-5xl md:text-6xl font-bold text-charcoal mb-6 leading-tight"
               style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
             >
@@ -681,9 +741,9 @@ export default function BadgesPage() {
             </motion.h1>
 
             <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
+              initial={isDesktop ? { opacity: 0, y: 20 } : false}
+              animate={isDesktop ? { opacity: 1, y: 0 } : undefined}
+              transition={isDesktop ? { duration: 0.6, delay: 0.3 } : undefined}
               className="text-lg sm:text-xl text-charcoal/70 mb-8 leading-relaxed"
               style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
             >
@@ -692,9 +752,9 @@ export default function BadgesPage() {
 
             {/* Search */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
+              initial={isDesktop ? { opacity: 0, y: 20 } : false}
+              animate={isDesktop ? { opacity: 1, y: 0 } : undefined}
+              transition={isDesktop ? { duration: 0.6, delay: 0.4 } : undefined}
               className="relative max-w-md"
             >
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-charcoal/40" />
@@ -720,9 +780,9 @@ export default function BadgesPage() {
           {/* Decorative Badges */}
           <div className="absolute right-8 top-1/2 -translate-y-1/2 hidden xl:block">
             <motion.div
-              initial={{ opacity: 0, scale: 0.8, rotate: -10 }}
-              animate={{ opacity: 1, scale: 1, rotate: 0 }}
-              transition={{ duration: 0.8, delay: 0.5 }}
+              initial={isDesktop ? { opacity: 0, scale: 0.8, rotate: -10 } : false}
+              animate={isDesktop ? { opacity: 1, scale: 1, rotate: 0 } : undefined}
+              transition={isDesktop ? { duration: 0.8, delay: 0.5 } : undefined}
               className="relative"
             >
               <div className="absolute -inset-4 bg-white/50 backdrop-blur-xl rounded-3xl shadow-lg" />
@@ -737,9 +797,9 @@ export default function BadgesPage() {
                 ].map((src, i) => (
                   <motion.div
                     key={src}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6 + i * 0.1 }}
+                    initial={isDesktop ? { opacity: 0, y: 20 } : false}
+                    animate={isDesktop ? { opacity: 1, y: 0 } : undefined}
+                    transition={isDesktop ? { delay: 0.6 + i * 0.1 } : undefined}
                     className="w-16 h-16 relative"
                   >
                     <Image
@@ -777,16 +837,24 @@ export default function BadgesPage() {
               </button>
             </div>
             {filteredBadges.length > 0 ? (
-              <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6"
-              >
-                {filteredBadges.map((badge, index) => (
-                  <BadgeCard key={badge.id} badge={badge} index={index} />
-                ))}
-              </motion.div>
+              isDesktop ? (
+                <motion.div
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6"
+                >
+                  {filteredBadges.map((badge, index) => (
+                    <BadgeCard key={badge.id} badge={badge} index={index} />
+                  ))}
+                </motion.div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                  {filteredBadges.map((badge, index) => (
+                    <BadgeCard key={badge.id} badge={badge} index={index} />
+                  ))}
+                </div>
+              )
             ) : (
               <div className="text-center py-16">
                 <p className="text-charcoal/60" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
@@ -807,10 +875,10 @@ export default function BadgesPage() {
 
         {/* CTA Section */}
         <motion.section
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+          initial={isDesktop ? { opacity: 0, y: 40 } : false}
+          whileInView={isDesktop ? { opacity: 1, y: 0 } : undefined}
+          viewport={isDesktop ? { once: true } : undefined}
+          transition={isDesktop ? { duration: 0.6 } : undefined}
           className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-sage to-sage/80 p-8 sm:p-12 md:p-16 text-center"
         >
           {/* Background Pattern */}

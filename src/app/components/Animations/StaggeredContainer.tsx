@@ -2,6 +2,7 @@
 
 import { motion, HTMLMotionProps } from 'framer-motion';
 import { usePageAnimation } from '../../hooks/useStaggeredAnimation';
+import { useIsDesktop } from '../../hooks/useIsDesktop';
 
 interface StaggeredContainerProps extends HTMLMotionProps<'div'> {
   children: React.ReactNode;
@@ -9,15 +10,24 @@ interface StaggeredContainerProps extends HTMLMotionProps<'div'> {
 }
 
 /**
- * Container component that enables subtle, premium staggered animations for children
- * Features ultra-tight stagger timing and refined motion for a cohesive, elegant appearance
+ * Container that enables staggered animations for children on desktop.
+ * Mobile: no animation — content appears instantly.
  */
 export default function StaggeredContainer({
   children,
   className = '',
   ...props
 }: StaggeredContainerProps) {
+  const isDesktop = useIsDesktop();
   const variants = usePageAnimation();
+
+  if (!isDesktop) {
+    return (
+      <div className={className} {...(props as unknown as React.HTMLAttributes<HTMLDivElement>)}>
+        {children}
+      </div>
+    );
+  }
 
   return (
     <motion.div

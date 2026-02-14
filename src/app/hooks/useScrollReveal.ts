@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useIsDesktop } from "./useIsDesktop";
 
 interface UseScrollRevealOptions {
   threshold?: number;
@@ -9,10 +10,12 @@ interface UseScrollRevealOptions {
 }
 
 /**
- * Scroll reveal hook that animates elements when they enter the viewport
- * Only runs once per page load by default
+ * Scroll reveal hook that animates elements when they enter the viewport.
+ * On mobile (< md): no animation — [data-reveal] elements get .active immediately.
+ * On desktop (md+): existing IntersectionObserver-based reveal.
  */
 export function useScrollReveal(options: UseScrollRevealOptions = {}) {
+  const isDesktop = useIsDesktop();
   const {
     threshold = 0.1,
     rootMargin = "0px 0px -100px 0px",
@@ -24,7 +27,18 @@ export function useScrollReveal(options: UseScrollRevealOptions = {}) {
   const rafIdRef = useRef<number | null>(null);
 
   useEffect(() => {
-    // Create IntersectionObserver
+    if (!isDesktop) {
+      const revealAll = () => {
+        document.querySelectorAll?.("[data-reveal], [data-section]").forEach((el) => {
+          el.classList.add("active");
+        });
+      };
+      revealAll();
+      const timeoutId = setTimeout(revealAll, 0);
+      return () => clearTimeout(timeoutId);
+    }
+
+    // Create IntersectionObserver (desktop only)
     observerRef.current = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -121,7 +135,7 @@ export function useScrollReveal(options: UseScrollRevealOptions = {}) {
         observedElementsRef.current.clear();
       }
     };
-  }, [threshold, rootMargin, once]);
+  }, [isDesktop, threshold, rootMargin, once]);
 
   return null;
 }

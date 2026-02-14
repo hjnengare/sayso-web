@@ -6,6 +6,7 @@ import { AlertCircle, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 import ReviewCard from './ReviewCard';
 import type { ReviewWithUser } from '../../lib/types/database';
+import { useIsDesktop } from '../../hooks/useIsDesktop';
 
 interface ReviewsListProps {
   reviews: ReviewWithUser[];
@@ -32,6 +33,8 @@ export default function ReviewsList({
   emptyStateAction,
   isOwnerView = false,
 }: ReviewsListProps) {
+  const isDesktop = useIsDesktop();
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -68,8 +71,8 @@ export default function ReviewsList({
     return (
       <div className="flex flex-1 items-center justify-center">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={isDesktop ? { opacity: 0, y: 20 } : false}
+          animate={isDesktop ? { opacity: 1, y: 0 } : undefined}
           className="bg-red-50 border border-red-200 rounded-lg p-6 text-center"
         >
           <div className="flex items-center justify-center mb-3">
@@ -143,9 +146,9 @@ export default function ReviewsList({
       {reviews.map((review, index) => (
         <motion.div
           key={review.id}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.1, duration: 0.5 }}
+          initial={isDesktop ? { opacity: 0, y: 20 } : false}
+          animate={isDesktop ? { opacity: 1, y: 0 } : undefined}
+          transition={isDesktop ? { delay: index * 0.1, duration: 0.5 } : undefined}
         >
           <ReviewCard
             review={review}
@@ -158,9 +161,9 @@ export default function ReviewsList({
 
       {reviews.length > 0 && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: reviews.length * 0.1 + 0.2 }}
+          initial={isDesktop ? { opacity: 0 } : false}
+          animate={isDesktop ? { opacity: 1 } : undefined}
+          transition={isDesktop ? { delay: reviews.length * 0.1 + 0.2 } : undefined}
           className="text-center pt-4"
         >
           <p className="font-urbanist text-sm text-charcoal/60">

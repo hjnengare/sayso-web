@@ -3,6 +3,7 @@
 import { motion, HTMLMotionProps } from 'framer-motion';
 import { useStaggeredAnimation, AnimationDirection } from '../../hooks/useStaggeredAnimation';
 import { useEffect, useState } from 'react';
+import { useIsDesktop } from '../../hooks/useIsDesktop';
 
 interface AnimatedElementProps extends HTMLMotionProps<'div'> {
   children: React.ReactNode;
@@ -15,23 +16,20 @@ interface AnimatedElementProps extends HTMLMotionProps<'div'> {
 }
 
 /**
- * Animated element that enters from a direction and does a bubbly dance
- * 
- * @example
- * <AnimatedElement index={0} direction="top">
- *   <YourContent />
- * </AnimatedElement>
+ * Animated element that enters from a direction (desktop only).
+ * Mobile: no animation — content appears instantly.
  */
 export default function AnimatedElement({
   children,
   index = 0,
   direction = 'bottom',
-  delay = 0.02, // Ultra-tight delay for subtle, premium stagger
-  duration = 0.4, // Refined duration for elegant, smooth motion
-  distance = 12, // Minimal distance for subtle, premium movement
+  delay = 0.02,
+  duration = 0.4,
+  distance = 12,
   className = '',
   ...props
 }: AnimatedElementProps) {
+  const isDesktop = useIsDesktop();
   const variants = useStaggeredAnimation(index, {
     delay,
     duration,
@@ -41,20 +39,18 @@ export default function AnimatedElement({
   const [animationState, setAnimationState] = useState<'visible' | 'settled' | 'bubbly'>('visible');
 
   useEffect(() => {
-    // Sequence: visible -> settled -> bubbly dance
-    const settledTimer = setTimeout(() => {
-      setAnimationState('settled');
-    }, (index * delay + duration + 0.2) * 1000);
-
-    const bubblyTimer = setTimeout(() => {
-      setAnimationState('bubbly');
-    }, (index * delay + duration + 0.5) * 1000);
-
+    if (!isDesktop) return;
+    const settledTimer = setTimeout(() => setAnimationState('settled'), (index * delay + duration + 0.2) * 1000);
+    const bubblyTimer = setTimeout(() => setAnimationState('bubbly'), (index * delay + duration + 0.5) * 1000);
     return () => {
       clearTimeout(settledTimer);
       clearTimeout(bubblyTimer);
     };
-  }, [index, delay, duration]);
+  }, [isDesktop, index, delay, duration]);
+
+  if (!isDesktop) {
+    return <div className={className} {...(props as unknown as React.HTMLAttributes<HTMLDivElement>)}>{children}</div>;
+  }
 
   return (
     <motion.div

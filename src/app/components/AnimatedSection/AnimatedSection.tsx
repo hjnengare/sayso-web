@@ -1,7 +1,8 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import { ReactNode, useState, useEffect } from "react";
+import { ReactNode } from "react";
+import { useIsDesktop } from "../../hooks/useIsDesktop";
 
 interface AnimatedSectionProps {
   children: ReactNode;
@@ -11,8 +12,8 @@ interface AnimatedSectionProps {
 }
 
 /**
- * AnimatedSection - Desktop gets slide animations, mobile gets subtle fade
- * Respects prefers-reduced-motion
+ * AnimatedSection - Desktop (md+): slide-in reveal. Mobile: no animation (content appears instantly).
+ * Respects prefers-reduced-motion on desktop.
  */
 export default function AnimatedSection({
   children,
@@ -21,30 +22,22 @@ export default function AnimatedSection({
   id,
 }: AnimatedSectionProps) {
   const prefersReducedMotion = useReducedMotion();
-  const [isMobile, setIsMobile] = useState(true);
+  const isDesktop = useIsDesktop();
   const isEven = index % 2 === 0;
 
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  if (!isDesktop) {
+    return (
+      <section id={id} className={className}>
+        {children}
+      </section>
+    );
+  }
 
-  // Mobile: subtle fade only
-  // Desktop: slide from left/right (alternating) + fade
   const initial = prefersReducedMotion
-    ? { opacity: 0 }
-    : isMobile
     ? { opacity: 0 }
     : { opacity: 0, y: 40, x: isEven ? -40 : 40 };
 
   const whileInView = prefersReducedMotion
-    ? { opacity: 1 }
-    : isMobile
     ? { opacity: 1 }
     : { opacity: 1, y: 0, x: 0 };
 
@@ -54,9 +47,9 @@ export default function AnimatedSection({
       className={className}
       initial={initial}
       whileInView={whileInView}
-      viewport={{ amount: isMobile ? 0.2 : 0.35, once: false }}
+      viewport={{ amount: 0.35, once: false }}
       transition={{
-        duration: prefersReducedMotion ? 0.2 : isMobile ? 0.4 : 0.6,
+        duration: prefersReducedMotion ? 0.2 : 0.6,
         ease: "easeOut",
       }}
     >

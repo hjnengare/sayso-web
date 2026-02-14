@@ -25,6 +25,7 @@ const BusinessOfMonthLeaderboard = nextDynamic(
 );
 import { useBusinesses } from "../hooks/useBusinesses";
 import { useFeaturedBusinesses } from "../hooks/useFeaturedBusinesses";
+import { useIsDesktop } from "../hooks/useIsDesktop";
 
 // Note: dynamic and revalidate cannot be exported from client components
 // Client components are automatically dynamic
@@ -45,6 +46,7 @@ interface LeaderboardUser {
 }
 
 function LeaderboardPage() {
+  const isDesktop = useIsDesktop();
   const searchParams = useSearchParams();
   const tabFromUrl = searchParams.get('tab');
   const initialTab = tabFromUrl === 'businesses' ? 'businesses' : 'contributors';
@@ -183,15 +185,17 @@ function LeaderboardPage() {
     },
   };
 
+  const contentClassName = "bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white";
+
   return (
     <EmailVerificationGuard>
       <div className="min-h-dvh bg-off-white">
 
         <motion.div 
-          className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
+          className={contentClassName}
+          variants={isDesktop ? containerVariants : undefined}
+          initial={isDesktop ? "hidden" : false}
+          animate={isDesktop ? "visible" : undefined}
         >
               {/* Hero Section */}
                 <section className="relative z-10 pb-6 sm:pb-8 md:pb-12">
@@ -200,7 +204,9 @@ function LeaderboardPage() {
                     <motion.nav 
                       className="pt-2 px-2" 
                       aria-label="Breadcrumb"
-                      variants={itemVariants}
+                      variants={isDesktop ? itemVariants : undefined}
+                      initial={isDesktop ? "hidden" : false}
+                      animate={isDesktop ? "visible" : undefined}
                     >
                       <ol className="flex items-center gap-2 text-sm sm:text-base">
                         <li>
@@ -222,7 +228,9 @@ function LeaderboardPage() {
                     {/* Title and Description Block */}
                     <motion.div 
                       className="mb-10 sm:mb-12 px-4 sm:px-6 text-center pt-4"
-                      variants={itemVariants}
+                      variants={isDesktop ? itemVariants : undefined}
+                      initial={isDesktop ? "hidden" : false}
+                      animate={isDesktop ? "visible" : undefined}
                     >
                       <div className="my-4 relative">
                         <h1 
@@ -256,7 +264,9 @@ function LeaderboardPage() {
                       <motion.p 
                         className="text-sm sm:text-base text-charcoal/70 max-w-2xl mx-auto leading-relaxed" 
                         style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-                        variants={itemVariants}
+                        variants={isDesktop ? itemVariants : undefined}
+                        initial={isDesktop ? "hidden" : false}
+                        animate={isDesktop ? "visible" : undefined}
                       >
                         Celebrate the top contributors and businesses in our community. 
                         See who's making a difference and discover the most loved local spots.
@@ -278,7 +288,9 @@ function LeaderboardPage() {
                       {/* Tabs */}
                         <motion.div 
                           className="flex justify-center pt-2 md:mb-8 px-2"
-                          variants={itemVariants}
+                          variants={isDesktop ? itemVariants : undefined}
+                          initial={isDesktop ? "hidden" : false}
+                          animate={isDesktop ? "visible" : undefined}
                         >
                           <Tabs tabs={tabs} activeTab={activeTab} onTabChange={handleTabChange} />
                         </motion.div>
@@ -287,10 +299,10 @@ function LeaderboardPage() {
                         <AnimatePresence mode="wait">
                           <motion.div
                             key={activeTab}
-                            variants={cardVariants}
-                            initial="hidden"
-                            animate="visible"
-                            exit="exit"
+                            variants={isDesktop ? cardVariants : undefined}
+                            initial={isDesktop ? "hidden" : false}
+                            animate={isDesktop ? "visible" : undefined}
+                            exit={isDesktop ? "exit" : undefined}
                             className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-[12px] ring-1 ring-white/20 shadow-md p-3 sm:p-4 md:p-6 lg:p-8 mb-6 sm:mb-8 md:mb-12 relative overflow-hidden"
                           >
                           {/* Card decorative elements */}

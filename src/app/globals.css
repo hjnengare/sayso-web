@@ -1122,6 +1122,18 @@
     transform: translate3d(0, 0, 0) scale(1);
   }
 
+  /* Mobile (< md): no reveal animations — content appears instantly */
+  @media (max-width: 767px) {
+    [data-section] > *,
+    [data-reveal],
+    [data-reveal][data-reveal-variant="premium"] {
+      transform: none !important;
+      opacity: 1 !important;
+      transition: none !important;
+      will-change: auto;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     [data-section] > *,
     [data-reveal] {

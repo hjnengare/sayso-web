@@ -13,6 +13,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePredefinedPageTitle } from "../hooks/usePageTitle";
 import { useScrollReveal } from "../hooks/useScrollReveal";
+import { useIsDesktop } from "../hooks/useIsDesktop";
 import { FilterState } from "../components/FilterModal/FilterModal";
 import BusinessRow from "../components/BusinessRow/BusinessRow";
 import BusinessRowSkeleton from "../components/BusinessRow/BusinessRowSkeleton";
@@ -92,6 +93,7 @@ const homeCardRevealViewport = { once: true, margin: "-50px" as const };
 
 
 export default function HomeClient() {
+  const isDesktop = useIsDesktop();
   const isDev = process.env.NODE_ENV === "development";
   const [eventsAndSpecials, setEventsAndSpecials] = useState<Event[]>([]);
   const [eventsAndSpecialsLoading, setEventsAndSpecialsLoading] = useState(true);
@@ -600,13 +602,10 @@ export default function HomeClient() {
                 >
                   {/* For You Section - Only show when NOT filtered */}
                   {!isFiltered && (
-                    <motion.div
-                      className="relative z-10 snap-start mt-2 mb-2 sm:mt-0 sm:mb-0"
-                      variants={homeCardRevealVariants}
-                      initial="hidden"
-                      whileInView="visible"
-                      viewport={homeCardRevealViewport}
-                    >
+                    (() => {
+                      const className = "relative z-10 snap-start mt-2 mb-2 sm:mt-0 sm:mb-0";
+                      const children = (
+                        <>
                       {!user ? (
                         /* Not signed in: Show Locked For You Section (teaser only) */
                         <div className="mx-auto w-full max-w-[2000px] px-2">
@@ -669,11 +668,19 @@ export default function HomeClient() {
                           )}
                         </>
                       )}
-                    </motion.div>
+                        </>
+                      );
+                      return isDesktop ? (
+                        <motion.div className={className} variants={homeCardRevealVariants} initial="hidden" whileInView="visible" viewport={homeCardRevealViewport}>{children}</motion.div>
+                      ) : (
+                        <div className={className}>{children}</div>
+                      );
+                    })()
                   )}
 
                   {/* Filtered Results Section - Show when filters are active */}
                   {isFiltered && (
+                    isDesktop ? (
                     <motion.div
                       className="relative z-10 snap-start"
                       variants={homeCardRevealVariants}
@@ -696,10 +703,29 @@ export default function HomeClient() {
                         </div>
                       )}
                     </motion.div>
+                    ) : (
+                    <div className="relative z-10 snap-start">
+                      {allBusinessesLoading ? (
+                        <BusinessRowSkeleton title="Filtered Results" />
+                      ) : allBusinesses.length > 0 ? (
+                        <MemoizedBusinessRow
+                          title="Filtered Results"
+                          businesses={allBusinesses.slice(0, 10)}
+                          cta="See All"
+                          href="/for-you"
+                        />
+                      ) : (
+                        <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-charcoal/70">
+                          No businesses match your filters. Try adjusting your selections.
+                        </div>
+                      )}
+                    </div>
+                    )
                   )}
 
                   {/* Trending Section - Only show when not filtered */}
                   {!isFiltered && (
+                    isDesktop ? (
                     <motion.div
                       className="relative z-10 snap-start"
                       variants={homeCardRevealVariants}
@@ -724,9 +750,30 @@ export default function HomeClient() {
                         </div>
                       )}
                     </motion.div>
+                    ) : (
+                    <div className="relative z-10 snap-start">
+                      {trendingLoading && <BusinessRowSkeleton title="Trending Now" />}
+                      {!trendingLoading && hasTrendingBusinesses && (
+                        <MemoizedBusinessRow title="Trending Now" businesses={trendingBusinesses} cta="See More" href="/trending" />
+                      )}
+                      {!trendingLoading && !hasTrendingBusinesses && !trendingError && (
+                        <MemoizedBusinessRow title="Trending Now" businesses={[]} cta="See More" href="/trending" />
+                      )}
+                      {trendingError && !trendingLoading && (
+                        <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral space-y-1">
+                          <p className="font-medium">Trending</p>
+                          <p>{trendingError}</p>
+                          {trendingStatus != null && (
+                            <p className="text-charcoal/70">Status: {trendingStatus}</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    )
                   )}
 
                   {/* Events & Specials */}
+                  {isDesktop ? (
                   <motion.div
                     className="relative z-10 snap-start"
                     variants={homeCardRevealVariants}
@@ -742,8 +789,20 @@ export default function HomeClient() {
                       premiumCtaHover
                     />
                   </motion.div>
+                  ) : (
+                  <div className="relative z-10 snap-start">
+                    <EventsSpecials
+                      events={eventsAndSpecials}
+                      loading={eventsAndSpecialsLoading}
+                      titleFontWeight={800}
+                      ctaFontWeight={400}
+                      premiumCtaHover
+                    />
+                  </div>
+                  )}
 
                   {/* Community Highlights (Featured by Category) */}
+                  {isDesktop ? (
                   <motion.div
                     className="relative z-10 snap-start"
                     variants={homeCardRevealVariants}
@@ -768,6 +827,26 @@ export default function HomeClient() {
                       />
                     )}
                   </motion.div>
+                  ) : (
+                  <div className="relative z-10 snap-start">
+                    {featuredError && !featuredLoading ? (
+                      <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral space-y-1">
+                        <p className="font-medium">Featured</p>
+                        <p>{featuredError}</p>
+                        {featuredStatus != null && (
+                          <p className="text-charcoal/70">Status: {featuredStatus}</p>
+                        )}
+                      </div>
+                    ) : allBusinessesLoading ? (
+                      <CommunityHighlightsSkeleton reviewerCount={12} businessCount={4} />
+                    ) : (
+                      <CommunityHighlights
+                        businessesOfTheMonth={Array.isArray(featuredByCategory) ? featuredByCategory : []}
+                        variant="reviews"
+                      />
+                    )}
+                  </div>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
