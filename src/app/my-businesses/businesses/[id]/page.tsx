@@ -1,12 +1,35 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "../../../contexts/AuthContext";
 import { BusinessOwnershipService } from "../../../lib/services/businessOwnershipService";
 import { PageLoader, Loader } from "../../../components/Loader";
-import { Store, MapPin, Star, MessageSquare, Edit, BarChart3, ArrowLeft, Eye, TrendingUp, ChevronRight, Camera, Upload, Loader2 } from "lucide-react";
+import { Store, MapPin, Star, MessageSquare, Edit, ArrowLeft, Eye, TrendingUp, ChevronRight, Camera, Upload, Loader2 } from "lucide-react";
 import Link from "next/link";
+
+const BusinessAnalyticsSection = dynamic(
+  () => import("./BusinessAnalyticsSection").then((m) => m.BusinessAnalyticsSection),
+  {
+    ssr: false,
+    loading: () => (
+      <section
+        className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-lg p-6 sm:p-8"
+        aria-label="Stats & Analytics loading"
+      >
+        <div className="animate-pulse flex items-center gap-3 mb-4">
+          <div className="h-10 w-10 rounded-full bg-charcoal/10" />
+          <div className="h-4 w-32 bg-charcoal/10 rounded" />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="h-[220px] rounded-[12px] bg-charcoal/5" />
+          <div className="h-[220px] rounded-[12px] bg-charcoal/5" />
+        </div>
+      </section>
+    ),
+  }
+);
 import { getBrowserSupabase } from "../../../lib/supabase/client";
 import type { Business } from "../../../lib/types/database";
 import { useToast } from "../../../contexts/ToastContext";
@@ -547,14 +570,6 @@ export default function OwnerBusinessDashboard() {
                         <span>View & Reply to Reviews</span>
                       </Link>
                       <Link
-                        href={`/dm?businessId=${business?.id || businessId}`}
-                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-coral/90 hover:bg-coral text-white rounded-full text-sm font-semibold transition-all duration-300 hover:scale-[1.02] active:scale-95 border border-coral/30 w-fit"
-                        style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-                      >
-                        <MessageSquare size={14} strokeWidth={2.5} />
-                        <span>View Messages</span>
-                      </Link>
-                      <Link
                         href={`/business/${businessId}/edit`}
                         className="inline-flex items-center gap-2 px-4 py-2.5 bg-coral/90 hover:bg-coral text-white rounded-full text-sm font-semibold transition-all duration-300 hover:scale-[1.02] active:scale-95 border border-coral/30 w-fit"
                         style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
@@ -564,6 +579,9 @@ export default function OwnerBusinessDashboard() {
                       </Link>
                     </div>
                   </section>
+
+                  {/* Stats & Analytics */}
+                  <BusinessAnalyticsSection businessId={business.id} />
                 </div>
               </div>
             </div>
