@@ -14,6 +14,16 @@ export const dynamic = "force-dynamic";
 
 const isProd = process.env.NODE_ENV === "production";
 
+// Environment sanity check on module load
+if (typeof window === 'undefined') {
+  console.log('[Event Review API] Environment check', {
+    hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+    hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    hasServiceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    nodeEnv: process.env.NODE_ENV,
+  });
+}
+
 function logDevError(...args: unknown[]) {
   if (!isProd) {
     console.error(...args);
@@ -167,6 +177,16 @@ export async function POST(
       error: authError,
     } = await supabase.auth.getUser();
     const isAnonymous = !user || !!authError;
+    
+    // Fail fast if service role key is missing and we're in anonymous mode
+    if (isAnonymous && !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.error('[Event Review API] CRITICAL: SUPABASE_SERVICE_ROLE_KEY missing in anonymous mode');
+      return NextResponse.json(
+        { success: false, code: "SERVER_ERROR", message: "Server configuration issue. Please contact support." },
+        { status: 500 },
+      );
+    }
+    
     const { anonymousId, setCookie } = resolveAnonymousId(req);
     const clientIp = getClientIp(req);
     const userAgentHash = getUserAgentHash(req);

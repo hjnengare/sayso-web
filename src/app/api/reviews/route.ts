@@ -13,6 +13,16 @@ import {
   resolveAnonymousId,
 } from '../../lib/utils/anonymousReviews';
 
+// Environment sanity check on module load
+if (typeof window === 'undefined') {
+  console.log('[Review API] Environment check', {
+    hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+    hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    hasServiceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    nodeEnv: process.env.NODE_ENV,
+  });
+}
+
 // ============================================================================
 // Structured Error Response Helpers
 // ============================================================================
@@ -74,13 +84,41 @@ function sanitizeText(text: string): string {
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+// Structured logging helper
+function logStepError(
+  step: 'business_resolution' | 'rate_limit' | 'insert' | 'stats_update' | 'image_upload',
+  error: any,
+  isAnonymous: boolean
+) {
+  console.error(`[Review API] Step failed: ${step}`, {
+    step,
+    message: error?.message,
+    code: error?.code,
+    details: error?.details,
+    hint: error?.hint,
+    hasServiceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    isAnonymous,
+  });
+}
+
 export async function POST(req: NextRequest) {
   try {
     const supabase = await getServerSupabase(req);
 
     // Auth: optional across business/event/special. Authenticated identity is preserved.
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    const isAnonymous = !user || authError;
+    const isAnonymous = !user || !!authError;
+    
+    // Fail fast if service role key is missing and we're in anonymous mode
+    if (isAnonymous && !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.error('[Review API] CRITICAL: SUPABASE_SERVICE_ROLE_KEY missing in anonymous mode');
+      return errorResponse(
+        'SERVER_ERROR',
+        'Server configuration issue. Please contact support.',
+        500
+      );
+    }
+    
     const { anonymousId, setCookie } = resolveAnonymousId(req);
     const clientIp = getClientIp(req);
     const userAgentHash = getUserAgentHash(req);
@@ -178,6 +216,12 @@ export async function POST(req: NextRequest) {
     // This is ONLY available for legacy business branch; for special/event we won't assume it exists.
     let resolvedBusiness: { id: string; name: string; slug: string | null } | null = null;
 
+    console.log('[Review API] Starting business resolution', {
+      isAnonymous,
+      reviewType: isEventReview ? 'event' : isSpecialReview ? 'special' : 'business',
+      hasServiceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    });
+
     if (isEventReview) {
       const { data: eventData, error: eventError } = await verifyClient
         .from('events_and_specials')
@@ -187,7 +231,7 @@ export async function POST(req: NextRequest) {
         .maybeSingle();
 
       if (eventError) {
-        console.error('[API] Error checking event:', eventError);
+        logStepError('business_resolution', eventError, isAnonymous);
         return errorResponse(
           'DB_ERROR',
           "We couldn't verify the event. Please try again.",
@@ -213,7 +257,7 @@ export async function POST(req: NextRequest) {
         .maybeSingle();
 
       if (specialError) {
-        console.error('[API] Error checking special:', specialError);
+        logStepError('business_resolution', specialError, isAnonymous);
         return errorResponse(
           'DB_ERROR',
           "We couldn't verify the special. Please try again.",
@@ -263,7 +307,7 @@ export async function POST(req: NextRequest) {
         .maybeSingle();
 
       if (slugError) {
-        console.error('[API] Error checking slug in POST reviews endpoint:', slugError);
+        logStepError('business_resolution', slugError, isAnonymous);
       } else if (slugData?.id) {
         business_id = slugData.id;
         resolvedBusiness = {
@@ -282,7 +326,7 @@ export async function POST(req: NextRequest) {
             .maybeSingle();
 
           if (idError) {
-            console.error('[API] Error checking business ID in POST reviews endpoint:', idError);
+            logStepError('business_resolution', idError, isAnonymous);
           } else if (idData?.id) {
             business_id = idData.id;
             resolvedBusiness = {
@@ -316,6 +360,7 @@ export async function POST(req: NextRequest) {
 
     // Anonymous protections: one review per target/device + cooldown (max 3/hour).
     if (isAnonymous) {
+      console.log('[Review API] Starting rate limit check', { anonymousId });
       // Reuse verifyClient (admin) for rate-limit queries
       const rateLimitAdmin = verifyClient;
 
@@ -334,7 +379,7 @@ export async function POST(req: NextRequest) {
         .gte('created_at', oneHourAgo);
 
       if (rateError) {
-        console.error('[Review API] Anonymous rate-limit query failed:', rateError);
+        logStepError('rate_limit', rateError, isAnonymous);
       }
 
       if ((recentCount ?? 0) >= 3) {
@@ -353,7 +398,7 @@ export async function POST(req: NextRequest) {
           .eq('anonymous_id', anonymousId);
 
         if (duplicateError) {
-          console.error('[Review API] Anonymous duplicate check failed:', duplicateError);
+          logStepError('rate_limit', duplicateError, isAnonymous);
         }
 
         if ((duplicateCount ?? 0) > 0) {
@@ -421,6 +466,11 @@ export async function POST(req: NextRequest) {
     // Create review
     let review: any = null;
     try {
+      console.log('[Review API] Starting review insert', {
+        isAnonymous,
+        targetTable,
+        hasServiceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      });
       reviewInsertData = {
         user_id: !isAnonymous && user ? user.id : null,
         rating: rating!,
@@ -474,7 +524,7 @@ export async function POST(req: NextRequest) {
         .single();
 
       if (reviewError) {
-        console.error('[Review API] Error creating review:', reviewError);
+        logStepError('insert', reviewError, isAnonymous);
         
         // Check for RLS/permission errors
         if (reviewError.message?.includes('permission') || reviewError.code === '42501') {
@@ -537,6 +587,7 @@ export async function POST(req: NextRequest) {
 
     if (statsBusinessId && UUID_REGEX.test(statsBusinessId)) {
       try {
+        console.log('[Review API] Starting stats update', { businessId: statsBusinessId });
         for (let attempt = 0; attempt < 3; attempt++) {
           const { error: statsUpdateError } = await supabase.rpc('update_business_stats', {
             p_business_id: statsBusinessId,
@@ -547,7 +598,11 @@ export async function POST(req: NextRequest) {
           }
           statsError = statsUpdateError;
         }
+        if (statsError) {
+          logStepError('stats_update', statsError, isAnonymous);
+        }
       } catch (err) {
+        logStepError('stats_update', err, isAnonymous);
         statsError = err;
       }
     }
@@ -584,7 +639,7 @@ export async function POST(req: NextRequest) {
             .upload(filePath, arrayBuffer, { contentType: file.type, upsert: false });
 
           if (storageError) {
-            console.error('[Review API] Image upload error:', storageError);
+            logStepError('image_upload', storageError, isAnonymous);
             uploadErrors.push({ file: file.name, error: storageError.message });
             continue;
           }
