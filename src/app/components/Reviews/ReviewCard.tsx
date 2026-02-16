@@ -73,9 +73,12 @@ function ReviewCard({
   const replyFormRef = useRef<HTMLDivElement>(null);
   const [userBadges, setUserBadges] = useState<BadgePillData[]>([]);
 
-  // Fetch user's badges (top 2 most relevant)
+  // Fetch user's badges (top 3 most relevant) — only for authenticated viewers
   useEffect(() => {
-    if (!review.user_id) return;
+    if (!review.user_id || !user) {
+      setUserBadges([]);
+      return;
+    }
 
     async function fetchUserBadges() {
       try {
@@ -99,8 +102,8 @@ function ReviewCard({
             return aIndex - bIndex;
           });
 
-          // Take top 2
-          setUserBadges(sortedBadges.slice(0, 2));
+          // Take top 3
+          setUserBadges(sortedBadges.slice(0, 3));
         }
       } catch (err) {
         console.error('Error fetching user badges:', err);
@@ -108,7 +111,7 @@ function ReviewCard({
     }
 
     fetchUserBadges();
-  }, [review.user_id]);
+  }, [review.user_id, user]);
 
   // Fetch helpful status and count on mount
   useEffect(() => {
@@ -413,24 +416,47 @@ function ReviewCard({
         <div className="flex-1 min-w-0">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-3 space-y-2 md:space-y-0">
-            <div className="flex items-center space-x-3">
-              <span className="font-urbanist text-lg font-600 text-charcoal-700 group-hover:text-sage transition-colors duration-300">
-                {review.user?.name || getDisplayUsername(
-                  review.user?.username,
-                  review.user?.display_name,
-                  review.user?.email,
-                  review.user_id
+            <div className="flex items-start sm:items-center gap-2">
+              <div className="flex flex-col gap-1">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2">
+                  <span className="font-urbanist text-lg font-600 text-charcoal-700 group-hover:text-sage transition-colors duration-300">
+                    {review.user?.name || getDisplayUsername(
+                      review.user?.username,
+                      review.user?.display_name,
+                      review.user?.email,
+                      review.user_id
+                    )}
+                  </span>
+                  <span
+                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
+                      isAnonymousReview
+                        ? "bg-charcoal/10 text-charcoal/70"
+                        : "bg-sage/15 text-sage"
+                    }`}
+                  >
+                    {isAnonymousReview ? "Anonymous" : "Verified account"}
+                  </span>
+                </div>
+                {/* Achievement badges — only visible to authenticated viewers */}
+                {user && userBadges.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {userBadges.slice(0, 3).map((badge) => (
+                      <span
+                        key={badge.id}
+                        className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] sm:text-xs font-medium bg-off-white/60 text-charcoal/70 border border-sage/20"
+                        title={badge.name}
+                      >
+                        {badge.name}
+                      </span>
+                    ))}
+                    {userBadges.length > 3 && (
+                      <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] sm:text-xs font-medium bg-off-white/60 text-charcoal/50 border border-sage/20">
+                        +{userBadges.length - 3} more
+                      </span>
+                    )}
+                  </div>
                 )}
-              </span>
-              <span
-                className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
-                  isAnonymousReview
-                    ? "bg-charcoal/10 text-charcoal/70"
-                    : "bg-sage/15 text-sage"
-                }`}
-              >
-                {isAnonymousReview ? "Anonymous" : "Verified account"}
-              </span>
+              </div>
               <div className="flex items-center space-x-1">
                 {[...Array(5)].map((_, i) => (
                   <motion.div
