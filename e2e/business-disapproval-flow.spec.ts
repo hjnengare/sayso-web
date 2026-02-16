@@ -78,22 +78,25 @@ test.describe("Business disapproval flow", () => {
       throw new Error(`Admin login failed (still on /login). ${err || "Check E2E_ADMIN_EMAIL and E2E_ADMIN_PASSWORD."}`);
     });
 
-    // --- 4. Admin: Pending list shows business; click Disapprove ---
+    // --- 4. Admin: Pending list shows business; click Review to open review page ---
     await page.goto(`${baseURL}/admin/pending-businesses`);
     await expect(page).toHaveURL(/\/admin\/pending-businesses/);
 
     const row = page.locator("table tbody tr").filter({ hasText: uniqueName });
     await expect(row).toBeVisible({ timeout: 10000 });
 
-    await row.getByRole("button", { name: /disapprove/i }).click();
+    await row.getByRole("link", { name: /review/i }).click();
+    await expect(page).toHaveURL(/\/admin\/businesses\/[^/]+\/review/, { timeout: 5000 });
 
-    // Optional reason modal may appear; confirm Disapprove
-    const confirmDisapprove = page.getByRole("button", { name: /^disapprove$/i });
-    if (await confirmDisapprove.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await confirmDisapprove.click();
-    }
+    // --- 4b. On review page, click Reject; modal appears with reason dropdown ---
+    await page.getByRole("button", { name: /^reject$/i }).click();
+    const modal = page.getByRole("dialog");
+    await expect(modal).toBeVisible({ timeout: 3000 });
+    await modal.locator("select").selectOption({ value: "duplicate" });
+    await modal.getByRole("button", { name: /^reject$/i }).click();
 
-    await expect(row).not.toBeVisible({ timeout: 8000 });
+    // Back to pending list; row removed (redirected away)
+    await expect(page).toHaveURL(/\/admin\/pending-businesses/, { timeout: 8000 });
 
     // --- 5. Public list must not show this business ---
     const listRes = await request.get(`${baseURL}/api/businesses?limit=100`);

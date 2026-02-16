@@ -15,7 +15,7 @@ function normalizeBusinessName(name: string): string {
 /**
  * GET /api/businesses/check-name
  * Check if a business name is available (no duplicate for non-chain businesses).
- * Query params: name (required), isChain (optional, default false)
+ * Query params: name (required), isChain (optional, default false), excludeId (optional) — exclude this business ID (for edit/review).
  * Returns: { available: boolean } — false if duplicate exists for non-chain.
  */
 export async function GET(req: NextRequest) {
@@ -23,6 +23,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const name = searchParams.get('name');
     const isChain = searchParams.get('isChain') === 'true';
+    const excludeId = searchParams.get('excludeId') || undefined;
 
     if (!name || name.trim().length === 0) {
       return NextResponse.json(
@@ -38,13 +39,16 @@ export async function GET(req: NextRequest) {
 
     const normalizedName = normalizeBusinessName(name);
     const supabase = getServiceSupabase();
-    const { data: existing, error } = await (supabase as any)
+    let query = (supabase as any)
       .from('businesses')
       .select('id')
       .eq('normalized_name', normalizedName)
       .eq('is_chain', false)
-      .neq('status', 'rejected')
-      .maybeSingle();
+      .neq('status', 'rejected');
+    if (excludeId) {
+      query = query.neq('id', excludeId);
+    }
+    const { data: existing, error } = await query.maybeSingle();
 
     if (error) {
       console.warn('[API] check-name error:', error);

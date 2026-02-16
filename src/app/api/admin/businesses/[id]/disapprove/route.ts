@@ -33,16 +33,33 @@ export async function POST(
       return NextResponse.json({ error: 'Business ID is required' }, { status: 400 });
     }
 
-    let body: { reason?: string } = {};
+    let body: { reason?: string; comment?: string } = {};
     try {
       body = await req.json();
     } catch {
       // optional body
     }
 
+    const allowedReasons = [
+      'duplicate',
+      'incomplete_information',
+      'inappropriate_content',
+      'other',
+    ] as const;
+    const reason = typeof body.reason === 'string' ? body.reason.trim().toLowerCase() : '';
+    if (!reason || !allowedReasons.includes(reason as (typeof allowedReasons)[number])) {
+      return NextResponse.json(
+        {
+          error: 'Validation failed',
+          message: 'A valid rejection reason is required. Choose one: Duplicate, Incomplete information, Inappropriate content, Other.',
+        },
+        { status: 400 }
+      );
+    }
+
     const service = getServiceSupabase();
 
-    const { data: business, error: fetchError } = await service
+    const { data: business, error: fetchError } = await (service as any)
       .from('businesses')
       .select('id, status, owner_id')
       .eq('id', businessId)
@@ -75,11 +92,16 @@ export async function POST(
       );
     }
 
+    const fullReason = body.comment
+      ? `${reason}: ${body.comment.trim()}`
+      : reason;
     const updatePayload: Record<string, unknown> = {
       status: 'rejected',
       is_hidden: true,
       updated_at: new Date().toISOString(),
-      rejection_reason: typeof body.reason === 'string' ? body.reason.trim() || null : null,
+      rejection_reason: fullReason,
+      rejected_at: new Date().toISOString(),
+      rejected_by: user.id,
     };
 
     const { error: updateError } = await (service as any)

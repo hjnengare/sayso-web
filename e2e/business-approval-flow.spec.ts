@@ -98,14 +98,16 @@ test.describe("Business approval flow", () => {
       timeout: 10000,
     });
 
-    // --- 7. Pending list contains our business; click Approve ---
+    // --- 7. Pending list contains our business; click Review to open review page ---
     const row = page.locator("table tbody tr").filter({ hasText: uniqueName });
     await expect(row).toBeVisible({ timeout: 10000 });
 
-    await row.getByRole("button", { name: /approve/i }).click();
-    await expect(page.getByText(/approved|success|visible publicly/i)).toBeVisible({
-      timeout: 8000,
-    }).catch(() => {});
+    await row.getByRole("link", { name: /review/i }).click();
+    await expect(page).toHaveURL(/\/admin\/businesses\/[^/]+\/review/, { timeout: 5000 });
+
+    // --- 7b. On review page, click Approve ---
+    await page.getByRole("button", { name: /^approve$/i }).click();
+    await expect(page).toHaveURL(/\/admin\/pending-businesses/, { timeout: 8000 }).catch(() => {});
 
     // --- 8. Public: business appears in list and detail page loads ---
     const listRes2 = await request.get(`${baseURL}/api/businesses?limit=100`);

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { getServerSupabase } from '@/app/lib/supabase/server';
 import { getServiceSupabase } from '@/app/lib/admin';
 import { isAdmin } from '@/app/lib/admin';
+import { invalidateBusinessCache } from '@/app/lib/utils/optimizedQueries';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -35,9 +37,9 @@ export async function POST(
 
     const service = getServiceSupabase();
 
-    const { data: business, error: fetchError } = await service
+    const { data: business, error: fetchError } = await (service as any)
       .from('businesses')
-      .select('id, status, owner_id')
+      .select('id, status, owner_id, name, slug, primary_subcategory_slug, primary_category_slug, location, address, lat, lng')
       .eq('id', businessId)
       .maybeSingle();
 
@@ -53,10 +55,39 @@ export async function POST(
       return NextResponse.json({ error: 'Business not found' }, { status: 404 });
     }
 
-    const biz = business as { status?: string; owner_id?: string | null };
+    const biz = business as {
+      status?: string;
+      owner_id?: string | null;
+      name?: string | null;
+      primary_subcategory_slug?: string | null;
+      primary_category_slug?: string | null;
+      location?: string | null;
+      address?: string | null;
+      lat?: number | null;
+      lng?: number | null;
+    };
     if (biz.status !== 'pending_approval') {
       return NextResponse.json(
         { error: 'Business is not pending approval' },
+        { status: 400 }
+      );
+    }
+
+    // Final validation: required fields
+    const hasName = typeof biz.name === 'string' && biz.name.trim().length > 0;
+    const hasCategory = Boolean(biz.primary_subcategory_slug || biz.primary_category_slug);
+    const hasAddress = Boolean(
+      (typeof biz.address === 'string' && biz.address.trim()) ||
+        (typeof biz.location === 'string' && biz.location.trim())
+    );
+    const hasLat = biz.lat != null && !Number.isNaN(biz.lat);
+    const hasLng = biz.lng != null && !Number.isNaN(biz.lng);
+    if (!hasName || !hasCategory || !hasAddress || !hasLat || !hasLng) {
+      return NextResponse.json(
+        {
+          error: 'Validation failed',
+          message: 'Missing required fields. Business must have name, category, address, and coordinates (latitude, longitude).',
+        },
         { status: 400 }
       );
     }
@@ -90,6 +121,16 @@ export async function POST(
         { status: 500 }
       );
     }
+
+    // Invalidate caches and revalidate home + category pages
+    try {
+      invalidateBusinessCache(businessId, (business as { slug?: string | null })?.slug ?? undefined);
+    } catch (cacheErr) {
+      console.warn('[Admin] Cache invalidation:', cacheErr);
+    }
+    revalidatePath('/');
+    revalidatePath('/home');
+    revalidatePath('/for-you');
 
     return NextResponse.json({
       success: true,

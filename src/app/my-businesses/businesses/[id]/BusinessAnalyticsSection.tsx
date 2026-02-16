@@ -44,9 +44,11 @@ function SkeletonChart({ className }: { className?: string }) {
   );
 }
 
+const chartTickStyle = { fontSize: 11, fill: "#374151", fontWeight: 500 };
+
 function EmptyChartMessage() {
   return (
-    <div className="flex items-center justify-center min-h-[180px] text-charcoal/60 text-sm font-medium">
+    <div className="flex items-center justify-center min-h-[180px] text-charcoal/85 text-sm font-medium">
       No data in this period
     </div>
   );
@@ -97,7 +99,7 @@ export function BusinessAnalyticsSection({ businessId }: { businessId: string })
           </span>
           <div>
             <h3 className="text-base font-semibold text-charcoal">Stats & Analytics</h3>
-            <p className="text-sm text-charcoal/70">Loading performance data…</p>
+            <p className="text-sm text-charcoal/85">Loading performance data…</p>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -122,7 +124,7 @@ export function BusinessAnalyticsSection({ businessId }: { businessId: string })
           </span>
           <h3 className="text-base font-semibold text-charcoal">Stats & Analytics</h3>
         </div>
-        <p className="text-sm text-charcoal/70">{error}</p>
+        <p className="text-sm text-charcoal/85">{error}</p>
       </section>
     );
   }
@@ -147,7 +149,7 @@ export function BusinessAnalyticsSection({ businessId }: { businessId: string })
           </span>
           <h3 className="text-base font-semibold text-charcoal">Stats & Analytics</h3>
         </div>
-        <p className="text-sm text-charcoal/70">No performance data yet.</p>
+        <p className="text-sm text-charcoal/85">No performance data yet.</p>
       </section>
     );
   }
@@ -167,7 +169,7 @@ export function BusinessAnalyticsSection({ businessId }: { businessId: string })
         </span>
         <div>
           <h3 className="text-base font-semibold text-charcoal">Stats & Analytics</h3>
-          <p className="text-sm text-charcoal/70">Last 30 days · key metrics</p>
+          <p className="text-sm text-charcoal/85">Last 30 days · key metrics</p>
         </div>
       </div>
 
@@ -188,18 +190,19 @@ export function BusinessAnalyticsSection({ businessId }: { businessId: string })
                 <XAxis
                   dataKey="date"
                   tickFormatter={formatShortDate}
-                  tick={{ fontSize: 10, fill: "var(--charcoal-muted, #6b7280)" }}
+                  tick={chartTickStyle}
                 />
                 <YAxis
                   allowDecimals={false}
-                  tick={{ fontSize: 10, fill: "var(--charcoal-muted, #6b7280)" }}
+                  tick={chartTickStyle}
                 />
                 <Tooltip
                   labelFormatter={formatShortDate}
                   contentStyle={{
                     borderRadius: 8,
-                    border: "1px solid rgba(0,0,0,0.08)",
+                    border: "1px solid rgba(0,0,0,0.12)",
                     fontFamily: "Urbanist, system-ui, sans-serif",
+                    color: "#1f2937",
                   }}
                 />
                 <Line
@@ -234,18 +237,19 @@ export function BusinessAnalyticsSection({ businessId }: { businessId: string })
                 <XAxis
                   dataKey="date"
                   tickFormatter={formatShortDate}
-                  tick={{ fontSize: 10, fill: "var(--charcoal-muted, #6b7280)" }}
+                  tick={chartTickStyle}
                 />
                 <YAxis
                   allowDecimals={false}
-                  tick={{ fontSize: 10, fill: "var(--charcoal-muted, #6b7280)" }}
+                  tick={chartTickStyle}
                 />
                 <Tooltip
                   labelFormatter={formatShortDate}
                   contentStyle={{
                     borderRadius: 8,
-                    border: "1px solid rgba(0,0,0,0.08)",
+                    border: "1px solid rgba(0,0,0,0.12)",
                     fontFamily: "Urbanist, system-ui, sans-serif",
+                    color: "#1f2937",
                   }}
                 />
                 <Bar
@@ -281,19 +285,20 @@ export function BusinessAnalyticsSection({ businessId }: { businessId: string })
                 <XAxis
                   dataKey="date"
                   tickFormatter={formatShortDate}
-                  tick={{ fontSize: 10, fill: "var(--charcoal-muted, #6b7280)" }}
+                  tick={chartTickStyle}
                 />
                 <YAxis
                   domain={[0, 5]}
-                  tick={{ fontSize: 10, fill: "var(--charcoal-muted, #6b7280)" }}
+                  tick={chartTickStyle}
                 />
                 <Tooltip
                   labelFormatter={formatShortDate}
                   formatter={(value: number) => [value?.toFixed(1) ?? "—", "Avg rating"]}
                   contentStyle={{
                     borderRadius: 8,
-                    border: "1px solid rgba(0,0,0,0.08)",
+                    border: "1px solid rgba(0,0,0,0.12)",
                     fontFamily: "Urbanist, system-ui, sans-serif",
+                    color: "#1f2937",
                   }}
                 />
                 <Area
@@ -321,7 +326,7 @@ export function BusinessAnalyticsSection({ businessId }: { businessId: string })
               <span className="text-sm font-semibold text-charcoal">Helpful Votes</span>
             </div>
             <p className="text-2xl font-bold text-charcoal">{data.totalHelpfulVotes}</p>
-            <p className="text-xs text-charcoal/60">On your reviews</p>
+            <p className="text-xs text-charcoal/85">On your reviews</p>
           </div>
           <div className="bg-white/60 border border-white/80 rounded-[12px] p-4 shadow-sm">
             <div className="flex items-center gap-2 mb-2">
@@ -331,11 +336,11 @@ export function BusinessAnalyticsSection({ businessId }: { businessId: string })
             <div className="flex gap-4">
               <div>
                 <p className="text-xl font-bold text-charcoal">{data.eventsCount}</p>
-                <p className="text-xs text-charcoal/60">Events</p>
+                <p className="text-xs text-charcoal/85">Events</p>
               </div>
               <div>
                 <p className="text-xl font-bold text-charcoal">{data.specialsCount}</p>
-                <p className="text-xs text-charcoal/60">Specials</p>
+                <p className="text-xs text-charcoal/85">Specials</p>
               </div>
             </div>
           </div>

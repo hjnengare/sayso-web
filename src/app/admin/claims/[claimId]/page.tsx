@@ -67,7 +67,7 @@ export default function AdminClaimDetailPage() {
   }, [claimId, router]);
 
   const formatDate = (s: string | null) =>
-    s ? new Date(s).toLocaleDateString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "—";
+    s ? new Date(s).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "—";
 
   const handleApprove = async () => {
     setAction("approve");

@@ -39,7 +39,26 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({ businesses: businesses ?? [] });
+    type PendingRow = { id: string; name: string | null; slug: string | null; location: string | null; primary_subcategory_label: string | null; created_at: string; owner_id: string | null };
+    const rows: PendingRow[] = (businesses ?? []) as PendingRow[];
+    const ownerIds = [...new Set(rows.map((b) => b.owner_id).filter(Boolean))] as string[];
+    let ownerEmailMap = new Map<string, string>();
+    if (ownerIds.length > 0) {
+      const { data: profiles } = await service
+        .from('profiles')
+        .select('user_id, email')
+        .in('user_id', ownerIds);
+      ownerEmailMap = new Map(
+        (profiles ?? []).map((p: { user_id: string; email: string | null }) => [p.user_id, p.email ?? '—'])
+      );
+    }
+
+    const enriched = rows.map((b) => ({
+      ...b,
+      owner_email: b.owner_id ? ownerEmailMap.get(b.owner_id) ?? '—' : '—',
+    }));
+
+    return NextResponse.json({ businesses: enriched });
   } catch (error) {
     console.error('[Admin] Error in pending businesses:', error);
     return NextResponse.json(

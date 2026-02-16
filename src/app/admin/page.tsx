@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { FileCheck, Database, Store } from "lucide-react";
 
@@ -7,6 +8,7 @@ const FONT = "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-ser
 
 const SECTIONS = [
   {
+    key: "pending-businesses",
     href: "/admin/pending-businesses",
     label: "Pending Businesses",
     description: "Approve new businesses before they go live",
@@ -14,6 +16,7 @@ const SECTIONS = [
     color: "sage" as const,
   },
   {
+    key: "claims",
     href: "/admin/claims",
     label: "Business Claims",
     description: "Review and manage business ownership claims",
@@ -21,6 +24,7 @@ const SECTIONS = [
     color: "sage" as const,
   },
   {
+    key: "seed",
     href: "/admin/seed",
     label: "Seed Data",
     description: "Seed businesses and test data into the database",
@@ -45,6 +49,24 @@ const colorMap = {
 };
 
 export default function AdminDashboardPage() {
+  const [pendingBusinessCount, setPendingBusinessCount] = useState<number | null>(null);
+  const [pendingClaimCount, setPendingClaimCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/businesses/pending")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.businesses) setPendingBusinessCount(data.businesses.length);
+      })
+      .catch(() => {});
+    fetch("/api/admin/claims?status=pending,under_review&limit=100")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.claims) setPendingClaimCount(data.claims.length);
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
       <div className="mb-8">
@@ -76,12 +98,22 @@ export default function AdminDashboardPage() {
               >
                 <section.icon className={`w-5 h-5 ${c.icon}`} />
               </div>
-              <div>
+              <div className="min-w-0 flex-1">
                 <h2
-                  className="text-base font-semibold text-charcoal group-hover:text-sage transition-colors"
+                  className="text-base font-semibold text-charcoal group-hover:text-sage transition-colors flex items-center gap-2"
                   style={{ fontFamily: FONT }}
                 >
                   {section.label}
+                  {section.key === "pending-businesses" && pendingBusinessCount != null && pendingBusinessCount > 0 && (
+                    <span className="inline-flex items-center justify-center min-w-[22px] h-5 px-1.5 rounded-full bg-amber-100 text-amber-800 text-xs font-semibold">
+                      {pendingBusinessCount}
+                    </span>
+                  )}
+                  {section.key === "claims" && pendingClaimCount != null && pendingClaimCount > 0 && (
+                    <span className="inline-flex items-center justify-center min-w-[22px] h-5 px-1.5 rounded-full bg-amber-100 text-amber-800 text-xs font-semibold">
+                      {pendingClaimCount}
+                    </span>
+                  )}
                 </h2>
                 <p
                   className="text-sm text-charcoal/60 mt-0.5"

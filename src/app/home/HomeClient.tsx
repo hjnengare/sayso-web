@@ -550,8 +550,6 @@ export default function HomeClient() {
           {!isSearchActive && (
             <motion.div
               key="hero-carousel"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto", transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] } }}
               exit={{ opacity: 0, height: 0, transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] } }}
               className="overflow-hidden"
             >

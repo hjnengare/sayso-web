@@ -11,6 +11,7 @@ type ClaimRow = {
   business_name: string | null;
   business_slug: string | null;
   claimant_user_id: string;
+  claimant_email: string | null;
   status: string;
   method_attempted: string | null;
   created_at: string;
@@ -24,7 +25,7 @@ export default function AdminClaimsPage() {
   const [claims, setClaims] = useState<ClaimRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("pending");
   const [methodFilter, setMethodFilter] = useState<string>("");
 
   useEffect(() => {
@@ -50,7 +51,7 @@ export default function AdminClaimsPage() {
   }, [router, statusFilter, methodFilter]);
 
   const formatDate = (s: string | null) =>
-    s ? new Date(s).toLocaleDateString(undefined, { dateStyle: "short", timeStyle: "short" }) : "—";
+    s ? new Date(s).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" }) : "—";
 
   return (
     <>
@@ -111,6 +112,7 @@ export default function AdminClaimsPage() {
                 <thead>
                   <tr className="border-b border-charcoal/10 bg-charcoal/5">
                     <th className="px-4 py-3 text-sm font-semibold text-charcoal">Business</th>
+                    <th className="px-4 py-3 text-sm font-semibold text-charcoal">Claimed By</th>
                     <th className="px-4 py-3 text-sm font-semibold text-charcoal">Status</th>
                     <th className="px-4 py-3 text-sm font-semibold text-charcoal">Method</th>
                     <th className="px-4 py-3 text-sm font-semibold text-charcoal">Created</th>
@@ -130,6 +132,9 @@ export default function AdminClaimsPage() {
                         >
                           {c.business_name ?? "—"}
                         </Link>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-charcoal/80">
+                        {c.claimant_email ?? "—"}
                       </td>
                       <td className="px-4 py-3">
                         <span

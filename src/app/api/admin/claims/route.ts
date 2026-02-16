@@ -86,12 +86,16 @@ function applyFilters<T>(query: T, filters: ClaimsFilter): T {
   return next as unknown as T;
 }
 
-function mapClaims(rows: BusinessClaimRow[]): Array<{
+function mapClaims(
+  rows: BusinessClaimRow[],
+  claimantEmailMap: Map<string, string> = new Map()
+): Array<{
   id: string;
   business_id: string;
   business_name: string | null;
   business_slug: string | null;
   claimant_user_id: string;
+  claimant_email: string | null;
   status: string;
   method_attempted: string | null;
   created_at: string;
@@ -107,6 +111,7 @@ function mapClaims(rows: BusinessClaimRow[]): Array<{
       business_name: business?.name ?? null,
       business_slug: business?.slug ?? null,
       claimant_user_id: row.claimant_user_id,
+      claimant_email: claimantEmailMap.get(row.claimant_user_id) ?? null,
       status: row.status,
       method_attempted: row.method_attempted,
       created_at: row.created_at,
@@ -163,7 +168,19 @@ export async function GET(req: NextRequest) {
       await joinedQuery;
 
     if (!joinedError) {
-      const claims = mapClaims((joinedRows ?? []) as BusinessClaimRow[]);
+      const rows = (joinedRows ?? []) as BusinessClaimRow[];
+      const claimantIds = [...new Set(rows.map((r) => r.claimant_user_id).filter(Boolean))];
+      let claimantEmailMap = new Map<string, string>();
+      if (claimantIds.length > 0) {
+        const { data: profiles } = await service
+          .from('profiles')
+          .select('user_id, email')
+          .in('user_id', claimantIds);
+        claimantEmailMap = new Map(
+          (profiles ?? []).map((p: { user_id: string; email: string | null }) => [p.user_id, p.email ?? '—'])
+        );
+      }
+      const claims = mapClaims(rows, claimantEmailMap);
       return NextResponse.json({
         claims,
         total: joinedCount ?? claims.length,
@@ -238,7 +255,18 @@ export async function GET(req: NextRequest) {
       businesses: businessMap.get(row.business_id) ?? null,
     })) as BusinessClaimRow[];
 
-    const claims = mapClaims(enrichedRows);
+    const claimantIds = [...new Set(rows.map((r) => r.claimant_user_id).filter(Boolean))];
+    let claimantEmailMap = new Map<string, string>();
+    if (claimantIds.length > 0) {
+      const { data: profiles } = await service
+        .from('profiles')
+        .select('user_id, email')
+        .in('user_id', claimantIds);
+      claimantEmailMap = new Map(
+        (profiles ?? []).map((p: { user_id: string; email: string | null }) => [p.user_id, p.email ?? '—'])
+      );
+    }
+    const claims = mapClaims(enrichedRows, claimantEmailMap);
 
     return NextResponse.json({
       claims,
