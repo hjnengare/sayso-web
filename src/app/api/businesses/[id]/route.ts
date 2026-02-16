@@ -144,13 +144,6 @@ export async function PUT(
       );
     }
 
-    if (businessError || !business) {
-      return NextResponse.json(
-        { error: 'Business not found' },
-        { status: 404 }
-      );
-    }
-
     // Check ownership
     const { data: ownerCheck } = await supabase
       .from('business_owners')
