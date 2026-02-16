@@ -551,7 +551,11 @@ export async function proxy(request: NextRequest) {
     'user';
 
   // Helper: Check if user is an admin account
-  const isAdminAccount = resolvedRole === 'admin';
+  // Use BOTH normalizeRole chain AND direct profile field check for resilience.
+  // Some admin profiles may have role/account_role values that normalizeRole doesn't cover.
+  const rawRole = (profileStatus?.role || '').toLowerCase().trim();
+  const rawAccountRole = (profileStatus?.account_role || '').toLowerCase().trim();
+  const isAdminAccount = resolvedRole === 'admin' || rawRole === 'admin' || rawAccountRole === 'admin';
 
   // Helper: Check if user is a business account (admin takes priority)
   const isBusinessAccount = !isAdminAccount && resolvedRole === 'business_owner';
@@ -580,39 +584,46 @@ export async function proxy(request: NextRequest) {
   });
 
   // Server-side hard gate for admin routes.
-  // /admin should never render for guests, non-admin users, or unverified users.
+  // /admin requires: hasUser + emailOk + isAdmin. Does NOT require onboarding or business account type.
   if (isAdminRoute && user) {
+    if (DEBUG_MIDDLEWARE) {
+      console.log(`[Middleware:ADMIN] pathname=${pathname} isAdmin=${isAdminAccount} role=${profileStatus?.role ?? 'null'} account_role=${profileStatus?.account_role ?? 'null'} account_type=${metadataRoleCandidate ?? 'null'} decision=${isAdminAccount ? 'ALLOW' : 'BLOCK'}`);
+    }
+
     if (!user.email_confirmed_at) {
       return redirectWithGuard(request, new URL('/verify-email', request.url));
     }
 
-    if (!isAdminAccount) {
-      // CRITICAL: If profileStatus is null, redirect to /home (safe default)
-      // rather than making decisions based on incomplete data
-      const fallbackTarget = profileStatus === null
-        ? '/home'
-        : isBusinessAccount
-          ? '/my-businesses'
-          : isOnboardingComplete
-            ? '/profile'
-            : '/interests';
-
-      debugLog('REDIRECT', {
-        requestId,
-        reason: 'non_admin_on_admin_route',
-        to: fallbackTarget,
-        profileStatusKnown: profileStatus !== null,
-        role: profileStatus?.role,
-        account_role: profileStatus?.account_role,
-      });
-      edgeLog('REDIRECT', pathname, {
-        hasUser: true,
-        emailConfirmed: true,
-        to: fallbackTarget,
-        reason: 'non_admin_on_admin_route',
-      });
-      return redirectWithGuard(request, new URL(fallbackTarget, request.url));
+    if (isAdminAccount) {
+      // Admin on admin route — allow immediately, skip all onboarding checks
+      debugLog('ALLOW', { requestId, reason: 'admin_on_admin_route_gate', pathname });
+      return response;
     }
+
+    // Non-admin user on admin route — redirect away
+    const fallbackTarget = profileStatus === null
+      ? '/home'
+      : isBusinessAccount
+        ? '/my-businesses'
+        : isOnboardingComplete
+          ? '/profile'
+          : '/interests';
+
+    debugLog('REDIRECT', {
+      requestId,
+      reason: 'non_admin_on_admin_route',
+      to: fallbackTarget,
+      profileStatusKnown: profileStatus !== null,
+      role: profileStatus?.role,
+      account_role: profileStatus?.account_role,
+    });
+    edgeLog('REDIRECT', pathname, {
+      hasUser: true,
+      emailConfirmed: true,
+      to: fallbackTarget,
+      reason: 'non_admin_on_admin_route',
+    });
+    return redirectWithGuard(request, new URL(fallbackTarget, request.url));
   }
 
   // ============================================
