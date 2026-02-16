@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { getBrowserSupabase } from '../lib/supabase/client';
 import { AuthService } from '../lib/auth';
@@ -59,53 +59,59 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const router = useRouter();
   const supabase = getBrowserSupabase();
 
+  // Deduplicate concurrent getCurrentUser calls: reuse the same in-flight promise
+  const fetchingUserRef = useRef<Promise<AuthUser | null> | null>(null);
+  const initCompleteRef = useRef(false);
+
+  const deduplicatedGetCurrentUser = useCallback((): Promise<AuthUser | null> => {
+    if (fetchingUserRef.current) {
+      return fetchingUserRef.current;
+    }
+    const promise = AuthService.getCurrentUser().finally(() => {
+      fetchingUserRef.current = null;
+    });
+    fetchingUserRef.current = promise;
+    return promise;
+  }, []);
+
   // Initialize auth state with retry logic (mobile-optimized)
   useEffect(() => {
     let isMounted = true;
-    let retryCount = 0;
-    
+
     // Mobile devices get fewer retries and shorter timeouts
-    const isMobile = typeof navigator !== 'undefined' && 
+    const isMobile = typeof navigator !== 'undefined' &&
       /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     const MAX_RETRIES = isMobile ? 1 : 3;
     const RETRY_DELAY_MS = isMobile ? 500 : 1000;
-    
+
     const initializeAuth = async () => {
       console.log('[AuthContext] Initializing auth...');
       setIsLoading(true);
 
       const attemptInit = async (attempt: number): Promise<void> => {
-        if (!isMounted) {
-          console.log('[AuthContext] Component unmounted, aborting init');
-          return;
-        }
+        if (!isMounted) return;
 
         console.log(`[AuthContext] Auth init attempt ${attempt}/${MAX_RETRIES}`);
 
         try {
-          console.log('[AuthContext] Calling AuthService.getCurrentUser()...');
-          const currentUser = await AuthService.getCurrentUser();
+          const currentUser = await deduplicatedGetCurrentUser();
 
-          if (!isMounted) {
-            console.log('[AuthContext] Component unmounted after getCurrentUser');
-            return;
-          }
+          if (!isMounted) return;
 
           console.log('[AuthContext] Got current user:', currentUser ? {
             id: currentUser.id,
             email: currentUser.email,
             email_verified: currentUser.email_verified,
             has_profile: !!currentUser.profile,
-            onboarding_step: currentUser.profile?.onboarding_step
           } : null);
 
           setUser(currentUser);
           setIsLoading(false);
-          console.log('[AuthContext] Auth initialization complete, isLoading set to false');
+          initCompleteRef.current = true;
+          console.log('[AuthContext] Auth initialization complete');
         } catch (error) {
           console.error(`[AuthContext] Error initializing auth (attempt ${attempt}/${MAX_RETRIES}):`, error);
 
-          // Retry on network errors
           if (attempt < MAX_RETRIES) {
             const errorMessage = error instanceof Error ? error.message : String(error);
             const isNetworkError =
@@ -115,67 +121,33 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
             if (isNetworkError) {
               const delay = RETRY_DELAY_MS * attempt;
-              console.log(`[AuthContext] Network error detected, retrying in ${delay}ms...`);
+              console.log(`[AuthContext] Network error, retrying in ${delay}ms...`);
               await new Promise(resolve => setTimeout(resolve, delay));
               return attemptInit(attempt + 1);
-            } else {
-              console.log('[AuthContext] Non-network error, stopping retries');
             }
-          } else {
-            console.log('[AuthContext] Max retries reached');
           }
 
           if (isMounted) {
-            console.log('[AuthContext] Setting isLoading to false after error');
             setIsLoading(false);
+            initCompleteRef.current = true;
           }
         }
       };
 
       attemptInit(1);
-      
-      // Listen for storage events (cross-tab synchronization)
-      const handleStorageChange = (e: StorageEvent) => {
-        if (e.key === 'auth_state_changed' && e.newValue) {
-          try {
-            const authEvent = JSON.parse(e.newValue);
-            if (authEvent.type === 'SIGNED_IN' || authEvent.type === 'SIGNED_OUT') {
-              console.log('AuthContext: Auth state changed in another tab, refreshing...');
-              // Refresh user state when auth changes in another tab
-              AuthService.getCurrentUser().then(user => {
-                if (isMounted) {
-                  setUser(user);
-                }
-              }).catch(err => {
-                console.warn('AuthContext: Error refreshing after storage event:', err);
-              });
-            }
-          } catch (err) {
-            console.warn('AuthContext: Error parsing storage event:', err);
-          }
-        }
-      };
-      
-      window.addEventListener('storage', handleStorageChange);
-      
-      return () => {
-        isMounted = false;
-        window.removeEventListener('storage', handleStorageChange);
-      };
     };
 
     initializeAuth();
 
     // Listen for auth changes - MIDDLEWARE HANDLES ROUTING
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('AuthContext: Auth state change', { 
-        event, 
-        user_id: session?.user?.id,
-        session_exists: !!session,
-        email_confirmed_at: session?.user?.email_confirmed_at
-      });
-      
-      // Broadcast auth state change to other tabs
+    // Use a debounce timer so rapid-fire events (INITIAL_SESSION + SIGNED_IN)
+    // collapse into a single getCurrentUser() call.
+    let authChangeTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('AuthContext: Auth state change', { event, session_exists: !!session });
+
+      // Broadcast to other tabs (storage events only fire in *other* tabs)
       if (typeof window !== 'undefined') {
         try {
           localStorage.setItem('auth_state_changed', JSON.stringify({
@@ -183,84 +155,71 @@ export function AuthProvider({ children }: AuthProviderProps) {
             timestamp: Date.now(),
             user_id: session?.user?.id
           }));
-          // Remove the item after a short delay to allow other tabs to pick it up
-          setTimeout(() => {
-            localStorage.removeItem('auth_state_changed');
-          }, 100);
-        } catch (err) {
+          setTimeout(() => localStorage.removeItem('auth_state_changed'), 100);
+        } catch {
           // Ignore localStorage errors (private browsing, etc.)
-          console.warn('AuthContext: Could not broadcast auth state change:', err);
         }
       }
-      
-      // Optimize for email verification events - update immediately if email is confirmed
-      if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
-        // Fast path: if email is confirmed in session, optimistically update user
-        try {
-          const currentUser = await AuthService.getCurrentUser();
-          if (currentUser) {
-            console.log('AuthContext: Email verified - fast update', {
-              email: currentUser.email,
-              email_verified: currentUser.email_verified
-            });
-            setUser(currentUser);
-            setIsLoading(false);
-            return;
-          }
-        } catch (error) {
-          console.warn('AuthContext: Error getting user after sign in:', error);
-          // Continue with normal flow
-        }
-      }
-      
-      // Handle token refresh events
-      if (event === 'TOKEN_REFRESHED' && session?.user) {
-        try {
-          const currentUser = await AuthService.getCurrentUser();
-          if (currentUser) {
-            console.log('AuthContext: Token refreshed, updating user state');
-            setUser(currentUser);
-          }
-        } catch (error) {
-          console.warn('AuthContext: Error getting user after token refresh:', error);
-        }
-        return;
-      }
-      
-      // Only update user state - middleware handles all routing logic
-      if (session?.user) {
-        try {
-          const currentUser = await AuthService.getCurrentUser();
-          console.log('AuthContext: User state updated', {
-            email: currentUser?.email,
-            email_verified: currentUser?.email_verified,
-            user_id: currentUser?.id
-          });
-          setUser(currentUser);
-          setIsLoading(false);
-        } catch (error) {
-          console.warn('AuthContext: Error getting user from session:', error);
-          // Retry once on error
-          try {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            const retryUser = await AuthService.getCurrentUser();
-            setUser(retryUser);
-          } catch (retryError) {
-            console.warn('AuthContext: Retry failed, clearing user state:', retryError);
-            // If retry fails, clear the state
-            setUser(null);
-          }
-          setIsLoading(false);
-        }
-      } else {
+
+      // Sign-out is immediate — no need to fetch
+      if (!session?.user) {
+        if (authChangeTimer) clearTimeout(authChangeTimer);
         console.log('AuthContext: User signed out');
         setUser(null);
         setIsLoading(false);
+        return;
       }
+
+      // Debounce: collapse rapid successive events into one fetch
+      if (authChangeTimer) clearTimeout(authChangeTimer);
+      authChangeTimer = setTimeout(async () => {
+        // Skip if init hasn't completed yet (init will handle the first fetch)
+        if (!initCompleteRef.current) return;
+
+        try {
+          const currentUser = await deduplicatedGetCurrentUser();
+          if (isMounted && currentUser) {
+            console.log('AuthContext: User state updated', {
+              email: currentUser.email,
+              email_verified: currentUser.email_verified,
+            });
+            setUser(currentUser);
+            setIsLoading(false);
+          }
+        } catch (error) {
+          console.warn('AuthContext: Error getting user from auth event:', error);
+          if (isMounted) setIsLoading(false);
+        }
+      }, 300);
     });
 
-    return () => subscription.unsubscribe();
-  }, [supabase]);
+    // Cross-tab sync via storage events
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'auth_state_changed' && e.newValue) {
+        try {
+          const authEvent = JSON.parse(e.newValue);
+          if (authEvent.type === 'SIGNED_IN' || authEvent.type === 'SIGNED_OUT') {
+            console.log('AuthContext: Auth state changed in another tab, refreshing...');
+            deduplicatedGetCurrentUser().then(u => {
+              if (isMounted) setUser(u);
+            }).catch(err => {
+              console.warn('AuthContext: Error refreshing after storage event:', err);
+            });
+          }
+        } catch {
+          // Ignore parse errors
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+      if (authChangeTimer) clearTimeout(authChangeTimer);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [supabase, deduplicatedGetCurrentUser]);
 
   const login = async (email: string, password: string, desiredRole?: 'user' | 'business_owner'): Promise<AuthUser | null> => {
     setIsLoading(true);

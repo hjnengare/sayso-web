@@ -39,7 +39,7 @@ const urbanist = Urbanist({
   variable: "--font-urbanist",
 });
 
-// Wordmark font - MonarchParadox (preloaded, critical)
+// Wordmark font - MonarchParadox (lazy-loaded, only used in logo wordmark)
 const monarchParadox = localFont({
   src: [
     {
@@ -48,6 +48,7 @@ const monarchParadox = localFont({
       style: "normal",
     },
   ],
+  preload: false,
   display: "swap",
   fallback: ["system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
   variable: "--font-monarch-paradox",

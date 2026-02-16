@@ -67,7 +67,8 @@ export default function AdminBusinessReviewPage() {
 
   useEffect(() => {
     if (!id) return;
-    fetch(`/api/admin/businesses/${id}`)
+    const controller = new AbortController();
+    fetch(`/api/admin/businesses/${id}`, { signal: controller.signal })
       .then((res) => {
         if (res.status === 403) {
           router.replace("/");
@@ -79,8 +80,12 @@ export default function AdminBusinessReviewPage() {
       .then((data) => {
         if (data) setBusiness(data);
       })
-      .catch((err) => setError(err.message || "Something went wrong"))
+      .catch((err) => {
+        if (err.name === 'AbortError') return;
+        setError(err.message || "Something went wrong");
+      })
       .finally(() => setLoading(false));
+    return () => controller.abort();
   }, [id, router]);
 
   useEffect(() => {
