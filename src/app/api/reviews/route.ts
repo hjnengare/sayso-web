@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { createClient } from '@supabase/supabase-js';
 import { getServerSupabase } from '../../lib/supabase/server';
 import { ReviewValidator } from '../../lib/utils/validation';
@@ -615,6 +616,9 @@ export async function POST(req: NextRequest) {
       }
 
       review = reviewData;
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[Review API] Review created', { reviewId: review?.id, businessId: reviewInsertData?.business_id ?? null });
+      }
     } catch (error) {
       console.error('[Review API] Unexpected error creating review:', error);
       return errorResponse(
@@ -657,6 +661,8 @@ export async function POST(req: NextRequest) {
         }
         if (statsError) {
           logStepError('update_business_stats', statsError, isAnonymous);
+        } else if (statsUpdateSuccess && process.env.NODE_ENV !== 'production') {
+          console.log('[Review API] Aggregates updated', { businessId: statsBusinessId });
         }
       } catch (err) {
         logStepError('update_business_stats', err, isAnonymous);
@@ -863,13 +869,20 @@ export async function POST(req: NextRequest) {
       };
     }
 
-    // Cache invalidation: ONLY if we actually have a resolved business (legacy OR special)
+    // Cache invalidation and revalidation: so business detail and lists show fresh data after post
     try {
       if (resolvedBusiness?.id) {
         invalidateBusinessCache(resolvedBusiness.id, resolvedBusiness.slug ?? undefined);
+        revalidatePath(`/business/${resolvedBusiness.id}`);
+        if (resolvedBusiness.slug && resolvedBusiness.slug !== resolvedBusiness.id) {
+          revalidatePath(`/business/${resolvedBusiness.slug}`);
+        }
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('[Review API] Revalidation done', { businessId: resolvedBusiness.id, slug: resolvedBusiness.slug ?? null });
+        }
       }
     } catch (cacheError) {
-      console.warn('Error invalidating business cache:', cacheError);
+      console.warn('Error invalidating business cache / revalidating:', cacheError);
     }
 
     // Fire and forget badge awarding (skip for anonymous reviews)

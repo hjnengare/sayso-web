@@ -364,6 +364,10 @@ function WriteReviewContent() {
     });
 
     if (success) {
+      // Refresh server cache and refetch reviews so UI shows new review without full reload
+      refetchReviews?.();
+      router.refresh();
+
       // Trigger confetti celebration
       const duration = 3000;
       const animationEnd = Date.now() + duration;
@@ -398,19 +402,9 @@ function WriteReviewContent() {
       }, 250);
 
       resetForm();
-      
-      // Note: Prioritization is now handled on the backend - the API will automatically
-      // prioritize businesses the user has reviewed within the last 24 hours
-      
-      // Refetch reviews immediately so the new review appears first
-      if (refetchReviews) {
-        setTimeout(() => {
-          refetchReviews();
-        }, 500);
-      }
-      // Navigate back to business profile (fresh data will be fetched automatically)
+
+      // Navigate back to business profile (fresh data via revalidatePath + refetch on mount)
       setTimeout(() => {
-        // Use the business slug or ID for navigation - prefer slug for SEO-friendly URLs
         const targetId = business?.slug || business?.id || businessId;
         router.push(`/business/${targetId}`);
       }, 1500);
