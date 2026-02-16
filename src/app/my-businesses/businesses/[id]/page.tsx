@@ -1,13 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "../../../contexts/AuthContext";
 import { BusinessOwnershipService } from "../../../lib/services/businessOwnershipService";
 import { PageLoader, Loader } from "../../../components/Loader";
-import { Store, MapPin, Star, MessageSquare, Edit, ArrowLeft, Eye, TrendingUp, ChevronRight, Camera, Upload, Loader2 } from "lucide-react";
+import { Store, MapPin, Star, MessageSquare, Edit, ArrowLeft, Eye, TrendingUp, ChevronRight, Camera, Upload, Loader2, CheckCircle, Calendar } from "lucide-react";
 import Link from "next/link";
+
+function formatRelativeDate(dateStr: string): string {
+  const now = new Date();
+  const date = new Date(dateStr);
+  const diffMs = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) return 'today';
+  if (diffDays === 1) return 'yesterday';
+  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
+  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+}
 
 const BusinessAnalyticsSection = dynamic(
   () => import("./BusinessAnalyticsSection").then((m) => m.BusinessAnalyticsSection),
@@ -58,6 +70,33 @@ export default function OwnerBusinessDashboard() {
   const [hasAccess, setHasAccess] = useState(false);
   const [uploadingProfilePicture, setUploadingProfilePicture] = useState(false);
   const { showToast } = useToast();
+
+  const profileCompletion = useMemo(() => {
+    if (!business) return 0;
+    const b = business as any;
+    const fields = [
+      { filled: !!b.name, weight: 15 },
+      { filled: !!b.description && b.description.length > 20, weight: 15 },
+      { filled: !!b.image_url, weight: 15 },
+      { filled: !!b.phone, weight: 10 },
+      { filled: !!b.email, weight: 10 },
+      { filled: !!b.website, weight: 10 },
+      { filled: !!b.address, weight: 10 },
+      { filled: Array.isArray(b.uploaded_images) && b.uploaded_images.length >= 1, weight: 15 },
+    ];
+    return fields.reduce((sum, f) => sum + (f.filled ? f.weight : 0), 0);
+  }, [business]);
+
+  const growthChecklist = useMemo(() => {
+    if (!business) return [];
+    const b = business as any;
+    return [
+      { label: 'Add at least 5 photos', done: Array.isArray(b.uploaded_images) && b.uploaded_images.length >= 5 },
+      { label: 'Complete your business description', done: !!b.description && b.description.length > 50 },
+      { label: 'Respond to reviews', done: (stats?.total_reviews || 0) > 0 },
+      { label: 'Share your profile link', done: false },
+    ];
+  }, [business, stats]);
 
   useEffect(() => {
     let cancelled = false;
@@ -396,8 +435,8 @@ export default function OwnerBusinessDashboard() {
                 </ol>
               </nav>
 
-              <div className="pt-2 pb-6">
-                <div className="space-y-6">
+              <div className="pt-1 pb-4">
+                <div className="space-y-4">
                   {/* Business Header Card */}
                   <article
                     className="w-full sm:mx-0"
@@ -407,21 +446,21 @@ export default function OwnerBusinessDashboard() {
                     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-sage/10 to-transparent rounded-full blur-lg"></div>
                     <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-coral/10 to-transparent rounded-full blur-lg"></div>
 
-                    <div className="relative z-10 p-6 sm:p-8">
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                    <div className="relative z-10 p-4 sm:p-6">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                         <div className="relative flex-shrink-0 group">
-                          <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-coral shadow-xl overflow-hidden bg-sage/20">
+                          <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full border-[3px] border-coral shadow-xl overflow-hidden bg-sage/20">
                             {business.image_url ? (
                               <Image
                                 src={business.image_url}
                                 alt={business.name}
                                 fill
                                 className="object-cover"
-                                sizes="(max-width: 640px) 96px, 128px"
+                                sizes="(max-width: 640px) 64px, 80px"
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
-                                <Store className="text-navbar-bg" size={44} strokeWidth={2.5} />
+                                <Store className="text-navbar-bg" size={32} strokeWidth={2.5} />
                               </div>
                             )}
                           </div>
@@ -432,9 +471,9 @@ export default function OwnerBusinessDashboard() {
                             title="Change profile picture"
                           >
                             {uploadingProfilePicture ? (
-                              <Loader2 className="w-6 h-6 text-white animate-spin" />
+                              <Loader2 className="w-5 h-5 text-white animate-spin" />
                             ) : (
-                              <Camera className="w-6 h-6 text-white" />
+                              <Camera className="w-5 h-5 text-white" />
                             )}
                           </label>
                           <input
@@ -448,7 +487,7 @@ export default function OwnerBusinessDashboard() {
                         </div>
 
                         <div className="flex-1 min-w-0 w-full">
-                          <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
                             <h1
                               id="business-heading"
                               className="text-h1 sm:text-hero font-semibold text-charcoal"
@@ -457,20 +496,14 @@ export default function OwnerBusinessDashboard() {
                               {business.name}
                             </h1>
                             {business.verified && (
-                              <div className="px-2 py-1 rounded-full text-caption font-semibold flex items-center gap-1 bg-sage/20 text-sage">
+                              <div className="px-2 py-0.5 rounded-full text-caption font-semibold flex items-center gap-1 bg-sage/20 text-sage">
                                 <Star size={12} />
                                 <span className="capitalize">Verified</span>
                               </div>
                             )}
                           </div>
-                          
-                          {business.description && (
-                            <p className="text-body-sm text-charcoal/80 mb-4 leading-relaxed">
-                              {business.description}
-                            </p>
-                          )}
-                          
-                          <div className="flex items-center gap-4 mb-4 text-body-sm text-charcoal/70 flex-wrap">
+
+                          <div className="flex items-center gap-3 mb-2 text-body-sm text-charcoal/70 flex-wrap">
                             <div className="flex items-center gap-1">
                               <MapPin size={14} />
                               <span>{business.location}</span>
@@ -480,6 +513,27 @@ export default function OwnerBusinessDashboard() {
                               <span>{business.category}</span>
                             </div>
                           </div>
+
+                          {/* Compact status row */}
+                          <div className="flex items-center gap-2.5 flex-wrap text-xs text-charcoal/70">
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${
+                              (business as any).status === 'active'
+                                ? 'bg-sage/15 text-sage'
+                                : (business as any).status === 'pending_approval'
+                                  ? 'bg-coral/15 text-coral'
+                                  : 'bg-charcoal/10 text-charcoal/60'
+                            }`}>
+                              <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                              {(business as any).status === 'active' ? 'Live' :
+                               (business as any).status === 'pending_approval' ? 'Pending' : 'Rejected'}
+                            </span>
+                            <span className="text-charcoal/25">|</span>
+                            <span>{profileCompletion}% complete</span>
+                            <span className="text-charcoal/25">|</span>
+                            <span>{stats?.total_reviews || 0} reviews</span>
+                            <span className="text-charcoal/25">|</span>
+                            <span>Updated {formatRelativeDate(business.updated_at)}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -488,96 +542,171 @@ export default function OwnerBusinessDashboard() {
 
                   {/* Stats Cards */}
                   <section
-                    className="grid grid-cols-2 sm:grid-cols-4 gap-4"
+                    className="grid grid-cols-2 sm:grid-cols-4 gap-3"
                     aria-label="Business statistics"
                   >
-                    <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-lg p-4">
+                    <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/80 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-lg p-4 min-h-[120px] flex flex-col justify-between hover:shadow-md transition-shadow duration-200">
                       <div className="flex items-center gap-2 mb-2">
                         <Star className="w-5 h-5 text-coral" />
                         <span className="text-sm text-charcoal/70">Average Rating</span>
                       </div>
-                      <p className="text-2xl font-bold text-charcoal">
-                        {stats?.average_rating ? stats.average_rating.toFixed(1) : '—'}
-                      </p>
-                      <p className="text-xs text-charcoal/60">From reviews</p>
+                      <div>
+                        <p className="text-3xl font-extrabold text-charcoal">
+                          {stats?.average_rating ? stats.average_rating.toFixed(1) : '--'}
+                        </p>
+                        <p className="text-xs text-charcoal/50 mt-0.5">
+                          From {stats?.total_reviews || 0} reviews
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-lg p-4">
+                    <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/80 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-lg p-4 min-h-[120px] flex flex-col justify-between hover:shadow-md transition-shadow duration-200">
                       <div className="flex items-center gap-2 mb-2">
                         <MessageSquare className="w-5 h-5 text-coral" />
                         <span className="text-sm text-charcoal/70">Reviews</span>
                       </div>
-                      <p className="text-2xl font-bold text-charcoal">
-                        {stats?.total_reviews || 0}
-                      </p>
-                      <p className="text-xs text-charcoal/60">Total received</p>
+                      <div>
+                        <p className="text-3xl font-extrabold text-charcoal">
+                          {stats?.total_reviews || 0}
+                        </p>
+                        <p className={`text-xs mt-0.5 ${(analytics?.newReviews || 0) > 0 ? 'text-sage font-medium' : 'text-charcoal/50'}`}>
+                          +{analytics?.newReviews || 0} in last 30d
+                        </p>
+                      </div>
                     </div>
 
-                    {analytics && (
-                      <>
-                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-lg p-4">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Eye className="w-5 h-5 text-coral" />
-                            <span className="text-sm text-charcoal/70">Profile Views</span>
-                          </div>
-                          <p className="text-2xl font-bold text-charcoal">
-                            {analytics.profileViews}
-                          </p>
-                          <p className="text-xs text-charcoal/60">Last 30 days</p>
-                        </div>
+                    <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/80 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-lg p-4 min-h-[120px] flex flex-col justify-between hover:shadow-md transition-shadow duration-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Eye className="w-5 h-5 text-coral" />
+                        <span className="text-sm text-charcoal/70">Profile Views</span>
+                      </div>
+                      <div>
+                        <p className="text-3xl font-extrabold text-charcoal">
+                          {analytics?.profileViews ?? '--'}
+                        </p>
+                        <p className={`text-xs mt-0.5 ${(analytics?.profileViews || 0) > 0 ? 'text-sage font-medium' : 'text-charcoal/50'}`}>
+                          +{analytics?.profileViews || 0} in last 30d
+                        </p>
+                      </div>
+                    </div>
 
-                        <Link
-                          href={`/dm?businessId=${business?.id || businessId}`}
-                          className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-lg p-4 hover:border-sage/40 transition-all duration-300 block"
-                        >
-                          <div className="flex items-center gap-2 mb-2">
-                            <MessageSquare className="w-5 h-5 text-coral" />
-                            <span className="text-sm text-charcoal/70">Conversations</span>
-                          </div>
-                          <p className="text-2xl font-bold text-charcoal">
-                            {analytics.newConversations}
-                          </p>
-                          <p className="text-xs text-charcoal/60">Last 30 days</p>
-                        </Link>
-                      </>
-                    )}
+                    <Link
+                      href={`/dm?businessId=${business?.id || businessId}`}
+                      className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/80 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-lg p-4 min-h-[120px] flex flex-col justify-between hover:shadow-md hover:border-sage/40 transition-all duration-200 block"
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <MessageSquare className="w-5 h-5 text-coral" />
+                        <span className="text-sm text-charcoal/70">Conversations</span>
+                      </div>
+                      <div>
+                        <p className="text-3xl font-extrabold text-charcoal">
+                          {analytics?.newConversations ?? '--'}
+                        </p>
+                        <p className={`text-xs mt-0.5 ${(analytics?.newConversations || 0) > 0 ? 'text-sage font-medium' : 'text-charcoal/50'}`}>
+                          +{analytics?.newConversations || 0} in last 30d
+                        </p>
+                      </div>
+                    </Link>
                   </section>
 
 
                   {/* Quick Actions */}
-                  <section
-                    className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-lg p-6 sm:p-8 space-y-4"
-                    aria-label="Business management"
-                  >
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-base font-semibold text-charcoal flex items-center gap-3">
-                        <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-sage/20 to-sage/10">
-                          <Store className="w-5 h-5 text-sage" />
-                        </span>
-                        Manage Your Business
-                      </h3>
-                    </div>
-                    <p className="text-sm text-charcoal/70 font-medium max-w-[520px]">
-                      Keep your business information up to date, respond to community feedback, and track performance insights from one place.
-                    </p>
-                    <div className="flex flex-wrap gap-3">
+                  <section aria-label="Quick actions" className="space-y-3">
+                    <h3 className="text-base font-semibold text-charcoal flex items-center gap-3">
+                      <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-sage/20 to-sage/10">
+                        <Store className="w-4 h-4 text-sage" />
+                      </span>
+                      Quick Actions
+                    </h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                       <Link
-                        href={`/my-businesses/businesses/${businessId}/reviews`}
-                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-coral/90 hover:bg-coral text-white rounded-full text-sm font-semibold transition-all duration-300 hover:scale-[1.02] active:scale-95 border border-coral/30 w-fit"
-                        style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                        href={`/business/${businessId}/edit`}
+                        className="group bg-gradient-to-br from-card-bg via-card-bg to-card-bg/80 backdrop-blur-xl border border-white/60 rounded-[12px] p-4 flex flex-col items-center gap-2 text-center hover:border-sage/40 hover:translate-y-[-2px] transition-all duration-200"
                       >
-                        <MessageSquare size={14} strokeWidth={2.5} />
-                        <span>View & Reply to Reviews</span>
+                        <span className="grid h-10 w-10 place-items-center rounded-full bg-sage/15 group-hover:bg-sage/25 transition-colors">
+                          <Edit className="w-5 h-5 text-sage" />
+                        </span>
+                        <span className="text-sm font-semibold text-charcoal">Edit Details</span>
                       </Link>
                       <Link
                         href={`/business/${businessId}/edit`}
-                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-coral/90 hover:bg-coral text-white rounded-full text-sm font-semibold transition-all duration-300 hover:scale-[1.02] active:scale-95 border border-coral/30 w-fit"
-                        style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                        className="group bg-gradient-to-br from-card-bg via-card-bg to-card-bg/80 backdrop-blur-xl border border-white/60 rounded-[12px] p-4 flex flex-col items-center gap-2 text-center hover:border-sage/40 hover:translate-y-[-2px] transition-all duration-200"
                       >
-                        <Edit size={14} strokeWidth={2.5} />
-                        <span>Edit Business Details</span>
+                        <span className="grid h-10 w-10 place-items-center rounded-full bg-sage/15 group-hover:bg-sage/25 transition-colors">
+                          <Upload className="w-5 h-5 text-sage" />
+                        </span>
+                        <span className="text-sm font-semibold text-charcoal">Upload Photos</span>
                       </Link>
+                      <Link
+                        href={`/my-businesses/businesses/${businessId}/reviews`}
+                        className="group bg-gradient-to-br from-card-bg via-card-bg to-card-bg/80 backdrop-blur-xl border border-white/60 rounded-[12px] p-4 flex flex-col items-center gap-2 text-center hover:border-sage/40 hover:translate-y-[-2px] transition-all duration-200"
+                      >
+                        <span className="grid h-10 w-10 place-items-center rounded-full bg-coral/15 group-hover:bg-coral/25 transition-colors">
+                          <MessageSquare className="w-5 h-5 text-coral" />
+                        </span>
+                        <span className="text-sm font-semibold text-charcoal">View Reviews</span>
+                      </Link>
+                      <Link
+                        href="/add-event"
+                        className="group bg-gradient-to-br from-card-bg via-card-bg to-card-bg/80 backdrop-blur-xl border border-white/60 rounded-[12px] p-4 flex flex-col items-center gap-2 text-center hover:border-sage/40 hover:translate-y-[-2px] transition-all duration-200"
+                      >
+                        <span className="grid h-10 w-10 place-items-center rounded-full bg-sage/15 group-hover:bg-sage/25 transition-colors">
+                          <Calendar className="w-5 h-5 text-sage" />
+                        </span>
+                        <span className="text-sm font-semibold text-charcoal">Add Event / Special</span>
+                      </Link>
+                      <div
+                        className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/80 backdrop-blur-xl border border-white/60 rounded-[12px] p-4 flex flex-col items-center gap-2 text-center opacity-60 cursor-default"
+                      >
+                        <span className="grid h-10 w-10 place-items-center rounded-full bg-charcoal/10">
+                          <TrendingUp className="w-5 h-5 text-charcoal/40" />
+                        </span>
+                        <span className="text-sm font-semibold text-charcoal/60">Promote</span>
+                        <span className="text-[10px] bg-sage/20 text-sage px-1.5 py-0.5 rounded-full font-semibold">Soon</span>
+                      </div>
                     </div>
+                  </section>
+
+                  {/* Growth Suggestions */}
+                  <section
+                    className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-lg p-5 sm:p-6 space-y-4"
+                    aria-label="Growth suggestions"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-sage/20 to-sage/10">
+                        <TrendingUp className="w-4 h-4 text-sage" />
+                      </span>
+                      <h3 className="text-base font-semibold text-charcoal">Grow Your Visibility</h3>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 h-2 bg-charcoal/10 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-sage rounded-full transition-all duration-500"
+                          style={{ width: `${profileCompletion}%` }}
+                        />
+                      </div>
+                      <span className="text-xs font-semibold text-charcoal/70 tabular-nums">{profileCompletion}%</span>
+                    </div>
+
+                    <ul className="space-y-2.5">
+                      {growthChecklist.map((item) => (
+                        <li key={item.label} className="flex items-center gap-3">
+                          <span className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
+                            item.done ? 'bg-sage/20' : 'bg-charcoal/5'
+                          }`}>
+                            {item.done ? (
+                              <CheckCircle className="w-3.5 h-3.5 text-sage" />
+                            ) : (
+                              <span className="w-2 h-2 rounded-full bg-charcoal/20" />
+                            )}
+                          </span>
+                          <span className={`text-sm ${item.done ? 'text-charcoal/50 line-through' : 'text-charcoal/80 font-medium'}`}>
+                            {item.label}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
                   </section>
 
                   {/* Stats & Analytics */}

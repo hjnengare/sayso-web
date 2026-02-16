@@ -140,16 +140,67 @@ export function BusinessAnalyticsSection({ businessId }: { businessId: string })
   if (!data || !hasAnyData) {
     return (
       <section
-        className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-lg p-6 sm:p-8"
+        className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-lg p-6 sm:p-8 space-y-5"
         aria-label="Stats & Analytics"
       >
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-3">
           <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-sage/20 to-sage/10">
             <BarChart3 className="w-5 h-5 text-sage" />
           </span>
-          <h3 className="text-base font-semibold text-charcoal">Stats & Analytics</h3>
+          <div>
+            <h3 className="text-base font-semibold text-charcoal">Stats & Analytics</h3>
+            <p className="text-sm text-charcoal/50">Last 30 days</p>
+          </div>
         </div>
-        <p className="text-sm text-charcoal/85">No performance data yet.</p>
+
+        {/* Greyed metric pills */}
+        <div className="flex flex-wrap gap-2.5">
+          {['Profile Views', 'Reviews', 'Rating', 'Helpful Votes'].map((label) => (
+            <div key={label} className="bg-white/30 rounded-full px-3 py-1 flex items-center gap-2">
+              <span className="text-xs text-charcoal/40 font-medium">{label}</span>
+              <span className="text-sm font-extrabold text-charcoal/25">--</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Chart placeholder grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Line chart placeholder */}
+          <div className="bg-white/30 border border-white/50 rounded-[12px] p-4 min-h-[180px] flex flex-col justify-end">
+            <svg viewBox="0 0 200 60" className="w-full h-[60px] text-charcoal/10" aria-hidden="true">
+              <polyline
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                points="0,50 30,45 60,40 90,35 120,30 150,25 180,20 200,15"
+              />
+            </svg>
+            <div className="flex justify-between mt-2">
+              {['Mon', 'Wed', 'Fri', 'Sun'].map((d) => (
+                <span key={d} className="text-[10px] text-charcoal/20">{d}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Bar chart placeholder */}
+          <div className="bg-white/30 border border-white/50 rounded-[12px] p-4 min-h-[180px] flex flex-col justify-end">
+            <div className="flex items-end gap-2 h-[60px]" aria-hidden="true">
+              {[30, 50, 20, 65, 40, 55, 35].map((h, i) => (
+                <div key={i} className="flex-1 bg-charcoal/8 rounded-t-sm" style={{ height: `${h}%` }} />
+              ))}
+            </div>
+            <div className="flex justify-between mt-2">
+              {['Mon', 'Wed', 'Fri', 'Sun'].map((d) => (
+                <span key={d} className="text-[10px] text-charcoal/20">{d}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <p className="text-sm text-charcoal/60 text-center font-medium">
+          Your analytics will appear once customers start interacting with your profile.
+        </p>
       </section>
     );
   }
