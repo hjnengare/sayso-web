@@ -9,6 +9,7 @@ import Link from "next/link";
 import confetti from "canvas-confetti";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useToast } from "../../../contexts/ToastContext";
 import { useReviewForm } from "../../../hooks/useReviewForm";
 import { useReviewSubmission, useReviews } from "../../../hooks/useReviews";
 import { PageLoader } from "../../../components/Loader";
@@ -59,6 +60,7 @@ function WriteReviewContent() {
   } = useReviewForm();
 
   const { user } = useAuth();
+  const { showToast } = useToast();
   const { submitReview, submitting, error: submitError } = useReviewSubmission();
 
   // State for edit mode (guests cannot edit — only when logged in)
@@ -441,6 +443,25 @@ function WriteReviewContent() {
         colors: ['#7D9B76', '#E88D67', '#FFFFFF', '#FFD700'],
       });
     }, 250);
+
+    // Check for newly earned badges
+    if (user?.id) {
+      fetch("/api/badges/check-and-award", { method: "POST", credentials: "include" })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data?.newBadges?.length > 0) {
+            const n = data.newBadges.length;
+            showToast(
+              n === 1
+                ? `You earned a new badge: ${data.newBadges[0].name}!`
+                : `You earned ${n} new badges!`,
+              "success",
+              4000
+            );
+          }
+        })
+        .catch(() => {});
+    }
 
     resetForm();
 

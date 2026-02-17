@@ -40,10 +40,10 @@ export default function BadgeCard({ badge, onClick }: BadgeCardProps) {
   return (
     <motion.div
       className={`
-        relative flex flex-col items-center p-4 rounded-xl border-2 transition-all cursor-pointer
+        relative flex flex-col items-center p-4 rounded-xl border-2 transition-all cursor-pointer bg-card-bg
         ${
           isLocked
-            ? "bg-charcoal/5 border-charcoal/10"
+            ? "border-charcoal/10"
             : `bg-gradient-to-br ${colors!.bg} ${colors!.border} shadow-md`
         }
         hover:scale-105 active:scale-95

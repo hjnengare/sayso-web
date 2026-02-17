@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
+import { ChevronRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { Loader } from '../components/Loader';
 import BadgeGrid from '../components/Badges/BadgeGrid';
@@ -87,6 +89,34 @@ export default function AchievementsPage() {
   return (
     <ProtectedRoute requiresAuth={true}>
       <div className="min-h-screen bg-page-bg pb-20">
+        {/* Breadcrumb Navigation */}
+        <div className="mx-auto w-full max-w-6xl px-4">
+          <nav className="py-1" aria-label="Breadcrumb">
+            <ol className="flex items-center gap-2 text-sm sm:text-base">
+              <li>
+                <Link
+                  href="/home"
+                  className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium"
+                  style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                >
+                  Home
+                </Link>
+              </li>
+              <li className="flex items-center">
+                <ChevronRight className="w-4 h-4 text-charcoal/60" />
+              </li>
+              <li>
+                <span
+                  className="text-charcoal font-semibold"
+                  style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                >
+                  Achievements
+                </span>
+              </li>
+            </ol>
+          </nav>
+        </div>
+
         {/* Header */}
         <div className="bg-gradient-to-br from-sage/10 via-coral/10 to-sage/10 px-4 py-8 mb-6">
           <div className="max-w-6xl mx-auto">
