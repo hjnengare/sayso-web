@@ -52,6 +52,37 @@ export async function POST(_req: NextRequest, { params }: RouteContext) {
       );
     }
 
+    // Get review owner and voter name to create notification
+    try {
+      const { data: reviewData } = await supabase
+        .from('reviews')
+        .select('user_id, profiles!reviews_user_id_fkey(display_name, username)')
+        .eq('id', reviewId)
+        .single();
+
+      if (reviewData && reviewData.user_id) {
+        // Get voter's display name
+        const { data: voterData } = await supabase
+          .from('profiles')
+          .select('display_name, username')
+          .eq('id', user.id)
+          .single();
+
+        const voterName = voterData?.display_name || voterData?.username || 'Someone';
+
+        // Create helpful vote notification for review owner
+        await supabase.rpc('create_helpful_notification', {
+          p_review_owner_id: reviewData.user_id,
+          p_voter_id: user.id,
+          p_review_id: reviewId,
+          p_voter_name: voterName
+        });
+      }
+    } catch (notifError) {
+      // Log error but don't fail the request if notification creation fails
+      console.error('Failed to create helpful notification:', notifError);
+    }
+
     // Revalidate business page so cached review data (e.g. helpful_count) stays in sync
     try {
       const { data: reviewRow } = await supabase.from('reviews').select('business_id').eq('id', reviewId).maybeSingle();

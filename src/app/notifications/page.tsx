@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, Check, X, MessageSquare, MessageCircle, Star, Heart, TrendingUp, Clock, ChevronRight, ChevronUp } from "lucide-react";
+import { Bell, Check, X, MessageSquare, MessageCircle, Star, Heart, TrendingUp, Clock, ChevronRight, ChevronUp, Award, ThumbsUp } from "lucide-react";
 import Footer from "../components/Footer/Footer";
 import { PageLoader } from "../components/Loader";
 import { usePredefinedPageTitle } from "../hooks/usePageTitle";
@@ -44,6 +44,11 @@ export default function NotificationsPage() {
         return Star;
       case 'message':
         return MessageCircle;
+      case 'badge_earned':
+      case 'gamification':
+        return Award;
+      case 'review_helpful':
+        return ThumbsUp;
       default:
         return Bell;
     }
@@ -64,6 +69,11 @@ export default function NotificationsPage() {
         return 'bg-yellow-400/10 text-yellow-400 border-yellow-400/30';
       case 'message':
         return 'bg-coral/10 text-coral border-coral/30';
+      case 'badge_earned':
+      case 'gamification':
+        return 'bg-amber-400/10 text-amber-400 border-amber-400/30';
+      case 'review_helpful':
+        return 'bg-blue-400/10 text-blue-400 border-blue-400/30';
       default:
         return 'bg-card-bg/10 text-sage border-sage/30';
     }

@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, ReactNode, useCallback,
 import { useAuth } from "./AuthContext";
 import { formatTimeAgo } from "../utils/formatTimeAgo";
 import { apiClient } from "../lib/api/apiClient";
+import { getBrowserSupabase } from "../lib/supabase/client";
 
 // Type for notification data displayed in toast/UI
 export type NotificationType =
@@ -16,7 +17,10 @@ export type NotificationType =
   | 'otp_verified'
   | 'claim_status_changed'
   | 'docs_requested'
-  | 'docs_received';
+  | 'docs_received'
+  | 'gamification'
+  | 'badge_earned'
+  | 'review_helpful';
 
 export interface ToastNotificationData {
   id: string;
@@ -144,6 +148,86 @@ export function NotificationsProvider({ children }: NotificationsProviderProps) 
   useEffect(() => {
     fetchNotifications();
   }, [fetchNotifications]);
+
+  // Real-time subscription for new notifications
+  useEffect(() => {
+    if (!user) return;
+
+    const supabase = getBrowserSupabase();
+    
+    // Subscribe to notifications table for current user
+    const channel = supabase
+      .channel('notifications-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          console.log('[Notifications] New notification received:', payload);
+          
+          // Add new notification to state immediately
+          const newNotification = convertToToastNotification(payload.new as DatabaseNotification);
+          setNotifications(prev => [newNotification, ...prev]);
+          
+          // Play notification sound or show toast (optional)
+          // You can add a toast notification here if needed
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          console.log('[Notifications] Notification updated:', payload);
+          
+          // Update notification in state
+          const updatedNotification = convertToToastNotification(payload.new as DatabaseNotification);
+          setNotifications(prev =>
+            prev.map(n => n.id === updatedNotification.id ? updatedNotification : n)
+          );
+          
+          // Update read status
+          if ((payload.new as DatabaseNotification).read) {
+            setReadNotifications(prev => new Set(prev).add(updatedNotification.id));
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          console.log('[Notifications] Notification deleted:', payload);
+          
+          // Remove notification from state
+          const deletedId = (payload.old as DatabaseNotification).id;
+          setNotifications(prev => prev.filter(n => n.id !== deletedId));
+          setReadNotifications(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(deletedId);
+            return newSet;
+          });
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription on unmount
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, convertToToastNotification]);
 
   const markAsRead = useCallback(async (id: string) => {
     // Optimistically update UI

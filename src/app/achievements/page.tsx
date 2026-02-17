@@ -95,11 +95,11 @@ export default function AchievementsPage() {
             <ol className="flex items-center gap-2 text-sm sm:text-base">
               <li>
                 <Link
-                  href="/home"
+                  href="/profile"
                   className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium"
                   style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                 >
-                  Home
+                  Profile
                 </Link>
               </li>
               <li className="flex items-center">
@@ -118,7 +118,7 @@ export default function AchievementsPage() {
         </div>
 
         {/* Header */}
-        <div className="bg-gradient-to-br from-sage/10 via-coral/10 to-sage/10 px-4 py-8 mb-6">
+        <div className="bg-card-bg px-4 py-8 mb-6 px-2">
           <div className="max-w-6xl mx-auto">
             <h1 className="font-urbanist font-900 text-4xl text-charcoal mb-2">
               🏆 Your Achievements
@@ -130,26 +130,26 @@ export default function AchievementsPage() {
             {/* Stats */}
             {stats && (
               <div className="flex items-center gap-6">
-                <div className="bg-white/80 backdrop-blur-sm rounded-xl px-6 py-4 border border-sage/20">
+                <div className="bg-off-white/90 px-6 py-4 border border-sage/20 rounded-xl">
                   <p className="text-sm text-charcoal/60 mb-1">Badges Earned</p>
                   <p className="font-urbanist font-800 text-3xl text-sage">
                     {stats.earned} <span className="text-xl text-charcoal/60">/ {stats.total}</span>
                   </p>
                 </div>
 
-                <div className="bg-white/80 backdrop-blur-sm rounded-xl px-6 py-4 border border-sage/20">
+                <div className="bg-off-white/90 px-6 py-4 border border-sage/20 rounded-xl">
                   <p className="text-sm text-charcoal/60 mb-1">Completion</p>
-                  <p className="font-urbanist font-800 text-3xl text-coral">
+                  <p className="font-urbanist font-800 text-3xl text-card-bg">
                     {stats.percentage}%
                   </p>
                 </div>
 
                 {/* Progress Bar */}
-                <div className="flex-1 bg-white/80 backdrop-blur-sm rounded-xl px-6 py-4 border border-sage/20">
+                <div className="flex-1 bg-off-white/90 px-6 py-4 border border-sage/20 rounded-xl">
                   <p className="text-sm text-charcoal/60 mb-2">Progress</p>
                   <div className="w-full bg-charcoal/10 rounded-full h-3 overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-sage to-coral transition-all duration-500"
+                      className="h-full bg-card-bg transition-all duration-500"
                       style={{ width: `${stats.percentage}%` }}
                     />
                   </div>

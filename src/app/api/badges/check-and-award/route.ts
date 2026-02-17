@@ -74,6 +74,21 @@ export async function POST(req: Request) {
     console.log(`[Badge Check] User ${user.id} earned ${newlyEarnedBadges.length} new badges:`,
       newlyEarnedBadges.map(b => b.name));
 
+    // Create notifications for each newly earned badge
+    for (const badge of newlyEarnedBadges) {
+      try {
+        await supabase.rpc('create_badge_notification', {
+          p_user_id: user.id,
+          p_badge_id: badge.id,
+          p_badge_name: badge.name,
+          p_badge_icon: badge.icon_path || '/badges/default-badge.png'
+        });
+      } catch (notifError) {
+        // Log error but don't fail the request if notification creation fails
+        console.error(`[Badge Check] Failed to create notification for badge ${badge.id}:`, notifError);
+      }
+    }
+
     return NextResponse.json({
       ok: true,
       newBadges: newlyEarnedBadges,
