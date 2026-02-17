@@ -191,9 +191,7 @@ export default function MyBusinessesPage() {
       if (isFetchingRef.current && !showLoading) {
         return;
       }
-      
-      // Track if we already set loading to false to prevent race conditions
-      let loadingCleared = false;
+
       isFetchingRef.current = true;
       fetchCallCountRef.current += 1;
       if (process.env.NODE_ENV !== "production") {
@@ -204,15 +202,31 @@ export default function MyBusinessesPage() {
       setError(null);
       setListingsWarning(null);
 
+      // Phase 1: Fetch businesses (blocking — clears isLoading when done)
+      let transformedBusinesses: Business[] = [];
       try {
         const ownedBusinesses = await withTimeout(
           BusinessOwnershipService.getBusinessesForOwner(ownerId),
           OWNER_DATA_REQUEST_TIMEOUT_MS,
           "Timed out while loading businesses",
         );
-        const transformedBusinesses = toBusinessCardData(ownedBusinesses);
+        transformedBusinesses = toBusinessCardData(ownedBusinesses);
         setBusinesses(transformedBusinesses);
+      } catch (err) {
+        console.error("Error fetching owner businesses:", err);
+        setBusinesses([]);
+        setOwnerListings([]);
+        setError("Couldn't load businesses. Please try again.");
+        isFetchingRef.current = false;
+        if (showLoading) setIsLoading(false);
+        return;
+      }
 
+      // Unblock page render — businesses are loaded
+      if (showLoading) setIsLoading(false);
+
+      // Phase 2: Fetch listings (non-blocking — page is already visible)
+      try {
         const { items, failedCount } = await withTimeout(
           fetchOwnerListings(transformedBusinesses),
           OWNER_DATA_REQUEST_TIMEOUT_MS,
@@ -224,16 +238,11 @@ export default function MyBusinessesPage() {
           setListingsWarning("Some business listings could not be loaded. Showing the available results.");
         }
       } catch (err) {
-        console.error("Error fetching owner dashboard data:", err);
-        setBusinesses([]);
+        console.error("Error fetching owner listings:", err);
         setOwnerListings([]);
-        setError("Couldn't load businesses. Please try again.");
+        setListingsWarning("Could not load events & specials. They will appear on your next visit.");
       } finally {
         isFetchingRef.current = false;
-        if (showLoading && !loadingCleared) {
-          setIsLoading(false);
-          loadingCleared = true;
-        }
       }
     },
     [fetchOwnerListings],
