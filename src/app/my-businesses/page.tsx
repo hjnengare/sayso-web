@@ -6,6 +6,7 @@ import Link from "next/link";
 
 import { useAuth } from "../contexts/AuthContext";
 import { BusinessOwnershipService } from "../lib/services/businessOwnershipService";
+import { getBrowserSupabase } from "@/app/lib/supabase/client";
 import SkeletonHeader from "../components/shared/skeletons/SkeletonHeader";
 import SkeletonList from "../components/shared/skeletons/SkeletonList";
 import { usePreviousPageBreadcrumb } from "../hooks/usePreviousPageBreadcrumb";
@@ -113,53 +114,103 @@ export default function MyBusinessesPage() {
   const fetchCallCountRef = useRef(0);
   const isFetchingRef = useRef(false);
 
-  const fetchOwnerListings = useCallback(async (ownedBusinesses: Business[]): Promise<OwnerListingsFetchResult> => {
-    if (ownedBusinesses.length === 0) return { items: [], failedCount: 0 };
+  const fetchOwnerListings = useCallback(async (ownedBusinesses: Business[], userId: string): Promise<OwnerListingsFetchResult> => {
+    const allPromises: Promise<OwnerListing[]>[] = [];
 
-    const results = await Promise.allSettled(
-      ownedBusinesses.map(async (business) => {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), LISTINGS_REQUEST_TIMEOUT_MS);
+    // Fetch business-linked events/specials
+    if (ownedBusinesses.length > 0) {
+      allPromises.push(
+        ...ownedBusinesses.map(async (business) => {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), LISTINGS_REQUEST_TIMEOUT_MS);
 
+          try {
+            const response = await fetch(`/api/businesses/${business.id}/events?owner_view=true`, {
+              cache: "no-store",
+              signal: controller.signal,
+            });
+            if (!response.ok) {
+              throw new Error(`Failed to fetch listings for business ${business.id}`);
+            }
+
+            const payload = (await response.json()) as { data?: any[]; error?: string };
+            if (payload?.error) {
+              throw new Error(payload.error);
+            }
+            const entries = Array.isArray(payload?.data) ? payload.data : [];
+
+            return entries.map((entry: any): OwnerListing => ({
+              id: String(entry.id),
+              title: typeof entry.title === "string" && entry.title.trim() ? entry.title.trim() : "Untitled listing",
+              type: entry.type === "special" ? "special" : "event",
+              businessId: business.id,
+              businessName: business.name,
+              startDate: typeof entry.startDate === "string" ? entry.startDate : null,
+              endDate: typeof entry.endDate === "string" ? entry.endDate : null,
+              location:
+                typeof entry.location === "string" && entry.location.trim()
+                  ? entry.location
+                  : business.location || "Location TBD",
+              description: typeof entry.description === "string" ? entry.description : null,
+            }));
+          } catch (error) {
+            if (error instanceof DOMException && error.name === "AbortError") {
+              throw new Error(`Listings request timed out for business ${business.id}`);
+            }
+            throw error;
+          } finally {
+            clearTimeout(timeoutId);
+          }
+        })
+      );
+    }
+
+    // Fetch community events (events without business_id or with null business_id) created by this user
+    allPromises.push(
+      (async () => {
         try {
-          const response = await fetch(`/api/businesses/${business.id}/events?owner_view=true`, {
-            cache: "no-store",
-            signal: controller.signal,
-          });
-          if (!response.ok) {
-            throw new Error(`Failed to fetch listings for business ${business.id}`);
+          const supabase = getBrowserSupabase();
+          
+          // Query events_and_specials table for user's community events
+          // Community events are those where business_id is null or where is_community_event is true
+          const { data, error } = await supabase
+            .from('events_and_specials')
+            .select('*')
+            .eq('created_by', userId)
+            .or('business_id.is.null,is_community_event.eq.true');
+          
+          if (error) {
+            console.warn("Error fetching community events:", error);
+            return [];
           }
 
-          const payload = (await response.json()) as { data?: any[]; error?: string };
-          if (payload?.error) {
-            throw new Error(payload.error);
-          }
-          const entries = Array.isArray(payload?.data) ? payload.data : [];
-
-          return entries.map((entry: any): OwnerListing => ({
+          const entries = Array.isArray(data) ? data : [];
+          
+          // Filter out events that are already included via business queries
+          const businessIds = new Set(ownedBusinesses.map(b => b.id));
+          const communityOnly = entries.filter((entry: any) => 
+            !entry.business_id || !businessIds.has(entry.business_id)
+          );
+          
+          return communityOnly.map((entry: any): OwnerListing => ({
             id: String(entry.id),
             title: typeof entry.title === "string" && entry.title.trim() ? entry.title.trim() : "Untitled listing",
             type: entry.type === "special" ? "special" : "event",
-            businessId: business.id,
-            businessName: business.name,
-            startDate: typeof entry.startDate === "string" ? entry.startDate : null,
-            endDate: typeof entry.endDate === "string" ? entry.endDate : null,
-            location:
-              typeof entry.location === "string" && entry.location.trim()
-                ? entry.location
-                : business.location || "Location TBD",
+            businessId: entry.business_id || "", // Community events may not have business_id
+            businessName: entry.business_id ? "Unknown Business" : "Community Event",
+            startDate: typeof entry.start_date === "string" ? entry.start_date : null,
+            endDate: typeof entry.end_date === "string" ? entry.end_date : null,
+            location: typeof entry.location === "string" && entry.location.trim() ? entry.location : "Location TBD",
             description: typeof entry.description === "string" ? entry.description : null,
           }));
         } catch (error) {
-          if (error instanceof DOMException && error.name === "AbortError") {
-            throw new Error(`Listings request timed out for business ${business.id}`);
-          }
-          throw error;
-        } finally {
-          clearTimeout(timeoutId);
+          console.warn("Error fetching community events:", error);
+          return [];
         }
-      }),
+      })()
     );
+
+    const results = await Promise.allSettled(allPromises);
 
     const items: OwnerListing[] = [];
     let failedCount = 0;
@@ -228,7 +279,7 @@ export default function MyBusinessesPage() {
       // Phase 2: Fetch listings (non-blocking — page is already visible)
       try {
         const { items, failedCount } = await withTimeout(
-          fetchOwnerListings(transformedBusinesses),
+          fetchOwnerListings(transformedBusinesses, ownerId),
           OWNER_DATA_REQUEST_TIMEOUT_MS,
           "Timed out while loading listings",
         );
@@ -423,7 +474,7 @@ export default function MyBusinessesPage() {
       <div className="bg-gradient-to-b from-off-white/0 via-off-white/50 to-off-white">
         <main>
           <div className="mx-auto w-full max-w-[2000px] px-2">
-            {(!businesses || businesses.length === 0) && (
+            {(!businesses || businesses.length === 0) && (!ownerListings || ownerListings.length === 0) && (
               <div className="relative z-10 min-h-[calc(100vh-200px)] flex items-center justify-center">
                 <div className="mx-auto w-full max-w-[2000px] px-2 font-urbanist">
                   <div className="text-center w-full">
@@ -431,24 +482,32 @@ export default function MyBusinessesPage() {
                       <Store className="w-10 h-10 text-charcoal/60" strokeWidth={1.5} />
                     </div>
 
-                    <h3 className="text-h2 font-semibold text-charcoal mb-2">No businesses yet</h3>
+                    <h3 className="text-h2 font-semibold text-charcoal mb-2">No businesses or events yet</h3>
 
                     <p className="text-body-sm text-charcoal/60 mb-6 max-w-md mx-auto" style={{ fontWeight: 500 }}>
-                      Add your business to manage it here
+                      Add your business or create an event to get started
                     </p>
 
-                    <button
-                      onClick={() => router.push("/add-business")}
-                      className="inline-flex items-center gap-2 px-6 py-2.5 bg-card-bg text-white text-body font-semibold rounded-full hover:bg-card-bg/90 transition-all duration-300"
-                    >
-                      Add your business
-                    </button>
+                    <div className="flex gap-3 justify-center flex-wrap">
+                      <button
+                        onClick={() => router.push("/add-business")}
+                        className="inline-flex items-center gap-2 px-6 py-2.5 bg-card-bg text-white text-body font-semibold rounded-full hover:bg-card-bg/90 transition-all duration-300"
+                      >
+                        Add your business
+                      </button>
+                      <button
+                        onClick={() => router.push("/add-event")}
+                        className="inline-flex items-center gap-2 px-6 py-2.5 bg-navbar-bg text-white text-body font-semibold rounded-full hover:bg-navbar-bg/90 transition-all duration-300"
+                      >
+                        Create an event
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {businesses && businesses.length > 0 && (
+            {((businesses && businesses.length > 0) || (ownerListings && ownerListings.length > 0)) && (
               <>
                 <motion.nav
                   className="pt-2 px-2"
@@ -468,7 +527,7 @@ export default function MyBusinessesPage() {
                     </li>
                     <li>
                       <span className="text-charcoal font-semibold" style={{ fontFamily: FONT_STACK }}>
-                        My Businesses
+                        {businesses && businesses.length > 0 ? "My Businesses" : "My Events & Specials"}
                       </span>
                     </li>
                   </ol>
@@ -481,28 +540,36 @@ export default function MyBusinessesPage() {
                   transition={{ duration: 0.4, delay: 0.1 }}
                 >
                   <h1 className="text-h2 sm:text-h1 font-bold text-charcoal" style={{ fontFamily: FONT_STACK }}>
-                    My Businesses
+                    {businesses && businesses.length > 0 ? "My Businesses" : "My Events & Specials"}
                   </h1>
                   <p className="text-body-sm text-charcoal/60 mt-2" style={{ fontFamily: FONT_STACK }}>
-                    {businesses.length} {businesses.length === 1 ? "business" : "businesses"} to manage
+                    {businesses && businesses.length > 0
+                      ? `${businesses.length} ${businesses.length === 1 ? "business" : "businesses"} to manage`
+                      : `${ownerListings.length} ${ownerListings.length === 1 ? "event" : "events"} & specials to manage`}
                   </p>
                 </motion.div>
 
                 {/* Two-column layout: table (left) + Events & Specials sidebar (right) */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 lg:gap-8 pb-4">
-                  {/* Left: My Businesses table (~65–75%) */}
-                  <motion.div
-                    className="relative z-10 lg:col-span-8 min-w-0"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.2 }}
-                  >
-                    <MyBusinessesTable businesses={businesses} />
-                  </motion.div>
+                {/* If no businesses, show events full-width */}
+                <div className={businesses && businesses.length > 0 ? "grid grid-cols-1 lg:grid-cols-12 lg:gap-8 pb-4" : "flex justify-center pb-4"}>
+                  {/* Left: My Businesses table (~65–75%) - only show if businesses exist */}
+                  {businesses && businesses.length > 0 && (
+                    <motion.div
+                      className="relative z-10 lg:col-span-8 min-w-0"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: 0.2 }}
+                    >
+                      <MyBusinessesTable businesses={businesses} />
+                    </motion.div>
+                  )}
 
                   {/* Right: Events & Specials sidebar (~25–35%), sticky on desktop */}
                   <motion.aside
-                    className="lg:col-span-4 w-full lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100vh-7rem)] flex flex-col min-h-0 mt-8 lg:mt-0"
+                    className={businesses && businesses.length > 0 
+                      ? "lg:col-span-4 w-full lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100vh-7rem)] flex flex-col min-h-0 mt-8 lg:mt-0"
+                      : "w-full max-w-4xl flex flex-col min-h-0"
+                    }
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: 0.25 }}
@@ -516,7 +583,9 @@ export default function MyBusinessesPage() {
                             My Events & Specials
                           </h2>
                           <p className="text-body-sm text-charcoal/70" style={{ fontFamily: FONT_STACK }}>
-                            {filteredOwnerListings.length} shown across {selectedBusinessName}
+                            {businesses && businesses.length > 0
+                              ? `${filteredOwnerListings.length} shown across ${selectedBusinessName}`
+                              : `${filteredOwnerListings.length} ${filteredOwnerListings.length === 1 ? "item" : "items"} shown`}
                           </p>
                         </div>
                         <div className="flex flex-col sm:flex-row gap-2">
@@ -573,26 +642,28 @@ export default function MyBusinessesPage() {
                         </div>
                       </div>
 
-                      {/* Stack 3: Business filter block */}
-                      <div className="flex-shrink-0 px-4 pt-3 space-y-2">
-                        <label htmlFor="business-listing-filter" className="block text-xs font-medium text-charcoal/70" style={{ fontFamily: FONT_STACK }}>
-                          Business
-                        </label>
-                        <select
-                          id="business-listing-filter"
-                          value={listingsBusinessFilter}
-                          onChange={(event) => setListingsBusinessFilter(event.target.value)}
-                          className="w-full bg-white/95 border border-white/60 rounded-lg px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-navbar-bg/30"
-                          style={{ fontFamily: FONT_STACK }}
-                        >
-                          <option value="all">All businesses</option>
-                          {businesses.map((business) => (
-                            <option key={business.id} value={business.id}>
-                              {business.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+                      {/* Stack 3: Business filter block - only show if businesses exist */}
+                      {businesses && businesses.length > 0 && (
+                        <div className="flex-shrink-0 px-4 pt-3 space-y-2">
+                          <label htmlFor="business-listing-filter" className="block text-xs font-medium text-charcoal/70" style={{ fontFamily: FONT_STACK }}>
+                            Business
+                          </label>
+                          <select
+                            id="business-listing-filter"
+                            value={listingsBusinessFilter}
+                            onChange={(event) => setListingsBusinessFilter(event.target.value)}
+                            className="w-full bg-white/95 border border-white/60 rounded-lg px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-navbar-bg/30"
+                            style={{ fontFamily: FONT_STACK }}
+                          >
+                            <option value="all">All businesses</option>
+                            {businesses.map((business) => (
+                              <option key={business.id} value={business.id}>
+                                {business.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
 
                       {listingsWarning ? (
                         <div className="flex-shrink-0 px-4 pt-3">
