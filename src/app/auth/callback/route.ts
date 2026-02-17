@@ -77,7 +77,7 @@ function resolveDestination(role: NormalizedRole, profile: ProfileRow | null): s
   if (role === 'business_owner') return '/my-businesses';
 
   const onboardingComplete = Boolean(profile?.onboarding_completed_at);
-  return onboardingComplete ? '/profile' : '/interests';
+  return onboardingComplete ? '/home' : '/interests';
 }
 
 async function loadProfile(

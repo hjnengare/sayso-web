@@ -104,72 +104,70 @@ export async function GET(req: NextRequest) {
       });
 
     if (rpcError) {
-      console.warn('[SEARCH API] RPC search_businesses error:', rpcError.message);
+      console.warn('[SEARCH API] RPC search_businesses error:', {
+        message: rpcError.message,
+        code: rpcError.code,
+        details: (rpcError as any).details,
+        hint: (rpcError as any).hint,
+      });
 
-      // Fallback to simple ILIKE search if RPC doesn't exist
-      if (rpcError.code === 'PGRST202' || rpcError.message?.includes('function')) {
-        console.log('[SEARCH API] Falling back to ILIKE search (RPC not available)');
-        usedFallback = true;
+      // Fallback to simple ILIKE search for ANY RPC error (missing function,
+      // SQL errors, permission errors, etc.) so search never fully breaks.
+      console.log('[SEARCH API] Falling back to ILIKE search');
+      usedFallback = true;
 
-        const { data: fallbackData, error: fallbackError } = await supabase
-          .from('businesses')
-          .select('id, name, primary_subcategory_slug, primary_subcategory_label, primary_category_slug, location, address, phone, email, website, hours, image_url, verified, lat, lng, slug, is_system')
-          .eq('status', 'active')
-          .neq('is_system', true) // Exclude system businesses
-          .or(`name.ilike.%${query}%, description.ilike.%${query}%, primary_subcategory_slug.ilike.%${query}%, primary_subcategory_label.ilike.%${query}%`)
-          .limit(limit);
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from('businesses')
+        .select('id, name, primary_subcategory_slug, primary_subcategory_label, primary_category_slug, location, address, phone, email, website, hours, image_url, verified, lat, lng, slug, is_system')
+        .eq('status', 'active')
+        .neq('is_system', true)
+        .or(`name.ilike.%${query}%, description.ilike.%${query}%, primary_subcategory_slug.ilike.%${query}%, primary_subcategory_label.ilike.%${query}%`)
+        .limit(limit);
 
-        if (fallbackError) {
-          console.error('[SEARCH API] Fallback search error:', fallbackError);
-          return NextResponse.json(
-            { error: 'Failed to search businesses' },
-            { status: 500 }
-          );
-        }
-
-        // Map fallback columns (primary_subcategory_*, primary_category_slug) to SearchBusinessesResult shape
-        businesses = (fallbackData || []).map((row: {
-          id: string;
-          name: string;
-          primary_subcategory_slug?: string | null;
-          primary_subcategory_label?: string | null;
-          primary_category_slug?: string | null;
-          location: string;
-          address?: string | null;
-          phone?: string | null;
-          email?: string | null;
-          website?: string | null;
-          hours?: unknown;
-          image_url?: string | null;
-          verified: boolean;
-          lat?: number | null;
-          lng?: number | null;
-          slug?: string | null;
-        }) => ({
-          id: row.id,
-          name: row.name,
-          category: row.primary_subcategory_label ?? row.primary_subcategory_slug ?? '',
-          sub_interest_id: row.primary_subcategory_slug ?? undefined,
-          interest_id: row.primary_category_slug ?? undefined,
-          location: row.location,
-          address: row.address ?? undefined,
-          phone: row.phone ?? undefined,
-          email: row.email ?? undefined,
-          website: row.website ?? undefined,
-          hours: row.hours ?? undefined,
-          image_url: row.image_url ?? undefined,
-          verified: row.verified,
-          lat: row.lat ?? null,
-          lng: row.lng ?? null,
-          slug: row.slug ?? null,
-          is_system: (row as { is_system?: boolean | null }).is_system ?? null,
-        }));
-      } else {
+      if (fallbackError) {
+        console.error('[SEARCH API] Fallback search error:', fallbackError);
         return NextResponse.json(
           { error: 'Failed to search businesses' },
           { status: 500 }
         );
       }
+
+      businesses = (fallbackData || []).map((row: {
+        id: string;
+        name: string;
+        primary_subcategory_slug?: string | null;
+        primary_subcategory_label?: string | null;
+        primary_category_slug?: string | null;
+        location: string;
+        address?: string | null;
+        phone?: string | null;
+        email?: string | null;
+        website?: string | null;
+        hours?: unknown;
+        image_url?: string | null;
+        verified: boolean;
+        lat?: number | null;
+        lng?: number | null;
+        slug?: string | null;
+      }) => ({
+        id: row.id,
+        name: row.name,
+        category: row.primary_subcategory_label ?? row.primary_subcategory_slug ?? '',
+        sub_interest_id: row.primary_subcategory_slug ?? undefined,
+        interest_id: row.primary_category_slug ?? undefined,
+        location: row.location,
+        address: row.address ?? undefined,
+        phone: row.phone ?? undefined,
+        email: row.email ?? undefined,
+        website: row.website ?? undefined,
+        hours: row.hours ?? undefined,
+        image_url: row.image_url ?? undefined,
+        verified: row.verified,
+        lat: row.lat ?? null,
+        lng: row.lng ?? null,
+        slug: row.slug ?? null,
+        is_system: (row as { is_system?: boolean | null }).is_system ?? null,
+      }));
     } else {
       businesses = (rpcData || []) as SearchBusinessesResult[];
     }
