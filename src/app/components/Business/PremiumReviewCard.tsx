@@ -11,6 +11,7 @@ import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
 import { ConfirmationDialog } from "../../../components/molecules/ConfirmationDialog/ConfirmationDialog";
 import { getDisplayUsername } from "../../utils/generateUsername";
+import { isOptimisticId, isValidUUID } from "../../lib/utils/validation";
 
 interface PremiumReviewCardProps {
     reviewId?: string;
@@ -59,6 +60,7 @@ export function PremiumReviewCard({
     const { deleteReview } = useReviewSubmission();
     const { showToast } = useToast();
     const router = useRouter();
+    const isTransientReviewId = !!reviewId && (isOptimisticId(reviewId) || !isValidUUID(reviewId));
 
     // State for helpful and flag
     const [isLiked, setIsLiked] = useState(false);
@@ -101,6 +103,12 @@ export function PremiumReviewCard({
     // Fetch helpful status and count on mount
     useEffect(() => {
         if (!reviewId) return;
+        if (isTransientReviewId) {
+            setHelpfulCount(0);
+            setIsLiked(false);
+            setIsFlagged(false);
+            return;
+        }
 
         const fetchHelpfulData = async () => {
             try {
@@ -136,7 +144,7 @@ export function PremiumReviewCard({
         };
 
         fetchHelpfulData();
-    }, [reviewId, user]);
+    }, [reviewId, user, isTransientReviewId]);
 
     // Check if current user owns this review
     const isOwner = user && userId && user.id === userId;
@@ -307,7 +315,7 @@ export function PremiumReviewCard({
 
     // Handle helpful/like
     const handleHelpful = async () => {
-        if (loadingHelpful || !user || !reviewId) return;
+        if (loadingHelpful || !user || !reviewId || isTransientReviewId) return;
         
         setLoadingHelpful(true);
         const prevHelpful = isLiked;
@@ -384,7 +392,7 @@ export function PremiumReviewCard({
 
     // Handle flag/report
     const handleFlag = async () => {
-        if (!user || !reviewId || flagging) return;
+        if (!user || !reviewId || flagging || isTransientReviewId) return;
 
         // Check if user is trying to flag their own review
         if (isOwner) {

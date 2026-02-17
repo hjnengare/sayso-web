@@ -12,6 +12,7 @@ import { useReviewSubmission } from '../../hooks/useReviews';
 import { getDisplayUsername } from '../../utils/generateUsername';
 import { ConfirmationDialog } from '../../../components/molecules/ConfirmationDialog/ConfirmationDialog';
 import BadgePill, { BadgePillData } from '../Badges/BadgePill';
+import { isOptimisticId, isValidUUID } from '../../lib/utils/validation';
 
 interface ReviewCardProps {
   review: ReviewWithUser;
@@ -114,6 +115,12 @@ function ReviewCard({
 
   // Fetch helpful status and count on mount
   useEffect(() => {
+    if (isOptimisticId(review.id) || !isValidUUID(review.id)) {
+      setIsLiked(false);
+      setHelpfulCount(typeof review.helpful_count === 'number' ? review.helpful_count : 0);
+      return;
+    }
+
     const fetchHelpfulData = async () => {
       try {
         // Fetch count
@@ -145,6 +152,12 @@ function ReviewCard({
 
   // Fetch replies on mount and after updates
   useEffect(() => {
+    if (isOptimisticId(review.id) || !isValidUUID(review.id)) {
+      setReplies([]);
+      setLoadingReplies(false);
+      return;
+    }
+
     const fetchReplies = async () => {
       try {
         setLoadingReplies(true);
@@ -171,6 +184,7 @@ function ReviewCard({
 
   const handleLike = async () => {
     if (loadingHelpful || !user) return;
+    if (isOptimisticId(review.id) || !isValidUUID(review.id)) return;
     
     setLoadingHelpful(true);
     const prevHelpful = isLiked;
@@ -241,6 +255,7 @@ function ReviewCard({
 
   const handleSubmitReply = async () => {
     if (!replyText.trim() || !user || submittingReply) return;
+    if (isOptimisticId(review.id) || !isValidUUID(review.id)) return;
 
     setSubmittingReply(true);
     try {

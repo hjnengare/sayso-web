@@ -16,7 +16,7 @@ import { PageLoader } from "../../../components/Loader";
 import ReviewForm from "../../../components/ReviewForm/ReviewForm";
 import BusinessInfoAside from "../../../components/BusinessInfo/BusinessInfoAside";
 import BusinessInfoModal, { BusinessInfo } from "../../../components/BusinessInfo/BusinessInfoModal";
-import { TestimonialCarousel } from "../../../components/Business/TestimonialCarousel";
+import ReviewsList from "../../../components/Reviews/ReviewsList";
 import Footer from "../../../components/Footer/Footer";
 import WavyTypedTitle from "../../../../components/Animations/WavyTypedTitle";
 import { isPlaceholderImage } from "../../../utils/subcategoryPlaceholders";
@@ -630,74 +630,14 @@ function WriteReviewContent() {
                           </div>
                         </div>
 
-                        {reviewsLoading ? (
-                          <div className="flex items-center justify-center py-12">
-                            <PageLoader size="md" variant="wavy" color="sage"  />
-                          </div>
-                        ) : reviews.length > 0 ? (
-                          <div style={{ minHeight: '480px' }}>
-                            <TestimonialCarousel
-                              onDelete={() => {
-                                // Refetch reviews after deletion
-                                if (refetchReviews) {
-                                  setTimeout(() => {
-                                    refetchReviews();
-                                  }, 500);
-                                }
-                              }}
-                              reviews={[...reviews]
-                                // Sort reviews by created_at descending (newest first)
-                                .sort((a: any, b: any) => {
-                                  const dateA = new Date(a.created_at || 0).getTime();
-                                  const dateB = new Date(b.created_at || 0).getTime();
-                                  return dateB - dateA;
-                                })
-                                .map((review: any, index: number) => {
-                                  const profile = review.profile || {};
-                                  // Extract review images - normalize to string[] for UI components
-                                  const reviewImages = review.review_images?.map((img: any) => img.image_url).filter(Boolean) || 
-                                                     review.images?.map((img: any) => typeof img === 'string' ? img : img.image_url).filter(Boolean) || 
-                                                     [];
-                                  
-                                  return {
-                                    id: review.id,
-                                    userId: review.user_id,
-                                    // Use computed user.name if available, then fallback to profile fields
-                                    author: review.user?.name || 
-                                           profile.display_name || 
-                                           profile.username || 
-                                           review.author || 
-                                           'User',
-                                    rating: review.rating,
-                                    text: review.content || review.text || review.title || '',
-                                    date: review.created_at ? new Date(review.created_at).toLocaleDateString('en-US', {
-                                      month: 'short',
-                                      year: 'numeric'
-                                    }) : review.date || '',
-                                    tags: review.tags || [],
-                                    highlight: index === 0 ? "Top Reviewer" : index < 2 ? "Local Guide" : undefined,
-                                    verified: index < 2,
-                                    profileImage: profile.avatar_url || review.profileImage,
-                                    reviewImages: reviewImages,
-                                    location: profile.location || review.location || '',
-                                    profile: profile,
-                                  };
-                                })}
-                            />
-                          </div>
-                        ) : (
-                          <div className="text-center py-12">
-                            <div className="w-16 h-16 bg-charcoal/5 rounded-full flex items-center justify-center mx-auto mb-4">
-                              <Star className="w-8 h-8 text-charcoal/60" />
-                            </div>
-                            <h3 className="text-h2 font-semibold text-charcoal mb-2" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                              No reviews yet
-                            </h3>
-                            <p className="text-body text-charcoal/70 mb-6 max-w-[70ch] mx-auto text-center" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                              Be the first to review this business!
-                            </p>
-                          </div>
-                        )}
+                        <ReviewsList
+                          reviews={reviews}
+                          loading={reviewsLoading}
+                          error={null}
+                          showBusinessInfo={false}
+                          onUpdate={refetchReviews}
+                          emptyMessage="Be the first to review this business!"
+                        />
                       </section>
                     </div>
                 </div>

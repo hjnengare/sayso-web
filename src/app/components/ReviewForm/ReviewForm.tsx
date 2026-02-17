@@ -156,13 +156,13 @@ export default function ReviewForm({
                 className="ml-auto text-sm text-charcoal/70"
                 style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
               >
-                {existingImages.length + selectedImages.length}/5
+                {existingImages.length + selectedImages.length}/2
               </span>
             )}
           </div>
           <ImageUpload
             onImagesChange={onImagesChange}
-            maxImages={5}
+            maxImages={2}
             disabled={false}
             existingImages={existingImages}
             onExistingImagesChange={onExistingImagesChange}

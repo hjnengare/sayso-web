@@ -18,6 +18,11 @@ interface LeaderboardPodiumProps {
 }
 
 function LeaderboardPodium({ topReviewers }: LeaderboardPodiumProps) {
+  // Only render podium if we have at least 3 reviewers
+  if (!topReviewers || topReviewers.length < 3) {
+    return null;
+  }
+
   return (
     <div className="flex flex-row justify-center items-end gap-1.5 sm:gap-3 md:gap-4 lg:gap-6 mb-6 sm:mb-8 md:mb-12 pt-6 sm:pt-8 md:pt-10 px-2 sm:px-4 md:px-6 max-w-xs sm:max-w-md md:max-w-2xl lg:max-w-4xl mx-auto">
       {/* 2nd Place */}

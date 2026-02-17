@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { getServerSupabase } from '../../../../lib/supabase/server';
 import { FlagRateLimiter } from '../../../../lib/utils/flagRateLimiter';
+import { isOptimisticId, isValidUUID } from '../../../../lib/utils/validation';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -9,6 +10,10 @@ interface RouteParams {
 const FLAG_REASONS = ['spam', 'inappropriate', 'harassment', 'off_topic', 'other'] as const;
 const AUTO_HIDE_THRESHOLD = 5; // Auto-hide review if flagged by 5+ users
 
+function isTransientReviewId(id: string): boolean {
+  return isOptimisticId(id) || !isValidUUID(id);
+}
+
 /**
  * POST /api/reviews/[id]/flag
  * Flag an inappropriate review
@@ -16,10 +21,22 @@ const AUTO_HIDE_THRESHOLD = 5; // Auto-hide review if flagged by 5+ users
 export async function POST(req: Request, { params }: RouteParams) {
   try {
     const { id } = await params;
+    const reviewId = (id || '').trim();
+
+    if (isTransientReviewId(reviewId)) {
+      return NextResponse.json(
+        { success: false, flagged: false, optimistic: true },
+        { status: 200 }
+      );
+    }
+
     const supabase = await getServerSupabase();
 
     // Check if user is authenticated
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
       return NextResponse.json(
@@ -32,14 +49,11 @@ export async function POST(req: Request, { params }: RouteParams) {
     const { data: review, error: reviewError } = await supabase
       .from('reviews')
       .select('id, user_id, business_id')
-      .eq('id', id)
+      .eq('id', reviewId)
       .single();
 
     if (reviewError || !review) {
-      return NextResponse.json(
-        { error: 'Review not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Review not found' }, { status: 404 });
     }
 
     // Prevent users from flagging their own reviews
@@ -54,7 +68,7 @@ export async function POST(req: Request, { params }: RouteParams) {
     const { data: existingFlag } = await supabase
       .from('review_flags')
       .select('id')
-      .eq('review_id', id)
+      .eq('review_id', reviewId)
       .eq('flagged_by', user.id)
       .maybeSingle();
 
@@ -92,7 +106,7 @@ export async function POST(req: Request, { params }: RouteParams) {
     const { reason, details } = body;
 
     // Validate reason
-    if (!reason || !FLAG_REASONS.includes(reason as typeof FLAG_REASONS[number])) {
+    if (!reason || !FLAG_REASONS.includes(reason as (typeof FLAG_REASONS)[number])) {
       return NextResponse.json(
         {
           error: 'Invalid flag reason',
@@ -114,7 +128,7 @@ export async function POST(req: Request, { params }: RouteParams) {
     const { data: flag, error: flagError } = await supabase
       .from('review_flags')
       .insert({
-        review_id: id,
+        review_id: reviewId,
         flagged_by: user.id,
         reason,
         details: details?.trim() || null,
@@ -135,31 +149,17 @@ export async function POST(req: Request, { params }: RouteParams) {
     const { count: flagCount, error: countError } = await supabase
       .from('review_flags')
       .select('*', { count: 'exact', head: true })
-      .eq('review_id', id)
+      .eq('review_id', reviewId)
       .eq('status', 'pending');
 
     if (countError) {
       console.error('Error counting flags:', countError);
     }
 
-    let autoHidden = false;
     if (flagCount && flagCount >= AUTO_HIDE_THRESHOLD) {
-      // Auto-hide logic: When threshold is reached, mark review for moderation
-      // Note: This requires a 'moderation_status' column in reviews table
-      // For now, we log it for admin review
-      // TODO: Add migration to add moderation_status column to reviews table
-      // Example migration:
-      // ALTER TABLE reviews ADD COLUMN IF NOT EXISTS moderation_status TEXT DEFAULT 'visible' 
-      //   CHECK (moderation_status IN ('visible', 'hidden', 'pending_review'));
-      
-      console.warn(`⚠️ Review ${id} has been flagged ${flagCount} times (threshold: ${AUTO_HIDE_THRESHOLD}). Review should be auto-hidden.`);
-      
-      // Log for admin review - in production, you would:
-      // 1. Add moderation_status column to reviews table
-      // 2. Update the review to set moderation_status = 'hidden'
-      // 3. Filter hidden reviews in your queries
-      // For now, we just log it so admins can manually review
-      autoHidden = true; // Mark as detected, even if we can't actually hide it yet
+      console.warn(
+        `Review ${reviewId} has been flagged ${flagCount} times (threshold: ${AUTO_HIDE_THRESHOLD}). Review should be auto-hidden.`
+      );
     }
 
     return NextResponse.json({
@@ -168,13 +168,9 @@ export async function POST(req: Request, { params }: RouteParams) {
       flag,
       autoHidden: flagCount && flagCount >= AUTO_HIDE_THRESHOLD,
     });
-
   } catch (error) {
     console.error('Error in flag review API:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -182,13 +178,26 @@ export async function POST(req: Request, { params }: RouteParams) {
  * GET /api/reviews/[id]/flag/status
  * Check if current user has flagged this review
  */
-export async function GET(req: Request, { params }: RouteParams) {
+export async function GET(_req: Request, { params }: RouteParams) {
   try {
     const { id } = await params;
+    const reviewId = (id || '').trim();
+
+    if (isTransientReviewId(reviewId)) {
+      return NextResponse.json({
+        flagged: false,
+        flag: null,
+        optimistic: true,
+      });
+    }
+
     const supabase = await getServerSupabase();
 
     // Check if user is authenticated
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
       // If not authenticated, return not flagged
@@ -202,7 +211,7 @@ export async function GET(req: Request, { params }: RouteParams) {
     const { data: flag, error: flagError } = await supabase
       .from('review_flags')
       .select('id, reason, details, status, created_at')
-      .eq('review_id', id)
+      .eq('review_id', reviewId)
       .eq('flagged_by', user.id)
       .maybeSingle();
 
@@ -218,13 +227,9 @@ export async function GET(req: Request, { params }: RouteParams) {
       flagged: !!flag,
       flag: flag || null,
     });
-
   } catch (error) {
     console.error('Error in get flag status API:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -232,13 +237,26 @@ export async function GET(req: Request, { params }: RouteParams) {
  * DELETE /api/reviews/[id]/flag
  * Remove flag (if user changes their mind)
  */
-export async function DELETE(req: Request, { params }: RouteParams) {
+export async function DELETE(_req: Request, { params }: RouteParams) {
   try {
     const { id } = await params;
+    const reviewId = (id || '').trim();
+
+    if (isTransientReviewId(reviewId)) {
+      return NextResponse.json({
+        success: true,
+        flagged: false,
+        optimistic: true,
+      });
+    }
+
     const supabase = await getServerSupabase();
 
     // Check if user is authenticated
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
       return NextResponse.json(
@@ -251,7 +269,7 @@ export async function DELETE(req: Request, { params }: RouteParams) {
     const { data: flag, error: flagError } = await supabase
       .from('review_flags')
       .select('id, status')
-      .eq('review_id', id)
+      .eq('review_id', reviewId)
       .eq('flagged_by', user.id)
       .maybeSingle();
 
@@ -264,10 +282,7 @@ export async function DELETE(req: Request, { params }: RouteParams) {
     }
 
     if (!flag) {
-      return NextResponse.json(
-        { error: 'Flag not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Flag not found' }, { status: 404 });
     }
 
     // Only allow deletion of pending flags (not reviewed ones)
@@ -296,13 +311,8 @@ export async function DELETE(req: Request, { params }: RouteParams) {
       success: true,
       message: 'Flag removed successfully',
     });
-
   } catch (error) {
     console.error('Error in remove flag API:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

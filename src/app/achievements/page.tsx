@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Trophy, Map, Star, Target, Users } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { Loader } from '../components/Loader';
 import BadgeGrid from '../components/Badges/BadgeGrid';
@@ -120,8 +120,11 @@ export default function AchievementsPage() {
         {/* Header */}
         <div className="bg-card-bg px-4 py-8 mb-6 px-2">
           <div className="max-w-6xl mx-auto">
-            <h1 className="font-urbanist font-900 text-4xl text-charcoal mb-2">
-              🏆 Your Achievements
+            <h1 className="font-urbanist font-900 text-4xl text-charcoal mb-2 flex items-center gap-3">
+              <span className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-off-white" aria-hidden="true">
+                <Trophy className="w-6 h-6 text-navbar-bg" />
+              </span>
+              Your Achievements
             </h1>
             <p className="font-urbanist text-lg text-charcoal/70 mb-6">
               Collect badges by exploring and reviewing businesses
@@ -164,25 +167,53 @@ export default function AchievementsPage() {
           {grouped && (
             <>
               <BadgeGrid
-                title="🗺️ Category Explorer"
+                title={
+                  <span className="flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-off-white" aria-hidden="true">
+                      <Map className="w-4 h-4 text-navbar-bg" />
+                    </span>
+                    Category Explorer
+                  </span>
+                }
                 badges={grouped.explorer}
                 emptyMessage="Explore different categories to unlock these badges"
               />
 
               <BadgeGrid
-                title="⭐ Category Specialist"
+                title={
+                  <span className="flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-off-white" aria-hidden="true">
+                      <Star className="w-4 h-4 text-navbar-bg" />
+                    </span>
+                    Category Specialist
+                  </span>
+                }
                 badges={grouped.specialist}
                 emptyMessage="Become an expert in specific categories to unlock these badges"
               />
 
               <BadgeGrid
-                title="🎯 Milestones"
+                title={
+                  <span className="flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-off-white" aria-hidden="true">
+                      <Target className="w-4 h-4 text-navbar-bg" />
+                    </span>
+                    Milestones
+                  </span>
+                }
                 badges={grouped.milestone}
                 emptyMessage="Hit review milestones to unlock these badges"
               />
 
               <BadgeGrid
-                title="🤝 Community"
+                title={
+                  <span className="flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-off-white" aria-hidden="true">
+                      <Users className="w-4 h-4 text-navbar-bg" />
+                    </span>
+                    Community
+                  </span>
+                }
                 badges={grouped.community}
                 emptyMessage="Engage with the community to unlock these badges"
               />

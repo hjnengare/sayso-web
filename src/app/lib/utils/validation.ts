@@ -130,3 +130,28 @@ export function validateProfileUpdate(payload: {
     errors,
   };
 }
+
+/**
+ * Check if a string is a valid UUID
+ * @param value - The string to validate
+ * @returns true if the string is a valid UUID, false otherwise
+ */
+export function isValidUUID(value: string): boolean {
+  if (!value || typeof value !== 'string') return false;
+  
+  // UUID v4 regex pattern (8-4-4-4-12 format)
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  
+  return uuidRegex.test(value);
+}
+
+/**
+ * Check if a string is an optimistic ID (temporary client-side ID)
+ * @param value - The string to check
+ * @returns true if the string is an optimistic ID, false otherwise
+ */
+export function isOptimisticId(value: string): boolean {
+  if (!value || typeof value !== 'string') return false;
+  
+  return value.startsWith('optimistic-') || value.startsWith('temp-');
+}

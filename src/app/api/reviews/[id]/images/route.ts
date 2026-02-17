@@ -10,9 +10,9 @@ interface RouteParams {
 const VERCEL_BODY_LIMIT_BYTES = 4.5 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
-// Keep total image payload under body limit (leave ~200KB for form overhead: action, remove_image_ids, etc.)
-const MAX_IMAGES = 3;
-const MAX_IMAGE_SIZE = 1 * 1024 * 1024; // 1MB per image → 4MB max images, under 4.5MB
+// Strict limits: 2 images max, 1MB each = 2MB total (well under 4.5MB limit with form overhead)
+const MAX_IMAGES = 2;
+const MAX_IMAGE_SIZE = 1 * 1024 * 1024; // 1MB per image
 
 /**
  * PUT /api/reviews/[id]/images

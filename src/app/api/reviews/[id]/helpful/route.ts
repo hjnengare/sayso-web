@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { getServerSupabase } from '../../../../lib/supabase/server';
+import { isValidUUID, isOptimisticId } from '../../../../lib/utils/validation';
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -12,7 +13,15 @@ type RouteContext = {
  */
 export async function POST(_req: NextRequest, { params }: RouteContext) {
   const { id } = await params;
-  const reviewId = id;
+  const reviewId = (id || '').trim();
+
+  // Skip optimistic IDs - they don't exist in the database yet
+  if (isOptimisticId(reviewId) || !isValidUUID(reviewId)) {
+    return NextResponse.json(
+      { helpful: false, optimistic: true },
+      { status: 200 }
+    );
+  }
 
   try {
     const supabase = await getServerSupabase();
@@ -113,7 +122,15 @@ export async function POST(_req: NextRequest, { params }: RouteContext) {
  */
 export async function DELETE(_req: NextRequest, { params }: RouteContext) {
   const { id } = await params;
-  const reviewId = id;
+  const reviewId = (id || '').trim();
+
+  // Skip optimistic IDs - they don't exist in the database yet
+  if (isOptimisticId(reviewId) || !isValidUUID(reviewId)) {
+    return NextResponse.json(
+      { helpful: false, optimistic: true },
+      { status: 200 }
+    );
+  }
 
   try {
     const supabase = await getServerSupabase();
@@ -176,7 +193,12 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
  */
 export async function GET(_req: NextRequest, { params }: RouteContext) {
   const { id } = await params;
-  const reviewId = id;
+  const reviewId = (id || '').trim();
+
+  // Skip optimistic IDs - they don't exist in the database yet
+  if (isOptimisticId(reviewId) || !isValidUUID(reviewId)) {
+    return NextResponse.json({ helpful: false, optimistic: true });
+  }
 
   try {
     const supabase = await getServerSupabase();

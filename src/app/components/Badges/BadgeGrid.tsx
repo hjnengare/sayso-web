@@ -5,7 +5,7 @@ import BadgeCard, { Badge } from './BadgeCard';
 import BadgeModal from './BadgeModal';
 
 interface BadgeGridProps {
-  title: string;
+  title: React.ReactNode;
   badges: Badge[];
   emptyMessage?: string;
 }

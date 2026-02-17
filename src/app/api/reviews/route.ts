@@ -157,8 +157,9 @@ export async function POST(req: NextRequest) {
       .getAll('images')
       .filter((file): file is File => file instanceof File && file.size > 0);
 
-    const MAX_REVIEW_IMAGES = 10;
-    const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+    // Strict image limits: 2 images max, 1MB each
+    const MAX_REVIEW_IMAGES = 2;
+    const MAX_IMAGE_SIZE = 1 * 1024 * 1024; // 1MB per image
     const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     const uploadErrors: any[] = [];
     const uploadedImages: any[] = [];

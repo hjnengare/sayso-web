@@ -524,7 +524,7 @@ export default function DesktopNav(props: DesktopNavProps) {
             fill={isNotificationsActive ? "currentColor" : "none"}
             style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
           />
-          {(unreadCount && unreadCount > 0) && (
+          {unreadCount > 0 && (
             <span className="pointer-events-none absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[10px] leading-none font-extrabold tracking-tight rounded-full bg-white text-coral border border-coral/30 shadow-[0_6px_14px_rgba(0,0,0,0.2)]">
               {unreadCount > 99 ? "99+" : unreadCount}
             </span>

@@ -55,9 +55,10 @@ export default function ImageUpload({
           return;
         }
 
-        // Validate file size (5MB max)
-        if (file.size > 5 * 1024 * 1024) {
-          alert(`${file.name} is too large. Maximum size is 5MB`);
+        // Validate file size (1MB max per image)
+        const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB
+        if (file.size > MAX_FILE_SIZE) {
+          alert(`${file.name} is too large. Maximum size is 1MB per image`);
           return;
         }
 
@@ -74,7 +75,7 @@ export default function ImageUpload({
         onImagesChange(updatedFiles);
       }
     },
-    [files, previews, maxImages, onImagesChange]
+    [files, previews, maxImages, existingImageUrls, onImagesChange]
   );
 
   const handleRemove = useCallback(
@@ -400,7 +401,9 @@ export default function ImageUpload({
             <p className="text-sm text-charcoal/60 text-center" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
               {(existingImageUrls.length + files.length) > 0
                 ? `${existingImageUrls.length + files.length}/${maxImages} added`
-                : `Up to ${maxImages} images, max 5MB each`
+                : maxImages === 2
+                  ? 'Up to 2 images only, max 1MB each'
+                  : `Up to ${maxImages} images, max 1MB each`
               }
             </p>
           </div>

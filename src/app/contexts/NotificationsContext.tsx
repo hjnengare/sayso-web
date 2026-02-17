@@ -249,10 +249,21 @@ export function NotificationsProvider({ children }: NotificationsProviderProps) 
           });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('✅ [Notifications] Successfully subscribed to real-time updates');
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('❌ [Notifications] Channel error - real-time updates may not work');
+        } else if (status === 'TIMED_OUT') {
+          console.warn('⏱️ [Notifications] Subscription timed out - retrying...');
+        } else if (status === 'CLOSED') {
+          console.log('🔌 [Notifications] Channel closed');
+        }
+      });
 
     // Cleanup subscription on unmount
     return () => {
+      console.log('🔌 [Notifications] Unsubscribing from real-time updates');
       supabase.removeChannel(channel);
     };
   }, [user, isBusinessAccountUser, convertToToastNotification]);
