@@ -4,15 +4,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { useEmailVerification } from './useEmailVerification';
+import type { ReviewWithUser } from '../lib/types/database';
 import {
   DUMMY_REVIEWS,
   simulateDelay,
   getReviewsByBusinessId,
   type Review
 } from '../lib/dummyData';
-
-// Use Review type as ReviewWithUser for dummy data
-type ReviewWithUser = Review;
 interface ReviewFormData {
   business_id: string;
   rating: number;
@@ -209,10 +207,25 @@ export function useRecentReviews(limit?: number) {
         setError(null);
 
         await simulateDelay();
-        // Get recent reviews (sorted by date)
-        const data = [...DUMMY_REVIEWS]
+        // Get recent reviews (sorted by date) and transform to ReviewWithUser
+        const data: ReviewWithUser[] = [...DUMMY_REVIEWS]
           .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-          .slice(0, limit || 10);
+          .slice(0, limit || 10)
+          .map(review => ({
+            ...review,
+            helpful_count: 0, // Add missing properties
+            updated_at: review.created_at,
+            user: {
+              id: review.user_id,
+              name: 'User',
+            },
+            images: review.images?.map((url, index) => ({
+              id: `${review.id}-img-${index}`,
+              review_id: review.id,
+              image_url: url,
+              created_at: review.created_at,
+            })) || [],
+          }));
 
         if (mounted) {
           setReviews(data);
@@ -244,9 +257,24 @@ export function useRecentReviews(limit?: number) {
     error,
     refetch: async () => {
       await simulateDelay();
-      const data = [...DUMMY_REVIEWS]
+      const data: ReviewWithUser[] = [...DUMMY_REVIEWS]
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-        .slice(0, limit || 10);
+        .slice(0, limit || 10)
+        .map(review => ({
+          ...review,
+          helpful_count: 0,
+          updated_at: review.created_at,
+          user: {
+            id: review.user_id,
+            name: 'User',
+          },
+          images: review.images?.map((url, index) => ({
+            id: `${review.id}-img-${index}`,
+            review_id: review.id,
+            image_url: url,
+            created_at: review.created_at,
+          })) || [],
+        }));
       setReviews(data);
     }
   };
