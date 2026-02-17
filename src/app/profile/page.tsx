@@ -19,7 +19,9 @@ import {
   Briefcase,
   AlertTriangle,
   X,
-  ChevronRight
+  ChevronRight,
+  Navigation,
+  Loader2,
 } from "lucide-react";
 import { getBrowserSupabase } from "@/app/lib/supabase/client";
 
@@ -31,6 +33,7 @@ import { DangerAction } from "@/components/molecules/DangerAction";
 import { ConfirmationDialog } from "@/components/molecules/ConfirmationDialog";
 import SavedBusinessRow from "@/app/components/Saved/SavedBusinessRow";
 import { useSavedItems } from "@/app/contexts/SavedItemsContext";
+import { useBusinessDistanceLocation } from "@/app/hooks/useBusinessDistanceLocation";
 import { EditProfileModal } from "@/app/components/EditProfile/EditProfileModal";
 // Removed mock data import - use API calls instead
 import { useMemo } from "react";
@@ -204,6 +207,7 @@ function ProfileContent() {
   const { savedItems } = useSavedItems();
   const { deleteReview } = useReviewSubmission();
   const router = useRouter();
+  const { status: locationStatus, requestLocation } = useBusinessDistanceLocation();
 
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -1326,6 +1330,65 @@ function ProfileContent() {
                         )}
                       </section>
                       )}
+                      {/* Preferences */}
+                      <section
+                        className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-md p-6 sm:p-8 space-y-4"
+                        aria-label="Preferences"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-sage/20 to-sage/10">
+                            <Navigation className="w-5 h-5 text-sage" />
+                          </span>
+                          <h3 className="text-base font-semibold text-charcoal">
+                            Preferences
+                          </h3>
+                        </div>
+
+                        {/* Location Distance */}
+                        <div className="flex items-center justify-between gap-4 py-3 border-t border-white/40">
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-charcoal">Location Distance</p>
+                            <p className="text-xs text-charcoal/60 mt-0.5">
+                              {locationStatus === 'granted'
+                                ? 'Enabled — distances are shown on business cards'
+                                : locationStatus === 'denied'
+                                  ? 'Blocked — update in your browser settings, then tap retry'
+                                  : 'Allow location to see how far businesses are from you'}
+                            </p>
+                          </div>
+
+                          {locationStatus === 'granted' ? (
+                            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-sage/15 text-sage text-xs font-semibold whitespace-nowrap border border-sage/20">
+                              <Check size={14} strokeWidth={2.5} />
+                              Enabled
+                            </span>
+                          ) : (
+                            <button
+                              onClick={requestLocation}
+                              disabled={locationStatus === 'loading'}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-coral/90 hover:bg-coral text-white text-xs font-semibold whitespace-nowrap transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+                            >
+                              {locationStatus === 'loading' ? (
+                                <>
+                                  <Loader2 size={14} className="animate-spin" />
+                                  Requesting...
+                                </>
+                              ) : locationStatus === 'denied' ? (
+                                <>
+                                  <Navigation size={14} />
+                                  Retry
+                                </>
+                              ) : (
+                                <>
+                                  <Navigation size={14} />
+                                  Allow
+                                </>
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      </section>
+
                       <section
                         className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border border-white/60 rounded-[12px] shadow-md p-6 sm:p-8 space-y-4"
                         aria-label="Account actions"
