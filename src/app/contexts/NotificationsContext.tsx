@@ -20,7 +20,12 @@ export type NotificationType =
   | 'docs_received'
   | 'gamification'
   | 'badge_earned'
-  | 'review_helpful';
+  | 'review_helpful'
+  | 'business_approved'
+  | 'claim_approved'
+  | 'comment_reply'
+  | 'photo_approved'
+  | 'milestone_achievement';
 
 export interface ToastNotificationData {
   id: string;

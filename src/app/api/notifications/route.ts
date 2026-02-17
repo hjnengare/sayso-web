@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
 
     // Filter by type
     if (typeParam) {
-      const validTypes = ['review', 'business', 'user', 'highlyRated', 'gamification', 'message', 'otp_sent', 'otp_verified', 'claim_status_changed', 'docs_requested', 'docs_received'];
+      const validTypes = ['review', 'business', 'user', 'highlyRated', 'gamification', 'message', 'otp_sent', 'otp_verified', 'claim_status_changed', 'docs_requested', 'docs_received', 'badge_earned', 'review_helpful', 'business_approved', 'claim_approved', 'comment_reply', 'photo_approved', 'milestone_achievement'];
       if (validTypes.includes(typeParam)) {
         query = query.eq('type', typeParam);
       }
@@ -142,7 +142,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Validate type
-    const validTypes = ['review', 'business', 'user', 'highlyRated', 'gamification', 'message', 'otp_sent', 'otp_verified', 'claim_status_changed', 'docs_requested', 'docs_received'];
+    const validTypes = ['review', 'business', 'user', 'highlyRated', 'gamification', 'message', 'otp_sent', 'otp_verified', 'claim_status_changed', 'docs_requested', 'docs_received', 'badge_earned', 'review_helpful', 'business_approved', 'claim_approved', 'comment_reply', 'photo_approved', 'milestone_achievement'];
     if (!validTypes.includes(type)) {
       return NextResponse.json(
         { error: `Invalid type. Must be one of: ${validTypes.join(', ')}` },

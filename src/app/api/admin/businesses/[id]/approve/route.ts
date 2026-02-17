@@ -132,6 +132,20 @@ export async function POST(
     revalidatePath('/home');
     revalidatePath('/for-you');
 
+    // Create notification for business owner
+    if (biz.owner_id) {
+      try {
+        await (service as any).rpc('create_business_approved_notification', {
+          p_owner_id: biz.owner_id,
+          p_business_id: businessId,
+          p_business_name: biz.name || 'Your business'
+        });
+      } catch (notifError) {
+        // Log error but don't fail the approval
+        console.error('[Admin] Failed to create business approval notification:', notifError);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Business approved and now visible publicly',

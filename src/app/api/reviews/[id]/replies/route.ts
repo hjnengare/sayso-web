@@ -154,6 +154,37 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
       },
     };
 
+    // Create notification for review owner (if not replying to own review)
+    try {
+      const { data: reviewOwner } = await supabase
+        .from('reviews')
+        .select('user_id, business_id')
+        .eq('id', reviewId)
+        .maybeSingle();
+
+      if (reviewOwner && reviewOwner.user_id !== user.id) {
+        const { data: businessData } = await supabase
+          .from('businesses')
+          .select('slug')
+          .eq('id', reviewOwner.business_id)
+          .maybeSingle();
+
+        const replierName = profile?.display_name || profile?.username || 'Someone';
+        
+        await supabase.rpc('create_comment_reply_notification', {
+          p_review_owner_id: reviewOwner.user_id,
+          p_replier_id: user.id,
+          p_review_id: reviewId,
+          p_reply_id: reply.id,
+          p_replier_name: replierName,
+          p_business_slug: businessData?.slug || null
+        });
+      }
+    } catch (notifError) {
+      console.error('[Reply Create] Failed to create notification:', notifError);
+      // Don't fail the request if notification fails
+    }
+
     // Revalidate business page so reply shows immediately
     try {
       const { revalidatePath } = await import('next/cache');

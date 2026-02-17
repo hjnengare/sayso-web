@@ -139,6 +139,18 @@ export async function POST(
       });
       updateClaimLastNotified(claimId).catch(() => {});
 
+      // Create new-style notification for real-time updates
+      try {
+        await (service as any).rpc('create_claim_approved_notification', {
+          p_claimant_id: claimRow.claimant_user_id,
+          p_business_id: claimRow.business_id,
+          p_business_name: business?.name || 'your business',
+          p_claim_id: claimId
+        });
+      } catch (notifError) {
+        console.error('[Claims] Failed to create claim approval notification:', notifError);
+      }
+
       if (userEmail && business) {
         const businessCategory = (business as { primary_subcategory_label?: string; primary_subcategory_slug?: string }).primary_subcategory_label
           ?? getSubcategoryLabel((business as { primary_subcategory_slug?: string }).primary_subcategory_slug ?? '')

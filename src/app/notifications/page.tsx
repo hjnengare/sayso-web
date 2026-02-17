@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, Check, X, MessageSquare, MessageCircle, Star, Heart, TrendingUp, Clock, ChevronRight, ChevronUp, Award, ThumbsUp } from "lucide-react";
+import { Bell, Check, X, MessageSquare, MessageCircle, Star, Heart, TrendingUp, Clock, ChevronRight, ChevronUp, Award, ThumbsUp, CheckCircle, ImageIcon, Trophy } from "lucide-react";
 import Footer from "../components/Footer/Footer";
 import { PageLoader } from "../components/Loader";
 import { usePredefinedPageTitle } from "../hooks/usePageTitle";
@@ -49,6 +49,15 @@ export default function NotificationsPage() {
         return Award;
       case 'review_helpful':
         return ThumbsUp;
+      case 'business_approved':
+      case 'claim_approved':
+        return CheckCircle;
+      case 'comment_reply':
+        return MessageCircle;
+      case 'photo_approved':
+        return ImageIcon;
+      case 'milestone_achievement':
+        return Trophy;
       default:
         return Bell;
     }
@@ -74,6 +83,15 @@ export default function NotificationsPage() {
         return 'bg-amber-400/10 text-amber-400 border-amber-400/30';
       case 'review_helpful':
         return 'bg-blue-400/10 text-blue-400 border-blue-400/30';
+      case 'business_approved':
+      case 'claim_approved':
+        return 'bg-emerald-400/10 text-emerald-500 border-emerald-400/30';
+      case 'comment_reply':
+        return 'bg-coral/10 text-coral border-coral/30';
+      case 'photo_approved':
+        return 'bg-sky-400/10 text-sky-500 border-sky-400/30';
+      case 'milestone_achievement':
+        return 'bg-amber-400/10 text-amber-500 border-amber-400/30';
       default:
         return 'bg-card-bg/10 text-sage border-sage/30';
     }
