@@ -1565,7 +1565,6 @@ nav[aria-label="Breadcrumb"] {
   padding-inline: clamp(1rem, 4vw, 1.5rem);
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
-  margin-top: 0.5rem;
 }
 
 nav[aria-label="Breadcrumb"] ol {
@@ -1590,16 +1589,13 @@ nav[aria-label="Breadcrumb"] li span {
 
 @media (min-width: 640px) {
   nav[aria-label="Breadcrumb"] {
-    padding-top: 0.75rem;
     padding-bottom: 0.75rem;
-    margin-top: 0.75rem;
   }
 }
 
 @media (min-width: 1024px) {
   nav[aria-label="Breadcrumb"] {
     padding-inline: clamp(1.5rem, 3vw, 2rem);
-    margin-top: 1rem;
   }
 }
 

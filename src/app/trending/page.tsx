@@ -25,22 +25,21 @@ import ScrollToTopButton from "../components/Navigation/ScrollToTopButton";
 import { useIsDesktop } from "../hooks/useIsDesktop";
 // Trending = cold-start API (/api/trending): metadata-only score, diversity-first selection, deterministic rotation.
 
-// Animation variants for staggered card appearance
+// Animation variants for staggered card appearance - optimized for performance
 const containerVariants = {
   hidden: { opacity: 1 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
+    transition: { staggerChildren: 0.04, delayChildren: 0 },
   },
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20, filter: "blur(4px)" },
+  hidden: { opacity: 0, y: 10 },
   visible: {
     opacity: 1,
     y: 0,
-    filter: "blur(0px)",
-    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const },
+    transition: { duration: 0.3, ease: [0.25, 0.1, 0.25, 1] as const },
   },
 };
 
@@ -255,7 +254,7 @@ export default function TrendingPage() {
   };
 
   return (
-    <div className="min-h-dvh bg-off-white relative">
+    <div className="min-h-dvh relative">
       {/* Background Gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-sage/10 via-off-white to-coral/5 pointer-events-none" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)] pointer-events-none" />
@@ -263,19 +262,10 @@ export default function TrendingPage() {
       {/* Header */}
 
       <main className="relative">
-        {/* Background Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-sage/10 via-off-white to-coral/5 pointer-events-none" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)] pointer-events-none" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(114,47,55,0.08)_0%,_transparent_50%)] pointer-events-none" />
         
         <div className="relative mx-auto w-full max-w-[2000px] px-2">
-           {/* Background Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-sage/10 via-off-white to-coral/5 pointer-events-none" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)] pointer-events-none" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(114,47,55,0.08)_0%,_transparent_50%)] pointer-events-none" />
-        
           {/* Breadcrumb */}
-          <nav className="pb-1" aria-label="Breadcrumb">
+          <nav className="relative z-10 pb-1" aria-label="Breadcrumb">
             <ol className="flex items-center gap-2 text-sm sm:text-base">
               <li>
                 <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium flex items-center gap-1.5" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
@@ -287,7 +277,7 @@ export default function TrendingPage() {
           </nav>
 
           {/* Title and Description Block */}
-          <div className="mb-6 sm:mb-8 px-4 sm:px-6 text-center pt-4">
+          <div className="relative z-10 mb-6 sm:mb-8 px-4 sm:px-6 text-center pt-4">
             <div className="my-4">
               <h1
                 className="font-urbanist text-2xl sm:text-3xl md:text-4xl font-bold leading-[1.2] tracking-tight text-charcoal mx-auto"
@@ -302,14 +292,13 @@ export default function TrendingPage() {
                 <WavyTypedTitle
                   text="Trending Now"
                   as="span"
-                  className="inline-block"
+                  className="inline-block font-bold"
                   typingSpeedMs={50}
                   startDelayMs={200}
                   disableWave={true}
                   enableScrollTrigger={true}
                   style={{
                     fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                    fontWeight: 800,
                     wordBreak: 'keep-all',
                     overflowWrap: 'break-word',
                     whiteSpace: 'normal',
@@ -325,7 +314,7 @@ export default function TrendingPage() {
           </div>
 
           {/* Search Input */}
-          <div ref={searchWrapRef} className="py-3 sm:py-4 px-4">
+          <div ref={searchWrapRef} className="relative z-10 py-3 sm:py-4 px-4">
             <SearchInput
               variant="header"
               placeholder="Search trending businesses..."
@@ -460,7 +449,7 @@ export default function TrendingPage() {
                         initial={isDesktop ? { opacity: 0 } : false}
                         animate={isDesktop ? { opacity: 1 } : {}}
                         exit={isDesktop ? { opacity: 0 } : {}}
-                        transition={isDesktop ? { duration: 0.3 } : undefined}
+                        transition={isDesktop ? { duration: 0.2 } : undefined}
                           className="w-full h-[calc(100vh-300px)] min-h-[500px] rounded-[12px] overflow-hidden border border-white/30 shadow-lg"
                         >
                           <BusinessesMap

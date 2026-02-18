@@ -261,31 +261,21 @@ export default function EventsSpecialsPage() {
   );
 
   return (
-    <div className="min-h-dvh bg-off-white relative">
+    <div className="min-h-dvh relative">
       {/* Background Gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-sage/10 via-off-white to-coral/5 pointer-events-none" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)] pointer-events-none" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(114,47,55,0.08)_0%,_transparent_50%)] pointer-events-none" />
 
       <main
-        className="bg-off-white relative"
+        className="relative"
         style={{
           fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
         }}
       >
-        {/* Background Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-sage/10 via-off-white to-coral/5 pointer-events-none" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)] pointer-events-none" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(114,47,55,0.08)_0%,_transparent_50%)] pointer-events-none" />
         
         <div className="relative mx-auto w-full max-w-[2000px] px-2">
-
- {/* Background Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-sage/10 via-off-white to-coral/5 pointer-events-none" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)] pointer-events-none" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(114,47,55,0.08)_0%,_transparent_50%)] pointer-events-none" />
-        
-          <nav aria-label="Breadcrumb">
+          <nav className="relative z-10" aria-label="Breadcrumb">
             <ol className="flex items-center gap-2 text-sm sm:text-base">
               <li>
                 <Link
@@ -301,10 +291,10 @@ export default function EventsSpecialsPage() {
           </nav>
 
           {/* Title and Description Block */}
-          <div className="mb-6 sm:mb-8 px-4 sm:px-6 text-center pt-4">
+          <div className="relative z-10 mb-6 sm:mb-8 px-4 sm:px-6 text-center pt-4">
             <div className="my-4">
               <h1 
-                className="text-2xl sm:text-3xl md:text-4xl font-semibold leading-[1.2] tracking-tight text-charcoal mx-auto font-urbanist"
+                className="text-2xl sm:text-3xl md:text-4xl font-bold leading-[1.2] tracking-tight text-charcoal mx-auto font-urbanist"
                 style={{ 
                   fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
                   wordBreak: 'keep-all',
@@ -316,14 +306,13 @@ export default function EventsSpecialsPage() {
                 <WavyTypedTitle
                   text="Events & Specials"
                   as="span"
-                  className="inline-block"
+                  className="inline-block font-bold"
                   typingSpeedMs={50}
                   startDelayMs={200}
                   disableWave={true}
                   enableScrollTrigger={true}
                   style={{
                     fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                    fontWeight: 800,
                     wordBreak: 'keep-all',
                     overflowWrap: 'break-word',
                     whiteSpace: 'normal',
@@ -338,7 +327,7 @@ export default function EventsSpecialsPage() {
             </p>
           </div>
 
-          <div className="py-4 px-4">
+          <div className="relative z-10 py-4 px-4">
             <SearchInput
               variant="header"
               placeholder="Search events and limited-time offers..."

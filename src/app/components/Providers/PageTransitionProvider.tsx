@@ -38,8 +38,8 @@ const getTransitionDurationMs = (
   direction: NavigationDirection,
   prefersReducedMotion: boolean,
 ) => {
-  if (prefersReducedMotion) return 180;
-  return direction === 0 ? 250 : 210;
+  if (prefersReducedMotion) return 120;
+  return direction === 0 ? 150 : 120;
 };
 
 const getMotionFrames = (
@@ -54,29 +54,12 @@ const getMotionFrames = (
     };
   }
 
-  if (direction === 1) {
-    // Forward navigation: keep movement vertical-only to avoid horizontal layout drift.
-    return {
-      initial: { opacity: 0, x: 0, y: 10, pointerEvents: "auto" as const },
-      animate: { opacity: 1, x: 0, y: 0, pointerEvents: "auto" as const },
-      exit: { opacity: 0, x: 0, y: -8, pointerEvents: "none" as const },
-    };
-  }
-
-  if (direction === -1) {
-    // Back navigation: keep movement vertical-only to avoid horizontal layout drift.
-    return {
-      initial: { opacity: 0, x: 0, y: 10, pointerEvents: "auto" as const },
-      animate: { opacity: 1, x: 0, y: 0, pointerEvents: "auto" as const },
-      exit: { opacity: 0, x: 0, y: -8, pointerEvents: "none" as const },
-    };
-  }
-
-  // Default transition: smart crossfade + micro vertical shift.
+  // Simplified transitions: opacity-only for faster page transitions
+  // Removed y-axis movement to reduce layout calculations
   return {
-    initial: { opacity: 0, x: 0, y: 10, pointerEvents: "auto" as const },
+    initial: { opacity: 0, x: 0, y: 0, pointerEvents: "auto" as const },
     animate: { opacity: 1, x: 0, y: 0, pointerEvents: "auto" as const },
-    exit: { opacity: 0, x: 0, y: -8, pointerEvents: "none" as const },
+    exit: { opacity: 0, x: 0, y: 0, pointerEvents: "none" as const },
   };
 };
 

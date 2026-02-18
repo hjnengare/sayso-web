@@ -14,6 +14,7 @@ import HeaderSkeleton from "./HeaderSkeleton";
 import { useHeaderState } from "./useHeaderState";
 import { PRIMARY_LINKS, DISCOVER_LINKS, getLogoHref } from "./headerActionsConfig";
 import { useLiveSearch, type LiveSearchResult } from "../../hooks/useLiveSearch";
+import { usePrefetchRoutes } from "../../hooks/usePrefetchRoutes";
 
 const NAV_SCROLLED_THRESHOLD = 20;
 const AUTH_HEADER_SKELETON_MAX_MS = 1200;
@@ -84,6 +85,9 @@ export default function Header({
   const inputRef = useRef<HTMLInputElement>(null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Prefetch critical routes for instant navigation
+  usePrefetchRoutes();
   const desktopSearchWrapRef = useRef<HTMLDivElement>(null);
   const mobileSearchWrapRef = useRef<HTMLDivElement>(null);
   const homeDesktopRowRef = useRef<HTMLDivElement>(null);
@@ -828,8 +832,8 @@ export default function Header({
   }
 
   const wrapperSizeClass = isNavScrolled
-    ? "py-2.5 min-h-[60px] lg:min-h-[64px]"
-    : "py-4 min-h-[72px] lg:min-h-[80px]";
+    ? "pt-2.5 min-h-[60px] lg:min-h-[64px]"
+    : "pt-4 min-h-[72px] lg:min-h-[80px]";
   const logoScaleClass = isNavScrolled ? "scale-95" : "scale-100";
 
   return (
