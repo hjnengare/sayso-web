@@ -3,7 +3,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef } from "react";
-import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
 
 /*──────────────────────────────────────────────────────────────
   Parallax-depth entrance keyframes (GPU-only: transform + opacity)
@@ -148,17 +147,7 @@ export default function OnboardingPage() {
             <div data-depth="3" style={{ "--depth-i": 1 } as React.CSSProperties} className="title-no-break">
               <h2 className="font-urbanist text-2xl sm:text-3xl md:text-5xl font-700 leading-[1.2] tracking-tight text-charcoal no-hyphens">
                 <div className="block whitespace-nowrap">
-                  <WavyTypedTitle
-                    text="Discover gems near you!"
-                    as="span"
-                    className="inline-block"
-                    typingSpeedMs={40}
-                    startDelayMs={300}
-                    waveVariant="subtle"
-                    loopWave={false}
-                    triggerOnTypingComplete={true}
-                    enableScrollTrigger={false}
-                  />
+                  <span className="inline-block">Discover gems near you!</span>
                 </div>
               </h2>
             </div>

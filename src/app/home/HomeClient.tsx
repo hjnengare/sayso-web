@@ -10,9 +10,7 @@ import { useSearchParams } from "next/navigation";
 import nextDynamic from "next/dynamic";
 import { ChevronUp } from "lucide-react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
 import { usePredefinedPageTitle } from "../hooks/usePageTitle";
-import { useScrollReveal } from "../hooks/useScrollReveal";
 import { useIsDesktop } from "../hooks/useIsDesktop";
 import { FilterState } from "../components/FilterModal/FilterModal";
 import BusinessRow from "../components/BusinessRow/BusinessRow";
@@ -78,19 +76,6 @@ function isIOSBrowser(): boolean {
   const isIPadOS = platform === 'MacIntel' && maxTouchPoints > 1;
   return /iPad|iPhone|iPod/i.test(ua) || isIPadOS;
 }
-
-// Match the badge page (`/badges`) scroll-reveal animation exactly.
-const homeCardRevealVariants = {
-  hidden: { opacity: 0, y: 20, filter: "blur(4px)" },
-  visible: {
-    opacity: 1,
-    y: 0,
-    filter: "blur(0px)",
-    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const },
-  },
-};
-
-const homeCardRevealViewport = { once: true, margin: "-50px" as const };
 
 
 export default function HomeClient() {
@@ -165,7 +150,6 @@ export default function HomeClient() {
   }, []);
 
   usePredefinedPageTitle('home');
-  useScrollReveal({ threshold: 0.12, rootMargin: "0px 0px -120px 0px", once: true });
   const isIOS = useMemo(() => isIOSBrowser(), []);
   const [heroReady, setHeroReady] = useState(false);
 
@@ -544,28 +528,22 @@ export default function HomeClient() {
   return (
     <>
       <div suppressHydrationWarning className="min-h-dvh flex flex-col bg-off-white">
-        {/* Hero Carousel - Hidden smoothly when search is active */}
-        <AnimatePresence mode="wait">
-          {!isSearchActive && (
-            <motion.div
-              key="hero-carousel"
-              exit={{ opacity: 0, height: 0, transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] } }}
-              className="overflow-hidden"
-            >
-              {heroReady ? (
-                <HeroCarousel />
-              ) : isDesktop ? (
-                <HeroSkeleton />
-              ) : (
-                <MobileHeroSkeleton />
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Hero Carousel - Hidden when search is active */}
+        {!isSearchActive && (
+          <div className="overflow-hidden">
+            {heroReady ? (
+              <HeroCarousel />
+            ) : isDesktop ? (
+              <HeroSkeleton />
+            ) : (
+              <MobileHeroSkeleton />
+            )}
+          </div>
+        )}
 
         <main 
           suppressHydrationWarning
-          className={`relative min-h-dvh transition-[padding] duration-300 ease-out ${isSearchActive ? 'pt-2' : 'pt-2'}`} 
+          className={`relative min-h-dvh ${isSearchActive ? 'pt-2' : 'pt-2'}`} 
           style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
         >
           {/* Background Gradient Overlays */}
@@ -573,37 +551,23 @@ export default function HomeClient() {
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)]" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(114,47,55,0.08)_0%,_transparent_50%)]" />
           <div suppressHydrationWarning ref={contentRef} className="relative mx-auto w-full max-w-[2000px]">
-            <AnimatePresence mode="wait">
-              {isSearchActive ? (
-                /* Search Results Mode */
-                <motion.div
-                  key="search-results"
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 30 }}
-                  transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-                  className="px-4 sm:px-6 lg:px-8"
-                >
-                  <SearchResultsPanel
-                    query={liveQuery.trim() || searchQueryParam.trim()}
-                    loading={liveLoading}
-                    error={liveError}
-                    results={liveResults}
-                    filters={liveFilters}
-                    onDistanceChange={(value) => setDistanceKm(value)}
-                    onRatingChange={(value) => setMinRating(value)}
-                    onResetFilters={resetFilters}
-                  />
-                </motion.div>
-              ) : (
-                /* Discovery Mode - Default Home Page Content */
-                <motion.div
-                  key="curated-feed"
-                  initial={{ opacity: 1, y: 0 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20, transition: { duration: 0.25, ease: [0.4, 0, 0.2, 1] } }}
-                  className="flex flex-col gap-8 sm:gap-10 md:gap-12 pt-0"
-                >
+            {isSearchActive ? (
+              /* Search Results Mode */
+              <div className="px-4 sm:px-6 lg:px-8">
+                <SearchResultsPanel
+                  query={liveQuery.trim() || searchQueryParam.trim()}
+                  loading={liveLoading}
+                  error={liveError}
+                  results={liveResults}
+                  filters={liveFilters}
+                  onDistanceChange={(value) => setDistanceKm(value)}
+                  onRatingChange={(value) => setMinRating(value)}
+                  onResetFilters={resetFilters}
+                />
+              </div>
+            ) : (
+              /* Discovery Mode - Default Home Page Content */
+              <div className="flex flex-col gap-8 sm:gap-10 md:gap-12 pt-0">
                   {/* For You Section - Only show when NOT filtered */}
                   {!isFiltered && (
                     (() => {
@@ -612,59 +576,39 @@ export default function HomeClient() {
                         <>
                       {!user ? (
                         /* Not signed in: Show Locked For You Section (teaser only) */
-                        <motion.div
-                          initial={isDesktop ? { opacity: 0, y: 40 } : false}
-                          whileInView={isDesktop ? { opacity: 1, y: 0 } : undefined}
-                          viewport={isDesktop ? { once: true } : undefined}
-                          transition={isDesktop ? { duration: 0.6, ease: [0.16, 1, 0.3, 1] } : undefined}
-                          className="mx-auto w-full max-w-[2000px] px-2"
-                        >
+                        <div className="mx-auto w-full max-w-[2000px] px-2">
                           <div className="relative border border-charcoal/10 bg-off-white rounded-[14px] p-6 sm:p-8 md:p-10 text-center space-y-4 shadow-[0_1px_0_rgba(0,0,0,0.02)]">
-                            <motion.h3
-                              initial={isDesktop ? { opacity: 0, x: -20 } : { opacity: 0, x: -20 }}
-                              whileInView={{ opacity: 1, x: 0 }}
-                              viewport={{ once: true }}
-                              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: isDesktop ? 0.1 : 0 }}
+                            <h3
                               className="text-lg sm:text-xl font-extrabold text-charcoal"
                               style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                             >
                               For You
-                            </motion.h3>
-                            <motion.p
-                              initial={isDesktop ? { opacity: 0, y: 10 } : false}
-                              whileInView={isDesktop ? { opacity: 1, y: 0 } : undefined}
-                              viewport={isDesktop ? { once: true } : undefined}
-                              transition={isDesktop ? { duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.2 } : undefined}
+                            </h3>
+                            <p
                               className="text-body sm:text-base text-charcoal/60 max-w-[60ch] mx-auto"
                               style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                             >
                               Create an account to unlock personalised recommendations.
-                            </motion.p>
+                            </p>
 
-                            <motion.div
-                              initial={isDesktop ? { opacity: 0, y: 10 } : false}
-                              whileInView={isDesktop ? { opacity: 1, y: 0 } : undefined}
-                              viewport={isDesktop ? { once: true } : undefined}
-                              transition={isDesktop ? { duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.3 } : undefined}
-                              className="pt-2 w-full flex flex-col sm:flex-row items-stretch justify-center gap-3"
-                            >
+                            <div className="pt-2 w-full flex flex-col sm:flex-row items-stretch justify-center gap-3">
                               <Link
                                 href="/register"
-                                className="mi-tap inline-flex items-center justify-center rounded-full min-h-[48px] px-6 py-3 text-body font-semibold text-white bg-gradient-to-r from-coral to-coral/85 hover:opacity-95 transition-all duration-200 shadow-md w-full sm:w-auto sm:min-w-[180px]"
+                                className="mi-tap inline-flex items-center justify-center rounded-full min-h-[48px] px-6 py-3 text-body font-semibold text-white bg-gradient-to-r from-coral to-coral/85 hover:opacity-95 shadow-md w-full sm:w-auto sm:min-w-[180px]"
                                 style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                               >
                                 Create Account
                               </Link>
                               <Link
                                 href="/onboarding"
-                                className="mi-tap inline-flex items-center justify-center rounded-full min-h-[48px] px-6 py-3 text-body font-semibold text-charcoal border border-charcoal/15 bg-white hover:bg-off-white transition-all duration-200 shadow-sm w-full sm:w-auto sm:min-w-[180px]"
+                                className="mi-tap inline-flex items-center justify-center rounded-full min-h-[48px] px-6 py-3 text-body font-semibold text-charcoal border border-charcoal/15 bg-white hover:bg-off-white shadow-sm w-full sm:w-auto sm:min-w-[180px]"
                                 style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                               >
                                 Sign In
                               </Link>
-                            </motion.div>
+                            </div>
                           </div>
-                        </motion.div>
+                        </div>
                       ) : (
                         /* Regular For You Section (Authenticated Users) */
                         <>
@@ -697,9 +641,7 @@ export default function HomeClient() {
                       )}
                         </>
                       );
-                      return isDesktop ? (
-                        <motion.div className={className} variants={homeCardRevealVariants} initial="hidden" whileInView="visible" viewport={homeCardRevealViewport}>{children}</motion.div>
-                      ) : (
+                      return (
                         <div className={className}>{children}</div>
                       );
                     })()
@@ -707,30 +649,6 @@ export default function HomeClient() {
 
                   {/* Filtered Results Section - Show when filters are active */}
                   {isFiltered && (
-                    isDesktop ? (
-                    <motion.div
-                      className="relative z-10 snap-start"
-                      variants={homeCardRevealVariants}
-                      initial="hidden"
-                      whileInView="visible"
-                      viewport={homeCardRevealViewport}
-                    >
-                      {allBusinessesLoading ? (
-                        <BusinessRowSkeleton title="Filtered Results" />
-                      ) : allBusinesses.length > 0 ? (
-                        <MemoizedBusinessRow
-                          title="Filtered Results"
-                          businesses={allBusinesses.slice(0, 10)}
-                          cta="See All"
-                          href="/for-you"
-                        />
-                      ) : (
-                        <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-charcoal/70">
-                          No businesses match your filters. Try adjusting your selections.
-                        </div>
-                      )}
-                    </motion.div>
-                    ) : (
                     <div className="relative z-10 snap-start">
                       {allBusinessesLoading ? (
                         <BusinessRowSkeleton title="Filtered Results" />
@@ -747,37 +665,10 @@ export default function HomeClient() {
                         </div>
                       )}
                     </div>
-                    )
                   )}
 
                   {/* Trending Section - Only show when not filtered */}
                   {!isFiltered && (
-                    isDesktop ? (
-                    <motion.div
-                      className="relative z-10 snap-start"
-                      variants={homeCardRevealVariants}
-                      initial="hidden"
-                      whileInView="visible"
-                      viewport={homeCardRevealViewport}
-                    >
-                      {trendingLoading && <BusinessRowSkeleton title="Trending Now" />}
-                      {!trendingLoading && hasTrendingBusinesses && (
-                        <MemoizedBusinessRow title="Trending Now" businesses={trendingBusinesses} cta="See More" href="/trending" />
-                      )}
-                      {!trendingLoading && !hasTrendingBusinesses && !trendingError && (
-                        <MemoizedBusinessRow title="Trending Now" businesses={[]} cta="See More" href="/trending" />
-                      )}
-                      {trendingError && !trendingLoading && (
-                        <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral space-y-1">
-                          <p className="font-medium">Trending</p>
-                          <p>{trendingError}</p>
-                          {trendingStatus != null && (
-                            <p className="text-charcoal/70">Status: {trendingStatus}</p>
-                          )}
-                        </div>
-                      )}
-                    </motion.div>
-                    ) : (
                     <div className="relative z-10 snap-start">
                       {trendingLoading && <BusinessRowSkeleton title="Trending Now" />}
                       {!trendingLoading && hasTrendingBusinesses && (
@@ -796,27 +687,9 @@ export default function HomeClient() {
                         </div>
                       )}
                     </div>
-                    )
                   )}
 
                   {/* Events & Specials */}
-                  {isDesktop ? (
-                  <motion.div
-                    className="relative z-10 snap-start"
-                    variants={homeCardRevealVariants}
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={homeCardRevealViewport}
-                  >
-                    <EventsSpecials
-                      events={eventsAndSpecials}
-                      loading={eventsAndSpecialsLoading}
-                      titleFontWeight={800}
-                      ctaFontWeight={400}
-                      premiumCtaHover
-                    />
-                  </motion.div>
-                  ) : (
                   <div className="relative z-10 snap-start">
                     <EventsSpecials
                       events={eventsAndSpecials}
@@ -826,35 +699,8 @@ export default function HomeClient() {
                       premiumCtaHover
                     />
                   </div>
-                  )}
 
                   {/* Community Highlights (Featured by Category) */}
-                  {isDesktop ? (
-                  <motion.div
-                    className="relative z-10 snap-start"
-                    variants={homeCardRevealVariants}
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={homeCardRevealViewport}
-                  >
-                    {featuredError && !featuredLoading ? (
-                      <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral space-y-1">
-                        <p className="font-medium">Featured</p>
-                        <p>{featuredError}</p>
-                        {featuredStatus != null && (
-                          <p className="text-charcoal/70">Status: {featuredStatus}</p>
-                        )}
-                      </div>
-                    ) : featuredLoading ? (
-                      <CommunityHighlightsSkeleton reviewerCount={12} businessCount={4} />
-                    ) : (
-                      <CommunityHighlights
-                        businessesOfTheMonth={Array.isArray(featuredByCategory) ? featuredByCategory : []}
-                        variant="reviews"
-                      />
-                    )}
-                  </motion.div>
-                  ) : (
                   <div className="relative z-10 snap-start">
                     {featuredError && !featuredLoading ? (
                       <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral space-y-1">
@@ -873,10 +719,8 @@ export default function HomeClient() {
                       />
                     )}
                   </div>
-                  )}
-                </motion.div>
+                </div>
               )}
-            </AnimatePresence>
           </div>
         </main>
         <Footer />
@@ -886,7 +730,7 @@ export default function HomeClient() {
       {showScrollTop && (
         <button
           onClick={scrollToTop}
-          className="md:hidden fixed bottom-6 right-6 z-[100] w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-sage to-sage/90 hover:from-sage/90 hover:to-sage/80 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center border border-sage/30 hover:scale-110"
+          className="md:hidden fixed bottom-6 right-6 z-[100] w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-sage to-sage/90 hover:from-sage/90 hover:to-sage/80 text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center border border-sage/30"
           aria-label="Scroll to top"
         >
           <ChevronUp className="w-5 h-5 sm:w-6 sm:h-6" />
