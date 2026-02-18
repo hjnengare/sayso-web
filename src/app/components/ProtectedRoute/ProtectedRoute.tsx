@@ -161,11 +161,11 @@ export default function ProtectedRoute({
 
       // Personal user flow
       if (onboardingComplete) {
-        // Only redirect if not already on /complete or /profile
+        // Only redirect if not already on /complete or /home
         // This prevents redirect loops - completed users can access both
-        if (pathname !== '/complete' && pathname !== '/profile') {
-          console.log('[ProtectedRoute] Personal user onboarding complete, redirecting to /profile');
-          router.replace('/profile');
+        if (pathname !== '/complete' && pathname !== '/home') {
+          console.log('[ProtectedRoute] Personal user onboarding complete, redirecting to /home');
+          router.replace('/home');
         }
       } else if (!emailVerified && !emailVerifiedFromUrl && !verifiedFromUrl) {
         // Only redirect if not already on verify-email
@@ -209,17 +209,10 @@ export default function ProtectedRoute({
     }
 
     // Allow access to /complete page even if onboarding is complete (it's the celebration page) - personal users only
-    // But redirect from other onboarding routes to /profile if already complete
+    // But redirect from other onboarding routes to /home if already complete
     if (userId && !isBusinessOwner && onboardingComplete && isOnboardingRoute && pathname !== '/complete') {
-      console.log('[ProtectedRoute] Personal user completed onboarding, redirecting from onboarding route to /profile');
-      router.push('/profile');
-      return;
-    }
-
-    // Incomplete personal user on /complete → redirect to /interests (start of onboarding)
-    if (userId && !isBusinessOwner && !onboardingComplete && pathname === '/complete') {
-      console.log('[ProtectedRoute] Incomplete personal user on /complete, redirecting to /interests');
-      router.push('/interests');
+      console.log('[ProtectedRoute] Personal user completed onboarding, redirecting from onboarding route to /home');
+      router.replace('/home');
       return;
     }
 

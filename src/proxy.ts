@@ -606,7 +606,7 @@ export async function proxy(request: NextRequest) {
       : isBusinessAccount
         ? '/my-businesses'
         : isOnboardingComplete
-          ? '/profile'
+          ? '/home'
           : '/interests';
 
     debugLog('REDIRECT', {
@@ -720,9 +720,9 @@ export async function proxy(request: NextRequest) {
           debugLog('ALLOW', { requestId, reason: 'completed_user_on_complete', pathname });
           return response;
         }
-        debugLog('REDIRECT', { requestId, reason: 'completed_user_on_onboarding', to: '/profile' });
-        edgeLog('REDIRECT', pathname, { hasUser: true, emailConfirmed: true, onboardingComplete: true, to: '/profile' });
-        return redirectWithGuard(request, new URL('/profile', request.url));
+        debugLog('REDIRECT', { requestId, reason: 'completed_user_on_onboarding', to: '/home' });
+        edgeLog('REDIRECT', pathname, { hasUser: true, emailConfirmed: true, onboardingComplete: true, to: '/home' });
+        return redirectWithGuard(request, new URL('/home', request.url));
       }
       if (pathname === '/complete') {
         debugLog('REDIRECT', { requestId, reason: 'incomplete_user_on_complete', to: '/interests' });
@@ -813,7 +813,7 @@ export async function proxy(request: NextRequest) {
       const redirectTarget = profileStatus === null
         ? '/home'
         : isOnboardingComplete
-          ? '/profile'
+          ? '/home'
           : '/interests';
       return redirectWithGuard(request, new URL(redirectTarget, request.url));
     }
@@ -840,7 +840,7 @@ export async function proxy(request: NextRequest) {
         edgeLog('ALLOW', pathname, { hasUser: true, emailConfirmed: true, reason: 'status_unknown' });
         return response;
       }
-      const redirectTarget = isOnboardingComplete ? '/profile' : '/interests';
+      const redirectTarget = isOnboardingComplete ? '/home' : '/interests';
       edgeLog('REDIRECT', pathname, { hasUser: true, emailConfirmed: true, onboardingComplete: isOnboardingComplete, to: redirectTarget });
       return redirectWithGuard(request, new URL(redirectTarget, request.url));
     }
@@ -852,7 +852,7 @@ export async function proxy(request: NextRequest) {
       } else if (isBusinessAccount) {
         redirectTarget = '/my-businesses';
       } else if (isOnboardingComplete === true) {
-        redirectTarget = '/profile';
+        redirectTarget = '/home';
       } else if (isOnboardingComplete === false) {
         redirectTarget = '/interests';
       } else {

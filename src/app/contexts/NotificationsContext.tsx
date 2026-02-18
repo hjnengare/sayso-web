@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo, useRef } from "react";
 import { useAuth } from "./AuthContext";
 import { formatTimeAgo } from "../utils/formatTimeAgo";
 import { apiClient } from "../lib/api/apiClient";
@@ -76,8 +76,10 @@ export function NotificationsProvider({ children }: NotificationsProviderProps) 
   const [readNotifications, setReadNotifications] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
+  const userId = user?.id ?? null;
   const userCurrentRole = user?.profile?.account_role || user?.profile?.role || "user";
   const isBusinessAccountUser = userCurrentRole === "business_owner";
+  const supabaseRef = useRef(getBrowserSupabase());
   
   // Ensure clean state on user change (fixes stuck counts when switching accounts)
   useEffect(() => {
@@ -103,7 +105,7 @@ export function NotificationsProvider({ children }: NotificationsProviderProps) 
   }, []);
 
   const fetchNotifications = useCallback(async () => {
-    if (!user) {
+    if (!userId) {
       setNotifications([]);
       setReadNotifications(new Set());
       setIsLoading(false);
@@ -126,7 +128,7 @@ export function NotificationsProvider({ children }: NotificationsProviderProps) 
         {
           ttl: 10000, // 10 second cache
           useCache: true,
-          cacheKey: `${USER_NOTIFICATIONS_ENDPOINT}:${user.id}`,
+          cacheKey: `${USER_NOTIFICATIONS_ENDPOINT}:${userId}`,
         }
       );
       
@@ -171,7 +173,7 @@ export function NotificationsProvider({ children }: NotificationsProviderProps) 
         setIsLoading(false);
       }
     }
-  }, [user, isBusinessAccountUser, convertToToastNotification]);
+  }, [userId, isBusinessAccountUser, convertToToastNotification]);
 
   useEffect(() => {
     fetchNotifications();
@@ -179,20 +181,35 @@ export function NotificationsProvider({ children }: NotificationsProviderProps) 
 
   // Real-time subscription for new notifications
   useEffect(() => {
-    if (!user || isBusinessAccountUser) return;
+    if (!userId || isBusinessAccountUser) return;
 
-    const supabase = getBrowserSupabase();
+    const supabase = supabaseRef.current;
+    let fallbackPollInterval: ReturnType<typeof setInterval> | null = null;
+
+    const startFallbackPolling = () => {
+      if (fallbackPollInterval) return;
+      // Keep notifications fresh when realtime channel cannot be established.
+      fallbackPollInterval = setInterval(() => {
+        void fetchNotifications();
+      }, 30000);
+    };
+
+    const stopFallbackPolling = () => {
+      if (!fallbackPollInterval) return;
+      clearInterval(fallbackPollInterval);
+      fallbackPollInterval = null;
+    };
     
     // Subscribe to notifications table for current user
     const channel = supabase
-      .channel(`notifications-user-${user.id}`)
+      .channel(`notifications-user-${userId}-${Date.now()}`)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'notifications',
-          filter: `user_id=eq.${user.id}`,
+          filter: `user_id=eq.${userId}`,
         },
         (payload) => {
           console.log('[Notifications] New notification received:', payload);
@@ -211,7 +228,7 @@ export function NotificationsProvider({ children }: NotificationsProviderProps) 
           event: 'UPDATE',
           schema: 'public',
           table: 'notifications',
-          filter: `user_id=eq.${user.id}`,
+          filter: `user_id=eq.${userId}`,
         },
         (payload) => {
           console.log('[Notifications] Notification updated:', payload);
@@ -234,7 +251,7 @@ export function NotificationsProvider({ children }: NotificationsProviderProps) 
           event: 'DELETE',
           schema: 'public',
           table: 'notifications',
-          filter: `user_id=eq.${user.id}`,
+          filter: `user_id=eq.${userId}`,
         },
         (payload) => {
           console.log('[Notifications] Notification deleted:', payload);
@@ -249,24 +266,31 @@ export function NotificationsProvider({ children }: NotificationsProviderProps) 
           });
         }
       )
-      .subscribe((status) => {
+      .subscribe((status, error) => {
         if (status === 'SUBSCRIBED') {
+          stopFallbackPolling();
           console.log('✅ [Notifications] Successfully subscribed to real-time updates');
         } else if (status === 'CHANNEL_ERROR') {
-          console.error('❌ [Notifications] Channel error - real-time updates may not work');
+          console.warn('[Notifications] Realtime channel error. Falling back to polling.', error);
+          startFallbackPolling();
+          void fetchNotifications();
         } else if (status === 'TIMED_OUT') {
-          console.warn('⏱️ [Notifications] Subscription timed out - retrying...');
+          console.warn('[Notifications] Realtime subscription timed out. Falling back to polling.');
+          startFallbackPolling();
+          void fetchNotifications();
         } else if (status === 'CLOSED') {
-          console.log('🔌 [Notifications] Channel closed');
+          console.log('[Notifications] Realtime channel closed');
+          startFallbackPolling();
         }
       });
 
     // Cleanup subscription on unmount
     return () => {
-      console.log('🔌 [Notifications] Unsubscribing from real-time updates');
+      stopFallbackPolling();
+      console.log('[Notifications] Unsubscribing from real-time updates');
       supabase.removeChannel(channel);
     };
-  }, [user, isBusinessAccountUser, convertToToastNotification]);
+  }, [userId, isBusinessAccountUser, convertToToastNotification, fetchNotifications]);
 
   const markAsRead = useCallback(async (id: string) => {
     // Optimistically update UI

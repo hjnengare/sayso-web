@@ -60,39 +60,21 @@ export function useCompletePage(): UseCompletePageReturn {
           return;
         }
 
-        const onboardingComplete = !!user.profile?.onboarding_completed_at;
-        const interestsCount = user.profile?.interests_count ?? 0;
-        const subcategoriesCount = user.profile?.subcategories_count ?? 0;
-        const dealbreakersCount = user.profile?.dealbreakers_count ?? 0;
-
-        // If onboarding already completed, stay on complete page for celebration
-        // Let the page handle navigation based on role
-        if (onboardingComplete) {
-          if (!cancelled) {
-            setHasVerified(true);
-            setIsVerifying(false);
-            console.log('[useCompletePage] Onboarding complete, allowing page to handle navigation');
-          }
-          return;
-        }
-
-        // Not complete yet - redirect to correct step based on DB counts
-        if (!onboardingComplete) {
-          const nextRoute = '/onboarding';
-          if (!cancelled) {
-            setHasVerified(true);
-            setIsVerifying(false);
-            router.replace(nextRoute);
-          }
-          return;
-        }
-      } catch (error) {
-        console.error('[Complete] Error verifying access:', error);
-        // On error, redirect to start of onboarding
+        // Let middleware own onboarding step enforcement.
+        // This prevents client-side stale profile data from skipping the complete page.
         if (!cancelled) {
           setHasVerified(true);
           setIsVerifying(false);
-          router.replace('/interests');
+          console.log('[useCompletePage] Access verified, allowing page to handle navigation');
+        }
+      } catch (error) {
+        console.error('[Complete] Error verifying access:', error);
+        // On error, fail closed to login.
+        if (!cancelled) {
+          setError('Failed to verify access');
+          setHasVerified(true);
+          setIsVerifying(false);
+          router.replace('/login');
         }
       }
     };
@@ -117,18 +99,13 @@ export function useCompletePage(): UseCompletePageReturn {
       // - user (personal) → /home (browse and review businesses)
       const destination = currentRole === 'business_owner' ? '/claim-business' : '/home';
       
-      // Use window.location for hard redirect (bypasses client-side router cache)
-      if (typeof window !== 'undefined') {
-        window.location.href = destination;
-      }
+      router.replace(destination);
     } catch (error) {
       console.error('[useCompletePage] Error navigating:', error);
       // Fallback to /home if something goes wrong
-      if (typeof window !== 'undefined') {
-        window.location.href = '/home';
-      }
+      router.replace('/home');
     }
-  }, [user]);
+  }, [user, router]);
 
   return {
     isVerifying,
