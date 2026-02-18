@@ -15,7 +15,6 @@ import type { Event } from "../lib/types/Event";
 import { useDebounce } from "../hooks/useDebounce";
 import { ChevronRight, ChevronDown, ChevronLeft } from "lucide-react";
 import { Loader } from "../components/Loader/Loader";
-import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
 import ScrollToTopButton from "../components/Navigation/ScrollToTopButton";
 import { useIsDesktop } from "../hooks/useIsDesktop";
 
@@ -381,22 +380,13 @@ export default function EventsSpecialsPage() {
                   hyphens: 'none',
                 }}
               >
-                <WavyTypedTitle
-                  text="Events & Specials"
-                  as="span"
-                  className="inline-block font-bold"
-                  typingSpeedMs={50}
-                  startDelayMs={200}
-                  disableWave={true}
-                  enableScrollTrigger={true}
-                  style={{
-                    fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                    wordBreak: 'keep-all',
-                    overflowWrap: 'break-word',
-                    whiteSpace: 'normal',
-                    hyphens: 'none',
-                  }}
-                />
+                <span className="inline-block font-bold" style={{
+                  fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                  wordBreak: 'keep-all',
+                  overflowWrap: 'break-word',
+                  whiteSpace: 'normal',
+                  hyphens: 'none',
+                }}>Events & Specials</span>
               </h1>
             </div>
             <p className="text-sm sm:text-base text-charcoal/70 max-w-2xl mx-auto leading-relaxed" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>

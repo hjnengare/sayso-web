@@ -20,7 +20,6 @@ import { Loader } from "../components/Loader/Loader";
 import { usePredefinedPageTitle } from "../hooks/usePageTitle";
 import Pagination from "../components/EventsPage/Pagination";
 import BusinessGridSkeleton from "../components/Explore/BusinessGridSkeleton";
-import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
 import type { Business } from "../components/BusinessCard/BusinessCard";
 import type { UserPreferences } from "../hooks/useUserPreferences";
 import type { BusinessMapItem } from "../components/maps/BusinessesMap";
@@ -480,22 +479,13 @@ export default function ForYouClient({
                   hyphens: 'none',
                 }}
               >
-                <WavyTypedTitle
-                  text="Curated Just For You"
-                  as="span"
-                  className="inline-block font-bold"
-                  typingSpeedMs={50}
-                  startDelayMs={200}
-                  disableWave={true}
-                  enableScrollTrigger={true}
-                  style={{
-                    fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                    wordBreak: 'keep-all',
-                    overflowWrap: 'break-word',
-                    whiteSpace: 'normal',
-                    hyphens: 'none',
-                  }}
-                />
+                <span className="inline-block font-bold" style={{
+                  fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                  wordBreak: 'keep-all',
+                  overflowWrap: 'break-word',
+                  whiteSpace: 'normal',
+                  hyphens: 'none',
+                }}>Curated Just For You</span>
               </h1>
             </div>
             <p className="text-sm sm:text-base text-charcoal/70 max-w-2xl mx-auto leading-relaxed" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>

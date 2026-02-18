@@ -20,7 +20,6 @@ import { Loader } from "../components/Loader/Loader";
 import { usePredefinedPageTitle } from "../hooks/usePageTitle";
 import { useScrollReveal } from "../hooks/useScrollReveal";
 import BusinessGridSkeleton from "../components/Explore/BusinessGridSkeleton";
-import WavyTypedTitle from "../../components/Animations/WavyTypedTitle";
 import ScrollToTopButton from "../components/Navigation/ScrollToTopButton";
 import { useIsDesktop } from "../hooks/useIsDesktop";
 // Trending = cold-start API (/api/trending): metadata-only score, diversity-first selection, deterministic rotation.
@@ -289,22 +288,13 @@ export default function TrendingPage() {
                   hyphens: 'none',
                 }}
               >
-                <WavyTypedTitle
-                  text="Trending Now"
-                  as="span"
-                  className="inline-block font-bold"
-                  typingSpeedMs={50}
-                  startDelayMs={200}
-                  disableWave={true}
-                  enableScrollTrigger={true}
-                  style={{
-                    fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                    wordBreak: 'keep-all',
-                    overflowWrap: 'break-word',
-                    whiteSpace: 'normal',
-                    hyphens: 'none',
-                  }}
-                />
+                <span className="inline-block font-bold" style={{
+                  fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                  wordBreak: 'keep-all',
+                  overflowWrap: 'break-word',
+                  whiteSpace: 'normal',
+                  hyphens: 'none',
+                }}>Trending Now</span>
               </h1>
             </div>
             <p className="text-sm sm:text-base text-charcoal/70 max-w-2xl mx-auto leading-relaxed" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
