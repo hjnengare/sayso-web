@@ -129,8 +129,6 @@ function isDopamineEvent(event: any): boolean {
     "show",
     "performance",
     "karaoke",
-    "paint",
-    "sip",
     "speed dating",
     "singles night",
     "mixer",
@@ -172,7 +170,7 @@ function getEventTags(event: any): string[] {
   }
 
   // Social
-  if (hasAnyKeyword(haystack, ["paint", "sip", "karaoke", "speed dating", "mixer", "social", "trivia"])) {
+  if (hasAnyKeyword(haystack, ["karaoke", "speed dating", "mixer", "social", "trivia"])) {
     tags.push("social");
   }
 
