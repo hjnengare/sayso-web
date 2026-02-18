@@ -551,11 +551,6 @@ export default function ForYouClient({
 
           <div className="py-3 sm:py-4">
             <div ref={resultsContainerRef} className="pt-4 sm:pt-6 md:pt-10">
-          {showDebugInfo && (
-            <p className="px-2 pb-2 text-xs text-charcoal/60">
-              items: {totalCount}, loading: {String(loading || prefsLoading || simpleSearchLoading)}, error: {combinedError ?? "none"}
-            </p>
-          )}
           {/* ✅ Show skeleton loader while prefs are loading OR businesses are loading OR simple search is loading */}
           {shouldShowSkeleton && (
             <BusinessGridSkeleton />
