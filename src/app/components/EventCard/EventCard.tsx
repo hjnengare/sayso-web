@@ -325,83 +325,71 @@ function EventCard({ event, index = 0 }: EventCardProps) {
               </div>
 
               {/* Smart Countdown Badge */}
-              {countdown.show && (
+              {countdown.show && countdown.status === "upcoming" && (
                 <div className="absolute left-3 bottom-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-off-white/95 backdrop-blur-md px-3 py-1.5 shadow-[0_2px_12px_rgba(0,0,0,0.15)] border border-white/60">
-                  {countdown.status === 'live' ? (
-                    <span 
-                      className="text-xs font-bold text-charcoal/90 leading-none animate-pulse"
-                      style={{
-                        fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                        fontWeight: 700,
-                      }}
-                    >
-                      LIVE NOW
-                    </span>
-                  ) : (
-                    <>
-                      {countdown.days > 0 && (
-                        <div className="flex items-baseline gap-0.5">
-                          <span 
-                            className="text-xs font-bold text-charcoal/90 leading-none"
-                            style={{
-                              fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                              fontWeight: 700,
-                            }}
-                          >
-                            {countdown.days}
-                          </span>
-                          <span 
-                            className="text-[10px] font-medium text-charcoal/90 leading-none"
-                            style={{
-                              fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                            }}
-                          >
-                            d
-                          </span>
-                        </div>
-                      )}
-                      {(countdown.days > 0 || countdown.hours > 0) && (
-                        <div className="flex items-baseline gap-0.5">
-                          <span 
-                            className="text-xs font-bold text-charcoal/90 leading-none"
-                            style={{
-                              fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                              fontWeight: 700,
-                            }}
-                          >
-                            {countdown.hours}
-                          </span>
-                          <span 
-                            className="text-[10px] font-medium text-charcoal/90 leading-none"
-                            style={{
-                              fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                            }}
-                          >
-                            h
-                          </span>
-                        </div>
-                      )}
+                  <>
+                    {countdown.days > 0 && (
                       <div className="flex items-baseline gap-0.5">
-                        <span 
+                        <span
                           className="text-xs font-bold text-charcoal/90 leading-none"
                           style={{
                             fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
                             fontWeight: 700,
                           }}
                         >
-                          {countdown.minutes}
+                          {countdown.days}
                         </span>
-                        <span 
+                        <span
                           className="text-[10px] font-medium text-charcoal/90 leading-none"
                           style={{
                             fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
                           }}
                         >
-                          m
+                          d
                         </span>
                       </div>
-                    </>
-                  )}
+                    )}
+                    {(countdown.days > 0 || countdown.hours > 0) && (
+                      <div className="flex items-baseline gap-0.5">
+                        <span
+                          className="text-xs font-bold text-charcoal/90 leading-none"
+                          style={{
+                            fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                            fontWeight: 700,
+                          }}
+                        >
+                          {countdown.hours}
+                        </span>
+                        <span
+                          className="text-[10px] font-medium text-charcoal/90 leading-none"
+                          style={{
+                            fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                          }}
+                        >
+                          h
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex items-baseline gap-0.5">
+                      <span
+                        className="text-xs font-bold text-charcoal/90 leading-none"
+                        style={{
+                          fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                          fontWeight: 700,
+                        }}
+                      >
+                        {countdown.minutes}
+                      </span>
+                      <span
+                        className="text-[10px] font-medium text-charcoal/90 leading-none"
+                        style={{
+                          fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                        }}
+                      >
+                        m
+                      </span>
+                    </div>
+                  </>
                 </div>
               )}
             </motion.div>

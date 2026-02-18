@@ -3,7 +3,7 @@
 import { useState, useEffect, use, useRef } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, Calendar } from "lucide-react";
+import { ChevronRight, ChevronLeft, Calendar } from "lucide-react";
 import type { Event } from "../../lib/types/Event";
 import nextDynamic from "next/dynamic";
 import { PageLoader } from "../../components/Loader";
@@ -267,8 +267,9 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
                 <nav className="pt-2" aria-label="Breadcrumb">
                   <ol className="flex items-center gap-1 sm:gap-2 text-sm sm:text-base flex-nowrap min-w-0">
                     <li className="shrink-0">
-                      <Link href="/events-specials" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium whitespace-nowrap">
-                        ← Back to Events & Specials
+                      <Link href="/events-specials" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium whitespace-nowrap flex items-center gap-1.5">
+                        <ChevronLeft className="w-4 h-4" />
+                        Back to Events & Specials
                       </Link>
                     </li>
                   </ol>

@@ -10,6 +10,7 @@ import {
     MessageSquare,
     X,
     ChevronRight,
+    ChevronLeft,
 } from "lucide-react";
 import ReviewsList from "../../components/Reviews/ReviewsList";
 import type { ReviewWithUser } from "../../lib/types/database";
@@ -537,8 +538,9 @@ export default function BusinessProfilePage() {
                                 <nav className="pb-1" aria-label="Breadcrumb">
                                     <ol className="flex items-center gap-2 text-sm sm:text-base">
                                         <li>
-                                            <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                                                ← Back to Home
+                                            <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium flex items-center gap-1.5" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                                                <ChevronLeft className="w-4 h-4" />
+                                                Back to Home
                                             </Link>
                                         </li>
                                     </ol>
