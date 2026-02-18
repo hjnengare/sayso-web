@@ -624,8 +624,8 @@ function BusinessCard({
                     >
                       <motion.h3
                         layoutId={businessTitleLayoutId}
-                        className="text-h2 sm:text-h1 font-bold text-center leading-tight line-clamp-1 transition-colors duration-300 group-hover:text-navbar-bg/90 w-full max-w-full relative z-[1]"
-                        style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 700, WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale', textRendering: 'optimizeLegibility' }}
+                        className="text-h2 sm:text-h1 font-bold text-center leading-[1.3] truncate tracking-tight transition-colors duration-300 group-hover:text-navbar-bg/90 w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap relative z-[1]"
+                        style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 700, WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale', textRendering: 'optimizeLegibility', letterSpacing: '-0.01em' }}
                       >
                         {business.name}
                       </motion.h3>
