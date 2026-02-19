@@ -579,7 +579,7 @@ export default function HomeClient() {
                   {/* For You Section - Only show when NOT filtered */}
                   {!isFiltered && (
                     (() => {
-                      const className = "relative z-10 snap-start mt-2 mb-2 sm:mt-0 sm:mb-0";
+                      const className = "relative z-10 snap-start";
                       const children = (
                         <>
                       {!user ? (
