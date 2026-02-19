@@ -12,7 +12,7 @@ import {
   AlertTriangle,
   FileText,
   RefreshCw,
-  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 const FONT = "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif";
@@ -64,18 +64,24 @@ function SkeletonBlock({ className }: { className?: string }) {
 function ReviewSkeleton() {
   return (
     <main className="max-w-4xl mx-auto px-4 py-6" style={{ fontFamily: FONT }}>
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-charcoal">Review Business</h1>
-          <p className="text-sm text-charcoal/60 mt-1">Loading submission details…</p>
-        </div>
-        <Link
-          href="/admin/pending-businesses"
-          className="text-sm font-medium text-charcoal/70 hover:text-charcoal flex items-center gap-1.5"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          Back to Pending
-        </Link>
+      <div className="mb-6">
+        <nav className="pb-1" aria-label="Breadcrumb">
+          <ol className="flex items-center gap-2 text-sm">
+            <li>
+              <Link href="/admin/pending-businesses" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium">
+                Pending Businesses
+              </Link>
+            </li>
+            <li className="flex items-center">
+              <ChevronRight className="w-4 h-4 text-charcoal/60" />
+            </li>
+            <li>
+              <span className="text-charcoal font-semibold">Review Business</span>
+            </li>
+          </ol>
+        </nav>
+        <h1 className="text-xl font-bold text-charcoal mt-3">Review Business</h1>
+        <p className="text-sm text-charcoal/60 mt-1">Loading submission details…</p>
       </div>
 
       <div className="space-y-6">
@@ -368,29 +374,34 @@ export default function AdminBusinessReviewPage() {
 
   return (
     <main className="max-w-4xl mx-auto px-4 py-6">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1
-            className="text-xl font-bold text-charcoal"
-            style={{ fontFamily: FONT }}
-          >
-            Review Business
-          </h1>
-          <p
-            className="text-sm text-charcoal/60 mt-1"
-            style={{ fontFamily: FONT }}
-          >
-            Validate submission before approval
-          </p>
-        </div>
-        <Link
-          href="/admin/pending-businesses"
-          className="text-sm font-medium text-charcoal/70 hover:text-charcoal flex items-center gap-1.5"
+      <div className="mb-6">
+        <nav className="pb-1" aria-label="Breadcrumb">
+          <ol className="flex items-center gap-2 text-sm">
+            <li>
+              <Link href="/admin/pending-businesses" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: FONT }}>
+                Pending Businesses
+              </Link>
+            </li>
+            <li className="flex items-center">
+              <ChevronRight className="w-4 h-4 text-charcoal/60" />
+            </li>
+            <li>
+              <span className="text-charcoal font-semibold" style={{ fontFamily: FONT }}>Review Business</span>
+            </li>
+          </ol>
+        </nav>
+        <h1
+          className="text-xl font-bold text-charcoal mt-3"
           style={{ fontFamily: FONT }}
         >
-          <ChevronLeft className="w-4 h-4" />
-          Back to Pending
-        </Link>
+          Review Business
+        </h1>
+        <p
+          className="text-sm text-charcoal/60 mt-1"
+          style={{ fontFamily: FONT }}
+        >
+          Validate submission before approval
+        </p>
       </div>
 
       {actionError && (

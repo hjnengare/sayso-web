@@ -538,10 +538,17 @@ export default function BusinessProfilePage() {
                                 <nav className="pb-1" aria-label="Breadcrumb">
                                     <ol className="flex items-center gap-2 text-sm sm:text-base">
                                         <li>
-                                            <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium flex items-center gap-1.5" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                                                <ChevronLeft className="w-4 h-4" />
-                                                Back to Home
+                                            <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                                                Home
                                             </Link>
+                                        </li>
+                                        <li className="flex items-center">
+                                            <ChevronRight className="w-4 h-4 text-charcoal/60" />
+                                        </li>
+                                        <li>
+                                            <span className="text-charcoal font-semibold truncate max-w-[200px] sm:max-w-none" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                                                {businessData.name || 'Business'}
+                                            </span>
                                         </li>
                                     </ol>
                                 </nav>
