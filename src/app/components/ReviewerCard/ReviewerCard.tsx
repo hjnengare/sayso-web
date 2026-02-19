@@ -128,7 +128,7 @@ export default function ReviewerCard({
           className="block group/card"
         >
           <div
-            className="relative rounded-2xl overflow-hidden cursor-pointer h-[268px] border border-white/50 shadow-sm hover:shadow-xl transition-all duration-500 ease-out"
+            className="relative rounded-2xl overflow-hidden cursor-pointer h-[268px] shadow-sm hover:shadow-xl transition-all duration-500 ease-out"
             style={{
               background: 'linear-gradient(165deg, rgba(255,255,255,0.92) 0%, rgba(229,224,229,0.85) 50%, rgba(157,171,155,0.18) 100%)',
               backdropFilter: 'blur(20px) saturate(1.4)',
@@ -148,7 +148,7 @@ export default function ReviewerCard({
                         alt={reviewerData?.name || "User avatar"}
                         width={44}
                         height={44}
-                        className="w-11 h-11 object-cover rounded-full ring-[2.5px] ring-white/80 shadow-sm"
+                        className="w-11 h-11 object-cover rounded-full shadow-sm"
                         priority={false}
                         onError={() => setImgError(true)}
                       />
@@ -166,7 +166,7 @@ export default function ReviewerCard({
                   </div>
                 ) : (
                   <div className="relative">
-                    <div className="w-11 h-11 flex items-center justify-center rounded-full ring-[2.5px] ring-white/80 shadow-sm"
+                    <div className="w-11 h-11 flex items-center justify-center rounded-full shadow-sm"
                       style={{ background: 'linear-gradient(135deg, #f0ece8 0%, #e5e0e5 100%)' }}>
                       <User className="text-charcoal/40" size={18} strokeWidth={1.8} />
                     </div>
@@ -187,7 +187,7 @@ export default function ReviewerCard({
                         <BadgePill key={badge.id} badge={badge} size="sm" />
                       ))}
                       {overflowCount > 0 && (
-                        <span className="text-[10px] font-semibold text-charcoal/35 px-1.5 py-0.5 rounded-full bg-white/60 backdrop-blur-sm border border-white/40"
+                        <span className="text-[10px] font-semibold text-charcoal/35 px-1.5 py-0.5 rounded-full bg-white/60 backdrop-blur-sm"
                           style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}>
                           +{overflowCount}
                         </span>
@@ -209,7 +209,7 @@ export default function ReviewerCard({
               {/* Stats section */}
               <div className="mb-3">
                 <div className="flex items-center justify-center">
-                  <div className="rounded-xl px-5 py-2 border border-white/50"
+                  <div className="rounded-xl px-5 py-2"
                     style={{
                       background: 'linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(229,224,229,0.5) 100%)',
                       backdropFilter: 'blur(8px)',
@@ -232,7 +232,7 @@ export default function ReviewerCard({
               {/* Latest Review Preview */}
               {latestReview && (
                 <div className="flex-1 min-h-0">
-                  <div className="rounded-xl px-3 py-2.5 border border-white/50 relative"
+                  <div className="rounded-xl px-3 py-2.5 relative"
                     style={{
                       background: 'linear-gradient(145deg, rgba(255,255,255,0.65) 0%, rgba(229,224,229,0.4) 100%)',
                       backdropFilter: 'blur(8px)',
@@ -274,7 +274,7 @@ export default function ReviewerCard({
         className="block"
       >
         <div
-          className="bg-card-bg rounded-2xl group cursor-pointer h-[187px] flex flex-col relative overflow-hidden border border-white/50 shadow-sm hover:shadow-lg transition-all duration-500 ease-out"
+          className="bg-card-bg rounded-2xl group cursor-pointer h-[187px] flex flex-col relative overflow-hidden shadow-sm hover:shadow-lg transition-all duration-500 ease-out"
         >
            <div className="flex items-start gap-1.5 p-2 pb-0">
             <div className="relative flex-shrink-0">
@@ -315,7 +315,7 @@ export default function ReviewerCard({
               ))}
               {overflowCount > 0 && (
                 <span
-                  className="inline-flex items-center px-1.5 py-[3px] rounded-full text-[10px] font-semibold text-charcoal/35 bg-white/60 backdrop-blur-sm border border-white/40"
+                  className="inline-flex items-center px-1.5 py-[3px] rounded-full text-[10px] font-semibold text-charcoal/35 bg-white/60 backdrop-blur-sm"
                   style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}
                 >
                   +{overflowCount}

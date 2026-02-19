@@ -287,6 +287,12 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
     router.push(reviewRoute);
   };
 
+  // Determine star gradient tier based on rating
+  const starGradientId = useMemo(() => {
+    if (!displayTotal || displayTotal === 0) return null;
+    return displayTotal > 4.0 ? 'Gold' : displayTotal > 2.0 ? 'Bronze' : 'Low';
+  }, [displayTotal]);
+
   // Handle share
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -328,8 +334,29 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
         fontWeight: 600,
       }}
     >
+      {/* SVG Gradient Definitions for Star Icons */}
+      <svg width="0" height="0" style={{ position: 'absolute' }}>
+        <defs>
+          {/* Gold Gradient: warm yellow → soft amber */}
+          <linearGradient id="starGradientGoldBOTM" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style={{ stopColor: '#F5D547', stopOpacity: 1 }} />
+            <stop offset="100%" style={{ stopColor: '#E6A547', stopOpacity: 1 }} />
+          </linearGradient>
+          {/* Bronze Gradient: muted orange → brown */}
+          <linearGradient id="starGradientBronzeBOTM" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style={{ stopColor: '#D4915C', stopOpacity: 1 }} />
+            <stop offset="100%" style={{ stopColor: '#8B6439', stopOpacity: 1 }} />
+          </linearGradient>
+          {/* Low Rating Gradient: soft red → charcoal */}
+          <linearGradient id="starGradientLowBOTM" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style={{ stopColor: '#D66B6B', stopOpacity: 1 }} />
+            <stop offset="100%" style={{ stopColor: '#6B5C5C', stopOpacity: 1 }} />
+          </linearGradient>
+        </defs>
+      </svg>
+      
       <div
-        className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden group cursor-pointer w-full flex flex-col border border-white/60 backdrop-blur-xl ring-1 ring-white/30 shadow-md sm:h-auto"
+        className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden group cursor-pointer w-full flex flex-col backdrop-blur-xl shadow-md sm:h-auto"
         style={{
           maxWidth: "540px",
         } as React.CSSProperties}
@@ -408,7 +435,7 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
           {/* Single overlay badge: smoothly switches between Sayso Select and distance */}
           {activeOverlayBadge && (
             <div className="absolute left-3 bottom-3 z-20 w-[calc(100%-1.5rem)] max-w-[230px] sm:max-w-[250px]">
-              <div className="relative h-[30px] overflow-hidden rounded-full border border-white/40 bg-off-white/90 backdrop-blur-[2px] shadow-[0_2px_8px_rgba(0,0,0,0.12)]">
+              <div className="relative h-[30px] overflow-hidden rounded-full bg-off-white/90 backdrop-blur-[2px] shadow-[0_2px_8px_rgba(0,0,0,0.12)]">
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.div
                     key={activeOverlayBadge.key}
@@ -436,8 +463,10 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
           )}
 
           {hasReviews && displayTotal > 0 ? (
-            <div className="absolute right-4 top-4 z-20 inline-flex items-center gap-1 rounded-full bg-off-white/95 backdrop-blur-xl px-3 py-1.5 text-charcoal border border-white/40">
-              <Star className="rounded-full p-1 w-6 h-6 text-charcoal fill-charcoal" strokeWidth={2.5} aria-hidden />
+            <div className="absolute right-4 top-4 z-20 inline-flex items-center gap-1 rounded-full bg-off-white/95 backdrop-blur-xl px-3 py-1.5 text-charcoal">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="rounded-full p-1" aria-hidden>
+                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill={`url(#starGradient${starGradientId}BOTM)`} stroke={`url(#starGradient${starGradientId}BOTM)`} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
               <span className="text-sm font-semibold text-charcoal" style={{ 
                 fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', 
                 fontWeight: 600
@@ -446,7 +475,7 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
               </span>
             </div>
           ) : (
-            <div className="absolute right-4 top-4 z-20 inline-flex items-center gap-1 rounded-full bg-off-white/95 backdrop-blur-xl px-3 py-1.5 text-charcoal border border-white/40 shadow-md">
+            <div className="absolute right-4 top-4 z-20 inline-flex items-center gap-1 rounded-full bg-off-white/95 backdrop-blur-xl px-3 py-1.5 text-charcoal shadow-md">
               <span className="text-sm font-semibold text-charcoal" style={{ 
                 fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', 
                 fontWeight: 600
@@ -459,7 +488,7 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
           {/* Premium floating actions - desktop only */}
           <div className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-20 flex-col items-center gap-2 transition-all duration-300 ease-out translate-x-12 opacity-0 md:group-hover:translate-x-0 md:group-hover:opacity-100">
             <button
-              className="w-12 h-10 bg-off-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-off-white/60 hover:scale-110 hover:text-charcoal/90 active:scale-95 active:translate-y-[1px] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40 shadow-md transform-gpu touch-manipulation select-none"
+              className="w-12 h-10 bg-off-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-off-white/60 hover:scale-110 hover:text-charcoal/90 active:scale-95 active:translate-y-[1px] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 shadow-md transform-gpu touch-manipulation select-none"
               onClick={(e) => {
                 e.stopPropagation();
                 handleWriteReview(e);
@@ -470,7 +499,7 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
               <Edit className="w-4 h-4 text-charcoal/80" strokeWidth={2.5} />
             </button>
             <button
-              className="w-12 h-10 bg-off-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-off-white/60 hover:scale-110 hover:text-charcoal/90 active:scale-95 active:translate-y-[1px] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40 shadow-md transform-gpu touch-manipulation select-none"
+              className="w-12 h-10 bg-off-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-off-white/60 hover:scale-110 hover:text-charcoal/90 active:scale-95 active:translate-y-[1px] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 shadow-md transform-gpu touch-manipulation select-none"
               onClick={(e) => {
                 e.stopPropagation();
                 handleBookmark(e);
@@ -484,7 +513,7 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
               />
             </button>
             <button
-              className="w-12 h-10 bg-off-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-off-white/60 hover:scale-110 hover:text-charcoal/90 active:scale-95 active:translate-y-[1px] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 border border-white/40 shadow-md transform-gpu touch-manipulation select-none"
+              className="w-12 h-10 bg-off-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-off-white/60 hover:scale-110 hover:text-charcoal/90 active:scale-95 active:translate-y-[1px] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 shadow-md transform-gpu touch-manipulation select-none"
               onClick={(e) => {
                 e.stopPropagation();
                 handleShare(e);
