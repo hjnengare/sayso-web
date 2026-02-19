@@ -794,8 +794,8 @@ export async function GET(req: Request) {
         longitude: lng,
       });
 
-      // For You: zero-stats only (preference + quality; no reviews, views, clicks)
-      const response = await handleForYouZeroStats({
+      // For You: unified personalization (preference + quality + freshness + discovery)
+      const response = await handleForYouFeed({
         supabase: feedSupabase,
         limit,
         category,
@@ -1580,41 +1580,7 @@ export async function HEAD(req: Request) {
   }
 }
 
-// ---- Mixed strategy helpers -------------------------------------------------
-
-type FeedV2Mode = 'v2_only' | 'v2_with_legacy_fallback';
-
-function getFeedV2Mode(): FeedV2Mode {
-  const raw = (process.env.FEED_V2_MODE || '').trim().toLowerCase();
-  if (raw === 'v2_with_legacy_fallback') return 'v2_with_legacy_fallback';
-  if (raw === 'v2_only') return 'v2_only';
-  // Default: be strict in production, permissive in development.
-  return process.env.NODE_ENV === 'development' ? 'v2_with_legacy_fallback' : 'v2_only';
-}
-
-const v2CircuitState: {
-  failureTimestampsMs: number[];
-  openUntilMs: number;
-} = {
-  failureTimestampsMs: [],
-  openUntilMs: 0,
-};
-
-function noteV2Failure(nowMs: number) {
-  const windowMs = 5 * 60 * 1000;
-  v2CircuitState.failureTimestampsMs = v2CircuitState.failureTimestampsMs.filter((t) => nowMs - t < windowMs);
-  v2CircuitState.failureTimestampsMs.push(nowMs);
-  const failuresInWindow = v2CircuitState.failureTimestampsMs.length;
-  const threshold = Number(process.env.FEED_V2_CIRCUIT_THRESHOLD || 3);
-  if (failuresInWindow >= threshold) {
-    const openForMs = Number(process.env.FEED_V2_CIRCUIT_OPEN_MS || 2 * 60 * 1000);
-    v2CircuitState.openUntilMs = nowMs + openForMs;
-  }
-}
-
-function isV2CircuitOpen(nowMs: number) {
-  return v2CircuitState.openUntilMs > nowMs;
-}
+// ---- For You feed handler ---------------------------------------------------
 
 type MixedFeedOptions = {
   supabase: SupabaseClientInstance;
@@ -1640,65 +1606,19 @@ type MixedFeedOptions = {
   cacheEtag?: string;
 };
 
-// =============================================
-// PREFERENCE-DRIVEN COLD START (no stats)
-// Used when V2 returns empty but user has preferences — "For You" = matches what you said you like.
-// =============================================
-
-type ColdStartOptions = {
-  interestIds: string[];
-  subInterestIds: string[];
-  priceFilters: string[] | undefined;
-  latitude: number | null;
-  longitude: number | null;
-  limit: number;
-  seed: string | null;
-};
-
-async function tryColdStartForYou(
-  supabase: Awaited<ReturnType<typeof getServerSupabase>>,
-  options: ColdStartOptions
-): Promise<{ data: any[] | null; error: any }> {
-  const {
-    interestIds,
-    subInterestIds,
-    priceFilters,
-    latitude,
-    longitude,
-    limit,
-    seed,
-  } = options;
-  try {
-    const { data, error } = await supabase.rpc('recommend_for_you_cold_start', {
-      p_interest_ids: interestIds,
-      p_sub_interest_ids: subInterestIds,
-      p_price_ranges: priceFilters && priceFilters.length > 0 ? priceFilters : null,
-      p_latitude: latitude,
-      p_longitude: longitude,
-      p_limit: limit,
-      p_seed: seed,
-    });
-    if (error) {
-      console.warn('[BUSINESSES API] recommend_for_you_cold_start RPC error:', error);
-      return { data: null, error };
-    }
-    return { data: Array.isArray(data) ? data : null, error: null };
-  } catch (err: any) {
-    console.warn('[BUSINESSES API] recommend_for_you_cold_start failed:', err?.message ?? err);
-    return { data: null, error: err };
-  }
-}
-
-/** Seed component that rotates daily so the feed feels fresh (small datasets, no engagement stats). */
+/** Seed component that rotates daily so the feed feels fresh. */
 function createDailySeedComponent(): string {
   return new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 }
 
 /**
- * For You zero-stats path: preference + quality only (no reviews, views, clicks).
- * Uses recommend_for_you_cold_start only. Diversity and freshness via seed (window + daily).
+ * Unified For You feed.
+ * Calls recommend_for_you_unified — single RPC that handles preference scoring,
+ * quality (Bayesian), freshness, new-business discovery, and dealbreaker exclusions.
+ * `punctuality` / `friendliness` dealbreakers (percentile-based) are still applied
+ * in Node after the RPC so that no-stats businesses are never incorrectly excluded.
  */
-async function handleForYouZeroStats(options: MixedFeedOptions): Promise<NextResponse> {
+async function handleForYouFeed(options: MixedFeedOptions): Promise<NextResponse> {
   const start = Date.now();
   const {
     supabase,
@@ -1709,7 +1629,6 @@ async function handleForYouZeroStats(options: MixedFeedOptions): Promise<NextRes
     preferredPriceRanges,
     latitude,
     longitude,
-    userId,
     requestId,
     seed: windowSeed,
   } = options;
@@ -1718,7 +1637,7 @@ async function handleForYouZeroStats(options: MixedFeedOptions): Promise<NextRes
   const dailyPart = createDailySeedComponent();
   const seed = windowSeed ? `${windowSeed}-${dailyPart}` : dailyPart;
 
-  console.log('[BUSINESSES API] For You zero-stats:', {
+  console.log('[BUSINESSES API] For You unified:', {
     limit,
     interestIds: interestIds?.length || 0,
     subInterestIds: subInterestIds?.length || 0,
@@ -1726,15 +1645,25 @@ async function handleForYouZeroStats(options: MixedFeedOptions): Promise<NextRes
     seedPrefix: seed.slice(0, 20),
   });
 
-  const { data: rpcData, error: rpcError } = await tryColdStartForYou(supabase, {
-    interestIds: interestIds || [],
-    subInterestIds: subInterestIds || [],
-    priceFilters,
-    latitude,
-    longitude,
-    limit: Math.min(limit, 100),
-    seed,
-  });
+  let rpcData: any[] | null = null;
+  let rpcError: any = null;
+
+  try {
+    const result = await supabase.rpc('recommend_for_you_unified', {
+      p_interest_ids: interestIds || [],
+      p_sub_interest_ids: subInterestIds || [],
+      p_dealbreaker_ids: dealbreakerIds || [],
+      p_price_ranges: priceFilters && priceFilters.length > 0 ? priceFilters : null,
+      p_latitude: latitude,
+      p_longitude: longitude,
+      p_limit: Math.min(limit, 120),
+      p_seed: seed,
+    });
+    rpcData = Array.isArray(result.data) ? result.data : null;
+    rpcError = result.error ?? null;
+  } catch (err: any) {
+    rpcError = err;
+  }
 
   if (rpcError) {
     const normalizedRpcError = normalizeForYouError(rpcError);
@@ -1744,12 +1673,7 @@ async function handleForYouZeroStats(options: MixedFeedOptions): Promise<NextRes
       status === 403
         ? 'For You query blocked by RLS or account mismatch.'
         : 'For You recommendation query failed.';
-    console.error('FOR_YOU ERROR', {
-      status,
-      code,
-      requestId: requestId ?? null,
-      ...normalizedRpcError,
-    });
+    console.error('FOR_YOU ERROR', { status, code, requestId: requestId ?? null, ...normalizedRpcError });
     const rpcErrorResponse = createForYouErrorResponse({
       status,
       code,
@@ -1757,17 +1681,14 @@ async function handleForYouZeroStats(options: MixedFeedOptions): Promise<NextRes
       requestId: requestId ?? 'unknown',
       details: normalizedRpcError,
     });
-    rpcErrorResponse.headers.set('X-Feed-Path', 'for_you_zero_stats_error');
+    rpcErrorResponse.headers.set('X-Feed-Path', 'for_you_unified_error');
     return rpcErrorResponse;
   }
 
   if (!rpcData || rpcData.length === 0) {
-    console.warn('[BUSINESSES API] For You zero-stats empty or error:', 'no data');
-    const fallback = await fetchTopPicksFallback(options, {
-      reason: 'for_you_zero_stats_empty',
-      details: null,
-    });
-    fallback.headers.set('X-Feed-Path', 'for_you_zero_stats_fallback');
+    console.warn('[BUSINESSES API] For You unified returned no data; falling back to top picks.');
+    const fallback = await fetchTopPicksFallback(options, { reason: 'for_you_unified_empty' });
+    fallback.headers.set('X-Feed-Path', 'for_you_unified_fallback');
     return fallback;
   }
 
@@ -1804,22 +1725,36 @@ async function handleForYouZeroStats(options: MixedFeedOptions): Promise<NextRes
     diversity_rank: row.diversity_rank,
   }));
 
-  let filteredBusinesses = filterByDealbreakers(businesses, dealbreakerIds);
-  const filteredOutAll = businesses.length > 0 && filteredBusinesses.length === 0 && (dealbreakerIds?.length || 0) > 0;
+  // Apply only the stat-dependent dealbreakers in Node (punctuality, friendliness).
+  // trustworthiness / value-for-money / expensive are already applied in SQL.
+  // filterByDealbreakers defaults to pass when percentiles are null, so new/no-stats
+  // businesses are never incorrectly excluded here.
+  const statDependentDealbreakers = (dealbreakerIds || []).filter((d) =>
+    d === 'punctuality' || d === 'friendliness'
+  );
+  let filteredBusinesses =
+    statDependentDealbreakers.length > 0
+      ? filterByDealbreakers(businesses, statDependentDealbreakers)
+      : businesses;
+
+  const filteredOutAll =
+    businesses.length > 0 && filteredBusinesses.length === 0 && statDependentDealbreakers.length > 0;
   if (filteredOutAll) {
-    console.warn('[BUSINESSES API] Dealbreakers removed all results; relaxing filter for For You zero-stats.', {
-      dealbreakers: dealbreakerIds?.length || 0,
+    console.warn('[BUSINESSES API] Stat-dependent dealbreakers removed all For You results; relaxing.', {
+      dealbreakers: statDependentDealbreakers,
       requestId: requestId ?? null,
     });
     filteredBusinesses = businesses;
   }
 
+  // The RPC already attaches uploaded_images via business_images lateral,
+  // but patch any remaining gaps just in case.
   const missingImages = filteredBusinesses.some((b) => !b.uploaded_images || b.uploaded_images.length === 0);
   if (missingImages) {
     const businessIds = filteredBusinesses.map((b) => b.id);
     const { data: imagesData } = await supabase
       .from('business_images')
-      .select('business_id, url, type, sort_order, is_primary')
+      .select('business_id, url, sort_order, is_primary')
       .in('business_id', businessIds)
       .order('sort_order', { ascending: true });
     if (imagesData) {
@@ -1830,17 +1765,16 @@ async function handleForYouZeroStats(options: MixedFeedOptions): Promise<NextRes
         byBusiness.set(img.business_id, list);
       }
       for (const b of filteredBusinesses) {
-        const urls = byBusiness.get(b.id);
-        if (urls?.length) b.uploaded_images = urls;
+        if (!b.uploaded_images?.length) {
+          const urls = byBusiness.get(b.id);
+          if (urls?.length) b.uploaded_images = urls;
+        }
       }
     }
   }
 
   const transformedBusinesses = filteredBusinesses.map(transformBusinessForCard);
-  console.log('FOR_YOU RESULTS COUNT', {
-    requestId: requestId ?? null,
-    count: transformedBusinesses.length,
-  });
+  console.log('FOR_YOU RESULTS COUNT', { requestId: requestId ?? null, count: transformedBusinesses.length });
 
   const response = NextResponse.json({
     businesses: transformedBusinesses,
@@ -1850,385 +1784,80 @@ async function handleForYouZeroStats(options: MixedFeedOptions): Promise<NextRes
       seed: seed.slice(0, 30),
       durationMs: Date.now() - start,
       feed: 'for-you',
-      zeroStats: true,
       dealbreakersRelaxed: filteredOutAll ? true : undefined,
     },
   });
-  response.headers.set('X-Feed-Path', 'for_you_zero_stats');
+  response.headers.set('X-Feed-Path', 'for_you_unified');
   response.headers.set('X-For-You-Results-Count', String(transformedBusinesses.length));
   return applySharedResponseHeaders(response);
 }
 
-// =============================================
-// NETFLIX-STYLE TWO-STAGE RECOMMENDER (V2)
-// Stage A: Candidate Generation (fast, broad)
-// Stage B: Ranking (sophisticated scoring)
-// =============================================
+// handleMixedFeedV2 and handleMixedFeedLegacy removed — superseded by handleForYouFeed.
 
-async function handleMixedFeedV2(options: MixedFeedOptions) {
-  const v2Start = Date.now();
-  let feedPath: 'v2' | 'cold_start' = 'v2';
-  const {
-    supabase,
-    limit,
-    priceRange,
-    preferredPriceRanges,
-    interestIds,
-    subInterestIds,
-    dealbreakerIds,
-    latitude,
-    longitude,
-    userId,
-    requestId,
-    seed,
-  } = options;
-
-  console.log('[BUSINESSES API] handleMixedFeedV2 (Netflix-style) called with:', {
-    limit,
-    interestIds: interestIds?.length || 0,
-    subInterestIds: subInterestIds?.length || 0,
-    dealbreakerIds: dealbreakerIds?.length || 0,
-    hasUserId: !!userId,
-    hasLocation: !!(latitude && longitude),
-    hasSeed: !!seed,
-    requestId: requestId ?? null,
-  });
-
-  const mode = getFeedV2Mode();
-  const nowMs = Date.now();
-  if (isV2CircuitOpen(nowMs)) {
-    console.warn('[BUSINESSES API] V2 circuit is open; serving top picks.', {
-      requestId: requestId ?? null,
-      openUntilMs: v2CircuitState.openUntilMs,
-    });
-    const topPicks = await fetchTopPicksFallback(options, { reason: 'circuit_open' });
-    topPicks.headers.set('X-Feed-Path', 'v2_circuit_open');
-    return topPicks;
-  }
-
-  // Derive price filters
-  const priceFilters = derivePriceFilters(priceRange, preferredPriceRanges);
-
-  try {
-    // Call the V2 recommender RPC
-    const rpcPayloadBase = {
-      p_user_id: userId || null,
-      p_interest_ids: interestIds || [],
-      p_sub_interest_ids: subInterestIds || [],
-      p_latitude: latitude,
-      p_longitude: longitude,
-      p_limit: Math.min(limit, 100),
-      p_price_ranges: priceFilters && priceFilters.length > 0 ? priceFilters : null,
-      p_suppress_recent_hours: userId ? 48 : 0, // Only suppress for logged-in users
-    };
-    const rpcPayloadSeeded = {
-      ...rpcPayloadBase,
-      p_seed: seed || null,
-    };
-
-    console.log('[BUSINESSES API] Calling recommend_for_you_v2_seeded RPC with:', {
-      ...rpcPayloadSeeded,
-      p_interest_ids_count: rpcPayloadSeeded.p_interest_ids.length,
-      p_sub_interest_ids_count: rpcPayloadSeeded.p_sub_interest_ids.length,
-    });
-
-    // Try V2 RPC with explicit error handling
-    let rpcData: any[] | null = null;
-    let rpcError: any = null;
-    const rpcStart = Date.now();
-
-    try {
-      const timeoutMs = Number(process.env.FEED_V2_TIMEOUT_MS || 8000);
-
-      const callWithTimeout = async (fnName: string, payload: any) => {
-        const result = await Promise.race([
-          supabase.rpc(fnName, payload),
-          new Promise<never>((_, reject) => {
-            setTimeout(() => reject(new Error(`${fnName} timed out after ${timeoutMs}ms`)), timeoutMs);
-          }),
-        ]);
-        return result as any;
-      };
-
-      // Prefer the seeded wrapper if present (deterministic ordering + images).
-      const seeded = await callWithTimeout('recommend_for_you_v2_seeded', rpcPayloadSeeded);
-      rpcData = seeded.data;
-      rpcError = seeded.error;
-
-      // If wrapper isn't available, try the original V2 function (then we seed-sort in Node).
-      if (rpcError?.code === '42883' || rpcError?.message?.includes('does not exist')) {
-        console.warn('[BUSINESSES API] recommend_for_you_v2_seeded not found; falling back to recommend_for_you_v2');
-        const unseeded = await callWithTimeout('recommend_for_you_v2', rpcPayloadBase);
-        rpcData = unseeded.data;
-        rpcError = unseeded.error;
-      }
-    } catch (rpcCallError: any) {
-      console.log('[BUSINESSES API] V2 RPC duration ms:', Date.now() - rpcStart);
-      console.warn('[BUSINESSES API] V2 RPC call failed:', rpcCallError?.message || rpcCallError);
-      noteV2Failure(Date.now());
-      // Try cold start before falling back (handles missing/broken V2 or schema mismatch)
-      const coldStartResult = await tryColdStartForYou(supabase, {
-        interestIds: interestIds || [],
-        subInterestIds: subInterestIds || [],
-        priceFilters,
-        latitude,
-        longitude,
-        limit: Math.min(limit, 100),
-        seed,
-      });
-      if (coldStartResult.data && coldStartResult.data.length > 0) {
-        rpcData = coldStartResult.data;
-        feedPath = 'cold_start';
-        console.log('[BUSINESSES API] Cold start (after V2 exception) returned', rpcData.length, 'businesses');
-      }
-      if (!rpcData || rpcData.length === 0) {
-        if (mode === 'v2_with_legacy_fallback') {
-          const legacy = await handleMixedFeedLegacy(options);
-          legacy.headers.set('X-Feed-Path', 'legacy_fallback');
-          return legacy;
-        }
-        const topPicks = await fetchTopPicksFallback(options, { reason: 'rpc_call_failed' });
-        topPicks.headers.set('X-Feed-Path', 'v2_error_top_picks');
-        return topPicks;
-      }
-    }
-    console.log('[BUSINESSES API] V2 RPC duration ms:', Date.now() - rpcStart);
-
-    // When V2 errors (e.g. schema/column mismatch), try cold start before falling back
-    if (rpcError) {
-      console.warn('[BUSINESSES API] recommend_for_you_v2 RPC error:', rpcError?.code, rpcError?.message, '- trying cold start');
-      noteV2Failure(Date.now());
-      const coldStartResult = await tryColdStartForYou(supabase, {
-        interestIds: interestIds || [],
-        subInterestIds: subInterestIds || [],
-        priceFilters,
-        latitude,
-        longitude,
-        limit: Math.min(limit, 100),
-        seed,
-      });
-      if (coldStartResult.data && coldStartResult.data.length > 0) {
-        rpcData = coldStartResult.data;
-        feedPath = 'cold_start';
-        console.log('[BUSINESSES API] Cold start (after V2 error) returned', rpcData.length, 'businesses');
-      }
-      if (!rpcData || rpcData.length === 0) {
-        if (mode === 'v2_with_legacy_fallback') {
-          const legacy = await handleMixedFeedLegacy(options);
-          legacy.headers.set('X-Feed-Path', 'legacy_fallback');
-          return legacy;
-        }
-        const topPicks = await fetchTopPicksFallback(options, { reason: 'rpc_error', details: rpcError?.code || rpcError?.message });
-        topPicks.headers.set('X-Feed-Path', 'v2_error_top_picks');
-        return topPicks;
-      }
-    }
-
-    // When V2 returns 0 results, always try cold start (with or without preferences)
-    if (!rpcData || rpcData.length === 0) {
-      console.log('[BUSINESSES API] V2 RPC returned 0 results; trying preference-driven cold start');
-      const coldStartResult = await tryColdStartForYou(supabase, {
-        interestIds: interestIds || [],
-        subInterestIds: subInterestIds || [],
-        priceFilters,
-        latitude,
-        longitude,
-        limit: Math.min(limit, 100),
-        seed,
-      });
-      if (coldStartResult.data && coldStartResult.data.length > 0) {
-        rpcData = coldStartResult.data;
-        feedPath = 'cold_start';
-        console.log('[BUSINESSES API] Cold start returned', rpcData.length, 'businesses');
-      }
-      if (!rpcData || rpcData.length === 0) {
-        if (mode === 'v2_with_legacy_fallback') {
-          const legacy = await handleMixedFeedLegacy(options);
-          legacy.headers.set('X-Feed-Path', 'legacy_fallback_empty');
-          return legacy;
-        }
-        const topPicks = await fetchTopPicksFallback(options, { reason: 'empty' });
-        topPicks.headers.set('X-Feed-Path', 'v2_empty_top_picks');
-        return topPicks;
-      }
-    }
-
-    console.log('[BUSINESSES API] V2 RPC returned', rpcData.length, 'businesses');
-
-    // Normalize RPC results to BusinessRPCResult format
-    const businesses: BusinessRPCResult[] = rpcData.map((row: any) => ({
-      id: row.id,
-      name: row.name,
-      description: row.description,
-      category: row.category,
-      interest_id: row.interest_id,
-      sub_interest_id: row.sub_interest_id,
-      location: row.location,
-      address: row.address,
-      phone: row.phone,
-      email: row.email,
-      website: row.website,
-      hours: row.hours,
-      image_url: row.image_url,
-      uploaded_images: Array.isArray(row.uploaded_images) ? row.uploaded_images : [],
-      verified: row.verified,
-      price_range: row.price_range,
-      badge: row.badge,
-      slug: row.slug,
-      lat: row.lat ?? row.latitude,
-      lng: row.lng ?? row.longitude,
-      created_at: row.created_at,
-      updated_at: row.updated_at,
-      total_reviews: row.total_reviews || 0,
-      average_rating: Number(row.average_rating || 0),
-      percentiles: row.percentiles,
-      distance_km: null,
-      cursor_id: row.id,
-      cursor_created_at: row.created_at,
-      personalization_score: row.personalization_score,
-      diversity_rank: row.diversity_rank,
-    }));
-
-    // Apply dealbreaker filtering (client-side for additional safety)
-    const filteredBusinesses = filterByDealbreakers(businesses, dealbreakerIds);
-
-    // Deterministic tie-breaker: keep "jitter" stable for the current seed window.
-    // This reduces jumpiness when scores are close or identical.
-    if (seed && filteredBusinesses.length > 1) {
-      filteredBusinesses.sort((a, b) => {
-        const scoreA = (a.personalization_score ?? 0);
-        const scoreB = (b.personalization_score ?? 0);
-        if (scoreA !== scoreB) return scoreB - scoreA;
-        const rankA = createWeakEtagFromKey(`${seed}|${a.id}`);
-        const rankB = createWeakEtagFromKey(`${seed}|${b.id}`);
-        return rankA.localeCompare(rankB);
-      });
-    }
-
-    // Back-compat: if RPC doesn't return uploaded_images (older migrations),
-    // fetch them once. Newer recommend_for_you_v2 returns uploaded_images.
-    const missingImages = filteredBusinesses.some((b) => !b.uploaded_images || b.uploaded_images.length === 0);
-    if (missingImages) {
-      const businessIds = filteredBusinesses.map(b => b.id);
-      if (businessIds.length > 0) {
-        const imagesStart = Date.now();
-        const { data: imagesData } = await supabase
-          .from('business_images')
-          .select('business_id, url, type, sort_order, is_primary')
-          .in('business_id', businessIds)
-          .order('sort_order', { ascending: true });
-        console.log('[BUSINESSES API] V2 images query duration ms:', Date.now() - imagesStart);
-
-        if (imagesData) {
-          const imagesByBusiness = new Map<string, string[]>();
-          for (const img of imagesData) {
-            const existing = imagesByBusiness.get(img.business_id) || [];
-            existing.push(img.url);
-            imagesByBusiness.set(img.business_id, existing);
-          }
-
-          // Attach images to businesses
-          for (const business of filteredBusinesses) {
-            const images = imagesByBusiness.get(business.id);
-            if (images && images.length > 0) {
-              business.uploaded_images = images;
-            }
-          }
-        }
-      }
-    }
-
-    // Transform for card display
-    const transformedBusinesses = filteredBusinesses.map(transformBusinessForCard);
-
-    console.log('[BUSINESSES API] V2 final transformed businesses:', {
-      count: transformedBusinesses.length,
-      beforeFilter: businesses.length,
-      afterFilter: filteredBusinesses.length,
-    });
-
-    // Record impressions for logged-in users (non-blocking)
-    if (userId && transformedBusinesses.length > 0) {
-      const impressionIds = transformedBusinesses.map(b => b.id);
-      // Fire and forget - don't wait for completion
-      (async () => {
-        try {
-          await supabase.rpc('record_reco_impressions_v2', {
-            p_user_id: userId,
-            p_business_ids: impressionIds,
-            p_feed_context: `mixed_v2`,
-            p_request_id: requestId || null,
-          });
-          console.log('[BUSINESSES API] Recorded', impressionIds.length, 'impressions for user');
-        } catch (err: any) {
-          console.warn('[BUSINESSES API] Failed to record impressions:', err);
-        }
-      })();
-    }
-
-    const response = NextResponse.json({
-      businesses: transformedBusinesses,
-      cursorId: null,
-      meta: {
-        requestId: requestId ?? null,
-        seed: seed ?? null,
-        v2DurationMs: Date.now() - v2Start,
-      },
-    });
-    response.headers.set('X-Feed-Path', feedPath);
-    console.log('[BUSINESSES API] V2 total duration ms:', Date.now() - v2Start);
-
-    return applySharedResponseHeaders(response);
-
-  } catch (error) {
-    console.error('[BUSINESSES API] Error in handleMixedFeedV2:', error);
-    noteV2Failure(Date.now());
-    if (mode === 'v2_with_legacy_fallback') {
-      const legacy = await handleMixedFeedLegacy(options);
-      legacy.headers.set('X-Feed-Path', 'legacy_fallback_exception');
-      return legacy;
-    }
-    const topPicks = await fetchTopPicksFallback(options, { reason: 'exception' });
-    topPicks.headers.set('X-Feed-Path', 'v2_error_top_picks');
-    return topPicks;
-  }
-}
 
 async function fetchTopPicksFallback(
   options: MixedFeedOptions,
   details: { reason: string; details?: string }
 ): Promise<NextResponse> {
   const start = Date.now();
-  const {
-    supabase,
-    limit,
-    category,
-    badge,
-    verified,
-    priceRange,
-    preferredPriceRanges,
-    location,
-    minRating,
-    dealbreakerIds,
-    requestId,
-    seed,
-  } = options;
+  const { supabase, limit, requestId, seed, dealbreakerIds } = options;
 
-  const priceFilters = derivePriceFilters(priceRange, preferredPriceRanges);
-  const topRated = await fetchTopRated(supabase, {
-    limit: Math.min(Math.max(limit, 20), 80),
-    category,
-    badge,
-    verified,
-    priceRange,
-    preferredPriceRanges: priceFilters,
-    location,
-    minRating,
-    dealbreakerIds,
-  });
+  // Simple direct query: active, not hidden, ordered by average_rating desc.
+  // Used only when recommend_for_you_unified fails or returns empty.
+  const fetchLimit = Math.min(Math.max(limit, 20), 80);
+  const { data: rawData } = await supabase
+    .from('businesses')
+    .select(
+      'id,name,description,primary_subcategory_slug,primary_category_slug,location,address,phone,email,website,image_url,verified,price_range,badge,slug,lat,lng,created_at,updated_at,is_hidden'
+    )
+    .eq('status', 'active')
+    .eq('is_hidden', false)
+    .order('created_at', { ascending: false })
+    .limit(fetchLimit);
 
-  const prioritized = await prioritizeRecentlyReviewedBusinesses(supabase, topRated.slice(0, limit));
-  const transformed = prioritized.map(transformBusinessForCard);
+  const rows: BusinessRPCResult[] = (rawData ?? []).map((row: any) => ({
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    category: row.primary_subcategory_slug,
+    interest_id: row.primary_category_slug,
+    sub_interest_id: row.primary_subcategory_slug,
+    location: row.location,
+    address: row.address,
+    phone: row.phone,
+    email: row.email,
+    website: row.website,
+    hours: null,
+    image_url: row.image_url,
+    uploaded_images: [],
+    verified: row.verified,
+    price_range: row.price_range,
+    badge: row.badge,
+    slug: row.slug,
+    lat: row.lat,
+    lng: row.lng,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    total_reviews: 0,
+    average_rating: 0,
+    percentiles: null,
+    distance_km: null,
+    cursor_id: row.id,
+    cursor_created_at: row.created_at,
+    personalization_score: null,
+    diversity_rank: null,
+  }));
+
+  // Apply only stat-safe dealbreakers in the fallback path too
+  const statDependentDealbreakers = (dealbreakerIds || []).filter(
+    (d) => d === 'punctuality' || d === 'friendliness'
+  );
+  const filtered =
+    statDependentDealbreakers.length > 0
+      ? filterByDealbreakers(rows, statDependentDealbreakers)
+      : rows;
+
+  const transformed = (filtered.length > 0 ? filtered : rows).slice(0, limit).map(transformBusinessForCard);
 
   const response = NextResponse.json({
     businesses: transformed,
@@ -2244,640 +1873,10 @@ async function fetchTopPicksFallback(
   });
 
   response.headers.set('X-For-You-Results-Count', String(transformed.length));
-
   return applySharedResponseHeaders(response);
 }
 
-/**
- * For You (legacy mixed feed): personalized discovery, not trending.
- * - Layers: high-match picks, quality wildcards, explore nearby tastes, new-but-relevant.
- * - Excludes: dealbreakers, businesses the user already reviewed (avoid repetition).
- * - Diversity: cap per subcategory so feed isn’t one category; mix personal + top + explore.
- */
-async function handleMixedFeedLegacy(options: MixedFeedOptions) {
-  const legacyStart = Date.now();
-  const {
-    supabase,
-    limit,
-    category,
-    badge,
-    verified,
-    priceRange,
-    preferredPriceRanges,
-    location,
-    minRating,
-    interestIds,
-    subInterestIds,
-    dealbreakerIds,
-    latitude,
-    longitude,
-    userId,
-  } = options;
-
-  console.log('[BUSINESSES API] handleMixedFeed called with:', {
-    limit,
-    category,
-    interestIds: interestIds?.length || 0,
-    subInterestIds: subInterestIds?.length || 0,
-  });
-
-  // =============================================
-  // STEP 1: Raw count check (bypasses all filters)
-  // =============================================
-  const { count: rawCount, error: countError } = await supabase
-    .from('businesses')
-    .select('id', { count: 'exact', head: true })
-    .eq('status', 'active')
-    .or('is_system.is.null,is_system.eq.false');
-
-  console.log('[BUSINESSES API] Raw active businesses count:', {
-    count: rawCount,
-    error: countError,
-    hasError: !!countError,
-  });
-
-  // =============================================
-  // STEP 2: If count is 0, test with service role (admin)
-  // =============================================
-  if (rawCount === 0 || countError) {
-    console.warn('[BUSINESSES API] Raw count is 0 or error occurred, testing with service role...');
-    
-    try {
-      const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-      if (serviceRoleKey) {
-        const { createClient } = await import('@supabase/supabase-js');
-        const adminClient = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          serviceRoleKey,
-          {
-            auth: {
-              autoRefreshToken: false,
-              persistSession: false
-            }
-          }
-        );
-
-        const { count: adminCount, error: adminError } = await adminClient
-          .from('businesses')
-          .select('id', { count: 'exact', head: true })
-          .eq('status', 'active')
-          .or('is_system.is.null,is_system.eq.false');
-
-        console.log('[BUSINESSES API] Admin (service role) count:', {
-          count: adminCount,
-          error: adminError,
-          hasError: !!adminError,
-        });
-
-        if (adminCount && adminCount > 0) {
-          console.error('[BUSINESSES API] ⚠️ RLS POLICY ISSUE DETECTED!');
-          console.error('[BUSINESSES API] Admin can see', adminCount, 'businesses but public/anonymous cannot.');
-          console.error('[BUSINESSES API] This indicates RLS policies are blocking public reads.');
-          console.error('[BUSINESSES API] Please check:');
-          console.error('[BUSINESSES API]   1. businesses_select_public_and_owners policy exists');
-          console.error('[BUSINESSES API]   2. business_stats_select_public policy exists');
-          console.error('[BUSINESSES API]   3. business_owners_select_public policy exists');
-        }
-      } else {
-        console.warn('[BUSINESSES API] SUPABASE_SERVICE_ROLE_KEY not set, skipping admin test');
-      }
-    } catch (adminTestError) {
-      console.error('[BUSINESSES API] Error running admin test:', adminTestError);
-    }
-  }
-
-  const bucketLimit = Math.min(Math.max(limit * 3, limit + 4), 80);
-  const priceFilters = derivePriceFilters(priceRange, preferredPriceRanges);
-
-  const bucketsStart = Date.now();
-  const [personalMatches, topRated, explore] = await Promise.all([
-    fetchPersonalMatches(supabase, {
-      limit: bucketLimit,
-      category,
-      badge,
-      verified,
-      priceRange,
-      preferredPriceRanges: priceFilters,
-      location,
-      minRating,
-      subcategories: subInterestIds,
-      interestIds,
-      dealbreakerIds,
-      latitude,
-      longitude,
-    }),
-    fetchTopRated(supabase, {
-      limit: bucketLimit,
-      category,
-      badge,
-      verified,
-      priceRange,
-      preferredPriceRanges: priceFilters,
-      location,
-      minRating,
-      dealbreakerIds,
-    }),
-    fetchExplore(supabase, {
-      limit: bucketLimit,
-      category,
-      badge,
-      verified,
-      priceRange,
-      preferredPriceRanges: priceFilters,
-      location,
-      minRating,
-      dealbreakerIds,
-    }),
-  ]);
-  console.log('[BUSINESSES API] Legacy buckets duration ms:', Date.now() - bucketsStart);
-
-  console.log('[BUSINESSES API] Mixed feed buckets:', {
-    personalMatches: personalMatches.length,
-    topRated: topRated.length,
-    explore: explore.length,
-    total: personalMatches.length + topRated.length + explore.length,
-  });
-
-  const blended = mixBusinesses(personalMatches, topRated, explore, limit);
-  
-  console.log('[BUSINESSES API] Blended businesses:', {
-    blendedCount: blended.length,
-    requestedLimit: limit,
-    bucketsTotal: personalMatches.length + topRated.length + explore.length,
-  });
-
-  // =============================================
-  // STEP 3: Check if buckets > 0 but blended = 0
-  // =============================================
-  const bucketsTotal = personalMatches.length + topRated.length + explore.length;
-  if (bucketsTotal > 0 && blended.length === 0) {
-    console.warn('[BUSINESSES API] ⚠️ BUCKET MIXING ISSUE DETECTED!');
-    console.warn('[BUSINESSES API] Buckets have', bucketsTotal, 'businesses but blended result is empty.');
-    console.warn('[BUSINESSES API] This suggests mixBusinesses() is filtering everything out.');
-    console.warn('[BUSINESSES API] Sample businesses from buckets:', {
-      personalSample: personalMatches[0] ? { id: personalMatches[0].id, name: personalMatches[0].name } : null,
-      topRatedSample: topRated[0] ? { id: topRated[0].id, name: topRated[0].name } : null,
-      exploreSample: explore[0] ? { id: explore[0].id, name: explore[0].name } : null,
-    });
-  }
-
-  // For You: exclude businesses the user already reviewed (discovery = places to try next, not repetition)
-  const excludeStart = Date.now();
-  const forDiscovery = userId
-    ? await excludeAlreadyReviewedBusinesses(supabase, userId, blended)
-    : blended;
-  console.log('[BUSINESSES API] Legacy exclude-already-reviewed duration ms:', Date.now() - excludeStart, 'excluded:', blended.length - forDiscovery.length);
-
-  // Diversity cap: prefer one per subcategory so we don't flood with one category (e.g. fashion)
-  const usedSubcategories = new Set<string>();
-  const diversified: typeof forDiscovery = [];
-  for (const b of forDiscovery) {
-    const key = (b.sub_interest_id ?? b.category ?? 'misc').toString();
-    if (!usedSubcategories.has(key)) {
-      diversified.push(b);
-      usedSubcategories.add(key);
-    }
-    if (diversified.length >= limit) break;
-  }
-  // Fill remainder from rest of list if we have room (after diversity cap)
-  if (diversified.length < limit) {
-    const diversifiedIds = new Set(diversified.map((x) => x.id));
-    for (const b of forDiscovery) {
-      if (diversified.length >= limit) break;
-      if (diversifiedIds.has(b.id)) continue;
-      diversified.push(b);
-      diversifiedIds.add(b.id);
-    }
-  }
-
-  const transformedBusinesses = diversified.map(transformBusinessForCard);
-
-  // =============================================
-  // STEP 4: Check if blended > 0 but final = 0
-  // =============================================
-  if (blended.length > 0 && transformedBusinesses.length === 0) {
-    console.warn('[BUSINESSES API] ⚠️ TRANSFORMATION ISSUE DETECTED!');
-    console.warn('[BUSINESSES API] Blended has', blended.length, 'businesses but transformed result is empty.');
-    console.warn('[BUSINESSES API] This suggests transformBusinessForCard() is dropping all items.');
-    console.warn('[BUSINESSES API] Sample business from blended:', {
-      id: blended[0].id,
-      name: blended[0].name,
-      hasUploadedImages: Array.isArray(blended[0].uploaded_images) && blended[0].uploaded_images.length > 0,
-      hasImageUrl: !!blended[0].image_url,
-    });
-  }
-
-  console.log('[BUSINESSES API] Final transformed businesses:', {
-    count: transformedBusinesses.length,
-    blendedCount: blended.length,
-    bucketsTotal,
-    sample: transformedBusinesses[0] ? {
-      id: transformedBusinesses[0].id,
-      name: transformedBusinesses[0].name,
-      hasImage: !!transformedBusinesses[0].image,
-      hasUploadedImages: Array.isArray(transformedBusinesses[0].uploaded_images) && transformedBusinesses[0].uploaded_images.length > 0,
-    } : null,
-  });
-
-  // Return in the same format as the standard route for consistency
-  const response = NextResponse.json({
-    businesses: transformedBusinesses, // Changed from "data" to "businesses" for consistency
-    cursorId: null, // Mixed feed doesn't use cursor pagination
-  });
-  response.headers.set('X-Feed-Path', 'legacy');
-  console.log('[BUSINESSES API] Legacy total duration ms:', Date.now() - legacyStart);
-
-  return applySharedResponseHeaders(response);
-}
-
-type BucketOptions = {
-  limit: number;
-  category: string | null;
-  badge: string | null;
-  verified: boolean | null;
-  priceRange: string | null;
-  preferredPriceRanges?: string[] | null;
-  location: string | null;
-  minRating: number | null;
-  interestIds?: string[];
-  subcategories?: string[];
-  dealbreakerIds?: string[];
-  latitude?: number | null;
-  longitude?: number | null;
-};
-
-async function fetchPersonalMatches(
-  supabase: SupabaseClientInstance,
-  options: BucketOptions
-): Promise<BusinessRPCResult[]> {
-  // Log exact filters being used
-  const filters = {
-    category: options.category || null,
-    badge: options.badge || null,
-    verified: options.verified,
-    priceRange: options.priceRange || null,
-    preferredPriceRanges: options.preferredPriceRanges || null,
-    location: options.location || null,
-    minRating: options.minRating || null,
-    subcategories: options.subcategories || [],
-    interestIds: options.interestIds || [],
-    dealbreakerIds: options.dealbreakerIds || [],
-    latitude: options.latitude || null,
-    longitude: options.longitude || null,
-    limit: options.limit,
-  };
-  console.log('[BUSINESSES API] fetchPersonalMatches filters:', JSON.stringify(filters, null, 2));
-
-  try {
-    const priceFilters = derivePriceFilters(options.priceRange, options.preferredPriceRanges || undefined);
-    const rpcPayload: Record<string, unknown> = {
-      p_user_sub_interest_ids: options.subcategories || [],
-      p_user_interest_ids: options.interestIds || [],
-      p_limit: Math.min(options.limit, 150),
-      p_latitude: options.latitude,
-      p_longitude: options.longitude,
-      p_price_ranges: priceFilters && priceFilters.length > 0 ? priceFilters : null,
-      p_min_rating: options.minRating,
-    };
-
-    const { data, error } = await supabase.rpc('recommend_personalized_businesses', rpcPayload);
-
-    if (!error && data) {
-      console.log('[BUSINESSES API] fetchPersonalMatches RPC returned', data.length, 'businesses');
-      const normalized = (data as any[]).map((row) => ({
-        id: row.id,
-        name: row.name,
-        description: row.description,
-        category: row.category,
-        interest_id: row.interest_id,
-        sub_interest_id: row.sub_interest_id,
-        location: row.location,
-        address: row.address,
-        phone: row.phone,
-        email: row.email,
-        website: row.website,
-        hours: row.hours ?? null,
-        image_url: row.image_url,
-        uploaded_images: row.uploaded_images || [],
-        verified: row.verified,
-        price_range: row.price_range,
-        badge: row.badge,
-        slug: row.slug,
-        lat: row.lat ?? row.latitude,
-        lng: row.lng ?? row.longitude,
-        created_at: row.created_at,
-        updated_at: row.updated_at,
-        total_reviews: row.total_reviews || 0,
-        average_rating: Number(row.average_rating || 0),
-        percentiles: row.percentiles,
-        distance_km: null,
-        cursor_id: row.id,
-        cursor_created_at: row.created_at,
-        personalization_score: row.personalization_score,
-        diversity_rank: row.diversity_rank,
-      })) as BusinessRPCResult[];
-
-      return filterByDealbreakers(normalized, options.dealbreakerIds);
-    }
-
-    if (error && error.code !== '42883') {
-      console.error('[BUSINESSES API] recommend_personalized_businesses RPC error:', error);
-    }
-  } catch (rpcError) {
-    console.warn('[BUSINESSES API] Falling back from recommend_personalized_businesses RPC:', rpcError);
-  }
-
-  try {
-    let query = buildBaseBusinessQuery(supabase);
-
-    if (options.category) {
-      query = query.eq('primary_subcategory_slug', options.category);
-      console.log('[BUSINESSES API] fetchPersonalMatches: Applied category filter:', options.category);
-    } else if (options.subcategories && options.subcategories.length > 0) {
-      query = query.in('primary_subcategory_slug', options.subcategories);
-      console.log('[BUSINESSES API] fetchPersonalMatches: Applied subcategories filter:', options.subcategories);
-    } else if (options.interestIds && options.interestIds.length > 0) {
-      query = query.in('primary_category_slug', options.interestIds);
-      console.log('[BUSINESSES API] fetchPersonalMatches: Applied interestIds filter:', options.interestIds);
-    }
-
-    query = applyCommonFilters(query, options);
-
-    const { data, error } = await query.limit(Math.min(options.limit, 150));
-
-    if (error) {
-      console.error('[BUSINESSES API] Personal matches fallback query error:', error);
-      return [];
-    }
-
-    const rows = (Array.isArray(data) ? (data as unknown as DatabaseBusinessRow[]) : []);
-    console.log('[BUSINESSES API] fetchPersonalMatches fallback returned', rows.length, 'businesses');
-
-    const normalized = filterByMinRating(normalizeBusinessRows(rows), options.minRating)
-      .sort((a, b) => {
-        const scoreDiff = scorePersonal(b) - scorePersonal(a);
-        if (scoreDiff !== 0) return scoreDiff;
-        const contactDiff = compareContactCompletenessDesc(a, b);
-        if (contactDiff !== 0) return contactDiff;
-        return a.id.localeCompare(b.id);
-      });
-    return filterByDealbreakers(normalized, options.dealbreakerIds);
-  } catch (err) {
-    console.error('[BUSINESSES API] Personal matches fallback fetch error:', err);
-    return [];
-  }
-}
-
-async function fetchTopRated(
-  supabase: SupabaseClientInstance,
-  options: BucketOptions
-): Promise<BusinessRPCResult[]> {
-  // Log exact filters being used
-  const filters = {
-    category: options.category || null,
-    badge: options.badge || null,
-    verified: options.verified,
-    priceRange: options.priceRange || null,
-    preferredPriceRanges: options.preferredPriceRanges || null,
-    location: options.location || null,
-    minRating: options.minRating || null,
-    dealbreakerIds: options.dealbreakerIds || [],
-    limit: options.limit,
-  };
-  console.log('[BUSINESSES API] fetchTopRated filters:', JSON.stringify(filters, null, 2));
-
-  try {
-    let query = buildBaseBusinessQuery(supabase);
-
-    if (options.category) {
-      query = query.eq('primary_subcategory_slug', options.category);
-      console.log('[BUSINESSES API] fetchTopRated: Applied category filter:', options.category);
-    }
-
-    query = applyCommonFilters(query, options);
-
-    let { data, error } = await query.limit(Math.min(options.limit, 150));
-
-    if (error) {
-      console.error('[BUSINESSES API] Top rated query error:', error);
-      if (shouldRetryWithoutJoins(error)) {
-        console.warn('[BUSINESSES API] Top rated retrying without joins');
-        let fallbackQuery = buildBaseBusinessQuery(supabase, BUSINESS_SELECT_FALLBACK);
-        if (options.category) {
-          fallbackQuery = fallbackQuery.eq('primary_subcategory_slug', options.category);
-        }
-        fallbackQuery = applyCommonFilters(fallbackQuery, options);
-        const retry = await fallbackQuery.limit(Math.min(options.limit, 150));
-        data = retry.data;
-        error = retry.error;
-        if (error) {
-          console.error('[BUSINESSES API] Top rated fallback query error:', error);
-          return [];
-        }
-      } else {
-        return [];
-      }
-    }
-
-    const rows = (Array.isArray(data) ? (data as unknown as DatabaseBusinessRow[]) : []);
-    console.log('[BUSINESSES API] fetchTopRated returned', rows.length, 'businesses');
-
-    const normalized = filterByMinRating(normalizeBusinessRows(rows), options.minRating)
-      .sort((a, b) => {
-        const scoreDiff = scoreTopRated(b) - scoreTopRated(a);
-        if (scoreDiff !== 0) return scoreDiff;
-        const contactDiff = compareContactCompletenessDesc(a, b);
-        if (contactDiff !== 0) return contactDiff;
-        return a.id.localeCompare(b.id);
-      });
-    return filterByDealbreakers(normalized, options.dealbreakerIds);
-  } catch (err) {
-    console.error('[BUSINESSES API] Top rated fetch error:', err);
-    return [];
-  }
-}
-
-async function fetchExplore(
-  supabase: SupabaseClientInstance,
-  options: BucketOptions
-): Promise<BusinessRPCResult[]> {
-  // Log exact filters being used
-  const filters = {
-    category: options.category || null,
-    badge: options.badge || null,
-    verified: options.verified,
-    priceRange: options.priceRange || null,
-    preferredPriceRanges: options.preferredPriceRanges || null,
-    location: options.location || null,
-    minRating: options.minRating || null,
-    dealbreakerIds: options.dealbreakerIds || [],
-    limit: options.limit,
-  };
-  console.log('[BUSINESSES API] fetchExplore filters:', JSON.stringify(filters, null, 2));
-
-  try {
-    let query = buildBaseBusinessQuery(supabase);
-
-    if (options.category) {
-      query = query.eq('primary_subcategory_slug', options.category);
-      console.log('[BUSINESSES API] fetchExplore: Applied category filter:', options.category);
-    }
-
-    query = applyCommonFilters(query, options);
-
-    let { data, error } = await query
-      .order('created_at', { ascending: false })
-      .limit(Math.min(options.limit, 150));
-
-    if (error) {
-      console.error('[BUSINESSES API] Explore query error:', error);
-      if (shouldRetryWithoutJoins(error)) {
-        console.warn('[BUSINESSES API] Explore retrying without joins');
-        let fallbackQuery = buildBaseBusinessQuery(supabase, BUSINESS_SELECT_FALLBACK);
-        if (options.category) {
-          fallbackQuery = fallbackQuery.eq('primary_subcategory_slug', options.category);
-        }
-        fallbackQuery = applyCommonFilters(fallbackQuery, options);
-        const retry = await fallbackQuery
-          .order('created_at', { ascending: false })
-          .limit(Math.min(options.limit, 150));
-        data = retry.data;
-        error = retry.error;
-        if (error) {
-          console.error('[BUSINESSES API] Explore fallback query error:', error);
-          return [];
-        }
-      } else {
-        return [];
-      }
-    }
-
-    const rows = (Array.isArray(data) ? (data as unknown as DatabaseBusinessRow[]) : []);
-    console.log('[BUSINESSES API] fetchExplore returned', rows.length, 'businesses');
-
-    const normalized = filterByMinRating(normalizeBusinessRows(rows), options.minRating)
-      .sort((a, b) => {
-        const scoreDiff = scoreExplore(b) - scoreExplore(a);
-        if (scoreDiff !== 0) return scoreDiff;
-        const contactDiff = compareContactCompletenessDesc(a, b);
-        if (contactDiff !== 0) return contactDiff;
-        return a.id.localeCompare(b.id);
-      });
-    return filterByDealbreakers(normalized, options.dealbreakerIds);
-  } catch (err) {
-    console.error('[BUSINESSES API] Explore fetch error:', err);
-    return [];
-  }
-}
-
-function buildBaseBusinessQuery(supabase: SupabaseClientInstance, select: string = BUSINESS_SELECT) {
-  return supabase
-    .from('businesses')
-    .select(select)
-    .eq('status', 'active')
-    .or('is_system.is.null,is_system.eq.false');
-}
-
-function shouldRetryWithoutJoins(error: any): boolean {
-  const message = (error?.message || '').toString().toLowerCase();
-  return (
-    message.includes('relationship') ||
-    message.includes('schema cache') ||
-    message.includes('could not find') ||
-    message.includes('foreign key') ||
-    message.includes('does not exist')
-  );
-}
-
-function applyCommonFilters(query: any, options: BucketOptions) {
-  let updatedQuery = query;
-
-  if (options.badge) {
-    updatedQuery = updatedQuery.eq('badge', options.badge);
-  }
-  if (options.verified !== null && options.verified !== undefined) {
-    updatedQuery = updatedQuery.eq('verified', options.verified);
-  }
-  if (options.preferredPriceRanges && options.preferredPriceRanges.length > 0) {
-    updatedQuery = updatedQuery.in('price_range', options.preferredPriceRanges);
-  } else if (options.priceRange) {
-    updatedQuery = updatedQuery.eq('price_range', options.priceRange);
-  }
-  if (options.location) {
-    updatedQuery = updatedQuery.ilike('location', `%${options.location}%`);
-  }
-
-  return updatedQuery;
-}
-
-function normalizeBusinessRows(rows: DatabaseBusinessRow[]): BusinessRPCResult[] {
-  return rows.map((row) => {
-    const stats = row.business_stats?.[0];
-    
-    // Normalize business_images to uploaded_images format
-    const { uploaded_images } = normalizeBusinessImages(row);
-
-    return {
-      id: row.id,
-      name: row.name,
-      description: row.description,
-      category: row.primary_subcategory_slug ?? '',
-      category_label: row.primary_subcategory_label ?? null,
-      interest_id: row.primary_category_slug ?? null,
-      sub_interest_id: row.primary_subcategory_slug ?? null,
-      location: row.location,
-      address: row.address,
-      phone: row.phone,
-      email: row.email,
-      website: row.website,
-      image_url: row.image_url,
-      uploaded_images: uploaded_images || [],
-      verified: row.verified,
-      price_range: row.price_range,
-      badge: row.badge,
-      slug: row.slug,
-      lat: row.lat,
-      lng: row.lng,
-      created_at: row.created_at,
-      updated_at: row.updated_at,
-      total_reviews: stats?.total_reviews || 0,
-      average_rating: stats?.average_rating || 0,
-      percentiles: stats?.percentiles || null,
-      distance_km: null,
-      cursor_id: row.id,
-      cursor_created_at: row.created_at,
-    };
-  });
-}
-
-function filterByMinRating(
-  businesses: BusinessRPCResult[],
-  minRating: number | null
-): BusinessRPCResult[] {
-  if (!minRating) return businesses;
-  return businesses.filter((business) => (business.average_rating || 0) >= minRating);
-}
-
-function filterByDealbreakers(
-  businesses: BusinessRPCResult[],
-  dealbreakerIds?: string[]
-): BusinessRPCResult[] {
-  if (!dealbreakerIds || dealbreakerIds.length === 0) {
-    return businesses;
-  }
-
-  return businesses.filter((business) =>
-    dealbreakerIds.every((id) => {
-      const rule = DEALBREAKER_RULES[id];
-      if (!rule) return true;
-      try {
-        return rule(business);
-      } catch {
-        return true;
-      }
-    })
-  );
-}
+// ---- Shared utilities ----
 
 function derivePriceFilters(
   primary: string | null,
@@ -2893,87 +1892,24 @@ function derivePriceFilters(
   return values.size > 0 ? Array.from(values) : undefined;
 }
 
-function mixBusinesses(
-  personalMatches: BusinessRPCResult[],
-  topRated: BusinessRPCResult[],
-  explore: BusinessRPCResult[],
-  limit: number
+function filterByDealbreakers(
+  businesses: BusinessRPCResult[],
+  dealbreakerIds?: string[]
 ): BusinessRPCResult[] {
-  const result: BusinessRPCResult[] = [];
-  const seen = new Set<string>();
-  const subInterestCounts = new Map<string, number>();
-  const PERSONAL_LIMIT = 2;
-  const TOP_LIMIT = 3;
-
-  const buckets = {
-    personal: { data: personalMatches, index: 0 },
-    top: { data: topRated, index: 0 },
-    explore: { data: explore, index: 0 },
-  };
-
-  const getSubInterestKey = (business: BusinessRPCResult) =>
-    business.sub_interest_id || business.category || 'uncategorized';
-
-  const pushIfNew = (
-    business: BusinessRPCResult | undefined,
-    bucketKey: keyof typeof buckets,
-    allowOverflow = false
-  ) => {
-    if (!business) return false;
-    if (seen.has(business.id)) return false;
-
-    const key = getSubInterestKey(business);
-    const limitPerBucket = bucketKey === 'top' ? TOP_LIMIT : PERSONAL_LIMIT;
-    const currentCount = subInterestCounts.get(key) || 0;
-
-    if (!allowOverflow && limitPerBucket > 0 && currentCount >= limitPerBucket) {
-      return false;
-    }
-
-    seen.add(business.id);
-    subInterestCounts.set(key, currentCount + 1);
-    result.push(business);
-    return true;
-  };
-
-  const pushFromBucket = (
-    bucketKey: keyof typeof buckets,
-    allowOverflow = false
-  ) => {
-    const bucket = buckets[bucketKey];
-    while (bucket.index < bucket.data.length) {
-      const candidate = bucket.data[bucket.index++];
-      if (pushIfNew(candidate, bucketKey, allowOverflow)) return true;
-    }
-    return false;
-  };
-
-  const hasRemaining = () =>
-    buckets.personal.index < buckets.personal.data.length ||
-    buckets.top.index < buckets.top.data.length ||
-    buckets.explore.index < buckets.explore.data.length;
-
-  while (result.length < limit && hasRemaining()) {
-    for (let i = 0; i < 2 && result.length < limit; i++) {
-      if (!pushFromBucket('personal')) break;
-    }
-
-    if (result.length < limit) {
-      pushFromBucket('top');
-    }
-
-    if (result.length < limit) {
-      pushFromBucket('explore');
-    }
+  if (!dealbreakerIds || dealbreakerIds.length === 0) {
+    return businesses;
   }
-
-  for (const key of ['personal', 'top', 'explore'] as const) {
-    while (result.length < limit && pushFromBucket(key, true)) {
-      // continue filling with relaxed diversity constraints
-    }
-  }
-
-  return result.slice(0, limit);
+  return businesses.filter((business) =>
+    dealbreakerIds.every((id) => {
+      const rule = DEALBREAKER_RULES[id];
+      if (!rule) return true;
+      try {
+        return rule(business);
+      } catch {
+        return true;
+      }
+    })
+  );
 }
 
 const DEALBREAKER_RULES: Record<string, (business: BusinessRPCResult) => boolean> = {

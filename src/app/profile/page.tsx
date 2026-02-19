@@ -1426,7 +1426,7 @@ function ProfileContent() {
                       >
                         <div className="flex items-center gap-3">
                           <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-sage/20 to-sage/10">
-                            <Navigation className="w-5 h-5 text-sage" />
+                            <Navigation className="w-5 h-5 text-navbar-bg" />
                           </span>
                           <h3 className="text-base font-semibold text-charcoal">
                             Preferences

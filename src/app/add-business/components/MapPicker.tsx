@@ -30,7 +30,7 @@ function MapPickerInner({ lat, lng, onLocationSelect, disabled, className = "" }
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState("");
-  const mapboxglRef = useRef<typeof import("mapbox-gl") | null>(null);
+  const mapboxglRef = useRef<typeof import("mapbox-gl").default | null>(null);
 
   const currentLat = lat ? parseFloat(lat) : null;
   const currentLng = lng ? parseFloat(lng) : null;
@@ -97,11 +97,12 @@ function MapPickerInner({ lat, lng, onLocationSelect, disabled, className = "" }
       return;
     }
 
-    let mapboxgl: typeof import("mapbox-gl");
+    let mapboxgl: typeof import("mapbox-gl").default;
     import("mapbox-gl").then((mod) => {
       mapboxgl = mod.default;
       mapboxglRef.current = mapboxgl;
       mapboxgl.accessToken = token;
+      // @ts-ignore - CSS import for side effects
       import("mapbox-gl/dist/mapbox-gl.css");
 
       const center: [number, number] = hasValidCoords ? [currentLng!, currentLat!] : CAPE_TOWN_CENTER;
