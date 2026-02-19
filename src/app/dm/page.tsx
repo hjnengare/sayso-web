@@ -404,13 +404,20 @@ export default function DMPage() {
         <div className="w-full md:w-[400px] lg:w-[480px] flex flex-col bg-off-white md:border-r border-white/60 overflow-hidden min-h-0">
           {/* Header */}
           <div className="flex-shrink-0 px-6 pt-4 sm:pt-6 pb-4 bg-off-white">
-            <nav className="mb-4" aria-label="Breadcrumb">
+            <nav className="pb-1" aria-label="Breadcrumb">
               <ol className="flex items-center gap-2 text-sm">
                 <li>
-                  <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium flex items-center gap-1.5">
-                    <ChevronLeft className="w-4 h-4" />
-                    Back to Home
+                  <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium">
+                    Home
                   </Link>
+                </li>
+                <li className="flex items-center">
+                  <ChevronRight className="w-4 h-4 text-charcoal/60" />
+                </li>
+                <li>
+                  <span className="text-charcoal font-semibold">
+                    Messages
+                  </span>
                 </li>
               </ol>
             </nav>

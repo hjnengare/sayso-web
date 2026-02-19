@@ -473,7 +473,7 @@ export default function OwnerBusinessDashboard() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)] pointer-events-none" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(114,47,55,0.08)_0%,_transparent_50%)] pointer-events-none" />
         
-        <div className="mx-auto w-full max-w-[2000px] px-3 sm:px-6 lg:px-10 2xl:px-16 relative z-10">
+        <div className="mx-auto w-full max-w-[2000px] px-2 sm:px-4 lg:px-6 2xl:px-8 relative z-10">
               {/* Breadcrumb Navigation */}
               <nav className="pb-1" aria-label="Breadcrumb">
                 <ol className="flex items-center gap-2 text-sm sm:text-base">

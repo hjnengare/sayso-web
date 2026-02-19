@@ -978,15 +978,22 @@ function ProfileContent() {
                 role="main"
                 aria-label="User profile content"
               >
-                <div className="mx-auto w-full max-w-[2000px] px-3 sm:px-6 lg:px-10 2xl:px-16 relative z-10">
+                <div className="mx-auto w-full max-w-[2000px] px-2 sm:px-4 lg:px-6 2xl:px-8 relative z-10">
                   {/* Breadcrumb Navigation */}
                   <nav className="pb-1" aria-label="Breadcrumb">
                     <ol className="flex items-center gap-2 text-sm sm:text-base">
                       <li>
-                        <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium flex items-center gap-1.5" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                          <ChevronLeft className="w-4 h-4" />
-                          Back to Home
+                        <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                          Home
                         </Link>
+                      </li>
+                      <li className="flex items-center">
+                        <ChevronRight className="w-4 h-4 text-charcoal/60" />
+                      </li>
+                      <li>
+                        <span className="text-charcoal font-semibold" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                          Profile
+                        </span>
                       </li>
                     </ol>
                   </nav>

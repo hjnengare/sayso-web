@@ -221,7 +221,7 @@ export default function SavedPage() {
         <main className="flex-1 relative z-10">
           <div className="pb-12 sm:pb-16 md:pb-20">
             <motion.div
-              className="mx-auto w-full max-w-[2000px] px-3 relative mb-4"
+              className="mx-auto w-full max-w-[2000px] px-2 relative mb-4"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
@@ -232,14 +232,23 @@ export default function SavedPage() {
                   <li>
                     <Link
                       href="/home"
-                      className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium flex items-center gap-1.5"
+                      className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium"
                       style={{
                         fontFamily: "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
                       }}
                     >
-                      <ChevronLeft className="w-4 h-4" />
-                      Back to Home
+                      Home
                     </Link>
+                  </li>
+                  <li className="flex items-center">
+                    <ChevronRight className="w-4 h-4 text-charcoal/60" />
+                  </li>
+                  <li>
+                    <span className="text-charcoal font-semibold" style={{
+                      fontFamily: "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                    }}>
+                      Saved
+                    </span>
                   </li>
                 </ol>
               </nav>

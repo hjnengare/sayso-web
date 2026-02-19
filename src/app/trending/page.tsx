@@ -20,7 +20,6 @@ import { Loader } from "../components/Loader/Loader";
 import { usePredefinedPageTitle } from "../hooks/usePageTitle";
 import { useScrollReveal } from "../hooks/useScrollReveal";
 import BusinessGridSkeleton from "../components/Explore/BusinessGridSkeleton";
-import ScrollToTopButton from "../components/Navigation/ScrollToTopButton";
 import { useIsDesktop } from "../hooks/useIsDesktop";
 // Trending = cold-start API (/api/trending): metadata-only score, diversity-first selection, deterministic rotation.
 
@@ -267,10 +266,17 @@ export default function TrendingPage() {
           <nav className="relative z-10 pb-1" aria-label="Breadcrumb">
             <ol className="flex items-center gap-2 text-sm sm:text-base">
               <li>
-                <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium flex items-center gap-1.5" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                  <ChevronLeft className="w-4 h-4" />
-                  Back to Home
+                <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                  Home
                 </Link>
+              </li>
+              <li className="flex items-center">
+                <ChevronRight className="w-4 h-4 text-charcoal/60" />
+              </li>
+              <li>
+                <span className="text-charcoal font-semibold" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                  Trending
+                </span>
               </li>
             </ol>
           </nav>
@@ -549,8 +555,6 @@ export default function TrendingPage() {
           }
         `}</style>
       )}
-
-      <ScrollToTopButton threshold={360} />
 
       <Footer />
     </div>

@@ -540,7 +540,7 @@ export default function MyBusinessesPage() {
             {((businesses && businesses.length > 0) || (ownerListings && ownerListings.length > 0)) && (
               <>
                 <motion.nav
-                  className="pt-2 px-2"
+                  className="pb-1 px-2"
                   aria-label="Breadcrumb"
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}

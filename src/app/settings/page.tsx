@@ -84,15 +84,22 @@ export default function SettingsPage() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)]" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(114,47,55,0.08)_0%,_transparent_50%)]" />
 
-      <div className="mx-auto w-full max-w-[920px] px-4 sm:px-6 relative z-10">
+      <div className="mx-auto w-full max-w-[920px] px-2 sm:px-4 relative z-10">
         {/* Breadcrumb Navigation */}
-        <nav className="pt-2" aria-label="Breadcrumb">
+        <nav className="pb-1" aria-label="Breadcrumb">
           <ol className="flex items-center gap-2 text-sm sm:text-base">
             <li>
-              <Link href={previousHref} className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium flex items-center gap-1.5" style={{ fontFamily: FONT_STACK }}>
-                <ChevronLeft className="w-4 h-4" />
-                Back to {previousLabel}
+              <Link href={previousHref} className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: FONT_STACK }}>
+                {previousLabel}
               </Link>
+            </li>
+            <li className="flex items-center">
+              <ChevronRight className="w-4 h-4 text-charcoal/60" />
+            </li>
+            <li>
+              <span className="text-charcoal font-semibold" style={{ fontFamily: FONT_STACK }}>
+                Settings
+              </span>
             </li>
           </ol>
         </nav>

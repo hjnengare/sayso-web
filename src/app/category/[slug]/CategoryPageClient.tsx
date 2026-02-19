@@ -63,7 +63,7 @@ export default function CategoryPageClient({
           className="max-w-7xl mx-auto relative"
         >
           {/* Breadcrumb Navigation */}
-          <nav className="py-1" aria-label="Breadcrumb">
+          <nav className="pb-1" aria-label="Breadcrumb">
             <ol className="flex items-center gap-2 text-sm sm:text-base">
               <li>
                 <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>

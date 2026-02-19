@@ -15,7 +15,6 @@ import type { Event } from "../lib/types/Event";
 import { useDebounce } from "../hooks/useDebounce";
 import { ChevronRight, ChevronDown, ChevronLeft } from "lucide-react";
 import { Loader } from "../components/Loader/Loader";
-import ScrollToTopButton from "../components/Navigation/ScrollToTopButton";
 import { useIsDesktop } from "../hooks/useIsDesktop";
 
 const ITEMS_PER_PAGE = 20;
@@ -385,17 +384,24 @@ export default function EventsSpecialsPage() {
       >
         
         <div className="relative mx-auto w-full max-w-[2000px] px-2">
-          <nav className="relative z-10" aria-label="Breadcrumb">
+          <nav className="relative z-10 pb-1" aria-label="Breadcrumb">
             <ol className="flex items-center gap-2 text-sm sm:text-base">
               <li>
                 <Link
                   href="/home"
-                  className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium flex items-center gap-1.5"
+                  className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium"
                   style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                 >
-                  <ChevronLeft className="w-4 h-4" />
-                  Back to Home
+                  Home
                 </Link>
+              </li>
+              <li className="flex items-center">
+                <ChevronRight className="w-4 h-4 text-charcoal/60" />
+              </li>
+              <li>
+                <span className="text-charcoal font-semibold" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                  Events & Specials
+                </span>
               </li>
             </ol>
           </nav>
@@ -562,8 +568,6 @@ export default function EventsSpecialsPage() {
           }
         `}</style>
       )}
-
-      <ScrollToTopButton threshold={360} />
 
       <Footer />
     </div>

@@ -489,7 +489,7 @@ export default function AddEventSpecialFormPage({ type }: AddEventSpecialFormPag
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(114,47,55,0.08)_0%,_transparent_50%)]" />
             
             <div className="container mx-auto max-w-[1300px] px-4 sm:px-6 relative z-10">
-              <nav className="py-1" aria-label="Breadcrumb">
+              <nav className="pb-1" aria-label="Breadcrumb">
                 <ol className="flex items-center gap-2 text-sm sm:text-base">
                   <li>
                     <Link href={previousHref} className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={fontStyle}>

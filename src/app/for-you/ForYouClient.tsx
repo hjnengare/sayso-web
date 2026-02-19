@@ -25,7 +25,6 @@ import type { UserPreferences } from "../hooks/useUserPreferences";
 import type { BusinessMapItem } from "../components/maps/BusinessesMap";
 import { sortBusinessesByPriority } from "../utils/businessPrioritization";
 import { getCategoryLabelFromBusiness } from "../utils/subcategoryPlaceholders";
-import ScrollToTopButton from "../components/Navigation/ScrollToTopButton";
 import { useIsDesktop as useIsDesktopHook } from "../hooks/useIsDesktop";
 
 
@@ -458,10 +457,17 @@ export default function ForYouClient({
           <nav className="relative z-10 pb-1" aria-label="Breadcrumb">
             <ol className="flex items-center gap-2 text-sm sm:text-base">
               <li>
-                <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium flex items-center gap-1.5" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                  <ChevronLeft className="w-4 h-4" />
-                  Back to Home
+                <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                  Home
                 </Link>
+              </li>
+              <li className="flex items-center">
+                <ChevronRight className="w-4 h-4 text-charcoal/60" />
+              </li>
+              <li>
+                <span className="text-charcoal font-semibold" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                  For You
+                </span>
               </li>
             </ol>
           </nav>
@@ -763,8 +769,6 @@ export default function ForYouClient({
           }
         `}</style>
       )}
-
-      <ScrollToTopButton threshold={360} />
 
       <Footer />
     </div>

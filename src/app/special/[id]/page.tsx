@@ -348,14 +348,6 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
           <nav className="pb-1" aria-label="Breadcrumb">
             <ol className="flex items-center gap-2 text-sm sm:text-base">
               <li>
-                <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-                  Home
-                </Link>
-              </li>
-              <li className="flex items-center">
-                <ChevronRight className="w-4 h-4 text-charcoal/60" />
-              </li>
-              <li>
                 <Link href="/events-specials" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                   Events & Specials
                 </Link>
@@ -557,13 +549,13 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
                 <div className="mt-4 pt-4 border-t border-charcoal/10">
                   <h4 className="text-sm font-semibold text-charcoal mb-2.5" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>Share Special</h4>
                   <div className="flex gap-2">
-                    <button className="flex-1 bg-white/40 backdrop-blur-sm hover:bg-coral text-charcoal/90 hover:text-white py-2 px-3 rounded-full transition-all duration-200 border border-white/40">
+                    <button className="flex-1 bg-white/40 backdrop-blur-sm hover:bg-coral text-charcoal/90 hover:text-white py-2 px-3 rounded-full transition-all duration-200 border-none">
                       <Facebook size={16} className="mx-auto" />
                     </button>
-                    <button className="flex-1 bg-white/40 backdrop-blur-sm hover:bg-card-bg text-charcoal/90 hover:text-white py-2 px-3 rounded-full transition-all duration-200 border border-white/40">
+                    <button className="flex-1 bg-white/40 backdrop-blur-sm hover:bg-card-bg text-charcoal/90 hover:text-white py-2 px-3 rounded-full transition-all duration-200 border-none">
                       <Instagram size={16} className="mx-auto" />
                     </button>
-                    <button className="flex-1 bg-white/40 backdrop-blur-sm hover:bg-charcoal text-charcoal/90 hover:text-white py-2 px-3 rounded-full transition-all duration-200 border border-white/40">
+                    <button className="flex-1 bg-white/40 backdrop-blur-sm hover:bg-charcoal text-charcoal/90 hover:text-white py-2 px-3 rounded-full transition-all duration-200 border-none">
                       <Twitter size={16} className="mx-auto" />
                     </button>
                   </div>

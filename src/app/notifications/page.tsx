@@ -223,25 +223,35 @@ export default function NotificationsPage() {
 
       <div className="relative z-10">
         <div className=" pb-12 sm:pb-16 md:pb-20">
-          <div className="mx-auto w-full max-w-[2000px] px-3 relative mb-4">
+          <div className="mx-auto w-full max-w-[2000px] px-2 relative mb-4">
             {/* Breadcrumb Navigation */}
             <nav
-              className="pt-2 px-2"
+              className="pb-1"
               aria-label="Breadcrumb"
             >
               <ol className="flex items-center gap-2 text-sm sm:text-base">
                 <li>
                   <Link
                     href={breadcrumbHref}
-                    className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium flex items-center gap-1.5"
+                    className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium"
                     style={{
                       fontFamily:
                         "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
                     }}
                   >
-                    <ChevronLeft className="w-4 h-4" />
-                    Back to {breadcrumbLabel}
+                    {breadcrumbLabel}
                   </Link>
+                </li>
+                <li className="flex items-center">
+                  <ChevronRight className="w-4 h-4 text-charcoal/60" />
+                </li>
+                <li>
+                  <span className="text-charcoal font-semibold" style={{
+                    fontFamily:
+                      "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                  }}>
+                    Notifications
+                  </span>
                 </li>
               </ol>
             </nav>

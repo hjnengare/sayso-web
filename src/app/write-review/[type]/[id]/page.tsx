@@ -366,7 +366,7 @@ function WriteReviewContent() {
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)] pointer-events-none" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(114,47,55,0.08)_0%,_transparent_50%)] pointer-events-none" />
           
-          <div className="mx-auto w-full max-w-[2000px] px-3 relative z-10">
+          <div className="mx-auto w-full max-w-[2000px] px-2 relative z-10">
             {/* Breadcrumb */}
             <nav className="pb-1" aria-label="Breadcrumb">
               <ol className="flex items-center gap-1 sm:gap-2 text-sm sm:text-base flex-nowrap min-w-0">
