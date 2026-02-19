@@ -13,6 +13,7 @@ interface ScrollableSectionProps {
   showArrows?: boolean;
   arrowColor?: string;
   enableMobilePeek?: boolean;
+  hideArrowsOnDesktop?: boolean;
 }
 
 export default function ScrollableSection({
@@ -21,6 +22,7 @@ export default function ScrollableSection({
   showArrows = true,
   arrowColor = "text-charcoal/60",
   enableMobilePeek = false,
+  hideArrowsOnDesktop = false,
 }: ScrollableSectionProps) {
   const pathname = usePathname();
   const isHomeRoute = pathname === "/" || pathname.startsWith("/home");
@@ -335,6 +337,7 @@ export default function ScrollableSection({
                 bg-navbar-bg
                 rounded-full
                 ${shouldEnableMobilePeek ? "hidden sm:flex" : "flex"} items-center justify-center
+                ${hideArrowsOnDesktop ? "lg:hidden" : ""}
                 transition-all duration-300 ease-out
                 active:scale-95
                 text-white
@@ -375,6 +378,7 @@ export default function ScrollableSection({
                 bg-navbar-bg
                 rounded-full
                 ${shouldEnableMobilePeek ? "hidden sm:flex" : "flex"} items-center justify-center
+                ${hideArrowsOnDesktop ? "lg:hidden" : ""}
                 transition-all duration-300 ease-out
                 active:scale-95
                 text-white

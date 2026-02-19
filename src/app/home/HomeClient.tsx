@@ -556,7 +556,7 @@ export default function HomeClient() {
                         <>
                       {!user ? (
                         /* Not signed in: Show Locked For You Section (teaser only) */
-                        <div className="mx-auto w-full max-w-[2000px] px-2">
+                        <div className="mx-auto w-full max-w-[2000px] px-2 pt-4 sm:pt-8 md:pt-10">
                           <div className="relative border border-charcoal/10 bg-off-white rounded-[14px] p-6 sm:p-8 md:p-10 text-center space-y-4 shadow-[0_1px_0_rgba(0,0,0,0.02)]">
                             <h3
                               className="text-lg sm:text-xl font-extrabold text-charcoal"
@@ -604,6 +604,8 @@ export default function HomeClient() {
                               businesses={forYouBusinesses}
                               cta="See More"
                               href="/for-you"
+                              disableAnimations
+                              hideCarouselArrowsOnDesktop
                             />
                           ) : (
                             <div className="mx-auto w-full max-w-[2000px] px-2 py-4">
@@ -638,6 +640,8 @@ export default function HomeClient() {
                           businesses={allBusinesses.slice(0, 10)}
                           cta="See All"
                           href="/for-you"
+                          disableAnimations
+                          hideCarouselArrowsOnDesktop
                         />
                       ) : (
                         <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-charcoal/70">
@@ -652,10 +656,10 @@ export default function HomeClient() {
                     <div className="relative z-10 snap-start">
                       {trendingLoading && <BusinessRowSkeleton title="Trending Now" />}
                       {!trendingLoading && hasTrendingBusinesses && (
-                        <MemoizedBusinessRow title="Trending Now" businesses={trendingBusinesses} cta="See More" href="/trending" />
+                        <MemoizedBusinessRow title="Trending Now" businesses={trendingBusinesses} cta="See More" href="/trending" disableAnimations hideCarouselArrowsOnDesktop />
                       )}
                       {!trendingLoading && !hasTrendingBusinesses && !trendingError && (
-                        <MemoizedBusinessRow title="Trending Now" businesses={[]} cta="See More" href="/trending" />
+                        <MemoizedBusinessRow title="Trending Now" businesses={[]} cta="See More" href="/trending" disableAnimations hideCarouselArrowsOnDesktop />
                       )}
                       {trendingError && !trendingLoading && (
                         <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral space-y-1">
@@ -677,6 +681,8 @@ export default function HomeClient() {
                       titleFontWeight={800}
                       ctaFontWeight={400}
                       premiumCtaHover
+                      disableAnimations
+                      hideCarouselArrowsOnDesktop
                     />
                   </div>
 
@@ -696,6 +702,8 @@ export default function HomeClient() {
                       <CommunityHighlights
                         businessesOfTheMonth={Array.isArray(featuredByCategory) ? featuredByCategory : []}
                         variant="reviews"
+                        disableAnimations
+                        hideCarouselArrowsOnDesktop
                       />
                     )}
                   </div>

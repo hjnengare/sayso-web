@@ -39,6 +39,8 @@ export default function EventsSpecials({
   titleFontWeight = 700,
   ctaFontWeight = 600,
   premiumCtaHover = false,
+  disableAnimations = false,
+  hideCarouselArrowsOnDesktop = false,
 }: {
   title?: string;
   events: Event[];
@@ -51,6 +53,10 @@ export default function EventsSpecials({
   ctaFontWeight?: number;
   /** Enable premium micro-hover animation on the CTA (default false). */
   premiumCtaHover?: boolean;
+  /** Disable scroll-triggered animations (default false). */
+  disableAnimations?: boolean;
+  /** Hide carousel arrows on desktop (lg+) breakpoints (default false). */
+  hideCarouselArrowsOnDesktop?: boolean;
 }) {
   const router = useRouter();
   const isDesktop = useIsDesktop();
@@ -111,19 +117,31 @@ export default function EventsSpecials({
     >
       <div className="mx-auto w-full max-w-[2000px] relative z-10 px-2">
         <div className="pb-4 sm:pb-8 md:pb-10 flex flex-wrap items-center justify-between gap-2">
-          <motion.h2
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="font-urbanist text-2xl sm:text-3xl md:text-2xl font-bold text-charcoal hover:text-sage transition-all duration-300 px-3 sm:px-4 py-1 hover:bg-card-bg/5 rounded-lg cursor-default"
-            style={{
-              fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-              fontWeight: titleFontWeight,
-            }}
-          >
-            {title}
-          </motion.h2>
+          {disableAnimations ? (
+            <h2
+              className="font-urbanist text-2xl sm:text-3xl md:text-2xl font-bold text-charcoal hover:text-sage transition-all duration-300 px-3 sm:px-4 py-1 hover:bg-card-bg/5 rounded-lg cursor-default"
+              style={{
+                fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                fontWeight: titleFontWeight,
+              }}
+            >
+              {title}
+            </h2>
+          ) : (
+            <motion.h2
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className="font-urbanist text-2xl sm:text-3xl md:text-2xl font-bold text-charcoal hover:text-sage transition-all duration-300 px-3 sm:px-4 py-1 hover:bg-card-bg/5 rounded-lg cursor-default"
+              style={{
+                fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                fontWeight: titleFontWeight,
+              }}
+            >
+              {title}
+            </motion.h2>
+          )}
 
           <button
             onClick={() => router.push(href)}
@@ -156,25 +174,38 @@ export default function EventsSpecials({
 
         {hasEvents ? (
           <div className="pt-2">
-            <ScrollableSection showArrows={true} className="items-stretch py-2">
+            <ScrollableSection showArrows={true} className="items-stretch py-2" hideArrowsOnDesktop={hideCarouselArrowsOnDesktop}>
               {isDesktop ? (
-                <motion.div
-                  variants={containerVariants}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true, margin: "-50px" }}
-                  className="flex gap-3 items-stretch"
-                >
-                  {displayEvents.map((event, index) => (
-                    <motion.div
-                      key={event.id ?? `event-${index}`}
-                      variants={itemVariants}
-                      className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto min-w-[clamp(220px,18vw,320px)] list-none flex justify-center"
-                    >
-                      <EventCard event={event} index={index} />
-                    </motion.div>
-                  ))}
-                </motion.div>
+                disableAnimations ? (
+                  <div className="flex gap-3 items-stretch">
+                    {displayEvents.map((event, index) => (
+                      <div
+                        key={event.id ?? `event-${index}`}
+                        className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto min-w-[clamp(220px,18vw,320px)] list-none flex justify-center"
+                      >
+                        <EventCard event={event} index={index} />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <motion.div
+                    variants={containerVariants}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, margin: "-50px" }}
+                    className="flex gap-3 items-stretch"
+                  >
+                    {displayEvents.map((event, index) => (
+                      <motion.div
+                        key={event.id ?? `event-${index}`}
+                        variants={itemVariants}
+                        className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto min-w-[clamp(220px,18vw,320px)] list-none flex justify-center"
+                      >
+                        <EventCard event={event} index={index} />
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                )
               ) : (
                 <>
                   {displayEvents.map((event, index) => (

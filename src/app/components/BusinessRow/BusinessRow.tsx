@@ -34,11 +34,15 @@ export default function BusinessRow({
   businesses,
   cta = "View All",
   href = "/home",
+  disableAnimations = false,
+  hideCarouselArrowsOnDesktop = false,
 }: {
   title: string;
   businesses: Business[];
   cta?: string;
   href?: string;
+  disableAnimations?: boolean;
+  hideCarouselArrowsOnDesktop?: boolean;
 }) {
   const router = useRouter();
   const isDesktop = useIsDesktop();
@@ -107,19 +111,31 @@ export default function BusinessRow({
       <LocationPromptBanner hasCoordinateBusinesses={hasCoordinateBusinesses} />
       <div className="mx-auto w-full relative z-10">
         <div className="pb-4 sm:pb-8 md:pb-10 flex flex-wrap items-center justify-between gap-2">
-          <motion.h2
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="font-urbanist text-2xl sm:text-3xl md:text-2xl font-bold text-charcoal hover:text-sage transition-all duration-300 px-3 sm:px-4 py-1 hover:bg-card-bg/5 rounded-lg cursor-default"
-            style={{ 
-              fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-              fontWeight: 800,
-            }}
-          >
-            {title}
-          </motion.h2>
+          {disableAnimations ? (
+            <h2
+              className="font-urbanist text-2xl sm:text-3xl md:text-2xl font-bold text-charcoal hover:text-sage transition-all duration-300 px-3 sm:px-4 py-1 hover:bg-card-bg/5 rounded-lg cursor-default"
+              style={{ 
+                fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                fontWeight: 800,
+              }}
+            >
+              {title}
+            </h2>
+          ) : (
+            <motion.h2
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className="font-urbanist text-2xl sm:text-3xl md:text-2xl font-bold text-charcoal hover:text-sage transition-all duration-300 px-3 sm:px-4 py-1 hover:bg-card-bg/5 rounded-lg cursor-default"
+              style={{ 
+                fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                fontWeight: 800,
+              }}
+            >
+              {title}
+            </motion.h2>
+          )}
 
           <button
             onClick={() => router.push(href)}
@@ -136,7 +152,7 @@ export default function BusinessRow({
           </button>
         </div>
 
-        <ScrollableSection enableMobilePeek>
+        <ScrollableSection enableMobilePeek hideArrowsOnDesktop={hideCarouselArrowsOnDesktop}>
           {/* Gap harmonizes with card radius/shadows; list semantics preserved via <li> inside cards */}
           <style dangerouslySetInnerHTML={{ __html: `
             @media (max-width: 639px) {
@@ -147,23 +163,36 @@ export default function BusinessRow({
             }
           `}} />
           {isDesktop ? (
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-50px" }}
-              className="flex gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2 items-stretch pt-2"
-            >
-              {businesses.map((business, index) => (
-                <motion.div
-                  key={business.id}
-                  variants={itemVariants}
-                  className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto min-w-[clamp(200px,16vw,300px)] list-none flex justify-center business-card-full-width"
-                >
-                  <BusinessCard business={business} index={index} />
-                </motion.div>
-              ))}
-            </motion.div>
+            disableAnimations ? (
+              <div className="flex gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2 items-stretch pt-2">
+                {businesses.map((business, index) => (
+                  <div
+                    key={business.id}
+                    className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto min-w-[clamp(200px,16vw,300px)] list-none flex justify-center business-card-full-width"
+                  >
+                    <BusinessCard business={business} index={index} />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: "-50px" }}
+                className="flex gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2 items-stretch pt-2"
+              >
+                {businesses.map((business, index) => (
+                  <motion.div
+                    key={business.id}
+                    variants={itemVariants}
+                    className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto min-w-[clamp(200px,16vw,300px)] list-none flex justify-center business-card-full-width"
+                  >
+                    <BusinessCard business={business} index={index} />
+                  </motion.div>
+                ))}
+              </motion.div>
+            )
           ) : (
             <div className="flex gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2 items-stretch pt-2">
               {businesses.map((business, index) => (

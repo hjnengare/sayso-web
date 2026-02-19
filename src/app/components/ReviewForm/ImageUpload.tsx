@@ -55,10 +55,10 @@ export default function ImageUpload({
           return;
         }
 
-        // Validate file size (1MB max per image)
-        const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB
+        // Validate file size (2MB max per image)
+        const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
         if (file.size > MAX_FILE_SIZE) {
-          alert(`${file.name} is too large. Maximum size is 1MB per image`);
+          alert(`${file.name} is too large. Maximum size is 2MB per image`);
           return;
         }
 

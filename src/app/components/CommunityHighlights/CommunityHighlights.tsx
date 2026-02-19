@@ -85,6 +85,10 @@ interface CommunityHighlightsProps {
   cta?: string;
   href?: string;
   variant?: "reviews" | "reviewers";
+  /** Disable scroll-triggered animations (default false). */
+  disableAnimations?: boolean;
+  /** Hide carousel arrows on desktop (lg+) breakpoints (default false). */
+  hideCarouselArrowsOnDesktop?: boolean;
 }
 
 export default function CommunityHighlights({
@@ -95,6 +99,8 @@ export default function CommunityHighlights({
   cta = "See More",
   href = "/leaderboard",
   variant = "reviews",
+  disableAnimations = false,
+  hideCarouselArrowsOnDesktop = false,
 }: CommunityHighlightsProps) {
   const router = useRouter();
   const isDesktop = useIsDesktop();
@@ -166,19 +172,31 @@ export default function CommunityHighlights({
       <div className="mx-auto w-full max-w-[2000px] relative z-10 px-2">
         {/* Header */}
         <div className="pb-4 sm:pb-8 md:pb-10 flex flex-wrap items-center justify-between gap-2">
-          <motion.h2
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="font-urbanist text-2xl sm:text-3xl md:text-2xl font-bold text-charcoal hover:text-sage transition-all duration-300 px-3 sm:px-4 py-1 hover:bg-card-bg/5 rounded-lg cursor-default"
-            style={{ 
-              fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-              fontWeight: 800,
-            }}
-          >
-            {title}
-          </motion.h2>
+          {disableAnimations ? (
+            <h2
+              className="font-urbanist text-2xl sm:text-3xl md:text-2xl font-bold text-charcoal hover:text-sage transition-all duration-300 px-3 sm:px-4 py-1 hover:bg-card-bg/5 rounded-lg cursor-default"
+              style={{ 
+                fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                fontWeight: 800,
+              }}
+            >
+              {title}
+            </h2>
+          ) : (
+            <motion.h2
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className="font-urbanist text-2xl sm:text-3xl md:text-2xl font-bold text-charcoal hover:text-sage transition-all duration-300 px-3 sm:px-4 py-1 hover:bg-card-bg/5 rounded-lg cursor-default"
+              style={{ 
+                fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                fontWeight: 800,
+              }}
+            >
+              {title}
+            </motion.h2>
+          )}
         </div>
 
         {/* Top Reviewers */}
@@ -204,7 +222,7 @@ export default function CommunityHighlights({
                 </button>
               </div>
 
-            <ScrollableSection>
+            <ScrollableSection hideArrowsOnDesktop={hideCarouselArrowsOnDesktop}>
               <div className="flex gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2 items-stretch py-2 mb-20">
                 {topReviewers.map((reviewer, index) => {
                 // Try to find an actual review first, otherwise use sample text
@@ -404,7 +422,7 @@ export default function CommunityHighlights({
                 </button>
               </div>
 
-              <ScrollableSection enableMobilePeek>
+              <ScrollableSection enableMobilePeek hideArrowsOnDesktop={hideCarouselArrowsOnDesktop}>
                 {/* Gap harmonizes with card radius/shadows; list semantics preserved via <li> inside cards */}
                 <style dangerouslySetInnerHTML={{ __html: `
                   @media (max-width: 639px) {
@@ -415,26 +433,42 @@ export default function CommunityHighlights({
                   }
                 `}} />
                 {isDesktop ? (
-                  <motion.div
-                    variants={containerVariants}
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, margin: "-50px" }}
-                    className="flex gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2 items-stretch pt-2 list-none"
-                  >
-                    {(Array.isArray(businessesOfTheMonth) ? businessesOfTheMonth : []).map((business, index) => (
-                      <motion.div
-                        key={business.id}
-                        variants={itemVariants}
-                        className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto sm:min-w-[25%] md:min-w-[25%] lg:min-w-[20%] xl:min-w-[18%] 2xl:min-w-[16%] list-none flex justify-center business-month-card-full-width"
-                      >
-                        <BusinessOfTheMonthCard
-                          business={business}
-                          index={index}
-                        />
-                      </motion.div>
-                    ))}
-                  </motion.div>
+                  disableAnimations ? (
+                    <div className="flex gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2 items-stretch pt-2 list-none">
+                      {(Array.isArray(businessesOfTheMonth) ? businessesOfTheMonth : []).map((business, index) => (
+                        <div
+                          key={business.id}
+                          className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto sm:min-w-[25%] md:min-w-[25%] lg:min-w-[20%] xl:min-w-[18%] 2xl:min-w-[16%] list-none flex justify-center business-month-card-full-width"
+                        >
+                          <BusinessOfTheMonthCard
+                            business={business}
+                            index={index}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <motion.div
+                      variants={containerVariants}
+                      initial="hidden"
+                      whileInView="visible"
+                      viewport={{ once: true, margin: "-50px" }}
+                      className="flex gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2 items-stretch pt-2 list-none"
+                    >
+                      {(Array.isArray(businessesOfTheMonth) ? businessesOfTheMonth : []).map((business, index) => (
+                        <motion.div
+                          key={business.id}
+                          variants={itemVariants}
+                          className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto sm:min-w-[25%] md:min-w-[25%] lg:min-w-[20%] xl:min-w-[18%] 2xl:min-w-[16%] list-none flex justify-center business-month-card-full-width"
+                        >
+                          <BusinessOfTheMonthCard
+                            business={business}
+                            index={index}
+                          />
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                  )
                 ) : (
                   <div className="flex gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2 items-stretch pt-2 list-none">
                     {(Array.isArray(businessesOfTheMonth) ? businessesOfTheMonth : []).map((business, index) => (
