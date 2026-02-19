@@ -313,6 +313,22 @@ export default function AddBusinessPage() {
         showToast('Coordinates cleared', 'sage', 2000);
     };
 
+    const handleLocationSelect = useCallback(
+        (loc: { lat: number; lng: number; address: string; location: string }) => {
+            setFormData(prev => ({
+                ...prev,
+                lat: String(loc.lat),
+                lng: String(loc.lng),
+                address: loc.address || prev.address,
+                location: loc.location || loc.address || prev.location,
+            }));
+            const resolved = normalizeGeocodeInput(loc.address || loc.location || "");
+            if (resolved) lastResolvedLocationRef.current = resolved;
+            setGeocodeStatus("found");
+        },
+        [normalizeGeocodeInput]
+    );
+
     const handleInputChange = (field: string, value: string | boolean) => {
         setFormData(prev => {
             if (field === "mainCategory") {
@@ -817,6 +833,7 @@ export default function AddBusinessPage() {
                                             onBlur={handleBlur}
                                             onLocationBlur={handleLocationBlurGeocode}
                                             onClearCoordinates={handleClearCoordinates}
+                                            onLocationSelect={handleLocationSelect}
                                         />
 
                                         {/* Contact Information Section */}

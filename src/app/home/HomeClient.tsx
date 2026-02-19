@@ -551,7 +551,7 @@ export default function HomeClient() {
 
         <main 
           suppressHydrationWarning
-          className={`relative min-h-dvh ${isSearchActive ? 'pt-2' : 'pt-2'}`} 
+          className={`relative min-h-dvh ${isSearchActive ? 'pt-2' : 'pt-8 sm:pt-10 md:pt-12'}`} 
           style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
         >
           {/* Background Gradient Overlays */}

@@ -4,6 +4,7 @@ import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapPin, X } from "lucide-react";
 import { BusinessFormData } from "./types";
+import MapPicker, { MapPickerLocation } from "./MapPicker";
 
 type GeocodeStatus = "idle" | "searching" | "found" | "not_found" | "error";
 
@@ -16,6 +17,7 @@ interface LocationSectionProps {
   onBlur: (field: string) => void;
   onLocationBlur: () => void;
   onClearCoordinates: () => void;
+  onLocationSelect?: (loc: MapPickerLocation) => void;
 }
 
 const LocationSection: React.FC<LocationSectionProps> = ({
@@ -27,6 +29,7 @@ const LocationSection: React.FC<LocationSectionProps> = ({
   onBlur,
   onLocationBlur,
   onClearCoordinates,
+  onLocationSelect,
 }) => {
   const isOnlineOnly = formData.businessType === "online-only";
   const showLocationError = Boolean(touched.location && errors.location);
@@ -173,6 +176,31 @@ const LocationSection: React.FC<LocationSectionProps> = ({
               </p>
               )}
           </div>
+
+          {/* Map Picker (physical & service-area only) */}
+          {!isOnlineOnly && onLocationSelect && (
+            <div>
+              <label
+                className="block text-sm font-semibold text-charcoal mb-2"
+                style={{
+                  fontFamily:
+                    "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+                  fontWeight: 600,
+                }}
+              >
+                Set location on map
+              </label>
+              <MapPicker
+                lat={formData.lat}
+                lng={formData.lng}
+                onLocationSelect={(loc) => {
+                  onLocationSelect(loc);
+                  onBlur("location");
+                }}
+                className="mt-2"
+              />
+            </div>
+          )}
 
           {/* Selected Coordinates */}
           <AnimatePresence>
