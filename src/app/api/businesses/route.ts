@@ -222,6 +222,7 @@ async function logSearchHistory(
 interface BusinessRPCResult {
   id: string;
   name: string;
+  is_system?: boolean | null;
   description: string | null;
   category: string;
   category_label?: string | null;
@@ -1697,6 +1698,7 @@ async function handleForYouFeed(options: MixedFeedOptions): Promise<NextResponse
   const businesses: BusinessRPCResult[] = rpcData.map((row: any) => ({
     id: row.id,
     name: row.name,
+    is_system: row.is_system ?? null,
     description: row.description,
     category: row.category,
     interest_id: row.interest_id,
@@ -1775,7 +1777,10 @@ async function handleForYouFeed(options: MixedFeedOptions): Promise<NextResponse
     }
   }
 
-  const transformedBusinesses = filteredBusinesses.map(transformBusinessForCard);
+  const cleanedBusinesses = filteredBusinesses.filter(
+    (business) => business?.is_system !== true && business?.name !== 'Sayso System'
+  );
+  const transformedBusinesses = cleanedBusinesses.map(transformBusinessForCard);
   console.log('FOR_YOU RESULTS COUNT', { requestId: requestId ?? null, count: transformedBusinesses.length });
 
   const response = NextResponse.json({
@@ -1810,16 +1815,18 @@ async function fetchTopPicksFallback(
   const { data: rawData } = await supabase
     .from('businesses')
     .select(
-      'id,name,description,primary_subcategory_slug,primary_category_slug,location,address,phone,email,website,image_url,verified,price_range,badge,slug,lat,lng,created_at,updated_at,is_hidden'
+      'id,name,description,primary_subcategory_slug,primary_category_slug,location,address,phone,email,website,image_url,verified,price_range,badge,slug,lat,lng,created_at,updated_at,is_hidden,is_system'
     )
     .eq('status', 'active')
     .eq('is_hidden', false)
+    .or('is_system.is.null,is_system.eq.false')
     .order('created_at', { ascending: false })
     .limit(fetchLimit);
 
   const rows: BusinessRPCResult[] = (rawData ?? []).map((row: any) => ({
     id: row.id,
     name: row.name,
+    is_system: row.is_system ?? null,
     description: row.description,
     category: row.primary_subcategory_slug,
     interest_id: row.primary_category_slug,
@@ -1859,7 +1866,11 @@ async function fetchTopPicksFallback(
       ? filterByDealbreakers(rows, statDependentDealbreakers)
       : rows;
 
-  const transformed = (filtered.length > 0 ? filtered : rows).slice(0, limit).map(transformBusinessForCard);
+  const baseRows = filtered.length > 0 ? filtered : rows;
+  const cleanedRows = baseRows.filter(
+    (business) => business?.is_system !== true && business?.name !== 'Sayso System'
+  );
+  const transformed = cleanedRows.slice(0, limit).map(transformBusinessForCard);
 
   const response = NextResponse.json({
     businesses: transformed,

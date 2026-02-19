@@ -60,7 +60,7 @@ set search_path = public
 as $$
 with
 
--- 1. Hard filters: active, not hidden, optional price-range allow-list,
+-- 1. Hard filters: active, not hidden, not system/placeholder, optional price-range allow-list,
 --       and data-safe dealbreakers (NULL-safe so no-stats businesses pass through).
 eligible as (
   select
@@ -90,6 +90,8 @@ eligible as (
   left join public.business_stats bs on bs.business_id = b.id
   where b.status = 'active'
     and coalesce(b.is_hidden, false) = false
+    and coalesce(b.is_system, false) = false
+    and b.name is distinct from 'Sayso System'
     -- price-range allow-list (null b.price_range always passes)
     and (
       p_price_ranges is null
@@ -277,7 +279,7 @@ order by w.final_rank;
 $$;
 
 comment on function public.recommend_for_you_unified(text[], text[], text[], text[], double precision, double precision, integer, text) is
-'Unified For You recommender. Scores: preference affinity (0/15/25) + Bayesian quality (0-20) + freshness (0-10) + new-business boost (0/4/8) + verified +3 + image +2 + seeded rand (0-2). Bucket interleaving: 65% preference, 20% new (<30d), 15% cold-start. SQL dealbreakers: trustworthiness (exempt if <30d old), value-for-money, expensive. SECURITY DEFINER bypasses RLS.';
+'Unified For You recommender. Excludes hidden and system/placeholder businesses (is_hidden=true, is_system=true, name=''Sayso System''). Scores: preference affinity (0/15/25) + Bayesian quality (0-20) + freshness (0-10) + new-business boost (0/4/8) + verified +3 + image +2 + seeded rand (0-2). Bucket interleaving: 65% preference, 20% new (<30d), 15% cold-start. SQL dealbreakers: trustworthiness (exempt if <30d old), value-for-money, expensive. SECURITY DEFINER bypasses RLS.';
 
 grant execute on function public.recommend_for_you_unified(text[], text[], text[], text[], double precision, double precision, integer, text)
   to authenticated;

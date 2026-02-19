@@ -473,14 +473,14 @@ function EventCard({ event, index = 0 }: EventCardProps) {
                 {event.occurrencesCount} dates available
               </span>
             )}
-            {event.type === "event" && !event.businessId && (
+            {event.type === "event" && !event.businessId && !event.isExternalEvent && (
               <span
                 className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-medium w-fit ${
                   "bg-coral/10 text-coral"
                 }`}
                 style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
               >
-                {event.isExternalEvent ? "External event (Quicket)" : "Community-hosted event"}
+                Community-hosted event
               </span>
             )}
             {/* Review count - same styling as Business Card */}

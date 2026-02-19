@@ -26,7 +26,7 @@ export default function EventInfo({ event, sharedTitleLayoutId }: EventInfoProps
       </motion.h1>
 
       <div className="flex items-center gap-3 mb-4 flex-wrap">
-        {event.type === "event" && (
+        {event.type === "event" && !event.isExternalEvent && (
           <div className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 border ${event.businessId ? "bg-navbar-bg/10 text-navbar-bg border-navbar-bg/20" : "bg-coral/10 text-coral border-coral/20"}`}>
             <span
               className="text-body-sm font-semibold"

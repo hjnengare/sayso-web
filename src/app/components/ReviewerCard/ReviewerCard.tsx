@@ -31,7 +31,6 @@ export default function ReviewerCard({
   reviewer,
   latestReview,
   variant = "review",
-  index = 0,
 }: ReviewerCardProps) {
   const { user: currentUser } = useAuth();
   const reviewerData = reviewer || review?.reviewer;
@@ -45,17 +44,6 @@ export default function ReviewerCard({
     () => `reviewer-${reviewerData?.id ?? userIdForBadges}`,
     [reviewerData?.id, userIdForBadges]
   );
-  const revealStyle = useMemo(() => {
-    const bucket = Math.abs(index) % 6;
-    const x = bucket === 1 ? -6 : bucket === 2 ? 6 : bucket === 4 ? -3 : bucket === 5 ? 3 : 0;
-    const y = 10 + (bucket % 3);
-    const delay = Math.min(90, bucket * 18);
-    return {
-      ['--reveal-x' as any]: `${x}px`,
-      ['--reveal-y' as any]: `${y}px`,
-      ['--reveal-delay' as any]: `${delay}ms`,
-    } as React.CSSProperties;
-  }, [index]);
   const [imgError, setImgError] = useState(false);
   const [userBadges, setUserBadges] = useState<BadgePillData[]>([]);
 
@@ -120,20 +108,13 @@ export default function ReviewerCard({
       <div
         id={idForSnap}
         className="snap-start snap-always w-full sm:w-[240px] flex-shrink-0"
-        data-reveal
-        style={revealStyle}
       >
         <Link
           href={cardHref}
           className="block group/card"
         >
           <div
-            className="relative rounded-2xl overflow-hidden cursor-pointer h-[268px] shadow-sm hover:shadow-xl transition-all duration-500 ease-out"
-            style={{
-              background: 'linear-gradient(165deg, rgba(255,255,255,0.92) 0%, rgba(229,224,229,0.85) 50%, rgba(157,171,155,0.18) 100%)',
-              backdropFilter: 'blur(20px) saturate(1.4)',
-              WebkitBackdropFilter: 'blur(20px) saturate(1.4)',
-            }}
+            className="relative rounded-2xl overflow-hidden cursor-pointer h-[268px] shadow-sm hover:shadow-xl transition-all duration-500 ease-out bg-card-bg"
           >
 
             {/* Content */}
