@@ -36,6 +36,8 @@ export default function ScrollableSection({
   const [showSwipeHint, setShowSwipeHint] = useState(true);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
   const previousScrollLeftRef = useRef(0);
+  const [isDraggingThumb, setIsDraggingThumb] = useState(false);
+  const trackRef = useRef<HTMLDivElement>(null);
 
   const syncMobileSnapTargets = () => {
     const container = scrollRef.current;
@@ -206,6 +208,69 @@ export default function ScrollableSection({
     }
   };
 
+  const handleTrackClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!scrollRef.current || !trackRef.current) return;
+    const track = trackRef.current;
+    const rect = track.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const clickPercent = clickX / rect.width;
+    const container = scrollRef.current;
+    const maxScrollLeft = container.scrollWidth - container.clientWidth;
+    container.scrollLeft = maxScrollLeft * clickPercent;
+  };
+
+  const handleThumbMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingThumb(true);
+  };
+
+  useEffect(() => {
+    if (!isDraggingThumb) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!scrollRef.current || !trackRef.current) return;
+      const track = trackRef.current;
+      const rect = track.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const movePercent = Math.max(0, Math.min(1, mouseX / rect.width));
+      const container = scrollRef.current;
+      const maxScrollLeft = container.scrollWidth - container.clientWidth;
+      container.scrollLeft = maxScrollLeft * movePercent;
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!scrollRef.current || !trackRef.current || !e.touches[0]) return;
+      const track = trackRef.current;
+      const rect = track.getBoundingClientRect();
+      const touchX = e.touches[0].clientX - rect.left;
+      const movePercent = Math.max(0, Math.min(1, touchX / rect.width));
+      const container = scrollRef.current;
+      const maxScrollLeft = container.scrollWidth - container.clientWidth;
+      container.scrollLeft = maxScrollLeft * movePercent;
+    };
+
+    const handleMouseUp = () => {
+      setIsDraggingThumb(false);
+    };
+
+    const handleTouchEnd = () => {
+      setIsDraggingThumb(false);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [isDraggingThumb]);
+
   return (
     <div className="relative">
       <div
@@ -336,8 +401,7 @@ export default function ScrollableSection({
                 w-14 h-14 sm:w-12 sm:h-12
                 bg-navbar-bg
                 rounded-full
-                ${shouldEnableMobilePeek ? "hidden sm:flex" : "flex"} items-center justify-center
-                ${hideArrowsOnDesktop ? "lg:hidden" : ""}
+                ${shouldEnableMobilePeek ? "hidden sm:flex lg:flex" : "flex"} items-center justify-center
                 transition-all duration-300 ease-out
                 active:scale-95
                 text-white
@@ -377,8 +441,7 @@ export default function ScrollableSection({
                 w-14 h-14 sm:w-12 sm:h-12
                 bg-navbar-bg
                 rounded-full
-                ${shouldEnableMobilePeek ? "hidden sm:flex" : "flex"} items-center justify-center
-                ${hideArrowsOnDesktop ? "lg:hidden" : ""}
+                ${shouldEnableMobilePeek ? "hidden sm:flex lg:flex" : "flex"} items-center justify-center
                 transition-all duration-300 ease-out
                 active:scale-95
                 text-white
@@ -410,6 +473,39 @@ export default function ScrollableSection({
             </button>
           )}
         </>
+      )}
+
+      {/* Premium Horizontal Scroll Indicator - Home page only */}
+      {isHomeRoute && (canScrollRight || canScrollLeft) && (
+        <div className="flex justify-center mt-3 px-4">
+          <div
+            ref={trackRef}
+            onClick={handleTrackClick}
+            className="relative w-full max-w-md h-[3px] bg-charcoal/10 rounded-full cursor-pointer hover:bg-charcoal/15 transition-colors"
+            style={{
+              touchAction: 'none',
+            }}
+          >
+            <div
+              className="absolute top-0 h-full bg-charcoal/40 rounded-full transition-all cursor-grab active:cursor-grabbing"
+              style={{
+                left: `${scrollProgress}%`,
+                width: scrollRef.current
+                  ? `${Math.min(100, (scrollRef.current.clientWidth / scrollRef.current.scrollWidth) * 100)}%`
+                  : '20%',
+                transform: `translateX(-${scrollProgress}%)`,
+                transitionProperty: isDraggingThumb ? 'none' : 'left, width',
+                transitionDuration: '150ms',
+                transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
+              }}
+              onMouseDown={handleThumbMouseDown}
+              onTouchStart={(e) => {
+                e.preventDefault();
+                setIsDraggingThumb(true);
+              }}
+            />
+          </div>
+        </div>
       )}
     </div>
   );
