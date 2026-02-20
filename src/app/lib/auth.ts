@@ -386,17 +386,10 @@ export class AuthService {
         if (isSessionError) {
           // Only log if it's not a simple "session missing" (which is expected for unauthenticated users)
           if (!errorMessage.includes('session missing') && !errorMessage.includes('auth session missing')) {
-            console.warn('AuthService: Invalid session detected, clearing session:', {
+            console.warn('AuthService: Session error detected (not signing out):', {
               message: error.message,
               code: error.code
             });
-            // Clear the invalid session
-            try {
-              await supabase.auth.signOut();
-            } catch (signOutError) {
-              // Ignore sign out errors - we're already handling an error state
-              console.warn('AuthService: Error during sign out after session failure:', signOutError);
-            }
           }
           return null;
         }
@@ -478,14 +471,9 @@ export class AuthService {
         lowerMessage.includes('auth session missing');
 
       if (isSessionError) {
-        // Only log and clear if it's not a simple "session missing" (which is expected for unauthenticated users)
+        // Only log if it's not a simple "session missing" (which is expected for unauthenticated users)
         if (!lowerMessage.includes('session missing') && !lowerMessage.includes('auth session missing')) {
-          console.warn('AuthService: Invalid session detected in catch block, clearing session:', errorMessage);
-          try {
-            await supabase.auth.signOut();
-          } catch (signOutError) {
-            console.warn('AuthService: Error during sign out after session failure:', signOutError);
-          }
+          console.warn('AuthService: Session error in catch block (not signing out):', errorMessage);
         }
       } else {
         console.error('AuthService: Unexpected error getting current user:', error);
