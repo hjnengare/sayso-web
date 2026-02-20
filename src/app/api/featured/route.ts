@@ -15,6 +15,23 @@ export const runtime = 'nodejs';
 
 const FEATURED_POOL_SIZE = 1500;
 const FEATURED_PERIOD = 'month';
+const FETCH_TIMEOUT_MS = 1500;
+const CACHE_CONTROL = 'public, s-maxage=30, stale-while-revalidate=300';
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const id = setTimeout(() => reject(new Error(`timeout:${label}`)), ms);
+    promise
+      .then((v) => {
+        clearTimeout(id);
+        resolve(v);
+      })
+      .catch((err) => {
+        clearTimeout(id);
+        reject(err);
+      });
+  });
+}
 
 const pad2 = (value: number) => value.toString().padStart(2, '0');
 
@@ -559,10 +576,11 @@ export async function GET(request: NextRequest) {
     if (ifNoneMatch && ifNoneMatch === featuredEtag) {
       console.log('[FEATURED API] GET end total ms:', Date.now() - start);
       const response = new NextResponse(null, { status: 304 });
-      response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+      response.headers.set('Cache-Control', CACHE_CONTROL);
       response.headers.set('ETag', featuredEtag);
       response.headers.set('X-Featured-Period', period);
       response.headers.set('X-Featured-Generated-At', generatedAt.toISOString());
+      response.headers.set('X-Query-Duration-MS', String(Date.now() - start));
       return response;
     }
 
@@ -657,10 +675,11 @@ export async function GET(request: NextRequest) {
 
     console.log('[FEATURED API] GET end total ms:', Date.now() - start);
     const response = NextResponse.json(payload);
-    response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+    response.headers.set('Cache-Control', CACHE_CONTROL);
     response.headers.set('ETag', featuredEtag);
     response.headers.set('X-Featured-Period', period);
     response.headers.set('X-Featured-Generated-At', generatedAt.toISOString());
+    response.headers.set('X-Query-Duration-MS', String(Date.now() - start));
     return response;
 
   } catch (error: unknown) {
@@ -671,9 +690,12 @@ export async function GET(request: NextRequest) {
     }
     console.error('[FEATURED API] GET end (error) total ms:', totalMs);
     console.error('Unexpected error in featured API:', error);
-    return NextResponse.json(
+    const response = NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     );
+    response.headers.set('Cache-Control', CACHE_CONTROL);
+    response.headers.set('X-Query-Duration-MS', String(totalMs));
+    return response;
   }
 }

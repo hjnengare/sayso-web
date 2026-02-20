@@ -11,6 +11,23 @@ import {
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
+const FETCH_TIMEOUT_MS = 1500;
+const CACHE_CONTROL = 'public, s-maxage=30, stale-while-revalidate=300';
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const id = setTimeout(() => reject(new Error(`timeout:${label}`)), ms);
+    promise
+      .then((v) => {
+        clearTimeout(id);
+        resolve(v);
+      })
+      .catch((err) => {
+        clearTimeout(id);
+        reject(err);
+      });
+  });
+}
 
 /**
  * GET /api/trending
@@ -58,12 +75,13 @@ export async function GET(request: NextRequest) {
     const debug = searchParams.get('debug') === '1';
 
     // 1. Cold-start candidate pool (metadata-only score, no stats)
-    const { data: candidateRows, error: candidatesError } = await supabase.rpc(
-      'get_trending_cold_start_candidates',
-      {
+    const { data: candidateRows, error: candidatesError } = await withTimeout(
+      supabase.rpc('get_trending_cold_start_candidates', {
         p_pool_size: TRENDING_POOL_SIZE,
         p_city: city || null,
-      },
+      }),
+      FETCH_TIMEOUT_MS,
+      'trending:candidates'
     );
 
     if (candidatesError) {
@@ -126,12 +144,16 @@ export async function GET(request: NextRequest) {
     }
 
     // 3. Enrich: businesses (primary_* columns) + business_stats (rating/reviews)
-    const { data: businessRows, error: businessError } = await supabase
-      .from('businesses')
-      .select(
-        'id, name, description, primary_subcategory_slug, primary_subcategory_label, primary_category_slug, location, address, image_url, verified, price_range, badge, slug, lat, lng, status, is_system',
-      )
-      .in('id', selectedIds);
+    const { data: businessRows, error: businessError } = await withTimeout(
+      supabase
+        .from('businesses')
+        .select(
+          'id, name, description, primary_subcategory_slug, primary_subcategory_label, primary_category_slug, location, address, image_url, verified, price_range, badge, slug, lat, lng, status, is_system',
+        )
+        .in('id', selectedIds),
+      FETCH_TIMEOUT_MS,
+      'trending:businesses'
+    );
 
     if (businessError) {
       console.warn('[TRENDING API] businesses enrich error:', businessError.message);
@@ -139,10 +161,14 @@ export async function GET(request: NextRequest) {
     const businessList = Array.isArray(businessRows) ? businessRows : [];
     const businessById = new Map(businessList.map((b: Record<string, unknown>) => [b.id as string, b]));
 
-    const { data: statsRows } = await supabase
-      .from('business_stats')
-      .select('business_id, total_reviews, average_rating, percentiles')
-      .in('business_id', selectedIds);
+    const { data: statsRows } = await withTimeout(
+      supabase
+        .from('business_stats')
+        .select('business_id, total_reviews, average_rating, percentiles')
+        .in('business_id', selectedIds),
+      FETCH_TIMEOUT_MS,
+      'trending:business_stats'
+    );
     const statsById = new Map(
       (Array.isArray(statsRows) ? statsRows : []).map((s: { business_id: string }) => [s.business_id, s]),
     );
@@ -174,12 +200,16 @@ export async function GET(request: NextRequest) {
       Array<{ url: string; alt_text: string | null; is_primary: boolean | null }>
     > = {};
     if (selectedIds.length > 0) {
-      const { data: imagesData } = await supabase
-        .from('business_images')
-        .select('business_id, url, alt_text, is_primary')
-        .in('business_id', selectedIds)
-        .order('is_primary', { ascending: false })
-        .order('created_at', { ascending: false });
+      const { data: imagesData } = await withTimeout(
+        supabase
+          .from('business_images')
+          .select('business_id, url, alt_text, is_primary')
+          .in('business_id', selectedIds)
+          .order('is_primary', { ascending: false })
+          .order('created_at', { ascending: false }),
+        FETCH_TIMEOUT_MS,
+        'trending:images'
+      );
 
       for (const img of imagesData || []) {
         const bid = (img as { business_id: string }).business_id;
@@ -252,9 +282,11 @@ export async function GET(request: NextRequest) {
       meta: { count: transformed.length, refreshedAt, category },
     };
 
-    console.log('[TRENDING API] GET end total ms:', Date.now() - start);
+    const totalMs = Date.now() - start;
+    console.log('[TRENDING API] GET end total ms:', totalMs);
     const response = NextResponse.json(payload);
-    response.headers.set('Cache-Control', 'public, s-maxage=900, stale-while-revalidate=1800');
+    response.headers.set('Cache-Control', CACHE_CONTROL);
+    response.headers.set('X-Query-Duration-MS', String(totalMs));
     return response;
   } catch (error: unknown) {
     const totalMs = Date.now() - start;
@@ -264,9 +296,12 @@ export async function GET(request: NextRequest) {
     }
     console.error('[TRENDING API] GET end (error) total ms:', totalMs);
     console.error('[TRENDING API] Unexpected error:', error);
-    return NextResponse.json(
+    const response = NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 },
     );
+    response.headers.set('Cache-Control', CACHE_CONTROL);
+    response.headers.set('X-Query-Duration-MS', String(totalMs));
+    return response;
   }
 }

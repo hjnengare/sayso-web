@@ -3,6 +3,24 @@ import { getServerSupabase } from '../../../../lib/supabase/server';
 import { getCategoryLabelFromBusiness } from '../../../../utils/subcategoryPlaceholders';
 import { getInterestIdForSubcategory } from '../../../../lib/onboarding/subcategoryMapping';
 
+const FETCH_TIMEOUT_MS = 1500;
+const CACHE_CONTROL = 'public, s-maxage=30, stale-while-revalidate=300';
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const id = setTimeout(() => reject(new Error(`timeout:${label}`)), ms);
+    promise
+      .then((v) => {
+        clearTimeout(id);
+        resolve(v);
+      })
+      .catch((err) => {
+        clearTimeout(id);
+        reject(err);
+      });
+  });
+}
+
 function calculateDistanceKm(
   lat1: number,
   lon1: number,
@@ -119,24 +137,31 @@ export async function GET(
     });
 
     // Fetch target coords to compute distance client-side (RPC doesn't currently return distance).
-    const { data: targetCoords } = await supabase
-      .from('businesses')
-      .select('lat, lng')
-      .eq('id', targetBusinessId)
-      .or('is_hidden.is.null,is_hidden.eq.false')
-      .or('is_system.is.null,is_system.eq.false')
-      .maybeSingle();
+    const { data: targetCoords } = await withTimeout(
+      supabase
+        .from('businesses')
+        .select('lat, lng')
+        .eq('id', targetBusinessId)
+        .or('is_hidden.is.null,is_hidden.eq.false')
+        .or('is_system.is.null,is_system.eq.false')
+        .maybeSingle(),
+      FETCH_TIMEOUT_MS,
+      'similar:target-coords'
+    );
 
     const targetLat = (targetCoords as any)?.lat as number | null | undefined;
     const targetLng = (targetCoords as any)?.lng as number | null | undefined;
 
     // Call the RPC function
-    const { data: similarBusinesses, error: rpcError } = await supabase
-      .rpc('get_similar_businesses', {
+    const { data: similarBusinesses, error: rpcError } = await withTimeout(
+      supabase.rpc('get_similar_businesses', {
         p_target_business_id: targetBusinessId,
         p_limit: validLimit,
         p_radius_km: validRadius,
-      });
+      }),
+      FETCH_TIMEOUT_MS,
+      'similar:rpc'
+    );
 
     if (rpcError) {
       console.error('[API] Error calling get_similar_businesses RPC:', {
@@ -156,7 +181,10 @@ export async function GET(
         rpcError.message?.toLowerCase().includes('unknown function')
       ) {
         console.warn('[API] get_similar_businesses RPC function not found. Please run the migration: supabase/migrations/20250122_create_get_similar_businesses_function.sql');
-        return NextResponse.json({ businesses: [] });
+        const res = NextResponse.json({ businesses: [] });
+        res.headers.set('Cache-Control', CACHE_CONTROL);
+        res.headers.set('X-Query-Duration-MS', String(Date.now() - start));
+        return res;
       }
 
       // In development, expose full error details for debugging
@@ -267,9 +295,8 @@ export async function GET(
     const response = NextResponse.json({
       businesses: transformedBusinesses,
     });
-
-    response.headers.set('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
-
+    response.headers.set('Cache-Control', CACHE_CONTROL);
+    response.headers.set('X-Query-Duration-MS', String(Date.now() - start));
     return response;
   } catch (error: any) {
     console.error('[API] Error in GET similar businesses:', {
@@ -285,13 +312,19 @@ export async function GET(
         error?.code === '42883' ||
         error?.code === 'PGRST301') {
       console.warn('[API] RPC function error detected, returning empty array. Please run migration: supabase/migrations/20250122_create_get_similar_businesses_function.sql');
-      return NextResponse.json({ businesses: [] });
+      const res = NextResponse.json({ businesses: [] });
+      res.headers.set('Cache-Control', CACHE_CONTROL);
+      res.headers.set('X-Query-Duration-MS', String(Date.now() - start));
+      return res;
     }
     
-    return NextResponse.json(
+    const res = NextResponse.json(
       { error: 'Internal server error', details: error?.message || 'Unknown error' },
       { status: 500 }
     );
+    res.headers.set('Cache-Control', CACHE_CONTROL);
+    res.headers.set('X-Query-Duration-MS', String(Date.now() - start));
+    return res;
   }
 }
 

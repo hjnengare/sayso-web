@@ -4,10 +4,28 @@ import { formatDateRangeLabel, mapEventsAndSpecialsRowToEventCard, type EventsAn
 import { createEventOrSpecial } from "@/app/lib/events/createEventSpecial";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 const MAX_RAW_ROWS = 4000;
 const BOOKING_SELECT_FRAGMENT =
   ",booking_url,booking_contact,cta_source,whatsapp_number,whatsapp_prefill_template";
+const FETCH_TIMEOUT_MS = 1500;
+const CACHE_CONTROL = "public, s-maxage=30, stale-while-revalidate=300";
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const id = setTimeout(() => reject(new Error(`timeout:${label}`)), ms);
+    promise
+      .then((v) => {
+        clearTimeout(id);
+        resolve(v);
+      })
+      .catch((err) => {
+        clearTimeout(id);
+        reject(err);
+      });
+  });
+}
 
 /**
  * Strip numbering, date tokens, and noise from a title to produce a canonical series key.
@@ -49,7 +67,7 @@ const normalizeSeriesKey = (row: Pick<EventsAndSpecialsRow, "title" | "business_
  * - limit?: number (default 20)
  */
 export async function GET(req: NextRequest) {
-  const cacheControl = "public, s-maxage=120, stale-while-revalidate=300";
+  const reqStart = Date.now();
   try {
     const { searchParams } = new URL(req.url);
     const typeParam = (searchParams.get("type") || "").trim().toLowerCase();
@@ -100,7 +118,7 @@ export async function GET(req: NextRequest) {
     let data: any[] | null = null;
     let error: any = null;
 
-    ({ data, error } = await query);
+    ({ data, error } = await withTimeout(query, FETCH_TIMEOUT_MS, "events-and-specials:primary"));
 
     const errorMessage = String(error?.message ?? "");
     const isMissingCtaOrBookingColumn =
@@ -127,13 +145,18 @@ export async function GET(req: NextRequest) {
         );
       }
 
-      ({ data, error } = await retryQuery);
+      ({ data, error } = await withTimeout(
+        retryQuery,
+        FETCH_TIMEOUT_MS,
+        "events-and-specials:retry-no-cta"
+      ));
     }
 
     if (error) {
       console.error("[events-and-specials] query error:", error);
       const response = NextResponse.json({ items: [], count: 0, limit, offset }, { status: 200 });
-      response.headers.set("Cache-Control", cacheControl);
+      response.headers.set("Cache-Control", CACHE_CONTROL);
+      response.headers.set("X-Query-Duration-MS", String(Date.now() - reqStart));
       return response;
     }
 
@@ -289,12 +312,14 @@ export async function GET(req: NextRequest) {
       limit,
       offset,
     });
-    response.headers.set("Cache-Control", cacheControl);
+    response.headers.set("Cache-Control", CACHE_CONTROL);
+    response.headers.set("X-Query-Duration-MS", String(Date.now() - reqStart));
     return response;
   } catch (err) {
     console.error("[events-and-specials] error:", err);
     const response = NextResponse.json({ items: [], count: 0, limit: 20, offset: 0 }, { status: 200 });
-    response.headers.set("Cache-Control", cacheControl);
+    response.headers.set("Cache-Control", CACHE_CONTROL);
+    response.headers.set("X-Query-Duration-MS", String(Date.now() - reqStart));
     return response;
   }
 }
