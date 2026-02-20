@@ -704,8 +704,10 @@ export async function proxy(request: NextRequest) {
     }
 
     // EXPLICIT: Already on valid onboarding path → allow. Never bounce backward to /interests.
-    // Exclude /complete — incomplete users on /complete get redirected to /interests below.
-    const allowedIncompletePaths = ['/interests', '/subcategories', '/deal-breakers', '/onboarding'];
+    // /complete is also allowed through here — the page handles its own access control and
+    // auto-redirects to /home. Blocking it here caused a DB replication race condition where
+    // the proxy saw stale incomplete state right after the deal-breakers API write.
+    const allowedIncompletePaths = ['/interests', '/subcategories', '/deal-breakers', '/onboarding', '/complete'];
     const isOnAllowedIncompletePath = allowedIncompletePaths.some(p => pathname === p || pathname.startsWith(p + '/'));
     if (isOnAllowedIncompletePath && !isOnboardingComplete) {
       debugLog('ALLOW', { requestId, reason: 'on_allowed_incomplete_path', pathname });
@@ -723,11 +725,6 @@ export async function proxy(request: NextRequest) {
         debugLog('REDIRECT', { requestId, reason: 'completed_user_on_onboarding', to: '/home' });
         edgeLog('REDIRECT', pathname, { hasUser: true, emailConfirmed: true, onboardingComplete: true, to: '/home' });
         return redirectWithGuard(request, new URL('/home', request.url));
-      }
-      if (pathname === '/complete') {
-        debugLog('REDIRECT', { requestId, reason: 'incomplete_user_on_complete', to: '/interests' });
-        edgeLog('REDIRECT', pathname, { hasUser: true, emailConfirmed: true, onboardingComplete: false, to: '/interests' });
-        return redirectWithGuard(request, new URL('/interests', request.url));
       }
       // User with incomplete onboarding CAN access onboarding routes
       debugLog('ALLOW', { requestId, reason: 'incomplete_user_on_onboarding', pathname });

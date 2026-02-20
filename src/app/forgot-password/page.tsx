@@ -95,14 +95,16 @@ export default function ForgotPasswordPage() {
     return (
       <>
         <style dangerouslySetInnerHTML={{ __html: authStyles }} />
-        <div ref={containerRef} className="min-h-[100dvh] bg-off-white flex flex-col relative overflow-hidden ios-inertia hide-scrollbar safe-area-full">
-          {/* Premium floating orbs background */}
-          <div className="floating-orb floating-orb-1" aria-hidden="true" />
-          <div className="floating-orb floating-orb-2" aria-hidden="true" />
-          <div className="floating-orb floating-orb-3" aria-hidden="true" />
-          <div className="floating-orb floating-orb-4" aria-hidden="true" />
-          <div className="floating-orb floating-orb-5" aria-hidden="true" />
-          <div className="floating-orb floating-orb-6" aria-hidden="true" />
+        <div ref={containerRef} className="min-h-[100dvh] bg-off-white flex flex-col relative overflow-y-auto ios-inertia hide-scrollbar safe-area-full">
+          {/* Premium floating orbs background — clipped inside own layer so root can scroll */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+            <div className="floating-orb floating-orb-1" />
+            <div className="floating-orb floating-orb-2" />
+            <div className="floating-orb floating-orb-3" />
+            <div className="floating-orb floating-orb-4" />
+            <div className="floating-orb floating-orb-5" />
+            <div className="floating-orb floating-orb-6" />
+          </div>
 
           {/* Back button with entrance animation */}
           <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-20 animate-slide-in-left animate-delay-200">
@@ -201,15 +203,17 @@ export default function ForgotPasswordPage() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: authStyles }} />
-      <div ref={containerRef} className="min-h-[100dvh] bg-off-white flex flex-col relative overflow-hidden ios-inertia hide-scrollbar safe-area-full">
+      <div ref={containerRef} className="min-h-[100dvh] bg-off-white flex flex-col relative overflow-y-auto ios-inertia hide-scrollbar safe-area-full">
 
-        {/* Premium floating orbs background */}
-        <div className="floating-orb floating-orb-1" aria-hidden="true" />
-        <div className="floating-orb floating-orb-2" aria-hidden="true" />
-        <div className="floating-orb floating-orb-3" aria-hidden="true" />
-        <div className="floating-orb floating-orb-4" aria-hidden="true" />
-        <div className="floating-orb floating-orb-5" aria-hidden="true" />
-        <div className="floating-orb floating-orb-6" aria-hidden="true" />
+        {/* Premium floating orbs background — clipped inside own layer so root can scroll */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+          <div className="floating-orb floating-orb-1" />
+          <div className="floating-orb floating-orb-2" />
+          <div className="floating-orb floating-orb-3" />
+          <div className="floating-orb floating-orb-4" />
+          <div className="floating-orb floating-orb-5" />
+          <div className="floating-orb floating-orb-6" />
+        </div>
 
         {/* Back button with entrance animation */}
         <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-20 animate-slide-in-left animate-delay-200">
