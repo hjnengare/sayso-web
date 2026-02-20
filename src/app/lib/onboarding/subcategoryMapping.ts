@@ -21,21 +21,10 @@ export const SUBCATEGORY_TO_INTEREST: Record<string, string> = {
   electricians: 'professional-services',
   'legal-services': 'professional-services',
 
-  // Travel
+  // Travel (canonical)
   accommodation: 'travel',
   transport: 'travel',
-  airports: 'travel',
-  'train-stations': 'travel',
-  'bus-stations': 'travel',
-  'car-rental-businesses': 'travel',
-  'campervan-rentals': 'travel',
-  'shuttle-services': 'travel',
-  'chauffeur-services': 'travel',
   'travel-services': 'travel',
-  'tour-guides': 'travel',
-  'travel-agencies': 'travel',
-  'luggage-shops': 'travel',
-  'travel-insurance-providers': 'travel',
 
   // Outdoors & Adventure
   hiking: 'outdoors-adventure',
@@ -70,5 +59,25 @@ export const SUBCATEGORY_TO_INTEREST: Record<string, string> = {
 };
 
 export function getInterestIdForSubcategory(subcategoryId: string): string | undefined {
-  return SUBCATEGORY_TO_INTEREST[subcategoryId];
+  const slug = subcategoryId?.trim().toLowerCase();
+  if (!slug) return undefined;
+  // Legacy travel slugs are mapped to the nearest canonical subcategory for backward compatibility.
+  const normalized = LEGACY_TRAVEL_SUBCATEGORY_MAP[slug] ?? slug;
+  return SUBCATEGORY_TO_INTEREST[normalized];
 }
+
+// Maps legacy Travel subcategory slugs to the new canonical set (Accommodation, Transport, Travel Services).
+// Keep this list tight and Travel-only to avoid touching other taxonomies.
+export const LEGACY_TRAVEL_SUBCATEGORY_MAP: Record<string, 'accommodation' | 'transport' | 'travel-services'> = {
+  airports: 'transport',
+  'train-stations': 'transport',
+  'bus-stations': 'transport',
+  'car-rental-businesses': 'transport',
+  'campervan-rentals': 'transport',
+  'shuttle-services': 'transport',
+  'chauffeur-services': 'transport',
+  'tour-guides': 'travel-services',
+  'travel-agencies': 'travel-services',
+  'luggage-shops': 'travel-services',
+  'travel-insurance-providers': 'travel-services',
+};

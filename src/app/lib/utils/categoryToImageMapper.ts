@@ -2,6 +2,8 @@
  * Maps business categories to subcategories and then to PNG placeholder images
  */
 
+import { LEGACY_TRAVEL_SUBCATEGORY_MAP } from "../onboarding/subcategoryMapping";
+
 // Mapping from OSM category names to subcategory IDs
 // This maps the categories from OSM_CATEGORY_MAP in overpassService.ts
 const CATEGORY_TO_SUBCATEGORY: Record<string, string> = {
@@ -62,18 +64,18 @@ const CATEGORY_TO_SUBCATEGORY: Record<string, string> = {
   'Guesthouse': 'accommodation',
   'Lodge': 'accommodation',
   'Motel': 'accommodation',
-  'Airport': 'airports',
-  'Train Station': 'train-stations',
-  'Bus Station': 'bus-stations',
-  'Car Rental': 'car-rental-businesses',
-  'Campervan Rental': 'campervan-rentals',
-  'Shuttle Service': 'shuttle-services',
-  'Chauffeur Service': 'chauffeur-services',
+  'Airport': 'transport',
+  'Train Station': 'transport',
+  'Bus Station': 'transport',
+  'Car Rental': 'transport',
+  'Campervan Rental': 'transport',
+  'Shuttle Service': 'transport',
+  'Chauffeur Service': 'transport',
   'Travel Service': 'travel-services',
-  'Tour Guide': 'tour-guides',
-  'Travel Agency': 'travel-agencies',
-  'Luggage Shop': 'luggage-shops',
-  'Travel Insurance Provider': 'travel-insurance-providers',
+  'Tour Guide': 'travel-services',
+  'Travel Agency': 'travel-services',
+  'Luggage Shop': 'travel-services',
+  'Travel Insurance Provider': 'travel-services',
   
   // Default fallback - use a generic shopping icon instead of restaurant
   'Business': 'electronics', // Generic fallback (shopping bag icon)
@@ -106,18 +108,19 @@ const SUBCATEGORY_TO_PNG: Record<string, string> = {
   // Travel
   'accommodation': '036-summer.png',
   'transport': '045-transportation.png',
+  'travel-services': '045-transportation.png',
+  // Legacy travel slugs (kept for compatibility; mapped to new taxonomy)
   'airports': '045-transportation.png',
   'train-stations': '045-transportation.png',
   'bus-stations': '045-transportation.png',
   'car-rental-businesses': '045-transportation.png',
-  'campervan-rentals': '036-summer.png',
+  'campervan-rentals': '045-transportation.png',
   'shuttle-services': '045-transportation.png',
   'chauffeur-services': '045-transportation.png',
-  'travel-services': '045-transportation.png',
-  'tour-guides': '035-tour-guide.png',
+  'tour-guides': '045-transportation.png',
   'travel-agencies': '045-transportation.png',
-  'luggage-shops': '023-shopping-bag.png',
-  'travel-insurance-providers': '046-insurance.png',
+  'luggage-shops': '045-transportation.png',
+  'travel-insurance-providers': '045-transportation.png',
   
   // Outdoors & Adventure
   'hiking': '034-skydive.png', // Using skydive as adventure
@@ -182,6 +185,9 @@ export function getCategoryImageUrl(category: string): string {
   if (!subcategory) {
     subcategory = 'electronics';
   }
+
+  // Normalize legacy travel slugs to the new canonical set.
+  subcategory = LEGACY_TRAVEL_SUBCATEGORY_MAP[subcategory] ?? subcategory;
   
   // Map subcategory to PNG
   const pngFile = SUBCATEGORY_TO_PNG[subcategory] || '023-shopping-bag.png'; // Default fallback to shopping bag
@@ -196,8 +202,10 @@ export function getCategoryImageUrl(category: string): string {
  */
 export function getSubcategoryForCategory(category: string): string {
   const normalizedCategory = category.trim();
-  return CATEGORY_TO_SUBCATEGORY[normalizedCategory] || 
-         CATEGORY_TO_SUBCATEGORY[normalizedCategory.toLowerCase()] ||
-         'electronics'; // Default fallback to electronics (shopping bag icon)
+  const base =
+    CATEGORY_TO_SUBCATEGORY[normalizedCategory] ||
+    CATEGORY_TO_SUBCATEGORY[normalizedCategory.toLowerCase()] ||
+    'electronics'; // Default fallback to electronics (shopping bag icon)
+  return LEGACY_TRAVEL_SUBCATEGORY_MAP[base] ?? base;
 }
 

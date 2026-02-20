@@ -3,7 +3,7 @@ import { getServerSupabase } from '../../../lib/supabase/server';
 import { fetchCapeTownBusinesses } from '../../../lib/services/overpassService';
 import { mapOSMToBusiness, generateInitialStats } from '../../../lib/utils/osmToBusinessMapper';
 import { getSubcategorySlugForOsmCategory } from '../../../lib/utils/osmCategoryToSlug';
-import { getInterestIdForSubcategory } from '../../../lib/onboarding/subcategoryMapping';
+import { getInterestIdForSubcategory, LEGACY_TRAVEL_SUBCATEGORY_MAP } from '../../../lib/onboarding/subcategoryMapping';
 import { SUBCATEGORY_SLUG_TO_LABEL } from '../../../utils/subcategoryPlaceholders';
 
 export const dynamic = 'force-dynamic';
@@ -32,7 +32,13 @@ export async function POST(req: Request) {
       Math.max(requestedLimit ?? MAX_TOTAL_BUSINESSES, 1),
       MAX_TOTAL_BUSINESSES
     );
-    const subcategory = body.subcategory || body.category || undefined; // Support both for backward compatibility
+    const rawSubcategory = body.subcategory || body.category || undefined; // Support both for backward compatibility
+    const normalizedKey = typeof rawSubcategory === 'string'
+      ? rawSubcategory.trim().toLowerCase()
+      : undefined;
+    const subcategory = normalizedKey
+      ? LEGACY_TRAVEL_SUBCATEGORY_MAP[normalizedKey] ?? normalizedKey
+      : undefined;
     const dryRun = body.dryRun === true; // Don't actually insert if true
     
     // Define all subcategories from subcategories page
@@ -44,7 +50,7 @@ export async function POST(req: Request) {
       // Professional Services
       'education-learning', 'transport-travel', 'finance-insurance', 'plumbers', 'electricians', 'legal-services',
       // Travel
-      'accommodation', 'transport', 'airports', 'train-stations', 'bus-stations', 'car-rental-businesses', 'campervan-rentals', 'shuttle-services', 'chauffeur-services', 'travel-services', 'tour-guides', 'travel-agencies', 'luggage-shops', 'travel-insurance-providers',
+      'accommodation', 'transport', 'travel-services',
       // Outdoors & Adventure
       'hiking', 'cycling', 'water-sports', 'camping',
       // Entertainment & Experiences
@@ -418,7 +424,11 @@ export async function GET(req: Request) {
       Math.max(Number.isFinite(parsedLimit) ? parsedLimit : MAX_TOTAL_BUSINESSES, 1),
       MAX_TOTAL_BUSINESSES
     );
-    const subcategory = searchParams.get('subcategory') || searchParams.get('category') || undefined;
+    const rawSubcategory = searchParams.get('subcategory') || searchParams.get('category') || undefined;
+    const normalizedKey = rawSubcategory ? rawSubcategory.trim().toLowerCase() : undefined;
+    const subcategory = normalizedKey
+      ? LEGACY_TRAVEL_SUBCATEGORY_MAP[normalizedKey] ?? normalizedKey
+      : undefined;
     
     // Define all subcategories from subcategories page
     const ALL_SUBCATEGORIES = [
@@ -429,7 +439,7 @@ export async function GET(req: Request) {
       // Professional Services
       'education-learning', 'transport-travel', 'finance-insurance', 'plumbers', 'electricians', 'legal-services',
       // Travel
-      'accommodation', 'transport', 'airports', 'train-stations', 'bus-stations', 'car-rental-businesses', 'campervan-rentals', 'shuttle-services', 'chauffeur-services', 'travel-services', 'tour-guides', 'travel-agencies', 'luggage-shops', 'travel-insurance-providers',
+      'accommodation', 'transport', 'travel-services',
       // Outdoors & Adventure
       'hiking', 'cycling', 'water-sports', 'camping',
       // Entertainment & Experiences

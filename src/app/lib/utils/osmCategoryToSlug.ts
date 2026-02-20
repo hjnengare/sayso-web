@@ -2,6 +2,8 @@
  * Maps OSM/category label (e.g. "Restaurant", "Bank") to our canonical subcategory slug.
  * Used by seed and update-images for primary_subcategory_slug.
  */
+import { LEGACY_TRAVEL_SUBCATEGORY_MAP } from "../onboarding/subcategoryMapping";
+
 export function getSubcategorySlugForOsmCategory(
   category: string,
   businessName?: string
@@ -53,45 +55,45 @@ export function getSubcategorySlugForOsmCategory(
     if (
       nameLower.includes('airport')
     ) {
-      return 'airports';
+      return 'transport';
     }
     if (
       nameLower.includes('train station') ||
       nameLower.includes('railway station')
     ) {
-      return 'train-stations';
+      return 'transport';
     }
     if (
       nameLower.includes('bus station') ||
       nameLower.includes('bus terminal')
     ) {
-      return 'bus-stations';
+      return 'transport';
     }
     if (
       nameLower.includes('car rental') ||
       nameLower.includes('car hire')
     ) {
-      return 'car-rental-businesses';
+      return 'transport';
     }
     if (
       nameLower.includes('campervan')
     ) {
-      return 'campervan-rentals';
+      return 'transport';
     }
     if (
       nameLower.includes('travel agency')
     ) {
-      return 'travel-agencies';
+      return 'travel-services';
     }
     if (
       nameLower.includes('tour guide')
     ) {
-      return 'tour-guides';
+      return 'travel-services';
     }
     if (
       nameLower.includes('travel insurance')
     ) {
-      return 'travel-insurance-providers';
+      return 'travel-services';
     }
     if (
       nameLower.includes('hotel') ||
@@ -150,30 +152,31 @@ export function getSubcategorySlugForOsmCategory(
     Guesthouse: 'accommodation',
     Lodge: 'accommodation',
     Motel: 'accommodation',
-    Airport: 'airports',
-    'Train Station': 'train-stations',
-    'Bus Station': 'bus-stations',
-    'Car Rental': 'car-rental-businesses',
-    'Campervan Rental': 'campervan-rentals',
-    'Shuttle Service': 'shuttle-services',
-    'Chauffeur Service': 'chauffeur-services',
+    Airport: 'transport',
+    'Train Station': 'transport',
+    'Bus Station': 'transport',
+    'Car Rental': 'transport',
+    'Campervan Rental': 'transport',
+    'Shuttle Service': 'transport',
+    'Chauffeur Service': 'transport',
     'Travel Service': 'travel-services',
-    'Tour Guide': 'tour-guides',
-    'Travel Agency': 'travel-agencies',
-    'Luggage Shop': 'luggage-shops',
-    'Travel Insurance Provider': 'travel-insurance-providers',
+    'Tour Guide': 'travel-services',
+    'Travel Agency': 'travel-services',
+    'Luggage Shop': 'travel-services',
+    'Travel Insurance Provider': 'travel-services',
     Business: 'electronics',
   };
 
   if (categoryMap[normalizedCategory]) {
-    return categoryMap[normalizedCategory];
+    return LEGACY_TRAVEL_SUBCATEGORY_MAP[categoryMap[normalizedCategory]] ?? categoryMap[normalizedCategory];
   }
   const lowerCategory = normalizedCategory.toLowerCase();
   const matchingKey = Object.keys(categoryMap).find(
     (key) => key.toLowerCase() === lowerCategory
   );
   if (matchingKey) {
-    return categoryMap[matchingKey];
+    const mapped = categoryMap[matchingKey];
+    return LEGACY_TRAVEL_SUBCATEGORY_MAP[mapped] ?? mapped;
   }
   return 'electronics';
 }

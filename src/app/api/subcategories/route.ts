@@ -27,18 +27,7 @@ const FALLBACK_SUBCATEGORIES = [
   // Travel
   { id: "accommodation", label: "Accommodation", interest_id: "travel" },
   { id: "transport", label: "Transport", interest_id: "travel" },
-  { id: "airports", label: "Airports", interest_id: "travel" },
-  { id: "train-stations", label: "Train Stations", interest_id: "travel" },
-  { id: "bus-stations", label: "Bus Stations", interest_id: "travel" },
-  { id: "car-rental-businesses", label: "Car Rental Businesses", interest_id: "travel" },
-  { id: "campervan-rentals", label: "Campervan Rentals", interest_id: "travel" },
-  { id: "shuttle-services", label: "Shuttle Services", interest_id: "travel" },
-  { id: "chauffeur-services", label: "Chauffeur Services", interest_id: "travel" },
   { id: "travel-services", label: "Travel Services", interest_id: "travel" },
-  { id: "tour-guides", label: "Tour Guides", interest_id: "travel" },
-  { id: "travel-agencies", label: "Travel Agencies", interest_id: "travel" },
-  { id: "luggage-shops", label: "Luggage Shops", interest_id: "travel" },
-  { id: "travel-insurance-providers", label: "Travel Insurance Providers", interest_id: "travel" },
 
   // Outdoors & Adventure
   { id: "hiking", label: "Hiking", interest_id: "outdoors-adventure" },

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { LEGACY_TRAVEL_SUBCATEGORY_MAP } from '@/app/lib/onboarding/subcategoryMapping';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -108,18 +109,18 @@ function getSubcategoryForCategory(category: string, businessName?: string): str
     'Guesthouse': 'accommodation',
     'Lodge': 'accommodation',
     'Motel': 'accommodation',
-    'Airport': 'airports',
-    'Train Station': 'train-stations',
-    'Bus Station': 'bus-stations',
-    'Car Rental': 'car-rental-businesses',
-    'Campervan Rental': 'campervan-rentals',
-    'Shuttle Service': 'shuttle-services',
-    'Chauffeur Service': 'chauffeur-services',
+    'Airport': 'transport',
+    'Train Station': 'transport',
+    'Bus Station': 'transport',
+    'Car Rental': 'transport',
+    'Campervan Rental': 'transport',
+    'Shuttle Service': 'transport',
+    'Chauffeur Service': 'transport',
     'Travel Service': 'travel-services',
-    'Tour Guide': 'tour-guides',
-    'Travel Agency': 'travel-agencies',
-    'Luggage Shop': 'luggage-shops',
-    'Travel Insurance Provider': 'travel-insurance-providers',
+    'Tour Guide': 'travel-services',
+    'Travel Agency': 'travel-services',
+    'Luggage Shop': 'travel-services',
+    'Travel Insurance Provider': 'travel-services',
     
     // Default fallback
     'Business': 'electronics',
@@ -127,7 +128,8 @@ function getSubcategoryForCategory(category: string, businessName?: string): str
   
   // Try exact match
   if (categoryMap[normalizedCategory]) {
-    return categoryMap[normalizedCategory];
+    const mapped = categoryMap[normalizedCategory];
+    return LEGACY_TRAVEL_SUBCATEGORY_MAP[mapped] ?? mapped;
   }
   
   // Try case-insensitive match
@@ -135,9 +137,10 @@ function getSubcategoryForCategory(category: string, businessName?: string): str
   const matchingKey = Object.keys(categoryMap).find(
     key => key.toLowerCase() === lowerCategory
   );
-  
+
   if (matchingKey) {
-    return categoryMap[matchingKey];
+    const mapped = categoryMap[matchingKey];
+    return LEGACY_TRAVEL_SUBCATEGORY_MAP[mapped] ?? mapped;
   }
   
   // Default fallback
@@ -174,18 +177,19 @@ function getPngForSubcategory(subcategory: string): string {
     // Travel
     'accommodation': '036-summer.png',
     'transport': '045-transportation.png',
+    'travel-services': '045-transportation.png',
+    // Legacy travel slugs (alias to new taxonomy)
     'airports': '045-transportation.png',
     'train-stations': '045-transportation.png',
     'bus-stations': '045-transportation.png',
     'car-rental-businesses': '045-transportation.png',
-    'campervan-rentals': '036-summer.png',
+    'campervan-rentals': '045-transportation.png',
     'shuttle-services': '045-transportation.png',
     'chauffeur-services': '045-transportation.png',
-    'travel-services': '045-transportation.png',
-    'tour-guides': '035-tour-guide.png',
+    'tour-guides': '045-transportation.png',
     'travel-agencies': '045-transportation.png',
-    'luggage-shops': '023-shopping-bag.png',
-    'travel-insurance-providers': '046-insurance.png',
+    'luggage-shops': '045-transportation.png',
+    'travel-insurance-providers': '045-transportation.png',
     
     // Outdoors & Adventure
     'hiking': '034-skydive.png',

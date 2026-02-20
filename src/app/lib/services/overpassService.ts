@@ -2,6 +2,8 @@
  * Service to fetch business data from Overpass API (OpenStreetMap)
  */
 
+import { LEGACY_TRAVEL_SUBCATEGORY_MAP } from "../onboarding/subcategoryMapping";
+
 export interface OSMNode {
   type: 'node' | 'way' | 'relation';
   id: number;
@@ -105,46 +107,14 @@ export const SUBCATEGORY_TO_OSM_TAGS: Record<string, OSMTagFilters> = {
   'transport': {
     amenity: ['taxi', 'bus_station', 'car_rental'],
     railway: ['station'],
-    aeroway: ['aerodrome'],
-  },
-  'airports': {
     aeroway: ['aerodrome', 'terminal'],
-  },
-  'train-stations': {
-    railway: ['station'],
-  },
-  'bus-stations': {
-    amenity: ['bus_station'],
-  },
-  'car-rental-businesses': {
-    amenity: ['car_rental'],
-  },
-  'campervan-rentals': {
-    tourism: ['caravan_site'],
-    amenity: ['car_rental'],
-  },
-  'shuttle-services': {
-    amenity: ['taxi', 'bus_station'],
-  },
-  'chauffeur-services': {
-    amenity: ['taxi'],
+    tourism: ['caravan_site'], // legacy campervan-style entries map to transport now
   },
   'travel-services': {
-    shop: ['travel_agency'],
+    shop: ['travel_agency', 'bag', 'luggage'],
     tourism: ['information'],
-  },
-  'tour-guides': {
-    tourism: ['information'],
-  },
-  'travel-agencies': {
-    shop: ['travel_agency'],
-  },
-  'luggage-shops': {
-    shop: ['bag', 'luggage'],
-  },
-  'travel-insurance-providers': {
     office: ['insurance'],
-    shop: ['insurance'],
+    amenity: ['information'],
   },
   
   // Outdoors & Adventure subcategories
@@ -301,6 +271,12 @@ const OSM_CATEGORY_MAP: Record<string, string> = {
 // Using 'Business' which maps to 'electronics' subcategory (shopping bag icon)
 const DEFAULT_CATEGORY = 'Business';
 
+const normalizeTravelSubcategory = (slug?: string | null): string | undefined => {
+  const key = slug?.trim().toLowerCase();
+  if (!key) return undefined;
+  return LEGACY_TRAVEL_SUBCATEGORY_MAP[key] ?? key;
+};
+
 /**
  * Fetches businesses from Overpass API for Cape Town area
  * @param limit - Maximum number of businesses to return
@@ -383,9 +359,11 @@ export async function fetchCapeTownBusinesses(
     // Build Overpass query based on subcategory
     let finalQuery: string;
     
-    if (subcategory && SUBCATEGORY_TO_OSM_TAGS[subcategory]) {
+    const normalizedSubcategory = normalizeTravelSubcategory(subcategory);
+
+    if (normalizedSubcategory && SUBCATEGORY_TO_OSM_TAGS[normalizedSubcategory]) {
       // Filter by specific subcategory
-      const tags = SUBCATEGORY_TO_OSM_TAGS[subcategory];
+      const tags = SUBCATEGORY_TO_OSM_TAGS[normalizedSubcategory];
       const queries: string[] = [];
 
       // Build queries for each supported tag key.

@@ -37,7 +37,7 @@ import {
   getSubcategoryLabel,
   getCategoryLabelFromBusiness,
 } from "@/app/utils/subcategoryPlaceholders";
-import { SUBCATEGORY_TO_INTEREST } from "@/app/lib/onboarding/subcategoryMapping";
+import { LEGACY_TRAVEL_SUBCATEGORY_MAP, SUBCATEGORY_TO_INTEREST } from "@/app/lib/onboarding/subcategoryMapping";
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs'; // Use Node.js runtime to avoid Edge Runtime warnings with Supabase
@@ -346,6 +346,9 @@ function resolveCanonicalCategorySlug(input: string): string | null {
   if (!trimmed) return null;
 
   const lowered = trimmed.toLowerCase();
+  const legacyTravel = LEGACY_TRAVEL_SUBCATEGORY_MAP[lowered];
+  if (legacyTravel) return legacyTravel;
+
   if (CANONICAL_SUBCATEGORY_SET.has(lowered)) {
     return lowered;
   }
@@ -369,7 +372,7 @@ const INTEREST_TO_SUBCATEGORIES: Record<string, string[]> = {
   'food-drink': ['restaurants', 'cafes', 'bars', 'fast-food', 'fine-dining'],
   'beauty-wellness': ['gyms', 'spas', 'salons', 'wellness', 'nail-salons'],
   'professional-services': ['education-learning', 'transport-travel', 'finance-insurance', 'plumbers', 'electricians', 'legal-services'],
-  travel: ['accommodation', 'transport', 'airports', 'train-stations', 'bus-stations', 'car-rental-businesses', 'campervan-rentals', 'shuttle-services', 'chauffeur-services', 'travel-services', 'tour-guides', 'travel-agencies', 'luggage-shops', 'travel-insurance-providers'],
+  travel: ['accommodation', 'transport', 'travel-services'],
   'outdoors-adventure': ['hiking', 'cycling', 'water-sports', 'camping'],
   'experiences-entertainment': ['events-festivals', 'sports-recreation', 'nightlife', 'comedy-clubs', 'cinemas'],
   'arts-culture': ['museums', 'galleries', 'theaters', 'concerts'],
