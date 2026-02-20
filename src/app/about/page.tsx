@@ -2,6 +2,13 @@
 import React from "react";
 // Import existing design tokens/styles
 import "../globals.css";
+import { Urbanist } from "next/font/google";
+
+const urbanist = Urbanist({
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
+  display: "swap",
+});
 
 // Animation utility (simple fade/translate, GPU-friendly)
 function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
@@ -22,7 +29,7 @@ function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
 
 export default function AboutPage() {
   return (
-    <main className="bg-off-white text-charcoal min-h-screen flex flex-col items-center px-4 sm:px-6 lg:px-0">
+    <main className={`${urbanist.className} bg-off-white text-charcoal min-h-screen flex flex-col items-center px-4 sm:px-6 lg:px-0`}>
       <div className="pt-10 flex flex-col items-center space-y-2">
         <img
           src="/logos/logo.png"
@@ -33,7 +40,6 @@ export default function AboutPage() {
         />
         <span
           className="text-2xl font-semibold tracking-tight text-charcoal"
-          style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif' }}
         >
           sayso
         </span>
