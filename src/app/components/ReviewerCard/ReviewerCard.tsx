@@ -113,63 +113,61 @@ export default function ReviewerCard({
           href={cardHref}
           className="block group/card h-full"
         >
-          <div
-            className="relative rounded-2xl cursor-pointer shadow-sm hover:shadow-xl transition-all duration-500 ease-out bg-card-bg flex flex-col"
-          >
+          <div className="relative rounded-2xl cursor-pointer shadow-sm hover:shadow-lg transition-shadow duration-300 bg-card-bg flex flex-col overflow-hidden">
 
             {/* Content */}
             <div className="relative p-4 flex flex-col gap-3">
-              {/* Header with profile pic, name, location */}
+
+              {/* Header: avatar + name + badges */}
               <div className="flex items-start gap-3">
+                {/* Avatar */}
                 {!imgError && reviewerData?.profilePicture && reviewerData.profilePicture.trim() !== '' ? (
                   <div className="relative flex-shrink-0">
-                    <div className="relative">
-                      <Image
-                        src={reviewerData.profilePicture}
-                        alt={reviewerData?.name || "User avatar"}
-                        width={44}
-                        height={44}
-                        className="w-11 h-11 object-cover rounded-full shadow-sm"
-                        priority={false}
-                        onError={() => setImgError(true)}
-                      />
-                    </div>
+                    <Image
+                      src={reviewerData.profilePicture}
+                      alt={reviewerData?.name || "User avatar"}
+                      width={44}
+                      height={44}
+                      className="w-11 h-11 object-cover rounded-full ring-2 ring-off-white/60"
+                      priority={false}
+                      onError={() => setImgError(true)}
+                    />
                     {reviewerData?.badge === "verified" && (
                       <div className="absolute -right-0.5 -top-0.5 z-20">
-                        <div className="bg-white rounded-full p-[3px] shadow-sm">
+                        <div className="bg-card-bg rounded-full p-[3px]">
                           <VerifiedBadge size="sm" />
                         </div>
                       </div>
                     )}
                     {reviewerData?.badge === "top" && (
-                      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-coral/25 to-coral/15 blur-lg animate-pulse" />
+                      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-coral/20 to-coral/10 blur-md animate-pulse" />
                     )}
                   </div>
                 ) : (
-                  <div className="relative">
-                    <div className="w-11 h-11 flex items-center justify-center rounded-full shadow-sm"
-                      style={{ background: 'linear-gradient(135deg, #f0ece8 0%, #e5e0e5 100%)' }}>
-                      <User className="text-charcoal/40" size={18} strokeWidth={1.8} />
-                    </div>
+                  <div className="w-11 h-11 flex items-center justify-center rounded-full bg-off-white/60 flex-shrink-0">
+                    <User className="text-charcoal/40" size={18} strokeWidth={1.8} />
                   </div>
                 )}
 
+                {/* Name + badges/location */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-[15px] font-bold text-charcoal/90 truncate tracking-[-0.01em]" style={{
-                    fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                    fontWeight: 700,
-                  }}>
+                  <h3
+                    className="text-[15px] font-bold text-charcoal truncate tracking-[-0.01em]"
+                    style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif", fontWeight: 700 }}
+                  >
                     {reviewerData?.name}
                   </h3>
-                  {/* Badges with gradient bg */}
+
                   {visibleBadges.length > 0 ? (
                     <div className="flex items-center gap-1 mt-1.5 flex-wrap">
                       {visibleBadges.map((badge) => (
                         <BadgePill key={badge.id} badge={badge} size="sm" />
                       ))}
                       {overflowCount > 0 && (
-                        <span className="text-[10px] font-semibold text-charcoal/35 px-1.5 py-0.5 rounded-full bg-white/60 backdrop-blur-sm"
-                          style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}>
+                        <span
+                          className="text-[10px] font-semibold text-charcoal/40 px-1.5 py-0.5 rounded-full bg-off-white/50"
+                          style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}
+                        >
                           +{overflowCount}
                         </span>
                       )}
@@ -177,9 +175,10 @@ export default function ReviewerCard({
                   ) : (
                     <div className="flex items-center gap-1.5 mt-1.5">
                       <div className="w-1 h-1 bg-sage/50 rounded-full" />
-                      <p className="text-[13px] text-charcoal/50 font-medium tracking-[-0.005em]" style={{
-                        fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                      }}>
+                      <p
+                        className="text-[13px] text-charcoal/50 font-medium tracking-[-0.005em]"
+                        style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}
+                      >
                         {reviewerData?.location}
                       </p>
                     </div>
@@ -187,53 +186,48 @@ export default function ReviewerCard({
                 </div>
               </div>
 
-              {/* Stats section */}
-              <div>
-                <div className="flex items-center justify-center">
-                  <div className="rounded-xl px-5 py-2"
-                    style={{
-                      background: 'linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(229,224,229,0.5) 100%)',
-                      backdropFilter: 'blur(8px)',
-                    }}>
-                    <div className="text-center">
-                      <div className="text-[22px] font-extrabold text-charcoal/85 tracking-tight" style={{
-                        fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                        fontWeight: 800,
-                      }}>
-                        {reviewerData?.reviewCount}
-                      </div>
-                      <div className="text-[10px] text-charcoal/45 font-semibold uppercase tracking-[0.08em]" style={{
-                        fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                      }}>Reviews</div>
+              {/* Review count pill */}
+              <div className="flex items-center justify-center">
+                <div className="rounded-xl px-5 py-2 bg-off-white/50">
+                  <div className="text-center">
+                    <div
+                      className="text-[22px] font-extrabold text-charcoal tracking-tight"
+                      style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif", fontWeight: 800 }}
+                    >
+                      {reviewerData?.reviewCount}
+                    </div>
+                    <div
+                      className="text-[10px] text-charcoal/45 font-semibold uppercase tracking-[0.08em]"
+                      style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}
+                    >
+                      Reviews
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Latest Review Preview */}
+              {/* Latest review preview */}
               {latestReview && (
                 <div className="flex-shrink-0">
-                  <div className="rounded-xl px-3 py-2.5 relative"
-                    style={{
-                      background: 'linear-gradient(145deg, rgba(255,255,255,0.65) 0%, rgba(229,224,229,0.4) 100%)',
-                      backdropFilter: 'blur(8px)',
-                    }}>
+                  <div className="rounded-xl px-3 py-2.5 relative bg-off-white/40">
                     <Quote className="absolute top-2 right-2.5 w-3.5 h-3.5 text-charcoal/10" strokeWidth={2} />
                     <div className="flex items-center gap-1.5 mb-1.5">
                       <div className="flex items-center gap-[1px]">
                         {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="w-[11px] h-[11px] fill-coral/80 text-coral/80" />
+                          <Star key={i} className="w-[11px] h-[11px] fill-coral text-coral" />
                         ))}
                       </div>
-                      <span className="text-[9px] text-charcoal/40 font-semibold uppercase tracking-[0.06em]" style={{
-                        fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                      }}>Latest</span>
+                      <span
+                        className="text-[9px] text-charcoal/40 font-semibold uppercase tracking-[0.06em]"
+                        style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}
+                      >
+                        Latest
+                      </span>
                     </div>
-                    <p className="text-[13px] text-charcoal/65 leading-snug line-clamp-2 font-medium" style={{
-                      fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                      fontStyle: 'italic',
-                      letterSpacing: '-0.005em',
-                    }}>
+                    <p
+                      className="text-[13px] text-charcoal/65 leading-snug line-clamp-2 font-medium"
+                      style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif", fontStyle: 'italic', letterSpacing: '-0.005em' }}
+                    >
                       &ldquo;{latestReview.reviewText}&rdquo;
                     </p>
                   </div>

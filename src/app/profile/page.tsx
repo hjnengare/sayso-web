@@ -37,11 +37,17 @@ import SavedBusinessRow from "@/app/components/Saved/SavedBusinessRow";
 import { useSavedItems } from "@/app/contexts/SavedItemsContext";
 import { useBusinessDistanceLocation } from "@/app/hooks/useBusinessDistanceLocation";
 import { EditProfileModal } from "@/app/components/EditProfile/EditProfileModal";
-// Removed mock data import - use API calls instead
 import { useMemo } from "react";
 import { useReviewSubmission } from "@/app/hooks/useReviews";
 import { useRouter } from "next/navigation";
 import { getBadgePngPath } from "@/app/lib/badgeMappings";
+
+// SWR hooks
+import { useUserProfile } from "@/app/hooks/useUserProfile";
+import { useUserStats } from "@/app/hooks/useUserStats";
+import { useUserReviews, type Review } from "@/app/hooks/useUserReviews";
+import { useUserBadges, type UserAchievement } from "@/app/hooks/useUserBadges";
+import { useSavedBusinessesDetails } from "@/app/hooks/useSavedBusinessesDetails";
 
 // Types
 import type { EnhancedProfile, UserStats } from '@/app/lib/types/user';
@@ -179,31 +185,6 @@ interface UserProfile {
   last_active_at?: string;
 }
 
-interface Review {
-  id: string;
-  business_name: string;
-  rating: number;
-  review_text: string | null;
-  is_featured: boolean;
-  created_at: string;
-  business_image_url?: string | null;
-  business_slug?: string; // For navigation
-}
-
-interface Achievement {
-  id: string;
-  name: string;
-  description: string | null;
-  icon: string;
-  category: string;
-}
-
-interface UserAchievement {
-  achievement_id: string;
-  earned_at: string;
-  achievements: Achievement;
-}
-
 function ProfileContent() {
   const { user, updateUser, isLoading, logout } = useAuth();
   const { savedItems } = useSavedItems();
@@ -215,7 +196,7 @@ function ProfileContent() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [avatarKey, setAvatarKey] = useState(0); // Force re-render of avatar
+  const [avatarKey, setAvatarKey] = useState(0);
   const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -228,385 +209,32 @@ function ProfileContent() {
   const [isDeactivating, setIsDeactivating] = useState(false);
   const [deactivateError, setDeactivateError] = useState<string | null>(null);
   const [imgError, setImgError] = useState(false);
-  const [enhancedProfile, setEnhancedProfile] = useState<EnhancedProfile | null>(null);
-  const [userStats, setUserStats] = useState<UserStats | null>(null);
-  const [profileLoading, setProfileLoading] = useState(true);
-  const [statsLoading, setStatsLoading] = useState(true);
   const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
   const supabase = getBrowserSupabase();
 
-  // Fetch user's reviews - MUST be before any early returns
-  const [userReviews, setUserReviews] = useState<Review[]>([]);
-  const [reviewsLoading, setReviewsLoading] = useState(true);
   const [reviewToDelete, setReviewToDelete] = useState<string | null>(null);
   const [reviewToEdit, setReviewToEdit] = useState<{ reviewId: string; businessSlug: string } | null>(null);
 
-  // Fetch user achievements
-  const [achievements, setAchievements] = useState<UserAchievement[]>([]);
-  const [achievementsLoading, setAchievementsLoading] = useState(true);
+  // SWR hooks — replace all raw fetch/useEffect pairs
+  const { profile: enhancedProfile, loading: profileLoading, mutate: profileMutate } = useUserProfile();
+  const { stats: userStats, loading: statsLoading } = useUserStats();
+  const { reviews: userReviews, loading: reviewsLoading, mutate: reviewsMutate } = useUserReviews();
+  const { achievements, loading: achievementsLoading, mutate: badgesMutate } = useUserBadges();
+  const { businesses: savedBusinesses } = useSavedBusinessesDetails();
 
-  // Track visibility changes to refetch data when returning to page
-  const refreshTriggerRef = React.useRef(0);
-
-  // Listen for page visibility changes to refresh data when user returns
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        // Page became visible - increment ref to trigger refetches
-        refreshTriggerRef.current += 1;
-        
-        // Refetch all data by setting loading states
-        setProfileLoading(true);
-        setStatsLoading(true);
-        setReviewsLoading(true);
-        setAchievementsLoading(true);
-        setSavedBusinessesLoading(true);
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, []);
-
-  // Fetch enhanced profile data from API
-  useEffect(() => {
-    const fetchEnhancedProfile = async () => {
-      if (!user?.id) {
-        setProfileLoading(false);
-        return;
-      }
-
-      try {
-        setProfileLoading(true);
-        const response = await fetch('/api/user/profile', { cache: 'no-store' });
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            console.warn('Not authenticated for profile fetch');
-            setProfileLoading(false);
-            return;
-          }
-          // Get error details from response
-          const errorData = await response.json().catch(() => ({ error: { message: 'Unknown error' } }));
-
-          // Handle 404 gracefully - profile might not exist yet, use existing profile data
-          if (response.status === 404) {
-            console.warn('Profile not found, using existing profile data:', errorData.error);
-            setEnhancedProfile(null);
-            setProfileLoading(false);
-            return;
-          }
-          // For other errors, log but don't break the page
-          console.warn('Error fetching enhanced profile:', {
-            status: response.status,
-            statusText: response.statusText,
-            error: errorData.error,
-          });
-          setEnhancedProfile(null);
-          setProfileLoading(false);
-          return;
-        }
-
-        const result = await response.json();
-        if (result.data) {
-          setEnhancedProfile(result.data);
-        } else {
-          setEnhancedProfile(null);
-        }
-      } catch (err) {
-        console.warn('Error fetching enhanced profile:', err);
-        setEnhancedProfile(null);
-      } finally {
-        setProfileLoading(false);
-      }
-    };
-
-    fetchEnhancedProfile();
-  }, [user?.id]);
-
-  // Fetch user stats from API
-  useEffect(() => {
-    const fetchUserStats = async () => {
-      if (!user?.id) {
-        setStatsLoading(false);
-        return;
-      }
-
-      try {
-        setStatsLoading(true);
-        const response = await fetch('/api/user/stats', { cache: 'no-store' });
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            setStatsLoading(false);
-            return;
-          }
-          // Get error details from response
-          const errorData = await response.json().catch(() => ({ error: { message: 'Unknown error' } }));
-          console.error('Error fetching user stats:', {
-            status: response.status,
-            statusText: response.statusText,
-            error: errorData.error,
-          });
-          setStatsLoading(false);
-          return;
-        }
-
-        const result = await response.json();
-        if (result.data) {
-          setUserStats(result.data);
-        }
-      } catch (err) {
-        console.error('Error fetching user stats:', err);
-      } finally {
-        setStatsLoading(false);
-      }
-    };
-
-    fetchUserStats();
-  }, [user?.id]);
-
-  // Get saved businesses for mobile display - only fetch if user has saved items
-  const [savedBusinesses, setSavedBusinesses] = useState<any[]>([]);
-  const [savedBusinessesLoading, setSavedBusinessesLoading] = useState(false);
-
-
-
-  useEffect(() => {
-    const fetchSavedBusinesses = async () => {
-      if (!user?.id || savedItems.length === 0) {
-        setSavedBusinesses([]);
-        setSavedBusinessesLoading(false);
-        return;
-      }
-
-      try {
-        setSavedBusinessesLoading(true);
-        // Limit to 20 for faster loading - user can see more on saved page
-        const response = await fetch('/api/saved/businesses?limit=20&page=1', { cache: 'no-store' });
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            setSavedBusinesses([]);
-            return;
-          }
-          console.warn('Error fetching saved businesses for profile:', response.status);
-          setSavedBusinesses([]);
-          return;
-        }
-
-        const data = await response.json();
-        if (data.businesses && Array.isArray(data.businesses)) {
-          setSavedBusinesses(data.businesses);
-        } else {
-          setSavedBusinesses([]);
-        }
-      } catch (error) {
-        console.warn('Error fetching saved businesses for profile:', error);
-        setSavedBusinesses([]);
-      } finally {
-        setSavedBusinessesLoading(false);
-      }
-    };
-
-    fetchSavedBusinesses();
-  }, [user?.id, savedItems.length]);
-
-  const profile = React.useMemo((): UserProfile => {
-    const rawProfile: any = user?.profile || {};
-    const enhanced: any = enhancedProfile || {};
-
-    // Merge enhanced profile data with existing profile
-    const profileData: UserProfile = {
-      user_id: user?.id || '',
-      username: (enhanced.username ?? rawProfile.username ?? (user?.email ? user.email.split('@')[0] : 'user')) as string | null,
-      display_name: (enhanced.display_name ?? rawProfile.display_name ?? null) as string | null,
-      avatar_url: (enhanced.avatar_url ?? rawProfile.avatar_url ?? null) as string | null,
-      locale: (rawProfile.locale || 'en') as string,
-      onboarding_step: (rawProfile.onboarding_step || 'interests') as string,
-      is_top_reviewer: rawProfile.is_top_reviewer ?? false,
-      reviews_count: rawProfile.reviews_count ?? 0,
-      badges_count: rawProfile.badges_count ?? 0,
-      interests_count: rawProfile.interests_count ?? 0,
-      last_interests_updated: (rawProfile.last_interests_updated ?? null) as string | null,
-      created_at: (enhanced.created_at ?? rawProfile.created_at ?? (user?.created_at ?? new Date().toISOString())) as string,
-      updated_at: (enhanced.updated_at ?? rawProfile.updated_at ?? new Date().toISOString()) as string,
-      // Enhanced fields
-      bio: enhanced.bio as string | undefined,
-      location: enhanced.location as string | undefined,
-      website_url: enhanced.website_url as string | undefined,
-      social_links: (enhanced.social_links || {}) as Record<string, string> | undefined,
-      privacy_settings: enhanced.privacy_settings as { showActivity?: boolean; showStats?: boolean; showSavedBusinesses?: boolean } | undefined,
-      last_active_at: enhanced.last_active_at as string | undefined,
-    };
-    return profileData;
-  }, [user?.profile, enhancedProfile, user?.email, user?.created_at, user?.id]);
-
-  // Note: Username and displayName state are now managed by EditProfileModal
-  // This effect is kept for backwards compatibility but modal will initialize its own state
   useEffect(() => {
     if (isEditOpen) {
       setError(null);
     }
   }, [isEditOpen]);
 
-  // Removed debug logging useEffect - was causing unnecessary re-renders
-
-  // Fetch user's reviews - use API endpoint for better performance
-  useEffect(() => {
-    const fetchUserReviews = async () => {
-      if (!user?.id) {
-        setReviewsLoading(false);
-        return;
-      }
-
-      try {
-        setReviewsLoading(true);
-
-        // Use new user reviews API endpoint
-        const response = await fetch(`/api/user/reviews?page=1&pageSize=20`);
-
-        if (!response.ok) {
-          console.error('Error fetching user reviews:', response.status, response.statusText);
-          setUserReviews([]);
-          return;
-        }
-
-        const result = await response.json();
-        console.log('User reviews API response:', result);
-        
-        if (result.data?.data && Array.isArray(result.data.data)) {
-          console.log('Transforming reviews:', result.data.data);
-          // Transform the data to match Review interface
-          const transformedReviews: Review[] = result.data.data.map((r: any) => ({
-            id: r.id,
-            business_name: r.business?.name || 'Unknown Business',
-            rating: r.rating,
-            review_text: r.body || r.title || null,
-            is_featured: false,
-            created_at: r.created_at,
-            business_image_url: r.business?.image_url || null,
-            business_slug: r.business?.slug || r.business?.id, // Store for navigation
-          }));
-          console.log('Transformed reviews:', transformedReviews);
-          setUserReviews(transformedReviews);
-        } else {
-          console.warn('Unexpected API response structure:', result);
-          setUserReviews([]);
-        }
-      } catch (err) {
-        console.error('Error fetching user reviews:', err);
-        setUserReviews([]);
-      } finally {
-        setReviewsLoading(false);
-      }
-    };
-
-    fetchUserReviews();
-  }, [user?.id]);
-
-  // Fetch user achievements (badges)
-  useEffect(() => {
-    const fetchAchievements = async () => {
-      if (!user?.id) {
-        setAchievementsLoading(false);
-        return;
-      }
-
-      try {
-        setAchievementsLoading(true);
-        // Use badges API instead of old achievements API
-        const response = await fetch(`/api/badges/user?user_id=${user.id}`, { cache: 'no-store' });
-
-        console.log('[Profile] Badges API response status:', response.status);
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            console.warn('[Profile] Unauthorized - user not authenticated');
-            setAchievements([]);
-            return;
-          }
-          console.warn('[Profile] Error fetching badges:', response.status);
-          setAchievements([]);
-          return;
-        }
-
-        const result = await response.json();
-        console.log('[Profile] Badges API result:', result);
-        
-        if (result.ok && result.badges && Array.isArray(result.badges)) {
-          // Filter only earned badges and transform to UserAchievement interface
-          const earnedBadges = result.badges.filter((badge: any) => badge.earned);
-          console.log('[Profile] Earned badges count:', earnedBadges.length, 'Total badges:', result.badges.length);
-          
-          const transformedAchievements: UserAchievement[] = earnedBadges.map((badge: any) => ({
-            achievement_id: badge.id,
-            earned_at: badge.awarded_at || new Date().toISOString(),
-            achievements: {
-              id: badge.id,
-              name: badge.name,
-              description: badge.description,
-              icon: badge.icon_path, // Use icon_path from badges table
-              category: badge.badge_group || 'general',
-            },
-          }));
-          console.log('[Profile] Setting achievements:', transformedAchievements);
-          setAchievements(transformedAchievements);
-        } else {
-          console.warn('[Profile] Unexpected response format or no badges:', result);
-          setAchievements([]);
-        }
-      } catch (err) {
-        console.warn('[Profile] Error fetching badges:', err);
-        setAchievements([]);
-      } finally {
-        setAchievementsLoading(false);
-      }
-    };
-
-    fetchAchievements();
-  }, [user?.id]);
-
   // Realtime subscription for user's badges and reviews
   useEffect(() => {
     if (!user?.id) return;
 
-    const THROTTLE_MS = 3000; // Throttle updates
+    const THROTTLE_MS = 3000;
     let lastRefresh = 0;
 
-    const throttledRefresh = () => {
-      const now = Date.now();
-      if (now - lastRefresh < THROTTLE_MS) return;
-      lastRefresh = now;
-
-      // Refetch achievements  
-      setAchievementsLoading(true);
-      fetch('/api/users/badges')
-        .then(res => res.json())
-        .then(result => {
-          if (result.ok && result.badges) {
-            const earnedBadges = result.badges.filter((badge: any) => badge.earned);
-            const transformed = earnedBadges.map((badge: any) => ({
-              achievement_id: badge.id,
-              earned_at: badge.awarded_at || new Date().toISOString(),
-              achievements: {
-                id: badge.id,
-                name: badge.name,
-                description: badge.description,
-                icon: badge.icon_path,
-                category: badge.badge_group || 'general',
-              },
-            }));
-            setAchievements(transformed);
-          }
-        })
-        .catch(console.error)
-        .finally(() => setAchievementsLoading(false));
-    };
-
-    // Subscribe to badges for this user
     const badgesChannel = supabase
       .channel(`profile-badges-${user.id}`)
       .on(
@@ -618,14 +246,16 @@ function ProfileContent() {
           filter: `user_id=eq.${user.id}`,
         },
         () => {
-          throttledRefresh();
+          const now = Date.now();
+          if (now - lastRefresh < THROTTLE_MS) return;
+          lastRefresh = now;
+          badgesMutate();
         }
       )
       .subscribe((status) => {
         setIsRealtimeConnected(status === 'SUBSCRIBED');
       });
 
-    // Subscribe to reviews for this user
     const reviewsChannel = supabase
       .channel(`profile-reviews-${user.id}`)
       .on(
@@ -637,8 +267,7 @@ function ProfileContent() {
           filter: `user_id=eq.${user.id}`,
         },
         () => {
-          // Trigger reviews refetch
-          setReviewsLoading(true);
+          reviewsMutate();
         }
       )
       .subscribe();
@@ -648,14 +277,13 @@ function ProfileContent() {
       supabase.removeChannel(reviewsChannel);
       setIsRealtimeConnected(false);
     };
-  }, [user?.id, supabase]);
+  }, [user?.id, supabase, badgesMutate, reviewsMutate]);
 
   const handleSaveProfile = async (data?: { username: string; displayName: string; avatarFile: File | null }) => {
     if (!user) return;
     setSaving(true);
     setError(null);
 
-    // Use data from parameters if provided, otherwise use state
     const usernameToSave = data?.username || username;
     const displayNameToSave = data?.displayName || displayName;
     const avatarFileToSave = data?.avatarFile !== undefined ? data.avatarFile : avatarFile;
@@ -663,17 +291,13 @@ function ProfileContent() {
     try {
       let avatar_url = profile.avatar_url || null;
 
-      // Handle avatar removal: if avatarFileToSave is explicitly null (user removed it)
       if (avatarFileToSave === null && data?.avatarFile === null) {
-        // User explicitly removed the avatar
         avatar_url = null;
 
-        // Delete old avatar from storage if it exists
         if (profile.avatar_url) {
           try {
-            // Extract path from URL
             const urlParts = profile.avatar_url.split('/');
-            const fileName = urlParts[urlParts.length - 1].split('?')[0]; // Remove query params
+            const fileName = urlParts[urlParts.length - 1].split('?')[0];
             const path = `${user.id}/${fileName}`;
 
             const { error: deleteError } = await supabase.storage
@@ -682,24 +306,14 @@ function ProfileContent() {
 
             if (deleteError) {
               console.warn('Error deleting old avatar:', deleteError);
-              // Continue even if deletion fails
             }
           } catch (deleteErr) {
             console.warn('Error deleting old avatar:', deleteErr);
-            // Continue even if deletion fails
           }
         }
       } else if (avatarFileToSave) {
         try {
-          console.log('Starting avatar upload...', {
-            fileName: avatarFileToSave.name,
-            fileSize: avatarFileToSave.size,
-            fileType: avatarFileToSave.type,
-            userId: user.id
-          });
-
-          // Validate file size (max 5MB)
-          const maxSize = 5 * 1024 * 1024; // 5MB
+          const maxSize = 5 * 1024 * 1024;
           if (avatarFileToSave.size > maxSize) {
             throw new Error('Image file is too large. Maximum size is 5MB.');
           }
@@ -708,10 +322,7 @@ function ProfileContent() {
           const fileExt = avatarFileToSave.name.split('.').pop() || 'jpg';
           const path = `${user.id}/avatar-${timestamp}.${fileExt}`;
 
-          console.log('Uploading to path:', path);
-
-          // Upload to Supabase Storage
-          const { error: uploadErr, data: uploadData } = await supabase.storage
+          const { error: uploadErr } = await supabase.storage
             .from('avatars')
             .upload(path, avatarFileToSave, {
               upsert: true,
@@ -720,68 +331,43 @@ function ProfileContent() {
             });
 
           if (uploadErr) {
-            console.error('Avatar upload error details:', {
-              error: uploadErr,
-              message: uploadErr.message,
-              name: uploadErr.name
-            });
-
-            // Provide more specific error messages
             let errorMessage = 'Failed to upload avatar image';
             if (uploadErr.message) {
               errorMessage = uploadErr.message;
 
-              // Check for specific error patterns
               if (uploadErr.message.includes('413') || uploadErr.message.includes('too large')) {
                 errorMessage = 'Image file is too large. Please choose a smaller image.';
               } else if (uploadErr.message.includes('401') || uploadErr.message.includes('403') || uploadErr.message.includes('permission') || uploadErr.message.includes('unauthorized')) {
                 errorMessage = 'Permission denied. Please check your account permissions.';
               } else if (uploadErr.message.includes('duplicate') || uploadErr.message.includes('already exists')) {
-                // If file already exists, try to get the URL anyway
-                console.log('File already exists, getting public URL...');
-                // Don't throw - continue to get the URL
+                // continue to get URL
               } else {
                 errorMessage = `Upload failed: ${uploadErr.message}`;
               }
             }
 
-            // Only throw if it's not a duplicate (we can still get the URL)
             if (!uploadErr.message?.includes('duplicate') && !uploadErr.message?.includes('already exists')) {
               throw new Error(errorMessage);
             }
           }
 
-          console.log('Upload successful, getting public URL...');
-
-          // Get public URL
           const { data: pubData } = supabase.storage.from('avatars').getPublicUrl(path);
 
           if (!pubData?.publicUrl) {
-            console.error('Failed to get public URL:', pubData);
             throw new Error('Failed to get public URL for uploaded image');
           }
 
-          console.log('Got public URL:', pubData.publicUrl);
-
-          // Store URL without query parameter (we can add cache-busting on display if needed)
           avatar_url = pubData.publicUrl;
 
-          // Small delay to ensure image is available after upload
           await new Promise(resolve => setTimeout(resolve, 500));
-
-          console.log('Avatar URL set:', avatar_url);
         } catch (uploadError: any) {
-          console.error('Avatar upload failed:', uploadError);
           throw new Error(uploadError.message || 'Failed to upload profile image. Please try again.');
         }
       }
 
-      // Use updateUser to handle both database update and local state update
-      // Ensure we explicitly set username and display_name (use null for empty strings)
       const usernameValue = usernameToSave.trim() || null;
       const displayNameValue = displayNameToSave.trim() || null;
 
-      // Update via AuthContext (for username, display_name, avatar_url)
       await updateUser({
         profile: {
           ...(user.profile || {}),
@@ -791,27 +377,16 @@ function ProfileContent() {
         } as any,
       });
 
-      // Refresh enhanced profile from API to get latest data
-      const profileResponse = await fetch('/api/user/profile', { cache: 'no-store' });
-      if (profileResponse.ok) {
-        const profileResult = await profileResponse.json();
-        if (profileResult.data) {
-          setEnhancedProfile(profileResult.data);
-        }
-      }
+      // Revalidate profile via SWR
+      profileMutate();
 
-      // Update local state if not already updated
       if (data) {
         setUsername(usernameToSave);
         setDisplayName(displayNameToSave);
         setAvatarFile(avatarFileToSave);
       }
 
-      console.log('Profile updated:', { avatar_url, username: usernameToSave, display_name: displayNameToSave });
-
-      // Force re-render of avatar component
       setAvatarKey(prev => prev + 1);
-
       setIsEditOpen(false);
       setAvatarFile(null);
     } catch (e: any) {
@@ -854,7 +429,6 @@ function ProfileContent() {
         throw new Error(data.error || 'Failed to deactivate account');
       }
 
-      // Account successfully deactivated, redirect to login
       setIsDeactivateDialogOpen(false);
       window.location.href = '/login?message=Account deactivated. Log in to reactivate.';
     } catch (error: any) {
@@ -883,7 +457,6 @@ function ProfileContent() {
         throw new Error(data.error || 'Failed to delete account');
       }
 
-      // Account successfully deleted, logout will be handled by the API
       setIsDeleteAccountDialogOpen(false);
       window.location.href = '/onboarding';
     } catch (error: any) {
@@ -893,7 +466,33 @@ function ProfileContent() {
     }
   };
 
+  const profile = React.useMemo((): UserProfile => {
+    const rawProfile: any = user?.profile || {};
+    const enhanced: any = enhancedProfile || {};
 
+    const profileData: UserProfile = {
+      user_id: user?.id || '',
+      username: (enhanced.username ?? rawProfile.username ?? (user?.email ? user.email.split('@')[0] : 'user')) as string | null,
+      display_name: (enhanced.display_name ?? rawProfile.display_name ?? null) as string | null,
+      avatar_url: (enhanced.avatar_url ?? rawProfile.avatar_url ?? null) as string | null,
+      locale: (rawProfile.locale || 'en') as string,
+      onboarding_step: (rawProfile.onboarding_step || 'interests') as string,
+      is_top_reviewer: rawProfile.is_top_reviewer ?? false,
+      reviews_count: rawProfile.reviews_count ?? 0,
+      badges_count: rawProfile.badges_count ?? 0,
+      interests_count: rawProfile.interests_count ?? 0,
+      last_interests_updated: (rawProfile.last_interests_updated ?? null) as string | null,
+      created_at: (enhanced.created_at ?? rawProfile.created_at ?? (user?.created_at ?? new Date().toISOString())) as string,
+      updated_at: (enhanced.updated_at ?? rawProfile.updated_at ?? new Date().toISOString()) as string,
+      bio: enhanced.bio as string | undefined,
+      location: enhanced.location as string | undefined,
+      website_url: enhanced.website_url as string | undefined,
+      social_links: (enhanced.social_links || {}) as Record<string, string> | undefined,
+      privacy_settings: enhanced.privacy_settings as { showActivity?: boolean; showStats?: boolean; showSavedBusinesses?: boolean } | undefined,
+      last_active_at: enhanced.last_active_at as string | undefined,
+    };
+    return profileData;
+  }, [user?.profile, enhancedProfile, user?.email, user?.created_at, user?.id]);
 
   const displayLabel =
     profile.display_name?.trim() ||
@@ -905,13 +504,10 @@ function ProfileContent() {
     profile.location ||
     profile.locale ||
     "Location not set";
-  // Use the actual reviews array length as primary source of truth, since we're fetching reviews directly
   const reviewsCount = userReviews.length > 0 ? userReviews.length : (userStats?.totalReviewsWritten ?? profile.reviews_count ?? 0);
-  const badgesCount = achievements.length; // Use actual achievements length instead of cached count
+  const badgesCount = achievements.length;
   const interestsCount = profile.interests_count ?? 0;
-  // Use actual helpful votes from userStats, fallback to 0
   const helpfulVotesCount = userStats?.helpfulVotesReceived ?? 0;
-  // Use actual saved items count as primary source (businesses only)
   const savedBusinessesCount = savedItems.length > 0 ? savedItems.length : (userStats?.totalBusinessesSaved ?? 0);
   const totalSavedCount = savedBusinessesCount;
   const memberSinceLabel = userStats?.accountCreationDate
@@ -920,12 +516,10 @@ function ProfileContent() {
       ? formatMemberSince(profile.created_at)
       : "—";
 
-  // Handle review edit
   const handleEditReview = (reviewId: string, businessSlug: string) => {
     router.push(`/business/${businessSlug}/review?edit=${reviewId}`);
   };
 
-  // Handle review delete
   const handleDeleteReviewClick = (reviewId: string) => {
     setReviewToDelete(reviewId);
     setIsDeleteDialogOpen(true);
@@ -940,43 +534,16 @@ function ProfileContent() {
     try {
       const success = await deleteReview(reviewToDelete);
       if (success) {
-        // Remove the review from the list
-        setUserReviews(prev => prev.filter(r => r.id !== reviewToDelete));
+        // Optimistically remove from cache, then revalidate
+        reviewsMutate(
+          (prev) => (prev ?? []).filter((r) => r.id !== reviewToDelete),
+          { revalidate: true }
+        );
+        // Refresh badges since review count changed
+        badgesMutate();
+
         setIsDeleteDialogOpen(false);
         setReviewToDelete(null);
-
-        // Refresh reviews count in stats if available
-        if (userStats) {
-          setUserStats(prev => prev ? { ...prev, totalReviewsWritten: Math.max(0, prev.totalReviewsWritten - 1) } : null);
-        }
-
-        // Refetch achievements/badges since review count changed
-        if (user?.id) {
-          try {
-            const response = await fetch(`/api/badges/user?user_id=${user.id}`, { cache: 'no-store' });
-            if (response.ok) {
-              const result = await response.json();
-              if (result.ok && result.badges && Array.isArray(result.badges)) {
-                const earnedBadges = result.badges.filter((badge: any) => badge.earned);
-                const transformedAchievements: UserAchievement[] = earnedBadges.map((badge: any) => ({
-                  achievement_id: badge.id,
-                  earned_at: badge.awarded_at || new Date().toISOString(),
-                  achievements: {
-                    id: badge.id,
-                    name: badge.name,
-                    description: badge.description,
-                    icon: badge.icon_path,
-                    category: badge.badge_group || 'general',
-                  },
-                }));
-                setAchievements(transformedAchievements);
-              }
-            }
-          } catch (achievementErr) {
-            console.error('Error refetching achievements after review deletion:', achievementErr);
-            // Continue anyway, user can refresh page if needed
-          }
-        }
       } else {
         setDeleteError('Failed to delete review');
       }
@@ -988,7 +555,6 @@ function ProfileContent() {
     }
   };
 
-  // Prepare reviews data
   const reviewsData = userReviews.map((review) => {
     const businessSlug = (review as any).business_slug || review.id;
     return {
@@ -999,7 +565,6 @@ function ProfileContent() {
       isFeatured: review.is_featured,
       createdAt: review.created_at,
       onViewClick: () => {
-        // Navigate to business page
         if (businessSlug) {
           window.location.href = `/business/${businessSlug}`;
         }
@@ -1009,10 +574,6 @@ function ProfileContent() {
     };
   });
 
-  console.log('reviewsData prepared:', reviewsData);
-  console.log('userReviews:', userReviews);
-
-  // Prepare achievements data
   const achievementsData = achievements.map((ua) => ({
     name: ua.achievements.name,
     description: ua.achievements.description,
@@ -1218,7 +779,7 @@ function ProfileContent() {
                           </div>
                         </div>
                       </article>
-					
+
                   {/* End of profile card */}
 
                   {statsLoading ? (
@@ -1393,8 +954,6 @@ function ProfileContent() {
                       </section>
                       )}
 
-
-
                       {reviewsLoading ? (
                         <ReviewsSkeleton />
                       ) : (
@@ -1403,15 +962,12 @@ function ProfileContent() {
                         aria-label="Your contributions"
                       >
                         {reviewsData.length > 0 ? (
-                          <>
-                            {console.log('Rendering ReviewsList with data:', reviewsData)}
-                            <ReviewsList
-                              reviews={reviewsData}
-                              title="Your Contributions"
-                              initialDisplayCount={2}
-                              showToggle={true}
-                            />
-                          </>
+                          <ReviewsList
+                            reviews={reviewsData}
+                            title="Your Contributions"
+                            initialDisplayCount={2}
+                            showToggle={true}
+                          />
                         ) : (
                           <div className="text-center py-8">
                             <p className="text-charcoal/70">You haven't written any reviews yet.</p>
@@ -1525,7 +1081,6 @@ function ProfileContent() {
         isOpen={isEditOpen}
         onClose={() => setIsEditOpen(false)}
         onSave={async (data) => {
-          // Call the save handler with the data from modal
           await handleSaveProfile(data);
         }}
         currentUsername={profile.username || ""}
@@ -1552,7 +1107,6 @@ function ProfileContent() {
         isLoading={isDeleting}
         error={deleteError}
       />
-
 
       {/* Delete Account Confirmation Dialog */}
       <ConfirmationDialog

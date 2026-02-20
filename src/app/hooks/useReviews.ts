@@ -338,7 +338,13 @@ export function useReviewSubmission() {
               );
               globalMutate(
                 (key: unknown) =>
-                  typeof key === 'string' && key.includes('/api/badges/user'),
+                  Array.isArray(key) && typeof key[0] === 'string' && (key[0] as string).includes('/api/badges/user'),
+                undefined,
+                { revalidate: true }
+              );
+            globalMutate(
+                (key: unknown) =>
+                  Array.isArray(key) && typeof key[0] === 'string' && (key[0] as string).includes('/api/user/reviews'),
                 undefined,
                 { revalidate: true }
               );
@@ -381,6 +387,18 @@ export function useReviewSubmission() {
       }
 
       showToast('Review deleted', 'sage', 2000);
+      globalMutate(
+        (key: unknown) =>
+          Array.isArray(key) && typeof key[0] === 'string' && (key[0] as string).includes('/api/user/reviews'),
+        undefined,
+        { revalidate: true }
+      );
+      globalMutate(
+        (key: unknown) =>
+          Array.isArray(key) && typeof key[0] === 'string' && (key[0] as string).includes('/api/badges/user'),
+        undefined,
+        { revalidate: true }
+      );
       return true;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete review';
