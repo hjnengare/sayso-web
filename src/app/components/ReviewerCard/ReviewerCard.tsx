@@ -54,11 +54,11 @@ export default function ReviewerCard({
   );
 
   const userBadges: BadgePillData[] = propBadges && propBadges.length > 0
-    ? [...propBadges].sort((a, b) => {
+    ? [...propBadges].filter(Boolean).sort((a, b) => {
         const order = ['milestone', 'specialist', 'explorer', 'community'];
         return order.indexOf(a.badge_group || '') - order.indexOf(b.badge_group || '');
       })
-    : fetchedBadges;
+    : fetchedBadges.filter(Boolean);
 
   const visibleBadges = userBadges.slice(0, MAX_VISIBLE_BADGES);
   const overflowCount = Math.max(0, userBadges.length - MAX_VISIBLE_BADGES);
