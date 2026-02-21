@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { useState } from 'react';
 
 export default function TestAuthPage() {

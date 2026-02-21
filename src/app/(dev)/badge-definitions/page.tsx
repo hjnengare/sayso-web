@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, ChevronUp } from "lucide-react";
-import { BADGE_MAPPINGS } from "../lib/badgeMappings";
+import { BADGE_MAPPINGS } from "../../lib/badgeMappings";
 
 const GROUP_LABELS: Record<string, string> = {
   explorer: "Category Explorer Badges",

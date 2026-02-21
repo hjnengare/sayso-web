@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { getBrowserSupabase } from '../lib/supabase/client';
+import { getBrowserSupabase } from '../../lib/supabase/client';
 
 export default function TestSupabasePage() {
   const [connectionStatus, setConnectionStatus] = useState<string>('Testing...');

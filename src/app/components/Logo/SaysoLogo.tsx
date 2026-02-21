@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useAnimationControls } from "framer-motion";
-import { colors } from '@/app/design-system/tokens';
+import { colors } from '@/app/(dev)/design-system/tokens';
 import { useState } from 'react';
 
 interface SaysoLogoProps {
