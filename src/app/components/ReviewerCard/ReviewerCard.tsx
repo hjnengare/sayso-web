@@ -154,13 +154,11 @@ export default function ReviewerCard({
               <style>{`
                 @keyframes stat-tick {
                   0%   { transform: translateY(14px); opacity: 0; }
-                  18%  { transform: translateY(0);    opacity: 1; }
-                  72%  { transform: translateY(0);    opacity: 1; }
-                  100% { transform: translateY(-14px); opacity: 0; }
+                  100% { transform: translateY(0);    opacity: 1; }
                 }
                 .stat-tick {
                   display: inline-block;
-                  animation: stat-tick 1.6s cubic-bezier(0.4,0,0.2,1) both;
+                  animation: stat-tick 0.45s cubic-bezier(0.22,1,0.36,1) both;
                 }
               `}</style>
               <div className="grid grid-cols-3 gap-1.5">
