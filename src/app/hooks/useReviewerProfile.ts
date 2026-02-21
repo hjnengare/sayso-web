@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import useSWR, { mutate as globalMutate } from 'swr';
 import { swrConfig } from '../lib/swrConfig';
 import { getBrowserSupabase } from '../lib/supabase/client';
@@ -42,18 +42,31 @@ export function useReviewerProfile(reviewerId: string | null | undefined) {
   }, [swrKey, mutate]);
 
   // Realtime: throttled refetch on reviews/badges changes
+  const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
+
   useEffect(() => {
     if (!reviewerId) return;
 
     const supabase = getBrowserSupabase();
     const THROTTLE_MS = 5_000;
     let lastRefresh = 0;
+    let subscribedCount = 0;
 
     const throttledRefresh = () => {
       const now = Date.now();
       if (now - lastRefresh < THROTTLE_MS) return;
       lastRefresh = now;
       mutate();
+    };
+
+    const handleStatus = (status: string) => {
+      if (status === 'SUBSCRIBED') {
+        subscribedCount++;
+        if (subscribedCount >= 2) setIsRealtimeConnected(true);
+      } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+        subscribedCount = Math.max(0, subscribedCount - 1);
+        setIsRealtimeConnected(false);
+      }
     };
 
     const reviewsChannel = supabase
@@ -64,7 +77,7 @@ export function useReviewerProfile(reviewerId: string | null | undefined) {
         table: 'reviews',
         filter: `user_id=eq.${reviewerId}`,
       }, throttledRefresh)
-      .subscribe();
+      .subscribe(handleStatus);
 
     const badgesChannel = supabase
       .channel(`reviewer-badges-swr-${reviewerId}`)
@@ -74,11 +87,12 @@ export function useReviewerProfile(reviewerId: string | null | undefined) {
         table: 'user_badges',
         filter: `user_id=eq.${reviewerId}`,
       }, throttledRefresh)
-      .subscribe();
+      .subscribe(handleStatus);
 
     return () => {
       supabase.removeChannel(reviewsChannel);
       supabase.removeChannel(badgesChannel);
+      setIsRealtimeConnected(false);
     };
   }, [reviewerId, mutate]);
 
@@ -88,6 +102,7 @@ export function useReviewerProfile(reviewerId: string | null | undefined) {
     reviewer: data ?? null,
     loading: isLoading,
     error: err ? err.message : null,
+    isRealtimeConnected,
     refetch: () => mutate(),
     mutate,
   };

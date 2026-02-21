@@ -114,16 +114,9 @@ export default function ReviewerProfilePage() {
     const reviewerId = params?.id as string;
     const [showScrollTop, setShowScrollTop] = useState(false);
     const [imgError, setImgError] = useState(false);
-    const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
 
     // SWR-backed reviewer profile (caching, dedup, visibility refetch, realtime)
-    const { reviewer, loading, refetch } = useReviewerProfile(reviewerId || null);
-
-    // Track realtime connection state for LiveIndicator
-    useEffect(() => {
-        setIsRealtimeConnected(true);
-        return () => setIsRealtimeConnected(false);
-    }, [reviewerId]);
+    const { reviewer, loading, isRealtimeConnected, refetch } = useReviewerProfile(reviewerId || null);
 
     // Handle scroll to top button visibility
     useEffect(() => {

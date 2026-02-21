@@ -14,13 +14,13 @@ export interface BadgePillData {
 
 /** Group-based color schemes for visual variety */
 const GROUP_STYLES: Record<string, { bg: string; border: string; text: string; glow: string }> = {
-  explorer:   { bg: "from-blue-400/15 to-cyan-400/10",    border: "border-blue-300/40",   text: "text-blue-700",    glow: "shadow-blue-200/40"  },
-  specialist: { bg: "from-purple-400/15 to-fuchsia-400/10", border: "border-purple-300/40", text: "text-purple-700",  glow: "shadow-purple-200/40" },
-  milestone:  { bg: "from-amber-400/15 to-yellow-300/10",  border: "border-amber-300/40",  text: "text-amber-700",   glow: "shadow-amber-200/40" },
-  community:  { bg: "from-emerald-400/15 to-teal-300/10",  border: "border-emerald-300/40", text: "text-emerald-700", glow: "shadow-emerald-200/40" },
+  explorer:   { bg: "from-sky-400/25 via-blue-400/15 to-cyan-300/20",        border: "border-sky-300/50",    text: "text-sky-700",     glow: "shadow-sky-300/30"    },
+  specialist: { bg: "from-violet-400/25 via-purple-400/15 to-fuchsia-300/20", border: "border-violet-300/50", text: "text-violet-700",  glow: "shadow-violet-300/30" },
+  milestone:  { bg: "from-amber-400/30 via-yellow-300/20 to-orange-300/20",   border: "border-amber-300/55",  text: "text-amber-700",   glow: "shadow-amber-300/30"  },
+  community:  { bg: "from-emerald-400/25 via-teal-300/15 to-green-300/20",    border: "border-emerald-300/50", text: "text-emerald-700", glow: "shadow-emerald-300/30" },
 };
 
-const DEFAULT_STYLE = { bg: "from-sage/12 to-coral/8", border: "border-sage/30", text: "text-sage", glow: "shadow-sage/20" };
+const DEFAULT_STYLE = { bg: "from-coral/20 via-sage/12 to-coral/10", border: "border-coral/30", text: "text-coral", glow: "shadow-coral/20" };
 
 interface BadgePillProps {
   badge: BadgePillData;

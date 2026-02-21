@@ -77,7 +77,12 @@ export default function ReviewerCard({
           href={cardHref}
           className="block group/card h-full"
         >
-          <div className="relative rounded-2xl cursor-pointer shadow-sm hover:shadow-lg transition-shadow duration-300 bg-card-bg flex flex-col overflow-hidden">
+          <div className="relative rounded-2xl cursor-pointer shadow-md hover:shadow-xl transition-all duration-300 bg-card-bg flex flex-col overflow-hidden group/card">
+            {/* Subtle shimmer on hover */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white/0 via-white/0 to-white/0 group-hover/card:from-sage/5 group-hover/card:via-transparent group-hover/card:to-coral/5 transition-all duration-500 rounded-2xl pointer-events-none" />
+
+            {/* Top accent line */}
+            <div className="h-[2px] w-full bg-gradient-to-r from-coral/60 via-sage/40 to-coral/20 rounded-t-2xl" />
 
             {/* Content */}
             <div className="relative p-4 flex flex-col gap-3">
@@ -87,28 +92,33 @@ export default function ReviewerCard({
                 {/* Avatar */}
                 {!imgError && reviewerData?.profilePicture && reviewerData.profilePicture.trim() !== '' ? (
                   <div className="relative flex-shrink-0">
+                    {reviewerData?.badge === "top" && (
+                      <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-amber-400/40 via-coral/30 to-orange-300/20 blur-md animate-pulse" />
+                    )}
                     <Image
                       src={reviewerData.profilePicture}
                       alt={reviewerData?.name || "User avatar"}
                       width={44}
                       height={44}
-                      className="w-11 h-11 object-cover rounded-full ring-2 ring-off-white/60"
+                      className="relative w-11 h-11 object-cover rounded-full ring-2 ring-white/80 shadow-sm"
                       priority={false}
                       onError={() => setImgError(true)}
                     />
                     {reviewerData?.badge === "verified" && (
-                      <div className="absolute -right-0.5 -top-0.5 z-20">
-                        <div className="bg-card-bg rounded-full p-[3px]">
+                      <div className="absolute -right-0.5 -bottom-0.5 z-20">
+                        <div className="bg-white rounded-full p-[2px] shadow-sm">
                           <VerifiedBadge size="sm" />
                         </div>
                       </div>
                     )}
                     {reviewerData?.badge === "top" && (
-                      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-coral/20 to-coral/10 blur-md animate-pulse" />
+                      <div className="absolute -right-0.5 -bottom-0.5 z-20 w-4 h-4 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-sm ring-1 ring-white">
+                        <Star className="w-2.5 h-2.5 fill-white text-white" />
+                      </div>
                     )}
                   </div>
                 ) : (
-                  <div className="w-11 h-11 flex items-center justify-center rounded-full bg-off-white/60 flex-shrink-0">
+                  <div className="w-11 h-11 flex items-center justify-center rounded-full bg-gradient-to-br from-sage/20 to-coral/10 ring-2 ring-white/60 flex-shrink-0 shadow-sm">
                     <User className="text-charcoal/40" size={18} strokeWidth={1.8} />
                   </div>
                 )}
@@ -129,7 +139,7 @@ export default function ReviewerCard({
                       ))}
                       {overflowCount > 0 && (
                         <span
-                          className="text-[10px] font-semibold text-charcoal/40 px-1.5 py-0.5 rounded-full bg-off-white/50"
+                          className="text-[10px] font-semibold text-charcoal/40 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-off-white/70 to-white/50 border border-white/60 shadow-sm"
                           style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}
                         >
                           +{overflowCount}
@@ -138,7 +148,7 @@ export default function ReviewerCard({
                     </div>
                   ) : (
                     <div className="flex items-center gap-1.5 mt-1.5">
-                      <div className="w-1 h-1 bg-sage/50 rounded-full" />
+                      <div className="w-1 h-1 bg-gradient-to-r from-coral/60 to-sage/60 rounded-full" />
                       <p
                         className="text-[13px] text-charcoal/50 font-medium tracking-[-0.005em]"
                         style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}
@@ -152,10 +162,10 @@ export default function ReviewerCard({
 
               {/* Review count pill */}
               <div className="flex items-center justify-center">
-                <div className="rounded-xl px-5 py-2 bg-off-white/50">
+                <div className="rounded-xl px-5 py-2 bg-gradient-to-br from-off-white/70 via-white/40 to-sage/10 border border-white/60 shadow-sm">
                   <div className="text-center">
                     <div
-                      className="text-[22px] font-extrabold text-charcoal tracking-tight"
+                      className="text-[22px] font-extrabold bg-gradient-to-br from-charcoal to-charcoal/70 bg-clip-text text-transparent tracking-tight"
                       style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif", fontWeight: 800 }}
                     >
                       {reviewerData?.reviewCount}
@@ -173,8 +183,8 @@ export default function ReviewerCard({
               {/* Latest review preview */}
               {latestReview && (
                 <div className="flex-shrink-0">
-                  <div className="rounded-xl px-3 py-2.5 relative bg-off-white/40">
-                    <Quote className="absolute top-2 right-2.5 w-3.5 h-3.5 text-charcoal/10" strokeWidth={2} />
+                  <div className="rounded-xl px-3 py-2.5 relative bg-gradient-to-br from-off-white/60 via-white/30 to-sage/10 border border-white/50 shadow-sm">
+                    <Quote className="absolute top-2 right-2.5 w-3.5 h-3.5 text-coral/15" strokeWidth={2} />
                     <div className="flex items-center gap-1.5 mb-1.5">
                       <div className="flex items-center gap-[1px]">
                         {[...Array(5)].map((_, i) => (
@@ -210,12 +220,18 @@ export default function ReviewerCard({
     <li className="w-[calc(50vw-12px)] sm:w-auto sm:min-w-[213px] flex-shrink-0">
       <Link
         href={cardHref}
-        className="block"
+        className="block group/card"
       >
         <div
-          className="bg-card-bg rounded-2xl group cursor-pointer h-[187px] flex flex-col relative overflow-hidden shadow-sm hover:shadow-lg transition-all duration-500 ease-out"
+          className="bg-card-bg rounded-2xl cursor-pointer h-[187px] flex flex-col relative overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 ease-out"
         >
-           <div className="flex items-start gap-1.5 p-2 pb-0">
+          {/* Top accent line */}
+          <div className="h-[2px] w-full bg-gradient-to-r from-coral/60 via-sage/40 to-coral/20 rounded-t-2xl flex-shrink-0" />
+
+          {/* Hover shimmer */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/0 to-white/0 group-hover/card:from-sage/5 group-hover/card:to-coral/5 transition-all duration-500 rounded-2xl pointer-events-none" />
+
+          <div className="flex items-start gap-1.5 p-2 pb-0">
             <div className="relative flex-shrink-0">
               <ProfilePicture
                 src={review?.reviewer.profilePicture || ""}
@@ -246,7 +262,7 @@ export default function ReviewerCard({
             </div>
           </div>
 
-          {/* Badges row - compact, under reviewer header */}
+          {/* Badges row */}
           {visibleBadges.length > 0 && (
             <div className="px-2 pt-1 pb-0.5 flex items-center gap-1 flex-wrap">
               {visibleBadges.map((badge) => (
@@ -254,7 +270,7 @@ export default function ReviewerCard({
               ))}
               {overflowCount > 0 && (
                 <span
-                  className="inline-flex items-center px-1.5 py-[3px] rounded-full text-[10px] font-semibold text-charcoal/35 bg-white/60 backdrop-blur-sm"
+                  className="inline-flex items-center px-1.5 py-[3px] rounded-full text-[10px] font-semibold text-charcoal/35 bg-gradient-to-r from-white/60 to-off-white/40 border border-white/50 backdrop-blur-sm"
                   style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}
                 >
                   +{overflowCount}
