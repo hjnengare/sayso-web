@@ -22,7 +22,7 @@ const NAV_ITEMS = [
 
 function Sidebar({ pathname, onClose }: { pathname: string; onClose?: () => void }) {
   return (
-    <aside className="flex flex-col h-full bg-navbar-bg/90 text-off-white">
+    <aside className="flex flex-col h-full bg-navbar-bg text-off-white">
       {/* Brand */}
       <div className="flex items-center justify-between px-5 py-5 border-b border-white/10">
         <Link href="/my-businesses" className="flex items-center gap-2.5" onClick={onClose}>
@@ -126,7 +126,7 @@ export default function MyBusinessesLayout({ children }: { children: ReactNode }
       {/* Main content — scrolls independently */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         {/* Mobile topbar */}
-        <header className="lg:hidden flex items-center gap-3 px-4 py-3 bg-navbar-bg/90 border-b border-white/10 shadow-sm flex-shrink-0">
+        <header className="lg:hidden flex items-center gap-3 px-4 py-3 bg-navbar-bg border-b border-white/10 shadow-sm flex-shrink-0">
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
