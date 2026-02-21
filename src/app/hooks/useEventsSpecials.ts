@@ -102,25 +102,13 @@ export function useEventsSpecials(filter: string, search: string) {
 
     try {
       const nextKey: [string, string, string, number] = ['/api/events', filter, search, nextOffset];
-      // Try to get from SWR cache first
-      let pageData = await globalMutate(nextKey) as EventsPage | undefined;
-      if (!pageData?.items?.length) {
-        pageData = await fetchEventsPage(nextKey);
-        await globalMutate(nextKey, pageData, { revalidate: false });
+      const pageData = await fetchEventsPage(nextKey);
+      if (pageData?.items?.length) {
+        setItems(prev => [...prev, ...pageData.items]);
       }
-      if (pageData) {
-        setItems(prev => [...prev, ...pageData!.items]);
-        setCount(pageData.count);
-        setOffset(nextOffset);
-        setHasMore(nextOffset + ITEMS_PER_PAGE < pageData.count);
-
-        // Pre-fetch the page after next
-        const nextNextOffset = nextOffset + ITEMS_PER_PAGE;
-        if (nextNextOffset < pageData.count) {
-          const nextNextKey: [string, string, string, number] = ['/api/events', filter, search, nextNextOffset];
-          globalMutate(nextNextKey, fetchEventsPage(nextNextKey), { revalidate: false });
-        }
-      }
+      setCount(pageData.count);
+      setOffset(nextOffset);
+      setHasMore(nextOffset + ITEMS_PER_PAGE < pageData.count);
     } catch (e) {
       // Silent fail — user can retry
     } finally {
