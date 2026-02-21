@@ -370,7 +370,7 @@ export default function CommunityHighlights({
         {/* Businesses of the Month */}
         {hasBusinesses && (
           <section
-            className="relative m-0 p-0 w-full mt-3 list-none"
+            className="relative m-0 pt-2 w-full mt-3 list-none"
             aria-label="Featured Businesses of the Month by Category"
             style={{
               fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',

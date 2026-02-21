@@ -402,8 +402,8 @@ export default function ImageUpload({
               {(existingImageUrls.length + files.length) > 0
                 ? `${existingImageUrls.length + files.length}/${maxImages} added`
                 : maxImages === 2
-                  ? 'Up to 2 images only, max 1MB each'
-                  : `Up to ${maxImages} images, max 1MB each`
+                  ? 'Up to 2 images only, max 2MB each'
+                  : `Up to ${maxImages} images, max 2MB each`
               }
             </p>
           </div>

@@ -78,7 +78,16 @@
       "Bash(git ls-tree:*)",
       "WebFetch(domain:www.npmjs.com)",
       "Bash(npm view:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(git fetch:*)",
+      "Bash(git pull:*)",
+      "Bash(for d in about events-specials trending leaderboard terms privacy)",
+      "Bash(do)",
+      "Bash(f=\"/c/Users/HilarioNengare/Projects/sayso/src/app/$d/layout.tsx\")",
+      "Bash(if [ -f \"$f\" ])",
+      "Bash(then echo \"EXISTS: $f\")",
+      "Bash(else echo \"MISSING: $f\")",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": [],
@@ -86,8 +95,8 @@
       "c:\\Users\\HilarioNengare\\Projects\\KLIO"
     ]
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "playwright-test"
-  ],
-  "enableAllProjectMcpServers": true
+  ]
 }

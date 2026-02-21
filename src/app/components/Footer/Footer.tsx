@@ -108,7 +108,6 @@ export default function Footer() {
       links: [
         { name: "About", href: "/about" },
         { name: "Contact", href: "/contact" },
-        { name: "Support", href: "mailto:info@sayso.com" },
       ],
     },
     {

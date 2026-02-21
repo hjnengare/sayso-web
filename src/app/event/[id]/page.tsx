@@ -5,7 +5,7 @@ import { useEventDetail } from "../../hooks/useEventDetail";
 import { useEventReviews } from "../../hooks/useEventReviews";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, ChevronLeft, Calendar } from "lucide-react";
+import { ChevronRight, Calendar } from "lucide-react";
 import type { Event } from "../../lib/types/Event";
 import nextDynamic from "next/dynamic";
 import { PageLoader } from "../../components/Loader";
