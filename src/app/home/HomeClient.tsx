@@ -8,7 +8,6 @@
 import { memo, useState, useEffect, useMemo, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import nextDynamic from "next/dynamic";
-import ScrollToTopButton from "../components/ScrollToTopButton/ScrollToTopButton";
 import Link from "next/link";
 import { usePredefinedPageTitle } from "../hooks/usePageTitle";
 import { useIsDesktop } from "../hooks/useIsDesktop";
@@ -701,7 +700,6 @@ export default function HomeClient() {
         <Footer />
       </div>
 
-      <ScrollToTopButton />
     </>
   );
 }

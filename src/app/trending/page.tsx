@@ -10,7 +10,6 @@ import Pagination from "../components/EventsPage/Pagination";
 import { useBusinesses } from "../hooks/useBusinesses";
 import { useTrendingBusinesses } from "../hooks/useTrendingBusinesses";
 import { useDebounce } from "../hooks/useDebounce";
-import ScrollToTopButton from "../components/ScrollToTopButton/ScrollToTopButton";
 import { FilterState } from "../components/FilterModal/FilterModal";
 import BusinessesMap, { BusinessMapItem } from "../components/maps/BusinessesMap";
 import { Loader } from "../components/Loader/Loader";
@@ -526,7 +525,6 @@ export default function TrendingPage() {
       )}
 
       <Footer />
-      <ScrollToTopButton />
     </div>
   );
 }
