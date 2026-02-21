@@ -26,7 +26,7 @@ export default function MobileHeroSkeleton() {
             <div className="h-8 bg-white/40 rounded-lg w-60 mx-auto animate-pulse mb-3" />
 
             {/* Description skeleton - mobile text-base */}
-            <div className="h-4 bg-white/30 rounded w-72 max-w-xl mx-auto animate-pulse mb-5" />
+            <div className="h-[26px] bg-white/30 rounded w-72 max-w-xl mx-auto animate-pulse mb-5" />
 
             {/* CTA Button skeleton - mobile full width with max-w-[320px] */}
             <div className="h-12 bg-white/35 rounded-full w-full max-w-[320px] mx-auto animate-pulse" />
