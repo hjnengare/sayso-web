@@ -172,7 +172,8 @@ export async function GET(req: NextRequest) {
     // Format response to match LeaderboardUser interface
     const formattedLeaderboard = limitedData.map((user, index) => {
       const displayName = user.display_name || user.username || 'Anonymous';
-      const avatar = user.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=150&h=150';
+      const avatarSeedName = user.display_name || user.username || 'User';
+      const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarSeedName)}&background=random&color=fff&size=128`;
       
       // Assign badges for top 3
       let badge: string | undefined;

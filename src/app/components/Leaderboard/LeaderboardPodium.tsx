@@ -38,7 +38,7 @@ function LeaderboardPodium({ topReviewers }: LeaderboardPodiumProps) {
               src={topReviewers[1].avatar}
               alt={topReviewers[1].username}
               fill
-              className="object-contain p-1 sm:p-1.5 md:p-2"
+              className="object-cover"
               sizes="(max-width: 640px) 48px, (max-width: 768px) 64px, (max-width: 1024px) 80px, 96px"
               fallbackType="profile"
             />
@@ -70,7 +70,7 @@ function LeaderboardPodium({ topReviewers }: LeaderboardPodiumProps) {
               src={topReviewers[0].avatar}
               alt={topReviewers[0].username}
               fill
-              className="object-contain p-1 sm:p-1.5 md:p-2"
+              className="object-cover"
               sizes="(max-width: 640px) 56px, (max-width: 768px) 80px, (max-width: 1024px) 96px, 128px"
               fallbackType="profile"
             />
@@ -102,7 +102,7 @@ function LeaderboardPodium({ topReviewers }: LeaderboardPodiumProps) {
               src={topReviewers[2].avatar}
               alt={topReviewers[2].username}
               fill
-              className="object-contain p-1 sm:p-1.5 md:p-2"
+              className="object-cover"
               sizes="(max-width: 640px) 48px, (max-width: 768px) 64px, (max-width: 1024px) 80px, 96px"
               fallbackType="profile"
             />
