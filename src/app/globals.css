@@ -1553,12 +1553,12 @@ html {
   }
 }
 
-html, body {
-  height: 100%;
+html {
+  min-height: 100%;
 }
 
 body {
-  overflow-y: auto;
+  min-height: 100%;
 }
 
 nav[aria-label="Breadcrumb"] {
