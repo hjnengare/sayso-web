@@ -329,6 +329,13 @@ export function useReviewSubmission() {
         globalMutate(['/api/reviewers', currentUser.id]);
       }
 
+      // Invalidate top reviewers list (review_count + avg_rating_given changed)
+      globalMutate(
+        (key: unknown) => Array.isArray(key) && key[0] === '/api/reviewers/top',
+        undefined,
+        { revalidate: true }
+      );
+
       // Invalidate recent reviews feed
       globalMutate(
         (key: unknown) => Array.isArray(key) && key[0] === '/api/reviews/recent',
@@ -423,6 +430,12 @@ export function useReviewSubmission() {
       // Invalidate recent reviews feed
       globalMutate(
         (key: unknown) => Array.isArray(key) && key[0] === '/api/reviews/recent',
+        undefined,
+        { revalidate: true }
+      );
+      // Invalidate top reviewers list (review_count + avg_rating_given changed)
+      globalMutate(
+        (key: unknown) => Array.isArray(key) && key[0] === '/api/reviewers/top',
         undefined,
         { revalidate: true }
       );

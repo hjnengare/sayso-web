@@ -27,12 +27,14 @@ export default function ReviewerCardSkeleton() {
             </div>
           </div>
 
-          {/* Review count */}
-          <div className="flex justify-center">
-            <div className="flex flex-col items-center px-6 py-2.5 rounded-xl bg-off-white/60 border border-charcoal/[0.06] gap-1">
-              <div className="h-7 w-10 bg-charcoal/8 rounded-md animate-pulse" />
-              <div className="h-2.5 w-12 bg-charcoal/5 rounded-md animate-pulse" />
-            </div>
+          {/* Stats row */}
+          <div className="grid grid-cols-3 gap-1.5">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="flex flex-col items-center px-2 py-2 rounded-xl bg-off-white/60 border border-charcoal/[0.06] gap-1">
+                <div className="h-6 w-8 bg-charcoal/8 rounded-md animate-pulse" />
+                <div className="h-2 w-10 bg-charcoal/5 rounded-md animate-pulse" />
+              </div>
+            ))}
           </div>
 
           {/* Badges */}

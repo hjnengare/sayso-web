@@ -210,6 +210,8 @@ export async function GET(req: Request) {
             profile.avatar_url ||
             `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarSeedName)}&background=random`,
           reviewCount: stats.count,
+          avgRatingGiven: stats.count > 0 ? Math.round((stats.ratingSum / stats.count) * 10) / 10 : null,
+          helpfulVotes: stats.helpfulReceived,
           rating: Math.round(avgRating * 10) / 10,
           badge: profile.is_top_reviewer ? ('top' as const) : undefined,
           badgesCount,

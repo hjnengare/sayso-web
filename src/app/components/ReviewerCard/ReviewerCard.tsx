@@ -149,24 +149,59 @@ export default function ReviewerCard({
                 </div>
               </div>
 
-              {/* ── SOCIAL PROOF ── review count — biggest number on the card */}
-              <div className="flex items-center justify-center">
-                <div className="flex flex-col items-center px-6 py-2.5 rounded-xl bg-off-white/60 border border-charcoal/[0.06] shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)]">
+              {/* ── SOCIAL PROOF ── 3-stat row */}
+              <div className="grid grid-cols-3 gap-1.5">
+                {/* Reviews */}
+                <div className="flex flex-col items-center px-2 py-2 rounded-xl bg-off-white/60 border border-charcoal/[0.06] shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)]">
                   <span
-                    className={`text-[26px] font-black leading-none tracking-tight ${
+                    className={`text-[22px] font-black leading-none tracking-tight ${
                       isTopReviewer
                         ? 'text-transparent bg-clip-text bg-gradient-to-br from-amber-500 to-coral'
                         : 'text-charcoal'
                     }`}
                     style={{ fontFamily: "'Urbanist', system-ui, sans-serif", fontWeight: 900 }}
                   >
-                    {reviewerData?.reviewCount}
+                    {reviewerData?.reviewCount ?? 0}
                   </span>
                   <span
-                    className="text-[10px] text-charcoal/40 font-semibold uppercase tracking-[0.1em] mt-0.5"
+                    className="text-[9px] text-charcoal/40 font-semibold uppercase tracking-[0.08em] mt-0.5"
                     style={{ fontFamily: "'Urbanist', system-ui, sans-serif" }}
                   >
                     Reviews
+                  </span>
+                </div>
+
+                {/* Avg rating */}
+                <div className="flex flex-col items-center px-2 py-2 rounded-xl bg-off-white/60 border border-charcoal/[0.06] shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)]">
+                  <span
+                    className="text-[22px] font-black leading-none tracking-tight text-charcoal"
+                    style={{ fontFamily: "'Urbanist', system-ui, sans-serif", fontWeight: 900 }}
+                  >
+                    {reviewerData?.avgRatingGiven != null
+                      ? reviewerData.avgRatingGiven.toFixed(1)
+                      : '—'}
+                  </span>
+                  <span
+                    className="text-[9px] text-charcoal/40 font-semibold uppercase tracking-[0.08em] mt-0.5"
+                    style={{ fontFamily: "'Urbanist', system-ui, sans-serif" }}
+                  >
+                    Avg
+                  </span>
+                </div>
+
+                {/* Helpful votes */}
+                <div className="flex flex-col items-center px-2 py-2 rounded-xl bg-off-white/60 border border-charcoal/[0.06] shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)]">
+                  <span
+                    className="text-[22px] font-black leading-none tracking-tight text-charcoal"
+                    style={{ fontFamily: "'Urbanist', system-ui, sans-serif", fontWeight: 900 }}
+                  >
+                    {reviewerData?.helpfulVotes ?? 0}
+                  </span>
+                  <span
+                    className="text-[9px] text-charcoal/40 font-semibold uppercase tracking-[0.08em] mt-0.5"
+                    style={{ fontFamily: "'Urbanist', system-ui, sans-serif" }}
+                  >
+                    Helpful
                   </span>
                 </div>
               </div>

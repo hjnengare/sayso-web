@@ -10,6 +10,10 @@ export interface Reviewer {
   profilePicture: string;
   reviewCount: number;
   rating: number;
+  /** Average rating the reviewer gives across all their reviews (1–5, 1 decimal). Null when they have no reviews yet. */
+  avgRatingGiven?: number | null;
+  /** Total helpful votes received across all their reviews. */
+  helpfulVotes?: number;
   badge?: "top" | "verified" | "local";
   trophyBadge?: "gold" | "silver" | "bronze" | "rising-star" | "community-favorite";
   badgesCount?: number;

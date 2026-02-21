@@ -79,6 +79,13 @@ export function useReviewHelpful(reviewId: string, initialCount = 0) {
           mutate({ ...next, count: countData.count }, { revalidate: false });
         }
       }
+
+      // Invalidate top reviewers list (helpfulVotes changed for review author)
+      globalMutate(
+        (key: any) => Array.isArray(key) && key[0] === '/api/reviewers/top',
+        undefined,
+        { revalidate: true }
+      );
     } catch {
       mutate(prev, { revalidate: false });
     }
