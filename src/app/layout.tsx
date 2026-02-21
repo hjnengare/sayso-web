@@ -132,6 +132,9 @@ export const metadata: Metadata = {
     shortcut: "/favicon.png",
     apple: "/favicon.png",
   },
+  verification: {
+    google: "01a88f23a79c8d23",
+  },
 };
 
 export const runtime = "nodejs";
