@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { DEFAULT_SITE_DESCRIPTION, generateSEOMetadata, SITE_URL } from '../../lib/utils/seoMetadata';
 import { getServerSupabase } from '../../lib/supabase/server';
 import SchemaMarkup from '../../components/SEO/SchemaMarkup';
-import { generateBreadcrumbSchema } from '../../lib/utils/schemaMarkup';
+import { generateBreadcrumbSchema, generateEventSchema } from '../../lib/utils/schemaMarkup';
 
 interface EventLayoutProps {
   children: React.ReactNode;
@@ -106,34 +106,13 @@ export default async function EventLayout({
     const citySlug = location ? toSlug(String(location).split(',')[0]) : '';
     const startDate = event.start_date || event.starts_at || undefined;
 
-    const eventSchema: Record<string, unknown> = {
-      '@context': 'https://schema.org',
-      '@type': 'Event',
+    const eventSchema = generateEventSchema({
       name: event.title,
       description: event.description || undefined,
       image: event.image_url || event.image || undefined,
       url: eventUrl,
-      eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
-      eventStatus: 'https://schema.org/EventScheduled',
-      location: location
-        ? {
-            '@type': 'Place',
-            name: location,
-            address: location,
-          }
-        : undefined,
+      location: location || undefined,
       startDate: startDate || undefined,
-      organizer: {
-        '@type': 'Organization',
-        name: 'Sayso',
-        url: SITE_URL,
-      },
-    };
-
-    Object.keys(eventSchema).forEach((key) => {
-      if (eventSchema[key] === undefined) {
-        delete eventSchema[key];
-      }
     });
 
     const breadcrumbSchema = generateBreadcrumbSchema([
