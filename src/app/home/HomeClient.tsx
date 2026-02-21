@@ -205,7 +205,7 @@ export default function HomeClient() {
     error: forYouError,
   } = useForYouBusinesses(20, undefined, {
     preferences,
-    preferencesLoading: prefsLoading,
+    preferencesLoading: false, // Fire immediately with available prefs; re-fetches when prefs load
     skip: !user, // Don't fetch For You when not signed in; section shows teaser only
   });
 
