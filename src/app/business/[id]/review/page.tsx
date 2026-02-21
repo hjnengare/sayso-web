@@ -21,6 +21,7 @@ import Footer from "../../../components/Footer/Footer";
 import WavyTypedTitle from "../../../../components/Animations/WavyTypedTitle";
 import { isPlaceholderImage } from "../../../utils/subcategoryPlaceholders";
 import { useDealbreakerQuickTags } from "../../../hooks/useDealbreakerQuickTags";
+import { useBusinessDetail } from "../../../hooks/useBusinessDetail";
 
 const urbanist = Urbanist({
   weight: ["400", "600", "700", "800"],
@@ -74,10 +75,8 @@ function WriteReviewContent() {
     return isFormValid && !submitting;
   }, [isFormValid, submitting]);
 
-  // State for business data
-  const [business, setBusiness] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Fetch business data via SWR
+  const { business, loading, error } = useBusinessDetail(businessId);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const infoButtonRef = useRef<HTMLButtonElement>(null);
@@ -154,43 +153,6 @@ function WriteReviewContent() {
       setIsEditMode(true);
     }
   }, [user, editReviewId]);
-
-  // Fetch business data using optimized API route
-  useEffect(() => {
-    async function fetchBusiness() {
-      if (!businessId) {
-        setError('No business ID provided');
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        const response = await fetch(`/api/businesses/${businessId}`, {
-          cache: 'no-store'
-        });
-
-        if (!response.ok) {
-          if (response.status === 404) {
-            setError('Business not found');
-          } else {
-            throw new Error('Failed to load business');
-          }
-          return;
-        }
-
-        const data = await response.json();
-        setBusiness(data);
-      } catch (err) {
-        console.error('Error fetching business:', err);
-        setError('Failed to load business information');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchBusiness();
-  }, [businessId]);
 
   // Handle scroll to top button visibility
   useEffect(() => {

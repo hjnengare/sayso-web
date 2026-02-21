@@ -1,20 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Calendar, MapPin, DollarSign, Loader } from 'lucide-react';
-
-interface BusinessEvent {
-  id: string;
-  title: string;
-  type: 'event' | 'special';
-  startDate: string;
-  endDate?: string;
-  location: string;
-  description?: string;
-  icon?: string;
-  price?: number;
-  businessId: string;
-  bookingUrl?: string;
-  bookingContact?: string;
-}
+import { useBusinessEvents } from '../../hooks/useBusinessEvents';
 
 interface BusinessOwnedEventsSectionProps {
   businessId: string;
@@ -25,27 +11,7 @@ export default function BusinessOwnedEventsSection({
   businessId,
   businessName,
 }: BusinessOwnedEventsSectionProps) {
-  const [events, setEvents] = useState<BusinessEvent[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    fetchEvents();
-  }, [businessId]);
-
-  const fetchEvents = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch(`/api/businesses/${businessId}/events`);
-      if (!res.ok) throw new Error('Failed to fetch events');
-      const result = await res.json();
-      setEvents(result.data || []);
-    } catch (error) {
-      console.error('Error fetching business events:', error);
-      setEvents([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { events, loading } = useBusinessEvents(businessId);
 
   if (loading) {
     return (

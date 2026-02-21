@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import {
   LineChart,
   BarChart,
@@ -8,20 +7,13 @@ import {
 } from "@tremor/react";
 import { BarChart3, Eye, Star, MessageSquare, ThumbsUp, Calendar } from "lucide-react";
 import { useReducedMotion } from "../../../utils/useReducedMotion";
+import { useBusinessAnalytics } from "../../../hooks/useBusinessAnalytics";
+import type { AnalyticsData } from "../../../hooks/useBusinessAnalytics";
+
+export type { AnalyticsData };
 
 /** Chart stroke/fill use theme token navbar-bg */
 const CHART_COLOR = "#722F37";
-
-export type AnalyticsData = {
-  viewsOverTime: { date: string; views: number }[];
-  reviewsOverTime: { date: string; count: number }[];
-  ratingTrend: { date: string; avgRating: number | null }[];
-  totalHelpfulVotes: number;
-  eventsCount: number;
-  specialsCount: number;
-  totalViews: number;
-  totalReviews: number;
-};
 
 const chartAnimationDuration = 280;
 
@@ -45,36 +37,8 @@ function SkeletonChart({ className }: { className?: string }) {
 }
 
 export function BusinessAnalyticsSection({ businessId }: { businessId: string }) {
-  const [data, setData] = useState<AnalyticsData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, loading, error } = useBusinessAnalytics(businessId);
   const reducedMotion = useReducedMotion();
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function fetchAnalytics() {
-      try {
-        const res = await fetch(`/api/businesses/${businessId}/analytics?days=30`);
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err?.error || "Failed to load analytics");
-        }
-        const json = await res.json();
-        if (!cancelled) setData(json);
-      } catch (e) {
-        if (!cancelled) {
-          setError(e instanceof Error ? e.message : "Failed to load analytics");
-          setData(null);
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    fetchAnalytics();
-    return () => { cancelled = true; };
-  }, [businessId]);
 
   if (loading) {
     return (

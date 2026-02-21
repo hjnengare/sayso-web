@@ -1,17 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "../../../../contexts/AuthContext";
-import { BusinessOwnershipService } from "../../../../lib/services/businessOwnershipService";
-import { PageLoader, Loader } from "../../../../components/Loader";
-import { ChevronRight, MessageSquare, ArrowLeft } from "lucide-react";
+import { PageLoader } from "../../../../components/Loader";
+import { ChevronRight, ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { getBrowserSupabase } from "../../../../lib/supabase/client";
-import type { Business } from "../../../../lib/types/database";
 import ReviewsList from "../../../../components/Reviews/ReviewsList";
-import type { ReviewWithUser } from "../../../../lib/types/database";
 import { usePreviousPageBreadcrumb } from "../../../../hooks/usePreviousPageBreadcrumb";
+import { useOwnerBusinessDashboard } from "../../../../hooks/useOwnerBusinessDashboard";
+import { useReviews } from "../../../../hooks/useReviews";
 
 export default function OwnerReviewsPage() {
   const router = useRouter();
@@ -22,122 +19,21 @@ export default function OwnerReviewsPage() {
     fallbackLabel: "Business",
   });
   const { user, isLoading: authLoading } = useAuth();
-  const [business, setBusiness] = useState<Business | null>(null);
-  const [reviews, setReviews] = useState<ReviewWithUser[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [hasAccess, setHasAccess] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
+  const {
+    business,
+    isLoading: dashboardLoading,
+    error,
+  } = useOwnerBusinessDashboard(authLoading ? null : user?.id, businessId);
 
-    const fetchData = async () => {
-      // If auth is still loading, wait
-      if (authLoading) return;
+  const { reviews, loading: reviewsLoading } = useReviews(business?.id);
 
-      // If auth resolved but no user, stop loading (will redirect below)
-      if (!user) {
-        setIsLoading(false);
-        return;
-      }
+  const isLoading = authLoading || dashboardLoading;
 
-      // If no business ID, stop loading
-      if (!businessId) {
-        setIsLoading(false);
-        setError('No business ID provided');
-        return;
-      }
-
-      setIsLoading(true);
-      try {
-        // Check ownership
-        const businessData = await BusinessOwnershipService.getOwnedBusinessById(user.id, businessId);
-
-        if (cancelled) return;
-
-        if (!businessData) {
-          setError('You do not have access to this business or it does not exist');
-          setIsLoading(false);
-          return;
-        }
-
-        setHasAccess(true);
-        setBusiness(businessData);
-
-        // Fetch reviews using the resolved UUID, not the raw URL param
-        const resolvedId = businessData.id;
-        const supabase = getBrowserSupabase();
-        const { data: reviewsData, error: reviewsError } = await supabase
-          .from('reviews')
-          .select(`
-            id,
-            user_id,
-            business_id,
-            rating,
-            title,
-            content,
-            tags,
-            helpful_count,
-            created_at,
-            updated_at,
-            profile:profiles!reviews_user_id_fkey (
-              user_id,
-              display_name,
-              avatar_url
-            ),
-            review_images (
-              id,
-              image_url,
-              alt_text
-            )
-          `)
-          .eq('business_id', resolvedId)
-          .order('created_at', { ascending: false })
-          .limit(20);
-
-        if (cancelled) return;
-
-        if (!reviewsError && reviewsData) {
-          const transformedReviews: ReviewWithUser[] = reviewsData.map((review: any) => {
-            const profile = Array.isArray(review.profile) ? review.profile[0] : review.profile;
-            return {
-              ...review,
-              user: {
-                id: review.user_id,
-                name: profile?.display_name || 'User',
-                avatar_url: profile?.avatar_url || null,
-              },
-              review_images: Array.isArray(review.review_images) ? review.review_images : [],
-            };
-          });
-          setReviews(transformedReviews);
-        } else {
-          setReviews([]);
-        }
-      } catch (error) {
-        if (cancelled) return;
-        console.error('Error fetching data:', error);
-        setError('Failed to load reviews');
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    fetchData();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [businessId, user?.id, authLoading]);
-
-  // Show loader while auth or data is loading
   if (authLoading || isLoading) {
     return <PageLoader size="lg" variant="wavy" color="sage" />;
   }
 
-  // Redirect to login if no user
   if (!user) {
     router.push('/login');
     return null;
@@ -146,17 +42,15 @@ export default function OwnerReviewsPage() {
   if (error || !business) {
     return (
       <div className="min-h-dvh bg-off-white relative">
-        {/* Background Gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-sage/10 via-off-white to-coral/5 pointer-events-none" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)] pointer-events-none" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(114,47,55,0.08)_0%,_transparent_50%)] pointer-events-none" />
-        
+
         <main className="relative">
-          {/* Background Gradient */}
           <div className="absolute inset-0 bg-gradient-to-br from-sage/10 via-off-white to-coral/5 pointer-events-none" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)] pointer-events-none" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(114,47,55,0.08)_0%,_transparent_50%)] pointer-events-none" />
-          
+
           <div className="mx-auto w-full max-w-[2000px] px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="max-w-4xl mx-auto text-center py-12">
               <p className="text-charcoal/70">{error || 'Business not found'}</p>
@@ -177,17 +71,15 @@ export default function OwnerReviewsPage() {
 
   return (
     <div className="min-h-dvh bg-off-white relative">
-      {/* Background Gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-sage/10 via-off-white to-coral/5 pointer-events-none" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)] pointer-events-none" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(114,47,55,0.08)_0%,_transparent_50%)] pointer-events-none" />
 
       <main className="pb-8 font-urbanist relative">
-        {/* Background Gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-sage/10 via-off-white to-coral/5 pointer-events-none" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)] pointer-events-none" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(114,47,55,0.08)_0%,_transparent_50%)] pointer-events-none" />
-        
+
         <div className="mx-auto w-full max-w-[2000px] px-2 sm:px-4 lg:px-6 2xl:px-8 relative z-10">
               {/* Breadcrumb Navigation */}
               <nav className="pb-1" aria-label="Breadcrumb">
@@ -218,7 +110,7 @@ export default function OwnerReviewsPage() {
                     <p className="text-body-sm text-charcoal/70 mb-4" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                       Respond to customer feedback and manage your reputation
                     </p>
-                    
+
                     {/* Quick Actions */}
                     <div className="flex flex-wrap gap-3 mt-4">
                       <Link
@@ -229,7 +121,6 @@ export default function OwnerReviewsPage() {
                         <ArrowLeft size={14} strokeWidth={2.5} />
                         <span>Back to Dashboard</span>
                       </Link>
-                      
                     </div>
                   </div>
 
@@ -240,7 +131,7 @@ export default function OwnerReviewsPage() {
                   >
                     <ReviewsList
                       reviews={reviews}
-                      loading={isLoading}
+                      loading={reviewsLoading}
                       error={error}
                       showBusinessInfo={false}
                       businessId={businessId}
@@ -255,4 +146,3 @@ export default function OwnerReviewsPage() {
     </div>
   );
 }
-

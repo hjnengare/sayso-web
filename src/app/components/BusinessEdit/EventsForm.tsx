@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Trash2, Edit2, Plus, X } from 'lucide-react';
 import { useToast } from '@/app/contexts/ToastContext';
+import { useBusinessEvents, BusinessEvent } from '../../hooks/useBusinessEvents';
 
 interface EventFormData {
   title: string;
@@ -15,13 +16,6 @@ interface EventFormData {
   bookingContact?: string;
 }
 
-interface BusinessEvent extends EventFormData {
-  id: string;
-  businessId: string;
-  createdAt: string;
-  image?: string;
-}
-
 interface EventsFormProps {
   businessId: string;
   businessName: string;
@@ -34,8 +28,8 @@ const ICON_OPTIONS = [
 
 export default function EventsForm({ businessId, businessName }: EventsFormProps) {
   const { showToast } = useToast();
-  const [events, setEvents] = useState<BusinessEvent[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { events, loading, mutate: refetchEvents } = useBusinessEvents(businessId);
+  const [saving, setSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<EventFormData>({
@@ -50,26 +44,6 @@ export default function EventsForm({ businessId, businessName }: EventsFormProps
     bookingUrl: '',
     bookingContact: '',
   });
-
-  // Fetch events on mount
-  useEffect(() => {
-    fetchEvents();
-  }, [businessId]);
-
-  const fetchEvents = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch(`/api/businesses/${businessId}/events`);
-      if (!res.ok) throw new Error('Failed to fetch events');
-      const result = await res.json();
-      setEvents(result.data || []);
-    } catch (error) {
-      console.error('Error fetching events:', error);
-      showToast('Failed to load events', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -89,7 +63,7 @@ export default function EventsForm({ businessId, businessName }: EventsFormProps
     }
 
     try {
-      setLoading(true);
+      setSaving(true);
       const method = editingId ? 'PUT' : 'POST';
       const url = editingId
         ? `/api/businesses/${businessId}/events?eventId=${editingId}`
@@ -106,14 +80,14 @@ export default function EventsForm({ businessId, businessName }: EventsFormProps
         throw new Error(error.error || 'Failed to save event');
       }
 
-      await fetchEvents();
+      refetchEvents();
       resetForm();
       showToast(editingId ? 'Event updated successfully' : 'Event created successfully', 'success');
     } catch (error) {
       console.error('Error saving event:', error);
       showToast(error instanceof Error ? error.message : 'Failed to save event', 'error');
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
@@ -136,19 +110,19 @@ export default function EventsForm({ businessId, businessName }: EventsFormProps
     if (!confirm('Are you sure you want to delete this event?')) return;
 
     try {
-      setLoading(true);
+      setSaving(true);
       const res = await fetch(`/api/businesses/${businessId}/events?eventId=${eventId}`, {
         method: 'DELETE',
       });
 
       if (!res.ok) throw new Error('Failed to delete event');
-      await fetchEvents();
+      refetchEvents();
       showToast('Event deleted successfully', 'success');
     } catch (error) {
       console.error('Error deleting event:', error);
       showToast('Failed to delete event', 'error');
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
@@ -362,10 +336,10 @@ export default function EventsForm({ businessId, businessName }: EventsFormProps
             <div className="flex gap-2 pt-4">
               <button
                 type="submit"
-                disabled={loading}
+                disabled={saving}
                 className="flex-1 px-4 py-2 bg-coral text-white rounded-lg hover:bg-coral/90 disabled:opacity-50 transition font-medium"
               >
-                {loading ? 'Saving...' : (editingId ? 'Update Event' : 'Create Event')}
+                {saving ? 'Saving...' : (editingId ? 'Update Event' : 'Create Event')}
               </button>
               <button
                 type="button"
@@ -415,7 +389,7 @@ export default function EventsForm({ businessId, businessName }: EventsFormProps
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleEdit(event)}
-                    disabled={loading}
+                    disabled={saving}
                     className="p-2 text-charcoal/60 hover:text-coral transition disabled:opacity-50"
                     title="Edit event"
                   >
@@ -423,7 +397,7 @@ export default function EventsForm({ businessId, businessName }: EventsFormProps
                   </button>
                   <button
                     onClick={() => handleDelete(event.id)}
-                    disabled={loading}
+                    disabled={saving}
                     className="p-2 text-charcoal/60 hover:text-coral transition disabled:opacity-50"
                     title="Delete event"
                   >

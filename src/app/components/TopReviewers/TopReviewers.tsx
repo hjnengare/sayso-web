@@ -1,11 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
 import { ArrowRight } from "lucide-react";
 import ReviewerCard from "../ReviewerCard/ReviewerCard";
-import ScrollableSection from "../ScrollableSection/ScrollableSection";
 import { Reviewer } from "../../types/community";
+import { useReviewersTop } from "../../hooks/useReviewersTop";
 
 // Sample review texts for variety
 const sampleReviewTexts = [
@@ -25,7 +24,7 @@ const sampleReviewTexts = [
 
 interface TopReviewersProps {
   title?: string;
-  reviewers?: Reviewer[]; // Made optional - will fetch from API if not provided
+  reviewers?: Reviewer[]; // Optional - will fetch from API if not provided
   cta?: string;
   href?: string;
 }
@@ -37,36 +36,16 @@ export default function TopReviewers({
   href = "/reviewers"
 }: TopReviewersProps) {
   const router = useRouter();
-  const [reviewers, setReviewers] = useState<Reviewer[]>(propReviewers || []);
-  const [loading, setLoading] = useState(!propReviewers);
 
-  // Fetch from API if not provided via props
-  useEffect(() => {
-    async function fetchReviewers() {
-      if (!propReviewers) {
-        setLoading(true);
-        try {
-          const response = await fetch('/api/reviewers/top?limit=12');
-          if (response.ok) {
-            const data = await response.json();
-            setReviewers(data.reviewers || []);
-          }
-        } catch (error) {
-          console.error('[TopReviewers] Failed to fetch reviewers:', error);
-        } finally {
-          setLoading(false);
-        }
-      }
-    }
-
-    fetchReviewers();
-  }, [propReviewers]);
+  // Use SWR hook only when reviewers are not passed via props
+  const { reviewers: fetchedReviewers, loading } = useReviewersTop(propReviewers ? 0 : 12);
+  const reviewers = propReviewers ?? fetchedReviewers;
 
   const handleSeeMore = () => {
     router.push(href);
   };
 
-  if (loading) {
+  if (!propReviewers && loading) {
     return (
       <section className="py-8 bg-off-white relative" aria-label="top reviewers">
         <div className="container mx-auto max-w-[1300px] px-4 relative z-10">
@@ -83,12 +62,12 @@ export default function TopReviewers({
         <div className="absolute top-10 left-20 w-32 h-32 bg-gradient-to-br from-sage/10 to-transparent rounded-full blur-lg" />
         <div className="absolute bottom-20 right-10 w-24 h-24 bg-gradient-to-br from-coral/8 to-transparent rounded-full blur-xl" />
       </div>
-      
+
       <div className="container mx-auto max-w-[1300px] px-4 relative z-10">
         <div className="mb-12 flex flex-wrap items-center justify-between gap-[18px]">
           <h2 className="font-urbanist text-lg font-800 text-charcoal relative">
             {title}
-          
+
           </h2>
           <button
             onClick={handleSeeMore}
@@ -107,7 +86,7 @@ export default function TopReviewers({
               // Get a consistent review text for each reviewer based on their ID
               const reviewIndex = parseInt(reviewer.id) % sampleReviewTexts.length;
               const sampleText = sampleReviewTexts[reviewIndex];
-              
+
               return (
                 <ReviewerCard
                   key={reviewer.id}

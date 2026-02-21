@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
@@ -13,6 +13,7 @@ import ReviewForm from "../../../components/ReviewForm/ReviewForm";
 import OptimizedImage from "../../../components/Performance/OptimizedImage";
 import { useReviewForm } from "../../../hooks/useReviewForm";
 import { useDealbreakerQuickTags } from "../../../hooks/useDealbreakerQuickTags";
+import { useReviewTarget } from "../../../hooks/useReviewTarget";
 
 function IconStar({ className = "" }: { className?: string }) {
   return (
@@ -114,8 +115,8 @@ function WriteReviewContent() {
   const type = params?.type as string;
   const id = params?.id as string;
 
-  const [target, setTarget] = useState<ReviewTarget | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { target: fetchedTarget, loading, error: targetError } = useReviewTarget(type, id);
+  const target = fetchedTarget as ReviewTarget | null;
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
@@ -159,44 +160,13 @@ function WriteReviewContent() {
     setSelectedImages(newImages);
   };
 
-  // Fetch target data
+  // Redirect if target not found after load
   useEffect(() => {
-    const fetchTarget = async () => {
-      if (!type || !id) return;
-
-      try {
-        setLoading(true);
-        let endpoint = "";
-
-        if (type === "event") {
-          endpoint = `/api/events/${id}`;
-        } else if (type === "special") {
-          endpoint = `/api/specials/${id}`;
-        } else {
-          throw new Error("Invalid type");
-        }
-
-        const response = await fetch(endpoint);
-        if (!response.ok) {
-          throw new Error("Target not found");
-        }
-
-        const data = await response.json();
-        // APIs return wrapped objects: { event: {...} } or { special: {...} }
-        const extracted = type === "event" ? data.event : type === "special" ? data.special : data;
-        if (!extracted) throw new Error("Target not found");
-        setTarget(extracted);
-      } catch (error) {
-        console.error("Error fetching target:", error);
-        showToast("Item not found", "sage");
-        router.back();
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTarget();
-  }, [type, id, router, showToast]);
+    if (!loading && targetError) {
+      showToast("Item not found", "sage");
+      router.back();
+    }
+  }, [loading, targetError, showToast, router]);
 
   const handleSubmit = async () => {
     setFormError(null);

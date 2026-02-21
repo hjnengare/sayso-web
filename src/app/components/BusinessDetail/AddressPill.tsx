@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Check, Copy } from 'lucide-react';
+import { useReverseGeocode } from '../../hooks/useReverseGeocode';
 
 interface AddressPillProps {
   address?: string | null;
@@ -25,58 +26,20 @@ export default function AddressPill({
   isUserUploaded = false,
   className = '',
 }: AddressPillProps) {
-  const [displayAddress, setDisplayAddress] = useState<string | null>(address || null);
-  const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // If user-uploaded business, just use the address directly
-  // Otherwise, reverse-geocode if coordinates are available
-  useEffect(() => {
-    if (isUserUploaded) {
-      // User-uploaded: use address field directly
-      setDisplayAddress(address || null);
-      return;
-    }
+  // Reverse-geocode only for OSM businesses without a text address
+  const shouldGeocode = !isUserUploaded && !address && !!latitude && !!longitude;
+  const { address: geocodedAddress, isLoading } = useReverseGeocode(
+    shouldGeocode ? latitude : null,
+    shouldGeocode ? longitude : null,
+  );
 
-    if (!address && latitude && longitude) {
-      // OSM business: reverse-geocode coordinates
-      const reverseGeocode = async () => {
-        setIsLoading(true);
-        try {
-          const response = await fetch('/api/geocode/reverse', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ latitude, longitude }),
-          });
-
-          if (!response.ok) {
-            console.warn(`[AddressPill] API error: ${response.status}, using fallback`);
-            // Use coordinates as fallback
-            setDisplayAddress(`${latitude?.toFixed(6)}, ${longitude?.toFixed(6)}`);
-          } else {
-            const data = await response.json();
-            if (data.success && data.address) {
-              setDisplayAddress(data.address);
-            } else {
-              // Use coordinates as fallback
-              setDisplayAddress(`${latitude?.toFixed(6)}, ${longitude?.toFixed(6)}`);
-            }
-          }
-        } catch (error) {
-          console.warn('[AddressPill] Reverse geocoding failed:', error);
-          // Fallback: use coordinates as display
-          setDisplayAddress(`${latitude?.toFixed(6)}, ${longitude?.toFixed(6)}`);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-
-      reverseGeocode();
-    } else if (address) {
-      // Address provided, use it directly
-      setDisplayAddress(address);
-    }
-  }, [address, latitude, longitude, isUserUploaded]);
+  // Determine what to display
+  const displayAddress =
+    isUserUploaded || address
+      ? address || null
+      : geocodedAddress ?? (latitude && longitude ? `${latitude.toFixed(6)}, ${longitude.toFixed(6)}` : null);
 
   const handleCopy = async () => {
     if (!displayAddress) return;
