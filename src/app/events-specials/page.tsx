@@ -17,8 +17,6 @@ import { useDebounce } from "../hooks/useDebounce";
 import { ChevronRight, ChevronDown, ChevronLeft } from "lucide-react";
 import { Loader } from "../components/Loader/Loader";
 import { useIsDesktop } from "../hooks/useIsDesktop";
-import ScrollToTopButton from "../components/ScrollToTopButton/ScrollToTopButton";
-
 const ITEMS_PER_PAGE = 20;
 const REQUEST_TIMEOUT_MS = 12000;
 const REQUEST_RETRY_DELAY_MS = 250;
@@ -417,7 +415,6 @@ export default function EventsSpecialsPage() {
       )}
 
       <Footer />
-      <ScrollToTopButton />
     </div>
   );
 }

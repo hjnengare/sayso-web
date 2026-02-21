@@ -10,7 +10,6 @@ import { useForYouBusinesses } from "../hooks/useBusinesses";
 import { useSimpleBusinessSearch } from "../hooks/useSimpleBusinessSearch";
 import { useUserPreferences } from "../hooks/useUserPreferences";
 import { useDebounce } from "../hooks/useDebounce";
-import ScrollToTopButton from "../components/ScrollToTopButton/ScrollToTopButton";
 import SearchInput from "../components/SearchInput/SearchInput";
 import { FilterState } from "../components/FilterModal/FilterModal";
 import ActiveFilterBadges from "../components/FilterActiveBadges/ActiveFilterBadges";
@@ -785,7 +784,6 @@ export default function ForYouClient({
       )}
 
       <Footer />
-      <ScrollToTopButton />
     </div>
   );
 }

@@ -223,7 +223,7 @@ export default function RootLayout({
                       </LazyMotionProvider>
                     </DeferredProviders>
                   </RealtimeProvider>
-                  <ScrollToTopButton threshold={360} />
+                  <ScrollToTopButton threshold={360} desktopThreshold={100} />
                 </NotificationsProvider>
               </SavedItemsProvider>
             </OnboardingProvider>
