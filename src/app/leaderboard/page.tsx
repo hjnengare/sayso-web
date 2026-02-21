@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useMemo, memo, useEffect } from "react";
+import { useLeaderboard } from "../hooks/useLeaderboard";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -26,7 +27,6 @@ const BusinessOfMonthLeaderboard = nextDynamic(
 import { useBusinesses } from "../hooks/useBusinesses";
 import { useFeaturedBusinesses } from "../hooks/useFeaturedBusinesses";
 import { useIsDesktop } from "../hooks/useIsDesktop";
-import { getBrowserSupabase } from "../lib/supabase/client";
 import { LiveIndicator } from "../components/Realtime/RealtimeIndicators";
 
 // Note: dynamic and revalidate cannot be exported from client components
@@ -56,11 +56,8 @@ function LeaderboardPage() {
   const [showFullLeaderboard, setShowFullLeaderboard] = useState(false);
   const [showFullBusinessLeaderboard, setShowFullBusinessLeaderboard] = useState(false);
   const [shouldFetchBusinesses, setShouldFetchBusinesses] = useState(false);
-  const [topReviewers, setTopReviewers] = useState<LeaderboardUser[]>([]);
-  const [isLoadingLeaderboard, setIsLoadingLeaderboard] = useState(true);
-  const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
-  const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
-  const [lastRefetch, setLastRefetch] = useState(Date.now());
+  const { topReviewers, isLoadingLeaderboard, leaderboardError, isRealtimeConnected, refetch: refetchLeaderboard } =
+    useLeaderboard(activeTab === 'contributors');
 
   // Update active tab when URL param changes
   useEffect(() => {
@@ -72,101 +69,6 @@ function LeaderboardPage() {
       }
     }
   }, [searchParams, shouldFetchBusinesses]);
-
-  // Fetch leaderboard data
-  useEffect(() => {
-    const fetchLeaderboard = async () => {
-      setIsLoadingLeaderboard(true);
-      setLeaderboardError(null);
-      
-      try {
-        const response = await fetch('/api/leaderboard?limit=50&sortBy=reviews');
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch leaderboard');
-        }
-        
-        const data = await response.json();
-        setTopReviewers(data.leaderboard || []);
-      } catch (error: any) {
-        console.error('Error fetching leaderboard:', error);
-        setLeaderboardError(error.message || 'Failed to load leaderboard');
-        // Fallback to empty array on error
-        setTopReviewers([]);
-      } finally {
-        setIsLoadingLeaderboard(false);
-      }
-    };
-
-    if (activeTab === "contributors") {
-      fetchLeaderboard();
-    }
-  }, [activeTab]);
-
-  // Realtime subscription for leaderboard updates (throttled)
-  useEffect(() => {
-    const supabase = getBrowserSupabase();
-    const THROTTLE_MS = 10000; // Refetch at most once every 10 seconds
-    
-    const throttledRefetch = () => {
-      const now = Date.now();
-      if (now - lastRefetch < THROTTLE_MS) {
-        return; // Skip if recently refetched
-      }
-      
-      setLastRefetch(now);
-      
-      // Refetch leaderboard data
-      fetch('/api/leaderboard?limit=50&sortBy=reviews')
-        .then(res => res.json())
-        .then(data => {
-          setTopReviewers(data.leaderboard || []);
-        })
-        .catch(error => {
-          console.error('Error refreshing leaderboard:', error);
-        });
-    };
-
-    // Subscribe to reviews table (affects review counts)
-    const reviewsChannel = supabase
-      .channel('leaderboard-reviews')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'reviews',
-        },
-        () => {
-          throttledRefetch();
-        }
-      )
-      .subscribe((status) => {
-        setIsRealtimeConnected(status === 'SUBSCRIBED');
-      });
-
-    // Subscribe to user_badges table (affects badges/gamification)
-    const badgesChannel = supabase
-      .channel('leaderboard-badges')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'user_badges',
-        },
-        () => {
-          throttledRefetch();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(reviewsChannel);
-      supabase.removeChannel(badgesChannel);
-      setIsRealtimeConnected(false);
-    };
-  }, [lastRefetch, activeTab]);
 
   // Fetch real businesses only when businesses tab is active or has been viewed
   // Reduced limit from 200 to 50 - we only need one business per interest category (max ~8)
@@ -399,20 +301,7 @@ function LeaderboardPage() {
                                   <div className="text-center py-12">
                                     <p className="text-charcoal/70 mb-4">{leaderboardError}</p>
                                     <button
-                                      onClick={() => {
-                                        setLeaderboardError(null);
-                                        setIsLoadingLeaderboard(true);
-                                        fetch('/api/leaderboard?limit=50&sortBy=reviews')
-                                          .then(res => res.json())
-                                          .then(data => {
-                                            setTopReviewers(data.leaderboard || []);
-                                            setIsLoadingLeaderboard(false);
-                                          })
-                                          .catch(err => {
-                                            setLeaderboardError(err.message);
-                                            setIsLoadingLeaderboard(false);
-                                          });
-                                      }}
+                                      onClick={refetchLeaderboard}
                                       className="px-4 py-2 bg-card-bg text-white rounded-full text-sm font-semibold hover:bg-card-bg/90 transition-colors"
                                     >
                                       Retry

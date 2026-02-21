@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "../contexts/AuthContext";
 import { useSimpleBusinessSearch } from "../hooks/useSimpleBusinessSearch";
@@ -21,6 +21,7 @@ import { PageLoader, Loader } from "../components/Loader";
 import Link from "next/link";
 import { Suspense } from "react";
 import { usePreviousPageBreadcrumb } from "../hooks/usePreviousPageBreadcrumb";
+import { useUserBusinessClaims } from "../hooks/useUserBusinessClaims";
 
 const Footer = dynamic(() => import("../components/Footer/Footer"), {
   loading: () => null,
@@ -36,18 +37,6 @@ function ClaimBusinessPageContent() {
   const searchParams = useSearchParams();
   const { user, isLoading: authLoading } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
-  const [myClaims, setMyClaims] = useState<Array<{
-    id: string;
-    business_id: string;
-    business_name: string;
-    business_slug: string | null;
-    status: string;
-    display_status: string;
-    next_step: string;
-    rejection_reason: string | null;
-  }>>([]);
-  const [claimsLoading, setClaimsLoading] = useState(false);
-  const [claimsError, setClaimsError] = useState<string | null>(null);
   const [actionLoadingBusinessId, setActionLoadingBusinessId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const ownershipPricingNotice =
@@ -55,62 +44,7 @@ function ClaimBusinessPageContent() {
 
   const { results: businesses, isSearching } = useSimpleBusinessSearch(searchQuery, 300);
 
-  const fetchMyClaims = useCallback(async () => {
-    if (!user) {
-      setMyClaims([]);
-      setClaimsError(null);
-      setClaimsLoading(false);
-      return;
-    }
-
-    setClaimsLoading(true);
-    setClaimsError(null);
-
-    try {
-      const response = await fetch("/api/business/claims", {
-        method: "GET",
-        cache: "no-store",
-        headers: { Accept: "application/json" },
-      });
-
-      let payload: any = null;
-      try {
-        payload = await response.json();
-      } catch {
-        payload = null;
-      }
-
-      if (!response.ok) {
-        const message =
-          (typeof payload?.error === "string" && payload.error) ||
-          (typeof payload?.message === "string" && payload.message) ||
-          "Unable to load your claims right now.";
-        setMyClaims([]);
-        setClaimsError(message);
-        return;
-      }
-
-      if (!Array.isArray(payload?.claims)) {
-        setMyClaims([]);
-        setClaimsError("Unexpected claims response. Please refresh and try again.");
-        return;
-      }
-
-      setMyClaims(payload.claims);
-      setClaimsError(null);
-    } catch (error) {
-      console.error("[Claim business page] Failed to fetch claims:", error);
-      setMyClaims([]);
-      setClaimsError("Unable to load your claims right now. Please try again.");
-    } finally {
-      setClaimsLoading(false);
-    }
-  }, [user]);
-
-  // Fetch current user's claims (business_claims) for "Your claims" section
-  useEffect(() => {
-    void fetchMyClaims();
-  }, [fetchMyClaims]);
+  const { claims: myClaims, claimsLoading, claimsError } = useUserBusinessClaims(user?.id);
 
   // Handle businessId from query params (after login redirect)
   useEffect(() => {

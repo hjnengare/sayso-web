@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 import { useAuth } from "../contexts/AuthContext";
-import { BusinessOwnershipService } from "../lib/services/businessOwnershipService";
 import { getBrowserSupabase } from "@/app/lib/supabase/client";
+import { useOwnerBusinessesList } from "../hooks/useOwnerBusinessesList";
 import SkeletonHeader from "../components/shared/skeletons/SkeletonHeader";
 import SkeletonList from "../components/shared/skeletons/SkeletonList";
 import { usePreviousPageBreadcrumb } from "../hooks/usePreviousPageBreadcrumb";
@@ -38,33 +38,6 @@ interface OwnerListingsFetchResult {
 
 const FONT_STACK = "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif";
 const LISTINGS_REQUEST_TIMEOUT_MS = 7000;
-const OWNER_DATA_REQUEST_TIMEOUT_MS = 7600;
-// Watchdog needs to account for two sequential API calls (owner data + listings)
-// Max theoretical time: 7.6s + 7.6s = 15.2s, so set to 18s with buffer
-const LOADING_WATCHDOG_TIMEOUT_MS = 18000;
-
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number, timeoutMessage: string): Promise<T> {
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
-
-  const timeoutPromise = new Promise<T>((_, reject) => {
-    timeoutId = setTimeout(() => {
-      reject(new Error(timeoutMessage));
-    }, timeoutMs);
-  });
-
-  return Promise.race([promise, timeoutPromise]).finally(() => {
-    if (timeoutId) clearTimeout(timeoutId);
-  });
-}
-
-function toBusinessCardData(ownedBusinesses: any[]): Business[] {
-  return ownedBusinesses.map((business) => ({
-    ...(business as any),
-    alt: business.name,
-    reviews: 0,
-    uploaded_images: [],
-  }));
-}
 
 function parseDate(value: string | null | undefined): Date | null {
   if (!value) return null;
@@ -104,15 +77,14 @@ export default function MyBusinessesPage() {
     fallbackLabel: "Home",
   });
 
-  const [businesses, setBusinesses] = useState<Business[]>([]);
+  const { businesses, isLoading: businessesLoading, error: businessesError, refetch: refetchBusinesses } =
+    useOwnerBusinessesList(authLoading ? null : user?.id);
   const [ownerListings, setOwnerListings] = useState<OwnerListing[]>([]);
   const [listingsTypeFilter, setListingsTypeFilter] = useState<ListingTypeFilter>("all");
   const [listingsBusinessFilter, setListingsBusinessFilter] = useState<string>("all");
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [listingsFetching, setListingsFetching] = useState(false);
   const [listingsWarning, setListingsWarning] = useState<string | null>(null);
-  const fetchCallCountRef = useRef(0);
-  const isFetchingRef = useRef(false);
+  const listingsFetchedForRef = useRef<string | null>(null);
 
   const fetchOwnerListings = useCallback(async (ownedBusinesses: Business[], userId: string): Promise<OwnerListingsFetchResult> => {
     const allPromises: Promise<OwnerListing[]>[] = [];
@@ -232,131 +204,33 @@ export default function MyBusinessesPage() {
     return { items, failedCount };
   }, []);
 
-  const loadOwnerDashboardData = useCallback(
-    async (ownerId: string, showLoading = true) => {
-      if (!ownerId) {
-        setError("Couldn't load businesses. Please try again.");
-        setIsLoading(false);
-        return;
-      }
-      if (isFetchingRef.current && !showLoading) {
-        return;
-      }
+  // Derive unified loading/error from SWR hook
+  const isLoading = authLoading || businessesLoading;
+  const error = businessesError;
 
-      isFetchingRef.current = true;
-      fetchCallCountRef.current += 1;
-      if (process.env.NODE_ENV !== "production") {
-        console.debug(`[my-businesses] fetch call #${fetchCallCountRef.current}`, { ownerId, showLoading });
-      }
+  // Fetch owner listings (events & specials) once businesses are loaded
+  useEffect(() => {
+    if (!user?.id || businesses.length === 0) return;
+    const userId = user.id;
+    const key = businesses.map((b) => b.id).join(',');
+    if (listingsFetchedForRef.current === key) return;
+    listingsFetchedForRef.current = key;
 
-      if (showLoading) setIsLoading(true);
-      setError(null);
-      setListingsWarning(null);
+    setListingsWarning(null);
 
-      // Phase 1: Fetch businesses (blocking — clears isLoading when done)
-      let transformedBusinesses: Business[] = [];
-      try {
-        const ownedBusinesses = await withTimeout(
-          BusinessOwnershipService.getBusinessesForOwner(ownerId),
-          OWNER_DATA_REQUEST_TIMEOUT_MS,
-          "Timed out while loading businesses",
-        );
-        transformedBusinesses = toBusinessCardData(ownedBusinesses);
-        setBusinesses(transformedBusinesses);
-      } catch (err) {
-        console.error("Error fetching owner businesses:", err);
-        setBusinesses([]);
-        setOwnerListings([]);
-        setError("Couldn't load businesses. Please try again.");
-        isFetchingRef.current = false;
-        if (showLoading) setIsLoading(false);
-        return;
-      }
-
-      // Unblock page render — businesses are loaded
-      if (showLoading) setIsLoading(false);
-
-      // Phase 2: Fetch listings (non-blocking — page is already visible)
-      try {
-        const { items, failedCount } = await withTimeout(
-          fetchOwnerListings(transformedBusinesses, ownerId),
-          OWNER_DATA_REQUEST_TIMEOUT_MS,
-          "Timed out while loading listings",
-        );
+    fetchOwnerListings(businesses, userId)
+      .then(({ items, failedCount }) => {
         setOwnerListings(items);
-
         if (failedCount > 0) {
           setListingsWarning("Some business listings could not be loaded. Showing the available results.");
         }
-      } catch (err) {
+      })
+      .catch((err) => {
         console.error("Error fetching owner listings:", err);
         setOwnerListings([]);
         setListingsWarning("Could not load events & specials. They will appear on your next visit.");
-      } finally {
-        isFetchingRef.current = false;
-      }
-    },
-    [fetchOwnerListings],
-  );
-
-  // Initial load
-  useEffect(() => {
-    if (authLoading) return;
-    if (!user?.id) {
-      setIsLoading(false);
-      return;
-    }
-    void loadOwnerDashboardData(user.id, true);
-  }, [authLoading, user?.id, loadOwnerDashboardData]);
-
-  // Refetch on focus / tab visibility
-  useEffect(() => {
-    if (!user?.id) return;
-
-    const refetch = async () => {
-      await loadOwnerDashboardData(user.id, false);
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        setTimeout(() => {
-          void refetch();
-        }, 100);
-      }
-    };
-
-    const handleFocus = () => {
-      void refetch();
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("focus", handleFocus);
-
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("focus", handleFocus);
-    };
-  }, [user?.id, loadOwnerDashboardData]);
-
-  useEffect(() => {
-    const isBlockingState = authLoading || isLoading;
-    if (!isBlockingState) return;
-
-    const timeoutId = window.setTimeout(() => {
-      console.error("[my-businesses] loading watchdog exceeded", {
-        userId: user?.id ?? null,
-        authLoading,
-        isLoading,
-        fetchCalls: fetchCallCountRef.current,
       });
-      setError("Couldn't load businesses. Please try again.");
-      setIsLoading(false);
-    }, LOADING_WATCHDOG_TIMEOUT_MS);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [authLoading, isLoading, user?.id]);
+  }, [businesses, user?.id, fetchOwnerListings]);
 
   // Keep business filter valid if a business is removed
   useEffect(() => {
@@ -367,15 +241,15 @@ export default function MyBusinessesPage() {
     }
   }, [businesses, listingsBusinessFilter]);
 
-  // Listen for business deletion events
+  // Keep listings in sync with business deletions
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
 
     import("../lib/utils/businessUpdateEvents")
       .then(({ businessUpdateEvents }) => {
         unsubscribe = businessUpdateEvents.onDelete((deletedBusinessId: string) => {
-          setBusinesses((prev) => prev.filter((business) => business.id !== deletedBusinessId));
           setOwnerListings((prev) => prev.filter((listing) => listing.businessId !== deletedBusinessId));
+          listingsFetchedForRef.current = null; // force re-fetch on next businesses update
         });
       })
       .catch((err) => {
@@ -419,8 +293,8 @@ export default function MyBusinessesPage() {
       router.push("/login");
       return;
     }
-    void loadOwnerDashboardData(user.id, true);
-  }, [loadOwnerDashboardData, router, user?.id]);
+    refetchBusinesses();
+  }, [refetchBusinesses, router, user?.id]);
 
   if ((authLoading || isLoading) && !error) {
     return (

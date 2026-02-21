@@ -4,8 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "../../../contexts/AuthContext";
-import { BusinessOwnershipService } from "../../../lib/services/businessOwnershipService";
-import { PageLoader, Loader } from "../../../components/Loader";
+import { PageLoader } from "../../../components/Loader";
 import { Store, MapPin, Star, MessageSquare, Edit, ArrowLeft, Eye, TrendingUp, ChevronRight, Camera, Upload, Loader2, CheckCircle, Calendar, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { ConfirmationDialog } from "@/components/molecules/ConfirmationDialog";
@@ -44,18 +43,13 @@ const BusinessAnalyticsSection = dynamic(
   }
 );
 import { getBrowserSupabase } from "../../../lib/supabase/client";
-import type { Business } from "../../../lib/types/database";
 import { useToast } from "../../../contexts/ToastContext";
 import { STORAGE_BUCKETS } from "../../../lib/utils/storageBucketConfig";
 import Image from "next/image";
 import { usePreviousPageBreadcrumb } from "../../../hooks/usePreviousPageBreadcrumb";
 import { useRealtimeBusinessStats, useRealtimeReviews, useRealtimeStatus } from "../../../hooks/useRealtime";
 import { LiveIndicator } from "../../../components/Realtime/RealtimeIndicators";
-
-interface BusinessStats {
-  average_rating: number | null;
-  total_reviews: number;
-}
+import { useOwnerBusinessDashboard } from "../../../hooks/useOwnerBusinessDashboard";
 
 export default function OwnerBusinessDashboard() {
   const router = useRouter();
@@ -66,16 +60,20 @@ export default function OwnerBusinessDashboard() {
     fallbackLabel: "My Businesses",
   });
   const { user, isLoading: authLoading } = useAuth();
-  const [business, setBusiness] = useState<Business | null>(null);
-  const [stats, setStats] = useState<BusinessStats | null>(null);
-  const [analytics, setAnalytics] = useState<{
-    profileViews: number;
-    newReviews: number;
-    newConversations: number;
-  } | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [hasAccess, setHasAccess] = useState(false);
+
+  const {
+    business,
+    stats,
+    analytics,
+    isLoading: dashboardLoading,
+    error,
+    setBusiness,
+    setStats,
+    setAnalytics,
+  } = useOwnerBusinessDashboard(authLoading ? null : user?.id, businessId);
+
+  const isLoading = authLoading || dashboardLoading;
+
   const [uploadingProfilePicture, setUploadingProfilePicture] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -114,164 +112,7 @@ export default function OwnerBusinessDashboard() {
     ];
   }, [business, stats]);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    const fetchData = async () => {
-      // If auth is still loading, wait
-      if (authLoading) return;
-
-      // If auth resolved but no user, stop loading (will redirect below)
-      if (!user) {
-        setIsLoading(false);
-        return;
-      }
-
-      // If no business ID, stop loading
-      if (!businessId) {
-        setIsLoading(false);
-        setError('No business ID provided');
-        return;
-      }
-
-      setIsLoading(true);
-      try {
-        // Check ownership and fetch business
-        const businessData = await BusinessOwnershipService.getOwnedBusinessById(user.id, businessId);
-
-        if (cancelled) return;
-
-        if (!businessData) {
-          setError('You do not have access to this business or it does not exist');
-          setIsLoading(false);
-          return;
-        }
-
-        setHasAccess(true);
-        setBusiness(businessData);
-
-        // Use the resolved UUID from the returned business, not the raw URL param
-        const resolvedId = businessData.id;
-
-        // Fetch stats, reviews, and conversations in parallel
-        const supabase = getBrowserSupabase();
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-        const [statsResult, reviewsResult, conversationsResult, viewsResult] = await Promise.allSettled([
-          supabase
-            .from('business_stats')
-            .select('average_rating, total_reviews')
-            .eq('business_id', resolvedId)
-            .single(),
-          supabase
-            .from('reviews')
-            .select('*', { count: 'exact', head: true })
-            .eq('business_id', resolvedId)
-            .gte('created_at', thirtyDaysAgo.toISOString()),
-          supabase
-            .from('conversations')
-            .select('*', { count: 'exact', head: true })
-            .eq('business_id', resolvedId)
-            .gte('created_at', thirtyDaysAgo.toISOString()),
-          fetch(`/api/businesses/${resolvedId}/views?days=30`).then(r => r.json()),
-        ]);
-
-        if (cancelled) return;
-
-        // Handle stats
-        if (statsResult.status === 'fulfilled' && !statsResult.value.error && statsResult.value.data) {
-          setStats({
-            average_rating: statsResult.value.data.average_rating,
-            total_reviews: statsResult.value.data.total_reviews || 0,
-          });
-        } else {
-          setStats({ average_rating: null, total_reviews: 0 });
-        }
-
-        // Handle analytics
-        const newReviewsCount = reviewsResult.status === 'fulfilled' ? reviewsResult.value.count : 0;
-        const newConversationsCount = conversationsResult.status === 'fulfilled' ? conversationsResult.value.count : 0;
-        const profileViewsCount = viewsResult.status === 'fulfilled' ? viewsResult.value.count : 0;
-
-        setAnalytics({
-          profileViews: profileViewsCount || 0,
-          newReviews: newReviewsCount || 0,
-          newConversations: newConversationsCount || 0,
-        });
-      } catch (error) {
-        if (cancelled) return;
-        console.error('Error fetching business data:', error);
-        setError('Failed to load business data');
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    fetchData();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [user?.id, authLoading, businessId]);
-
-  // Refetch when page becomes visible (e.g., returning from edit page)
-  useEffect(() => {
-    let cancelled = false;
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
-
-    const refetchBusiness = async () => {
-      if (cancelled || !business?.id) return;
-      const resolvedId = business.id;
-      try {
-        const supabase = getBrowserSupabase();
-        const [businessResult, statsResult] = await Promise.allSettled([
-          supabase.from('businesses').select('*').eq('id', resolvedId).single(),
-          supabase.from('business_stats').select('average_rating, total_reviews').eq('business_id', resolvedId).single(),
-        ]);
-
-        if (cancelled) return;
-
-        if (businessResult.status === 'fulfilled' && !businessResult.value.error && businessResult.value.data) {
-          setBusiness(businessResult.value.data as Business);
-        }
-        if (statsResult.status === 'fulfilled' && !statsResult.value.error && statsResult.value.data) {
-          setStats({
-            average_rating: statsResult.value.data.average_rating,
-            total_reviews: statsResult.value.data.total_reviews || 0,
-          });
-        }
-      } catch (error) {
-        if (!cancelled) {
-          console.error('Error refetching business data:', error);
-        }
-      }
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && business?.id) {
-        timeoutId = setTimeout(refetchBusiness, 100);
-      }
-    };
-
-    const handleFocus = () => {
-      refetchBusiness();
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleFocus);
-
-    return () => {
-      cancelled = true;
-      if (timeoutId) clearTimeout(timeoutId);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
-    };
-  }, [business?.id]);
-
-  // Sync realtime stats with local state
+  // Sync realtime stats with SWR cache
   useEffect(() => {
     if (realtimeStats) {
       setStats(prev => ({
@@ -286,15 +127,12 @@ export default function OwnerBusinessDashboard() {
     if (realtimeReviews.length > 0 && analytics) {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      
-      const recentReviewsCount = realtimeReviews.filter(review => 
+
+      const recentReviewsCount = realtimeReviews.filter(review =>
         new Date(review.created_at) >= thirtyDaysAgo
       ).length;
-      
-      setAnalytics(prev => prev ? {
-        ...prev,
-        newReviews: recentReviewsCount,
-      } : prev);
+
+      setAnalytics(prev => prev ? { ...prev, newReviews: recentReviewsCount } : prev);
     }
   }, [realtimeReviews.length]);
 
@@ -331,10 +169,9 @@ export default function OwnerBusinessDashboard() {
   // Listen for business deletion events
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
-    
+
     import('../../../lib/utils/businessUpdateEvents').then(({ businessUpdateEvents }) => {
       unsubscribe = businessUpdateEvents.onDelete((deletedBusinessId: string) => {
-        // If this business was deleted, redirect to owners list
         if (deletedBusinessId === businessId) {
           router.push('/my-businesses');
         }
@@ -352,8 +189,7 @@ export default function OwnerBusinessDashboard() {
     const file = event.target.files?.[0];
     if (!file || !businessId) return;
 
-    // Validate file
-    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    const MAX_SIZE = 5 * 1024 * 1024;
     const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
     if (file.size > MAX_SIZE) {
@@ -369,11 +205,9 @@ export default function OwnerBusinessDashboard() {
     setUploadingProfilePicture(true);
     try {
       const supabase = getBrowserSupabase();
-      
-      // Delete old profile picture if it exists and is in our storage
+
       if (business?.image_url && business.image_url.includes(STORAGE_BUCKETS.BUSINESS_IMAGES)) {
         try {
-          // Extract path from URL
           const urlParts = business.image_url.split('/');
           const pathIndex = urlParts.findIndex(part => part === STORAGE_BUCKETS.BUSINESS_IMAGES);
           if (pathIndex !== -1 && pathIndex < urlParts.length - 1) {
@@ -384,22 +218,19 @@ export default function OwnerBusinessDashboard() {
           }
         } catch (deleteError) {
           console.warn('Could not delete old profile picture:', deleteError);
-          // Continue with upload even if deletion fails
         }
       }
 
-      // Upload new profile picture
       const fileExt = file.name.split('.').pop() || 'jpg';
       const timestamp = Date.now();
       const fileName = `profile_${timestamp}.${fileExt}`;
       const filePath = `${businessId}/${fileName}`;
 
-      // Upload with upsert (will use UPDATE policy if file exists, INSERT if new)
       const { error: uploadError } = await supabase.storage
         .from(STORAGE_BUCKETS.BUSINESS_IMAGES)
         .upload(filePath, file, {
           contentType: file.type,
-          upsert: true, // Replace if exists
+          upsert: true,
         });
 
       if (uploadError) {
@@ -408,7 +239,6 @@ export default function OwnerBusinessDashboard() {
         return;
       }
 
-      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from(STORAGE_BUCKETS.BUSINESS_IMAGES)
         .getPublicUrl(filePath);
@@ -418,7 +248,6 @@ export default function OwnerBusinessDashboard() {
         return;
       }
 
-      // Update business image_url
       const { error: updateError } = await supabase
         .from('businesses')
         .update({ image_url: publicUrl })
@@ -427,18 +256,15 @@ export default function OwnerBusinessDashboard() {
       if (updateError) {
         console.error('[Owner Dashboard] Error updating profile picture:', updateError);
         showToast(`Failed to save profile picture: ${updateError.message}`, 'error', 5000);
-        // Clean up uploaded file
         await supabase.storage
           .from(STORAGE_BUCKETS.BUSINESS_IMAGES)
           .remove([filePath]);
         return;
       }
 
-      // Update local state
       setBusiness(prev => prev ? { ...prev, image_url: publicUrl } : null);
       showToast('Profile picture updated successfully!', 'success', 3000);
 
-      // Notify other components
       const { notifyBusinessUpdated } = await import('../../../lib/utils/businessUpdateEvents');
       notifyBusinessUpdated(businessId);
     } catch (error: any) {
@@ -446,17 +272,14 @@ export default function OwnerBusinessDashboard() {
       showToast(error.message || 'Failed to upload profile picture. Please try again.', 'error', 5000);
     } finally {
       setUploadingProfilePicture(false);
-      // Reset file input
       event.target.value = '';
     }
   };
 
-  // Show loader while auth or data is loading
   if (authLoading || isLoading) {
     return <PageLoader size="lg" variant="wavy" color="sage" />;
   }
 
-  // Redirect to login if no user
   if (!user) {
     router.push('/login');
     return null;
@@ -465,17 +288,15 @@ export default function OwnerBusinessDashboard() {
   if (error || !business) {
     return (
       <div className="min-h-dvh bg-off-white relative">
-        {/* Background Gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-sage/10 via-off-white to-coral/5 pointer-events-none" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)] pointer-events-none" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(114,47,55,0.08)_0%,_transparent_50%)] pointer-events-none" />
-        
+
         <main className="relative">
-          {/* Background Gradient */}
           <div className="absolute inset-0 bg-gradient-to-br from-sage/10 via-off-white to-coral/5 pointer-events-none" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)] pointer-events-none" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(114,47,55,0.08)_0%,_transparent_50%)] pointer-events-none" />
-          
+
           <div className="mx-auto w-full max-w-[2000px] px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="max-w-4xl mx-auto text-center py-12">
               <p className="text-charcoal/70">{error || 'Business not found'}</p>
@@ -496,17 +317,15 @@ export default function OwnerBusinessDashboard() {
 
   return (
     <div className="min-h-dvh bg-off-white relative">
-      {/* Background Gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-sage/10 via-off-white to-coral/5 pointer-events-none" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)] pointer-events-none" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(114,47,55,0.08)_0%,_transparent_50%)] pointer-events-none" />
 
       <main className="pb-8 font-urbanist relative">
-        {/* Background Gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-sage/10 via-off-white to-coral/5 pointer-events-none" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)] pointer-events-none" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(114,47,55,0.08)_0%,_transparent_50%)] pointer-events-none" />
-        
+
         <div className="mx-auto w-full max-w-[2000px] px-2 sm:px-4 lg:px-6 2xl:px-8 relative z-10">
               {/* Breadcrumb Navigation */}
               <nav className="pb-1" aria-label="Breadcrumb">
@@ -845,4 +664,3 @@ export default function OwnerBusinessDashboard() {
     </div>
   );
 }
-

@@ -26,6 +26,7 @@ import {
 import { PageLoader } from "../../../components/Loader";
 import { useRequireBusinessOwner } from "../../../hooks/useBusinessAccess";
 import { usePreviousPageBreadcrumb } from "../../../hooks/usePreviousPageBreadcrumb";
+import { useBusinessDetail } from "../../../hooks/useBusinessDetail";
 import { getBrowserSupabase } from "../../../lib/supabase/client";
 import { ConfirmationDialog } from "@/components/molecules/ConfirmationDialog";
 import EventsForm from "../../../components/BusinessEdit/EventsForm";
@@ -108,72 +109,42 @@ export default function BusinessEditPage() {
     const [uploadingImages, setUploadingImages] = useState(false);
     const [deletingImageIndex, setDeletingImageIndex] = useState<number | null>(null);
     const [reorderingImage, setReorderingImage] = useState<number | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [deleteError, setDeleteError] = useState<string | null>(null);
+    const [formPopulated, setFormPopulated] = useState(false);
 
-    // Fetch business data
+    // Fetch business data via SWR (only after ownership check passes)
+    const { business: businessData, loading: isLoading, error } = useBusinessDetail(
+        hasAccess && !isChecking ? businessId : null
+    );
+
+    // Populate form once when business data first loads
     useEffect(() => {
-        const fetchBusiness = async () => {
-            if (!businessId || isChecking) return;
-
-            try {
-                setIsLoading(true);
-                setError(null);
-
-                const response = await fetch(`/api/businesses/${businessId}`, {
-                    cache: 'no-store',
-                });
-
-                if (!response.ok) {
-                    if (response.status === 404) {
-                        setError('Business not found');
-                    } else {
-                        setError('Failed to load business');
-                    }
-                    setIsLoading(false);
-                    return;
-                }
-
-                const data = await response.json();
-                
-                // Populate form with business data
-                setFormData({
-                    name: data.name || "",
-                    description: data.description || "",
-                    category: data.category || "",
-                    address: data.address || "",
-                    phone: data.phone || "",
-                    email: data.email || "",
-                    website: data.website || "",
-                    priceRange: data.price_range || "$",
-                    hours: data.hours || {
-                        monday: "",
-                        tuesday: "",
-                        wednesday: "",
-                        thursday: "",
-                        friday: "",
-                        saturday: "",
-                        sunday: "",
-                    },
-                    images: data.uploaded_images || data.images || [], // Use uploaded_images array
-                    specials: [], // Specials would need separate API endpoint
-                });
-            } catch (err: any) {
-                console.error('Error fetching business:', err);
-                setError('Failed to load business');
-                showToast('Failed to load business data', 'sage', 4000);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        if (hasAccess && !isChecking) {
-            fetchBusiness();
-        }
-    }, [businessId, hasAccess, isChecking, showToast]);
+        if (!businessData || formPopulated) return;
+        setFormData({
+            name: businessData.name || "",
+            description: businessData.description || "",
+            category: businessData.category || "",
+            address: businessData.address || "",
+            phone: businessData.phone || "",
+            email: businessData.email || "",
+            website: businessData.website || "",
+            priceRange: businessData.price_range || "$",
+            hours: businessData.hours || {
+                monday: "",
+                tuesday: "",
+                wednesday: "",
+                thursday: "",
+                friday: "",
+                saturday: "",
+                sunday: "",
+            },
+            images: businessData.uploaded_images || businessData.images || [],
+            specials: [],
+        });
+        setFormPopulated(true);
+    }, [businessData, formPopulated]);
 
     const handleInputChange = (field: string, value: any) => {
         setFormData(prev => ({
