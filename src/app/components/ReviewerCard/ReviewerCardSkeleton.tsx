@@ -3,9 +3,8 @@
 import React from "react";
 
 /**
- * Skeleton for enhanced ReviewerCard (variant="reviewer") — structure and dimensions
- * match the enhanced design exactly so loading → content has no layout shift.
- * Matches the new premium styling with correct height, padding, and layout.
+ * Skeleton for ReviewerCard (variant="reviewer").
+ * Structure matches the redesigned card exactly to prevent layout shift.
  */
 export default function ReviewerCardSkeleton() {
   return (
@@ -13,59 +12,51 @@ export default function ReviewerCardSkeleton() {
       className="snap-start snap-always w-full sm:w-[240px] flex-shrink-0"
       aria-hidden
     >
-      <div
-        className="relative bg-card-bg rounded-lg overflow-hidden h-[260px] border border-sage/20 shadow-md animate-pulse"
-        style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}
-      >
-        <div className="relative p-4 h-full flex flex-col">
-          {/* Header — avatar 40px + name + badges */}
-          <div className="flex items-start gap-3 mb-3">
-            <div className="relative flex-shrink-0">
-              <div className="w-10 h-10 bg-charcoal/10 rounded-full ring-2 ring-sage/30 animate-pulse" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="h-4 w-24 bg-charcoal/10 rounded animate-pulse mb-1" />
-              {/* Badges skeleton */}
-              <div className="flex items-center gap-1 mt-1 flex-wrap">
-                <div className="w-16 h-5 bg-charcoal/10 rounded-full animate-pulse" />
-                <div className="w-14 h-5 bg-charcoal/10 rounded-full animate-pulse" />
-                <div className="w-12 h-5 bg-charcoal/10 rounded-full animate-pulse" />
-              </div>
+      <div className="relative bg-card-bg rounded-2xl overflow-hidden shadow-md">
+        {/* Top accent */}
+        <div className="h-[3px] w-full bg-gradient-to-r from-coral/20 via-sage/20 to-coral/10" />
+
+        <div className="p-4 flex flex-col gap-3.5">
+
+          {/* Identity row */}
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-charcoal/8 animate-pulse flex-shrink-0" />
+            <div className="flex-1 min-w-0 space-y-1.5">
+              <div className="h-4 w-28 bg-charcoal/8 rounded-md animate-pulse" />
+              <div className="h-3 w-16 bg-charcoal/5 rounded-md animate-pulse" />
             </div>
           </div>
 
-          {/* Stats section */}
-          <div className="mb-3">
-            <div className="flex items-center justify-center">
-              <div className="bg-off-white rounded-lg px-4 py-2 border border-sage/20">
-                <div className="text-center">
-                  <div className="h-8 w-8 bg-charcoal/10 rounded animate-pulse mx-auto mb-1" />
-                  <div className="h-3 w-12 bg-charcoal/5 rounded animate-pulse mx-auto" />
-                </div>
-              </div>
+          {/* Review count */}
+          <div className="flex justify-center">
+            <div className="flex flex-col items-center px-6 py-2.5 rounded-xl bg-off-white/60 border border-charcoal/[0.06] gap-1">
+              <div className="h-7 w-10 bg-charcoal/8 rounded-md animate-pulse" />
+              <div className="h-2.5 w-12 bg-charcoal/5 rounded-md animate-pulse" />
             </div>
           </div>
 
-          {/* Latest Review block */}
-          <div className="flex-1 min-h-0">
-            <div className="bg-off-white rounded-lg px-3 py-2.5 border border-sage/20">
-              <div className="flex items-center gap-2 mb-1.5">
-                <div className="flex items-center gap-0.5">
-                  <div className="w-3 h-3 bg-coral/30 rounded-sm animate-pulse" />
-                  <div className="w-3 h-3 bg-coral/30 rounded-sm animate-pulse" />
-                  <div className="w-3 h-3 bg-coral/30 rounded-sm animate-pulse" />
-                  <div className="w-3 h-3 bg-coral/30 rounded-sm animate-pulse" />
-                  <div className="w-3 h-3 bg-coral/30 rounded-sm animate-pulse" />
-                </div>
-                <div className="h-2.5 w-10 bg-charcoal/5 rounded animate-pulse" />
-              </div>
-              <div className="space-y-1.5">
-                <div className="h-3 w-full bg-charcoal/5 rounded animate-pulse" />
-                <div className="h-3 w-5/6 bg-charcoal/5 rounded animate-pulse" />
-              </div>
-            </div>
+          {/* Badges */}
+          <div className="flex items-center gap-1">
+            <div className="h-5 w-16 bg-charcoal/8 rounded-full animate-pulse" />
+            <div className="h-5 w-14 bg-charcoal/8 rounded-full animate-pulse" />
+            <div className="h-5 w-12 bg-charcoal/8 rounded-full animate-pulse" />
           </div>
 
+          {/* Latest review snippet */}
+          <div className="rounded-xl px-3 py-2.5 bg-off-white/50 border border-charcoal/[0.06] space-y-2">
+            <div className="flex items-center gap-1.5">
+              <div className="flex gap-[2px]">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="w-2.5 h-2.5 rounded-sm bg-coral/20 animate-pulse" />
+                ))}
+              </div>
+              <div className="h-2 w-8 bg-charcoal/5 rounded animate-pulse" />
+            </div>
+            <div className="space-y-1.5">
+              <div className="h-3 w-full bg-charcoal/5 rounded animate-pulse" />
+              <div className="h-3 w-4/5 bg-charcoal/5 rounded animate-pulse" />
+            </div>
+          </div>
 
         </div>
       </div>
