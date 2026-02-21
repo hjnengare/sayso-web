@@ -533,13 +533,6 @@ function BusinessCard({
     ? `${mediaBaseClass} h-[280px] sm:h-[300px] md:h-[220px]`
     : `${mediaBaseClass} h-[280px] sm:h-[300px] md:h-[220px]`;
 
-  // Helper function to get star gradient style based on rating (uses per-card ids)
-  const getStarGradientStyle = (rating: number) => {
-    const tier = rating > 4.0 ? 'Gold' : rating > 2.0 ? 'Bronze' : 'Low';
-    const ref = `url(#starGradient${tier}-${gradientSuffix})`;
-    return { fill: ref, stroke: ref };
-  };
-
   // Use business.id as suffix to make gradient ids unique per card instance,
   // avoiding url(#id) resolution failures when multiple cards render in the same
   // overflow:hidden container (e.g. trending grid).
@@ -555,24 +548,6 @@ function BusinessCard({
       className={`snap-start snap-always flex-shrink-0 ${compact ? 'w-auto' : 'w-[240px] sm:w-[260px] md:w-[340px]'}`}
       style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
     >
-      {/* SVG Gradient Definitions for Star Icons — ids are per-card to avoid url(#id) conflicts in overflow:hidden containers */}
-      <svg width="0" height="0" aria-hidden style={{ position: 'absolute', pointerEvents: 'none' }}>
-        <defs>
-          <linearGradient id={`starGradientGold-${gradientSuffix}`} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style={{ stopColor: '#F5D547', stopOpacity: 1 }} />
-            <stop offset="100%" style={{ stopColor: '#E6A547', stopOpacity: 1 }} />
-          </linearGradient>
-          <linearGradient id={`starGradientBronze-${gradientSuffix}`} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style={{ stopColor: '#D4915C', stopOpacity: 1 }} />
-            <stop offset="100%" style={{ stopColor: '#8B6439', stopOpacity: 1 }} />
-          </linearGradient>
-          <linearGradient id={`starGradientLow-${gradientSuffix}`} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style={{ stopColor: '#D66B6B', stopOpacity: 1 }} />
-            <stop offset="100%" style={{ stopColor: '#6B5C5C', stopOpacity: 1 }} />
-          </linearGradient>
-        </defs>
-      </svg>
-      
       <Link
         href={businessProfileRoute}
         className={`rounded-[12px] ${compact ? "lg:min-h-[200px]" : "flex-1"} relative flex-shrink-0 flex flex-col justify-between bg-card-bg z-10 shadow-md group cursor-pointer w-full sm:h-auto overflow-hidden`}
@@ -604,6 +579,26 @@ function BusinessCard({
           {!hideStar && hasRating && displayRating !== undefined && (
             <div className="absolute right-4 top-4 z-20 inline-flex items-center gap-1 rounded-full bg-off-white/95 backdrop-blur-xl px-3 py-1.5 text-charcoal">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="rounded-full p-1" aria-hidden>
+                <defs>
+                  {starGradientId === 'Gold' && (
+                    <linearGradient id={`starGradient${starGradientId}-${gradientSuffix}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" style={{ stopColor: '#F5D547', stopOpacity: 1 }} />
+                      <stop offset="100%" style={{ stopColor: '#E6A547', stopOpacity: 1 }} />
+                    </linearGradient>
+                  )}
+                  {starGradientId === 'Bronze' && (
+                    <linearGradient id={`starGradient${starGradientId}-${gradientSuffix}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" style={{ stopColor: '#D4915C', stopOpacity: 1 }} />
+                      <stop offset="100%" style={{ stopColor: '#8B6439', stopOpacity: 1 }} />
+                    </linearGradient>
+                  )}
+                  {starGradientId === 'Low' && (
+                    <linearGradient id={`starGradient${starGradientId}-${gradientSuffix}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" style={{ stopColor: '#D66B6B', stopOpacity: 1 }} />
+                      <stop offset="100%" style={{ stopColor: '#6B5C5C', stopOpacity: 1 }} />
+                    </linearGradient>
+                  )}
+                </defs>
                 <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill={`url(#starGradient${starGradientId}-${gradientSuffix})`} stroke={`url(#starGradient${starGradientId}-${gradientSuffix})`} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               <span className="text-sm font-semibold text-charcoal" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>{Number(displayRating).toFixed(1)}</span>
