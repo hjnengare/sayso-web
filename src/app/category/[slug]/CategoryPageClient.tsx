@@ -60,7 +60,7 @@ export default function CategoryPageClient({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="max-w-7xl mx-auto relative"
+          className="max-w-7xl mx-auto relative px-2"
         >
           {/* Breadcrumb Navigation */}
           <nav className="pb-1" aria-label="Breadcrumb">

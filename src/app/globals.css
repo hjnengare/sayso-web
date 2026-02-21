@@ -1562,7 +1562,6 @@ body {
 }
 
 nav[aria-label="Breadcrumb"] {
-  padding-inline: clamp(1rem, 4vw, 1.5rem);
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
 }
@@ -1593,11 +1592,6 @@ nav[aria-label="Breadcrumb"] li span {
   }
 }
 
-@media (min-width: 1024px) {
-  nav[aria-label="Breadcrumb"] {
-    padding-inline: clamp(1.5rem, 3vw, 2rem);
-  }
-}
 
 /* ========================================
  * Fast, smooth page transitions

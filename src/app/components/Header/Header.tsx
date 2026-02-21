@@ -834,7 +834,7 @@ export default function Header({
   const wrapperSizeClass = isNavScrolled
     ? "pt-2.5 min-h-[60px] lg:min-h-[64px]"
     : "pt-4 min-h-[72px] lg:min-h-[80px]";
-  const logoScaleClass = isNavScrolled ? "scale-95" : "scale-100";
+  const logoScaleClass = "";
 
   return (
     <>
