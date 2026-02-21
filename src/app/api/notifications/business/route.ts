@@ -72,11 +72,38 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Safe default until business notifications datasource is wired.
-    return NextResponse.json({
-      items: [],
-      unreadCount: 0,
-    });
+    const { searchParams } = new URL(req.url);
+    const unreadParam = searchParams.get('unread');
+    const limitParam  = searchParams.get('limit');
+    const offsetParam = searchParams.get('offset');
+
+    let query = supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+
+    if (unreadParam !== null) {
+      query = query.eq('read', unreadParam !== 'true');
+    }
+
+    const limit  = limitParam  ? Math.max(1, parseInt(limitParam,  10)) : 50;
+    const offset = offsetParam ? Math.max(0, parseInt(offsetParam, 10)) : 0;
+    query = query.range(offset, offset + limit - 1);
+
+    const { data: items, error: fetchError } = await query;
+    if (fetchError) {
+      console.error('[BusinessNotificationsAPI] Failed to fetch notifications', fetchError);
+      return NextResponse.json({ error: 'Failed to fetch notifications' }, { status: 500 });
+    }
+
+    const { count: unreadCount } = await supabase
+      .from('notifications')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('read', false);
+
+    return NextResponse.json({ items: items ?? [], unreadCount: unreadCount ?? 0 });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error('[BusinessNotificationsAPI] Unexpected error', {
