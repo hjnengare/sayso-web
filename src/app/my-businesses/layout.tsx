@@ -25,7 +25,7 @@ const NAV_ITEMS = [
 
 function Sidebar({ pathname, onClose }: { pathname: string; onClose?: () => void }) {
   return (
-    <aside className="flex flex-col h-full bg-card-bg text-off-white">
+    <aside className="flex flex-col h-full bg-navbar-bg/90 text-off-white">
       {/* Brand */}
       <div className="flex items-center justify-between px-5 py-5 border-b border-white/10">
         <Link href="/my-businesses" className="flex items-center gap-2.5" onClick={onClose}>
@@ -110,28 +110,26 @@ export default function MyBusinessesLayout({ children }: { children: ReactNode }
   }
 
   return (
-    <div className="min-h-dvh bg-page-bg flex">
-      {/* Desktop sidebar */}
-      <div className="hidden lg:flex lg:flex-col lg:w-56 xl:w-60 flex-shrink-0 shadow-lg">
-        <div className="flex-1 flex flex-col min-h-0">
-          <Sidebar pathname={pathname} />
-        </div>
+    <div className="h-dvh bg-page-bg flex overflow-hidden">
+      {/* Desktop sidebar — fixed height, never scrolls */}
+      <div className="hidden lg:flex lg:flex-col lg:w-56 xl:w-60 flex-shrink-0 shadow-lg h-full">
+        <Sidebar pathname={pathname} />
       </div>
 
       {/* Mobile overlay */}
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-40 flex">
           <div className="fixed inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
-          <div className="relative z-50 flex flex-col w-64 shadow-xl">
+          <div className="relative z-50 flex flex-col w-64 h-full shadow-xl">
             <Sidebar pathname={pathname} onClose={() => setMobileOpen(false)} />
           </div>
         </div>
       )}
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      {/* Main content — scrolls independently */}
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         {/* Mobile topbar */}
-        <header className="lg:hidden flex items-center gap-3 px-4 py-3 bg-card-bg border-b border-white/10 shadow-sm">
+        <header className="lg:hidden flex items-center gap-3 px-4 py-3 bg-navbar-bg/90 border-b border-white/10 shadow-sm flex-shrink-0">
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
@@ -142,7 +140,7 @@ export default function MyBusinessesLayout({ children }: { children: ReactNode }
           <span className="font-urbanist font-bold text-white text-base tracking-tight">My Portal</span>
         </header>
 
-        {/* Page content */}
+        {/* Page content + footer scroll together */}
         <main className="flex-1 overflow-y-auto bg-page-bg">
           {children}
           <Footer />

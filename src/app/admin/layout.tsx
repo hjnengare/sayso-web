@@ -108,28 +108,26 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-dvh bg-page-bg flex">
-      {/* Desktop sidebar */}
-      <div className="hidden lg:flex lg:flex-col lg:w-56 xl:w-60 flex-shrink-0 shadow-lg">
-        <div className="flex-1 flex flex-col min-h-0">
-          <Sidebar pathname={pathname} />
-        </div>
+    <div className="h-dvh bg-page-bg flex overflow-hidden">
+      {/* Desktop sidebar — fixed height, never scrolls */}
+      <div className="hidden lg:flex lg:flex-col lg:w-56 xl:w-60 flex-shrink-0 shadow-lg h-full">
+        <Sidebar pathname={pathname} />
       </div>
 
       {/* Mobile overlay */}
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-40 flex">
           <div className="fixed inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
-          <div className="relative z-50 flex flex-col w-64 shadow-xl">
+          <div className="relative z-50 flex flex-col w-64 h-full shadow-xl">
             <Sidebar pathname={pathname} onClose={() => setMobileOpen(false)} />
           </div>
         </div>
       )}
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      {/* Main content — scrolls independently */}
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         {/* Mobile topbar */}
-        <header className="lg:hidden flex items-center gap-3 px-4 py-3 bg-navbar-bg border-b border-white/10 shadow-sm">
+        <header className="lg:hidden flex items-center gap-3 px-4 py-3 bg-navbar-bg border-b border-white/10 shadow-sm flex-shrink-0">
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
