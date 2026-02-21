@@ -377,7 +377,7 @@ export default function CommunityHighlights({
           >
             <LocationPromptBanner hasCoordinateBusinesses={hasCoordinateBusinesses} />
             <div className="mx-auto w-full max-w-[2000px] relative z-10">
-              <div className="pt-12 pb-2 flex flex-wrap items-center justify-between gap-2">
+              <div className="pb-2 flex flex-wrap items-center justify-between gap-2">
                 <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-gradient-to-r from-sage/20 to-sage/10 border border-sage/30 mb-4">
                   <span className="text-sm font-semibold text-sage" style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}>
                     <span className="sm:hidden">Featured Businesses</span>
