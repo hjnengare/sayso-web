@@ -62,6 +62,68 @@ export async function DELETE(req: Request) {
       // Continue with account deletion even if storage deletion fails
     }
 
+    // Delete event review images from storage
+    try {
+      const { data: eventReviews } = await supabase
+        .from('event_reviews')
+        .select('id')
+        .eq('user_id', user.id);
+
+      if (eventReviews && eventReviews.length > 0) {
+        const eventReviewIds = eventReviews.map((r) => r.id);
+        const { data: eventImages } = await supabase
+          .from('event_review_images')
+          .select('storage_path')
+          .in('review_id', eventReviewIds);
+
+        const storagePaths = (eventImages ?? [])
+          .map((img) => img?.storage_path)
+          .filter((path): path is string => Boolean(path));
+
+        if (storagePaths.length > 0) {
+          const { error: storageError } = await supabase.storage
+            .from('review_images')
+            .remove(storagePaths);
+          if (storageError) {
+            console.error('Error deleting event review images from storage (continuing):', storageError);
+          }
+        }
+      }
+    } catch (storageError) {
+      console.error('Error deleting event review images:', storageError);
+    }
+
+    // Delete special review images from storage
+    try {
+      const { data: specialReviews } = await supabase
+        .from('special_reviews')
+        .select('id')
+        .eq('user_id', user.id);
+
+      if (specialReviews && specialReviews.length > 0) {
+        const specialReviewIds = specialReviews.map((r) => r.id);
+        const { data: specialImages } = await supabase
+          .from('special_review_images')
+          .select('storage_path')
+          .in('review_id', specialReviewIds);
+
+        const storagePaths = (specialImages ?? [])
+          .map((img) => img?.storage_path)
+          .filter((path): path is string => Boolean(path));
+
+        if (storagePaths.length > 0) {
+          const { error: storageError } = await supabase.storage
+            .from('review_images')
+            .remove(storagePaths);
+          if (storageError) {
+            console.error('Error deleting special review images from storage (continuing):', storageError);
+          }
+        }
+      }
+    } catch (storageError) {
+      console.error('Error deleting special review images:', storageError);
+    }
+
     // Delete business images from storage
     // Note: Businesses will be cascade deleted when user is deleted,
     // but we need to clean up storage files first
