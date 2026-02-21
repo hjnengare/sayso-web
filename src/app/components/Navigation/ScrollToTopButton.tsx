@@ -96,7 +96,7 @@ export default function ScrollToTopButton({
             duration: prefersReducedMotion ? 0.12 : 0.22,
             ease: [0.2, 0.8, 0.2, 1],
           }}
-          className="pointer-events-auto fixed right-4 z-[120] h-10 w-10 rounded-full border border-charcoal/15 bg-off-white/90 text-charcoal shadow-[0_8px_24px_rgba(0,0,0,0.12)] backdrop-blur-[2px] flex items-center justify-center transition-[transform,opacity] duration-200 ease-[cubic-bezier(0.2,0.8,0.2,1)] active:scale-95 active:opacity-90 motion-reduce:transition-none lg:right-6 lg:h-12 lg:w-12 lg:rounded-2xl"
+          className="pointer-events-auto fixed right-4 z-[120] h-10 w-10 rounded-full border border-charcoal/15 bg-off-white/90 text-charcoal shadow-[0_8px_24px_rgba(0,0,0,0.12)] backdrop-blur-[2px] flex items-center justify-center transition-[transform,opacity] duration-200 ease-[cubic-bezier(0.2,0.8,0.2,1)] active:scale-95 active:opacity-90 motion-reduce:transition-none lg:right-6 lg:h-12 lg:w-12"
           style={
             isMobile
               ? { bottom: "max(1rem, calc(env(safe-area-inset-bottom, 0px) + 4.25rem))" }
@@ -104,7 +104,13 @@ export default function ScrollToTopButton({
           }
           aria-label={ariaLabel}
         >
-          <ChevronUp className="h-4 w-4 lg:h-5 lg:w-5" strokeWidth={2.25} />
+          <motion.span
+            animate={prefersReducedMotion ? {} : { scale: [1, 1.08, 1] }}
+            transition={prefersReducedMotion ? {} : { duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
+            className="flex items-center justify-center"
+          >
+            <ChevronUp className="h-4 w-4 lg:h-5 lg:w-5" strokeWidth={2.25} />
+          </motion.span>
         </motion.button>
       ) : null}
     </AnimatePresence>
