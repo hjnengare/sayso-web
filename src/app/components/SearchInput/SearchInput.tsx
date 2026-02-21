@@ -69,6 +69,7 @@ const SearchInput = forwardRef<HTMLFormElement, SearchInputProps>(
     const [activeIndex, setActiveIndex] = useState(-1);
     const rootRef = useRef<HTMLFormElement | null>(null);
     const blurTimeoutRef = useRef<number | null>(null);
+    const dismissedQueryRef = useRef<string | null>(null);
 
     const {
       setQuery: setLiveQuery,
@@ -121,6 +122,10 @@ const SearchInput = forwardRef<HTMLFormElement, SearchInputProps>(
       setSearchQuery(value);
       onSearch?.(value);
       setActiveIndex(-1);
+      // Clear dismiss when the query changes so suggestions reappear
+      if (dismissedQueryRef.current !== null && value !== dismissedQueryRef.current) {
+        dismissedQueryRef.current = null;
+      }
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -148,6 +153,7 @@ const SearchInput = forwardRef<HTMLFormElement, SearchInputProps>(
       enableSuggestions &&
       isFocused &&
       searchQuery.trim().length > 0 &&
+      dismissedQueryRef.current !== searchQuery &&
       (suggestionsMode === "business"
         ? liveLoading || businessSuggestions.length > 0
         : normalizedCustomSuggestions.length > 0);
@@ -337,7 +343,7 @@ const SearchInput = forwardRef<HTMLFormElement, SearchInputProps>(
                     type="button"
                     onMouseDown={(e) => {
                       e.preventDefault();
-                      setIsFocused(false);
+                      dismissedQueryRef.current = searchQuery;
                       setActiveIndex(-1);
                     }}
                     className="w-8 h-8 flex items-center justify-center text-charcoal/60 hover:text-charcoal transition-colors focus:outline-none focus:ring-0"
