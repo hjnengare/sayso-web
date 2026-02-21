@@ -3,10 +3,7 @@
 import { ReactNode, useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { useAuth } from "../contexts/AuthContext";
-
-const Footer = dynamic(() => import("../components/Footer/Footer"), { ssr: false, loading: () => null });
 import {
   LayoutDashboard,
   Store,
@@ -140,10 +137,9 @@ export default function MyBusinessesLayout({ children }: { children: ReactNode }
           <span className="font-urbanist font-bold text-white text-base tracking-tight">My Portal</span>
         </header>
 
-        {/* Page content + footer scroll together */}
+        {/* Page content */}
         <main className="flex-1 overflow-y-auto bg-page-bg">
           {children}
-          <Footer />
         </main>
       </div>
     </div>
