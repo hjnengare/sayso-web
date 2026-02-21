@@ -187,6 +187,16 @@ export const PageMetadata = {
       type: 'website',
     }),
 
+  contact: (): Metadata =>
+    generateSEOMetadata({
+      title: `Contact Us | ${SITE_NAME}`,
+      description:
+        "Get in touch with the Sayso team. We'd love to hear from you - whether it's a question, partnership enquiry, or feedback.",
+      keywords: ['contact sayso', 'sayso support', 'sayso cape town', 'get in touch'],
+      url: '/contact',
+      type: 'website',
+    }),
+
   about: (): Metadata =>
     generateSEOMetadata({
       title: `About Sayso | Hyper-local reviews for Cape Town`,

@@ -9,6 +9,7 @@ export const TEMPLATE_COLUMNS = [
   'name',
   'location',
   'primary_subcategory_slug',
+  'primary_category_slug',
   'description',
   'address',
   'phone',
@@ -27,6 +28,10 @@ export const TEMPLATE_COLUMNS = [
   'source',
   'source_id',
   'hours',
+  'slug',
+  'owner_id',
+  'category_raw',
+  'rejection_reason',
 ] as const;
 
 export type SeedInputRow = Record<string, unknown>;
@@ -54,6 +59,10 @@ export type ParsedSeedRow = {
   source: string | null;
   source_id: string | null;
   hours: Record<string, unknown> | null;
+  slug: string | null;
+  owner_id: string | null;
+  category_raw: string | null;
+  rejection_reason: string | null;
   normalized_name: string;
   primary_subcategory_label: string | null;
   primary_category_slug: string | null;
@@ -100,6 +109,7 @@ const COLUMN_ALIASES: Record<string, string[]> = {
   name: ['name'],
   location: ['location'],
   primary_subcategory_slug: ['primary_subcategory_slug', 'subcategory', 'subcategory_slug', 'category', 'category_slug'],
+  primary_category_slug: ['primary_category_slug'],
   description: ['description'],
   address: ['address'],
   phone: ['phone'],
@@ -118,7 +128,24 @@ const COLUMN_ALIASES: Record<string, string[]> = {
   source: ['source'],
   source_id: ['source_id'],
   hours: ['hours'],
+  slug: ['slug'],
+  owner_id: ['owner_id'],
+  category_raw: ['category_raw'],
+  rejection_reason: ['rejection_reason'],
 };
+
+const VALID_PRIMARY_CATEGORY_SLUGS = new Set([
+  'food-drink',
+  'beauty-wellness',
+  'professional-services',
+  'travel',
+  'outdoors-adventure',
+  'experiences-entertainment',
+  'arts-culture',
+  'family-pets',
+  'shopping-lifestyle',
+  'miscellaneous',
+]);
 
 const PRICE_SET = new Set<string>(VALID_PRICE_RANGES);
 const STATUS_SET = new Set<string>(VALID_STATUSES);
@@ -184,6 +211,41 @@ export function normalizeBusinessName(name: string): string {
     .replace(/\s+/g, ' ');
 }
 
+/**
+ * Strip UTM/tracking parameters and other junk from URLs, keeping just the
+ * scheme + host + path. Returns null if the value is not a valid URL.
+ */
+function cleanUrl(value: unknown): string | null {
+  const raw = toOptionalString(value);
+  if (!raw) return null;
+
+  // Ensure the value looks like a URL before parsing
+  const candidate = raw.startsWith('http://') || raw.startsWith('https://') ? raw : `https://${raw}`;
+
+  try {
+    const url = new URL(candidate);
+    // Keep only scheme + host + pathname (drop query string and fragment)
+    const cleaned = `${url.protocol}//${url.host}${url.pathname}`.replace(/\/$/, '');
+    return cleaned || null;
+  } catch {
+    // Not a valid URL — return original trimmed value rather than losing the data
+    return raw;
+  }
+}
+
+/**
+ * Normalise primary_category_slug: lowercase + trim, then validate against
+ * the known set. Returns the slug if valid, otherwise null (with a warning
+ * surfaced by the caller).
+ */
+function normalizePrimaryCategorySlug(value: unknown): { slug: string | null; invalid: boolean } {
+  const raw = toOptionalString(value);
+  if (!raw) return { slug: null, invalid: false };
+  const normalized = raw.toLowerCase().trim();
+  if (VALID_PRIMARY_CATEGORY_SLUGS.has(normalized)) return { slug: normalized, invalid: false };
+  return { slug: null, invalid: true };
+}
+
 function getFieldValue(row: SeedInputRow, field: keyof typeof COLUMN_ALIASES): unknown {
   const normalizedAliases = COLUMN_ALIASES[field].map(normalizeHeader);
 
@@ -216,14 +278,17 @@ function parseHours(value: unknown): { data: Record<string, unknown> | null; err
     if (parsed && typeof parsed === 'object') {
       return { data: parsed as Record<string, unknown>, error: null };
     }
-    return { data: null, error: 'Hours must be a JSON object string.' };
+    // JSON parsed to a primitive — wrap it
+    return { data: { raw: String(parsed) }, error: null };
   } catch {
-    return { data: null, error: 'Invalid hours JSON format.' };
+    // Not JSON at all — treat as a plain-text hours description
+    return { data: { raw }, error: null };
   }
 }
 
-function parseRow(row: SeedInputRow, rowNumber: number): { parsed: ParsedSeedRow | null; errors: string[] } {
+function parseRow(row: SeedInputRow, rowNumber: number): { parsed: ParsedSeedRow | null; errors: string[]; warnings: string[] } {
   const errors: string[] = [];
+  const warnings: string[] = [];
 
   const name = toOptionalString(getFieldValue(row, 'name')) || '';
   const location = toOptionalString(getFieldValue(row, 'location')) || '';
@@ -234,12 +299,14 @@ function parseRow(row: SeedInputRow, rowNumber: number): { parsed: ParsedSeedRow
   if (!location) errors.push('Missing required field: location');
   if (!primarySubcategorySlug) errors.push('Missing required field: primary_subcategory_slug');
 
+  // price_range: default to $$ if missing; reject unknown values
   const priceRangeRaw = toOptionalString(getFieldValue(row, 'price_range'));
   const priceRange = priceRangeRaw || '$$';
   if (!PRICE_SET.has(priceRange as (typeof VALID_PRICE_RANGES)[number])) {
     errors.push(`Invalid price_range: ${priceRange}`);
   }
 
+  // status: default to active if missing; reject unknown values
   const statusRaw = toOptionalString(getFieldValue(row, 'status'));
   const status = (statusRaw || 'active').toLowerCase();
   if (!STATUS_SET.has(status as (typeof VALID_STATUSES)[number])) {
@@ -276,6 +343,7 @@ function parseRow(row: SeedInputRow, rowNumber: number): { parsed: ParsedSeedRow
     errors.push('Invalid lng value (must be between -180 and 180)');
   }
 
+  // hours: parse JSON or wrap plain-text strings — never block on this
   const hoursResult = parseHours(getFieldValue(row, 'hours'));
   if (hoursResult.error) {
     errors.push(hoursResult.error);
@@ -288,8 +356,14 @@ function parseRow(row: SeedInputRow, rowNumber: number): { parsed: ParsedSeedRow
     errors.push('source and source_id must either both be provided or both be empty');
   }
 
+  // primary_category_slug: normalise + validate; warn and drop if unrecognised
+  const primaryCategorySlugResult = normalizePrimaryCategorySlug(getFieldValue(row, 'primary_category_slug'));
+  if (primaryCategorySlugResult.invalid) {
+    warnings.push(`Unrecognised primary_category_slug dropped — will derive from subcategory`);
+  }
+
   if (errors.length > 0) {
-    return { parsed: null, errors };
+    return { parsed: null, errors, warnings };
   }
 
   return {
@@ -302,8 +376,9 @@ function parseRow(row: SeedInputRow, rowNumber: number): { parsed: ParsedSeedRow
       address: toOptionalString(getFieldValue(row, 'address')),
       phone: toOptionalString(getFieldValue(row, 'phone')),
       email: toOptionalString(getFieldValue(row, 'email')),
-      website: toOptionalString(getFieldValue(row, 'website')),
-      image_url: toOptionalString(getFieldValue(row, 'image_url')),
+      // Clean tracking params from website and image_url URLs
+      website: cleanUrl(getFieldValue(row, 'website')),
+      image_url: cleanUrl(getFieldValue(row, 'image_url')),
       price_range: priceRange,
       status,
       badge: toOptionalString(getFieldValue(row, 'badge')),
@@ -316,11 +391,16 @@ function parseRow(row: SeedInputRow, rowNumber: number): { parsed: ParsedSeedRow
       source,
       source_id: sourceId,
       hours: hoursResult.data,
+      slug: toOptionalString(getFieldValue(row, 'slug')),
+      owner_id: toOptionalString(getFieldValue(row, 'owner_id')),
+      category_raw: toOptionalString(getFieldValue(row, 'category_raw')),
+      rejection_reason: toOptionalString(getFieldValue(row, 'rejection_reason')),
       normalized_name: normalizeBusinessName(name),
       primary_subcategory_label: null,
-      primary_category_slug: null,
+      primary_category_slug: primaryCategorySlugResult.slug,
     },
     errors,
+    warnings,
   };
 }
 
@@ -475,7 +555,7 @@ export async function validateSeedRows(params: {
       raw: row,
       parsed: parsedResult.parsed,
       errors: [...parsedResult.errors],
-      warnings: [],
+      warnings: [...parsedResult.warnings],
       duplicate: false,
       duplicateReason: null,
       duplicateKey: null,
@@ -504,7 +584,7 @@ export async function validateSeedRows(params: {
     }
 
     row.parsed.primary_subcategory_label = canonical.label;
-    row.parsed.primary_category_slug = canonical.primaryCategorySlug;
+    row.parsed.primary_category_slug = row.parsed.primary_category_slug || canonical.primaryCategorySlug;
   }
 
   const existingSourceMap = await fetchExistingSourceKeys(params.service, parsedRows);
@@ -593,7 +673,7 @@ function slugify(value: string): string {
 export function buildBusinessInsertPayload(row: ParsedSeedRow, suffix: string) {
   const baseSlug = slugify(row.name) || 'business';
   const rowSuffix = row.rowNumber.toString(36);
-  const slug = `${baseSlug}-${suffix}-${rowSuffix}`;
+  const slug = row.slug || `${baseSlug}-${suffix}-${rowSuffix}`;
 
   return {
     name: row.name,
@@ -620,6 +700,9 @@ export function buildBusinessInsertPayload(row: ParsedSeedRow, suffix: string) {
     source_id: row.source_id,
     hours: row.hours,
     slug,
+    owner_id: row.owner_id ?? null,
+    category_raw: row.category_raw ?? null,
+    rejection_reason: row.rejection_reason ?? null,
   };
 }
 
