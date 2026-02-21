@@ -148,7 +148,7 @@ export async function DELETE(req: Request) {
         }
 
         if (allImageUrls.length > 0) {
-          const { extractStoragePaths } = await import('../../lib/utils/storagePathExtraction');
+          const { extractStoragePaths } = await import('../../../lib/utils/storagePathExtraction');
           const storagePaths = extractStoragePaths(allImageUrls);
 
           if (storagePaths.length > 0) {

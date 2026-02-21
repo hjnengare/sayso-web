@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../contexts/ToastContext";
-import { usePrefersReducedMotion } from "../../utils/hooks/usePrefersReducedMotion";
+import { usePrefersReducedMotion } from "../../hooks/usePrefersReducedMotion";
 import { useScrollReveal } from "../../hooks/useScrollReveal";
 import { usePredefinedPageTitle } from "../../hooks/usePageTitle";
 import { InlineLoader } from "../../components/Loader/Loader";

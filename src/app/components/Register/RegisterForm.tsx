@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../contexts/ToastContext";
-import { usePrefersReducedMotion } from "../../utils/hooks/usePrefersReducedMotion";
+import { usePrefersReducedMotion } from "../../hooks/usePrefersReducedMotion";
 import FormField from "./FormField";
 import PasswordStrength from "./PasswordStrength";
 import ConsentCheckbox from "./ConsentCheckbox";

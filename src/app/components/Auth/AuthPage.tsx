@@ -9,7 +9,7 @@ import { AnimatePresence, motion } from "framer-motion";
 
 import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../contexts/ToastContext";
-import { usePrefersReducedMotion } from "../../utils/hooks/usePrefersReducedMotion";
+import { usePrefersReducedMotion } from "../../hooks/usePrefersReducedMotion";
 import { useScrollReveal } from "../../hooks/useScrollReveal";
 import { InlineLoader } from "../Loader/Loader";
 import { getBrowserSupabase } from "../../lib/supabase/client";

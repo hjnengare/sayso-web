@@ -26,6 +26,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { id } = await params;
   
   let business: any = null;
+  let actualId: string = id;
   
   try {
     const supabase = await getServerSupabase();
@@ -40,7 +41,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       .or('is_system.is.null,is_system.eq.false')
       .single();
     
-    const actualId = slugData?.id || id;
+    actualId = slugData?.id || id;
     
     // Fetch business data
     const { data } = await supabase
@@ -84,7 +85,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     title: `${business.name} reviews in Cape Town | Sayso`,
     description,
     keywords: [business.name, 'sayso reviews', 'cape town business reviews', categoryLabel],
-    image: `${SITE_URL}/api/og/business/${actualId}`,
+    image: `${SITE_URL}/api/og/business/${id}`,
     url: `/business/${businessSlug}`,
     type: 'article',
   });

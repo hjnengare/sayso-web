@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Urbanist } from "next/font/google";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
-import { usePrefersReducedMotion } from "../utils/hooks/usePrefersReducedMotion";
+import { usePrefersReducedMotion } from "../hooks/usePrefersReducedMotion";
 import { getBrowserSupabase } from "../lib/supabase/client";
 import type { AuthUser } from "../lib/types/database";
 import { Mail, CheckCircle, ExternalLink, ArrowLeft, AlertCircle } from "lucide-react";
