@@ -136,7 +136,7 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="relative overflow-hidden bg-charcoal text-off-white">
+    <footer className="relative overflow-hidden border-t border-charcoal/6 bg-gradient-to-br from-navbar-bg via-navbar-bg/95 to-navbar-bg/90 text-off-white">
       <div aria-hidden className="pointer-events-none absolute inset-0">
         <div className="absolute -top-24 left-1/2 h-48 w-[520px] -translate-x-1/2 rounded-full bg-card-bg/10 blur-3xl" />
         <div className="absolute bottom-0 left-0 h-32 w-64 bg-off-white/5 blur-2xl" />
