@@ -19,11 +19,15 @@ const staticPublicPages: Array<{
   priority: number;
   changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency'];
 }> = [
-  { url: '/home', priority: 1.0, changeFrequency: 'daily' },
+  { url: '/', priority: 1.0, changeFrequency: 'daily' },
   { url: '/search', priority: 0.9, changeFrequency: 'daily' },
-  { url: '/events', priority: 0.9, changeFrequency: 'daily' },
+  { url: '/events-specials', priority: 0.9, changeFrequency: 'daily' },
+  { url: '/trending', priority: 0.85, changeFrequency: 'daily' },
   { url: '/leaderboard', priority: 0.8, changeFrequency: 'daily' },
   { url: '/discover/reviews', priority: 0.7, changeFrequency: 'daily' },
+  { url: '/about', priority: 0.6, changeFrequency: 'monthly' },
+  { url: '/terms', priority: 0.3, changeFrequency: 'yearly' },
+  { url: '/privacy', priority: 0.3, changeFrequency: 'yearly' },
 ];
 
 async function getBusinesses(): Promise<Array<{ slug: string; updated_at: string | null; created_at: string | null }>> {
@@ -164,14 +168,14 @@ async function getEvents(): Promise<Array<{ id: string; updated_at: string | nul
   }
 }
 
-async function getPublicProfiles(): Promise<Array<{ username: string; updated_at: string | null; created_at: string | null }>> {
+async function getPublicProfiles(): Promise<Array<{ user_id: string; updated_at: string | null; created_at: string | null }>> {
   try {
     const supabase = getSitemapSupabase();
 
     const { data, error } = await supabase
       .from('profiles')
-      .select('username, updated_at, created_at, reviews_count')
-      .not('username', 'is', null)
+      .select('user_id, updated_at, created_at, reviews_count')
+      .not('user_id', 'is', null)
       .gt('reviews_count', 0)
       .limit(5000);
 
@@ -181,9 +185,9 @@ async function getPublicProfiles(): Promise<Array<{ username: string; updated_at
     }
 
     return (data || [])
-      .filter((row: any) => typeof row.username === 'string' && row.username.trim().length > 0)
+      .filter((row: any) => typeof row.user_id === 'string' && row.user_id.trim().length > 0)
       .map((row: any) => ({
-        username: String(row.username).toLowerCase(),
+        user_id: String(row.user_id),
         updated_at: row.updated_at || null,
         created_at: row.created_at || null,
       }));
@@ -276,10 +280,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   const profileUrls: MetadataRoute.Sitemap = profiles.map((profile) => ({
-    url: `${SITE_URL}/profile/${profile.username}`,
+    url: `${SITE_URL}/reviewer/${profile.user_id}`,
     lastModified: toDate(profile.updated_at || profile.created_at),
     changeFrequency: 'weekly',
-    priority: 0.55,
+    priority: 0.6,
   }));
 
   return [

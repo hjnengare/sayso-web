@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { getServerSupabase } from '../../lib/supabase/server';
 import { DEFAULT_SITE_DESCRIPTION, generateSEOMetadata, SITE_URL } from '../../lib/utils/seoMetadata';
 import SchemaMarkup from '../../components/SEO/SchemaMarkup';
-import { generateLocalBusinessSchema, generateBreadcrumbSchema } from '../../lib/utils/schemaMarkup';
+import { generateLocalBusinessSchema, generateBreadcrumbSchema, generateReviewSchema } from '../../lib/utils/schemaMarkup';
 import Link from 'next/link';
 
 interface BusinessLayoutProps {
@@ -142,7 +142,16 @@ export default async function BusinessLayout({
       .eq('status', 'active')
       .or('is_system.is.null,is_system.eq.false')
       .single();
-    
+
+    // Fetch up to 5 most helpful reviews for Review schema (rich results)
+    const { data: reviewRows } = await supabase
+      .from('reviews')
+      .select('rating, content, created_at, profiles(username)')
+      .eq('business_id', actualId)
+      .not('content', 'is', null)
+      .order('helpful_count', { ascending: false })
+      .limit(5);
+
     if (business) {
       const businessSlug = business.slug || id;
       const categoryLabel = business.primary_category_label || business.category || 'Business';
@@ -185,7 +194,21 @@ export default async function BusinessLayout({
         { name: business.name, url: `${SITE_URL}/business/${businessSlug}` },
       ]);
       
-      schemas = [businessSchema, breadcrumbSchema];
+      // Generate Review schemas for rich results
+      const reviewSchemas = reviewRows && reviewRows.length > 0
+        ? generateReviewSchema(
+            reviewRows
+              .filter((r: any) => r.rating && r.content)
+              .map((r: any) => ({
+                author: (r.profiles as any)?.username || 'Sayso User',
+                ratingValue: r.rating,
+                reviewBody: r.content,
+                datePublished: r.created_at ? new Date(r.created_at).toISOString().split('T')[0] : '',
+              }))
+          )
+        : [];
+
+      schemas = [businessSchema, breadcrumbSchema, ...reviewSchemas];
       relatedLinks = [
         { href: `/categories/${categorySlug}`, label: `More in ${categoryLabel}` },
         ...(citySlug ? [{ href: `/${citySlug}`, label: `More in ${business.location}` }] : []),

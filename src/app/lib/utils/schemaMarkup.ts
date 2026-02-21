@@ -179,15 +179,76 @@ export function generateOrganizationSchema(): object {
     name: SITE_NAME,
     url: SITE_URL,
     logo: `${SITE_URL}/logos/logo.png`,
+    areaServed: {
+      '@type': 'City',
+      name: 'Cape Town',
+      containedInPlace: { '@type': 'Country', name: 'South Africa' },
+    },
+    foundingLocation: { '@type': 'Place', name: 'Cape Town, South Africa' },
     sameAs: [
-      // Add social media links here when available
+      'https://www.instagram.com/sayso_za',
+      'https://www.facebook.com/sayso.co.za',
     ],
     contactPoint: {
       '@type': 'ContactPoint',
+      email: 'info@sayso.co.za',
       contactType: 'Customer Service',
       availableLanguage: ['English'],
     },
   };
+}
+
+/**
+ * Generate Event schema for event detail pages
+ */
+export function generateEventSchema(event: {
+  name: string;
+  description?: string;
+  startDate?: string;
+  endDate?: string;
+  location?: string;
+  image?: string;
+  url: string;
+}): object {
+  const schema: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'Event',
+    name: event.name,
+    url: event.url,
+    eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+    eventStatus: 'https://schema.org/EventScheduled',
+    organizer: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
+    location: {
+      '@type': 'Place',
+      name: event.location || 'Cape Town',
+      address: event.location || 'Cape Town, South Africa',
+    },
+  };
+  if (event.description) schema.description = event.description;
+  if (event.startDate) schema.startDate = event.startDate;
+  if (event.endDate) schema.endDate = event.endDate;
+  if (event.image) schema.image = event.image;
+  return schema;
+}
+
+/**
+ * Generate Person/ProfilePage schema for reviewer profile pages
+ */
+export function generatePersonSchema(person: {
+  name: string;
+  url: string;
+  image?: string;
+  description?: string;
+}): object {
+  const schema: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: person.name,
+    url: person.url,
+  };
+  if (person.image) schema.image = person.image;
+  if (person.description) schema.description = person.description;
+  return schema;
 }
 
 /**

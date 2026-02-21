@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 
 export const SITE_URL = 'https://sayso.co.za';
 export const SITE_NAME = 'Sayso';
-export const SITE_TAGLINE = 'Less guessing,and more confessing.';
+export const SITE_TAGLINE = 'Less guessing, and more confessing.';
 export const BRAND_POSITIONING = 'Hyper-local reviews & discovery for Cape Town';
 export const DEFAULT_SITE_DESCRIPTION =
   'Sayso is a hyper-local reviews and discovery app for Cape Town. Explore restaurants, salons, gyms, events, and more - with real community ratings.';
@@ -127,6 +127,12 @@ export function generateSEOMetadata(options: SEOOptions = {}): Metadata {
         'max-snippet': -1,
       },
     },
+    twitter: {
+      card: 'summary_large_image',
+      title: ogTitle,
+      description: fullDescription,
+      images: [ogImageUrl],
+    },
   };
 }
 
@@ -145,7 +151,7 @@ export const PageMetadata = {
         'cape town restaurants',
         'hyper-local discovery',
       ],
-      url: '/home',
+      url: '/',
       type: 'website',
     }),
 
@@ -181,6 +187,16 @@ export const PageMetadata = {
       type: 'website',
     }),
 
+  about: (): Metadata =>
+    generateSEOMetadata({
+      title: `About Sayso | Hyper-local reviews for Cape Town`,
+      description:
+        'Learn about Sayso — the hyper-local community review and discovery platform built for Cape Town. Real people, real places, real ratings.',
+      keywords: ['about sayso', 'sayso cape town', 'hyper-local reviews', 'community platform'],
+      url: '/about',
+      type: 'website',
+    }),
+
   leaderboard: (): Metadata =>
     generateSEOMetadata({
       title: `Top reviewers and businesses in Cape Town | ${SITE_NAME}`,
@@ -197,7 +213,7 @@ export const PageMetadata = {
       description:
         'Discover upcoming Cape Town events and specials in one hyper-local feed on Sayso.',
       keywords: ['cape town events', 'cape town specials', 'sayso events'],
-      url: '/events',
+      url: '/events-specials',
       type: 'website',
     }),
 
@@ -412,6 +428,24 @@ export const PageMetadata = {
       url: '/my-businesses',
       noindex: true,
       nofollow: true,
+      type: 'website',
+    }),
+
+  terms: (): Metadata =>
+    generateSEOMetadata({
+      title: `Terms of Service | ${SITE_NAME}`,
+      description: 'Read the Sayso Terms of Service — the rules and guidelines for using our platform.',
+      keywords: ['sayso terms of service', 'terms', 'legal'],
+      url: '/terms',
+      type: 'website',
+    }),
+
+  privacy: (): Metadata =>
+    generateSEOMetadata({
+      title: `Privacy Policy | ${SITE_NAME}`,
+      description: 'Read the Sayso Privacy Policy to understand how we collect and use your data.',
+      keywords: ['sayso privacy policy', 'privacy', 'data'],
+      url: '/privacy',
       type: 'website',
     }),
 };

@@ -121,9 +121,20 @@ const nextConfig: NextConfig = {
   // Turbopack configuration (for Next.js 16+) - empty config to silence warning
   turbopack: {},
   
-  // Headers for static asset caching
+  // Headers for security and static asset caching
   async headers() {
     return [
+      {
+        source: '/(.*)',
+        headers: [
+          { key: 'X-DNS-Prefetch-Control', value: 'on' },
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-XSS-Protection', value: '1; mode=block' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(self)' },
+        ],
+      },
       {
         source: '/:all*(svg|jpg|jpeg|png|gif|webp|avif|ico)',
         headers: [
