@@ -24,8 +24,10 @@ export default function Logo({
 
   const containerGapClass =
     variant === "footer" ? "gap-2" : variant === "default" ? "gap-4" : "gap-3";
+  // Only apply negative margin when the mark image is shown (pulls wordmark closer to icon).
+  // Without the image, negative margin pushes the text off-screen on mobile.
   const wordmarkSpacingClass =
-    variant === "footer" ? "" : "-ml-2 sm:-ml-4 md:-ml-4";
+    !showMark || variant === "footer" ? "" : "-ml-2 sm:-ml-4 md:-ml-4";
 
   return (
     <div className={`inline-flex items-center ${containerGapClass} ${className}`}>
