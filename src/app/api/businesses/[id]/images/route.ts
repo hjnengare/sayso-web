@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSupabase } from '../../../../lib/supabase/server';
+import { withUser } from '@/app/api/_lib/withAuth';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -50,35 +51,21 @@ export async function GET(
   }
 }
 
+type RouteContext = { params: Promise<{ id: string }> };
+
 /**
  * POST /api/businesses/[id]/images
  * Add images to a business (requires business owner authentication)
  * Inserts records into business_images table
  */
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const POST = withUser(async (req: NextRequest, { user, supabase, params }) => {
   try {
-    const { id: businessId } = await params;
+    const { id: businessId } = await (params as RouteContext['params']);
 
     if (!businessId || businessId.trim() === '') {
       return NextResponse.json(
         { error: 'Business ID is required' },
         { status: 400 }
-      );
-    }
-
-    const supabase = await getServerSupabase(req);
-
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      console.error('[API] Auth error:', authError);
-      return NextResponse.json(
-        { error: 'Unauthorized', details: authError?.message || 'User not authenticated', code: 'AUTH_ERROR' },
-        { status: 401 }
       );
     }
 
@@ -240,4 +227,4 @@ export async function POST(
       { status: 500 }
     );
   }
-}
+});

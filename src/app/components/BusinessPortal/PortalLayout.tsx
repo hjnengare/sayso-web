@@ -2,9 +2,9 @@
 
 import { ReactNode, useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Menu } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import PortalSidebar from "./PortalSidebar";
+import MobileMenuToggleIcon from "../Header/MobileMenuToggleIcon";
 
 interface PortalLayoutProps {
   children: ReactNode;
@@ -63,10 +63,12 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
         <header className="lg:hidden flex items-center gap-3 px-4 py-3 bg-navbar-bg border-b border-white/10 shadow-sm flex-shrink-0">
           <button
             type="button"
-            onClick={() => setMobileOpen(true)}
-            className="p-2 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors"
+            onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+            aria-expanded={mobileOpen}
+            className="w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 text-white hover:text-white/80 hover:bg-white/10"
           >
-            <Menu className="w-5 h-5" />
+            <MobileMenuToggleIcon isOpen={mobileOpen} />
           </button>
           <span className="font-urbanist font-bold text-white text-base tracking-tight">My Portal</span>
         </header>

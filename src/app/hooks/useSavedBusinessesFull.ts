@@ -62,7 +62,7 @@ async function fetchSavedBusinessesFull([, userId]: [string, string]): Promise<S
   return { businesses, error: null };
 }
 
-export function useSavedBusinessesFull() {
+export function useSavedBusinesses() {
   const { user, isLoading: authLoading } = useAuth();
 
   const swrKey = (!authLoading && user?.id)

@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSupabase } from '../../../../../lib/supabase/server';
+import { withUser } from '@/app/api/_lib/withAuth';
 import { extractStoragePath } from '../../../../../lib/utils/storagePathExtraction';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
+
+type RouteContext = { params: Promise<{ id: string; imageId: string }> };
 
 /**
  * DELETE /api/businesses/[id]/images/[imageId]
@@ -12,23 +14,9 @@ export const runtime = 'nodejs';
  * Deletes from both storage bucket and business_images table
  * Trigger automatically promotes next image if primary was deleted
  */
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string; imageId: string }> }
-) {
+export const DELETE = withUser(async (req: NextRequest, { user, supabase, params }) => {
   try {
-    const { id: businessId, imageId } = await params;
-    const supabase = await getServerSupabase(req);
-
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const { id: businessId, imageId } = await (params as RouteContext['params']);
 
     // Verify user owns this business
     const { data: business, error: businessError } = await supabase
@@ -115,11 +103,11 @@ export async function DELETE(
       );
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
       was_primary: wasPrimary,
       message: wasPrimary
-        ? 'Primary image deleted. Next image has been promoted to primary automatically.' 
+        ? 'Primary image deleted. Next image has been promoted to primary automatically.'
         : 'Image deleted successfully.'
     });
   } catch (error: any) {
@@ -129,4 +117,4 @@ export async function DELETE(
       { status: 500 }
     );
   }
-}
+});

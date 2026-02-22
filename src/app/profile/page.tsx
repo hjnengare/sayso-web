@@ -47,7 +47,7 @@ import { useUserProfile } from "@/app/hooks/useUserProfile";
 import { useUserStats } from "@/app/hooks/useUserStats";
 import { useUserReviews, type Review } from "@/app/hooks/useUserReviews";
 import { useUserBadges, type UserAchievement } from "@/app/hooks/useUserBadges";
-import { useSavedBusinessesDetails } from "@/app/hooks/useSavedBusinessesDetails";
+import { useSavedBusinessesPreview } from "@/app/hooks/useSavedBusinessesDetails";
 
 // Types
 import type { EnhancedProfile, UserStats } from '@/app/lib/types/user';
@@ -220,7 +220,7 @@ function ProfileContent() {
   const { stats: userStats, loading: statsLoading } = useUserStats();
   const { reviews: userReviews, loading: reviewsLoading, mutate: reviewsMutate } = useUserReviews();
   const { achievements, loading: achievementsLoading, mutate: badgesMutate } = useUserBadges();
-  const { businesses: savedBusinesses } = useSavedBusinessesDetails();
+  const { businesses: savedBusinesses } = useSavedBusinessesPreview();
 
   useEffect(() => {
     if (isEditOpen) {
