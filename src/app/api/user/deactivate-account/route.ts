@@ -1,16 +1,8 @@
-import { NextResponse } from "next/server";
-import { getServerSupabase } from "../../../lib/supabase/server";
+import { NextRequest, NextResponse } from "next/server";
+import { withUser } from '@/app/api/_lib/withAuth';
 
-export async function POST(req: Request) {
-  const supabase = await getServerSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export const POST = withUser(async (_req: NextRequest, { user, supabase }) => {
   try {
-    // Deactivate the user's profile
     const { error: updateError } = await supabase
       .from('profiles')
       .update({
@@ -28,16 +20,10 @@ export async function POST(req: Request) {
       );
     }
 
-    // Sign out the user
     await supabase.auth.signOut();
-
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error in deactivate account:', error);
-    return NextResponse.json(
-      { error: 'Failed to deactivate account' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to deactivate account' }, { status: 500 });
   }
-}
-
+});

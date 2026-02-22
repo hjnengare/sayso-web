@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSupabase } from "@/app/lib/supabase/server";
+import { withUser } from '@/app/api/_lib/withAuth';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -8,24 +8,12 @@ export const runtime = 'nodejs';
  * GET /api/search/history
  * Get search history for the authenticated user
  */
-export async function GET(req: NextRequest) {
+export const GET = withUser(async (req: NextRequest, { user, supabase }) => {
   try {
-    const supabase = await getServerSupabase();
-    
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized', message: 'You must be logged in to view search history' },
-        { status: 401 }
-      );
-    }
-
     const { searchParams } = new URL(req.url);
     const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '20')));
     const offset = Math.max(0, parseInt(searchParams.get('offset') || '0'));
 
-    // Fetch search history
     const { data, error } = await supabase
       .from('search_history')
       .select('id, query, lat, lng, radius_km, sort, created_at')
@@ -41,15 +29,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({
-      data: data || [],
-      meta: {
-        count: data?.length || 0,
-        limit,
-        offset,
-      },
-    });
-
+    return NextResponse.json({ data: data || [], meta: { count: data?.length || 0, limit, offset } });
   } catch (error) {
     console.error('[SEARCH HISTORY API] Error:', error);
     return NextResponse.json(
@@ -57,5 +37,4 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     );
   }
-}
-
+});

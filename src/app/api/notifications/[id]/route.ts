@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSupabase } from '@/app/lib/supabase/server';
+import { withUser } from '@/app/api/_lib/withAuth';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,20 +11,10 @@ type RouteContext = {
  * PATCH /api/notifications/[id]
  * Mark a specific notification as read
  */
-export async function PATCH(req: NextRequest, { params }: RouteContext) {
+export const PATCH = withUser(async (_req: NextRequest, { user, supabase, params }) => {
   try {
-    const { id } = await params;
-    const supabase = await getServerSupabase();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { id } = await (params as RouteContext['params']);
 
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    // Verify the notification belongs to the user
     const { data: notification, error: fetchError } = await supabase
       .from('notifications')
       .select('id, user_id')
@@ -33,13 +23,9 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       .single();
 
     if (fetchError || !notification) {
-      return NextResponse.json(
-        { error: 'Notification not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Notification not found' }, { status: 404 });
     }
 
-    // Update the notification to mark as read
     const now = new Date().toISOString();
     const { data: updated, error: updateError } = await supabase
       .from('notifications')
@@ -57,37 +43,21 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      notification: updated
-    });
+    return NextResponse.json({ success: true, notification: updated });
   } catch (error) {
     console.error('Error in PATCH /api/notifications/[id]:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
 /**
  * DELETE /api/notifications/[id]
  * Delete a specific notification
  */
-export async function DELETE(req: NextRequest, { params }: RouteContext) {
+export const DELETE = withUser(async (_req: NextRequest, { user, supabase, params }) => {
   try {
-    const { id } = await params;
-    const supabase = await getServerSupabase();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { id } = await (params as RouteContext['params']);
 
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    // Verify the notification belongs to the user before deleting
     const { data: notification, error: fetchError } = await supabase
       .from('notifications')
       .select('id, user_id')
@@ -96,13 +66,9 @@ export async function DELETE(req: NextRequest, { params }: RouteContext) {
       .single();
 
     if (fetchError || !notification) {
-      return NextResponse.json(
-        { error: 'Notification not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Notification not found' }, { status: 404 });
     }
 
-    // Delete the notification
     const { error: deleteError } = await supabase
       .from('notifications')
       .delete()
@@ -117,16 +83,9 @@ export async function DELETE(req: NextRequest, { params }: RouteContext) {
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      message: 'Notification deleted successfully'
-    });
+    return NextResponse.json({ success: true, message: 'Notification deleted successfully' });
   } catch (error) {
     console.error('Error in DELETE /api/notifications/[id]:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
-
+});

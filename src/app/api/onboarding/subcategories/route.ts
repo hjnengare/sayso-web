@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
-import { getServerSupabase } from '../../../lib/supabase/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { withUser } from '@/app/api/_lib/withAuth';
 import { addNoCacheHeaders } from '../../../lib/utils/responseHeaders';
 import { SUBCATEGORY_TO_INTEREST } from '../../../lib/onboarding/subcategoryMapping';
 
@@ -29,26 +29,10 @@ function normalizeSubcategoryEntry(entry: unknown): { subcategoryId: string; int
 
 /**
  * POST /api/onboarding/subcategories
- * Saves subcategories and advances onboarding_step to 'deal-breakers'
+ * Saves subcategories and advances onboarding_step to 'deal-breakers' — requires auth
  */
-export async function POST(req: Request) {
+export const POST = withUser(async (req: NextRequest, { user, supabase }) => {
   try {
-    const supabase = await getServerSupabase(req);
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError) {
-      const response = NextResponse.json({
-        error: 'Authentication failed',
-        message: authError.message
-      }, { status: 401 });
-      return addNoCacheHeaders(response);
-    }
-
-    if (!user) {
-      const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      return addNoCacheHeaders(response);
-    }
-
     const body = await req.json();
     const subcategories = body?.subcategories ?? body?.subcategory_ids;
 
@@ -230,4 +214,4 @@ export async function POST(req: Request) {
     );
     return addNoCacheHeaders(response);
   }
-}
+});

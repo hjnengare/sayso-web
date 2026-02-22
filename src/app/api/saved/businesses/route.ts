@@ -1,31 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSupabase } from '../../../lib/supabase/server';
+import { withUser } from '@/app/api/_lib/withAuth';
 import { normalizeBusinessImages } from '../../../lib/utils/businessImages';
 import { getCategoryLabelFromBusiness } from '../../../utils/subcategoryPlaceholders';
 import { getInterestIdForSubcategory } from '../../../lib/onboarding/subcategoryMapping';
-
-type RouteContext = {
-  params: Promise<{ id?: string }>;
-};
 
 /**
  * GET /api/saved/businesses
  * List user's saved businesses (paginated)
  */
-export async function GET(req: NextRequest) {
+export const GET = withUser(async (req: NextRequest, { user, supabase }) => {
   try {
-    const supabase = await getServerSupabase(req);
-    
-    // Check if user is authenticated
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'You must be logged in to view saved businesses' },
-        { status: 401 }
-      );
-    }
-
     const { searchParams } = new URL(req.url);
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
     const limit = Math.min(20, Math.max(1, parseInt(searchParams.get('limit') || '20')));
@@ -246,34 +230,16 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error('Error in GET /api/saved/businesses:', error);
     const errorMessage = error instanceof Error ? error.message : String(error);
-    return NextResponse.json(
-      { 
-        error: 'Internal server error',
-        details: errorMessage
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error', details: errorMessage }, { status: 500 });
   }
-}
+});
 
 /**
  * POST /api/saved/businesses
  * Save business to user's list
  */
-export async function POST(req: NextRequest) {
+export const POST = withUser(async (req: NextRequest, { user, supabase }) => {
   try {
-    const supabase = await getServerSupabase(req);
-    
-    // Check if user is authenticated
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'You must be logged in to save businesses' },
-        { status: 401 }
-      );
-    }
-
     const { business_id } = await req.json();
 
     if (!business_id) {
@@ -354,10 +320,7 @@ export async function POST(req: NextRequest) {
     }, { status: 201 });
   } catch (error) {
     console.error('Error in POST /api/saved/businesses:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 

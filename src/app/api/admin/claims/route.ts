@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSupabase } from '@/app/lib/supabase/server';
-import { getServiceSupabase } from '@/app/lib/admin';
-import { isAdmin } from '@/app/lib/admin';
+import { withAdmin } from '@/app/api/_lib/withAuth';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -122,25 +120,9 @@ function mapClaims(
   });
 }
 
-export async function GET(req: NextRequest) {
+export const GET = withAdmin(async (req, { service }) => {
   try {
-    const supabase = await getServerSupabase(req);
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const isUserAdmin = await isAdmin(user.id);
-    if (!isUserAdmin) {
-      return NextResponse.json({ error: 'Admin only' }, { status: 403 });
-    }
-
     const { filters, limit, offset } = parseFilters(req);
-    const service = getServiceSupabase();
 
     let joinedQuery = service
       .from('business_claims')
@@ -278,4 +260,4 @@ export async function GET(req: NextRequest) {
     console.error('Admin claims list error:', err);
     return NextResponse.json({ error: 'Something went wrong' }, { status: 500 });
   }
-}
+});

@@ -1,8 +1,7 @@
-import { NextResponse } from "next/server";
-import { getServerSupabase } from "../../../lib/supabase/server";
+import { NextRequest, NextResponse } from "next/server";
+import { withUser } from '@/app/api/_lib/withAuth';
 import { SUBCATEGORY_TO_INTEREST } from "../../../lib/onboarding/subcategoryMapping";
 
-// Force dynamic rendering and disable caching for onboarding data
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -12,17 +11,10 @@ export const revalidate = 0;
  * - POST /api/onboarding/subcategories
  * - POST /api/onboarding/deal-breakers
  * - POST /api/onboarding/complete
- * 
+ *
  * This endpoint is kept for backward compatibility but should not be used for new code.
  */
-export async function POST(req: Request) {
-  const supabase = await getServerSupabase(req);
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export const POST = withUser(async (req: NextRequest, { user, supabase }) => {
   try {
     const { step, interests, subcategories, dealbreakers } = await req.json();
 
@@ -226,26 +218,17 @@ export async function POST(req: Request) {
       { status: 500 }
     );
   }
-}
+});
 
 // GET endpoint to retrieve user's onboarding data
-export async function GET(req: Request) {
-  const supabase = await getServerSupabase(req);
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export const GET = withUser(async (_req: NextRequest, { user, supabase }) => {
   try {
-    // Get user's profile to check counts (CRITICAL: Only hydrate if user has actually saved data)
     const { data: profile } = await supabase
       .from('profiles')
       .select('interests_count, subcategories_count, dealbreakers_count')
       .eq('user_id', user.id)
       .single();
 
-    // Get user's interests - ONLY if interests_count > 0
     let interests: string[] = [];
     if (profile && profile.interests_count && profile.interests_count > 0) {
       const { data: interestsData } = await supabase
@@ -255,7 +238,6 @@ export async function GET(req: Request) {
       interests = interestsData?.map(i => i.interest_id) || [];
     }
 
-    // Get user's subcategories - ONLY if subcategories_count > 0
     let subcategories: any[] = [];
     if (profile && profile.subcategories_count && profile.subcategories_count > 0) {
       const { data: subcategoriesData } = await supabase
@@ -265,7 +247,6 @@ export async function GET(req: Request) {
       subcategories = subcategoriesData || [];
     }
 
-    // Get user's dealbreakers - ONLY if dealbreakers_count > 0
     let dealbreakers: string[] = [];
     if (profile && profile.dealbreakers_count && profile.dealbreakers_count > 0) {
       const { data: dealbreakersData } = await supabase
@@ -283,19 +264,14 @@ export async function GET(req: Request) {
       subcategories_count: profile?.subcategories_count || 0,
       dealbreakers_count: profile?.dealbreakers_count || 0
     });
-    
-    // Disable all caching for fresh data
+
     response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     response.headers.set('Pragma', 'no-cache');
     response.headers.set('Expires', '0');
-    
-    return response;
 
+    return response;
   } catch (error) {
     console.error('Error fetching onboarding data:', error);
-    return NextResponse.json(
-      { error: "Failed to fetch onboarding data" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to fetch onboarding data" }, { status: 500 });
   }
-}
+});

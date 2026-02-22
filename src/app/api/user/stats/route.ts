@@ -1,7 +1,6 @@
-import { NextResponse } from 'next/server';
-import { getServerSupabase } from '@/app/lib/supabase/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { withUser } from '@/app/api/_lib/withAuth';
 import {
-  getCurrentUserId,
   getUserStats,
   updateLastActive,
 } from '@/app/lib/services/userService';
@@ -13,26 +12,10 @@ export const dynamic = 'force-dynamic';
  * GET /api/user/stats
  * Get user statistics
  */
-export async function GET(req: Request) {
+export const GET = withUser(async (_req: NextRequest, { user, supabase }) => {
   try {
-    const supabase = await getServerSupabase();
-    const userId = await getCurrentUserId(supabase);
+    const userId = user.id;
 
-    if (!userId) {
-      console.error('[Stats API] Auth error: No user ID');
-      return NextResponse.json<ApiResponse<UserStats>>(
-        {
-          data: null,
-          error: {
-            message: 'Unauthorized',
-            code: 'UNAUTHORIZED',
-          },
-        },
-        { status: 401 }
-      );
-    }
-
-    // Update last active
     try {
       await updateLastActive(supabase, userId);
     } catch (lastActiveError: any) {
@@ -81,5 +64,5 @@ export async function GET(req: Request) {
       { status: 500 }
     );
   }
-}
+});
 

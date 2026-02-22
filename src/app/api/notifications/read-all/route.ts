@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSupabase } from '@/app/lib/supabase/server';
+import { withUser } from '@/app/api/_lib/withAuth';
 
 export const dynamic = 'force-dynamic';
 
@@ -7,18 +7,8 @@ export const dynamic = 'force-dynamic';
  * PATCH /api/notifications/read-all
  * Mark all notifications as read for the authenticated user
  */
-export async function PATCH(req: NextRequest) {
+export const PATCH = withUser(async (_req: NextRequest, { user, supabase }) => {
   try {
-    const supabase = await getServerSupabase();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
     const now = new Date().toISOString();
     const { error } = await supabase
       .from('notifications')
@@ -34,16 +24,9 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      message: 'All notifications marked as read'
-    });
+    return NextResponse.json({ success: true, message: 'All notifications marked as read' });
   } catch (error) {
     console.error('Error in PATCH /api/notifications/read-all:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
-
+});

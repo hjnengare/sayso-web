@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSupabase } from '@/app/lib/supabase/server';
+import { withUser } from '@/app/api/_lib/withAuth';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,15 +8,8 @@ export const dynamic = 'force-dynamic';
  * Mark specific notifications as read.
  * Body: { ids: string[] }
  */
-export async function POST(req: NextRequest) {
+export const POST = withUser(async (req: NextRequest, { user, supabase }) => {
   try {
-    const supabase = await getServerSupabase(req);
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const body = await req.json().catch(() => ({}));
     const ids = Array.isArray(body.ids) ? body.ids.filter((id: unknown) => typeof id === 'string') : [];
     if (ids.length === 0) {
@@ -44,4 +37,4 @@ export async function POST(req: NextRequest) {
     console.error('Error in POST /api/notifications/mark-read:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

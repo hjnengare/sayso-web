@@ -1,25 +1,16 @@
-import { NextResponse } from 'next/server';
-import { getServerSupabase } from '../../../lib/supabase/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { withUser } from '@/app/api/_lib/withAuth';
 import { addNoCacheHeaders } from '../../../lib/utils/responseHeaders';
 
-// Force dynamic rendering and disable caching
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 /**
  * POST /api/onboarding/deal-breakers
- * Saves dealbreakers and marks onboarding complete
+ * Saves dealbreakers and marks onboarding complete — requires auth
  */
-export async function POST(req: Request) {
+export const POST = withUser(async (req: NextRequest, { user, supabase }) => {
   try {
-    const supabase = await getServerSupabase(req);
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      return addNoCacheHeaders(response);
-    }
-
     const body = await req.json();
     const dealbreakers = body?.dealbreakers ?? body?.dealbreaker_ids;
 
@@ -155,13 +146,6 @@ export async function POST(req: Request) {
 
   } catch (error: any) {
     console.error('[Dealbreakers API] Unexpected error:', error);
-    const response = NextResponse.json(
-      {
-        error: 'Failed to save dealbreakers',
-        message: error.message
-      },
-      { status: 500 }
-    );
-    return addNoCacheHeaders(response);
+    return addNoCacheHeaders(NextResponse.json({ error: 'Failed to save dealbreakers', message: error.message }, { status: 500 }));
   }
-}
+});

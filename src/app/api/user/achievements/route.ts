@@ -1,37 +1,26 @@
-import { NextResponse } from "next/server";
-import { getServerSupabase } from "../../../lib/supabase/server";
+import { NextRequest, NextResponse } from "next/server";
+import { withUser } from '@/app/api/_lib/withAuth';
 
-export async function GET(req: Request) {
-  const supabase = await getServerSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export const GET = withUser(async (req: NextRequest, { user, supabase }) => {
   try {
-    // Fetch user stats (which includes cached counts)
     const { data: userStats } = await supabase
       .from('user_stats')
       .select('*')
       .eq('user_id', user.id)
       .single();
 
-    // Fetch reviews count
     const { count: reviewsCount } = await supabase
       .from('reviews')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id);
 
-    // Use helpful votes from stats if available, otherwise calculate
     let helpfulVotesReceived = userStats?.helpful_votes_received || 0;
     if (helpfulVotesReceived === 0 && (!userStats || userStats.helpful_votes_received === 0)) {
-      // Calculate helpful votes received if not in stats
       const { data: userReviews } = await supabase
         .from('reviews')
         .select('id')
         .eq('user_id', user.id);
-      
+
       const reviewIds = userReviews?.map(r => r.id) || [];
       if (reviewIds.length > 0) {
         const { count } = await supabase
@@ -42,7 +31,6 @@ export async function GET(req: Request) {
       }
     }
 
-    // Use saved businesses from stats if available, otherwise calculate
     let savedBusinesses = userStats?.total_businesses_saved || 0;
     if (!savedBusinesses) {
       const { count: savedCount } = await supabase
@@ -52,14 +40,12 @@ export async function GET(req: Request) {
       savedBusinesses = savedCount || 0;
     }
 
-    // Fetch profile to check if user is top reviewer
     const { data: profile } = await supabase
       .from('profiles')
       .select('is_top_reviewer, created_at')
       .eq('user_id', user.id)
       .single();
 
-    // Fetch first review date
     const { data: firstReview } = await supabase
       .from('reviews')
       .select('created_at')
@@ -74,7 +60,6 @@ export async function GET(req: Request) {
     const accountCreatedAt = profile?.created_at || user.created_at;
     const firstReviewDate = firstReview?.created_at;
 
-    // Compute achievements based on stats (matching Badge Notes spec)
     const achievements: Array<{
       name: string;
       description: string;
@@ -82,7 +67,6 @@ export async function GET(req: Request) {
       earnedAt: string | null;
     }> = [];
 
-    // Activity & Milestone Badges (Section C from spec - Badge names.pdf)
     if (totalReviews >= 100) {
       achievements.push({
         name: "Century Club",
@@ -115,7 +99,6 @@ export async function GET(req: Request) {
         earnedAt: firstReviewDate || accountCreatedAt,
       });
     }
-    // First review badge - "New Voice" for first-timers
     if (firstReviewDate && totalReviews >= 1) {
       achievements.push({
         name: "New Voice",
@@ -124,8 +107,6 @@ export async function GET(req: Request) {
         earnedAt: firstReviewDate,
       });
     }
-
-    // Helpful Votes Achievement - "Helpful Honeybee" (updated from Helpful Reviewer)
     if (helpfulVotes >= 10) {
       achievements.push({
         name: "Helpful Honeybee",
@@ -134,28 +115,22 @@ export async function GET(req: Request) {
         earnedAt: accountCreatedAt,
       });
     }
-
-    // Top Reviewer Achievement (not in spec but keeping for admin-awarded badge)
     if (isTopReviewer) {
       achievements.push({
         name: "Top Reviewer",
         description: "Among the top reviewers this month",
-        icon: "/badges/011-compass.png", // Compass for being a guide/leader
+        icon: "/badges/011-compass.png",
         earnedAt: accountCreatedAt,
       });
     }
 
-    // Sort achievements by earned date (most recent first)
     achievements.sort((a, b) => {
       if (!a.earnedAt) return 1;
       if (!b.earnedAt) return -1;
       return new Date(b.earnedAt).getTime() - new Date(a.earnedAt).getTime();
     });
 
-    return NextResponse.json({
-      data: achievements,
-      success: true,
-    });
+    return NextResponse.json({ data: achievements, success: true });
   } catch (error: any) {
     console.error('Error fetching achievements:', error);
     return NextResponse.json(
@@ -163,5 +138,4 @@ export async function GET(req: Request) {
       { status: 500 }
     );
   }
-}
-
+});

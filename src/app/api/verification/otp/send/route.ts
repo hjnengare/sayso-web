@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSupabase } from '@/app/lib/supabase/server';
+import { withUser } from '@/app/api/_lib/withAuth';
 import { getServiceSupabase } from '@/app/lib/admin';
 import { isAdmin } from '@/app/lib/admin';
 import { sendSms, maskPhoneE164 } from '@/app/lib/services/smsService';
@@ -60,14 +60,8 @@ function hashOtp(code: string): string {
   return crypto.createHash('sha256').update(pepper + code).digest('hex');
 }
 
-export async function POST(req: NextRequest) {
+export const POST = withUser(async (req: NextRequest, { user, supabase }) => {
   try {
-    const supabase = await getServerSupabase(req);
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return otpSendError(401, 'UNAUTHORIZED', 'Unauthorized');
-    }
-
     const body = await req.json().catch(() => ({}));
     const claimId = body.claimId ?? body.claim_id;
     if (!claimId || typeof claimId !== 'string') {
@@ -291,4 +285,4 @@ export async function POST(req: NextRequest) {
     console.error('OTP send error:', err);
     return otpSendError(500, 'OTP_SEND_UNKNOWN_ERROR', 'Something went wrong');
   }
-}
+});

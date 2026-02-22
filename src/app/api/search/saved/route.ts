@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSupabase } from "@/app/lib/supabase/server";
+import { withUser } from '@/app/api/_lib/withAuth';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -8,23 +8,11 @@ export const runtime = 'nodejs';
  * POST /api/search/saved
  * Save a search with user-defined name and query parameters
  */
-export async function POST(req: NextRequest) {
+export const POST = withUser(async (req: NextRequest, { user, supabase }) => {
   try {
-    const supabase = await getServerSupabase();
-    
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized', message: 'You must be logged in to save searches' },
-        { status: 401 }
-      );
-    }
-
     const body = await req.json();
     const { name, params } = body;
 
-    // Validation
     if (!name || typeof name !== 'string' || name.trim().length === 0) {
       return NextResponse.json(
         { error: 'Invalid request', message: 'name is required and must be a non-empty string' },
@@ -39,14 +27,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Insert saved search
     const { data, error } = await supabase
       .from('saved_searches')
-      .insert({
-        user_id: user.id,
-        name: name.trim(),
-        params: params,
-      })
+      .insert({ user_id: user.id, name: name.trim(), params })
       .select()
       .single();
 
@@ -59,15 +42,8 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({
-      data: {
-        id: data.id,
-        name: data.name,
-        params: data.params,
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-      },
+      data: { id: data.id, name: data.name, params: data.params, created_at: data.created_at, updated_at: data.updated_at },
     });
-
   } catch (error) {
     console.error('[SAVED SEARCHES API] Error:', error);
     return NextResponse.json(
@@ -75,30 +51,18 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * GET /api/search/saved
  * Get saved searches for the authenticated user
  */
-export async function GET(req: NextRequest) {
+export const GET = withUser(async (req: NextRequest, { user, supabase }) => {
   try {
-    const supabase = await getServerSupabase();
-    
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized', message: 'You must be logged in to view saved searches' },
-        { status: 401 }
-      );
-    }
-
     const { searchParams } = new URL(req.url);
     const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '20')));
     const offset = Math.max(0, parseInt(searchParams.get('offset') || '0'));
 
-    // Fetch saved searches
     const { data, error } = await supabase
       .from('saved_searches')
       .select('id, name, params, created_at, updated_at')
@@ -114,15 +78,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({
-      data: data || [],
-      meta: {
-        count: data?.length || 0,
-        limit,
-        offset,
-      },
-    });
-
+    return NextResponse.json({ data: data || [], meta: { count: data?.length || 0, limit, offset } });
   } catch (error) {
     console.error('[SAVED SEARCHES API] Error:', error);
     return NextResponse.json(
@@ -130,5 +86,4 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     );
   }
-}
-
+});

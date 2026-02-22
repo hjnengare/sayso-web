@@ -1,33 +1,18 @@
-import { NextResponse } from "next/server";
-import { getServerSupabase } from "../../../lib/supabase/server";
+import { NextRequest, NextResponse } from "next/server";
+import { withUser } from '@/app/api/_lib/withAuth';
 
-export async function DELETE(req: Request) {
-  const supabase = await getServerSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export const DELETE = withUser(async (_req: NextRequest, { user, supabase }) => {
   try {
-    // First, delete user's avatar from storage
     try {
-      const { data: files } = await supabase.storage
-        .from('avatars')
-        .list(user.id);
-      
+      const { data: files } = await supabase.storage.from('avatars').list(user.id);
       if (files && files.length > 0) {
         const pathsToDelete = files.map(file => `${user.id}/${file.name}`);
-        await supabase.storage
-          .from('avatars')
-          .remove(pathsToDelete);
+        await supabase.storage.from('avatars').remove(pathsToDelete);
       }
     } catch (storageError) {
       console.error('Error deleting avatar files:', storageError);
-      // Continue with account deletion even if storage deletion fails
     }
 
-    // Delete all review images from storage (bucket: review_images) so no orphaned files remain
     try {
       const { data: reviews } = await supabase
         .from('reviews')
@@ -46,10 +31,7 @@ export async function DELETE(req: Request) {
           .filter((path): path is string => Boolean(path));
 
         if (storagePaths.length > 0) {
-          const { error: storageError } = await supabase.storage
-            .from('review_images')
-            .remove(storagePaths);
-
+          const { error: storageError } = await supabase.storage.from('review_images').remove(storagePaths);
           if (storageError) {
             console.error('Error deleting review images from storage (continuing with account deletion):', storageError);
           } else {
@@ -59,10 +41,8 @@ export async function DELETE(req: Request) {
       }
     } catch (storageError) {
       console.error('Error deleting review images:', storageError);
-      // Continue with account deletion even if storage deletion fails
     }
 
-    // Delete event review images from storage
     try {
       const { data: eventReviews } = await supabase
         .from('event_reviews')
@@ -81,9 +61,7 @@ export async function DELETE(req: Request) {
           .filter((path): path is string => Boolean(path));
 
         if (storagePaths.length > 0) {
-          const { error: storageError } = await supabase.storage
-            .from('review_images')
-            .remove(storagePaths);
+          const { error: storageError } = await supabase.storage.from('review_images').remove(storagePaths);
           if (storageError) {
             console.error('Error deleting event review images from storage (continuing):', storageError);
           }
@@ -93,7 +71,6 @@ export async function DELETE(req: Request) {
       console.error('Error deleting event review images:', storageError);
     }
 
-    // Delete special review images from storage
     try {
       const { data: specialReviews } = await supabase
         .from('special_reviews')
@@ -112,9 +89,7 @@ export async function DELETE(req: Request) {
           .filter((path): path is string => Boolean(path));
 
         if (storagePaths.length > 0) {
-          const { error: storageError } = await supabase.storage
-            .from('review_images')
-            .remove(storagePaths);
+          const { error: storageError } = await supabase.storage.from('review_images').remove(storagePaths);
           if (storageError) {
             console.error('Error deleting special review images from storage (continuing):', storageError);
           }
@@ -124,9 +99,6 @@ export async function DELETE(req: Request) {
       console.error('Error deleting special review images:', storageError);
     }
 
-    // Delete business images from storage
-    // Note: Businesses will be cascade deleted when user is deleted,
-    // but we need to clean up storage files first
     try {
       const { data: businesses } = await supabase
         .from('businesses')
@@ -135,8 +107,6 @@ export async function DELETE(req: Request) {
 
       if (businesses && businesses.length > 0) {
         const businessIds = businesses.map(b => b.id);
-        
-        // Fetch business images from business_images table
         const { data: businessImages } = await supabase
           .from('business_images')
           .select('url')
@@ -159,7 +129,6 @@ export async function DELETE(req: Request) {
 
             if (storageError) {
               console.warn('Error deleting business images from storage (continuing with account deletion):', storageError);
-              // Continue with account deletion even if storage deletion fails
             } else {
               console.log(`Deleted ${storagePaths.length} business image files for user ${user.id}`);
             }
@@ -168,15 +137,9 @@ export async function DELETE(req: Request) {
       }
     } catch (storageError) {
       console.error('Error deleting business images:', storageError);
-      // Continue with account deletion even if storage deletion fails
     }
 
-    // Delete the user from auth.users
-    // This will cascade delete all related data in profiles, user_interests, reviews, businesses, etc.
-    // Note: Businesses owned by the user will be cascade deleted along with their images, stats, etc.
-    const { error } = await supabase.rpc('delete_user_account', {
-      p_user_id: user.id
-    });
+    const { error } = await supabase.rpc('delete_user_account', { p_user_id: user.id });
 
     if (error) {
       console.error('Error deleting account:', error);
@@ -186,15 +149,10 @@ export async function DELETE(req: Request) {
       );
     }
 
-    // Sign out the user
     await supabase.auth.signOut();
-
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error in delete account:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete account' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to delete account' }, { status: 500 });
   }
-}
+});

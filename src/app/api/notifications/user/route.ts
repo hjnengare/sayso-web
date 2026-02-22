@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSupabase } from '@/app/lib/supabase/server';
+import { withUser } from '@/app/api/_lib/withAuth';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,23 +17,9 @@ function isBusinessOwnerRole(profile: ProfileRoleRow | null): boolean {
  * GET /api/notifications/user
  * Fetch notifications for authenticated personal scope only.
  */
-export async function GET(req: NextRequest) {
+export const GET = withUser(async (req: NextRequest, { user, supabase }) => {
   const endpoint = '/api/notifications/user';
-
   try {
-    const supabase = await getServerSupabase(req);
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role, account_role')
@@ -126,10 +112,7 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('Error in GET /api/notifications/user:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 

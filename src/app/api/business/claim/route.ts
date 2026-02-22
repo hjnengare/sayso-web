@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withUser } from '@/app/api/_lib/withAuth';
 import { getServerSupabase } from '@/app/lib/supabase/server';
 import { EmailService } from '@/app/lib/services/emailService';
 import { businessEmailDomainMatchesWebsite } from '@/app/lib/utils/claimVerification';
@@ -234,21 +235,8 @@ async function startClaimWithoutRpc(
   };
 }
 
-export async function POST(req: NextRequest) {
+export const POST = withUser(async (req: NextRequest, { user, supabase }) => {
   try {
-    const supabase = await getServerSupabase(req);
-
-    // ========================================================================
-    // 1. Authentication Check
-    // ========================================================================
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return errorResponse(
-        'NOT_AUTHENTICATED',
-        'Please log in to claim this business.',
-        401
-      );
-    }
     console.log('CLAIM USER:', user?.id);
 
     // ========================================================================
@@ -886,5 +874,5 @@ export async function POST(req: NextRequest) {
       500
     );
   }
-}
+});
 

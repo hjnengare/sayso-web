@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSupabase } from '@/app/lib/supabase/server';
+import { withUser } from '@/app/api/_lib/withAuth';
 
 export const dynamic = 'force-dynamic';
 
@@ -7,18 +7,8 @@ export const dynamic = 'force-dynamic';
  * GET /api/notifications/unread-count
  * Get the count of unread notifications for the authenticated user
  */
-export async function GET(req: NextRequest) {
+export const GET = withUser(async (_req: NextRequest, { user, supabase }) => {
   try {
-    const supabase = await getServerSupabase();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
     const { count, error } = await supabase
       .from('notifications')
       .select('*', { count: 'exact', head: true })
@@ -33,15 +23,9 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({
-      unreadCount: count || 0
-    });
+    return NextResponse.json({ unreadCount: count || 0 });
   } catch (error) {
     console.error('Error in GET /api/notifications/unread-count:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
-
+});

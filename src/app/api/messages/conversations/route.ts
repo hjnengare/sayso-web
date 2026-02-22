@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSupabase } from '@/app/lib/supabase/server';
+import { withUser } from '@/app/api/_lib/withAuth';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,18 +33,8 @@ interface ConversationWithBusiness {
  * GET /api/messages/conversations
  * Get all conversations for the authenticated user
  */
-export async function GET(req: NextRequest) {
+export const GET = withUser(async (req: NextRequest, { user, supabase }) => {
   try {
-    const supabase = await getServerSupabase();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
     // Get businessId from query params (for owner filtering)
     const { searchParams } = new URL(req.url);
     const businessId = searchParams.get('businessId');
@@ -207,30 +197,17 @@ export async function GET(req: NextRequest) {
     });
   } catch (error: any) {
     console.error('Error in conversations API:', error);
-    return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error', details: error.message }, { status: 500 });
   }
-}
+});
 
 /**
  * POST /api/messages/conversations
  * Create a new conversation or get existing one
  * Body: { owner_id: string, business_id?: string }
  */
-export async function POST(req: NextRequest) {
+export const POST = withUser(async (req: NextRequest, { user, supabase }) => {
   try {
-    const supabase = await getServerSupabase();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
     const body = await req.json();
     const { owner_id, user_id: target_user_id, business_id } = body;
 
@@ -346,10 +323,7 @@ export async function POST(req: NextRequest) {
     }, { status: 201 });
   } catch (error: any) {
     console.error('Error in create conversation API:', error);
-    return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error', details: error.message }, { status: 500 });
   }
-}
+});
 

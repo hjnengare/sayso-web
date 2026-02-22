@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSupabase } from '@/app/lib/supabase/server';
+import { withUser } from '@/app/api/_lib/withAuth';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,30 +14,19 @@ function toDateKey(d: Date): string {
   return d.toISOString().split('T')[0];
 }
 
+type RouteContext = { params: Promise<{ id: string }> };
+
 /**
  * GET /api/businesses/[id]/analytics
  * Returns time-series and aggregate stats for the business dashboard.
  * Owner-only (same check as views API).
  */
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const GET = withUser(async (req: NextRequest, { user, supabase, params }) => {
   try {
-    const { id: businessId } = await params;
+    const { id: businessId } = await (params as RouteContext['params']);
 
     if (!businessId || businessId.trim() === '') {
-      return NextResponse.json(
-        { error: 'Business ID is required' },
-        { status: 400 }
-      );
-    }
-
-    const supabase = await getServerSupabase();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Business ID is required' }, { status: 400 });
     }
 
     const { data: business } = await supabase
@@ -150,4 +139,4 @@ export async function GET(
     console.error('Error in business analytics API:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

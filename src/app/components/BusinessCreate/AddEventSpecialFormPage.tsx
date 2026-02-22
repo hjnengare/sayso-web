@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import dynamic from "next/dynamic";
+
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { m, AnimatePresence } from "framer-motion";
@@ -28,11 +28,6 @@ import { authStyles } from "@/app/components/Auth/Shared/authStyles";
 import { animations } from "@/app/add-business/components/types";
 import { BusinessOwnershipService } from "@/app/lib/services/businessOwnershipService";
 import { ImageUploadService } from "@/app/lib/services/imageUploadService";
-
-const Footer = dynamic(() => import("../Footer/Footer"), {
-  loading: () => null,
-  ssr: false,
-});
 
 const urbanist = Urbanist({
   weight: ["400", "600", "700", "800"],
@@ -462,7 +457,7 @@ export default function AddEventSpecialFormPage({ type }: AddEventSpecialFormPag
               </Link>
             </div>
           </div>
-          <Footer />
+
         </div>
       </>
     );
@@ -843,7 +838,6 @@ export default function AddEventSpecialFormPage({ type }: AddEventSpecialFormPag
             </div>
           </section>
         </div>
-        <Footer />
       </div>
     </>
   );

@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSupabase } from "@/app/lib/supabase/server";
+import { withUser } from '@/app/api/_lib/withAuth';
 import {
-  getCurrentUserId,
   getUserProfile,
   updateLastActive,
 } from '@/app/lib/services/userService';
@@ -105,27 +105,12 @@ export async function GET() {
  * PUT /api/user/preferences
  * Update user preferences (interests, deal-breakers, privacy settings)
  */
-export async function PUT(req: Request) {
+export const PUT = withUser(async (req: NextRequest, { user, supabase }) => {
   try {
-    const supabase = await getServerSupabase(req);
-    const userId = await getCurrentUserId(supabase);
-
-    if (!userId) {
-      return NextResponse.json(
-        {
-          data: null,
-          error: {
-            message: 'Unauthorized',
-            code: 'UNAUTHORIZED',
-          },
-        },
-        { status: 401 }
-      );
-    }
+    const userId = user.id;
 
     const body: UpdatePreferencesPayload = await req.json();
 
-    // Get current profile to merge privacy settings
     const currentProfile = await getUserProfile(supabase, userId);
     const currentPrivacySettings: PrivacySettings = currentProfile?.privacy_settings || {
       showActivity: true,
@@ -215,30 +200,13 @@ export async function PUT(req: Request) {
       }
     }
 
-    // Update last active
     await updateLastActive(supabase, userId);
 
-    // Return updated preferences by calling GET logic
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json(
-        {
-          data: null,
-          error: {
-            message: 'User not found',
-            code: 'NOT_FOUND',
-          },
-        },
-        { status: 404 }
-      );
-    }
-
-    // Fetch updated preferences
     let interestIds: string[] = [];
     const { data: interestsData } = await supabase
       .from('user_interests')
       .select('interest_id')
-      .eq('user_id', user.id);
+      .eq('user_id', userId);
 
     if (interestsData) {
       interestIds = interestsData.map(i => i.interest_id);
@@ -248,7 +216,7 @@ export async function PUT(req: Request) {
     const { data: subcategoriesData } = await supabase
       .from('user_subcategories')
       .select('subcategory_id')
-      .eq('user_id', user.id);
+      .eq('user_id', userId);
 
     if (subcategoriesData) {
       subcategoryIds = subcategoriesData.map(s => s.subcategory_id);
@@ -258,7 +226,7 @@ export async function PUT(req: Request) {
     const { data: dealbreakersData } = await supabase
       .from('user_dealbreakers')
       .select('dealbreaker_id')
-      .eq('user_id', user.id);
+      .eq('user_id', userId);
 
     if (dealbreakersData) {
       dealbreakersIds = dealbreakersData.map(d => d.dealbreaker_id);
@@ -301,5 +269,5 @@ export async function PUT(req: Request) {
       { status: 500 }
     );
   }
-}
+});
 

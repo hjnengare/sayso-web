@@ -1,5 +1,5 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
-import { getServerSupabase } from '@/app/lib/supabase/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { withUser } from '@/app/api/_lib/withAuth';
 import { getServiceSupabase } from '@/app/lib/admin';
 import { isPhoneOtpAutoMode } from '@/app/lib/services/phoneOtpMode';
 import { movePhoneClaimToUnderReview } from '@/app/lib/services/phoneOtpFlow';
@@ -46,14 +46,8 @@ function hashOtp(code: string): string {
   return crypto.createHash('sha256').update(pepper + code).digest('hex');
 }
 
-export async function POST(req: NextRequest) {
+export const POST = withUser(async (req: NextRequest, { user }) => {
   try {
-    const supabase = await getServerSupabase(req);
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return otpVerifyError(401, 'UNAUTHORIZED', 'Unauthorized');
-    }
-
     const autoMode = isPhoneOtpAutoMode();
     const body = await req.json().catch(() => ({}));
     const claimId = body.claimId ?? body.claim_id;
@@ -201,4 +195,4 @@ export async function POST(req: NextRequest) {
     console.error('OTP verify error:', err);
     return otpVerifyError(500, 'OTP_VERIFY_UNKNOWN_ERROR', 'Something went wrong');
   }
-}
+});

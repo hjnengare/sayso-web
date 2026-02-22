@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSupabase } from '@/app/lib/supabase/server';
+import { withUser } from '@/app/api/_lib/withAuth';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,33 +11,13 @@ type ProfileRoleRow = {
 function hasBusinessNotificationsAccess(profile: ProfileRoleRow | null): boolean {
   const accountRole = String(profile?.account_role ?? '').toLowerCase().trim();
   const role = String(profile?.role ?? '').toLowerCase().trim();
-  if (accountRole) {
-    return accountRole === 'business_owner';
-  }
+  if (accountRole) return accountRole === 'business_owner';
   return role === 'business_owner' || role === 'both';
 }
 
-export async function GET(req: NextRequest) {
+export const GET = withUser(async (req: NextRequest, { user, supabase }) => {
   const endpoint = '/api/notifications/business';
-
   try {
-    const supabase = await getServerSupabase(req);
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      console.error('[BusinessNotificationsAPI] Unauthorized request', {
-        endpoint,
-        status: 401,
-        errorCode: authError?.code ?? null,
-        errorMessage: authError?.message ?? 'Missing authenticated user',
-        hasSession: false,
-      });
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role, account_role')
@@ -115,4 +95,4 @@ export async function GET(req: NextRequest) {
     });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

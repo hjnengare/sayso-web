@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSupabase } from '@/app/lib/supabase/server';
+import { withUser } from '@/app/api/_lib/withAuth';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,26 +16,10 @@ function isBusinessOwnerRole(profile: ProfileRoleRow | null): boolean {
 /**
  * GET /api/notifications
  * Fetch notifications for the authenticated user
- * Query parameters:
- *   - unread: boolean - filter by unread status (true = only unread, false = only read, undefined = all)
- *   - type: string - filter by notification type ('review', 'business', 'user', 'highlyRated')
- *   - limit: number - limit the number of results (default: no limit)
- *   - offset: number - offset for pagination (default: 0)
  */
-export async function GET(req: NextRequest) {
+export const GET = withUser(async (req: NextRequest, { user, supabase }) => {
   const endpoint = '/api/notifications';
-
   try {
-    const supabase = await getServerSupabase(req);
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role, account_role')
@@ -129,38 +113,16 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('Error in GET /api/notifications:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
 /**
  * POST /api/notifications
  * Create a new notification for a user
- * Body: {
- *   user_id: string (optional, defaults to authenticated user),
- *   type: 'review' | 'business' | 'user' | 'highlyRated' | 'gamification',
- *   message: string,
- *   title: string,
- *   image?: string,
- *   image_alt?: string,
- *   link?: string
- * }
  */
-export async function POST(req: NextRequest) {
+export const POST = withUser(async (req: NextRequest, { user, supabase }) => {
   try {
-    const supabase = await getServerSupabase(req);
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
     const body = await req.json();
     const {
       user_id: targetUserId,
@@ -228,11 +190,8 @@ export async function POST(req: NextRequest) {
     }, { status: 201 });
   } catch (error) {
     console.error('Error in POST /api/notifications:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
 

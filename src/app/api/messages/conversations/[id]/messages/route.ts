@@ -1,47 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSupabase } from '@/app/lib/supabase/server';
+import { withUser } from '@/app/api/_lib/withAuth';
 
 export const dynamic = 'force-dynamic';
+
+type RouteContext = { params: Promise<{ id: string }> };
 
 /**
  * POST /api/messages/conversations/[id]/messages
  * Send a message in a conversation
  * Body: { content: string }
  */
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const POST = withUser(async (req: NextRequest, { user, supabase, params }) => {
   try {
-    const { id: conversationId } = await params;
+    const { id: conversationId } = await (params as RouteContext['params']);
 
     if (!conversationId || conversationId.trim() === '') {
-      return NextResponse.json(
-        { error: 'Conversation ID is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Conversation ID is required' }, { status: 400 });
     }
 
-    const supabase = await getServerSupabase();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
     const body = await req.json();
     const { content } = body;
 
     if (!content || typeof content !== 'string' || content.trim().length === 0) {
-      return NextResponse.json(
-        { error: 'Message content is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Message content is required' }, { status: 400 });
     }
 
-    // Verify user has access to this conversation
     const { data: conversation, error: convError } = await supabase
       .from('conversations')
       .select('*')
@@ -50,13 +33,9 @@ export async function POST(
       .single();
 
     if (convError || !conversation) {
-      return NextResponse.json(
-        { error: 'Conversation not found or access denied' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Conversation not found or access denied' }, { status: 404 });
     }
 
-    // Create the message
     const { data: message, error: messageError } = await supabase
       .from('messages')
       .insert({
@@ -76,16 +55,9 @@ export async function POST(
       );
     }
 
-    return NextResponse.json({
-      data: message,
-      error: null,
-    }, { status: 201 });
+    return NextResponse.json({ data: message, error: null }, { status: 201 });
   } catch (error: any) {
     console.error('Error in send message API:', error);
-    return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error', details: error.message }, { status: 500 });
   }
-}
-
+});

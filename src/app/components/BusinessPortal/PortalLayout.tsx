@@ -43,7 +43,7 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
   return (
     <div className="flex bg-page-bg" style={{ height: 'calc(100dvh - var(--header-height, 0px))' }}>
       {/* Desktop sidebar */}
-      <div className="hidden lg:flex lg:flex-col lg:w-56 xl:w-60 flex-shrink-0 shadow-lg">
+      <div className="hidden lg:flex lg:flex-col lg:w-56 xl:w-60 flex-shrink-0 shadow-lg h-full">
         <PortalSidebar pathname={pathname} />
       </div>
 

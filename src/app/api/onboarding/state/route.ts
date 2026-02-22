@@ -5,9 +5,8 @@
  * This is the single source of truth for onboarding progress.
  */
 
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { withUser } from '@/app/api/_lib/withAuth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -17,24 +16,8 @@ function isSchemaCacheError(error: { message?: string } | null | undefined): boo
   return message.includes('schema cache') && message.includes('onboarding_completed_at');
 }
 
-export async function GET() {
-  const supabase = createRouteHandlerClient({ cookies });
-
+export const GET = withUser(async (_req: NextRequest, { user, supabase }) => {
   try {
-    // Get authenticated user
-    const {
-      data: { user },
-      error: authError
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
-    }
-
-    // Fetch onboarding state from database
     let { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select(`
@@ -64,20 +47,13 @@ export async function GET() {
 
     if (profileError) {
       console.error('[OnboardingState API] Error fetching profile:', profileError);
-      return NextResponse.json(
-        { error: 'Failed to fetch onboarding state' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to fetch onboarding state' }, { status: 500 });
     }
 
     if (!profile) {
-      return NextResponse.json(
-        { error: 'Profile not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
-    // Return fresh state
     const state = {
       onboarding_step: profile.onboarding_step || 'interests',
       onboarding_complete: !!profile.onboarding_completed_at,
@@ -101,9 +77,6 @@ export async function GET() {
     );
   } catch (error) {
     console.error('[OnboardingState API] Unexpected error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
-import { getServerSupabase } from '@/app/lib/supabase/server';
-import { getServiceSupabase } from '@/app/lib/admin';
-import { isAdmin } from '@/app/lib/admin';
+import { withAdmin } from '@/app/api/_lib/withAuth';
 import { invalidateBusinessCache } from '@/app/lib/utils/optimizedQueries';
 
 export const dynamic = 'force-dynamic';
@@ -12,30 +10,13 @@ export const runtime = 'nodejs';
  * POST /api/admin/businesses/[id]/approve
  * Approve a pending business so it becomes publicly visible.
  * Requires admin. Sets status = 'active'.
- * Optional: if DB has approved_at, approved_by columns they can be set via migration.
  */
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const POST = withAdmin(async (req, { user, service, params }) => {
   try {
-    const supabase = await getServerSupabase(req);
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const isUserAdmin = await isAdmin(user.id);
-    if (!isUserAdmin) {
-      return NextResponse.json({ error: 'Admin only' }, { status: 403 });
-    }
-
     const businessId = (await params).id;
     if (!businessId) {
       return NextResponse.json({ error: 'Business ID is required' }, { status: 400 });
     }
-
-    const service = getServiceSupabase();
 
     const { data: business, error: fetchError } = await (service as any)
       .from('businesses')
@@ -140,13 +121,13 @@ export async function POST(
           business_id: businessId,
           business_name: biz.name
         });
-        
+
         const { data: notifData, error: notifError } = await (service as any).rpc('create_business_approved_notification', {
           p_owner_id: biz.owner_id,
           p_business_id: businessId,
           p_business_name: biz.name || 'Your business'
         });
-        
+
         if (notifError) {
           console.error('[Admin] RPC error creating business approval notification:', {
             error: notifError,
@@ -178,4 +159,4 @@ export async function POST(
       { status: 500 }
     );
   }
-}
+});

@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSupabase } from '@/app/lib/supabase/server';
-import { getServiceSupabase } from '@/app/lib/admin';
-import { isAdmin } from '@/app/lib/admin';
+import { withAdmin } from '@/app/api/_lib/withAuth';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -10,20 +8,8 @@ export const runtime = 'nodejs';
  * GET /api/admin/businesses/pending
  * List businesses with status = 'pending_approval' for admin review.
  */
-export async function GET(req: NextRequest) {
+export const GET = withAdmin(async (req, { service }) => {
   try {
-    const supabase = await getServerSupabase(req);
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const isUserAdmin = await isAdmin(user.id);
-    if (!isUserAdmin) {
-      return NextResponse.json({ error: 'Admin only' }, { status: 403 });
-    }
-
-    const service = getServiceSupabase();
 
     const { data: businesses, error } = await service
       .from('businesses')
@@ -66,4 +52,4 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

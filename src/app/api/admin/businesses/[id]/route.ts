@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSupabase } from '@/app/lib/supabase/server';
-import { getServiceSupabase } from '@/app/lib/admin';
-import { isAdmin } from '@/app/lib/admin';
+import { withAdmin } from '@/app/api/_lib/withAuth';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -11,28 +9,12 @@ export const runtime = 'nodejs';
  * Fetch full business details for admin review (no status filter).
  * Requires admin role.
  */
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const GET = withAdmin(async (req, { service, params }) => {
   try {
-    const supabase = await getServerSupabase(req);
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const isUserAdmin = await isAdmin(user.id);
-    if (!isUserAdmin) {
-      return NextResponse.json({ error: 'Admin only' }, { status: 403 });
-    }
-
     const businessId = (await params).id;
     if (!businessId) {
       return NextResponse.json({ error: 'Business ID is required' }, { status: 400 });
     }
-
-    const service = getServiceSupabase();
 
     const { data: business, error } = await (service as any)
       .from('businesses')
@@ -105,4 +87,4 @@ export async function GET(
     console.error('[Admin] Error fetching business for review:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

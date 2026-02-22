@@ -1,16 +1,9 @@
-import { NextResponse } from "next/server";
-import { getServerSupabase } from "@/app/lib/supabase/server";
+import { NextRequest, NextResponse } from "next/server";
+import { withUser } from '@/app/api/_lib/withAuth';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
-  const supabase = await getServerSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export const GET = withUser(async (_req: NextRequest, { user, supabase }) => {
   try {
     const { data, error } = await supabase
       .from("user_dealbreakers")
@@ -23,28 +16,14 @@ export async function GET() {
     }
 
     const dealBreakers = data?.map(row => row.dealbreaker_id) || [];
-
-    return NextResponse.json({
-      dealBreakers,
-      count: dealBreakers.length
-    });
+    return NextResponse.json({ dealBreakers, count: dealBreakers.length });
   } catch (error) {
     console.error('Error in GET deal-breakers API:', error);
-    return NextResponse.json(
-      { error: "Failed to fetch deal-breakers" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to fetch deal-breakers" }, { status: 500 });
   }
-}
+});
 
-export async function POST(req: Request) {
-  const supabase = await getServerSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export const POST = withUser(async (req: NextRequest, { user, supabase }) => {
   try {
     const { selections }: { selections: string[] } = await req.json();
 
@@ -52,7 +31,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid payload - selections must be an array" }, { status: 400 });
     }
 
-    // Clean and dedupe selections
     const cleaned = Array.from(
       new Set(
         (selections ?? [])
@@ -61,7 +39,6 @@ export async function POST(req: Request) {
       )
     );
 
-    // Enforce maximum 3 deal-breakers
     const MAX_DEALBREAKERS = 3;
     if (cleaned.length > MAX_DEALBREAKERS) {
       return NextResponse.json(
@@ -70,7 +47,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Validate that all deal-breaker IDs exist in the deal_breakers table
     if (cleaned.length > 0) {
       const { data: known, error: knownErr } = await supabase
         .from('deal_breakers')
@@ -89,7 +65,6 @@ export async function POST(req: Request) {
 
     const validSelections = cleaned;
 
-    // Short-circuit if no changes needed
     const { data: existing } = await supabase
       .from('user_dealbreakers')
       .select('dealbreaker_id')
@@ -100,15 +75,9 @@ export async function POST(req: Request) {
     const same = current.size === next.size && [...current].every(x => next.has(x));
 
     if (same) {
-      return NextResponse.json({
-        ok: true,
-        message: 'No changes needed',
-        selections: validSelections
-      });
+      return NextResponse.json({ ok: true, message: 'No changes needed', selections: validSelections });
     }
 
-    // Use upsert to handle concurrent requests gracefully
-    // First, delete all existing entries for this user
     const { error: deleteError } = await supabase
       .from('user_dealbreakers')
       .delete()
@@ -119,7 +88,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: deleteError.message }, { status: 400 });
     }
 
-    // Then insert new selections using upsert to handle race conditions
     if (validSelections.length > 0) {
       const rows = validSelections.map(dealbreaker_id => ({
         user_id: user.id,
@@ -129,23 +97,16 @@ export async function POST(req: Request) {
 
       const { error: upsertError } = await supabase
         .from('user_dealbreakers')
-        .upsert(rows, {
-          onConflict: 'user_id,dealbreaker_id',
-          ignoreDuplicates: false
-        });
+        .upsert(rows, { onConflict: 'user_id,dealbreaker_id', ignoreDuplicates: false });
 
       if (upsertError) {
         console.error('Error upserting user deal-breakers:', upsertError);
-        // Handle FK violation explicitly
         if (upsertError.code === '23503') {
           return NextResponse.json({ error: 'Invalid deal-breaker id(s).' }, { status: 400 });
         }
         return NextResponse.json({ error: upsertError.message }, { status: 400 });
       }
     }
-
-    // Note: Profile counts are updated by the RPC function replace_user_dealbreakers
-    // This endpoint should not be used for onboarding - use /api/user/onboarding instead
 
     return NextResponse.json({
       ok: true,
@@ -154,9 +115,6 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error('Error in deal-breakers API:', error);
-    return NextResponse.json(
-      { error: "Failed to save deal-breakers" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to save deal-breakers" }, { status: 500 });
   }
-}
+});

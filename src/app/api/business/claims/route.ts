@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSupabase } from "@/app/lib/supabase/server";
+import { withUser } from '@/app/api/_lib/withAuth';
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -169,23 +169,8 @@ async function fetchClaimsWithFallback(supabase: any, userId: string): Promise<{
   return { data: enrichedRows, error: null };
 }
 
-export async function GET(req: NextRequest) {
+export const GET = withUser(async (req: NextRequest, { user, supabase }) => {
   try {
-    const supabase = await getServerSupabase(req);
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError) {
-      console.error("[GET /api/business/claims] auth error:", authError);
-      return json({ success: false, error: "Unauthorized" }, 401);
-    }
-
-    if (!user) {
-      return json({ success: false, error: "Unauthorized" }, 401);
-    }
-
     const { data: claims, error } = await fetchClaimsWithFallback(supabase, user.id);
 
     if (error) {
@@ -234,4 +219,4 @@ export async function GET(req: NextRequest) {
     console.error("[GET /api/business/claims] unexpected error:", error);
     return json({ success: false, error: "Internal server error" }, 500);
   }
-}
+});

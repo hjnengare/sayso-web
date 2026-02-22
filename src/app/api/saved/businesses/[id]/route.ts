@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSupabase } from '../../../../lib/supabase/server';
+import { withUser } from '@/app/api/_lib/withAuth';
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -9,20 +9,9 @@ type RouteContext = {
  * GET /api/saved/businesses/[id]
  * Check if business is saved
  */
-export async function GET(req: NextRequest, { params }: RouteContext) {
+export const GET = withUser(async (_req: NextRequest, { user, supabase, params }) => {
   try {
-    const { id } = await params;
-    const supabase = await getServerSupabase();
-    
-    // Check if user is authenticated
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'You must be logged in to check saved status' },
-        { status: 401 }
-      );
-    }
+    const { id } = await (params as RouteContext['params']);
 
     const { data: saved, error: savedError } = await supabase
       .from('saved_businesses')
@@ -39,40 +28,21 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      isSaved: !!saved,
-      saved: saved || null,
-    });
+    return NextResponse.json({ success: true, isSaved: !!saved, saved: saved || null });
   } catch (error) {
     console.error('Error in GET /api/saved/businesses/[id]:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
 /**
  * DELETE /api/saved/businesses/[id]
  * Remove business from saved list
  */
-export async function DELETE(req: NextRequest, { params }: RouteContext) {
+export const DELETE = withUser(async (_req: NextRequest, { user, supabase, params }) => {
   try {
-    const { id } = await params;
-    const supabase = await getServerSupabase();
-    
-    // Check if user is authenticated
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'You must be logged in to unsave businesses' },
-        { status: 401 }
-      );
-    }
+    const { id } = await (params as RouteContext['params']);
 
-    // Delete the saved business
     const { error: deleteError } = await supabase
       .from('saved_businesses')
       .delete()
@@ -87,17 +57,9 @@ export async function DELETE(req: NextRequest, { params }: RouteContext) {
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      message: 'Business unsaved successfully',
-      isSaved: false,
-    });
+    return NextResponse.json({ success: true, message: 'Business unsaved successfully', isSaved: false });
   } catch (error) {
     console.error('Error in DELETE /api/saved/businesses/[id]:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
-
+});
