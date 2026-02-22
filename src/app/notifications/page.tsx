@@ -344,9 +344,9 @@ export default function NotificationsPage() {
           )}
         </div>
 
-        <Footer />
+        
       </div>
-
+      <Footer />
     </div>
   );
 }
