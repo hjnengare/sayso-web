@@ -84,41 +84,41 @@ export default function AchievementsPage() {
         </div>
 
         {/* Header */}
-        <div className="bg-card-bg px-4 py-8 mb-6 px-2">
-          <div className="max-w-6xl mx-auto">
-            <h1 className="font-urbanist font-900 text-4xl text-charcoal mb-2 flex items-center gap-3">
-              <span className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-off-white" aria-hidden="true">
-                <Trophy className="w-6 h-6 text-navbar-bg" />
+        <div className="relative z-10 bg-navbar-bg px-4 py-8 mb-6">
+          <div className="max-w-6xl mx-auto relative z-10">
+            <h1 className="font-urbanist font-900 text-4xl text-white mb-2 flex items-center gap-3">
+              <span className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-white/15" aria-hidden="true">
+                <Trophy className="w-6 h-6 text-white" />
               </span>
               Your Achievements
             </h1>
-            <p className="font-urbanist text-lg text-charcoal/70 mb-6">
+            <p className="font-urbanist text-lg text-white/70 mb-6">
               Collect badges by exploring and reviewing businesses
             </p>
 
             {/* Stats */}
             {stats && (
               <div className="flex items-center gap-6">
-                <div className="bg-off-white/90 px-6 py-4 border border-sage/20 rounded-xl">
-                  <p className="text-sm text-charcoal/60 mb-1">Badges Earned</p>
-                  <p className="font-urbanist font-800 text-3xl text-sage">
-                    {stats.earned} <span className="text-xl text-charcoal/60">/ {stats.total}</span>
+                <div className="bg-white/10 px-6 py-4 border border-white/20 rounded-xl">
+                  <p className="text-sm text-white/60 mb-1">Badges Earned</p>
+                  <p className="font-urbanist font-800 text-3xl text-white">
+                    {stats.earned} <span className="text-xl text-white/60">/ {stats.total}</span>
                   </p>
                 </div>
 
-                <div className="bg-off-white/90 px-6 py-4 border border-sage/20 rounded-xl">
-                  <p className="text-sm text-charcoal/60 mb-1">Completion</p>
-                  <p className="font-urbanist font-800 text-3xl text-card-bg">
+                <div className="bg-white/10 px-6 py-4 border border-white/20 rounded-xl">
+                  <p className="text-sm text-white/60 mb-1">Completion</p>
+                  <p className="font-urbanist font-800 text-3xl text-white">
                     {stats.percentage}%
                   </p>
                 </div>
 
                 {/* Progress Bar */}
-                <div className="flex-1 bg-off-white/90 px-6 py-4 border border-sage/20 rounded-xl">
-                  <p className="text-sm text-charcoal/60 mb-2">Progress</p>
-                  <div className="w-full bg-charcoal/10 rounded-full h-3 overflow-hidden">
+                <div className="flex-1 bg-white/10 px-6 py-4 border border-white/20 rounded-xl">
+                  <p className="text-sm text-white/60 mb-2">Progress</p>
+                  <div className="w-full bg-white/20 rounded-full h-3 overflow-hidden">
                     <div
-                      className="h-full bg-card-bg transition-all duration-500"
+                      className="h-full bg-white transition-all duration-500"
                       style={{ width: `${stats.percentage}%` }}
                     />
                   </div>
@@ -129,7 +129,7 @@ export default function AchievementsPage() {
         </div>
 
         {/* Badge Grids */}
-        <div className="max-w-6xl mx-auto px-4">
+        <div className="relative z-10 max-w-6xl mx-auto px-4">
           {grouped && (
             <>
               <BadgeGrid
