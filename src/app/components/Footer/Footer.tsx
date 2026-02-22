@@ -115,7 +115,6 @@ export default function Footer() {
       links: [
         { name: "Privacy Policy", href: "/privacy" },
         { name: "Terms of Use", href: "/terms" },
-        { name: "Badge Definitions", href: "/badges" },
       ],
     },
   ];
