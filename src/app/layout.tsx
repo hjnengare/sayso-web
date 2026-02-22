@@ -227,13 +227,13 @@ export default function RootLayout({
                   <BusinessNotifications />
                   <NotificationToasts />
                   <GlobalHeader />
-                  <RealtimeProvider>
-                    <DeferredProviders>
-                      <LazyMotionProvider>
+                  <LazyMotionProvider>
+                    <RealtimeProvider>
+                      <DeferredProviders>
                         {children}
-                      </LazyMotionProvider>
-                    </DeferredProviders>
-                  </RealtimeProvider>
+                      </DeferredProviders>
+                    </RealtimeProvider>
+                  </LazyMotionProvider>
                   <ScrollToTopButton threshold={360} desktopThreshold={100} />
                 </NotificationsProvider>
               </SavedItemsProvider>
