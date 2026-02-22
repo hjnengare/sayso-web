@@ -73,15 +73,15 @@ function Reveal({
 
 // ─── Badge showcase data ─────────────────────────────────────────────────────
 const SHOWCASE_BADGES = [
-  { icon: Star,         label: "First Voice",       desc: "Leave your first review",                color: "from-amber-400/30 via-yellow-300/20 to-orange-300/20", border: "border-amber-300/50",   text: "text-amber-700"   },
-  { icon: Flame,        label: "On Fire",            desc: "7-day review streak",                    color: "from-orange-400/30 via-red-300/20 to-amber-300/15",   border: "border-orange-300/50",  text: "text-orange-700"  },
-  { icon: Trophy,       label: "Top Reviewer",       desc: "50+ helpful votes received",             color: "from-amber-400/30 via-yellow-300/20 to-orange-300/20", border: "border-amber-300/50",   text: "text-amber-700"   },
-  { icon: Compass,      label: "Neighbourhood Pro",  desc: "Reviews in 5+ businesses in one suburb", color: "from-sky-400/25 via-blue-400/15 to-cyan-300/20",       border: "border-sky-300/50",     text: "text-sky-700"     },
-  { icon: Globe,        label: "City Explorer",      desc: "Review 10+ distinct categories",         color: "from-sky-400/25 via-blue-400/15 to-cyan-300/20",       border: "border-sky-300/50",     text: "text-sky-700"     },
-  { icon: Crown,        label: "Local Legend",       desc: "First to review a new business",         color: "from-violet-400/25 via-purple-400/15 to-fuchsia-300/20", border: "border-violet-300/50", text: "text-violet-700" },
-  { icon: ThumbsUp,     label: "Community Pillar",   desc: "100+ helpful votes on your reviews",     color: "from-emerald-400/25 via-teal-300/15 to-green-300/20", border: "border-emerald-300/50", text: "text-emerald-700" },
-  { icon: Camera,       label: "Shutterbug",         desc: "Attach photos to 10+ reviews",           color: "from-violet-400/25 via-purple-400/15 to-fuchsia-300/20", border: "border-violet-300/50", text: "text-violet-700" },
-  { icon: Repeat,       label: "Loyal Reviewer",     desc: "Review the same business 3+ times",      color: "from-emerald-400/25 via-teal-300/15 to-green-300/20", border: "border-emerald-300/50", text: "text-emerald-700" },
+  { icon: Star,         label: "First Voice",       desc: "Leave your first review",                color: "from-amber-400/30 via-yellow-300/20 to-orange-300/20", border: "border-amber-300/50",   text: "text-amber-300"   },
+  { icon: Flame,        label: "On Fire",            desc: "7-day review streak",                    color: "from-orange-400/30 via-red-300/20 to-amber-300/15",   border: "border-orange-300/50",  text: "text-orange-300"  },
+  { icon: Trophy,       label: "Top Reviewer",       desc: "50+ helpful votes received",             color: "from-amber-400/30 via-yellow-300/20 to-orange-300/20", border: "border-amber-300/50",   text: "text-amber-300"   },
+  { icon: Compass,      label: "Neighbourhood Pro",  desc: "Reviews in 5+ businesses in one suburb", color: "from-sky-400/25 via-blue-400/15 to-cyan-300/20",       border: "border-sky-300/50",     text: "text-sky-300"     },
+  { icon: Globe,        label: "City Explorer",      desc: "Review 10+ distinct categories",         color: "from-sky-400/25 via-blue-400/15 to-cyan-300/20",       border: "border-sky-300/50",     text: "text-sky-300"     },
+  { icon: Crown,        label: "Local Legend",       desc: "First to review a new business",         color: "from-violet-400/25 via-purple-400/15 to-fuchsia-300/20", border: "border-violet-300/50", text: "text-violet-300" },
+  { icon: ThumbsUp,     label: "Community Pillar",   desc: "100+ helpful votes on your reviews",     color: "from-emerald-400/25 via-teal-300/15 to-green-300/20", border: "border-emerald-300/50", text: "text-emerald-300" },
+  { icon: Camera,       label: "Shutterbug",         desc: "Attach photos to 10+ reviews",           color: "from-violet-400/25 via-purple-400/15 to-fuchsia-300/20", border: "border-violet-300/50", text: "text-violet-300" },
+  { icon: Repeat,       label: "Loyal Reviewer",     desc: "Review the same business 3+ times",      color: "from-emerald-400/25 via-teal-300/15 to-green-300/20", border: "border-emerald-300/50", text: "text-emerald-300" },
   { icon: Medal,        label: "Hidden Gem Finder",  desc: "Review 5 businesses with <5 reviews",    color: "from-coral/20 via-sage/12 to-coral/10",               border: "border-coral/30",       text: "text-coral"       },
 ];
 
@@ -190,7 +190,7 @@ export default function AboutPage() {
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Link
                 href="/signup"
-                className="inline-flex items-center gap-2 rounded-full bg-navbar-bg px-6 py-3 text-sm font-bold text-white shadow-lg hover:bg-navbar-bg/90 transition-all hover:scale-[1.03] active:scale-95"
+                className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold text-navbar-bg shadow-lg hover:bg-white/90 transition-all hover:scale-[1.03] active:scale-95"
               >
                 Get started <ArrowRight className="w-4 h-4" />
               </Link>
@@ -281,7 +281,7 @@ export default function AboutPage() {
                     style={{ transform: `translateX(${i * 10}px)` }}
                   >
                     <div className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-full bg-gradient-to-br from-sage/25 to-coral/15">
-                      <MapPin className="w-4 h-4 text-navbar-bg" />
+                      <MapPin className="w-4 h-4 text-white/70" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-white truncate">{b.name}</p>
@@ -294,7 +294,7 @@ export default function AboutPage() {
                     </div>
                   </div>
                 ))}
-                <div className="absolute -bottom-3 -right-3 grid h-11 w-11 place-items-center rounded-full bg-navbar-bg shadow-lg">
+                <div className="absolute -bottom-3 -right-3 grid h-11 w-11 place-items-center rounded-full bg-white/15 border border-white/20 shadow-lg">
                   <Compass className="w-5 h-5 text-white" />
                 </div>
               </div>
@@ -320,10 +320,10 @@ export default function AboutPage() {
         {/* Badge group cards */}
         <div className="grid gap-5 sm:grid-cols-2 mb-12">
           {[
-            { icon: Trophy,  group: "Milestone",  color: "from-amber-400/20 to-orange-300/15",      border: "border-amber-300/40",   iconColor: "text-amber-600",   desc: "Hit review counts, streak records, and community vote thresholds. The more you contribute, the more milestones you unlock.",                              delay: 0.05 },
-            { icon: Compass, group: "Explorer",   color: "from-sky-400/20 to-cyan-300/15",          border: "border-sky-300/40",     iconColor: "text-sky-600",     desc: "Venture beyond your usual haunts. Review different suburbs, discover new categories, and become the local who knows every corner of the city.",         delay: 0.10 },
-            { icon: Crown,   group: "Specialist", color: "from-violet-400/20 to-fuchsia-300/15",    border: "border-violet-300/40",  iconColor: "text-violet-600",  desc: "Go deep on what you love. Whether it's coffee, live music, or hidden bookshops — specialists earn recognition for category mastery.",                  delay: 0.15 },
-            { icon: Heart,   group: "Community",  color: "from-emerald-400/20 to-teal-300/15",      border: "border-emerald-300/40", iconColor: "text-emerald-600", desc: "The glue of Sayso. Community badges go to people whose reviews others find genuinely helpful, loyal regulars, and those who show up consistently.",  delay: 0.20 },
+            { icon: Trophy,  group: "Milestone",  color: "from-amber-400/20 to-orange-300/15",      border: "border-amber-300/40",   iconColor: "text-amber-300",   desc: "Hit review counts, streak records, and community vote thresholds. The more you contribute, the more milestones you unlock.",                              delay: 0.05 },
+            { icon: Compass, group: "Explorer",   color: "from-sky-400/20 to-cyan-300/15",          border: "border-sky-300/40",     iconColor: "text-sky-300",     desc: "Venture beyond your usual haunts. Review different suburbs, discover new categories, and become the local who knows every corner of the city.",         delay: 0.10 },
+            { icon: Crown,   group: "Specialist", color: "from-violet-400/20 to-fuchsia-300/15",    border: "border-violet-300/40",  iconColor: "text-violet-300",  desc: "Go deep on what you love. Whether it's coffee, live music, or hidden bookshops — specialists earn recognition for category mastery.",                  delay: 0.15 },
+            { icon: Heart,   group: "Community",  color: "from-emerald-400/20 to-teal-300/15",      border: "border-emerald-300/40", iconColor: "text-emerald-300", desc: "The glue of Sayso. Community badges go to people whose reviews others find genuinely helpful, loyal regulars, and those who show up consistently.",  delay: 0.20 },
           ].map(({ icon: Icon, group, color, border, iconColor, desc, delay }) => (
             <Reveal key={group} delay={delay}>
               <div className={`flex flex-col gap-3 rounded-[16px] bg-gradient-to-br ${color} ${border} border p-6 h-full`}>
@@ -387,14 +387,14 @@ export default function AboutPage() {
                 "Build lasting reputation — not just momentary visibility",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-2.5 text-sm text-white/65">
-                  <BadgeCheck className="w-4 h-4 text-navbar-bg flex-shrink-0 mt-0.5" />
+                  <BadgeCheck className="w-4 h-4 text-white/60 flex-shrink-0 mt-0.5" />
                   {item}
                 </li>
               ))}
             </ul>
             <Link
               href="/claim-business"
-              className="inline-flex items-center gap-2 rounded-full bg-navbar-bg px-6 py-3 text-sm font-bold text-white shadow-lg hover:bg-navbar-bg/90 transition-all hover:scale-[1.02]"
+              className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold text-navbar-bg shadow-lg hover:bg-white/90 transition-all hover:scale-[1.02]"
             >
               Claim your business <ArrowRight className="w-4 h-4" />
             </Link>
