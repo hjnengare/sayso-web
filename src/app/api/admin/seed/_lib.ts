@@ -1,6 +1,3 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSupabase } from '@/app/lib/supabase/server';
-import { getServiceSupabase, isAdmin } from '@/app/lib/admin';
 
 export const VALID_PRICE_RANGES = ['$', '$$', '$$$', '$$$$'] as const;
 export const VALID_STATUSES = ['active', 'inactive', 'pending', 'pending_approval', 'rejected'] as const;
@@ -100,10 +97,6 @@ export type CanonicalSlugRecord = {
   primaryCategorySlug: string | null;
 };
 
-export type AdminContext = {
-  service: any;
-  userId: string;
-};
 
 const COLUMN_ALIASES: Record<string, string[]> = {
   name: ['name'],
@@ -727,38 +720,4 @@ export function getDatabaseErrorMessage(error: any): string {
   }
 
   return message;
-}
-
-export async function requireAdminContext(req: NextRequest): Promise<
-  | { ok: true; context: AdminContext }
-  | { ok: false; response: NextResponse }
-> {
-  const supabase = await getServerSupabase(req);
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    return {
-      ok: false,
-      response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }),
-    };
-  }
-
-  const admin = await isAdmin(user.id);
-  if (!admin) {
-    return {
-      ok: false,
-      response: NextResponse.json({ error: 'Admin only' }, { status: 403 }),
-    };
-  }
-
-  return {
-    ok: true,
-    context: {
-      service: getServiceSupabase(),
-      userId: user.id,
-    },
-  };
 }

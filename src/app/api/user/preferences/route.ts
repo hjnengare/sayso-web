@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSupabase } from "@/app/lib/supabase/server";
-import { withUser } from '@/app/api/_lib/withAuth';
+import { withUser, withOptionalUser } from '@/app/api/_lib/withAuth';
 import {
   getUserProfile,
   updateLastActive,
@@ -14,31 +13,15 @@ export const dynamic = 'force-dynamic';
  * Fetches the current user's interests, subcategories, and deal-breakers
  * Returns empty arrays if tables don't exist or user has no preferences
  */
-export async function GET() {
+export const GET = withOptionalUser(async (_req: NextRequest, { user, supabase }) => {
   try {
-    const supabase = await getServerSupabase();
-
-    // Get the current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      console.log('[Preferences API] No authenticated user');
+    if (!user) {
       return NextResponse.json(
-        {
-          interests: [],
-          subcategories: [],
-          dealbreakers: [],
-        },
+        { interests: [], subcategories: [], dealbreakers: [] },
         { status: 200 }
       );
     }
 
-    console.log('[Preferences API] Fetching preferences for user:', user.id);
-
-    // Fetch all preference types in parallel for speed
     const [interestsResult, subcategoriesResult, dealbreakersResult] = await Promise.all([
       supabase.from('user_interests').select('interest_id').eq('user_id', user.id),
       supabase.from('user_subcategories').select('subcategory_id').eq('user_id', user.id),
@@ -49,57 +32,31 @@ export async function GET() {
     const { data: subcategoriesData, error: subcategoriesError } = subcategoriesResult;
     const { data: dealbreakersData, error: dealbreakersError } = dealbreakersResult;
 
-    if (interestsError) {
-      console.warn('[Preferences API] Warning fetching interests:', interestsError.message);
-    }
-    if (subcategoriesError) {
-      console.warn('[Preferences API] Warning fetching subcategories:', subcategoriesError.message);
-    }
-    if (dealbreakersError) {
-      console.warn('[Preferences API] Warning fetching dealbreakers:', dealbreakersError.message);
-    }
+    if (interestsError) console.warn('[Preferences API] Warning fetching interests:', interestsError.message);
+    if (subcategoriesError) console.warn('[Preferences API] Warning fetching subcategories:', subcategoriesError.message);
+    if (dealbreakersError) console.warn('[Preferences API] Warning fetching dealbreakers:', dealbreakersError.message);
 
     const interestIds = interestsData ? interestsData.map(i => i.interest_id) : [];
     const subcategoryIds = subcategoriesData ? subcategoriesData.map(s => s.subcategory_id) : [];
     const dealbreakersIds = dealbreakersData ? dealbreakersData.map(d => d.dealbreaker_id) : [];
 
-    // Return preferences as IDs only - catalog tables don't exist
-    // The frontend can map IDs to names using hardcoded lists if needed
-    // This prevents errors from querying non-existent tables
-    const interestDetails = interestIds.map(id => ({ id, name: id })); // Use ID as name fallback
-    const subcategoryDetails = subcategoryIds.map(id => ({ id, name: id })); // Use ID as name fallback
-    const dealbreakersDetails = dealbreakersIds.map(id => ({ id, name: id })); // Use ID as name fallback
-    
-    console.log('[Preferences API] Returning preferences as IDs:', {
-      interests: interestDetails.length,
-      subcategories: subcategoryDetails.length,
-      dealbreakers: dealbreakersDetails.length,
-    });
-
-    console.log('[Preferences API] Successfully fetched preferences:', {
-      interests: interestDetails.length,
-      subcategories: subcategoryDetails.length,
-      dealbreakers: dealbreakersDetails.length,
-    });
+    const interestDetails = interestIds.map(id => ({ id, name: id }));
+    const subcategoryDetails = subcategoryIds.map(id => ({ id, name: id }));
+    const dealbreakersDetails = dealbreakersIds.map(id => ({ id, name: id }));
 
     return NextResponse.json({
-      interests: interestDetails || [],
-      subcategories: subcategoryDetails || [],
-      dealbreakers: dealbreakersDetails || [],
+      interests: interestDetails,
+      subcategories: subcategoryDetails,
+      dealbreakers: dealbreakersDetails,
     });
   } catch (error: any) {
     console.error('[Preferences API] Unexpected error:', error);
-    // Return empty preferences instead of error to prevent UI breaking
     return NextResponse.json(
-      {
-        interests: [],
-        subcategories: [],
-        dealbreakers: [],
-      },
+      { interests: [], subcategories: [], dealbreakers: [] },
       { status: 200 }
     );
   }
-}
+});
 
 /**
  * PUT /api/user/preferences

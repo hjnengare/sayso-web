@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
-import { getServerSupabase } from '../../../lib/supabase/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { withUser } from '@/app/api/_lib/withAuth';
 
 /**
  * POST /api/badges/check-and-award
@@ -11,15 +11,8 @@ import { getServerSupabase } from '../../../lib/supabase/server';
  * - Helpful vote received
  * - Daily cron (for streaks)
  */
-export async function POST(req: Request) {
+export const POST = withUser(async (_req: NextRequest, { user, supabase }) => {
   try {
-    const supabase = await getServerSupabase(req);
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     // Call check_user_badges RPC which checks all badges and awards new ones
     // Returns a table of newly awarded badges (awarded_badge_id, badge_name)
     const { data: awardedBadges, error: checkError } = await supabase.rpc(
@@ -107,4 +100,4 @@ export async function POST(req: Request) {
       { status: 500 }
     );
   }
-}
+});

@@ -1,6 +1,5 @@
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { withUser } from '@/app/api/_lib/withAuth';
 
 type NormalizedRole = 'admin' | 'business_owner' | 'user';
 
@@ -28,38 +27,8 @@ function normalizeRole(value: string | null | undefined): NormalizedRole | null 
  * This is a fallback for cases where the profile was created with default 'user' role
  * but the user actually registered as a business_owner
  */
-export async function POST() {
+export const POST = withUser(async (_req: NextRequest, { user, supabase }) => {
   try {
-    const cookieStore = await cookies();
-
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value;
-          },
-          set(name: string, value: string, options: Record<string, unknown>) {
-            cookieStore.set({ name, value, ...options });
-          },
-          remove(name: string, options: Record<string, unknown>) {
-            cookieStore.set({ name, value: '', ...options });
-          },
-        },
-      }
-    );
-
-    // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized', synced: false },
-        { status: 401 }
-      );
-    }
-
     // Get account_type/role from user metadata
     let userMetadataAccountType = normalizeRole(
       (user.user_metadata?.account_type as string | undefined) ||
@@ -164,5 +133,4 @@ export async function POST() {
       { status: 500 }
     );
   }
-}
-
+});

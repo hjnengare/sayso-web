@@ -3,7 +3,7 @@
 import nextDynamic from "next/dynamic";
 import Link from "next/link";
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { useSavedBusinessesFull } from "../hooks/useSavedBusinessesFull";
+import { useSavedBusinesses } from "../hooks/useSavedBusinessesFull";
 import { AnimatePresence, m } from "framer-motion";
 import { ChevronRight, ChevronLeft, ChevronUp, Store } from "lucide-react";
 import Pagination from "../components/EventsPage/Pagination";
@@ -28,7 +28,7 @@ export default function SavedPage() {
   const { savedItems, isLoading: savedItemsLoading, refetch: refetchBusinesses } = useSavedItems();
 
   // SWR-backed saved businesses list
-  const { businesses: savedBusinesses, loading: isLoadingBusinesses, error } = useSavedBusinessesFull();
+  const { businesses: savedBusinesses, loading: isLoadingBusinesses, error } = useSavedBusinesses();
 
   const [currentPage, setCurrentPage] = useState(1);
   const [showScrollTop, setShowScrollTop] = useState(false);

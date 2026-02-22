@@ -25,7 +25,7 @@ async function fetchSavedBusinesses([,,]: [string, string, string]): Promise<any
   return Array.isArray(data.businesses) ? data.businesses : [];
 }
 
-export function useSavedBusinessesDetails() {
+export function useSavedBusinessesPreview() {
   const { user, isLoading: authLoading } = useAuth();
   const { savedItems } = useSavedItems();
 

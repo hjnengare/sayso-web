@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { getServerSupabase } from '@/app/lib/supabase/server';
+import { withUser } from '@/app/api/_lib/withAuth';
 import { getServiceSupabase } from '@/app/lib/admin';
 import { EmailService } from '@/app/lib/services/emailService';
 import { createClaimNotification, updateClaimLastNotified } from '@/app/lib/claimNotifications';
@@ -13,14 +13,8 @@ const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 const BUCKET = 'business-verification';
 const DOC_TYPES = ['letterhead_authorization', 'lease_first_page'] as const;
 
-export async function POST(req: NextRequest) {
+export const POST = withUser(async (req: NextRequest, { user }) => {
   try {
-    const supabase = await getServerSupabase(req);
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const formData = await req.formData().catch(() => null);
     if (!formData) {
       return NextResponse.json({ error: 'Invalid form data' }, { status: 400 });
@@ -169,4 +163,4 @@ export async function POST(req: NextRequest) {
     console.error('Doc upload error:', err);
     return NextResponse.json({ error: 'Something went wrong' }, { status: 500 });
   }
-}
+});
