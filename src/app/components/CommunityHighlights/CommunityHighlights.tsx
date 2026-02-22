@@ -11,7 +11,7 @@ import { ArrowRight } from "lucide-react";
 import ReviewerCard from "../ReviewerCard/ReviewerCard";
 import BusinessOfTheMonthCard from "../BusinessCard/BusinessOfTheMonthCard";
 import ScrollableSection from "../ScrollableSection/ScrollableSection";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import LocationPromptBanner from "../Location/LocationPromptBanner";
 import CommunityHighlightsSkeleton from "./CommunityHighlightsSkeleton";
 import { useIsDesktop } from "../../hooks/useIsDesktop";
@@ -158,7 +158,7 @@ export default function CommunityHighlights({
               {title}
             </h2>
           ) : (
-            <motion.h2
+            <m.h2
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
@@ -170,7 +170,7 @@ export default function CommunityHighlights({
               }}
             >
               {title}
-            </motion.h2>
+            </m.h2>
           )}
         </div>
 
@@ -424,7 +424,7 @@ export default function CommunityHighlights({
                       ))}
                     </div>
                   ) : (
-                    <motion.div
+                    <m.div
                       variants={containerVariants}
                       initial="hidden"
                       whileInView="visible"
@@ -432,7 +432,7 @@ export default function CommunityHighlights({
                       className="flex gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2 items-stretch pt-2 list-none"
                     >
                       {(Array.isArray(businessesOfTheMonth) ? businessesOfTheMonth : []).map((business, index) => (
-                        <motion.div
+                        <m.div
                           key={business.id}
                           variants={itemVariants}
                           className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto sm:min-w-[25%] md:min-w-[25%] lg:min-w-[20%] xl:min-w-[18%] 2xl:min-w-[16%] list-none flex justify-center business-month-card-full-width"
@@ -441,9 +441,9 @@ export default function CommunityHighlights({
                             business={business}
                             index={index}
                           />
-                        </motion.div>
+                        </m.div>
                       ))}
-                    </motion.div>
+                    </m.div>
                   )
                 ) : (
                   <div className="flex gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2 items-stretch pt-2 list-none">

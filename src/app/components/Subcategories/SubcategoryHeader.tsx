@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import WavyTypedTitle from "@/app/components/Animations/WavyTypedTitle";
 
 const headerVariants = {
@@ -26,7 +26,7 @@ export default function SubcategoryHeader() {
   } as React.CSSProperties;
 
   return (
-    <motion.div
+    <m.div
       className="text-center mb-6 pt-4 sm:pt-6 title-no-break"
       variants={headerVariants}
       initial="hidden"
@@ -53,6 +53,6 @@ export default function SubcategoryHeader() {
       >
         Select specific areas within your interests
       </p>
-    </motion.div>
+    </m.div>
   );
 }

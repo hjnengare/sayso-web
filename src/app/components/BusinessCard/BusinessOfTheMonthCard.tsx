@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Image as ImageIcon, Star, Edit, Bookmark, Share2 } from "lucide-react";
 import { Scissors, Coffee, UtensilsCrossed, Wine, Dumbbell, Activity, Heart, Book, ShoppingBag, Home, Briefcase, MapPin, Music, Film, Camera, Car, GraduationCap, CreditCard, Tag } from "lucide-react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, m, useReducedMotion } from "framer-motion";
 
 // Tiny 4x3 SVG matching the card error-state bg (#E5E0E5) — instant visual fill while image loads
 const BLUR_DATA_URL =
@@ -437,7 +437,7 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
             <div className="absolute left-3 bottom-3 z-20 w-[calc(100%-1.5rem)] max-w-[230px] sm:max-w-[250px]">
               <div className="relative h-[30px] overflow-hidden rounded-full bg-off-white/90 backdrop-blur-[2px] shadow-[0_2px_8px_rgba(0,0,0,0.12)]">
                 <AnimatePresence mode="wait" initial={false}>
-                  <motion.div
+                  <m.div
                     key={activeOverlayBadge.key}
                     initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 6 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -456,7 +456,7 @@ export default function BusinessOfTheMonthCard({ business, index = 0 }: { busine
                     >
                       {activeOverlayBadge.label}
                     </span>
-                  </motion.div>
+                  </m.div>
                 </AnimatePresence>
               </div>
             </div>

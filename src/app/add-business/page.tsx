@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { ChevronRight, ChevronLeft, AlertCircle } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { useToast } from "../contexts/ToastContext";
 import { useAuth } from "../contexts/AuthContext";
 import { PageLoader } from "../components/Loader";
@@ -777,7 +777,7 @@ export default function AddBusinessPage() {
 
                                 <div className="max-w-4xl mx-auto pt-8 pb-8">
                                     {/* Page Header */}
-                                    <motion.div
+                                    <m.div
                                         className="text-center mb-8"
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
@@ -791,15 +791,15 @@ export default function AddBusinessPage() {
                                                 Create Business Profile
                                             </h1>
                                         </div>
-                                        <motion.p
+                                        <m.p
                                             className="text-sm sm:text-base text-charcoal/70 font-urbanist max-w-md mx-auto"
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
                                             transition={{ delay: 0.3, duration: 0.4 }}
                                         >
                                             Connect with customers and grow your presence
-                                        </motion.p>
-                                    </motion.div>
+                                        </m.p>
+                                    </m.div>
 
                                     {/* Screen reader announcements */}
                                     <div
@@ -860,7 +860,7 @@ export default function AddBusinessPage() {
                                         />
 
                                         {/* Ownership Pricing Disclaimer */}
-                                        <motion.div
+                                        <m.div
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
@@ -887,10 +887,10 @@ export default function AddBusinessPage() {
                                                     </p>
                                                 </div>
                                             </div>
-                                        </motion.div>
+                                        </m.div>
 
                                         {/* Submit Button */}
-                                        <motion.div
+                                        <m.div
                                             className="flex flex-col sm:flex-row gap-4 justify-end pt-4"
                                             initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
@@ -902,7 +902,7 @@ export default function AddBusinessPage() {
                                             >
                                                 Cancel
                                             </Link>
-                                            <motion.button
+                                            <m.button
                                                 type="submit"
                                                 disabled={isSubmitting || nameDuplicateCheck.checking || nameDuplicateCheck.available === false}
                                                 whileHover={{ scale: isSubmitting ? 1 : 1.02 }}
@@ -912,16 +912,16 @@ export default function AddBusinessPage() {
                                             >
                                                 <AnimatePresence mode="wait">
                                                     {isSubmitting ? (
-                                                        <motion.div
+                                                        <m.div
                                                             key="loading"
                                                             initial={{ opacity: 0, scale: 0.8 }}
                                                             animate={{ opacity: 1, scale: 1 }}
                                                             exit={{ opacity: 0, scale: 0.8 }}
                                                             className="flex items-center gap-2"
                                                         >
-                                                            <motion.div className="flex items-center gap-1">
+                                                            <m.div className="flex items-center gap-1">
                                                                 {[0, 1, 2, 3].map((i) => (
-                                                                    <motion.div
+                                                                    <m.div
                                                                         key={i}
                                                                         className="w-2 h-2 bg-white rounded-full"
                                                                         animate={{
@@ -936,11 +936,11 @@ export default function AddBusinessPage() {
                                                                         }}
                                                                     />
                                                                 ))}
-                                                            </motion.div>
+                                                            </m.div>
                                                             <span>Creating...</span>
-                                                        </motion.div>
+                                                        </m.div>
                                                     ) : (
-                                                        <motion.div
+                                                        <m.div
                                                             key="default"
                                                             initial={{ opacity: 0, scale: 0.8 }}
                                                             animate={{ opacity: 1, scale: 1 }}
@@ -948,11 +948,11 @@ export default function AddBusinessPage() {
                                                             className="flex items-center gap-2"
                                                         >
                                                             <span>Create Business Profile</span>
-                                                        </motion.div>
+                                                        </m.div>
                                                     )}
                                                 </AnimatePresence>
-                                            </motion.button>
-                                        </motion.div>
+                                            </m.button>
+                                        </m.div>
                                     </form>
                                 </div>
                             </div>

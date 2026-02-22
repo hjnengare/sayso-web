@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useMotionValue, useSpring } from "framer-motion";
+import { m, useMotionValue, useSpring } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
@@ -73,18 +73,18 @@ export default function ScrollHint() {
   }, [showArrow, y]);
 
   return (
-    <motion.div
+    <m.div
       className="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 hidden lg:flex items-center justify-center pointer-events-none"
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: showArrow ? 1 : 0, y: showArrow ? 0 : 10 }}
       transition={{ delay: 0.15, duration: 0.35, ease: "easeOut" }}
     >
-      <motion.div
+      <m.div
         style={{ y: springY }}
         className="w-10 h-10 rounded-full bg-navbar-bg/80 backdrop-blur-sm border border-white/20 flex items-center justify-center shadow-lg"
       >
         <ChevronDown className="w-5 h-5 text-white" strokeWidth={2.5} />
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }

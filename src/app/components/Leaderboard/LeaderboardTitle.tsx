@@ -1,11 +1,11 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Trophy } from "lucide-react";
 
 export default function LeaderboardTitle() {
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 100, damping: 15, delay: 0.15 }}
@@ -20,6 +20,6 @@ export default function LeaderboardTitle() {
       <p className="font-urbanist text-charcoal/70 text-caption sm:text-body-sm max-w-md mx-auto px-2">
         Celebrating our community&apos;s most valued reviewers and featured businesses
       </p>
-    </motion.div>
+    </m.div>
   );
 }

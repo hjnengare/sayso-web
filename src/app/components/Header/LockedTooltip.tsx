@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 
 interface LockedTooltipProps {
   show: boolean;
@@ -9,7 +9,7 @@ export default function LockedTooltip({ show, label }: LockedTooltipProps) {
   return (
     <AnimatePresence>
       {show && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 4, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 2, scale: 0.98 }}
@@ -19,7 +19,7 @@ export default function LockedTooltip({ show, label }: LockedTooltipProps) {
         >
           Sign in to {label}
           <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-card-bg rotate-45 border-l border-t border-sage/20" />
-        </motion.div>
+        </m.div>
       )}
     </AnimatePresence>
   );

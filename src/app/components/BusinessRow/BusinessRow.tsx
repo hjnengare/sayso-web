@@ -4,7 +4,7 @@
 import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import BusinessCard, { Business } from "../BusinessCard/BusinessCard";
 import ScrollableSection from "../ScrollableSection/ScrollableSection";
 import LocationPromptBanner from "../Location/LocationPromptBanner";
@@ -122,7 +122,7 @@ export default function BusinessRow({
               {title}
             </h2>
           ) : (
-            <motion.h2
+            <m.h2
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
@@ -134,7 +134,7 @@ export default function BusinessRow({
               }}
             >
               {title}
-            </motion.h2>
+            </m.h2>
           )}
 
           <button
@@ -175,7 +175,7 @@ export default function BusinessRow({
                 ))}
               </div>
             ) : (
-              <motion.div
+              <m.div
                 variants={containerVariants}
                 initial="hidden"
                 whileInView="visible"
@@ -183,15 +183,15 @@ export default function BusinessRow({
                 className="flex gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2 items-stretch pt-2"
               >
                 {businesses.map((business, index) => (
-                  <motion.div
+                  <m.div
                     key={business.id}
                     variants={itemVariants}
                     className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto min-w-[clamp(200px,16vw,300px)] list-none flex justify-center business-card-full-width"
                   >
                     <BusinessCard business={business} index={index} />
-                  </motion.div>
+                  </m.div>
                 ))}
-              </motion.div>
+              </m.div>
             )
           ) : (
             <div className="flex gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2 items-stretch pt-2">

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { getBadgeMapping, getBadgeLucideIcon } from "../../lib/badgeMappings";
 import { Award } from "lucide-react";
 
@@ -59,7 +59,7 @@ export default function BadgePill({
   const style = GROUP_STYLES[group] || DEFAULT_STYLE;
 
   return (
-    <motion.div
+    <m.div
       className={`
         inline-flex items-center rounded-full
         bg-gradient-to-r ${style.bg}
@@ -85,6 +85,6 @@ export default function BadgePill({
       <span className={`font-urbanist font-700 ${style.text} whitespace-nowrap leading-tight`}>
         {badge.name}
       </span>
-    </motion.div>
+    </m.div>
   );
 }

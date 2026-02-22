@@ -2,7 +2,7 @@
 "use client";
 
 import { Phone, Globe, MapPin } from "lucide-react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 
 interface SpecialContactInfoProps {
     phone?: string | null;
@@ -25,7 +25,7 @@ export default function SpecialContactInfo({
     }
 
     return (
-        <motion.div
+        <m.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.6, duration: 0.6 }}
@@ -100,6 +100,6 @@ export default function SpecialContactInfo({
                     </div>
                 )}
             </div>
-        </motion.div>
+        </m.div>
     );
 }

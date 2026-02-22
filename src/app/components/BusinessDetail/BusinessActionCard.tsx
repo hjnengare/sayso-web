@@ -1,7 +1,7 @@
 // src/components/BusinessDetail/BusinessActionCard.tsx
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Facebook, Instagram, Twitter, MessageSquare } from "lucide-react";
 import Link from "next/link";
 
@@ -15,7 +15,7 @@ interface BusinessActionCardProps {
 
 export default function BusinessActionCard({ businessSlug, businessId, isBusinessOwner = false, hasReviewed = false, ownerId }: BusinessActionCardProps) {
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.5, duration: 0.6 }}
@@ -59,7 +59,7 @@ export default function BusinessActionCard({ businessSlug, businessId, isBusines
             </Link>
           )}
         </div>
-    </motion.div>
+    </m.div>
   );
 }
 

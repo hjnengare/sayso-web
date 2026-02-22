@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, HTMLMotionProps } from "framer-motion";
+import { m, HTMLMotionProps } from "framer-motion";
 import { ReactNode } from "react";
 
 interface PremiumHoverProps extends Omit<HTMLMotionProps<"div">, "children"> {
@@ -27,7 +27,7 @@ export default function PremiumHover({
   };
 
   return (
-    <motion.div
+    <m.div
       whileHover={{
         scale,
         rotateZ,
@@ -46,6 +46,6 @@ export default function PremiumHover({
       {...props}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }

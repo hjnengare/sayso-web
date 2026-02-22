@@ -2,7 +2,7 @@
 
 import { useOnboarding } from "../../contexts/OnboardingContext";
 import { useEffect, useState, useRef } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { m, useReducedMotion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface CategoryFilterPillsProps {
@@ -104,7 +104,7 @@ export default function CategoryFilterPills({
     <div className="relative">
       {/* Left Scroll Indicator - Hidden on mobile */}
       {showLeftScroll && !isMobile && (
-        <motion.button
+        <m.button
           onClick={scrollLeft}
           className="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 items-center justify-center bg-navbar-bg rounded-full shadow-md hover:shadow-lg transition-all"
           aria-label="Scroll left"
@@ -112,12 +112,12 @@ export default function CategoryFilterPills({
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         >
           <ChevronLeft className="w-5 h-5 text-white" strokeWidth={2.5} />
-        </motion.button>
+        </m.button>
       )}
 
       {/* Right Scroll Indicator - Hidden on mobile */}
       {showRightScroll && !isMobile && (
-        <motion.button
+        <m.button
           onClick={scrollRight}
           className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 items-center justify-center bg-navbar-bg rounded-full shadow-md hover:shadow-lg transition-all"
           aria-label="Scroll right"
@@ -125,7 +125,7 @@ export default function CategoryFilterPills({
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         >
           <ChevronRight className="w-5 h-5 text-white" strokeWidth={2.5} />
-        </motion.button>
+        </m.button>
       )}
 
       <div
@@ -161,7 +161,7 @@ export default function CategoryFilterPills({
             : { opacity: 1, y: 0, scale: 1 };
           
           return (
-            <motion.button
+            <m.button
               key={interest.id}
               onClick={() => onToggleCategory(interest.id)}
               className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-urbanist font-600 text-body-sm sm:text-body transition-all duration-200 active:scale-95 flex-shrink-0 whitespace-nowrap relative ${
@@ -186,7 +186,7 @@ export default function CategoryFilterPills({
               {isPreferred && !isActive && (
                 <span className="absolute -top-1 -right-1 w-2 h-2 bg-card-bg rounded-full border border-white" />
               )}
-            </motion.button>
+            </m.button>
           );
         })}
         </div>

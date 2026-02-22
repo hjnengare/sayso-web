@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { CheckCircle, AlertTriangle, Info, X } from 'lucide-react';
 
 interface Toast {
@@ -20,7 +20,7 @@ interface AnimatedToastProps {
 
 export default function AnimatedToast({ toast, onRemove, getToastStyles, getToastIcon }: AnimatedToastProps) {
   return (
-    <motion.div
+    <m.div
       key={toast.id}
       initial={{ opacity: 0, x: 300, scale: 0.9 }}
       animate={{ opacity: 1, x: 0, scale: 1 }}
@@ -53,6 +53,6 @@ export default function AnimatedToast({ toast, onRemove, getToastStyles, getToas
           <X className="w-5 h-5" />
         </button>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

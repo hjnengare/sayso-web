@@ -1,7 +1,7 @@
 "use client";
 
 import { memo } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { CheckCircle } from "lucide-react";
 
 interface Interest {
@@ -111,7 +111,7 @@ function InterestButton({
   };
 
   return (
-    <motion.button
+    <m.button
       data-interest-id={interest.id}
       onClick={() => onToggle(interest.id)}
       disabled={isDisabled}
@@ -159,17 +159,17 @@ function InterestButton({
           {typeof interest.name === 'string' ? interest.name : String(interest.name || interest.id)}
         </span>
         {isSelected && (
-          <motion.div
+          <m.div
             className="absolute top-2 right-2"
             variants={checkIconVariants}
             initial="hidden"
             animate="visible"
           >
             <CheckCircle className="w-5 h-5 text-sage" aria-hidden="true" />
-          </motion.div>
+          </m.div>
         )}
       </div>
-    </motion.button>
+    </m.button>
   );
 }
 

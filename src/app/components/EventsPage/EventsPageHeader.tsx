@@ -1,7 +1,7 @@
 // src/components/EventsPage/EventsPageHeader.tsx
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 
@@ -20,7 +20,7 @@ export default function EventsPageHeader({
 }: EventsPageHeaderProps) {
   return (
     <>
-      <motion.header
+      <m.header
         initial={{ y: -80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: "spring", stiffness: 80, damping: 20, mass: 1 }}
@@ -37,7 +37,7 @@ export default function EventsPageHeader({
                    size={22}
                  />
                </div>
-              <motion.h3
+              <m.h3
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.3, duration: 0.6 }}
@@ -45,11 +45,11 @@ export default function EventsPageHeader({
                 style={sf}
               >
                 {title}
-              </motion.h3>
+              </m.h3>
             </Link>
           </div>
         </div>
-      </motion.header>
+      </m.header>
     </>
   );
 }

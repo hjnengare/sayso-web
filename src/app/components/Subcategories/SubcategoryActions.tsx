@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import OnboardingButton from "../Onboarding/OnboardingButton";
 
 interface SubcategoryActionsProps {
@@ -35,7 +35,7 @@ export default function SubcategoryActions({
   onContinue
 }: SubcategoryActionsProps) {
   return (
-    <motion.div
+    <m.div
       className="pt-6"
       variants={actionsVariants}
       initial="hidden"
@@ -49,6 +49,6 @@ export default function SubcategoryActions({
         onClick={onContinue}
         variant="continue"
       />
-    </motion.div>
+    </m.div>
   );
 }

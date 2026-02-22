@@ -4,7 +4,7 @@
 import { useCallback, useEffect, useState, useRef, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Bell, Settings, Bookmark, Search, X, Lock, Shield, FileCheck, Database, LogOut } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import Logo from "../Logo/Logo";
 import OptimizedLink from "../Navigation/OptimizedLink";
 import DesktopNav from "./DesktopNav";
@@ -439,7 +439,7 @@ export default function Header({
     return (
       <AnimatePresence>
         {show && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 8, scale: 0.99 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.99 }}
@@ -501,7 +501,7 @@ export default function Header({
                 })
               )}
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     );
@@ -552,7 +552,7 @@ export default function Header({
       className="relative h-10 flex justify-end shrink-0"
       style={{ width: expandedWidth }}
     >
-      <motion.form
+      <m.form
         onSubmit={handleSearchSubmit}
         initial={false}
         animate={{ width: isDesktopSearchExpanded ? expandedWidth : 44 }}
@@ -576,7 +576,7 @@ export default function Header({
           {/* Expanded input */}
           <AnimatePresence initial={false}>
             {isDesktopSearchExpanded && (
-              <motion.div
+              <m.div
                 key="desktop-search-expanded"
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -635,17 +635,17 @@ export default function Header({
                 />
 
                 {renderSuggestionsDropdown("desktop", expandedWidth)}
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
         </div>
-      </motion.form>
+      </m.form>
     </div>
   );
 
   // Mobile search input (expandable with sleek animation)
   const renderMobileSearchInput = () => (
-    <motion.div
+    <m.div
       key="mobile-search-overlay"
       className="absolute inset-x-0 top-0 bottom-0 flex items-center justify-center px-4 z-20"
       initial={{ opacity: 0 }}
@@ -653,7 +653,7 @@ export default function Header({
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
     >
-      <motion.form
+      <m.form
         initial={{ width: "36px", opacity: 0, borderRadius: "50%" }}
         animate={{
           width: "92%",
@@ -674,7 +674,7 @@ export default function Header({
         className="relative origin-right"
         style={{ transformOrigin: "right center" }}
       >
-        <motion.div
+        <m.div
           ref={mobileSearchWrapRef}
           className="relative"
           initial={{ opacity: 0 }}
@@ -683,7 +683,7 @@ export default function Header({
           transition={{ delay: 0.18, duration: 0.2, ease: "easeOut" }}
         >
           {/* Search icon on left */}
-          <motion.div
+          <m.div
             className="absolute inset-y-0 left-4 flex items-center pointer-events-none z-10"
             initial={{ opacity: 0, x: 8 }}
             animate={{ opacity: 1, x: 0 }}
@@ -691,10 +691,10 @@ export default function Header({
             transition={{ delay: 0.22, duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
           >
             <Search className="w-5 h-5 text-charcoal/50" strokeWidth={2} />
-          </motion.div>
+          </m.div>
 
           {/* Clear/Close button on right */}
-          <motion.div
+          <m.div
             className="absolute inset-y-0 right-2 flex items-center z-10"
             initial={{ opacity: 0, rotate: -90, scale: 0 }}
             animate={{ opacity: 1, rotate: 0, scale: 1 }}
@@ -715,7 +715,7 @@ export default function Header({
             >
               <X className="w-5 h-5" strokeWidth={2} />
             </button>
-          </motion.div>
+          </m.div>
 
           <input
             ref={mobileInputRef}
@@ -739,9 +739,9 @@ export default function Header({
           />
 
           {renderSuggestionsDropdown("mobile")}
-        </motion.div>
-      </motion.form>
-    </motion.div>
+        </m.div>
+      </m.form>
+    </m.div>
   );
 
   const currentPaddingClass = heroMode ? "py-0" : reducedPadding ? "py-1" : "py-4";
@@ -920,7 +920,7 @@ export default function Header({
                 {/* Logo - always visible when search is closed */}
                 <AnimatePresence mode="wait">
                   {!isMobileSearchOpen && (
-                    <motion.div
+                    <m.div
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -10 }}
@@ -934,7 +934,7 @@ export default function Header({
                           className={`transition-all duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${logoScaleClass}`}
                         />
                       </OptimizedLink>
-                    </motion.div>
+                    </m.div>
                   )}
                 </AnimatePresence>
 
@@ -1149,7 +1149,7 @@ export default function Header({
       {!effectiveIsAdminUser && (
         <AnimatePresence>
           {isMobileSearchOpen && isSuggestionsOpen && (
-            <motion.div
+            <m.div
               key="search-backdrop"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

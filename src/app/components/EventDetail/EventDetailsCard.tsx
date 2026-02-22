@@ -1,7 +1,7 @@
 // src/components/EventDetail/EventDetailsCard.tsx
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Calendar, Clock, Users } from "lucide-react";
 import type { Event } from "../../lib/types/Event";
 
@@ -11,7 +11,7 @@ interface EventDetailsCardProps {
 
 export default function EventDetailsCard({ event }: EventDetailsCardProps) {
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3, duration: 0.6 }}
@@ -125,6 +125,6 @@ export default function EventDetailsCard({ event }: EventDetailsCardProps) {
         )}
       </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

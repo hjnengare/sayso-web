@@ -3,7 +3,7 @@
 
 import Image from "next/image";
 import { Star, Heart, Percent } from "lucide-react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 
 interface SpecialHeroImageProps {
     special: {
@@ -21,7 +21,7 @@ export default function SpecialHeroImage({ special, isLiked = false, onLike }: S
     const imageSrc = special.image || "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=1920&h=1080&fit=crop&crop=center&q=90";
 
     return (
-        <motion.div
+        <m.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6 }}
@@ -74,6 +74,6 @@ export default function SpecialHeroImage({ special, isLiked = false, onLike }: S
                     <Heart className={`mx-auto w-5 h-5 ${isLiked ? "fill-current" : ""}`} />
                 </button>
             )}
-        </motion.div>
+        </m.div>
     );
 }

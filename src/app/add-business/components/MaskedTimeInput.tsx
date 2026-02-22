@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 
 interface MaskedTimeInputProps {
     value: string;
@@ -82,7 +82,7 @@ const MaskedTimeInput: React.FC<MaskedTimeInputProps> = ({
     }, [value, isFocused]);
 
     return (
-        <motion.div
+        <m.div
             className="relative flex-1"
             whileFocus={{ scale: 1.01 }}
         >
@@ -102,15 +102,15 @@ const MaskedTimeInput: React.FC<MaskedTimeInputProps> = ({
                 }`}
             />
             {isFocused && (
-                <motion.span
+                <m.span
                     initial={{ opacity: 0, y: 4 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="absolute -bottom-5 left-0 right-0 text-center text-xs text-white/90"
                 >
                     24h format
-                </motion.span>
+                </m.span>
             )}
-        </motion.div>
+        </m.div>
     );
 };
 

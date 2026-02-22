@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { Type, MessageSquare, Lightbulb } from "lucide-react";
 
 interface ReviewTextFormProps {
@@ -69,7 +69,7 @@ export default function ReviewTextForm({
           </label>
         </div>
 
-        <motion.div
+        <m.div
           animate={{
             scale: isTitleFocused ? 1.01 : 1,
           }}
@@ -99,7 +99,7 @@ export default function ReviewTextForm({
             `}
             style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
           />
-        </motion.div>
+        </m.div>
       </div>
 
       {/* Review Text */}
@@ -116,7 +116,7 @@ export default function ReviewTextForm({
           </div>
 
           {/* Character counter */}
-          <motion.span
+          <m.span
             animate={{
               color: isNearLimit ? '#E88D67' : charCount < minChars ? 'rgba(45,52,54,0.4)' : 'rgba(45,52,54,0.6)',
             }}
@@ -124,10 +124,10 @@ export default function ReviewTextForm({
             style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
           >
             {charCount}/{maxChars}
-          </motion.span>
+          </m.span>
         </div>
 
-        <motion.div
+        <m.div
           animate={{
             scale: isTextFocused ? 1.01 : 1,
           }}
@@ -171,7 +171,7 @@ export default function ReviewTextForm({
           {/* Smart writing prompt */}
           <AnimatePresence mode="wait">
             {reviewText.length === 0 && !isTextFocused && (
-              <motion.div
+              <m.div
                 key={currentPrompt}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -186,15 +186,15 @@ export default function ReviewTextForm({
                 >
                   Tip: {writingPrompts[currentPrompt]}
                 </span>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
-        </motion.div>
+        </m.div>
 
         {/* Validation message */}
         <AnimatePresence>
           {charCount > 0 && charCount < minChars && (
-            <motion.p
+            <m.p
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
@@ -202,14 +202,14 @@ export default function ReviewTextForm({
               style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
             >
               {minChars - charCount} more character{minChars - charCount !== 1 ? 's' : ''} needed
-            </motion.p>
+            </m.p>
           )}
         </AnimatePresence>
 
         {/* Progress bar for minimum characters */}
         {charCount > 0 && charCount < minChars && (
           <div className="mt-2 h-1 bg-white/10 rounded-full overflow-hidden">
-            <motion.div
+            <m.div
               className="h-full bg-coral/60 rounded-full"
               initial={{ width: 0 }}
               animate={{ width: `${(charCount / minChars) * 100}%` }}

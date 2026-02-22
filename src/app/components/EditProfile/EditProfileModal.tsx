@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { X, User, Upload, Camera } from "lucide-react";
 import Image from "next/image";
 import { authStyles } from "../Auth/Shared/authStyles";
@@ -142,7 +142,7 @@ export function EditProfileModal({
         {isOpen && (
           <>
             {/* Backdrop */}
-            <motion.div
+            <m.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -153,7 +153,7 @@ export function EditProfileModal({
 
             {/* Modal */}
             <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6">
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -202,7 +202,7 @@ export function EditProfileModal({
                     Profile Picture
                   </label>
                   <div className="flex items-center gap-4">
-                    <motion.div layoutId="profile-avatar" className="relative">
+                    <m.div layoutId="profile-avatar" className="relative">
                       {avatarPreview && !imgError ? (
                         <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-4 border-white shadow-lg ring-2 ring-sage/20">
                           <Image
@@ -218,7 +218,7 @@ export function EditProfileModal({
                           <User className="text-white/80" size={32} strokeWidth={2.5} />
                         </div>
                       )}
-                    </motion.div>
+                    </m.div>
                     <div className="flex-1 flex gap-2">
                       <button
                         type="button"
@@ -344,7 +344,7 @@ export function EditProfileModal({
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </m.div>
           </div>
         </>
       )}

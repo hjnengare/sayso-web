@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { usePredefinedPageTitle } from "@/app/hooks/usePageTitle";
 import {
@@ -593,7 +593,7 @@ function ProfileContent() {
         }
       `}</style>
       <AnimatePresence mode="wait">
-        <motion.div
+        <m.div
           key="profile"
           initial={{ opacity: 0, y: 20, scale: 0.98, filter: "blur(8px)" }}
           animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
@@ -653,7 +653,7 @@ function ProfileContent() {
 
                           <div className="relative z-10 p-6 sm:p-8">
                             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-                              <motion.div layoutId="profile-avatar" className="relative flex-shrink-0">
+                              <m.div layoutId="profile-avatar" className="relative flex-shrink-0">
                                 {!imgError && profile.avatar_url && profile.avatar_url.trim() !== "" ? (
                                   <div className="relative">
                                     <Image
@@ -679,7 +679,7 @@ function ProfileContent() {
                                     <User className="text-navbar-bg" size={44} strokeWidth={2.5} />
                                   </div>
                                 )}
-                              </motion.div>
+                              </m.div>
 
                               <div className="flex-1 min-w-0 w-full">
                                 <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -909,7 +909,7 @@ function ProfileContent() {
                               };
                               const colors = groupColors[group] || { bg: "from-white to-off-white", ring: "ring-white/60", accent: "text-charcoal" };
                               return (
-                                <motion.div
+                                <m.div
                                   key={achievement.achievement_id}
                                   initial={{ opacity: 0, scale: 0.9 }}
                                   animate={{ opacity: 1, scale: 1 }}
@@ -933,7 +933,7 @@ function ProfileContent() {
                                       className="w-12 h-12 object-contain drop-shadow-sm"
                                     />
                                     {/* Subtle shine sweep */}
-                                    <motion.div
+                                    <m.div
                                       className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/40 to-transparent rounded-lg pointer-events-none"
                                       initial={{ x: "-100%" }}
                                       animate={{ x: "200%" }}
@@ -946,7 +946,7 @@ function ProfileContent() {
                                   <p className="text-[10px] text-charcoal/55 leading-snug line-clamp-2">
                                     {achievement.achievements.description}
                                   </p>
-                                </motion.div>
+                                </m.div>
                               );
                             })}
                           </div>
@@ -1073,7 +1073,7 @@ function ProfileContent() {
           </div>
 
           <Footer />
-        </motion.div>
+        </m.div>
       </AnimatePresence>
 
       {/* Edit Profile Modal */}

@@ -2,7 +2,7 @@
 
 import { memo } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Star, Trophy } from "lucide-react";
 import FallbackImage from "../FallbackImage/FallbackImage";
 
@@ -38,7 +38,7 @@ function LeaderboardUser({ user, index, isMobile = false }: LeaderboardUserProps
 
   return (
     <Link href={user.id ? `/reviewer/${user.id}` : '#'} className="w-full">
-      <motion.div
+      <m.div
         initial={{ opacity: 0, x: -10 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: index * 0.05, duration: 0.3 }}
@@ -74,7 +74,7 @@ function LeaderboardUser({ user, index, isMobile = false }: LeaderboardUserProps
             <span className="font-urbanist text-caption sm:text-body-sm text-charcoal/70 whitespace-nowrap">{user.reviews > 0 ? `${user.reviews} reviews` : "No reviews yet"}</span>
           </div>
         </div>
-      </motion.div>
+      </m.div>
     </Link>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import BusinessCard from "../components/BusinessCard/BusinessCard";
 import Footer from "../components/Footer/Footer";
 import { ChevronRight } from "lucide-react";
@@ -414,7 +414,7 @@ export default function TrendingClient({ fallbackData }: TrendingClientProps = {
                     {/* Paginated Content with Smooth Transition - Map or List */}
                     <AnimatePresence mode="wait" initial={false}>
                       {isMapMode ? (
-                        <motion.div
+                        <m.div
                           key="map-view"
                         initial={isDesktop ? { opacity: 0 } : false}
                         animate={isDesktop ? { opacity: 1 } : {}}
@@ -426,10 +426,10 @@ export default function TrendingClient({ fallbackData }: TrendingClientProps = {
                             businesses={mapBusinesses}
                             className="w-full h-full"
                           />
-                        </motion.div>
+                        </m.div>
                       ) : (
                         isDesktop ? (
-                          <motion.div
+                          <m.div
                             variants={containerVariants}
                             initial="hidden"
                             whileInView="visible"
@@ -437,7 +437,7 @@ export default function TrendingClient({ fallbackData }: TrendingClientProps = {
                             className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2"
                           >
                             {currentBusinesses.map((business) => (
-                              <motion.div
+                              <m.div
                                 key={business.id}
                                 variants={itemVariants}
                                 className="list-none relative overflow-hidden desktop-card-shimmer"
@@ -449,11 +449,11 @@ export default function TrendingClient({ fallbackData }: TrendingClientProps = {
                                 <div className="hidden md:block">
                                   <BusinessCard business={business} compact />
                                 </div>
-                              </motion.div>
+                              </m.div>
                             ))}
-                          </motion.div>
+                          </m.div>
                         ) : (
-                          <motion.div
+                          <m.div
                             key={currentPage}
                             initial={{ opacity: 0, y: 20, scale: 0.98, filter: "blur(8px)" }}
                             animate={{ opacity: isPaginationLoading ? 0 : 1, y: 0, scale: 1, filter: "blur(0px)" }}
@@ -465,7 +465,7 @@ export default function TrendingClient({ fallbackData }: TrendingClientProps = {
                           >
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2">
                               {currentBusinesses.map((business, index) => (
-                                <motion.div
+                                <m.div
                                   key={business.id}
                                   className="list-none"
                                   initial={{ opacity: 0, y: 30, scale: 0.95 }}
@@ -483,10 +483,10 @@ export default function TrendingClient({ fallbackData }: TrendingClientProps = {
                                   <div className="hidden md:block">
                                     <BusinessCard business={business} compact />
                                   </div>
-                                </motion.div>
+                                </m.div>
                               ))}
                             </div>
-                          </motion.div>
+                          </m.div>
                         )
                       )}
                     </AnimatePresence>

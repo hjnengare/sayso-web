@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { MapPin, ExternalLink, Maximize2, Copy, Check, X, Navigation, Share2, Car, Footprints, Clock } from "lucide-react";
 import dynamic from "next/dynamic";
 import { createPortal } from "react-dom";
@@ -186,7 +186,7 @@ export default function BusinessLocation({
 
     return (
         <>
-            <motion.div
+            <m.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
@@ -209,7 +209,7 @@ export default function BusinessLocation({
 
                         {/* Quick Actions */}
                         <div className="flex items-center gap-1">
-                            <motion.button
+                            <m.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={copyAddress}
@@ -218,29 +218,29 @@ export default function BusinessLocation({
                             >
                                 <AnimatePresence mode="wait">
                                     {copied ? (
-                                        <motion.div
+                                        <m.div
                                             key="check"
                                             initial={{ scale: 0 }}
                                             animate={{ scale: 1 }}
                                             exit={{ scale: 0 }}
                                         >
                                             <Check className="w-4 h-4 text-charcoal/70" />
-                                        </motion.div>
+                                        </m.div>
                                     ) : (
-                                        <motion.div
+                                        <m.div
                                             key="copy"
                                             initial={{ scale: 0 }}
                                             animate={{ scale: 1 }}
                                             exit={{ scale: 0 }}
                                         >
                                             <Copy className="w-4 h-4 text-charcoal/60" />
-                                        </motion.div>
+                                        </m.div>
                                     )}
                                 </AnimatePresence>
-                            </motion.button>
+                            </m.button>
 
                             {shareSupported && (
-                                <motion.button
+                                <m.button
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
                                     onClick={shareLocation}
@@ -248,7 +248,7 @@ export default function BusinessLocation({
                                     aria-label="Share location"
                                 >
                                     <Share2 className="w-4 h-4 text-charcoal/60" />
-                                </motion.button>
+                                </m.button>
                             )}
                         </div>
                     </div>
@@ -257,7 +257,7 @@ export default function BusinessLocation({
                     <div className="mt-2 ml-11.5">
                         {/* Address Copy Pill */}
                         {(address || latitude || longitude) && (
-                            <motion.div
+                            <m.div
                                 initial={{ opacity: 0, y: -3 }}
                                 animate={{ opacity: 1, y: 0 }}
                             >
@@ -267,12 +267,12 @@ export default function BusinessLocation({
                                     longitude={longitude}
                                     isUserUploaded={isUserUploaded}
                                 />
-                            </motion.div>
+                            </m.div>
                         )}
 
                         {/* Distance & Travel Time - Premium Design */}
                         {distance !== null && (
-                            <motion.div
+                            <m.div
                                 initial={{ opacity: 0, y: -5 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 className="mt-3 flex flex-wrap items-center gap-2"
@@ -306,11 +306,11 @@ export default function BusinessLocation({
                                         <span className="font-600">{estimateTravelTime(distance, 'walk')}</span>
                                     </span>
                                 )}
-                            </motion.div>
+                            </m.div>
                         )}
 
                         {isLoadingLocation && hasCoordinates && (
-                            <motion.div
+                            <m.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 className="flex items-center gap-2 mt-2"
@@ -319,7 +319,7 @@ export default function BusinessLocation({
                                 <span className="text-sm text-charcoal/70" style={{ fontFamily: 'Urbanist, sans-serif' }}>
                                     Calculating distance...
                                 </span>
-                            </motion.div>
+                            </m.div>
                         )}
                     </div>
                 </div>
@@ -339,7 +339,7 @@ export default function BusinessLocation({
                             />
                             {/* Overlay on hover */}
                             <div className="absolute inset-0 bg-charcoal/0 group-hover:bg-charcoal/10 transition-colors duration-300 flex items-center justify-center">
-                                <motion.div
+                                <m.div
                                     initial={{ opacity: 0, scale: 0.8 }}
                                     whileHover={{ opacity: 1, scale: 1 }}
                                     className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
@@ -350,14 +350,14 @@ export default function BusinessLocation({
                                             View larger
                                         </span>
                                     </div>
-                                </motion.div>
+                                </m.div>
                             </div>
                         </div>
 
                         {/* Actions */}
                         <div className="px-4 sm:px-6 py-3 border-t border-white/20 space-y-2">
                             <div className="flex items-center gap-2">
-                                <motion.a
+                                <m.a
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
                                     href={getDirectionsUrl('driving')}
@@ -368,9 +368,9 @@ export default function BusinessLocation({
                                 >
                                     <Navigation className="w-4 h-4" />
                                     Get directions
-                                </motion.a>
+                                </m.a>
 
-                                <motion.a
+                                <m.a
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
                                     href={getDirectionsUrl('walking')}
@@ -380,9 +380,9 @@ export default function BusinessLocation({
                                     aria-label="Walking directions"
                                 >
                                     <Footprints className="w-4 h-4 text-charcoal" />
-                                </motion.a>
+                                </m.a>
                             </div>
-                            <motion.a
+                            <m.a
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 href={getUberUrl()}
@@ -392,7 +392,7 @@ export default function BusinessLocation({
                                 style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 600 }}
                             >
                                 Get an Uber
-                            </motion.a>
+                            </m.a>
                         </div>
                     </>
                 ) : (
@@ -407,7 +407,7 @@ export default function BusinessLocation({
                             >
                                 Map coordinates not available
                             </p>
-                            <motion.a
+                            <m.a
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 href={getDirectionsUrl()}
@@ -418,16 +418,16 @@ export default function BusinessLocation({
                             >
                                 <ExternalLink className="w-4 h-4" />
                                 Search on map
-                            </motion.a>
+                            </m.a>
                         </div>
                     </div>
                 )}
-            </motion.div>
+            </m.div>
 
             {/* Full-Screen Map Modal */}
             <AnimatePresence>
                 {isMapModalOpen && hasCoordinates && typeof window !== "undefined" && createPortal(
-                    <motion.div
+                    <m.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -435,7 +435,7 @@ export default function BusinessLocation({
                         className="fixed inset-0 z-[9999] bg-charcoal/95 backdrop-blur-sm"
                         onClick={() => setIsMapModalOpen(false)}
                     >
-                        <motion.div
+                        <m.div
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.95, opacity: 0 }}
@@ -447,7 +447,7 @@ export default function BusinessLocation({
                             <div className="px-4 sm:px-6 py-4 bg-charcoal/90 backdrop-blur-md border-b border-white/10">
                                 <div className="flex items-center justify-between mb-3">
                                     <Logo variant="mobile" />
-                                    <motion.button
+                                    <m.button
                                         whileHover={{ scale: 1.1 }}
                                         whileTap={{ scale: 0.9 }}
                                         onClick={() => setIsMapModalOpen(false)}
@@ -455,7 +455,7 @@ export default function BusinessLocation({
                                         aria-label="Close map"
                                     >
                                         <X className="w-5 h-5" />
-                                    </motion.button>
+                                    </m.button>
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <h2
@@ -472,7 +472,7 @@ export default function BusinessLocation({
                                             >
                                                 {displayLocation}
                                             </p>
-                                            <motion.button
+                                            <m.button
                                                 whileHover={{ scale: 1.1 }}
                                                 whileTap={{ scale: 0.9 }}
                                                 onClick={copyAddress}
@@ -484,7 +484,7 @@ export default function BusinessLocation({
                                                 ) : (
                                                     <Copy className="w-4 h-4 text-white/50" />
                                                 )}
-                                            </motion.button>
+                                            </m.button>
                                         </div>
                                     )}
                                     {distance !== null && (
@@ -517,7 +517,7 @@ export default function BusinessLocation({
                             {/* Modal Footer Actions */}
                             <div className="px-4 sm:px-6 py-4 bg-charcoal/90 backdrop-blur-md border-t border-white/10">
                                 <div className="flex items-center gap-3">
-                                    <motion.a
+                                    <m.a
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                         href={getDirectionsUrl('driving')}
@@ -528,8 +528,8 @@ export default function BusinessLocation({
                                     >
                                         <Car className="w-4 h-4" />
                                         Drive
-                                    </motion.a>
-                                    <motion.a
+                                    </m.a>
+                                    <m.a
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                         href={getDirectionsUrl('walking')}
@@ -540,9 +540,9 @@ export default function BusinessLocation({
                                     >
                                         <Footprints className="w-4 h-4" />
                                         Walk
-                                    </motion.a>
+                                    </m.a>
                                     {shareSupported && (
-                                        <motion.button
+                                        <m.button
                                             whileHover={{ scale: 1.05 }}
                                             whileTap={{ scale: 0.95 }}
                                             onClick={shareLocation}
@@ -550,12 +550,12 @@ export default function BusinessLocation({
                                             aria-label="Share"
                                         >
                                             <Share2 className="w-5 h-5 text-white" />
-                                        </motion.button>
+                                        </m.button>
                                     )}
                                 </div>
                             </div>
-                        </motion.div>
-                    </motion.div>,
+                        </m.div>
+                    </m.div>,
                     document.body
                 )}
             </AnimatePresence>

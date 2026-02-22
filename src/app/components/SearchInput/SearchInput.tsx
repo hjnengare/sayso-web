@@ -5,7 +5,7 @@ import { useState, useEffect, forwardRef, useRef, useMemo, useCallback } from "r
 import { useRouter } from "next/navigation";
 import { Search, Sliders, Map } from "lucide-react";
 import MobileMenuToggleIcon from "../Header/MobileMenuToggleIcon";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, m, useReducedMotion } from "framer-motion";
 import { useLiveSearch, type LiveSearchResult } from "../../hooks/useLiveSearch";
 
 interface SearchInputProps {
@@ -321,7 +321,7 @@ const SearchInput = forwardRef<HTMLFormElement, SearchInputProps>(
 
           <AnimatePresence>
             {isOpen && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, y: 8, scale: 0.99 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 8, scale: 0.99 }}
@@ -428,7 +428,7 @@ const SearchInput = forwardRef<HTMLFormElement, SearchInputProps>(
                     })
                   )}
                 </div>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
         </div>

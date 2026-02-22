@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, m, useReducedMotion } from "framer-motion";
 import { ChevronUp } from "lucide-react";
 
 interface ScrollToTopButtonProps {
@@ -86,7 +86,7 @@ export default function ScrollToTopButton({
   return (
     <AnimatePresence>
       {isVisible ? (
-        <motion.button
+        <m.button
           type="button"
           onClick={handleScrollToTop}
           initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.96 }}
@@ -104,14 +104,14 @@ export default function ScrollToTopButton({
           }
           aria-label={ariaLabel}
         >
-          <motion.span
+          <m.span
             animate={prefersReducedMotion ? {} : { scale: [1, 1.08, 1] }}
             transition={prefersReducedMotion ? {} : { duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
             className="flex items-center justify-center"
           >
             <ChevronUp className="h-4 w-4 lg:h-5 lg:w-5" strokeWidth={2.25} />
-          </motion.span>
-        </motion.button>
+          </m.span>
+        </m.button>
       ) : null}
     </AnimatePresence>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import LeaderboardUser from "./LeaderboardUser";
 
@@ -51,7 +51,7 @@ function LeaderboardList({
 
         <AnimatePresence>
           {showFullLeaderboard && hiddenUsers.map((user, index) => (
-            <motion.div
+            <m.div
               key={user.rank}
               initial={{ opacity: 0, height: 0, y: -20 }}
               animate={{ opacity: 1, height: 'auto', y: 0 }}
@@ -64,7 +64,7 @@ function LeaderboardList({
                 index={index + 5}
                 isMobile={true}
               />
-            </motion.div>
+            </m.div>
           ))}
         </AnimatePresence>
       </div>
@@ -82,7 +82,7 @@ function LeaderboardList({
 
         <AnimatePresence>
           {showFullLeaderboard && hiddenUsers.map((user, index) => (
-            <motion.div
+            <m.div
               key={user.rank}
               initial={{ opacity: 0, height: 0, y: -20 }}
               animate={{ opacity: 1, height: 'auto', y: 0 }}
@@ -95,7 +95,7 @@ function LeaderboardList({
                 index={index + 5}
                 isMobile={false}
               />
-            </motion.div>
+            </m.div>
           ))}
         </AnimatePresence>
       </div>

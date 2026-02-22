@@ -1,7 +1,7 @@
 "use client";
 
 import { memo } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Trophy } from "lucide-react";
 import FallbackImage from "../FallbackImage/FallbackImage";
 
@@ -26,7 +26,7 @@ function LeaderboardPodium({ topReviewers }: LeaderboardPodiumProps) {
   return (
     <div className="flex flex-row justify-center items-end gap-1.5 sm:gap-3 md:gap-4 lg:gap-6 mb-6 sm:mb-8 md:mb-12 pt-6 sm:pt-8 md:pt-10 px-2 sm:px-4 md:px-6 max-w-xs sm:max-w-md md:max-w-2xl lg:max-w-4xl mx-auto">
       {/* 2nd Place */}
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.4 }}
@@ -55,10 +55,10 @@ function LeaderboardPodium({ topReviewers }: LeaderboardPodiumProps) {
         <div className="relative mt-auto">
           <div className="podium-metal podium-metal--silver rounded-t-xl h-12 sm:h-20 md:h-28 lg:h-32 w-full shadow-[0_10px_34px_rgba(0,0,0,0.16)]" />
         </div>
-      </motion.div>
+      </m.div>
 
       {/* 1st Place */}
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5, duration: 0.6 }}
@@ -87,10 +87,10 @@ function LeaderboardPodium({ topReviewers }: LeaderboardPodiumProps) {
         <div className="relative mt-auto">
           <div className="podium-metal podium-metal--gold rounded-t-xl h-16 sm:h-24 md:h-36 lg:h-48 w-full shadow-[0_14px_44px_rgba(0,0,0,0.2)]" />
         </div>
-      </motion.div>
+      </m.div>
 
       {/* 3rd Place */}
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.7, duration: 0.6 }}
@@ -119,7 +119,7 @@ function LeaderboardPodium({ topReviewers }: LeaderboardPodiumProps) {
         <div className="relative mt-auto">
           <div className="podium-metal podium-metal--bronze rounded-t-xl h-10 sm:h-16 md:h-24 lg:h-28 w-full shadow-[0_10px_34px_rgba(0,0,0,0.16)]" />
         </div>
-      </motion.div>
+      </m.div>
     </div>
   );
 }

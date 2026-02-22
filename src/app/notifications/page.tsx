@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
 import { useBusinessNotificationsFeed } from "../hooks/useBusinessNotificationsFeed";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { Bell, Check, X, MessageSquare, MessageCircle, Star, Heart, TrendingUp, Clock, ChevronRight, ChevronLeft, ChevronUp, Award, ThumbsUp, CheckCircle, ImageIcon, Trophy } from "lucide-react";
 import Footer from "../components/Footer/Footer";
 import { PageLoader } from "../components/Loader";
@@ -183,7 +183,7 @@ export default function NotificationsPage() {
             </div>
           ) : notifications.length === 0 ? (
             <div className="relative z-10 min-h-[calc(100vh-200px)] flex items-center justify-center">
-              <motion.div
+              <m.div
                 className="mx-auto w-full max-w-[2000px] px-2 font-urbanist w-full"
                 style={{
                   fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
@@ -192,7 +192,7 @@ export default function NotificationsPage() {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.4 }}
               >
-                <motion.div
+                <m.div
                   className="text-center w-full"
                   initial="hidden"
                   animate="visible"
@@ -207,16 +207,16 @@ export default function NotificationsPage() {
                     },
                   }}
                 >
-                  <motion.div
+                  <m.div
                     className="w-20 h-20 mx-auto mb-6 bg-charcoal/10 rounded-full flex items-center justify-center"
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.4, ease: "easeOut" }}
                   >
                     <Bell className="w-10 h-10 text-charcoal/60" strokeWidth={1.5} />
-                  </motion.div>
+                  </m.div>
 
-                  <motion.h3
+                  <m.h3
                     className="text-h2 font-semibold text-charcoal mb-2"
                     style={{
                       fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
@@ -226,9 +226,9 @@ export default function NotificationsPage() {
                     transition={{ duration: 0.5, ease: "easeOut" }}
                   >
                     No notifications yet
-                  </motion.h3>
+                  </m.h3>
 
-                  <motion.p
+                  <m.p
                     className="text-body-sm text-charcoal/60 mb-6 max-w-md mx-auto"
                     style={{
                       fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
@@ -239,12 +239,12 @@ export default function NotificationsPage() {
                     transition={{ duration: 0.5, ease: "easeOut", delay: 0.15 }}
                   >
                     When you receive notifications, they'll appear here
-                  </motion.p>
-                </motion.div>
-              </motion.div>
+                  </m.p>
+                </m.div>
+              </m.div>
             </div>
           ) : (
-            <motion.div
+            <m.div
               className="relative z-10"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -252,7 +252,7 @@ export default function NotificationsPage() {
             >
               <div className="mx-auto w-full max-w-[2000px] px-2">
                 {/* Title */}
-                <motion.div
+                <m.div
                   className="mb-6 sm:mb-8 px-2"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -293,10 +293,10 @@ export default function NotificationsPage() {
                       </button>
                     )}
                   </div>
-                </motion.div>
+                </m.div>
 
                 {/* Filter Pills */}
-                <motion.div
+                <m.div
                   className="mb-6 px-2"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -340,7 +340,7 @@ export default function NotificationsPage() {
                       );
                     })}
                   </div>
-                </motion.div>
+                </m.div>
 
                 {filteredNotifications.length === 0 ? (
                   <div className="pb-12 sm:pb-16 md:pb-20 text-center py-12">
@@ -420,7 +420,7 @@ export default function NotificationsPage() {
                           );
 
                           return (
-                            <motion.div
+                            <m.div
                               key={notification.id}
                               initial={{ opacity: 0, y: 20 }}
                               animate={{ opacity: 1, y: 0 }}
@@ -447,7 +447,7 @@ export default function NotificationsPage() {
                               <div className="flex items-start gap-3 sm:gap-3.5">
                                 {contentNode}
                               </div>
-                            </motion.div>
+                            </m.div>
                           );
                         })}
                       </div>
@@ -455,7 +455,7 @@ export default function NotificationsPage() {
                   </div>
                 )}
               </div>
-            </motion.div>
+            </m.div>
           )}
         </div>
 

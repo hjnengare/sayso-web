@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { ChevronRight, Search, Edit3, MessageCircle } from "lucide-react";
 import ConversationItem from "./ConversationItem";
 
@@ -81,7 +81,7 @@ export default function ConversationListPanel({
               {chats.length} {chats.length === 1 ? "conversation" : "conversations"}
             </p>
           </div>
-          <motion.button
+          <m.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={onNewConversation}
@@ -89,7 +89,7 @@ export default function ConversationListPanel({
             aria-label="New conversation"
           >
             <Edit3 className="w-4.5 h-4.5" strokeWidth={2.5} />
-          </motion.button>
+          </m.button>
         </div>
       </div>
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { memo } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import SubcategoryPill from "./SubcategoryPill";
 
 interface SubcategoryItem {
@@ -69,19 +69,19 @@ function SubcategoryGroup({
   };
 
   return (
-    <motion.div
+    <m.div
       variants={groupVariants}
       initial="hidden"
       animate="visible"
       custom={groupIndex}
     >
-      <motion.h3
+      <m.h3
         className="text-base md:text-lg font-bold text-charcoal mb-3"
         style={sfPro}
         variants={titleVariants}
       >
         {title}
-      </motion.h3>
+      </m.h3>
       <div className="pills-container">
         {items.map((subcategory, index) => {
           const isSelected = selectedSubcategories.some(s => s.id === subcategory.id);
@@ -101,7 +101,7 @@ function SubcategoryGroup({
           );
         })}
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 

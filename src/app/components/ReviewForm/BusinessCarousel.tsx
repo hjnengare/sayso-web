@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { isPlaceholderImage, getSubcategoryPlaceholder } from "../../utils/subcategoryPlaceholders";
 
@@ -33,7 +33,7 @@ export default function BusinessCarousel({ businessName, businessImages, subcate
   // If no valid images, show subcategory placeholder (full photo, same layout as BusinessHeroImage)
   if (!hasImages) {
     return (
-      <motion.div
+      <m.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.6 }}
@@ -50,7 +50,7 @@ export default function BusinessCarousel({ businessName, businessImages, subcate
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 900px"
           />
         </div>
-      </motion.div>
+      </m.div>
     );
   }
 
@@ -81,7 +81,7 @@ export default function BusinessCarousel({ businessName, businessImages, subcate
   };
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.6 }}
@@ -92,7 +92,7 @@ export default function BusinessCarousel({ businessName, businessImages, subcate
     >
       {/* Blurred background - Instagram style */}
       <AnimatePresence mode="wait">
-        <motion.div
+        <m.div
           key={`bg-${currentImageIndex}`}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -116,12 +116,12 @@ export default function BusinessCarousel({ businessName, businessImages, subcate
             aria-hidden="true"
             onError={() => setImageError((prev) => ({ ...prev, [currentImageIndex]: true }))}
           />
-        </motion.div>
+        </m.div>
       </AnimatePresence>
 
       {/* Foreground image - sharp, centered, aspect-ratio preserved */}
       <AnimatePresence mode="wait">
-        <motion.div
+        <m.div
           key={`fg-${currentImageIndex}`}
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -139,7 +139,7 @@ export default function BusinessCarousel({ businessName, businessImages, subcate
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 900px"
             onError={() => setImageError((prev) => ({ ...prev, [currentImageIndex]: true }))}
           />
-        </motion.div>
+        </m.div>
       </AnimatePresence>
 
       {/* Gradient overlay */}
@@ -207,6 +207,6 @@ export default function BusinessCarousel({ businessName, businessImages, subcate
           </div>
         </>
       )}
-    </motion.div>
+    </m.div>
   );
 }

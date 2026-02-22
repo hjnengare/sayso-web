@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
@@ -10,7 +10,7 @@ const sf = {
 
 export default function LeaderboardHeader() {
   return (
-    <motion.header
+    <m.header
       initial={{ y: -80, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ type: "spring", stiffness: 80, damping: 20, mass: 1 }}
@@ -30,6 +30,6 @@ export default function LeaderboardHeader() {
           </Link>
         </div>
       </div>
-    </motion.header>
+    </m.header>
   );
 }

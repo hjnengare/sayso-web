@@ -5,7 +5,7 @@ import type { Event } from "../../lib/types/Event";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Star, Edit, Bookmark, Share2 } from "lucide-react";
 import { getEventIconPng } from "../../utils/eventIconToPngMapping";
 import EventBadge from "./EventBadge";
@@ -282,7 +282,7 @@ function EventCard({ event, index = 0 }: EventCardProps) {
       >
           {/* MEDIA - Full bleed with premium overlay */}
           <div className="relative w-full flex-shrink-0 z-10">
-            <motion.div
+            <m.div
               layoutId={eventMediaLayoutId}
               className="relative w-full overflow-hidden flex items-center justify-center bg-gradient-to-br from-off-white/95 to-off-white/85 h-[280px] sm:h-[300px] md:h-[220px]"
             >
@@ -421,7 +421,7 @@ function EventCard({ event, index = 0 }: EventCardProps) {
                   </>
                 </div>
               )}
-            </motion.div>
+            </m.div>
 
             {/* Date ribbon badge */}
             <EventBadge
@@ -437,7 +437,7 @@ function EventCard({ event, index = 0 }: EventCardProps) {
           {/* CONTENT - Minimal, premium spacing */}
           <div className="px-4 pt-3 pb-0 bg-gradient-to-b from-card-bg/95 to-card-bg  gap-2 rounded-b-[12px]">
             <div className="flex flex-col gap-2">
-              <motion.h3
+              <m.h3
                 layoutId={eventTitleLayoutId}
                 className="text-base sm:text-lg font-bold text-charcoal leading-tight line-clamp-1 transition-colors duration-300 group-hover:text-navbar-bg/90"
                 style={{
@@ -449,7 +449,7 @@ function EventCard({ event, index = 0 }: EventCardProps) {
                 }}
               >
                 {event.title}
-              </motion.h3>
+              </m.h3>
 
               <div className="w-full">
                 <p

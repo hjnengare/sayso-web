@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 
 import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../contexts/ToastContext";
@@ -520,7 +520,7 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
         <div className="w-full mx-auto max-w-[2000px] flex-1 flex flex-col justify-center py-8 sm:py-12 px-0 lg:px-10 2xl:px-16">
           <div className="w-full sm:max-w-md lg:max-w-lg xl:max-w-xl sm:mx-auto relative z-10">
             <section data-section>
-              <motion.div
+              <m.div
                 layout
                 className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden backdrop-blur-md shadow-md px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12"
               >
@@ -626,7 +626,7 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
                   </div>
                 ) : (
                   <AnimatePresence mode="wait">
-                    <motion.div
+                    <m.div
                       key={`${accountType}-${authMode}`}
                       {...motionVariants}
                       transition={{ duration: 0.25, ease: "easeOut" }}
@@ -844,10 +844,10 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
                           </button>
                         </div>
                       </div>
-                    </motion.div>
+                    </m.div>
                   </AnimatePresence>
                 )}
-              </motion.div>
+              </m.div>
             </section>
           </div>
         </div>

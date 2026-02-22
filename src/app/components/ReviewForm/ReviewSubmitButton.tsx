@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { Send, Loader2, AlertCircle } from "lucide-react";
 
 interface ReviewSubmitButtonProps {
@@ -77,7 +77,7 @@ export default function ReviewSubmitButton({
       {/* Inline Error Banner */}
       <AnimatePresence>
         {error && (
-          <motion.div
+          <m.div
             ref={errorRef}
             initial={{ opacity: 0, y: -10, height: 0 }}
             animate={{ opacity: 1, y: 0, height: 'auto' }}
@@ -91,11 +91,11 @@ export default function ReviewSubmitButton({
           >
             <AlertCircle className="w-5 h-5 text-coral flex-shrink-0 mt-0.5" />
             <p className="text-sm font-medium">{error}</p>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 
-      <motion.button
+      <m.button
         type="button"
         onClick={handleClick}
         onTouchStart={handleTouchStart}
@@ -121,7 +121,7 @@ export default function ReviewSubmitButton({
       >
         {/* Background gradient animation */}
         {isFormValid && !isSubmitting && (
-          <motion.div
+          <m.div
             className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
             initial={{ x: '-100%' }}
             animate={{ x: '100%' }}
@@ -136,7 +136,7 @@ export default function ReviewSubmitButton({
 
         <AnimatePresence mode="wait">
           {isSubmitting ? (
-            <motion.span
+            <m.span
               key="loading"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -145,9 +145,9 @@ export default function ReviewSubmitButton({
             >
               <Loader2 className="w-5 h-5 animate-spin" />
               <span>Submitting...</span>
-            </motion.span>
+            </m.span>
           ) : (
-            <motion.span
+            <m.span
               key="submit"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -156,23 +156,23 @@ export default function ReviewSubmitButton({
             >
               <span>Submit Review</span>
               {isFormValid && (
-                <motion.span
+                <m.span
                   initial={{ x: -4, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   transition={{ delay: 0.1 }}
                 >
                   <Send className="w-4 h-4" />
-                </motion.span>
+                </m.span>
               )}
-            </motion.span>
+            </m.span>
           )}
         </AnimatePresence>
-      </motion.button>
+      </m.button>
 
       {/* Helper text when form is invalid */}
       <AnimatePresence>
         {!isFormValid && (
-          <motion.p
+          <m.p
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
@@ -180,7 +180,7 @@ export default function ReviewSubmitButton({
             style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
           >
             Add a rating and at least 10 characters to submit
-          </motion.p>
+          </m.p>
         )}
       </AnimatePresence>
     </div>

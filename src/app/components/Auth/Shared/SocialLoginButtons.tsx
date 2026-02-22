@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { AuthService } from "@/app/lib/auth";
 import { useToast } from "@/app/contexts/ToastContext";
 import { authCopy, formatAuthMessage } from "./authCopy";
@@ -39,7 +39,7 @@ export function SocialLoginButtons({ accountType = 'user' }: SocialLoginButtonsP
   return (
     <AnimatePresence mode="wait">
       {showOAuth && (
-        <motion.div
+        <m.div
           key="oauth-section"
           initial={{ opacity: 0, height: 0 }}
           animate={{ 
@@ -94,7 +94,7 @@ export function SocialLoginButtons({ accountType = 'user' }: SocialLoginButtonsP
               </span>
             </button>
           </div>
-        </motion.div>
+        </m.div>
       )}
     </AnimatePresence>
   );

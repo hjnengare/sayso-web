@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { useEventsSpecials } from "../hooks/useEventsSpecials";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import Footer from "../components/Footer/Footer";
 import FilterTabs from "../components/EventsPage/FilterTabs";
 import ResultsCount from "../components/EventsPage/ResultsCount";
@@ -146,7 +146,7 @@ export default function EventsSpecialsPage() {
         <h2 className="text-lg font-semibold text-charcoal" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>{title}</h2>
       </div>
       {isDesktop ? (
-        <motion.div
+        <m.div
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
@@ -154,28 +154,28 @@ export default function EventsSpecialsPage() {
           className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4"
         >
           {items.map((event, index) => (
-            <motion.div
+            <m.div
               key={event.id}
               variants={itemVariants}
               className="list-none relative desktop-card-shimmer"
             >
               <span aria-hidden className="desktop-shimmer-veil" />
               <EventCard event={event} index={index} />
-            </motion.div>
+            </m.div>
           ))}
           {/* Optimistic skeleton cards during load more */}
           {optimisticSkeletons > 0 && Array.from({ length: optimisticSkeletons }).map((_, idx) => (
-            <motion.div
+            <m.div
               key={`skeleton-${idx}`}
               variants={itemVariants}
               className="list-none"
             >
               <EventCardSkeleton />
-            </motion.div>
+            </m.div>
           ))}
-        </motion.div>
+        </m.div>
       ) : (
-        <motion.div
+        <m.div
           key={title}
           initial={{ opacity: 0, y: 20, scale: 0.98, filter: "blur(8px)" }}
           animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
@@ -187,7 +187,7 @@ export default function EventsSpecialsPage() {
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
             {items.map((event, index) => (
-              <motion.div
+              <m.div
                 key={event.id}
                 className="list-none"
                 initial={{ opacity: 0, y: 30, scale: 0.95 }}
@@ -200,7 +200,7 @@ export default function EventsSpecialsPage() {
                 }}
               >
                 <EventCard event={event} index={index} />
-              </motion.div>
+              </m.div>
             ))}
             {/* Optimistic skeleton cards during load more */}
             {optimisticSkeletons > 0 && Array.from({ length: optimisticSkeletons }).map((_, idx) => (
@@ -209,7 +209,7 @@ export default function EventsSpecialsPage() {
               </div>
             ))}
           </div>
-        </motion.div>
+        </m.div>
       )}
     </section>
   );

@@ -4,7 +4,7 @@ import { useState, useEffect, use, useRef } from "react";
 import { useEventDetail } from "../../hooks/useEventDetail";
 import { useEventReviews } from "../../hooks/useEventReviews";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { ChevronRight, Calendar } from "lucide-react";
 import type { Event } from "../../lib/types/Event";
 import nextDynamic from "next/dynamic";
@@ -71,7 +71,7 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
     return (
       <div className="min-h-dvh bg-off-white">
         <AnimatePresence>
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -79,7 +79,7 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
             className="fixed inset-0 z-[9999] bg-off-white min-h-screen w-full flex items-center justify-center"
           >
             <PageLoader size="lg" variant="wavy" color="sage"  />
-          </motion.div>
+          </m.div>
         </AnimatePresence>
       </div>
     );
@@ -125,7 +125,7 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
 
   return (
     <AnimatePresence mode="wait">
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
@@ -328,7 +328,7 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
           </div>
 
         <Footer />
-      </motion.div>
+      </m.div>
     </AnimatePresence>
   );
 }

@@ -3,7 +3,7 @@
 
 import { useState, useMemo, memo, useEffect } from "react";
 import { useLeaderboard } from "../hooks/useLeaderboard";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import nextDynamic from "next/dynamic";
@@ -166,7 +166,7 @@ function LeaderboardPage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(114,47,55,0.08)_0%,_transparent_50%)]" />
 
-        <motion.div 
+        <m.div 
           className={contentClassName}
           variants={isDesktop ? containerVariants : undefined}
           initial={isDesktop ? "hidden" : false}
@@ -176,7 +176,7 @@ function LeaderboardPage() {
                 <section className="relative z-10 pb-6 sm:pb-8 md:pb-12">
                   <div className="mx-auto w-full max-w-[2000px] px-2">
                     {/* Breadcrumb */}
-                    <motion.nav 
+                    <m.nav 
                       className="pb-1" 
                       aria-label="Breadcrumb"
                       variants={isDesktop ? itemVariants : undefined}
@@ -198,10 +198,10 @@ function LeaderboardPage() {
                           </span>
                         </li>
                       </ol>
-                    </motion.nav>
+                    </m.nav>
 
                     {/* Title and Description Block */}
-                    <motion.div 
+                    <m.div 
                       className="mb-10 sm:mb-12 px-4 sm:px-6 text-center pt-4"
                       variants={isDesktop ? itemVariants : undefined}
                       initial={isDesktop ? "hidden" : false}
@@ -242,7 +242,7 @@ function LeaderboardPage() {
                           />
                         </h1>
                       </div>
-                      <motion.p 
+                      <m.p 
                         className="text-sm sm:text-base text-charcoal/70 max-w-2xl mx-auto leading-relaxed" 
                         style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                         variants={isDesktop ? itemVariants : undefined}
@@ -251,8 +251,8 @@ function LeaderboardPage() {
                       >
                         Celebrate the top contributors and businesses in our community. 
                         See who's making a difference and discover the most loved local spots.
-                      </motion.p>
-                    </motion.div>
+                      </m.p>
+                    </m.div>
                   </div>
                 </section>
 
@@ -267,18 +267,18 @@ function LeaderboardPage() {
                     <div className="max-w-[800px] mx-auto pt-4 sm:pt-6 md:pt-8">
 
                       {/* Tabs */}
-                        <motion.div 
+                        <m.div 
                           className="flex justify-center pt-2 mb-8 px-2"
                           variants={isDesktop ? itemVariants : undefined}
                           initial={isDesktop ? "hidden" : false}
                           animate={isDesktop ? "visible" : undefined}
                         >
                           <Tabs tabs={tabs} activeTab={activeTab} onTabChange={handleTabChange} />
-                        </motion.div>
+                        </m.div>
 
                       {/* Leaderboard Content */}
                         <AnimatePresence mode="wait">
-                          <motion.div
+                          <m.div
                             key={activeTab}
                             variants={isDesktop ? cardVariants : undefined}
                             initial={isDesktop ? "hidden" : false}
@@ -336,12 +336,12 @@ function LeaderboardPage() {
                               />
                             )}
                           </div>
-                        </motion.div>
+                        </m.div>
                         </AnimatePresence>
                     </div>
                   </div>
                 </section>
-        </motion.div>
+        </m.div>
 
         {/* Badge Definitions Section - Before Footer */}
         <section className="relative z-50 py-4 sm:py-8 bg-off-white">

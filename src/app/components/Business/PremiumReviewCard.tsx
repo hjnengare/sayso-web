@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "../../contexts/AuthContext";
 import { useReviewSubmission } from "../../hooks/useReviews";
 import { useToast } from "../../contexts/ToastContext";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { ConfirmationDialog } from "@/app/components/molecules/ConfirmationDialog/ConfirmationDialog";
 import { getDisplayUsername } from "../../utils/generateUsername";
@@ -703,7 +703,7 @@ export function PremiumReviewCard({
         {/* Image Lightbox with Zoom */}
         <AnimatePresence>
             {selectedImageIndex !== null && reviewImages && reviewImages[selectedImageIndex] && (
-                <motion.div
+                <m.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -803,7 +803,7 @@ export function PremiumReviewCard({
                     )}
 
                     {/* Image Container */}
-                    <motion.div
+                    <m.div
                         initial={{ scale: 0.9 }}
                         animate={{ scale: 1 }}
                         exit={{ scale: 0.9 }}
@@ -827,8 +827,8 @@ export function PremiumReviewCard({
                             }}
                             draggable={false}
                         />
-                    </motion.div>
-                </motion.div>
+                    </m.div>
+                </m.div>
             )}
         </AnimatePresence>
 

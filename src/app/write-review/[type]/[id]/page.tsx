@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -375,7 +375,7 @@ function WriteReviewContent() {
                 {/* Main Content */}
                 <div className="lg:col-span-2 space-y-6">
                   {/* Event/Special Info Header */}
-                  <motion.div
+                  <m.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
@@ -434,10 +434,10 @@ function WriteReviewContent() {
                         </div>
                       </div>
                     </div>
-                  </motion.div>
+                  </m.div>
 
                   {/* Review Form */}
-                  <motion.div
+                  <m.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
@@ -492,7 +492,7 @@ function WriteReviewContent() {
                         error={formError}
                       />
                     </div>
-                  </motion.div>
+                  </m.div>
                 </div>
 
                 {/* Sidebar — context card (desktop only) */}

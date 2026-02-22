@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { AlertCircle, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 import ReviewCard from './ReviewCard';
@@ -89,7 +89,7 @@ export default function ReviewsList({
   if (error) {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <motion.div
+        <m.div
           initial={isDesktop ? { opacity: 0, y: 20 } : false}
           animate={isDesktop ? { opacity: 1, y: 0 } : undefined}
           className="bg-red-50 border border-red-200 rounded-lg p-6 text-center"
@@ -103,7 +103,7 @@ export default function ReviewsList({
           <p className="font-urbanist text-sm text-red-600">
             {error}
           </p>
-        </motion.div>
+        </m.div>
       </div>
     );
   }
@@ -170,7 +170,7 @@ export default function ReviewsList({
       )}
       
       {reviews.map((review, index) => (
-        <motion.div
+        <m.div
           key={review.id}
           initial={isDesktop ? { opacity: 0, y: 20 } : false}
           animate={isDesktop ? { opacity: 1, y: 0 } : undefined}
@@ -183,11 +183,11 @@ export default function ReviewsList({
             isOwnerView={isOwnerView}
             realtimeHelpfulCount={helpfulCounts[review.id]}
           />
-        </motion.div>
+        </m.div>
       ))}
 
       {reviews.length > 0 && (
-        <motion.div
+        <m.div
           initial={isDesktop ? { opacity: 0 } : false}
           animate={isDesktop ? { opacity: 1 } : undefined}
           transition={isDesktop ? { delay: reviews.length * 0.1 + 0.2 } : undefined}
@@ -196,7 +196,7 @@ export default function ReviewsList({
           <p className="font-urbanist text-sm text-charcoal/60">
             Showing {reviews.length} review{reviews.length !== 1 ? 's' : ''}
           </p>
-        </motion.div>
+        </m.div>
       )}
     </div>
   );

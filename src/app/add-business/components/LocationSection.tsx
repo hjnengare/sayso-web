@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { MapPin, X } from "lucide-react";
 import { BusinessFormData } from "./types";
 import MapPicker, { MapPickerLocation } from "./MapPicker";
@@ -205,7 +205,7 @@ const LocationSection: React.FC<LocationSectionProps> = ({
           {/* Selected Coordinates */}
           <AnimatePresence>
             {(formData.lat || formData.lng) && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
@@ -244,7 +244,7 @@ const LocationSection: React.FC<LocationSectionProps> = ({
                     <X className="w-4 h-4 text-charcoal" />
                   </button>
                 </div>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
         </div>

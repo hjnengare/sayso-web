@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { X, MapPin, Star, MessageCircle, Heart } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 
 export default function WelcomeModal() {
   const [isOpen, setIsOpen] = useState(false);
@@ -48,7 +48,7 @@ export default function WelcomeModal() {
       {isOpen && (
         <>
           {/* Backdrop */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -59,7 +59,7 @@ export default function WelcomeModal() {
 
           {/* Modal */}
           <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6">
-            <motion.div
+            <m.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -168,7 +168,7 @@ export default function WelcomeModal() {
                   You can always find this info in Settings
                 </p>
               </div>
-            </motion.div>
+            </m.div>
           </div>
         </>
       )}

@@ -2,7 +2,7 @@
 
 import { Clock, Smile, Shield } from "lucide-react";
 import { memo } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 
 interface PercentileChipsSectionProps {
   punctuality?: number;
@@ -45,7 +45,7 @@ function PercentileChipsSection({
   ];
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
@@ -76,7 +76,7 @@ function PercentileChipsSection({
           };
 
           return (
-            <motion.div
+            <m.div
               key={metric.label}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -121,7 +121,7 @@ function PercentileChipsSection({
                   <div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-charcoal transform rotate-45" />
                 </div>
               )}
-            </motion.div>
+            </m.div>
           );
         })}
       </div>
@@ -132,7 +132,7 @@ function PercentileChipsSection({
           ✓ Community verified metrics from verified reviews
         </p>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 

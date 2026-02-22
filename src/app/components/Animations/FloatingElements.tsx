@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { useState, useEffect } from "react";
 
 interface SparkleData {
@@ -31,7 +31,7 @@ export default function FloatingElements() {
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
       {/* Floating orbs */}
-      <motion.div
+      <m.div
         className="absolute w-32 h-32 bg-gradient-to-br from-sage/10 to-transparent rounded-full blur-lg"
         initial={{ x: -100, y: 100 }}
         animate={{
@@ -46,7 +46,7 @@ export default function FloatingElements() {
         style={{ top: "20%", left: "10%" }}
       />
 
-      <motion.div
+      <m.div
         className="absolute w-24 h-24 bg-gradient-to-br from-coral/8 to-transparent rounded-full blur-xl"
         initial={{ x: 100, y: -50 }}
         animate={{
@@ -61,7 +61,7 @@ export default function FloatingElements() {
         style={{ top: "60%", right: "15%" }}
       />
 
-      <motion.div
+      <m.div
         className="absolute w-20 h-20 bg-gradient-to-br from-sage/6 to-transparent rounded-full blur-lg"
         initial={{ x: 0, y: 0 }}
         animate={{
@@ -78,7 +78,7 @@ export default function FloatingElements() {
 
       {/* Subtle sparkles - only render after hydration */}
       {mounted && sparkles.map((sparkle) => (
-        <motion.div
+        <m.div
           key={sparkle.id}
           className="absolute w-1 h-1 bg-card-bg/20 rounded-full"
           style={{

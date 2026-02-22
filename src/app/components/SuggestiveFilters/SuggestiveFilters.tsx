@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { Star, MapPin, X } from "lucide-react";
 import { FilterState } from "../FilterModal/FilterModal";
 
@@ -83,7 +83,7 @@ export default function SuggestiveFilters({
       {/* Rating Filters Row */}
       <AnimatePresence>
         {!filters.minRating && (
-          <motion.div
+          <m.div
             variants={containerVariants}
             initial="hidden"
             animate="visible"
@@ -98,7 +98,7 @@ export default function SuggestiveFilters({
             </p>
             <div className="flex flex-wrap gap-2">
               {ratingOptions.map((option) => (
-                <motion.button
+                <m.button
                   key={option.value}
                   variants={itemVariants}
                   onClick={() => onUpdateFilter('minRating', option.value)}
@@ -109,17 +109,17 @@ export default function SuggestiveFilters({
                 >
                   <Star className="w-4 h-4" fill="currentColor" />
                   <span>{option.label}</span>
-                </motion.button>
+                </m.button>
               ))}
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 
       {/* Distance Filters Row */}
       <AnimatePresence>
         {!filters.distance && (
-          <motion.div
+          <m.div
             variants={containerVariants}
             initial="hidden"
             animate="visible"
@@ -133,7 +133,7 @@ export default function SuggestiveFilters({
             </p>
             <div className="flex flex-wrap gap-2">
               {distanceOptions.map((option) => (
-                <motion.button
+                <m.button
                   key={option.value}
                   variants={itemVariants}
                   onClick={() => onUpdateFilter('distance', option.value)}
@@ -144,10 +144,10 @@ export default function SuggestiveFilters({
                 >
                   <MapPin className="w-4 h-4" />
                   <span>{option.label}</span>
-                </motion.button>
+                </m.button>
               ))}
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

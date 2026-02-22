@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import BusinessOfMonthPodium from "./BusinessOfMonthPodium";
 import BusinessLeaderboardItem from "./BusinessLeaderboardItem";
@@ -154,7 +154,7 @@ function BusinessOfMonthLeaderboard({
         <AnimatePresence>
           {showFullLeaderboard &&
             hiddenBusinesses.map((business, index) => (
-              <motion.div
+              <m.div
                 key={business.id}
                 initial={{ opacity: 0, height: 0, y: -20 }}
                 animate={{ opacity: 1, height: "auto", y: 0 }}
@@ -166,7 +166,7 @@ function BusinessOfMonthLeaderboard({
                   index={index + 5}
                   rank={index + 6}
                 />
-              </motion.div>
+              </m.div>
             ))}
         </AnimatePresence>
       </div>

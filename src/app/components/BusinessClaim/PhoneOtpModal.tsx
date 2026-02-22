@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { AlertCircle, Clock3, Loader2, ShieldCheck, X } from "lucide-react";
 
 const FONT = "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif";
@@ -326,7 +326,7 @@ export default function PhoneOtpModal({
   return (
     <AnimatePresence>
       {open && session ? (
-        <motion.div
+        <m.div
           className="fixed inset-0 z-[70] bg-charcoal/35 backdrop-blur-[2px]"
           role="dialog"
           aria-modal="true"
@@ -342,7 +342,7 @@ export default function PhoneOtpModal({
           }}
         >
           <div className="grid min-h-full place-items-center p-4 sm:p-6">
-            <motion.section
+            <m.section
               className="w-full max-w-[420px] rounded-[14px] border border-sage/20 bg-off-white shadow-[0_24px_80px_rgba(0,0,0,0.24)]"
               initial={{ opacity: 0, y: 10, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -517,9 +517,9 @@ export default function PhoneOtpModal({
                   )}
                 </div>
               </div>
-            </motion.section>
+            </m.section>
           </div>
-        </motion.div>
+        </m.div>
       ) : null}
     </AnimatePresence>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { ReactNode, useEffect, useState } from "react";
 
 interface PageTransitionProps {
@@ -48,7 +48,7 @@ export default function PageTransition({ children, className = "" }: PageTransit
   }
 
   return (
-    <motion.div
+    <m.div
       variants={pageVariants}
       initial="initial"
       animate="animate"
@@ -56,7 +56,7 @@ export default function PageTransition({ children, className = "" }: PageTransit
       className={className}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { getBadgeMapping, getBadgePngPath } from "../../lib/badgeMappings";
 import { Lock } from "lucide-react";
 
@@ -38,7 +38,7 @@ export default function BadgeCard({ badge, onClick }: BadgeCardProps) {
   const colors = !isLocked ? (groupColors[badge.badge_group] || { bg: "from-sage/5 to-coral/5", border: "border-sage/30" }) : null;
 
   return (
-    <motion.div
+    <m.div
       className={`
         relative flex flex-col items-center p-4 rounded-xl border-2 transition-all cursor-pointer bg-card-bg
         ${
@@ -77,7 +77,7 @@ export default function BadgeCard({ badge, onClick }: BadgeCardProps) {
 
         {/* Shine effect for earned badges */}
         {!isLocked && (
-          <motion.div
+          <m.div
             className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/30 to-transparent rounded-lg"
             initial={{ x: "-100%" }}
             animate={{ x: "200%" }}
@@ -112,6 +112,6 @@ export default function BadgeCard({ badge, onClick }: BadgeCardProps) {
           Earned {new Date(badge.awarded_at).toLocaleDateString()}
         </p>
       )}
-    </motion.div>
+    </m.div>
   );
 }

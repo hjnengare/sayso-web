@@ -1,7 +1,7 @@
 "use client";
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 
 interface Props {
   children: ReactNode;
@@ -59,7 +59,7 @@ class OnboardingErrorBoundary extends Component<Props, State> {
             <div className="absolute bottom-0 left-0 w-80 h-80 bg-card-bg/3 rounded-full blur-3xl" />
           </div>
 
-          <motion.div 
+          <m.div 
             className="max-w-md w-full relative z-10"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -124,7 +124,7 @@ class OnboardingErrorBoundary extends Component<Props, State> {
                 </a>
               </p>
             </div>
-          </motion.div>
+          </m.div>
         </div>
       );
     }

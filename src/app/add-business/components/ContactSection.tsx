@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Phone, Coins, Sparkles, Wallet, Gem, Crown } from "lucide-react";
 import { BusinessFormData } from "./types";
 
@@ -120,14 +120,14 @@ const ContactSection: React.FC<ContactSectionProps> = ({
                                 Price Range
                             </label>
                             {formData.priceRange && (
-                                <motion.span
+                                <m.span
                                     initial={{ opacity: 0, scale: 0.8 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     className="text-xs text-charcoal/60 bg-charcoal/5 px-3 py-1 rounded-full"
                                     style={{ fontFamily: 'Urbanist, sans-serif' }}
                                 >
                                     {priceRangeOptions.find(p => p.value === formData.priceRange)?.description}
-                                </motion.span>
+                                </m.span>
                             )}
                         </div>
 
@@ -136,7 +136,7 @@ const ContactSection: React.FC<ContactSectionProps> = ({
                                 const isSelected = formData.priceRange === option.value;
                                 const Icon = option.Icon;
                                 return (
-                                    <motion.button
+                                    <m.button
                                         key={option.value}
                                         type="button"
                                         onClick={() => onInputChange('priceRange', option.value)}
@@ -159,15 +159,15 @@ const ContactSection: React.FC<ContactSectionProps> = ({
                                             {option.description}
                                         </span>
                                         {isSelected && (
-                                            <motion.div
+                                            <m.div
                                                 layoutId="price-indicator"
                                                 className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-coral flex items-center justify-center"
                                                 initial={false}
                                             >
                                                 <Sparkles className="w-3 h-3 text-white" />
-                                            </motion.div>
+                                            </m.div>
                                         )}
-                                    </motion.button>
+                                    </m.button>
                                 );
                             })}
                         </div>

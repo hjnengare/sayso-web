@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { IoArrowBack, IoHome } from "react-icons/io5";
 import FadeInUp from "../Animations/FadeInUp";
 import PremiumHover from "../Animations/PremiumHover";
@@ -163,14 +163,14 @@ export default function ErrorPage({
         <div className="text-center max-w-lg mx-auto">
           {/* Error Icon */}
           <FadeInUp delay={0.1}>
-            <motion.div
+            <m.div
               className="relative mb-8 flex justify-center"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.6, ease: "easeOut" }}
             >
               {finalIcon}
-            </motion.div>
+            </m.div>
           </FadeInUp>
 
           {/* Title */}

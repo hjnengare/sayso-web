@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 
 interface LiveIndicatorProps {
   isLive: boolean;
@@ -13,13 +13,13 @@ export function LiveIndicator({ isLive, className = '' }: LiveIndicatorProps) {
 
   return (
     <AnimatePresence>
-      <motion.div
+      <m.div
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.8 }}
         className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-sage/10 border border-sage/20 ${className}`}
       >
-        <motion.div
+        <m.div
           animate={{
             scale: [1, 1.2, 1],
             opacity: [1, 0.8, 1],
@@ -32,7 +32,7 @@ export function LiveIndicator({ isLive, className = '' }: LiveIndicatorProps) {
           className="w-1.5 h-1.5 bg-sage rounded-full"
         />
         <span className="text-xs font-medium text-sage">Live</span>
-      </motion.div>
+      </m.div>
     </AnimatePresence>
   );
 }
@@ -48,7 +48,7 @@ interface BadgeNotificationProps {
 
 export function BadgeNotification({ badge, onClose }: BadgeNotificationProps) {
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: -20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -20, scale: 0.95 }}
@@ -102,7 +102,7 @@ export function BadgeNotification({ badge, onClose }: BadgeNotificationProps) {
           </button>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -114,23 +114,23 @@ export function ReconnectingIndicator({ isReconnecting }: ReconnectingIndicatorP
   if (!isReconnecting) return null;
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
       className="fixed top-16 left-1/2 transform -translate-x-1/2 z-40"
     >
       <div className="bg-charcoal/90 backdrop-blur-sm text-white text-sm px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
-        <motion.div
+        <m.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-        </motion.div>
+        </m.div>
         <span>Reconnecting...</span>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

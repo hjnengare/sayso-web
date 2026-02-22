@@ -3,7 +3,7 @@
 import { useState, useEffect, use } from "react";
 import { useEventDetail } from "../../hooks/useEventDetail";
 import { useSavedEvent } from "../../hooks/useSavedEvent";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -237,7 +237,7 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
             {/* Left Column - Main Content */}
             <div className="lg:col-span-2 space-y-4 sm:space-y-6 lg:space-y-8">
               {/* Hero Image */}
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.6 }}
@@ -274,10 +274,10 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
                 >
                   <Heart className={`mx-auto ${isLiked ? "fill-current" : ""}`} size={20} />
                 </button>
-              </motion.div>
+              </m.div>
 
               {/* Special Title */}
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, duration: 0.6 }}
@@ -299,10 +299,10 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
                     <span className="text-xs font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>{special.location}</span>
                   </div>
                 </div>
-              </motion.div>
+              </m.div>
 
               {/* Special Details */}
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.6 }}
@@ -365,10 +365,10 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
                     </div>
                   )}
                 </div>
-              </motion.div>
+              </m.div>
 
               {/* Description */}
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4, duration: 0.6 }}
@@ -378,13 +378,13 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
                 <p className="text-sm text-charcoal/80 leading-7 whitespace-pre-wrap break-words [overflow-wrap:anywhere]" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                   {normalizedDescription}
                 </p>
-              </motion.div>
+              </m.div>
             </div>
 
             {/* Right Column - Sidebar */}
             <div className="space-y-6">
               {/* Action Card */}
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.5, duration: 0.6 }}
@@ -431,7 +431,7 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
                     </button>
                   </div>
                 </div>
-              </motion.div>
+              </m.div>
 
               {/* More dates */}
               {(() => {
@@ -484,7 +484,7 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
                 if (otherDates.length === 0) return null;
 
                 return (
-                  <motion.div
+                  <m.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.55, duration: 0.6 }}
@@ -512,12 +512,12 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
                         </div>
                       ))}
                     </div>
-                  </motion.div>
+                  </m.div>
                 );
               })()}
 
               {/* Contact Info */}
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.6, duration: 0.6 }}
@@ -582,7 +582,7 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
                     </Link>
                   )}
                 </div>
-              </motion.div>
+              </m.div>
             </div>
           </div>
         </div>

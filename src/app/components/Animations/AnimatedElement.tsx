@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, HTMLMotionProps } from 'framer-motion';
+import { m, HTMLMotionProps } from 'framer-motion';
 import { useStaggeredAnimation, AnimationDirection } from '../../hooks/useStaggeredAnimation';
 import { useEffect, useState } from 'react';
 import { useIsDesktop } from '../../hooks/useIsDesktop';
@@ -53,7 +53,7 @@ export default function AnimatedElement({
   }
 
   return (
-    <motion.div
+    <m.div
       initial="hidden"
       animate={animationState}
       variants={variants}
@@ -61,7 +61,7 @@ export default function AnimatedElement({
       {...props}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Star, Trophy, MapPin, ImageIcon } from "lucide-react";
 import Image from "next/image";
 import { BusinessOfTheMonth } from "../../types/community";
@@ -92,7 +92,7 @@ function BusinessLeaderboardItem({ business, index, rank }: BusinessLeaderboardI
   };
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.05, duration: 0.3 }}
@@ -143,7 +143,7 @@ function BusinessLeaderboardItem({ business, index, rank }: BusinessLeaderboardI
           <span className="font-urbanist text-caption sm:text-body-sm text-charcoal/70 whitespace-nowrap">{business.reviewCount > 0 ? `${business.reviewCount} reviews` : "No reviews yet"}</span>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 

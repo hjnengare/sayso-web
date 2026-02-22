@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { m, useReducedMotion } from "framer-motion";
 import { ReactNode } from "react";
 import { useIsDesktop } from "../../hooks/useIsDesktop";
 
@@ -42,7 +42,7 @@ export default function AnimatedSection({
     : { opacity: 1, y: 0, x: 0 };
 
   return (
-    <motion.section
+    <m.section
       id={id}
       className={className}
       initial={initial}
@@ -54,7 +54,7 @@ export default function AnimatedSection({
       }}
     >
       {children}
-    </motion.section>
+    </m.section>
   );
 }
 

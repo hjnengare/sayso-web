@@ -1,7 +1,7 @@
 "use client";
 
 import { memo } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { CheckCircle } from "lucide-react";
 
 interface SubcategoryPillProps {
@@ -98,7 +98,7 @@ function SubcategoryPill({
   };
 
   return (
-    <motion.button
+    <m.button
       onClick={() => !isDisabled && onToggle(subcategory.id, subcategory.interest_id)}
       disabled={isDisabled}
       variants={pillVariants}
@@ -125,15 +125,15 @@ function SubcategoryPill({
     >
       <span>{subcategory.label}</span>
       {isSelected && (
-        <motion.div
+        <m.div
           variants={checkIconVariants}
           initial="hidden"
           animate="visible"
         >
           <CheckCircle className="h-4 w-4" />
-        </motion.div>
+        </m.div>
       )}
-    </motion.button>
+    </m.button>
   );
 }
 

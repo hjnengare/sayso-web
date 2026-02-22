@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { MapPin, AlertCircle, ZoomIn, ZoomOut } from "lucide-react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -322,7 +322,7 @@ export default function MapboxMap({
     if (hasError) {
         return (
             <div className="w-full h-full flex items-center justify-center bg-off-white" style={{ minHeight: "220px" }}>
-                <motion.div
+                <m.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="text-center p-6"
@@ -342,7 +342,7 @@ export default function MapboxMap({
                     >
                         Unable to load the map
                     </p>
-                </motion.div>
+                </m.div>
             </div>
         );
     }
@@ -352,12 +352,12 @@ export default function MapboxMap({
             {/* Loading overlay */}
             {!isLoaded && (
                 <div className="absolute inset-0 z-10 bg-off-white flex items-center justify-center">
-                    <motion.div
+                    <m.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         className="flex flex-col items-center gap-3"
                     >
-                        <motion.div
+                        <m.div
                             animate={{
                                 scale: [1, 1.15, 1],
                                 rotate: [0, 5, -5, 0]
@@ -370,25 +370,25 @@ export default function MapboxMap({
                             className="w-14 h-14 rounded-full bg-coral/15 flex items-center justify-center"
                         >
                             <MapPin className="w-7 h-7 text-coral" />
-                        </motion.div>
+                        </m.div>
                         <div className="flex items-center gap-1.5">
-                            <motion.div
+                            <m.div
                                 animate={{ opacity: [0.3, 1, 0.3] }}
                                 transition={{ duration: 1, repeat: Infinity, delay: 0 }}
                                 className="w-2 h-2 rounded-full bg-coral"
                             />
-                            <motion.div
+                            <m.div
                                 animate={{ opacity: [0.3, 1, 0.3] }}
                                 transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
                                 className="w-2 h-2 rounded-full bg-coral"
                             />
-                            <motion.div
+                            <m.div
                                 animate={{ opacity: [0.3, 1, 0.3] }}
                                 transition={{ duration: 1, repeat: Infinity, delay: 0.4 }}
                                 className="w-2 h-2 rounded-full bg-coral"
                             />
                         </div>
-                    </motion.div>
+                    </m.div>
                 </div>
             )}
 
@@ -400,7 +400,7 @@ export default function MapboxMap({
 
             {/* Custom zoom controls */}
             {isLoaded && interactive && (
-                <motion.div
+                <m.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.3 }}
@@ -420,12 +420,12 @@ export default function MapboxMap({
                     >
                         <ZoomOut className="w-5 h-5 text-charcoal" />
                     </button>
-                </motion.div>
+                </m.div>
             )}
 
             {/* Re-center button */}
             {isLoaded && interactive && (
-                <motion.button
+                <m.button
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 }}
@@ -440,7 +440,7 @@ export default function MapboxMap({
                     >
                         Center
                     </span>
-                </motion.button>
+                </m.button>
             )}
 
             {/* Custom styles for Mapbox elements */}

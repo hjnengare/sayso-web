@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { MessageCircle, User, Check } from "lucide-react";
 
 interface BusinessChat {
@@ -29,7 +29,7 @@ export default function ConversationItem({ chat, index, isSelected, onClick }: C
   const [imgError, setImgError] = useState(false);
 
   return (
-    <motion.button
+    <m.button
       onClick={onClick}
       className="group relative block w-full text-left"
       initial={{ opacity: 0, y: 10 }}
@@ -72,7 +72,7 @@ export default function ConversationItem({ chat, index, isSelected, onClick }: C
 
           {/* Unread Indicator */}
           {chat.unreadCount > 0 && !isSelected && (
-            <motion.div
+            <m.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-gradient-to-br from-coral to-coral/90 rounded-full ring-2 ring-off-white shadow-sm"
@@ -95,18 +95,18 @@ export default function ConversationItem({ chat, index, isSelected, onClick }: C
               {chat.lastMessage}
             </p>
             {chat.unreadCount > 0 && (
-              <motion.span
+              <m.span
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 className="min-w-[24px] h-6 px-2.5 bg-gradient-to-br from-sage via-sage to-sage/95 text-white text-xs font-black rounded-full flex items-center justify-center flex-shrink-0 shadow-md shadow-sage/30"
                 style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
               >
                 {chat.unreadCount > 99 ? "99+" : chat.unreadCount}
-              </motion.span>
+              </m.span>
             )}
           </div>
         </div>
       </div>
-    </motion.button>
+    </m.button>
   );
 }

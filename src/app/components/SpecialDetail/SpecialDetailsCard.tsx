@@ -2,7 +2,7 @@
 "use client";
 
 import { Calendar, Percent, Clock, Users } from "lucide-react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 
 interface SpecialDetailsCardProps {
     special: {
@@ -14,7 +14,7 @@ interface SpecialDetailsCardProps {
 
 export default function SpecialDetailsCard({ special }: SpecialDetailsCardProps) {
     return (
-        <motion.div
+        <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.6 }}
@@ -110,6 +110,6 @@ export default function SpecialDetailsCard({ special }: SpecialDetailsCardProps)
                     </div>
                 </div>
             </div>
-        </motion.div>
+        </m.div>
     );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { X } from 'lucide-react';
 import { Badge } from './BadgeCard';
@@ -17,7 +17,7 @@ export default function BadgeModal({ badge, onClose }: BadgeModalProps) {
 
   return (
     <AnimatePresence>
-      <motion.div
+      <m.div
         className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -28,7 +28,7 @@ export default function BadgeModal({ badge, onClose }: BadgeModalProps) {
         <div className="absolute inset-0 bg-charcoal/60 backdrop-blur-sm" />
 
         {/* Modal Content */}
-        <motion.div
+        <m.div
           className="relative bg-off-white rounded-[28px] p-6 max-w-md w-full shadow-2xl"
           initial={{ scale: 0.9, y: 20 }}
           animate={{ scale: 1, y: 0 }}
@@ -125,8 +125,8 @@ export default function BadgeModal({ badge, onClose }: BadgeModalProps) {
               )}
             </div>
           )}
-        </motion.div>
-      </motion.div>
+        </m.div>
+      </m.div>
     </AnimatePresence>
   );
 }

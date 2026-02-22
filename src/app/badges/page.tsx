@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { 
   ChevronLeft, 
@@ -411,7 +411,7 @@ function BadgeCard({ badge, index }: { badge: BadgeMapping; index: number }) {
   const details = BADGE_DETAILS[badge.id];
   
   return (
-    <motion.div
+    <m.div
       variants={isDesktop ? itemVariants : undefined}
       initial={isDesktop ? "hidden" : false}
       animate={isDesktop ? "visible" : undefined}
@@ -465,7 +465,7 @@ function BadgeCard({ badge, index }: { badge: BadgeMapping; index: number }) {
 
       {/* Hover Glow Effect */}
       <div className="absolute inset-0 bg-gradient-to-t from-sage/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -498,7 +498,7 @@ function BadgeSection({
     <section className="mb-16 sm:mb-24">
       {/* Section Header */}
       {isDesktop ? (
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-100px" }}
@@ -526,7 +526,7 @@ function BadgeSection({
         >
           {meta.description}
         </p>
-      </motion.div>
+      </m.div>
       ) : (
       <div className="mb-8 sm:mb-12">
         <div className={`inline-flex items-center gap-3 px-4 py-2 rounded-full bg-gradient-to-r ${meta.gradient} border ${meta.borderColor} mb-4`}>
@@ -564,7 +564,7 @@ function BadgeSection({
             return (
               <div key={categoryKey}>
                 {isDesktop ? (
-                  <motion.div
+                  <m.div
                     initial={{ opacity: 0, x: -20 }}
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
@@ -578,7 +578,7 @@ function BadgeSection({
                       {categoryMeta.title}
                     </h3>
                     <div className="flex-1 h-px bg-charcoal/10" />
-                  </motion.div>
+                  </m.div>
                 ) : (
                   <div className="flex items-center gap-3 mb-6">
                     <span className="text-2xl">{categoryMeta.emoji}</span>
@@ -592,7 +592,7 @@ function BadgeSection({
                   </div>
                 )}
                 {isDesktop ? (
-                  <motion.div
+                  <m.div
                     variants={containerVariants}
                     initial="hidden"
                     whileInView="visible"
@@ -602,7 +602,7 @@ function BadgeSection({
                     {categoryBadges.map((badge, index) => (
                       <BadgeCard key={badge.id} badge={badge} index={index} />
                     ))}
-                  </motion.div>
+                  </m.div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                     {categoryBadges.map((badge, index) => (
@@ -616,7 +616,7 @@ function BadgeSection({
         </div>
       ) : isDesktop ? (
         // Other badge groups (desktop: animated)
-        <motion.div
+        <m.div
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
@@ -626,7 +626,7 @@ function BadgeSection({
           {badges.map((badge, index) => (
             <BadgeCard key={badge.id} badge={badge} index={index} />
           ))}
-        </motion.div>
+        </m.div>
       ) : (
         // Other badge groups (mobile: no animation)
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
@@ -690,7 +690,7 @@ export default function BadgesPage() {
 
         <div className="relative mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-8 pt-8 pb-16 sm:pt-12 sm:pb-24">
           {/* Back Link */}
-          <motion.div
+          <m.div
             initial={isDesktop ? { opacity: 0, x: -20 } : false}
             animate={isDesktop ? { opacity: 1, x: 0 } : undefined}
             transition={isDesktop ? { duration: 0.4 } : undefined}
@@ -710,11 +710,11 @@ export default function BadgesPage() {
               <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
               <span className="text-sm font-medium">Back to previous page</span>
             </button>
-          </motion.div>
+          </m.div>
 
           {/* Hero Content */}
           <div className="max-w-3xl">
-            <motion.div
+            <m.div
               initial={isDesktop ? { opacity: 0, y: 20 } : false}
               animate={isDesktop ? { opacity: 1, y: 0 } : undefined}
               transition={isDesktop ? { duration: 0.6, delay: 0.1 } : undefined}
@@ -727,9 +727,9 @@ export default function BadgesPage() {
               >
                 {Object.keys(BADGE_MAPPINGS).length} Badges to Collect
               </span>
-            </motion.div>
+            </m.div>
 
-            <motion.h1
+            <m.h1
               initial={isDesktop ? { opacity: 0, y: 20 } : false}
               animate={isDesktop ? { opacity: 1, y: 0 } : undefined}
               transition={isDesktop ? { duration: 0.6, delay: 0.2 } : undefined}
@@ -738,9 +738,9 @@ export default function BadgesPage() {
             >
               Earn Badges.<br />
               <span className="text-sage">Show Your Expertise.</span>
-            </motion.h1>
+            </m.h1>
 
-            <motion.p
+            <m.p
               initial={isDesktop ? { opacity: 0, y: 20 } : false}
               animate={isDesktop ? { opacity: 1, y: 0 } : undefined}
               transition={isDesktop ? { duration: 0.6, delay: 0.3 } : undefined}
@@ -748,10 +748,10 @@ export default function BadgesPage() {
               style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
             >
               Every review, photo, and helpful action earns you recognition. Collect badges that showcase your unique journey and expertise across Cape Town's best local businesses.
-            </motion.p>
+            </m.p>
 
             {/* Search */}
-            <motion.div
+            <m.div
               initial={isDesktop ? { opacity: 0, y: 20 } : false}
               animate={isDesktop ? { opacity: 1, y: 0 } : undefined}
               transition={isDesktop ? { duration: 0.6, delay: 0.4 } : undefined}
@@ -774,12 +774,12 @@ export default function BadgesPage() {
                   <X className="w-4 h-4 text-charcoal/40" />
                 </button>
               )}
-            </motion.div>
+            </m.div>
           </div>
 
           {/* Decorative Badges */}
           <div className="absolute right-8 top-1/2 -translate-y-1/2 hidden xl:block">
-            <motion.div
+            <m.div
               initial={isDesktop ? { opacity: 0, scale: 0.8, rotate: -10 } : false}
               animate={isDesktop ? { opacity: 1, scale: 1, rotate: 0 } : undefined}
               transition={isDesktop ? { duration: 0.8, delay: 0.5 } : undefined}
@@ -795,7 +795,7 @@ export default function BadgesPage() {
                   "/badges/066-skydiving.png",
                   "/badges/035-sunglasses.png",
                 ].map((src, i) => (
-                  <motion.div
+                  <m.div
                     key={src}
                     initial={isDesktop ? { opacity: 0, y: 20 } : false}
                     animate={isDesktop ? { opacity: 1, y: 0 } : undefined}
@@ -808,10 +808,10 @@ export default function BadgesPage() {
                       fill
                       className="object-contain"
                     />
-                  </motion.div>
+                  </m.div>
                 ))}
               </div>
-            </motion.div>
+            </m.div>
           </div>
         </div>
       </section>
@@ -838,7 +838,7 @@ export default function BadgesPage() {
             </div>
             {filteredBadges.length > 0 ? (
               isDesktop ? (
-                <motion.div
+                <m.div
                   variants={containerVariants}
                   initial="hidden"
                   animate="visible"
@@ -847,7 +847,7 @@ export default function BadgesPage() {
                   {filteredBadges.map((badge, index) => (
                     <BadgeCard key={badge.id} badge={badge} index={index} />
                   ))}
-                </motion.div>
+                </m.div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                   {filteredBadges.map((badge, index) => (
@@ -874,7 +874,7 @@ export default function BadgesPage() {
         )}
 
         {/* CTA Section */}
-        <motion.section
+        <m.section
           initial={isDesktop ? { opacity: 0, y: 40 } : false}
           whileInView={isDesktop ? { opacity: 1, y: 0 } : undefined}
           viewport={isDesktop ? { once: true } : undefined}
@@ -910,7 +910,7 @@ export default function BadgesPage() {
               <Sparkles className="w-5 h-5" />
             </Link>
           </div>
-        </motion.section>
+        </m.section>
       </main>
 
       <Footer />

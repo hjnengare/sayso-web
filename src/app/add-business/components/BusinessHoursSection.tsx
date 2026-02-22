@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { Clock, Sun, Moon, Copy, Sparkles, Coffee, Store, Zap } from "lucide-react";
 import { BusinessFormData } from "./types";
 
@@ -129,7 +129,7 @@ const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({
     const openDaysCount = Object.values(formData.hours).filter(h => h && h.trim()).length;
 
     return (
-        <motion.div
+        <m.div
             className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden border-none backdrop-blur-xl shadow-md px-4 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -147,14 +147,14 @@ const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({
                         Business Hours
                     </h3>
                     {hasAnyHours && (
-                        <motion.span
+                        <m.span
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
                             className="text-xs text-charcoal/60 bg-charcoal/5 px-3 py-1 rounded-full"
                             style={{ fontFamily: 'Urbanist, sans-serif' }}
                         >
                             {openDaysCount} day{openDaysCount !== 1 ? 's' : ''} open
-                        </motion.span>
+                        </m.span>
                     )}
                 </div>
 
@@ -168,7 +168,7 @@ const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({
                             const Icon = preset.icon;
                             const isSelected = selectedPreset === preset.id;
                             return (
-                                <motion.button
+                                <m.button
                                     key={preset.id}
                                     type="button"
                                     onClick={() => applyPreset(preset.id)}
@@ -190,13 +190,13 @@ const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({
                                         {preset.description}
                                     </span>
                                     {isSelected && (
-                                        <motion.div
+                                        <m.div
                                             layoutId="preset-indicator"
                                             className="absolute top-2 right-2 w-2 h-2 rounded-full bg-coral"
                                             initial={false}
                                         />
                                     )}
-                                </motion.button>
+                                </m.button>
                             );
                         })}
                     </div>
@@ -225,7 +225,7 @@ const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({
                             const isOpen = !hours.isClosed;
 
                             return (
-                                <motion.div
+                                <m.div
                                     key={day.key}
                                     initial={{ opacity: 0, x: -10 }}
                                     animate={{ opacity: 1, x: 0 }}
@@ -246,7 +246,7 @@ const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({
                                                 : 'bg-charcoal/20 justify-start pl-1'
                                         }`}
                                     >
-                                        <motion.div
+                                        <m.div
                                             layout
                                             className={`w-6 h-6 rounded-full flex items-center justify-center ${
                                                 isOpen ? 'bg-white' : 'bg-white/80'
@@ -257,7 +257,7 @@ const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({
                                             ) : (
                                                 <Moon className="w-3.5 h-3.5 text-charcoal/60" />
                                             )}
-                                        </motion.div>
+                                        </m.div>
                                     </button>
 
                                     {/* Day Label */}
@@ -272,7 +272,7 @@ const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({
                                         <AnimatePresence mode="wait">
                                             {isOpen ? (
                                                 showCustomize ? (
-                                                    <motion.div
+                                                    <m.div
                                                         key="edit"
                                                         initial={{ opacity: 0 }}
                                                         animate={{ opacity: 1 }}
@@ -294,9 +294,9 @@ const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({
                                                             className="bg-white border border-charcoal/20 rounded-full px-3 py-1.5 text-sm text-charcoal font-semibold focus:outline-none focus:border-coral/50 focus:ring-2 focus:ring-coral/30 w-[100px] hover:border-sage/50 transition-all duration-200"
                                                             style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 600 }}
                                                         />
-                                                    </motion.div>
+                                                    </m.div>
                                                 ) : (
-                                                    <motion.div
+                                                    <m.div
                                                         key="display"
                                                         initial={{ opacity: 0 }}
                                                         animate={{ opacity: 1 }}
@@ -306,10 +306,10 @@ const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({
                                                         <span className="text-sm text-charcoal/80 font-medium" style={{ fontFamily: 'Urbanist, sans-serif' }}>
                                                             {formatTimeDisplay(hours.open)} – {formatTimeDisplay(hours.close)}
                                                         </span>
-                                                    </motion.div>
+                                                    </m.div>
                                                 )
                                             ) : (
-                                                <motion.span
+                                                <m.span
                                                     key="closed"
                                                     initial={{ opacity: 0 }}
                                                     animate={{ opacity: 1 }}
@@ -318,7 +318,7 @@ const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({
                                                     style={{ fontFamily: 'Urbanist, sans-serif' }}
                                                 >
                                                     Closed
-                                                </motion.span>
+                                                </m.span>
                                             )}
                                         </AnimatePresence>
                                     </div>
@@ -336,7 +336,7 @@ const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({
                                             </button>
                                         </div>
                                     )}
-                                </motion.div>
+                                </m.div>
                             );
                         })}
                     </div>
@@ -344,7 +344,7 @@ const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({
 
                 {/* Smart Actions */}
                 {hasAnyHours && (
-                    <motion.div
+                    <m.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="mt-4 pt-4 border-t border-charcoal/10 flex flex-wrap gap-2"
@@ -384,7 +384,7 @@ const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({
                         >
                             Clear all
                         </button>
-                    </motion.div>
+                    </m.div>
                 )}
 
                 {/* Helper text */}
@@ -394,7 +394,7 @@ const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({
                     </p>
                 )}
             </div>
-        </motion.div>
+        </m.div>
     );
 };
 

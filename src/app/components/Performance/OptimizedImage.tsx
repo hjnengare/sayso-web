@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState, useCallback, memo, useEffect } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { getResponsiveSizes, getOptimalQuality, preloadImage } from "../../lib/utils/cdnUtils";
 
 interface OptimizedImageProps {
@@ -77,7 +77,7 @@ function OptimizedImage({
         </div>
       )}
       
-      <motion.div
+      <m.div
         initial={{ opacity: 0 }}
         animate={{ opacity: isLoading ? 0 : 1 }}
         transition={{ duration: 0.3 }}
@@ -98,7 +98,7 @@ function OptimizedImage({
           onError={handleError}
           loading={priority ? "eager" : "lazy"}
         />
-      </motion.div>
+      </m.div>
     </div>
   );
 }

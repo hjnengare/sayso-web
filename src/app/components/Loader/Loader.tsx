@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 
 // =============================================================================
 // TYPES
@@ -70,7 +70,7 @@ const WavyDotsLoader: React.FC<{ size: LoaderSize; color: LoaderColor }> = ({ si
   return (
     <div className="flex items-center gap-1.5" role="status" aria-label="Loading">
       {[0, 1, 2, 3].map((i) => ( // 4 dots
-        <motion.div
+        <m.div
           key={i}
           className={`${dotClass} ${bgClass} rounded-full`}
           animate={{

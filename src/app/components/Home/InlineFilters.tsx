@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence, useReducedMotion, Easing } from "framer-motion";
+import { m, AnimatePresence, useReducedMotion, Easing } from "framer-motion";
 import { MapPin, Star } from "lucide-react";
 
 interface InlineFiltersProps {
@@ -117,7 +117,7 @@ export default function InlineFilters({
   return (
     <AnimatePresence mode="wait">
       {show && (
-        <motion.div
+        <m.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -126,7 +126,7 @@ export default function InlineFilters({
         >
           <div className="px-4 sm:px-6 pb-4 space-y-4">
             {/* Distance Filter Group */}
-            <motion.div
+            <m.div
               variants={groupVariants}
               initial="hidden"
               animate="visible"
@@ -138,7 +138,7 @@ export default function InlineFilters({
               </div>
               <div className="flex gap-2 flex-wrap">
                 {DISTANCE_OPTIONS.map((option) => (
-                  <motion.button
+                  <m.button
                     key={option.value}
                     variants={chipVariants}
                     whileHover={prefersReducedMotion ? {} : { scale: 1.05, y: -2 }}
@@ -152,13 +152,13 @@ export default function InlineFilters({
                     style={{ fontFamily: 'Urbanist, system-ui, sans-serif', fontWeight: 600 }}
                   >
                     {option.label}
-                  </motion.button>
+                  </m.button>
                 ))}
               </div>
-            </motion.div>
+            </m.div>
 
             {/* Rating Filter Group */}
-            <motion.div
+            <m.div
               variants={groupVariants}
               initial="hidden"
               animate="visible"
@@ -170,7 +170,7 @@ export default function InlineFilters({
               </div>
               <div className="flex gap-2 flex-wrap">
                 {RATING_OPTIONS.map((option) => (
-                  <motion.button
+                  <m.button
                     key={option.value}
                     variants={chipVariants}
                     whileHover={prefersReducedMotion ? {} : { scale: 1.05, y: -2 }}
@@ -185,12 +185,12 @@ export default function InlineFilters({
                   >
                     <Star className="w-3.5 h-3.5 fill-current" />
                     {option.label}
-                  </motion.button>
+                  </m.button>
                 ))}
               </div>
-            </motion.div>
+            </m.div>
           </div>
-        </motion.div>
+        </m.div>
       )}
     </AnimatePresence>
   );

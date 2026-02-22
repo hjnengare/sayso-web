@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowRight } from "lucide-react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 
 interface OnboardingButtonProps {
   canProceed: boolean;
@@ -76,7 +76,7 @@ export default function OnboardingButton({
   };
 
   return (
-    <motion.button
+    <m.button
       type="button"
       className={`w-full min-h-[44px] text-sm font-600 py-3 px-4 rounded-full transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 btn-target btn-press ${getButtonColor()}`}
       onClick={handleClick}
@@ -94,25 +94,25 @@ export default function OnboardingButton({
         </>
       ) : (
         <>
-          <motion.span
+          <m.span
             initial={{ x: 0 }}
             whileHover={{ x: 2 }}
             transition={{ type: "spring", stiffness: 500, damping: 20 }}
           >
             {getButtonText()}
-          </motion.span>
+          </m.span>
           {variant === "continue" && (
-            <motion.div
+            <m.div
               initial={{ x: 0 }}
               whileHover={{ x: 4 }}
               transition={{ type: "spring", stiffness: 500, damping: 20 }}
             >
               <ArrowRight className="w-4 h-4" aria-hidden="true" />
-            </motion.div>
+            </m.div>
           )}
         </>
       )}
-    </motion.button>
+    </m.button>
   );
 }
 

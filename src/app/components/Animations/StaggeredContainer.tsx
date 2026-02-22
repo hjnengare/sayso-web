@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, HTMLMotionProps } from 'framer-motion';
+import { m, HTMLMotionProps } from 'framer-motion';
 import { usePageAnimation } from '../../hooks/useStaggeredAnimation';
 import { useIsDesktop } from '../../hooks/useIsDesktop';
 
@@ -30,7 +30,7 @@ export default function StaggeredContainer({
   }
 
   return (
-    <motion.div
+    <m.div
       initial="hidden"
       animate="visible"
       variants={variants}
@@ -38,7 +38,7 @@ export default function StaggeredContainer({
       {...props}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 

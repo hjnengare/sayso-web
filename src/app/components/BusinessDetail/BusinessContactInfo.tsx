@@ -1,7 +1,7 @@
 // src/components/BusinessDetail/BusinessContactInfo.tsx
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Phone, Globe, MapPin, Mail } from "lucide-react";
 
 interface BusinessContactInfoProps {
@@ -18,7 +18,7 @@ export default function BusinessContactInfo({ phone, website, address, email, lo
   const websiteHref = website ? (website.startsWith("http") ? website : `https://${website}`) : "";
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.6, duration: 0.6 }}
@@ -113,7 +113,7 @@ export default function BusinessContactInfo({ phone, website, address, email, lo
           </div>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 

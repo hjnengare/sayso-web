@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import {
   MessageCircle,
   Check,
@@ -52,7 +52,7 @@ function ChatItem({
   const [imgError, setImgError] = useState(false);
 
   return (
-    <motion.button
+    <m.button
       onClick={onClick}
       className="w-full text-left"
       whileHover={{ scale: 1.01 }}
@@ -103,7 +103,7 @@ function ChatItem({
           </div>
         </div>
       </div>
-    </motion.button>
+    </m.button>
   );
 }
 
@@ -479,7 +479,7 @@ export default function DMPage() {
         {/* RIGHT: Message view */}
         <AnimatePresence mode="wait">
           {selectedChat ? (
-            <motion.div
+            <m.div
               key="chat"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -544,7 +544,7 @@ export default function DMPage() {
                     {messages.map((msg) => {
                       const isCurrentUser = msg.senderId === user?.id;
                       return (
-                        <motion.div
+                        <m.div
                           key={msg.id}
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
@@ -563,7 +563,7 @@ export default function DMPage() {
                               {isCurrentUser && msg.read && <Check className="w-3 h-3" strokeWidth={3} />}
                             </div>
                           </div>
-                        </motion.div>
+                        </m.div>
                       );
                     })}
                     <div ref={messagesEndRef} />
@@ -595,14 +595,14 @@ export default function DMPage() {
                   </button>
                 </form>
               </div>
-            </motion.div>
+            </m.div>
           ) : (
             <div className="hidden md:flex flex-1 items-center justify-center bg-off-white">
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center">
+              <m.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center">
                 <MessageCircle className="w-16 h-16 text-charcoal/10 mx-auto mb-4" />
                 <h2 className="text-lg font-semibold text-charcoal mb-1">Select a conversation</h2>
                 <p className="text-sm text-charcoal/60">Choose from the list to start messaging</p>
-              </motion.div>
+              </m.div>
             </div>
           )}
         </AnimatePresence>

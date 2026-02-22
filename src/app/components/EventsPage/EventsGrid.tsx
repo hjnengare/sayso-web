@@ -1,7 +1,7 @@
 // src/components/EventsPage/EventsGrid.tsx
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import EventCard from "../EventCard/EventCard";
 import type { Event } from "../../lib/types/Event";
 
@@ -27,7 +27,7 @@ export default function EventsGrid({ events, disableMotion = false, cardWrapperC
   }
 
   return (
-    <motion.div
+    <m.div
       className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2"
       initial="hidden"
       animate="visible"
@@ -43,7 +43,7 @@ export default function EventsGrid({ events, disableMotion = false, cardWrapperC
       }}
     >
       {events.map((event, index) => (
-        <motion.div
+        <m.div
           key={event.id}
           className="list-none relative group"
           variants={{
@@ -65,8 +65,8 @@ export default function EventsGrid({ events, disableMotion = false, cardWrapperC
           }}
         >
           <EventCard event={event} index={index} />
-        </motion.div>
+        </m.div>
       ))}
-    </motion.div>
+    </m.div>
   );
 }

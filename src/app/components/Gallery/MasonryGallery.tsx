@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { useState } from "react";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -55,7 +55,7 @@ export default function MasonryGallery({ images, businessName }: MasonryGalleryP
       <div className="w-full aspect-square rounded-[12px] overflow-hidden bg-gradient-to-br from-white/80 to-white/50">
         <div className="w-full h-full p-3 grid grid-cols-2 md:grid-cols-3 gap-3 auto-rows-min overflow-y-auto scrollbar-hide">
           {images.map((image, index) => (
-            <motion.div
+            <m.div
               key={index}
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -77,14 +77,14 @@ export default function MasonryGallery({ images, businessName }: MasonryGalleryP
                   View
                 </div>
               </div>
-            </motion.div>
+            </m.div>
           ))}
         </div>
       </div>
 
       {/* Lightbox Modal */}
       {selectedImage !== null && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -136,7 +136,7 @@ export default function MasonryGallery({ images, businessName }: MasonryGalleryP
           )}
 
           {/* Main Image */}
-          <motion.div
+          <m.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             className="relative max-w-4xl max-h-[80vh] w-full h-full"
@@ -150,8 +150,8 @@ export default function MasonryGallery({ images, businessName }: MasonryGalleryP
               priority
               unoptimized
             />
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       )}
     </>
   );

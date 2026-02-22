@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import Footer from '../components/Footer/Footer';
 import BusinessCard from '../components/BusinessCard/BusinessCard';
 import { useState, useMemo } from 'react';
@@ -59,7 +59,7 @@ export default function CityPageClient({
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(114,47,55,0.08)_0%,_transparent_50%)]" />
         
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
@@ -117,7 +117,7 @@ export default function CityPageClient({
               })}
             </div>
           )}
-        </motion.div>
+        </m.div>
       </main>
 
       <Footer />

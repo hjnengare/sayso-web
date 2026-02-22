@@ -2,7 +2,7 @@
 "use client";
 
 import { Star, MapPin } from "lucide-react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 
 interface SpecialInfoProps {
     special: {
@@ -15,7 +15,7 @@ interface SpecialInfoProps {
 
 export default function SpecialInfo({ special }: SpecialInfoProps) {
     return (
-        <motion.div
+        <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.6 }}
@@ -56,6 +56,6 @@ export default function SpecialInfo({ special }: SpecialInfoProps) {
                     </div>
                 )}
             </div>
-        </motion.div>
+        </m.div>
     );
 }

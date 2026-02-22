@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { X, UserCheck, Mail, Phone, FileText, Building2, AlertCircle } from "lucide-react";
 import { Loader } from "../Loader/Loader";
 import { useAuth } from "../../contexts/AuthContext";
@@ -177,7 +177,7 @@ export function ClaimModal({ business, onClose, onSuccess }: ClaimModalProps) {
   };
 
   return (
-    <motion.div
+    <m.div
       className="fixed inset-0 z-50 bg-charcoal/45 backdrop-blur-[3px]"
       role="dialog"
       aria-modal="true"
@@ -201,7 +201,7 @@ export function ClaimModal({ business, onClose, onSuccess }: ClaimModalProps) {
           paddingRight: "max(1rem, env(safe-area-inset-right))",
         }}
       >
-        <motion.section
+        <m.section
           className="w-full max-w-[680px]"
           initial={{ opacity: 0, y: 16, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -402,8 +402,8 @@ export function ClaimModal({ business, onClose, onSuccess }: ClaimModalProps) {
               </form>
             </div>
           </div>
-        </motion.section>
+        </m.section>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

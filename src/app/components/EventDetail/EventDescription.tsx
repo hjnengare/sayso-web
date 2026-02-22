@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import type { Event } from "../../lib/types/Event";
 import { normalizeDescriptionText } from "../../lib/utils/descriptionText";
 
@@ -53,7 +53,7 @@ export default function EventDescription({ event }: EventDescriptionProps) {
   }, [normalizedDescription]);
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.4, duration: 0.6 }}
@@ -71,7 +71,7 @@ export default function EventDescription({ event }: EventDescriptionProps) {
           About This Event
         </h2>
 
-        <motion.div
+        <m.div
           initial={false}
           animate={{ height: animatedHeight }}
           transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
@@ -88,7 +88,7 @@ export default function EventDescription({ event }: EventDescriptionProps) {
           {isCollapsible && !isExpanded && (
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-card-bg via-card-bg/95 to-transparent" />
           )}
-        </motion.div>
+        </m.div>
 
         {isCollapsible && (
           <button
@@ -101,6 +101,6 @@ export default function EventDescription({ event }: EventDescriptionProps) {
           </button>
         )}
       </div>
-    </motion.div>
+    </m.div>
   );
 }

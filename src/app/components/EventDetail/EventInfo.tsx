@@ -1,7 +1,7 @@
 // src/components/EventDetail/EventInfo.tsx
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Star, MapPin } from "lucide-react";
 import type { Event } from "../../lib/types/Event";
 
@@ -12,18 +12,18 @@ interface EventInfoProps {
 
 export default function EventInfo({ event, sharedTitleLayoutId }: EventInfoProps) {
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2, duration: 0.6 }}
     >
-      <motion.h1
+      <m.h1
         layoutId={sharedTitleLayoutId}
         className="font-urbanist text-2xl sm:text-3xl md:text-4xl font-bold text-charcoal mb-3"
         style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
       >
         {event.title}
-      </motion.h1>
+      </m.h1>
 
       <div className="flex items-center gap-3 mb-4 flex-wrap">
         {event.rating != null && (
@@ -55,6 +55,6 @@ export default function EventInfo({ event, sharedTitleLayoutId }: EventInfoProps
           </div>
         )}
       </div>
-    </motion.div>
+    </m.div>
   );
 }

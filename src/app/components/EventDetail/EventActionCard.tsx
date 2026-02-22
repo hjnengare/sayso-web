@@ -1,7 +1,7 @@
 // src/components/EventDetail/EventActionCard.tsx
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import Link from "next/link";
 import { useToast } from "../../contexts/ToastContext";
 import type { Event } from "../../lib/types/Event";
@@ -87,7 +87,7 @@ export default function EventActionCard({
     showToast?.("Booking link not available yet.", "info");
   };
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.5, duration: 0.6 }}
@@ -106,7 +106,7 @@ export default function EventActionCard({
         </h3>
 
         <div className="space-y-3">
-          <motion.button
+          <m.button
             type="button"
             onClick={handleReserveClick}
             whileHover={{ scale: 1.02 }}
@@ -115,10 +115,10 @@ export default function EventActionCard({
             style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
           >
             {!isLikelyPhone(bookingContact) && bookingContact?.trim() ? bookingContact.trim() : "Reserve Your Spot"}
-          </motion.button>
+          </m.button>
 
           {eventId && (
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <m.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <Link
                 href={`/write-review/event/${eventId}`}
                 className="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-br from-coral to-coral/90 text-white font-semibold py-3 px-5 rounded-full transition-all duration-300 hover:scale-105 border border-white/30 shadow-md text-body-sm"
@@ -126,10 +126,10 @@ export default function EventActionCard({
               >
                 Write Review
               </Link>
-            </motion.div>
+            </m.div>
           )}
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { Clock, CheckCircle, ChevronDown, ChevronUp, Coins } from "lucide-react";
 
 type DayHours = {
@@ -190,7 +190,7 @@ export default function BusinessDetailsCard({ priceRange, verified, hours }: Bus
   const openStatus = isCurrentlyOpen(hours);
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3, duration: 0.6 }}
@@ -295,7 +295,7 @@ export default function BusinessDetailsCard({ priceRange, verified, hours }: Bus
                 {/* Hours List */}
                 <AnimatePresence>
                   {showAllHours && (
-                    <motion.div
+                    <m.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
@@ -330,7 +330,7 @@ export default function BusinessDetailsCard({ priceRange, verified, hours }: Bus
                           </span>
                         </div>
                       ))}
-                    </motion.div>
+                    </m.div>
                   )}
                 </AnimatePresence>
               </div>
@@ -377,6 +377,6 @@ export default function BusinessDetailsCard({ priceRange, verified, hours }: Bus
           </div>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

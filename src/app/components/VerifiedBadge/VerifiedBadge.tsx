@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Check } from "lucide-react";
 
 interface VerifiedBadgeProps {
@@ -25,7 +25,7 @@ export default function VerifiedBadge({
   };
 
   return (
-    <motion.div
+    <m.div
       initial={{ scale: 0 }}
       animate={{ scale: 1 }}
       transition={{
@@ -43,6 +43,6 @@ export default function VerifiedBadge({
         className="text-white"
         aria-label="Verified"
       />
-    </motion.div>
+    </m.div>
   );
 }

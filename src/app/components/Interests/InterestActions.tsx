@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import OnboardingButton from "../Onboarding/OnboardingButton";
 
 interface InterestActionsProps {
@@ -35,7 +35,7 @@ export default function InterestActions({
   onContinue
 }: InterestActionsProps) {
   return (
-    <motion.div
+    <m.div
       className="pt-4 space-y-4"
       variants={actionsVariants}
       initial="hidden"
@@ -48,6 +48,6 @@ export default function InterestActions({
         onClick={onContinue}
         variant="continue"
       />
-    </motion.div>
+    </m.div>
   );
 }

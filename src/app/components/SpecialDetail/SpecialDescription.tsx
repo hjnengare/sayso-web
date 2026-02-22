@@ -1,7 +1,7 @@
 // src/components/SpecialDetail/SpecialDescription.tsx
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 
 interface SpecialDescriptionProps {
     description: string;
@@ -9,7 +9,7 @@ interface SpecialDescriptionProps {
 
 export default function SpecialDescription({ description }: SpecialDescriptionProps) {
     return (
-        <motion.div
+        <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.6 }}
@@ -27,6 +27,6 @@ export default function SpecialDescription({ description }: SpecialDescriptionPr
             >
                 {description || "Don't miss out on this amazing special offer! This limited-time deal provides incredible value and a fantastic experience. Perfect for trying something new or treating yourself to something special."}
             </p>
-        </motion.div>
+        </m.div>
     );
 }

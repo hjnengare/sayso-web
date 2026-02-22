@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { X, Star, MapPin, ChevronDown } from "lucide-react";
 import { FilterState } from "../FilterModal/FilterModal";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 
 interface ActiveFilterBadgesProps {
   filters: FilterState;
@@ -94,7 +94,7 @@ export default function ActiveFilterBadges({
 
           <AnimatePresence>
             {openDropdown === 'rating' && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
@@ -121,7 +121,7 @@ export default function ActiveFilterBadges({
                     </button>
                   ))}
                 </div>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
         </div>
@@ -164,7 +164,7 @@ export default function ActiveFilterBadges({
 
           <AnimatePresence>
             {openDropdown === 'distance' && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
@@ -191,7 +191,7 @@ export default function ActiveFilterBadges({
                     </button>
                   ))}
                 </div>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
         </div>

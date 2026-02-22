@@ -4,7 +4,7 @@ import nextDynamic from "next/dynamic";
 import Link from "next/link";
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useSavedBusinessesFull } from "../hooks/useSavedBusinessesFull";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { ChevronRight, ChevronLeft, ChevronUp, Store } from "lucide-react";
 import Pagination from "../components/EventsPage/Pagination";
 import EmailVerificationGuard from "../components/Auth/EmailVerificationGuard";
@@ -130,7 +130,7 @@ export default function SavedPage() {
 
         <main className="flex-1 relative z-10">
           <div className="pb-12 sm:pb-16 md:pb-20">
-            <motion.div
+            <m.div
               className="mx-auto w-full max-w-[2000px] px-2 relative mb-4"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -162,7 +162,7 @@ export default function SavedPage() {
                   </li>
                 </ol>
               </nav>
-            </motion.div>
+            </m.div>
 
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
@@ -187,7 +187,7 @@ export default function SavedPage() {
                 </div>
               </div>
             ) : hasAnyContent ? (
-              <motion.div
+              <m.div
                 className="relative z-10"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -195,7 +195,7 @@ export default function SavedPage() {
               >
                 <div className="mx-auto w-full max-w-[2000px] px-2">
                   {/* Title */}
-                  <motion.div
+                  <m.div
                     className="mb-6 sm:mb-8 px-2"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -218,7 +218,7 @@ export default function SavedPage() {
                     >
                       {totalSavedCount} {totalSavedCount === 1 ? "item" : "items"} saved
                     </p>
-                  </motion.div>
+                  </m.div>
 
                   {/* Category Filters */}
                   {categories.length > 1 && (
@@ -306,7 +306,7 @@ export default function SavedPage() {
                     />
                   )}
                 </div>
-              </motion.div>
+              </m.div>
             ) : (
               <div className="relative z-10 min-h-[calc(100vh-200px)] flex items-center justify-center">
                 <EmptySavedState />

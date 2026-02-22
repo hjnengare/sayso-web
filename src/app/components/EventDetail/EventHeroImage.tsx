@@ -1,7 +1,7 @@
 // src/components/EventDetail/EventHeroImage.tsx
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import Image from "next/image";
 import { Star, Heart } from "lucide-react";
 import type { Event } from "../../lib/types/Event";
@@ -54,7 +54,7 @@ export default function EventHeroImage({
   const imageUrl = getOptimizedImageUrl(event.image, 1080);
 
   return (
-    <motion.div
+    <m.div
       layoutId={sharedLayoutId}
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
@@ -110,6 +110,6 @@ export default function EventHeroImage({
         </button>
       )}
 
-    </motion.div>
+    </m.div>
   );
 }

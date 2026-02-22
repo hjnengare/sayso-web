@@ -2,7 +2,7 @@
 
 import React, { useMemo } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import {
     Store,
     Loader2,
@@ -320,7 +320,7 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
                             </div>
 
                             {formData.businessType && (
-                                <motion.div
+                                <m.div
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.3 }}
@@ -337,7 +337,7 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
                                             Part of a chain
                                         </span>
                                     </label>
-                                </motion.div>
+                                </m.div>
                             )}
                         </div>
                     )}

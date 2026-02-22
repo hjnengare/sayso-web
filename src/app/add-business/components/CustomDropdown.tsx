@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
 import { createPortal } from "react-dom";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 
 interface CustomDropdownProps {
     id?: string;
@@ -137,7 +137,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
 
     return (
         <div className={`relative ${className}`}>
-            <motion.button
+            <m.button
                 ref={buttonRef}
                 type="button"
                 id={id}
@@ -157,16 +157,16 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
                 aria-controls={id ? `${id}-dropdown` : undefined}
             >
                 <span className={value ? 'text-charcoal' : 'text-charcoal/70'}>{displayValue}</span>
-                <motion.div
+                <m.div
                     animate={{ rotate: isOpen && !disabled ? 180 : 0 }}
                     transition={{ duration: 0.2 }}
                 >
                     <ChevronDown size={16} />
-                </motion.div>
-            </motion.button>
+                </m.div>
+            </m.button>
 
             {isOpen && dropdownPos && typeof window !== 'undefined' && createPortal(
-                <motion.div
+                <m.div
                     ref={dropdownRef}
                     id={id ? `${id}-dropdown` : undefined}
                     initial={{ opacity: 0, y: -8, scale: 0.96 }}
@@ -207,7 +207,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
                             </div>
                         )}
                         {filteredOptions.map((option, index) => (
-                            <motion.button
+                            <m.button
                                 key={`${option.value}-${index}`}
                                 type="button"
                                 onClick={() => {
@@ -225,10 +225,10 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
                                 aria-selected={option.value === value}
                             >
                                 {option.label}
-                            </motion.button>
+                            </m.button>
                         ))}
                     </div>
-                </motion.div>,
+                </m.div>,
                 document.body
             )}
         </div>

@@ -7,7 +7,7 @@ import EventCard from "../EventCard/EventCard";
 import EventCardSkeleton from "../EventCard/EventCardSkeleton";
 import type { Event } from "../../lib/types/Event";
 import ScrollableSection from "../ScrollableSection/ScrollableSection";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { useMemo } from "react";
 import { useIsDesktop } from "../../hooks/useIsDesktop";
 
@@ -128,7 +128,7 @@ export default function EventsSpecials({
               {title}
             </h2>
           ) : (
-            <motion.h2
+            <m.h2
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
@@ -140,7 +140,7 @@ export default function EventsSpecials({
               }}
             >
               {title}
-            </motion.h2>
+            </m.h2>
           )}
 
           <button
@@ -188,7 +188,7 @@ export default function EventsSpecials({
                     ))}
                   </div>
                 ) : (
-                  <motion.div
+                  <m.div
                     variants={containerVariants}
                     initial="hidden"
                     whileInView="visible"
@@ -196,15 +196,15 @@ export default function EventsSpecials({
                     className="flex gap-3 items-stretch"
                   >
                     {displayEvents.map((event, index) => (
-                      <motion.div
+                      <m.div
                         key={event.id ?? `event-${index}`}
                         variants={itemVariants}
                         className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto min-w-[clamp(220px,18vw,320px)] list-none flex justify-center"
                       >
                         <EventCard event={event} index={index} />
-                      </motion.div>
+                      </m.div>
                     ))}
-                  </motion.div>
+                  </m.div>
                 )
               ) : (
                 <>

@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo, ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { CheckCircle, XCircle, AlertTriangle, Info, X, Sparkles } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 
 interface Toast {
   id: string;
@@ -128,7 +128,7 @@ export function ToastProvider({ children }: ToastProviderProps) {
       <div className="fixed top-2 sm:top-4 left-1/2 -translate-x-1/2 z-[9999] flex flex-col gap-2 pointer-events-none w-full px-2 sm:px-4 max-w-full sm:max-w-sm">
         <AnimatePresence mode="popLayout">
           {toasts.map((toast) => (
-            <motion.div
+            <m.div
               key={toast.id}
               layout
               initial={{ opacity: 0, y: -20, scale: 0.95 }}
@@ -146,20 +146,20 @@ export function ToastProvider({ children }: ToastProviderProps) {
               `}
             >
               <div className="flex items-center gap-2">
-                <motion.div
+                <m.div
                   className="flex-shrink-0"
                   initial={{ scale: 0, rotate: -180 }}
                   animate={{ scale: 1, rotate: 0 }}
                   transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
                 >
                   {getToastIcon(toast.type)}
-                </motion.div>
+                </m.div>
                 <div className="flex-1 min-w-0">
                   <p className="font-urbanist text-xs sm:text-sm font-600 leading-tight break-words">
                     {toast.message}
                   </p>
                 </div>
-                <motion.button
+                <m.button
                   onClick={() => removeToast(toast.id)}
                   className="flex-shrink-0 ml-1.5 sm:ml-2 opacity-70 hover:opacity-100 transition-opacity duration-200 p-0.5 hover:bg-white/20 rounded-full"
                   aria-label="Dismiss notification"
@@ -167,9 +167,9 @@ export function ToastProvider({ children }: ToastProviderProps) {
                   whileTap={{ scale: 0.9 }}
                 >
                   <X className="w-3 h-3" />
-                </motion.button>
+                </m.button>
               </div>
-            </motion.div>
+            </m.div>
           ))}
         </AnimatePresence>
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import WavyTypedTitle from "@/app/components/Animations/WavyTypedTitle";
 
 interface InterestHeaderProps {
@@ -51,7 +51,7 @@ export default function InterestHeader({ isOnline }: InterestHeaderProps) {
   return (
     <>
       {!isOnline && (
-        <motion.div
+        <m.div
           className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20"
           variants={offlineBadgeVariants}
           initial="hidden"
@@ -64,10 +64,10 @@ export default function InterestHeader({ isOnline }: InterestHeaderProps) {
             <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
             <span className="text-sm sm:text-xs font-semibold text-orange-700">Offline</span>
           </div>
-        </motion.div>
+        </m.div>
       )}
 
-      <motion.div
+      <m.div
         className="text-center mb-4 pt-4 sm:pt-6 title-no-break"
         variants={headerVariants}
         initial="hidden"
@@ -96,7 +96,7 @@ export default function InterestHeader({ isOnline }: InterestHeaderProps) {
         >
           Pick a few things you love and let&apos;s personalise your experience!
         </p>
-      </motion.div>
+      </m.div>
     </>
   );
 }

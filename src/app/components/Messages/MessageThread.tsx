@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { MessageCircle, Check } from "lucide-react";
 
 interface Message {
@@ -72,7 +72,7 @@ export default function MessageThread({
         {messages.map((msg) => {
           const isCurrentUser = msg.senderId === currentUserId;
           return (
-            <motion.div
+            <m.div
               key={msg.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -97,7 +97,7 @@ export default function MessageThread({
                   )}
                 </div>
               </div>
-            </motion.div>
+            </m.div>
           );
         })}
         <div ref={messagesEndRef} />

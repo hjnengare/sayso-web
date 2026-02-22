@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { Check, Plus, Sparkles } from "lucide-react";
 
 interface TagSelectorProps {
@@ -48,7 +48,7 @@ export default function TagSelector({ selectedTags, onTagToggle, availableTags }
         </div>
 
         {/* Selected counter */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           className={`text-sm px-2.5 py-1 rounded-full ${
@@ -59,7 +59,7 @@ export default function TagSelector({ selectedTags, onTagToggle, availableTags }
           style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
         >
           {selectedCount}/4 selected
-        </motion.div>
+        </m.div>
       </div>
 
       {/* Tags Grid - Mobile optimized with wrap */}
@@ -70,7 +70,7 @@ export default function TagSelector({ selectedTags, onTagToggle, availableTags }
             const isDisabled = !isSelected && !canSelectMore;
 
             return (
-              <motion.button
+              <m.button
                 key={tag}
                 layout
                 initial={{ opacity: 0, scale: 0.8 }}
@@ -99,7 +99,7 @@ export default function TagSelector({ selectedTags, onTagToggle, availableTags }
                 {/* Selection indicator */}
                 <AnimatePresence mode="wait">
                   {isSelected ? (
-                    <motion.span
+                    <m.span
                       key="check"
                       initial={{ scale: 0, rotate: -180 }}
                       animate={{ scale: 1, rotate: 0 }}
@@ -107,9 +107,9 @@ export default function TagSelector({ selectedTags, onTagToggle, availableTags }
                       transition={{ duration: 0.2 }}
                     >
                       <Check className="w-3.5 h-3.5 text-coral" strokeWidth={3} />
-                    </motion.span>
+                    </m.span>
                   ) : !isDisabled ? (
-                    <motion.span
+                    <m.span
                       key="plus"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
@@ -117,11 +117,11 @@ export default function TagSelector({ selectedTags, onTagToggle, availableTags }
                       className="opacity-50"
                     >
                       <Plus className="w-3.5 h-3.5" strokeWidth={2} />
-                    </motion.span>
+                    </m.span>
                   ) : null}
                 </AnimatePresence>
                 {tag}
-              </motion.button>
+              </m.button>
             );
           })}
         </AnimatePresence>
@@ -129,14 +129,14 @@ export default function TagSelector({ selectedTags, onTagToggle, availableTags }
 
       {/* Helper text */}
       {!canSelectMore && (
-        <motion.p
+        <m.p
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           className="mt-3 text-sm text-charcoal/60 text-center"
           style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
         >
           Tap a selected tag to remove it
-        </motion.p>
+        </m.p>
       )}
     </div>
   );

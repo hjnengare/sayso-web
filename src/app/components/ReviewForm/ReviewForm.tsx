@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Edit3, Camera } from "lucide-react";
 import RatingSelector from "./RatingSelector";
 import TagSelector from "./TagSelector";
@@ -63,7 +63,7 @@ export default function ReviewForm({
   const hasImages = existingImages.length > 0 || selectedImages.length > 0;
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
@@ -91,19 +91,19 @@ export default function ReviewForm({
       {/* Form Content */}
       <div className="space-y-2">
         {/* Rating Section */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.1 }}
         >
           <RatingSelector overallRating={overallRating} onRatingChange={onRatingChange} />
-        </motion.div>
+        </m.div>
 
         {/* Divider */}
         <div className="h-px bg-gradient-to-r from-transparent via-charcoal/10 to-transparent" />
 
         {/* Tags Section */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.15 }}
@@ -113,13 +113,13 @@ export default function ReviewForm({
             onTagToggle={onTagToggle}
             availableTags={availableTags}
           />
-        </motion.div>
+        </m.div>
 
         {/* Divider */}
         <div className="h-px bg-gradient-to-r from-transparent via-charcoal/10 to-transparent" />
 
         {/* Text Form Section */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2 }}
@@ -130,13 +130,13 @@ export default function ReviewForm({
             onTitleChange={onTitleChange}
             onTextChange={onTextChange}
           />
-        </motion.div>
+        </m.div>
 
         {/* Divider */}
         <div className="h-px bg-gradient-to-r from-transparent via-charcoal/10 to-transparent" />
 
         {/* Image Upload Section */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.25 }}
@@ -167,10 +167,10 @@ export default function ReviewForm({
             existingImages={existingImages}
             onExistingImagesChange={onExistingImagesChange}
           />
-        </motion.div>
+        </m.div>
 
         {/* Submit Button */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
@@ -182,8 +182,8 @@ export default function ReviewForm({
             isSubmitting={isSubmitting}
             error={error}
           />
-        </motion.div>
+        </m.div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

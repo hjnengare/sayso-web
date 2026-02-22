@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { X, DollarSign, Clock, Shield } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { useFilters } from '@/app/contexts/FilterContext';
 import { PriceRange } from '@/app/types/filters';
 
@@ -33,14 +33,14 @@ export function AdvancedFilters() {
 
   return (
     <AnimatePresence>
-      <motion.div
+      <m.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 bg-charcoal/50 backdrop-blur-sm z-50 flex items-end sm:items-center sm:justify-center"
         onClick={toggleAdvanced}
       >
-        <motion.div
+        <m.div
           initial={{ y: '100%', opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: '100%', opacity: 0 }}
@@ -188,8 +188,8 @@ export function AdvancedFilters() {
               Apply Filters
             </button>
           </div>
-        </motion.div>
-      </motion.div>
+        </m.div>
+      </m.div>
     </AnimatePresence>
   );
 }

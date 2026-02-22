@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, m, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import nextDynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
@@ -694,7 +694,7 @@ export default function HeroCarousel() {
         {/* Hero Section - 75vh responsive height */}
         <section
           ref={containerRef as React.RefObject<HTMLElement>}
-          className="relative h-[100dvh] sm:h-[90dvh] md:h-[80dvh] w-full overflow-hidden outline-none rounded-none min-h-[420px] sm:min-h-[520px] sm:max-h-[820px]"
+          className="relative h-[100svh] sm:h-[90dvh] md:h-[80dvh] w-full overflow-hidden outline-none rounded-none min-h-[420px] sm:min-h-[520px] sm:max-h-[820px]"
           aria-label="Hero carousel"
           tabIndex={0}
           style={{
@@ -716,7 +716,7 @@ export default function HeroCarousel() {
         const fallbackImg = HERO_IMAGES[idx % HERO_IMAGES.length];
         const src = failedImageUrls.has(slide.image) ? fallbackImg : slide.image;
         return (
-        <motion.div
+        <m.div
           key={slide.id}
           initial={false}
           animate={{ opacity: isActive ? 1 : 0, zIndex: isActive ? 10 : 0 }}
@@ -750,19 +750,19 @@ export default function HeroCarousel() {
              <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-black/30 via-transparent to-black/40" />
              <div className="absolute inset-0 pointer-events-none bg-black/20" />
            </div>
-        </motion.div>
+        </m.div>
       );
       })}
 
       {/* Hero Text - transitions independently from image slides */}
       <div data-testid="hero-text" className="absolute inset-0 z-30 flex items-center justify-center w-full pt-[var(--safe-area-top)] sm:pt-[var(--header-height)] translate-y-0 sm:-translate-y-4 px-6 sm:px-10 pointer-events-none">
-          <motion.div
+          <m.div
             className="w-full max-w-3xl flex flex-col items-center justify-center text-center pb-12 sm:pb-20"
             initial="hidden"
             animate="visible"
             variants={heroTextStaggerVariants}
           >
-            <motion.h2
+            <m.h2
               className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-off-white drop-shadow-lg mb-3 sm:mb-4 leading-tight tracking-tight whitespace-pre-line [word-break:normal] [overflow-wrap:normal] [hyphens:none]"
               style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
               variants={heroTitleEntranceVariants}
@@ -772,7 +772,7 @@ export default function HeroCarousel() {
                   {titleLayoutFallback}
                 </span>
                 <AnimatePresence mode="sync" initial={false}>
-                  <motion.span
+                  <m.span
                     key={`text-${textMotionKey}`}
                     className="col-start-1 row-start-1 whitespace-pre-line [word-break:normal] [overflow-wrap:normal] [hyphens:none]"
                     initial={heroTitleSwapMotion.initial}
@@ -781,11 +781,11 @@ export default function HeroCarousel() {
                     transition={heroTitleSwapMotion.transition}
                   >
                     {currentTitle}
-                  </motion.span>
+                  </m.span>
                 </AnimatePresence>
               </span>
-            </motion.h2>
-            <motion.p
+            </m.h2>
+            <m.p
               className="text-base sm:text-lg lg:text-xl text-off-white/90 drop-shadow-md max-w-xl mb-5 sm:mb-6 leading-relaxed whitespace-pre-line [word-break:normal] [overflow-wrap:normal] [hyphens:none]"
               style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 500 }}
               variants={heroSubtitleEntranceVariants}
@@ -795,7 +795,7 @@ export default function HeroCarousel() {
                   {descriptionLayoutFallback}
                 </span>
                 <AnimatePresence mode="sync" initial={false}>
-                  <motion.span
+                  <m.span
                     key={`desc-${textMotionKey}`}
                     className="col-start-1 row-start-1 whitespace-pre-line [word-break:normal] [overflow-wrap:normal] [hyphens:none]"
                     initial={heroSubtitleSwapMotion.initial}
@@ -804,13 +804,13 @@ export default function HeroCarousel() {
                     transition={heroSubtitleSwapMotion.transition}
                   >
                     {currentDescription}
-                  </motion.span>
+                  </m.span>
                 </AnimatePresence>
               </span>
-            </motion.p>
+            </m.p>
 
             {/* Conditional CTA Button */}
-            <motion.div
+            <m.div
               variants={heroCtaEntranceVariants}
               className="w-full flex justify-center pointer-events-auto"
             >
@@ -837,8 +837,8 @@ export default function HeroCarousel() {
                   <span className="relative z-10">Discover</span>
                 </Link>
               )}
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
       </div>
 
       {/* Accessible live region (announces slide title) */}

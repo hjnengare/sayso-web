@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useAnimationControls } from "framer-motion";
+import { m, useAnimationControls } from "framer-motion";
 import { colors } from '@/app/(dev)/design-system/tokens';
 import { useState } from 'react';
 
@@ -112,7 +112,7 @@ export default function SaysoLogo({
   }
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{
@@ -126,7 +126,7 @@ export default function SaysoLogo({
         style={{ fontFamily: '"Playfair Display", serif', fontWeight: 700, letterSpacing: '-0.02em' }}
       >
         {["S", "A", "Y", "S2", "O"].map((letter, index) => (
-          <motion.span
+          <m.span
             key={`${letter}-${index}`}
             initial={{ opacity: 0, y: -20, rotateX: -90 }}
             animate={{
@@ -153,9 +153,9 @@ export default function SaysoLogo({
             onMouseLeave={() => interactive && setHoveredLetter(null)}
           >
             {letter === "S2" ? "s" : letter.toLowerCase()}
-          </motion.span>
+          </m.span>
         ))}
       </span>
-    </motion.div>
+    </m.div>
   );
 }

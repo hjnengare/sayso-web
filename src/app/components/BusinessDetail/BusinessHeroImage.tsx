@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { Star, ChevronLeft, ChevronRight } from "lucide-react";
 import { getSubcategoryPlaceholder } from "../../utils/subcategoryPlaceholders";
@@ -77,7 +77,7 @@ export default function BusinessHeroImage({
   };
 
   return (
-    <motion.div
+    <m.div
       layoutId={sharedLayoutId}
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
@@ -88,7 +88,7 @@ export default function BusinessHeroImage({
         <>
           {/* Blurred background - Instagram style */}
           <AnimatePresence mode="wait">
-            <motion.div
+            <m.div
               key={`bg-${currentImageIndex}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -112,12 +112,12 @@ export default function BusinessHeroImage({
                 }}
                 aria-hidden="true"
               />
-            </motion.div>
+            </m.div>
           </AnimatePresence>
 
           {/* Foreground image - sharp, centered, aspect-ratio preserved */}
           <AnimatePresence mode="wait">
-            <motion.div
+            <m.div
               key={`fg-${currentImageIndex}`}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -134,7 +134,7 @@ export default function BusinessHeroImage({
                 quality={75}
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 900px"
               />
-            </motion.div>
+            </m.div>
           </AnimatePresence>
 
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
@@ -222,6 +222,6 @@ export default function BusinessHeroImage({
         </>
       )}
 
-    </motion.div>
+    </m.div>
   );
 }

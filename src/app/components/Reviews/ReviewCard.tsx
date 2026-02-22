@@ -4,7 +4,7 @@ import React, { useState, useRef, memo } from 'react';
 import { useReviewHelpful } from '../../hooks/useReviewHelpful';
 import { useReviewReplies } from '../../hooks/useReviewReplies';
 import { useUserBadgesById } from '../../hooks/useUserBadges';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -212,7 +212,7 @@ function ReviewCard({
   const isAnonymousReview = !review.user_id;
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
@@ -221,7 +221,7 @@ function ReviewCard({
     >
       <div className="flex items-start space-x-4">
         {/* Avatar */}
-        <motion.div
+        <m.div
           whileHover={{ scale: 1.1, rotate: 5 }}
           transition={{ duration: 0.3 }}
           className="flex-shrink-0"
@@ -255,7 +255,7 @@ function ReviewCard({
               </span>
             </div>
           )}
-        </motion.div>
+        </m.div>
 
         <div className="flex-1 min-w-0">
           {/* Header */}
@@ -297,7 +297,7 @@ function ReviewCard({
               </div>
               <div className="flex items-center space-x-1">
                 {[...Array(5)].map((_, i) => (
-                  <motion.div
+                  <m.div
                     key={i}
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
@@ -319,7 +319,7 @@ function ReviewCard({
                         d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
                       />
                     </svg>
-                  </motion.div>
+                  </m.div>
                 ))}
               </div>
             </div>
@@ -333,7 +333,7 @@ function ReviewCard({
               <div className="flex items-center gap-1 sm:gap-1.5">
                 {isReviewOwner() && (
                   <>
-                    <motion.button
+                    <m.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={handleEdit}
@@ -342,8 +342,8 @@ function ReviewCard({
                       title="Edit review"
                     >
                       <Edit className="w-5 h-5 sm:w-[18px] sm:h-[18px] text-white" />
-                    </motion.button>
-                    <motion.button
+                    </m.button>
+                    <m.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={handleDelete}
@@ -352,11 +352,11 @@ function ReviewCard({
                       title="Delete review"
                     >
                       <Trash2 className="w-5 h-5 sm:w-[18px] sm:h-[18px] text-white" />
-                    </motion.button>
+                    </m.button>
                   </>
                 )}
                 {/* Reply functionality commented out */}
-                {/* <motion.button
+                {/* <m.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setShowReplyForm(!showReplyForm)}
@@ -366,7 +366,7 @@ function ReviewCard({
                   disabled={!user}
                 >
                   <MessageCircle className="w-[18px] h-[18px] text-white" />
-                </motion.button> */}
+                </m.button> */}
               </div>
             </div>
           </div>
@@ -396,7 +396,7 @@ function ReviewCard({
           {review.tags && review.tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-4">
               {review.tags.map((tag, index) => (
-                <motion.span
+                <m.span
                   key={tag}
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -405,7 +405,7 @@ function ReviewCard({
                   className="inline-flex items-center px-3 py-1 bg-card-bg/10 text-sage text-sm font-500 rounded-full border border-sage/20 hover:bg-card-bg/20 transition-colors duration-300"
                 >
                   {tag}
-                </motion.span>
+                </m.span>
               ))}
             </div>
           )}
@@ -415,7 +415,7 @@ function ReviewCard({
             <div className="mb-4">
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-2">
                 {displayedImages?.map((image, index) => (
-                  <motion.div
+                  <m.div
                     key={image.id}
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -431,12 +431,12 @@ function ReviewCard({
                       height={200}
                       className="w-full h-full object-cover transition-transform duration-300 group-hover/image:scale-110"
                     />
-                  </motion.div>
+                  </m.div>
                 ))}
               </div>
 
               {!showAllImages && review.images.length > 3 && (
-                <motion.button
+                <m.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setShowAllImages(true)}
@@ -444,11 +444,11 @@ function ReviewCard({
                 >
                   <ImageIcon size={16} />
                   <span>Show {review.images.length - 3} more images</span>
-                </motion.button>
+                </m.button>
               )}
 
               {showAllImages && review.images.length > 3 && (
-                <motion.button
+                <m.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setShowAllImages(false)}
@@ -456,7 +456,7 @@ function ReviewCard({
                 >
                   <ChevronUp size={16} />
                   <span>Show less</span>
-                </motion.button>
+                </m.button>
               )}
             </div>
           )}
@@ -465,7 +465,7 @@ function ReviewCard({
           <div className="flex items-center justify-between pt-3 border-t border-sage/10">
             <div className="flex items-center gap-3">
               {!isOwnerView && (
-                <motion.button
+                <m.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={handleLike}
@@ -480,12 +480,12 @@ function ReviewCard({
                   <span className="font-urbanist text-sm font-500">
                     Helpful ({helpfulCount})
                   </span>
-                </motion.button>
+                </m.button>
               )}
 
               {/* Reply button - available to all authenticated users */}
               {user && (
-                <motion.button
+                <m.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setShowReplyForm(!showReplyForm)}
@@ -499,12 +499,12 @@ function ReviewCard({
                   <span className="font-urbanist text-sm">
                     Reply{replies.length > 0 ? ` (${replies.length})` : ''}
                   </span>
-                </motion.button>
+                </m.button>
               )}
 
               {/* Owner-only: Message Customer */}
               {isOwnerView && user && review.user_id && (
-                <motion.button
+                <m.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => router.push(`/dm?user_id=${review.user_id}&business_id=${review.business_id}`)}
@@ -514,7 +514,7 @@ function ReviewCard({
                   <span className="font-urbanist text-sm">
                     Message Customer
                   </span>
-                </motion.button>
+                </m.button>
               )}
             </div>
 
@@ -528,7 +528,7 @@ function ReviewCard({
           {/* Reply Form - Available to all authenticated users */}
           <AnimatePresence>
             {showReplyForm && user && (
-                <motion.div
+                <m.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
@@ -545,7 +545,7 @@ function ReviewCard({
                       disabled={submittingReply}
                     />
                     <div className="flex items-center justify-end gap-2">
-                      <motion.button
+                      <m.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => {
@@ -557,8 +557,8 @@ function ReviewCard({
                         style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                       >
                         Cancel
-                      </motion.button>
-                      <motion.button
+                      </m.button>
+                      <m.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={handleSubmitReply}
@@ -568,10 +568,10 @@ function ReviewCard({
                       >
                         <Send size={16} />
                         <span>{submittingReply ? 'Sending...' : 'Save Reply'}</span>
-                      </motion.button>
+                      </m.button>
                     </div>
                   </div>
-                </motion.div>
+                </m.div>
               )}
           </AnimatePresence>
 
@@ -588,7 +588,7 @@ function ReviewCard({
                 const replyDisplayName = reply.user?.name || 'Anonymous';
                 const replyActionButtons = !isEditing && (isOwnerView || reply.user_id === user?.id) ? (
                   <div className="flex items-center gap-1 flex-shrink-0">
-                    <motion.button
+                    <m.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => handleEditReply(reply)}
@@ -597,8 +597,8 @@ function ReviewCard({
                       title="Edit reply"
                     >
                       <Edit className="w-[18px] h-[18px] text-white" />
-                    </motion.button>
-                    <motion.button
+                    </m.button>
+                    <m.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => handleDeleteReply(reply.id)}
@@ -608,12 +608,12 @@ function ReviewCard({
                       title="Delete reply"
                     >
                       <Trash2 className="w-[18px] h-[18px] text-white" />
-                    </motion.button>
+                    </m.button>
                   </div>
                 ) : null;
 
                 return (
-                  <motion.div
+                  <m.div
                     key={reply.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -642,15 +642,15 @@ function ReviewCard({
                           autoFocus
                         />
                         <div className="flex items-center justify-end gap-2">
-                          <motion.button
+                          <m.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={handleCancelEdit}
                             className="px-3 py-1.5 text-xs font-medium text-charcoal/70 hover:text-charcoal transition-colors"
                           >
                             Cancel
-                          </motion.button>
-                          <motion.button
+                          </m.button>
+                          <m.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => handleSaveEdit(reply.id)}
@@ -658,7 +658,7 @@ function ReviewCard({
                             className="px-3 py-1.5 text-xs font-medium bg-navbar-bg text-white rounded-lg hover:bg-navbar-bg/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             Save
-                          </motion.button>
+                          </m.button>
                         </div>
                       </div>
                     ) : (
@@ -672,7 +672,7 @@ function ReviewCard({
                         {replyActionButtons}
                       </div>
                     ) : null}
-                  </motion.div>
+                  </m.div>
                 );
               })}
             </div>
@@ -683,14 +683,14 @@ function ReviewCard({
       {/* Image Lightbox */}
       <AnimatePresence>
         {selectedImageIndex !== null && review.images && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
             onClick={() => setSelectedImageIndex(null)}
           >
-            <motion.div
+            <m.div
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.8 }}
@@ -704,16 +704,16 @@ function ReviewCard({
                 height={600}
                 className="max-w-full max-h-full object-contain rounded-lg"
               />
-              <motion.button
+              <m.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setSelectedImageIndex(null)}
                 className="absolute -top-4 -right-4 w-8 h-8 bg-off-white/95 backdrop-blur-xl text-black rounded-full flex items-center justify-center border-none"
               >
                 <X size={20} />
-              </motion.button>
-            </motion.div>
-          </motion.div>
+              </m.button>
+            </m.div>
+          </m.div>
         )}
       </AnimatePresence>
 
@@ -743,7 +743,7 @@ function ReviewCard({
         cancelText="Cancel"
         variant="danger"
       />
-    </motion.div>
+    </m.div>
   );
 }
 

@@ -1,7 +1,7 @@
 // src/components/BusinessDetail/BusinessInfo.tsx
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Star, MapPin } from "lucide-react";
 
 interface BusinessInfoProps {
@@ -14,18 +14,18 @@ interface BusinessInfoProps {
 
 export default function BusinessInfo({ name, rating, location, category, sharedTitleLayoutId }: BusinessInfoProps) {
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2, duration: 0.6 }}
     >
-      <motion.h1
+      <m.h1
         layoutId={sharedTitleLayoutId}
         className="font-urbanist text-2xl sm:text-3xl md:text-4xl font-bold text-charcoal mb-3"
         style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
       >
         {name}
-      </motion.h1>
+      </m.h1>
 
       <div className="flex items-center gap-3 mb-4 flex-wrap">
         {/* Rating Badge - matching BusinessCard style */}
@@ -61,7 +61,7 @@ export default function BusinessInfo({ name, rating, location, category, sharedT
           </span>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 

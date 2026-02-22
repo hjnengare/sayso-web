@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { AlertTriangle } from 'lucide-react';
 
 export interface ConfirmationDialogProps {
@@ -128,7 +128,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   const modalContent = (
     <div className="fixed inset-0 z-[9999]" style={{ isolation: 'isolate' }}>
       {/* Backdrop with blur */}
-      <motion.div
+      <m.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
@@ -138,7 +138,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
 
       {/* Dialog - Centered vertically and horizontally */}
       <div className="absolute inset-0 flex items-center justify-center p-4 sm:p-6 pointer-events-none">
-        <motion.div
+        <m.div
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{
@@ -155,7 +155,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
               {/* Content */}
               <div className="relative z-10 p-6 sm:p-8">
                 {/* Icon with ring effect */}
-                <motion.div
+                <m.div
                   className="flex items-center justify-center mb-6"
                   initial={{ scale: 0.5, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
@@ -164,10 +164,10 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
                   <div className={`w-18 h-18 ${styles.iconBg} rounded-full flex items-center justify-center ring-8 ${styles.iconRing} p-4`}>
                     <AlertTriangle className={`w-8 h-8 ${styles.iconColor}`} strokeWidth={2} />
                   </div>
-                </motion.div>
+                </m.div>
 
                 {/* Title */}
-                <motion.h3
+                <m.h3
                   className="text-xl font-semibold text-charcoal text-center mb-3"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -175,10 +175,10 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
                   style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                 >
                   {title}
-                </motion.h3>
+                </m.h3>
 
                 {/* Message */}
-                <motion.p
+                <m.p
                   className="text-sm text-charcoal/70 text-center mb-6 leading-relaxed"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -186,11 +186,11 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
                   style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                 >
                   {message}
-                </motion.p>
+                </m.p>
 
                 {/* Confirm Input (if required) */}
                 {requireConfirmText && (
-                  <motion.div
+                  <m.div
                     className="mb-6"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -208,23 +208,23 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
                       autoFocus
                       style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                     />
-                  </motion.div>
+                  </m.div>
                 )}
 
                 {/* Error Message */}
                 {error && (
-                  <motion.div
+                  <m.div
                     className="mb-6 p-4 rounded-2xl bg-coral/10 border border-coral/20"
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.2 }}
                   >
                     <p className="text-sm text-coral font-medium">{error}</p>
-                  </motion.div>
+                  </m.div>
                 )}
 
                 {/* Buttons */}
-                <motion.div
+                <m.div
                   className="flex gap-3"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -246,9 +246,9 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
                   >
                     {isLoading ? 'Processing...' : confirmText}
                   </button>
-            </motion.div>
+            </m.div>
           </div>
-        </motion.div>
+        </m.div>
       </div>
     </div>
   );

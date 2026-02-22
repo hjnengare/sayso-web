@@ -1,7 +1,7 @@
 // src/components/EventDetail/EventContactInfo.tsx
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Phone, Globe, MapPin } from "lucide-react";
 import type { Event } from "../../lib/types/Event";
 
@@ -17,7 +17,7 @@ export default function EventContactInfo({ event }: EventContactInfoProps) {
   const hasAnyInfo = !!(contactText || websiteUrl || primaryLocation || secondaryLocation);
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.6, duration: 0.6 }}
@@ -87,6 +87,6 @@ export default function EventContactInfo({ event }: EventContactInfoProps) {
           </p>
         )}
       </div>
-    </motion.div>
+    </m.div>
   );
 }

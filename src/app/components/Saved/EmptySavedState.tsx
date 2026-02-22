@@ -2,7 +2,7 @@
 
 import { Bookmark } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 
 export default function EmptySavedState() {
   const router = useRouter();
@@ -41,7 +41,7 @@ export default function EmptySavedState() {
   };
 
   return (
-    <motion.div
+    <m.div
       className="mx-auto w-full max-w-[2000px] px-2 font-urbanist w-full"
       style={{
         fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
@@ -51,14 +51,14 @@ export default function EmptySavedState() {
       animate="visible"
     >
       <div className="text-center w-full">
-        <motion.div
+        <m.div
           className="w-20 h-20 mx-auto mb-6 bg-charcoal/10 rounded-full flex items-center justify-center"
           variants={iconVariants}
         >
           <Bookmark className="w-10 h-10 text-charcoal/60" strokeWidth={1.5} />
-        </motion.div>
+        </m.div>
 
-        <motion.h3
+        <m.h3
           className="text-h2 font-semibold text-charcoal mb-2"
           style={{
             fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
@@ -66,9 +66,9 @@ export default function EmptySavedState() {
           variants={itemVariants}
         >
           No saved items yet
-        </motion.h3>
+        </m.h3>
 
-        <motion.p
+        <m.p
           className="text-body-sm text-charcoal/60 mb-6 max-w-md mx-auto"
           style={{
             fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
@@ -77,9 +77,9 @@ export default function EmptySavedState() {
           variants={itemVariants}
         >
           Tap the bookmark icon on any business to save it here
-        </motion.p>
+        </m.p>
 
-        <motion.button
+        <m.button
           onClick={() => router.push("/home")}
           className="inline-flex items-center gap-2 px-6 py-2.5 bg-card-bg text-white text-body font-semibold rounded-full hover:bg-card-bg/90 transition-all duration-300"
           style={{
@@ -90,8 +90,8 @@ export default function EmptySavedState() {
           whileTap={{ scale: 0.95 }}
         >
           Discover Businesses
-        </motion.button>
+        </m.button>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

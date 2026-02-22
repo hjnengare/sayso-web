@@ -3,7 +3,7 @@
 import React, { useMemo, useState, useEffect, useRef, memo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Image as ImageIcon, Star, Share2, Bookmark, Info, ChevronLeft, ChevronRight, TrendingUp, Zap, Scissors, Coffee, UtensilsCrossed, Wine, Dumbbell, Activity, Heart, Book, ShoppingBag, Home, Briefcase, MapPin, Music, Film, Camera, Car, GraduationCap, CreditCard, Tag, Flame, Store } from "lucide-react";
 import Image from "next/image";
 import PercentileChip from "../PercentileChip/PercentileChip";
@@ -653,13 +653,13 @@ function BusinessCard({
                       className="group w-full max-w-full min-w-0 text-charcoal transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-coral/40 rounded-lg px-2 py-1 flex items-center justify-center relative"
                       aria-label={`View ${business.name} details`}
                     >
-                      <motion.h3
+                      <m.h3
                         layoutId={businessTitleLayoutId}
                         className="text-h2 sm:text-h1 font-bold text-center leading-[1.3] truncate tracking-tight transition-colors duration-300 group-hover:text-navbar-bg/90 w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap relative z-[1]"
                         style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 700, WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale', textRendering: 'optimizeLegibility', letterSpacing: '-0.01em' }}
                       >
                         {business.name}
-                      </motion.h3>
+                      </m.h3>
                     </button>
                   </Tooltip>
                   {ownerView && (business as { status?: string }).status === 'pending_approval' && (

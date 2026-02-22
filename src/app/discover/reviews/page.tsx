@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { useState, useMemo } from "react";
 import { ArrowLeft, Briefcase, Image as ImageIcon, ThumbsUp, FileText, Star, ChevronRight, ChevronLeft, TrendingUp } from "lucide-react";
 import VerifiedBadge from "@/app/components/VerifiedBadge/VerifiedBadge";
@@ -224,7 +224,7 @@ export default function GeneralReviewsPage() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(114,47,55,0.08)_0%,_transparent_50%)]" />
 
       {/* Premium Header */}
-      <motion.header
+      <m.header
         initial={{ y: -80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
@@ -235,12 +235,12 @@ export default function GeneralReviewsPage() {
             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-charcoal/10 to-charcoal/5 hover:from-sage/20 hover:to-sage/10 rounded-full flex items-center justify-center shadow-premium-sm hover:shadow-premium-md transition-all duration-premium ease-premium hover:scale-110 border border-charcoal/5 hover:border-sage/20 mr-2 sm:mr-4">
               <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 text-charcoal/70 group-hover:text-sage transition-colors duration-premium ease-premium" />
             </div>
-            <motion.h1
+            <m.h1
               className="text-base sm:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-sage via-sage/90 to-charcoal transition-all duration-premium ease-premium group-hover:from-sage/90 group-hover:to-sage relative tracking-[-0.02em]"
               style={{ fontFamily: '"Urbanist", system-ui, sans-serif' }}
             >
               Community Reviews
-            </motion.h1>
+            </m.h1>
           </Link>
           <Link
             href="/write-review"
@@ -252,7 +252,7 @@ export default function GeneralReviewsPage() {
             <span className="sm:hidden">Review</span>
           </Link>
         </div>
-      </motion.header>
+      </m.header>
 
       <div className="mx-auto w-full max-w-[2000px] px-2 pt-20 sm:pt-24 py-6 sm:py-8 relative z-10">
         {/* Breadcrumb Navigation */}
@@ -275,7 +275,7 @@ export default function GeneralReviewsPage() {
         </nav>
 
         {/* Filters and Sort */}
-        <motion.div
+        <m.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.6, duration: 0.6 }}
@@ -285,7 +285,7 @@ export default function GeneralReviewsPage() {
             {/* Filters */}
             <div className="flex flex-wrap gap-2">
               {FILTER_OPTIONS.map((filter) => (
-                <motion.button
+                <m.button
                   key={filter.id}
                   onClick={() => setSelectedFilter(filter.id)}
                   whileHover={{ scale: 1.05 }}
@@ -304,7 +304,7 @@ export default function GeneralReviewsPage() {
                   {filter.id === "4" && <Star className="w-4 h-4" />}
                   {filter.id === "photos" && <ImageIcon className="w-4 h-4" />}
                   <span>{filter.label}</span>
-                </motion.button>
+                </m.button>
               ))}
             </div>
 
@@ -326,7 +326,7 @@ export default function GeneralReviewsPage() {
               </select>
             </div>
           </div>
-        </motion.div>
+        </m.div>
 
         {/* Reviews List - Masonry Layout */}
         <div className="columns-1 md:columns-2 lg:columns-3 gap-3 sm:gap-6">
@@ -353,7 +353,7 @@ export default function GeneralReviewsPage() {
                 : "inline-flex items-center gap-2 px-4 py-2 bg-charcoal/5 hover:bg-charcoal/10 rounded-full font-urbanist text-sm font-600 text-charcoal/70 transition-all duration-premium shadow-premium-sm hover:shadow-premium-md tracking-[-0.015em]";
 
               return (
-                <motion.div
+                <m.div
                   key={review.id}
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
@@ -363,7 +363,7 @@ export default function GeneralReviewsPage() {
                 >
                   {/* Hero Image Section - Instagram-like Carousel */}
                   {review.images && review.images.length > 0 && (
-                    <motion.div
+                    <m.div
                       initial={{ opacity: 0, y: -20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.15 + index * 0.05, duration: 0.6 }}
@@ -371,7 +371,7 @@ export default function GeneralReviewsPage() {
                     >
                       {/* Carousel Images */}
                       <AnimatePresence mode="wait">
-                        <motion.img
+                        <m.img
                           key={`${review.id}-${currentImageIndex[review.id] || 0}`}
                           src={review.images[currentImageIndex[review.id] || 0]}
                           alt={`${review.businessName} - Review by ${review.author}`}
@@ -428,7 +428,7 @@ export default function GeneralReviewsPage() {
                           ))}
                         </div>
                       )}
-                    </motion.div>
+                    </m.div>
                   )}
 
                   {/* Content Section with padding */}
@@ -452,7 +452,7 @@ export default function GeneralReviewsPage() {
                     {/* Review Header */}
                     <div className="flex items-start gap-3 mb-4">
                       {/* Avatar */}
-                      <motion.div
+                      <m.div
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ delay: 0.2 + index * 0.05, duration: 0.5, ease: [0.34, 1.56, 0.64, 1] }}
@@ -479,7 +479,7 @@ export default function GeneralReviewsPage() {
                             <VerifiedBadge size="md" delay={0.4 + index * 0.05} />
                           </div>
                         )}
-                      </motion.div>
+                      </m.div>
 
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
@@ -537,7 +537,7 @@ export default function GeneralReviewsPage() {
 
                     {/* Helpful Button */}
                     <div className={`flex items-center gap-3 pt-4 border-t ${isNavy ? "border-white/20" : "border-charcoal/10"}`}>
-                      <motion.button
+                      <m.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         className={buttonClasses}
@@ -545,10 +545,10 @@ export default function GeneralReviewsPage() {
                         <ThumbsUp className="w-4 h-4" />
                         <span>Helpful</span>
                         <span className={isNavy ? "text-white/60" : "text-charcoal/70"}>({review.helpful})</span>
-                      </motion.button>
+                      </m.button>
                     </div>
                   </div>
-                </motion.div>
+                </m.div>
               );
             })}
           </AnimatePresence>
@@ -556,7 +556,7 @@ export default function GeneralReviewsPage() {
 
         {/* Empty State */}
         {filteredReviews.length === 0 && (
-          <motion.div
+          <m.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.6 }}
@@ -571,7 +571,7 @@ export default function GeneralReviewsPage() {
             <p className="font-urbanist text-base font-600 text-charcoal/70 tracking-[-0.015em]">
               Try adjusting your filters
             </p>
-          </motion.div>
+          </m.div>
         )}
       </div>
     </div>

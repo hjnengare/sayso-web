@@ -7,7 +7,7 @@ import { Urbanist } from "next/font/google";
 import { Edit, Star, ChevronUp, Info, ChevronRight, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import confetti from "canvas-confetti";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useToast } from "../../../contexts/ToastContext";
 import { useReviewForm } from "../../../hooks/useReviewForm";
@@ -451,14 +451,14 @@ function WriteReviewContent() {
           <p className="text-body text-charcoal/70 mb-6" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
             {error || "The business you're looking for doesn't exist."}
           </p>
-          <motion.button
+          <m.button
             onClick={() => router.back()}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="px-6 py-3 bg-card-bg text-white rounded-full text-body font-semibold"
           >
             Go Back
-          </motion.button>
+          </m.button>
         </div>
       </div>
     );
@@ -621,7 +621,7 @@ function WriteReviewContent() {
         {/* Scroll to Top Button */}
         <AnimatePresence>
           {showScrollTop && (
-            <motion.button
+            <m.button
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
@@ -638,7 +638,7 @@ function WriteReviewContent() {
               transition={{ duration: 0.2 }}
             >
               <ChevronUp className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2.5} />
-            </motion.button>
+            </m.button>
           )}
         </AnimatePresence>
 

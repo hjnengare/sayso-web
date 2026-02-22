@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Star } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 
 interface RatingSelectorProps {
   overallRating: number;
@@ -37,7 +37,7 @@ export default function RatingSelector({ overallRating, onRatingChange }: Rating
         {/* Smart rating feedback */}
         <AnimatePresence mode="wait">
           {currentLabel ? (
-            <motion.div
+            <m.div
               key={displayRating}
               initial={{ opacity: 0, y: -8, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -52,16 +52,16 @@ export default function RatingSelector({ overallRating, onRatingChange }: Rating
               >
                 {currentLabel.text}
               </span>
-            </motion.div>
+            </m.div>
           ) : (
-            <motion.p
+            <m.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="text-sm text-charcoal/60"
               style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
             >
               Tap a star to rate
-            </motion.p>
+            </m.p>
           )}
         </AnimatePresence>
       </div>
@@ -73,7 +73,7 @@ export default function RatingSelector({ overallRating, onRatingChange }: Rating
           const isSelected = star <= overallRating;
 
           return (
-            <motion.button
+            <m.button
               key={star}
               onClick={() => onRatingChange(star)}
               onMouseEnter={() => setHoverRating(star)}
@@ -91,7 +91,7 @@ export default function RatingSelector({ overallRating, onRatingChange }: Rating
             >
               {/* Glow effect for selected stars */}
               {isSelected && (
-                <motion.div
+                <m.div
                   layoutId={`star-glow-${star}`}
                   className="absolute inset-0 rounded-full blur-md"
                   initial={{ opacity: 0, scale: 0.8 }}
@@ -99,7 +99,7 @@ export default function RatingSelector({ overallRating, onRatingChange }: Rating
                 />
               )}
 
-              <motion.div
+              <m.div
                 animate={{
                   scale: isActive ? 1 : 0.9,
                   rotate: isActive && star === displayRating ? [0, -10, 10, 0] : 0,
@@ -120,8 +120,8 @@ export default function RatingSelector({ overallRating, onRatingChange }: Rating
                     strokeWidth: isActive ? 0 : 2,
                   }}
                 />
-              </motion.div>
-            </motion.button>
+              </m.div>
+            </m.button>
           );
         })}
       </div>

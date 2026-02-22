@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 
 const DISMISS_MS = { success: 1500, error: 3000 } as const;
 
@@ -59,7 +59,7 @@ export function AutoDismissFeedback({
   return (
     <AnimatePresence>
       {visible && message ? (
-        <motion.div
+        <m.div
           key={message}
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
@@ -67,7 +67,7 @@ export function AutoDismissFeedback({
           transition={{ duration: 0.2, ease: "easeOut" }}
         >
           {children}
-        </motion.div>
+        </m.div>
       ) : null}
     </AnimatePresence>
   );

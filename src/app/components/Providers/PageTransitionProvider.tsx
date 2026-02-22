@@ -11,7 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, m, useReducedMotion } from "framer-motion";
 
 type NavigationDirection = -1 | 0 | 1;
 
@@ -174,7 +174,7 @@ export default function PageTransitionProvider({ children }: PageTransitionProvi
         <div className="relative min-h-screen w-full overflow-x-clip">
           {hasMounted ? (
             <AnimatePresence initial={false} mode="wait">
-              <motion.div
+              <m.div
                 key={routeKey}
                 initial={motionFrames.initial}
                 animate={motionFrames.animate}
@@ -186,7 +186,7 @@ export default function PageTransitionProvider({ children }: PageTransitionProvi
                 className="min-h-screen w-full will-change-[opacity,transform]"
               >
                 {children}
-              </motion.div>
+              </m.div>
             </AnimatePresence>
           ) : (
             // Hydration-safe fallback: keep SSR and initial client tree identical.
