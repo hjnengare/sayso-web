@@ -8,27 +8,22 @@ export default function PrivacyPolicyPage() {
 
   return (
     <div
-      className="min-h-dvh bg-off-white font-urbanist relative overflow-hidden"
+      className="min-h-dvh bg-navbar-bg font-urbanist relative overflow-hidden"
       style={{ fontFamily: "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}
     >
-      {/* Background Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-sage/10 via-off-white to-coral/5" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(114,47,55,0.08)_0%,_transparent_50%)]" />
-      
       <div className="mx-auto max-w-3xl px-4 py-8 sm:py-12 relative z-10">
         <button
           onClick={() => router.back()}
-          className="inline-flex items-center gap-2 text-sm text-charcoal/60 hover:text-charcoal transition-colors mb-6"
+          className="inline-flex items-center gap-2 text-sm text-white/50 hover:text-white transition-colors mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
           Back
         </button>
 
-        <h1 className="text-2xl sm:text-3xl font-bold text-charcoal mb-2">Privacy Policy</h1>
-        <p className="text-sm text-charcoal/60 mb-8">Last updated: 28 January 2026</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Privacy Policy</h1>
+        <p className="text-sm text-white/50 mb-8">Last updated: 28 January 2026</p>
 
-        <div className="prose prose-charcoal max-w-none space-y-6 text-base text-charcoal/80 leading-relaxed">
+        <div className="prose max-w-none space-y-6 text-base text-white/75 leading-relaxed">
           <p>
             Sayso respects your privacy and is committed to protecting personal information in
             accordance with the Protection of Personal Information Act, 4 of 2013 (POPIA) and other
@@ -45,7 +40,7 @@ export default function PrivacyPolicyPage() {
             protect your information.
           </p>
 
-          <h2 className="text-lg sm:text-xl font-bold text-charcoal pt-4">1. About Sayso</h2>
+          <h2 className="text-lg sm:text-xl font-bold text-white pt-4">1. About Sayso</h2>
           <p>
             Sayso is a South African business discovery and review platform. During certain stages
             of development, Sayso may display business listings sourced from publicly available
@@ -53,9 +48,9 @@ export default function PrivacyPolicyPage() {
             listings.
           </p>
 
-          <h2 className="text-lg sm:text-xl font-bold text-charcoal pt-4">2. Information We Collect</h2>
+          <h2 className="text-lg sm:text-xl font-bold text-white pt-4">2. Information We Collect</h2>
 
-          <h3 className="text-base sm:text-lg font-semibold text-charcoal">2.1 Information from Website Visitors</h3>
+          <h3 className="text-base sm:text-lg font-semibold text-white/90">2.1 Information from Website Visitors</h3>
           <p>
             When you visit the Sayso website, we may automatically collect limited technical
             information, including:
@@ -68,7 +63,7 @@ export default function PrivacyPolicyPage() {
           </ul>
           <p>This information is used for security, analytics, and to improve our website.</p>
 
-          <h3 className="text-base sm:text-lg font-semibold text-charcoal">2.2 Information from Users</h3>
+          <h3 className="text-base sm:text-lg font-semibold text-white/90">2.2 Information from Users</h3>
           <p>When you create an account, we may collect:</p>
           <ul className="list-disc pl-6 space-y-1">
             <li>Name or display name</li>
@@ -83,7 +78,7 @@ export default function PrivacyPolicyPage() {
             certain features.
           </p>
 
-          <h3 className="text-base sm:text-lg font-semibold text-charcoal">2.3 Information from Businesses</h3>
+          <h3 className="text-base sm:text-lg font-semibold text-white/90">2.3 Information from Businesses</h3>
           <p>
             If you claim, create, or manage a business profile on Sayso, we may collect:
           </p>
@@ -99,7 +94,7 @@ export default function PrivacyPolicyPage() {
             This information is used solely for operating and maintaining the Sayso platform.
           </p>
 
-          <h3 className="text-base sm:text-lg font-semibold text-charcoal">2.4 Publicly Available Business Information</h3>
+          <h3 className="text-base sm:text-lg font-semibold text-white/90">2.4 Publicly Available Business Information</h3>
           <p>Prior to a business claiming its profile, Sayso may display:</p>
           <ul className="list-disc pl-6 space-y-1">
             <li>Business name</li>
@@ -112,7 +107,7 @@ export default function PrivacyPolicyPage() {
             removed upon request.
           </p>
 
-          <h2 className="text-lg sm:text-xl font-bold text-charcoal pt-4">3. How We Use Information</h2>
+          <h2 className="text-lg sm:text-xl font-bold text-white pt-4">3. How We Use Information</h2>
           <p>We use personal and business-related information to:</p>
           <ul className="list-disc pl-6 space-y-1">
             <li>Operate and improve the Sayso platform</li>
@@ -126,7 +121,7 @@ export default function PrivacyPolicyPage() {
           </ul>
           <p>We do not sell personal information to third parties.</p>
 
-          <h2 className="text-lg sm:text-xl font-bold text-charcoal pt-4">4. Legal Basis for Processing</h2>
+          <h2 className="text-lg sm:text-xl font-bold text-white pt-4">4. Legal Basis for Processing</h2>
           <p>We process personal information on the basis of:</p>
           <ul className="list-disc pl-6 space-y-1">
             <li>Consent (where required)</li>
@@ -135,7 +130,7 @@ export default function PrivacyPolicyPage() {
             <li>Compliance with legal obligations</li>
           </ul>
 
-          <h2 className="text-lg sm:text-xl font-bold text-charcoal pt-4">5. Sharing of Information</h2>
+          <h2 className="text-lg sm:text-xl font-bold text-white pt-4">5. Sharing of Information</h2>
           <p>We may share information with:</p>
           <ul className="list-disc pl-6 space-y-1">
             <li>
@@ -150,7 +145,7 @@ export default function PrivacyPolicyPage() {
             line with applicable data protection laws.
           </p>
 
-          <h2 className="text-lg sm:text-xl font-bold text-charcoal pt-4">6. Cookies and Tracking Technologies</h2>
+          <h2 className="text-lg sm:text-xl font-bold text-white pt-4">6. Cookies and Tracking Technologies</h2>
           <p>Sayso may use cookies or similar technologies to:</p>
           <ul className="list-disc pl-6 space-y-1">
             <li>Improve user experience</li>
@@ -162,7 +157,7 @@ export default function PrivacyPolicyPage() {
             function correctly.
           </p>
 
-          <h2 className="text-lg sm:text-xl font-bold text-charcoal pt-4">7. Data Retention</h2>
+          <h2 className="text-lg sm:text-xl font-bold text-white pt-4">7. Data Retention</h2>
           <p>
             We retain personal and business information only for as long as necessary to:
           </p>
@@ -185,7 +180,7 @@ export default function PrivacyPolicyPage() {
           </ul>
           <p>No verification documents or unnecessary personal information are retained.</p>
 
-          <h2 className="text-lg sm:text-xl font-bold text-charcoal pt-4">8. Your Rights</h2>
+          <h2 className="text-lg sm:text-xl font-bold text-white pt-4">8. Your Rights</h2>
           <p>Under POPIA, you have the right to:</p>
           <ul className="list-disc pl-6 space-y-1">
             <li>Request access to your personal information</li>
@@ -197,7 +192,7 @@ export default function PrivacyPolicyPage() {
             Businesses may also request updates or removal of unclaimed listings.
           </p>
 
-          <h2 className="text-lg sm:text-xl font-bold text-charcoal pt-4">9. Security</h2>
+          <h2 className="text-lg sm:text-xl font-bold text-white pt-4">9. Security</h2>
           <p>
             We take reasonable technical and organisational measures to protect personal information,
             uploaded content, and verification materials against loss, misuse, unauthorised access,
@@ -205,27 +200,27 @@ export default function PrivacyPolicyPage() {
             strictly limited to authorised personnel.
           </p>
 
-          <h2 className="text-lg sm:text-xl font-bold text-charcoal pt-4">10. Children&apos;s Information</h2>
+          <h2 className="text-lg sm:text-xl font-bold text-white pt-4">10. Children&apos;s Information</h2>
           <p>
             Sayso is not intended for use by children under the age of 18. We do not knowingly
             collect personal information from minors.
           </p>
 
-          <h2 className="text-lg sm:text-xl font-bold text-charcoal pt-4">11. Changes to This Policy</h2>
+          <h2 className="text-lg sm:text-xl font-bold text-white pt-4">11. Changes to This Policy</h2>
           <p>
             We may update this Privacy Policy from time to time. Any changes will be posted on this
             page with an updated revision date.
           </p>
 
-          <h2 className="text-lg sm:text-xl font-bold text-charcoal pt-4">12. Contact Us</h2>
+          <h2 className="text-lg sm:text-xl font-bold text-white pt-4">12. Contact Us</h2>
           <p>
             If you have questions about this Privacy Policy or wish to exercise your rights, please
             contact:
           </p>
-          <p className="font-semibold">
+          <p className="font-semibold text-white/90">
             Sayso<br />
             Email:{" "}
-            <a href="mailto:info@sayso.co.za" className="text-coral hover:underline">
+            <a href="mailto:info@sayso.co.za" className="text-white underline underline-offset-2 hover:text-white/80">
               info@sayso.co.za
             </a>
           </p>
