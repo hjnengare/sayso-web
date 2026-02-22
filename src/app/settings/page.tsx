@@ -49,19 +49,6 @@ export default function SettingsPage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-2xl">
-        {/* Header */}
-        <div className="mb-8 sm:mb-10">
-          <p className="inline-flex items-center px-3 py-1 rounded-full border border-sage/25 bg-white/70 text-charcoal/70 text-xs font-semibold tracking-wide uppercase" style={{ fontFamily: FONT_STACK }}>
-            Business Account
-          </p>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-charcoal mt-3 mb-2" style={{ fontFamily: FONT_STACK }}>
-            Settings
-          </h1>
-          <p className="text-charcoal/70 text-sm sm:text-base" style={{ fontFamily: FONT_STACK }}>
-            Manage your account and security preferences
-          </p>
-        </div>
-
         <div className="space-y-5">
           {/* Account Summary */}
           <section className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border-none rounded-[16px] shadow-lg p-5 sm:p-6">
