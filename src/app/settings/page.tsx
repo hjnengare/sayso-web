@@ -1,31 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { LogOut, Trash2, ChevronRight, ChevronLeft, UserRound, Mail, ShieldAlert } from "lucide-react";
-import Link from "next/link";
-import { usePreviousPageBreadcrumb } from "../hooks/usePreviousPageBreadcrumb";
+import { LogOut, Trash2, UserRound, Mail, ShieldAlert } from "lucide-react";
 
 const FONT_STACK = "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif";
 
 export default function SettingsPage() {
-  const { user, logout, isLoading } = useAuth();
-  const router = useRouter();
-  const { previousHref, previousLabel } = usePreviousPageBreadcrumb({
-    fallbackHref: "/my-businesses",
-    fallbackLabel: "My Businesses",
-  });
+  const { user, logout } = useAuth();
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-
-  useEffect(() => {
-    // Redirect if not authenticated
-    if (!isLoading && !user) {
-      router.push("/login");
-    }
-  }, [user, isLoading, router]);
 
   const handleLogout = async () => {
     try {
@@ -60,52 +45,12 @@ export default function SettingsPage() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-off-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-sage/20 border-t-sage rounded-full animate-spin mx-auto mb-3"></div>
-          <p className="text-charcoal/60 text-sm font-medium">Loading settings...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return null;
-  }
-
-  const username = user.profile?.username || user.profile?.display_name || user.email?.split("@")[0] || "User";
+  const username = user?.profile?.username || user?.profile?.display_name || user?.email?.split("@")[0] || "User";
 
   return (
-    <div className="min-h-dvh bg-off-white relative overflow-hidden pb-16">
-      {/* Background Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-sage/10 via-off-white to-coral/5" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(114,47,55,0.08)_0%,_transparent_50%)]" />
-
-      <div className="mx-auto w-full max-w-[920px] px-2 sm:px-4 relative z-10">
-        {/* Breadcrumb Navigation */}
-        <nav className="pb-1" aria-label="Breadcrumb">
-          <ol className="flex items-center gap-2 text-sm sm:text-base">
-            <li>
-              <Link href={previousHref} className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: FONT_STACK }}>
-                {previousLabel}
-              </Link>
-            </li>
-            <li className="flex items-center">
-              <ChevronRight className="w-4 h-4 text-charcoal/60" />
-            </li>
-            <li>
-              <span className="text-charcoal font-semibold" style={{ fontFamily: FONT_STACK }}>
-                Settings
-              </span>
-            </li>
-          </ol>
-        </nav>
-
+    <div className="p-4 sm:p-6 lg:p-8 max-w-2xl">
         {/* Header */}
-        <div className="mt-4 mb-8 sm:mb-10">
+        <div className="mb-8 sm:mb-10">
           <p className="inline-flex items-center px-3 py-1 rounded-full border border-sage/25 bg-white/70 text-charcoal/70 text-xs font-semibold tracking-wide uppercase" style={{ fontFamily: FONT_STACK }}>
             Business Account
           </p>
@@ -136,7 +81,7 @@ export default function SettingsPage() {
                   </div>
                   <div className="flex items-center gap-2.5 text-charcoal/75">
                     <Mail className="w-4 h-4 text-charcoal/60" />
-                    <span className="text-sm truncate" style={{ fontFamily: FONT_STACK }}>{user.email}</span>
+                    <span className="text-sm truncate" style={{ fontFamily: FONT_STACK }}>{user?.email}</span>
                   </div>
                 </div>
               </div>
@@ -214,7 +159,6 @@ export default function SettingsPage() {
             )}
           </section>
         </div>
-      </div>
     </div>
   );
 }
