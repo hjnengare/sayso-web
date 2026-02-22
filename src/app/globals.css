@@ -126,7 +126,8 @@
     color-scheme: light;
     /* Ensures browser UI (scrollbars, form controls) adapts to light theme */
     @apply bg-off-white;
-    overflow-x: hidden;
+    /* clip instead of hidden: prevents horizontal scroll without creating a new scroll container (which breaks position:sticky) */
+    overflow-x: clip;
   }
 
   /* Smooth scrolling (respect reduced motion). */
@@ -150,7 +151,7 @@
     padding: 0;
     width: 100%;
     max-width: 100vw;
-    overflow-x: hidden;
+    overflow-x: clip;
     -webkit-overflow-scrolling: touch;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
