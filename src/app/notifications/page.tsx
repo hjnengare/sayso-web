@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
 import { useBusinessNotificationsFeed } from "../hooks/useBusinessNotificationsFeed";
 import { m, AnimatePresence } from "framer-motion";
-import { Bell, Check, X, MessageSquare, MessageCircle, Star, Heart, TrendingUp, Clock, ChevronRight, ChevronLeft, ChevronUp, Award, ThumbsUp, CheckCircle, ImageIcon, Trophy } from "lucide-react";
+import { Bell, Check, X, MessageSquare, MessageCircle, Star, Heart, TrendingUp, Clock, ChevronRight, ChevronUp, Award, ThumbsUp, CheckCircle, ImageIcon, Trophy } from "lucide-react";
 import Footer from "../components/Footer/Footer";
 import { PageLoader } from "../components/Loader";
 import { usePredefinedPageTitle } from "../hooks/usePageTitle";
@@ -13,6 +13,7 @@ import { useNotifications, type ToastNotificationData } from "../contexts/Notifi
 import { useAuth } from "../contexts/AuthContext";
 import { usePreviousPageBreadcrumb } from "../hooks/usePreviousPageBreadcrumb";
 import { LiveIndicator } from "../components/Realtime/RealtimeIndicators";
+import PortalLayout from "../components/BusinessPortal/PortalLayout";
 
 export default function NotificationsPage() {
   usePredefinedPageTitle('notifications');
@@ -129,35 +130,31 @@ export default function NotificationsPage() {
     return notifications.filter(n => readNotifications.has(n.id));
   }, [notifications, readNotifications, filterType]);
 
-  return (
+  const content = (
     <div
-      className="min-h-dvh bg-off-white relative font-urbanist"
-      style={{
-        fontFamily: '"Urbanist", -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-      }}
+      className={isBusinessAccountUser ? "p-4 sm:p-6 lg:p-8" : "min-h-dvh bg-off-white relative font-urbanist"}
+      style={{ fontFamily: '"Urbanist", -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
     >
-      {/* Background Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-sage/10 via-off-white to-coral/5" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(114,47,55,0.08)_0%,_transparent_50%)]" />
+      {!isBusinessAccountUser && (
+        <>
+          <div className="absolute inset-0 bg-gradient-to-br from-sage/10 via-off-white to-coral/5" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(114,47,55,0.08)_0%,_transparent_50%)]" />
+        </>
+      )}
 
-      <div className="relative z-10">
-        <div className=" pb-12 sm:pb-16 md:pb-20">
+      <div className={isBusinessAccountUser ? "" : "relative z-10"}>
+        <div className={isBusinessAccountUser ? "" : "pb-12 sm:pb-16 md:pb-20"}>
+          {!isBusinessAccountUser && (
           <div className="mx-auto w-full max-w-[2000px] px-2 relative mb-4">
             {/* Breadcrumb Navigation */}
-            <nav
-              className="pb-1"
-              aria-label="Breadcrumb"
-            >
+            <nav className="pb-1" aria-label="Breadcrumb">
               <ol className="flex items-center gap-2 text-sm sm:text-base">
                 <li>
                   <Link
                     href={breadcrumbHref}
                     className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium"
-                    style={{
-                      fontFamily:
-                        "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                    }}
+                    style={{ fontFamily: "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}
                   >
                     {breadcrumbLabel}
                   </Link>
@@ -166,16 +163,14 @@ export default function NotificationsPage() {
                   <ChevronRight className="w-4 h-4 text-charcoal/60" />
                 </li>
                 <li>
-                  <span className="text-charcoal font-semibold" style={{
-                    fontFamily:
-                      "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                  }}>
+                  <span className="text-charcoal font-semibold" style={{ fontFamily: "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}>
                     Notifications
                   </span>
                 </li>
               </ol>
             </nav>
           </div>
+          )}
 
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
@@ -459,11 +454,10 @@ export default function NotificationsPage() {
           )}
         </div>
 
-        <Footer />
+        {!isBusinessAccountUser && <Footer />}
       </div>
 
-      {/* Scroll to Top Button */}
-      {showScrollTop && (
+      {!isBusinessAccountUser && showScrollTop && (
         <button
           onClick={scrollToTop}
           className="fixed bottom-6 right-6 z-40 w-11 h-11 sm:w-12 sm:h-12 bg-white hover:bg-charcoal/5 rounded-xl flex items-center justify-center shadow-lg border border-charcoal/10 hover:border-navbar-bg/30 transition-all duration-200"
@@ -474,5 +468,11 @@ export default function NotificationsPage() {
       )}
     </div>
   );
+
+  if (isBusinessAccountUser) {
+    return <PortalLayout>{content}</PortalLayout>;
+  }
+
+  return content;
 }
 
