@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSupabase } from '@/app/lib/supabase/server';
-import { isAdmin } from '@/app/lib/admin';
+import { withAdmin } from '@/app/api/_lib/withAuth';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -9,16 +8,10 @@ export const runtime = 'nodejs';
  * GET /api/admin/flags?status=pending&limit=50&offset=0
  * Returns flagged reviews with reviewer info for admin moderation.
  */
-export async function GET(req: NextRequest) {
-  const supabase = await getServerSupabase();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  if (!(await isAdmin(user.id))) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
-
+export const GET = withAdmin(async (
+  req: NextRequest,
+  { supabase }
+) => {
   const { searchParams } = req.nextUrl;
   const status = searchParams.get('status') || 'pending';
   const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);
@@ -86,4 +79,4 @@ export async function GET(req: NextRequest) {
   }));
 
   return NextResponse.json({ flags: enriched, total: count ?? 0 });
-}
+});

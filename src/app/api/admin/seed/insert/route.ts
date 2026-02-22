@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withAdmin } from '@/app/api/_lib/withAuth';
 import {
   buildBusinessInsertPayload,
   buildInsertSuffix,
   getDatabaseErrorMessage,
-  requireAdminContext,
   type ParsedSeedRow,
   type SeedInputRow,
   validateSeedRows,
@@ -20,13 +20,8 @@ type RejectedRow = {
   reasons: string[];
 };
 
-export async function POST(req: NextRequest) {
+export const POST = withAdmin(async (req: NextRequest, { service }) => {
   try {
-    const admin = await requireAdminContext(req);
-    if (admin.ok === false) {
-      return admin.response;
-    }
-
     const body = await req.json().catch(() => ({}));
     const rows = Array.isArray(body?.rows) ? (body.rows as SeedInputRow[]) : [];
     const allowDuplicates = body?.allowDuplicates === true;
@@ -38,7 +33,7 @@ export async function POST(req: NextRequest) {
 
     const validation = await validateSeedRows({
       rows,
-      service: admin.context.service,
+      service,
       allowDuplicates,
     });
 
@@ -104,7 +99,7 @@ export async function POST(req: NextRequest) {
     for (let i = 0; i < candidatesWithPayload.length; i += batchSize) {
       const batch = candidatesWithPayload.slice(i, i + batchSize);
 
-      const { data, error } = await admin.context.service
+      const { data, error } = await (service as any)
         .from('businesses')
         .insert(batch.map((item) => item.payload))
         .select('id,name');
@@ -125,7 +120,7 @@ export async function POST(req: NextRequest) {
       }
 
       for (const item of batch) {
-        const singleInsert = await admin.context.service
+        const singleInsert = await (service as any)
           .from('businesses')
           .insert(item.payload)
           .select('id,name')
@@ -179,4 +174,4 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

@@ -96,7 +96,13 @@
       "Bash(git -C /c/Users/HilarioNengare/Projects/sayso log --oneline -10)",
       "Bash(git -C /c/Users/HilarioNengare/Projects/sayso add .claude/settings.local.json src/app/add-business/page.tsx src/app/admin/layout.tsx src/app/admin/page.tsx src/app/claim-business/layout.tsx src/app/claim-business/page.tsx src/app/components/Business/PremiumReviewCard.tsx src/app/components/BusinessPortal/PortalLayout.tsx src/app/components/Header/GlobalHeader.tsx src/app/components/Header/useHeaderState.ts src/app/types/supabase.ts src/app/admin/flagged-reviews/ src/app/api/admin/flags/)",
       "Bash(git -C /c/Users/HilarioNengare/Projects/sayso checkout dev)",
-      "Bash(git -C /c/Users/HilarioNengare/Projects/sayso log --oneline -5)"
+      "Bash(git -C /c/Users/HilarioNengare/Projects/sayso log --oneline -5)",
+      "Bash(npx supabase gen types:*)",
+      "Bash(/c/Users/HilarioNengare/Projects/sayso/src/app/api/admin/cleanup-orphaned-images/route.ts:*)",
+      "Bash(/c/Users/HilarioNengare/Projects/sayso/src/app/api/debug/fix-role/route.ts:*)",
+      "Bash(/c/Users/HilarioNengare/Projects/sayso/src/app/api/debug/profile/route.ts:*)",
+      "Bash(/c/Users/HilarioNengare/Projects/sayso/src/app/api/test/onboarding-performance/route.ts:*)",
+      "Bash(/c/Users/HilarioNengare/Projects/sayso/src/app/api/test/reset-onboarding/route.ts:*)"
     ],
     "deny": [],
     "ask": [],

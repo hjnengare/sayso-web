@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withAdmin } from '@/app/api/_lib/withAuth';
 import {
-  requireAdminContext,
   type SeedInputRow,
   validateSeedRows,
 } from '../_lib';
@@ -8,13 +8,8 @@ import {
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-export async function POST(req: NextRequest) {
+export const POST = withAdmin(async (req: NextRequest, { service }) => {
   try {
-    const admin = await requireAdminContext(req);
-    if (admin.ok === false) {
-      return admin.response;
-    }
-
     const body = await req.json().catch(() => ({}));
     const rows = Array.isArray(body?.rows) ? (body.rows as SeedInputRow[]) : [];
     const allowDuplicates = body?.allowDuplicates === true;
@@ -25,7 +20,7 @@ export async function POST(req: NextRequest) {
 
     const result = await validateSeedRows({
       rows,
-      service: admin.context.service,
+      service,
       allowDuplicates,
     });
 
@@ -45,4 +40,4 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

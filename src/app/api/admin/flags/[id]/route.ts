@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSupabase } from '@/app/lib/supabase/server';
-import { isAdmin, getServiceSupabase } from '@/app/lib/admin';
+import { withAdmin } from '@/app/api/_lib/withAuth';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -17,20 +16,11 @@ type AdminAction = 'dismiss' | 'remove_review' | 'warn';
  * remove_review — delete the review and mark flag as reviewed
  * warn          — add admin_notes to flag and mark as reviewed (future: notify author)
  */
-export async function PATCH(
+export const PATCH = withAdmin(async (
   req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const supabase = await getServerSupabase();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  if (!(await isAdmin(user.id))) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
-
-  const flagId = params.id;
+  { user, service, params }
+) => {
+  const flagId = (await params)?.id;
   if (!flagId) {
     return NextResponse.json({ error: 'Missing flag id' }, { status: 400 });
   }
@@ -47,12 +37,11 @@ export async function PATCH(
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   }
 
-  // Use service client without generic typing for tables not in minimal schema
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const service = getServiceSupabase() as any;
+  const svc = service as any;
 
   // Fetch the flag to get review_id
-  const { data: flag, error: fetchError } = await service
+  const { data: flag, error: fetchError } = await svc
     .from('review_flags')
     .select('id, review_id, status')
     .eq('id', flagId)
@@ -68,7 +57,7 @@ export async function PATCH(
 
   // For remove_review: delete the review (cascades to all flags for that review)
   if (action === 'remove_review') {
-    const { error: deleteError } = await service
+    const { error: deleteError } = await svc
       .from('reviews')
       .delete()
       .eq('id', flag.review_id) as { error: unknown };
@@ -83,7 +72,7 @@ export async function PATCH(
   }
 
   // For dismiss / warn: update the flag record
-  const { error: updateError } = await service
+  const { error: updateError } = await svc
     .from('review_flags')
     .update({
       status: 'reviewed',
@@ -99,4 +88,4 @@ export async function PATCH(
   }
 
   return NextResponse.json({ success: true, action });
-}
+});

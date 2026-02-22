@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { TEMPLATE_COLUMNS, requireAdminContext } from '../_lib';
+import { withAdmin } from '@/app/api/_lib/withAuth';
+import { TEMPLATE_COLUMNS } from '../_lib';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -35,12 +36,7 @@ function escapeCsv(value: string): string {
   return value;
 }
 
-export async function GET(req: NextRequest) {
-  const admin = await requireAdminContext(req);
-  if (admin.ok === false) {
-    return admin.response;
-  }
-
+export const GET = withAdmin(async (_req: NextRequest, _ctx) => {
   const header = TEMPLATE_COLUMNS.join(',');
   const sample = TEMPLATE_COLUMNS.map((column) => escapeCsv(SAMPLE_ROW[column] || '')).join(',');
   const csv = `${header}\n${sample}\n`;
@@ -53,4 +49,4 @@ export async function GET(req: NextRequest) {
       'Cache-Control': 'no-store',
     },
   });
-}
+});

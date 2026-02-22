@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdminContext } from '../seed/_lib';
+import { withAdmin } from '@/app/api/_lib/withAuth';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -248,13 +248,8 @@ async function geocodeSingleAddress(rawAddress: string): Promise<GeocodeResult |
   return geocodeWithNominatim(candidates);
 }
 
-export async function POST(req: NextRequest) {
+export const POST = withAdmin(async (req: NextRequest, { service }) => {
   try {
-    const admin = await requireAdminContext(req);
-    if (admin.ok === false) {
-      return admin.response;
-    }
-
     const body = await req.json().catch(() => ({}));
     const items = Array.isArray(body?.items) ? (body.items as GeocodeItemInput[]) : [];
     const updateExisting = body?.updateExisting === true;
@@ -337,7 +332,7 @@ export async function POST(req: NextRequest) {
     if (updateExisting) {
       const updates = results.filter((item) => item.success && item.id && item.lat !== null && item.lng !== null);
       for (const update of updates) {
-        await admin.context.service
+        await service
           .from('businesses')
           .update({ lat: update.lat, lng: update.lng })
           .eq('id', update.id);
@@ -367,4 +362,4 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

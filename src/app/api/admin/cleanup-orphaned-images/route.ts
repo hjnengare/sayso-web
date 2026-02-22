@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSupabase } from '../../../lib/supabase/server';
-import { isAdmin } from '../../../lib/admin';
+import { withAdmin } from '@/app/api/_lib/withAuth';
 import { cleanupOrphanedImages } from '../../../lib/utils/orphanedImagesCleanup';
 
 export const dynamic = 'force-dynamic';
@@ -14,19 +13,8 @@ export const runtime = 'nodejs';
  * Query params:
  * - businessId: Optional - only check images for a specific business
  */
-export async function POST(req: NextRequest) {
+export const POST = withAdmin(async (req: NextRequest, { supabase }) => {
   try {
-    const supabase = await getServerSupabase(req);
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    if (!(await isAdmin(user.id))) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
     const { searchParams } = new URL(req.url);
     const businessId = searchParams.get('businessId') || undefined;
 
@@ -52,4 +40,4 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
