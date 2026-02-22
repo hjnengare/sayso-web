@@ -23,6 +23,8 @@ const EXCLUDED_ROUTES = [
   "/add-event",
   "/add-special",
   "/claim-business",
+  "/notifications",
+  "/settings",
   "/admin",
 ];
 
