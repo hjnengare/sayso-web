@@ -69,20 +69,20 @@ export default function ContactPage() {
   const canSubmit = form.name.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email) && form.message.trim();
 
   return (
-    <div className="min-h-dvh bg-off-white" style={{ fontFamily: FONT }}>
+    <div className="min-h-dvh bg-navbar-bg" style={{ fontFamily: FONT }}>
 
       {/* Breadcrumb */}
       <div className="mx-auto w-full max-w-2xl px-4 sm:px-6 pt-6 pb-0">
-        <nav className="flex items-center gap-2 text-sm text-charcoal/45" aria-label="Breadcrumb">
-          <Link href="/home" className="hover:text-charcoal transition-colors">Home</Link>
+        <nav className="flex items-center gap-2 text-sm text-white/50" aria-label="Breadcrumb">
+          <Link href="/home" className="hover:text-white transition-colors">Home</Link>
           <ChevronRight className="w-3.5 h-3.5" />
-          <span className="text-charcoal/80">Contact</span>
+          <span className="text-white/80">Contact</span>
         </nav>
       </div>
 
       {/* Page heading */}
       <div className="mx-auto w-full max-w-2xl px-4 sm:px-6 pt-8 pb-0">
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-charcoal leading-tight tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-white leading-tight tracking-tight">
           Contact us
         </h1>
       </div>
@@ -97,19 +97,19 @@ export default function ContactPage() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              className="rounded-[16px] border border-sage/25 bg-sage/6 px-6 py-14 text-center"
+              className="rounded-[16px] border border-white/20 bg-white/10 px-6 py-14 text-center"
             >
-              <div className="w-16 h-16 rounded-full bg-sage/15 flex items-center justify-center mx-auto mb-5">
-                <CheckCircle2 className="w-8 h-8 text-sage" strokeWidth={1.5} />
+              <div className="w-16 h-16 rounded-full bg-white/15 flex items-center justify-center mx-auto mb-5">
+                <CheckCircle2 className="w-8 h-8 text-white" strokeWidth={1.5} />
               </div>
-              <h3 className="text-xl font-extrabold text-charcoal mb-2">Message sent!</h3>
-              <p className="text-sm text-charcoal/60 max-w-xs mx-auto mb-7 leading-relaxed">
+              <h3 className="text-xl font-extrabold text-white mb-2">Message sent!</h3>
+              <p className="text-sm text-white/70 max-w-xs mx-auto mb-7 leading-relaxed">
                 We've received your message and sent you a confirmation. We'll get back to you within 24–48 hours.
               </p>
               <button
                 type="button"
                 onClick={() => setStatus("idle")}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-navbar-bg text-white text-sm font-semibold hover:bg-navbar-bg/90 transition-colors shadow-sm"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-navbar-bg text-sm font-semibold hover:bg-white/90 transition-colors shadow-sm"
               >
                 Send another message
               </button>
@@ -128,8 +128,8 @@ export default function ContactPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 {/* Name */}
                 <div className="flex flex-col gap-1.5">
-                  <label htmlFor="contact-name" className="text-xs font-semibold text-charcoal/50 uppercase tracking-wider">
-                    Full name <span className="text-coral normal-case tracking-normal">*</span>
+                  <label htmlFor="contact-name" className="text-xs font-semibold text-white/60 uppercase tracking-wider">
+                    Full name <span className="text-white/40 normal-case tracking-normal">*</span>
                   </label>
                   <input
                     id="contact-name"
@@ -141,21 +141,21 @@ export default function ContactPage() {
                     onChange={handleChange}
                     onBlur={() => handleBlur("name")}
                     placeholder="Your name"
-                    className={`w-full rounded-full border bg-white px-4 py-3 text-sm text-charcoal placeholder:text-charcoal/35 focus:outline-none focus:ring-2 transition ${
+                    className={`w-full rounded-full border bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/35 focus:outline-none focus:ring-2 transition ${
                       isNameInvalid
-                        ? "border-coral/50 focus:ring-coral/20 focus:border-coral/50"
-                        : "border-charcoal/12 focus:ring-sage/25 focus:border-sage/40"
+                        ? "border-white/40 focus:ring-white/20 focus:border-white/60"
+                        : "border-white/20 focus:ring-white/20 focus:border-white/40"
                     }`}
                   />
                   {isNameInvalid && (
-                    <p className="text-xs text-coral font-medium">Please enter your name.</p>
+                    <p className="text-xs text-white/70 font-medium">Please enter your name.</p>
                   )}
                 </div>
 
                 {/* Email */}
                 <div className="flex flex-col gap-1.5">
-                  <label htmlFor="contact-email" className="text-xs font-semibold text-charcoal/50 uppercase tracking-wider">
-                    Email address <span className="text-coral normal-case tracking-normal">*</span>
+                  <label htmlFor="contact-email" className="text-xs font-semibold text-white/60 uppercase tracking-wider">
+                    Email address <span className="text-white/40 normal-case tracking-normal">*</span>
                   </label>
                   <input
                     id="contact-email"
@@ -167,21 +167,21 @@ export default function ContactPage() {
                     onChange={handleChange}
                     onBlur={() => handleBlur("email")}
                     placeholder="you@example.com"
-                    className={`w-full rounded-full border bg-white px-4 py-3 text-sm text-charcoal placeholder:text-charcoal/35 focus:outline-none focus:ring-2 transition ${
+                    className={`w-full rounded-full border bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/35 focus:outline-none focus:ring-2 transition ${
                       isEmailInvalid
-                        ? "border-coral/50 focus:ring-coral/20 focus:border-coral/50"
-                        : "border-charcoal/12 focus:ring-sage/25 focus:border-sage/40"
+                        ? "border-white/40 focus:ring-white/20 focus:border-white/60"
+                        : "border-white/20 focus:ring-white/20 focus:border-white/40"
                     }`}
                   />
                   {isEmailInvalid && (
-                    <p className="text-xs text-coral font-medium">Please enter a valid email address.</p>
+                    <p className="text-xs text-white/70 font-medium">Please enter a valid email address.</p>
                   )}
                 </div>
               </div>
 
               {/* Reason */}
               <div className="flex flex-col gap-1.5">
-                <label htmlFor="contact-reason" className="text-xs font-semibold text-charcoal/50 uppercase tracking-wider">
+                <label htmlFor="contact-reason" className="text-xs font-semibold text-white/60 uppercase tracking-wider">
                   How can we help?
                 </label>
                 <select
@@ -189,10 +189,10 @@ export default function ContactPage() {
                   name="reason"
                   value={form.reason}
                   onChange={handleChange}
-                  className="w-full rounded-full border border-charcoal/12 bg-white px-4 py-3 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-sage/25 focus:border-sage/40 transition"
+                  className="w-full rounded-full border border-white/20 bg-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/40 transition"
                 >
                   {CONTACT_REASONS.map((r) => (
-                    <option key={r.value} value={r.value}>{r.label}</option>
+                    <option key={r.value} value={r.value} className="text-charcoal bg-white">{r.label}</option>
                   ))}
                 </select>
               </div>
@@ -200,10 +200,10 @@ export default function ContactPage() {
               {/* Message */}
               <div className="flex flex-col gap-1.5">
                 <div className="flex items-center justify-between">
-                  <label htmlFor="contact-message" className="text-xs font-semibold text-charcoal/50 uppercase tracking-wider">
-                    Message <span className="text-coral normal-case tracking-normal">*</span>
+                  <label htmlFor="contact-message" className="text-xs font-semibold text-white/60 uppercase tracking-wider">
+                    Message <span className="text-white/40 normal-case tracking-normal">*</span>
                   </label>
-                  <span className={`text-xs tabular-nums ${form.message.length > MESSAGE_MAX * 0.9 ? "text-coral" : "text-charcoal/35"}`}>
+                  <span className={`text-xs tabular-nums ${form.message.length > MESSAGE_MAX * 0.9 ? "text-white" : "text-white/35"}`}>
                     {form.message.length}/{MESSAGE_MAX}
                   </span>
                 </div>
@@ -216,14 +216,14 @@ export default function ContactPage() {
                   onChange={handleChange}
                   onBlur={() => handleBlur("message")}
                   placeholder="Tell us what's on your mind…"
-                  className={`w-full rounded-[10px] border bg-white px-4 py-3 text-sm text-charcoal placeholder:text-charcoal/35 focus:outline-none focus:ring-2 transition resize-none ${
+                  className={`w-full rounded-[10px] border bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/35 focus:outline-none focus:ring-2 transition resize-none ${
                     isMessageInvalid
-                      ? "border-coral/50 focus:ring-coral/20 focus:border-coral/50"
-                      : "border-charcoal/12 focus:ring-sage/25 focus:border-sage/40"
+                      ? "border-white/40 focus:ring-white/20 focus:border-white/60"
+                      : "border-white/20 focus:ring-white/20 focus:border-white/40"
                   }`}
                 />
                 {isMessageInvalid && (
-                  <p className="text-xs text-coral font-medium">Please enter a message.</p>
+                  <p className="text-xs text-white/70 font-medium">Please enter a message.</p>
                 )}
               </div>
 
@@ -231,7 +231,7 @@ export default function ContactPage() {
                 <button
                   type="submit"
                   disabled={status === "loading" || !canSubmit}
-                  className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-navbar-bg text-white text-sm font-semibold hover:bg-navbar-bg/90 active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
+                  className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-white text-navbar-bg text-sm font-semibold hover:bg-white/90 active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
                 >
                   {status === "loading" ? (
                     <>Sending…</>
@@ -240,7 +240,7 @@ export default function ContactPage() {
                   )}
                 </button>
                 {status === "error" && (
-                  <p className="text-xs text-coral font-medium">
+                  <p className="text-xs text-white/70 font-medium">
                     Something went wrong. Please try again or email us directly at info@sayso.com.
                   </p>
                 )}
