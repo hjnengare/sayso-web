@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withUser } from '@/app/api/_lib/withAuth';
+import { getServiceSupabase } from '@/app/lib/admin';
 
 /**
  * POST /api/badges/check-and-award
@@ -67,17 +68,16 @@ export const POST = withUser(async (_req: NextRequest, { user, supabase }) => {
     console.log(`[Badge Check] User ${user.id} earned ${newlyEarnedBadges.length} new badges:`,
       newlyEarnedBadges.map(b => b.name));
 
-    // Create notifications for each newly earned badge
+    // Create notifications for each newly earned badge (service role to bypass RLS)
+    const service = getServiceSupabase();
     for (const badge of newlyEarnedBadges) {
-      try {
-        await supabase.rpc('create_badge_notification', {
-          p_user_id: user.id,
-          p_badge_id: badge.id,
-          p_badge_name: badge.name,
-          p_badge_icon: badge.icon_path || '/badges/default-badge.png'
-        });
-      } catch (notifError) {
-        // Log error but don't fail the request if notification creation fails
+      const { error: notifError } = await service.rpc('create_badge_notification', {
+        p_user_id: user.id,
+        p_badge_id: badge.id,
+        p_badge_name: badge.name,
+        p_badge_icon: badge.icon_path || '/badges/default-badge.png'
+      });
+      if (notifError) {
         console.error(`[Badge Check] Failed to create notification for badge ${badge.id}:`, notifError);
       }
     }
