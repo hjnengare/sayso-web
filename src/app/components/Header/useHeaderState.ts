@@ -173,6 +173,19 @@ export const useHeaderState = ({
     showSearchBarRef.current = showSearchBar;
   }, [showSearchBar]);
 
+  // Publish header height as CSS variable so portal/admin layouts can fill the remaining viewport
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(() => {
+      document.documentElement.style.setProperty('--header-height', `${el.offsetHeight}px`);
+    });
+    observer.observe(el);
+    // Set immediately on mount
+    document.documentElement.style.setProperty('--header-height', `${el.offsetHeight}px`);
+    return () => observer.disconnect();
+  }, []);
+
   useEffect(() => {
     if (forceSearchOpen || isStackedLayout) {
       setShowSearchBar(true);

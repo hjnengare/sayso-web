@@ -41,9 +41,9 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
   }
 
   return (
-    <div className="h-dvh bg-page-bg flex overflow-hidden">
+    <div className="flex bg-page-bg" style={{ height: 'calc(100dvh - var(--header-height, 0px))' }}>
       {/* Desktop sidebar */}
-      <div className="hidden lg:flex lg:flex-col lg:w-56 xl:w-60 flex-shrink-0 shadow-lg h-full">
+      <div className="hidden lg:flex lg:flex-col lg:w-56 xl:w-60 flex-shrink-0 shadow-lg">
         <PortalSidebar pathname={pathname} />
       </div>
 
@@ -58,7 +58,7 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
       )}
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Mobile topbar */}
         <header className="lg:hidden flex items-center gap-3 px-4 py-3 bg-navbar-bg border-b border-white/10 shadow-sm flex-shrink-0">
           <button

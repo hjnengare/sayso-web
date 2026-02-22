@@ -17,7 +17,13 @@ const EXCLUDED_ROUTES = [
   "/verify-email",
   "/privacy",
   "/terms",
-  "/verify-email",
+  // Portal routes — have their own sidebar + mobile topbar
+  "/my-businesses",
+  "/add-business",
+  "/add-event",
+  "/add-special",
+  "/claim-business",
+  "/admin",
 ];
 
 export default function GlobalHeader() {

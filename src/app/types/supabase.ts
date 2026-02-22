@@ -100,6 +100,28 @@ export interface Database {
         Insert: Record<string, unknown>;
         Update: Record<string, unknown>;
       };
+      reviews: {
+        Row: { id: string; business_id: string; user_id: string; rating: number; content: string | null; title: string | null; created_at: string; [key: string]: unknown };
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
+      };
+      review_flags: {
+        Row: {
+          id: string;
+          review_id: string;
+          flagged_by: string;
+          reason: string;
+          details: string | null;
+          status: string;
+          admin_notes: string | null;
+          reviewed_by: string | null;
+          reviewed_at: string | null;
+          created_at: string;
+          [key: string]: unknown;
+        };
+        Insert: Record<string, unknown>;
+        Update: Record<string, unknown>;
+      };
     };
     Functions: {
       verify_business_claim: {

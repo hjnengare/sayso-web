@@ -1,6 +1,5 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "../contexts/AuthContext";
@@ -23,10 +22,6 @@ import { Suspense } from "react";
 import { usePreviousPageBreadcrumb } from "../hooks/usePreviousPageBreadcrumb";
 import { useUserBusinessClaims } from "../hooks/useUserBusinessClaims";
 
-const Footer = dynamic(() => import("../components/Footer/Footer"), {
-  loading: () => null,
-  ssr: false,
-});
 
 function ClaimBusinessPageContent() {
   const router = useRouter();
@@ -501,7 +496,6 @@ function ClaimBusinessPageContent() {
         </div>
       </main>
 
-      <Footer />
     </div>
   );
 }

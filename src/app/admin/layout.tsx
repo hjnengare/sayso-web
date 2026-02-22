@@ -9,6 +9,7 @@ import {
   Store,
   FileCheck,
   Database,
+  Flag,
   ChevronRight,
   Menu,
   X,
@@ -18,6 +19,7 @@ const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/pending-businesses", label: "Pending Businesses", icon: Store, exact: false },
   { href: "/admin/claims", label: "Business Claims", icon: FileCheck, exact: false },
+  { href: "/admin/flagged-reviews", label: "Flagged Reviews", icon: Flag, exact: false },
   { href: "/admin/seed", label: "Seed Data", icon: Database, exact: false },
 ];
 
@@ -108,9 +110,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="h-dvh bg-page-bg flex overflow-hidden">
+    <div className="flex bg-page-bg overflow-hidden" style={{ height: 'calc(100dvh - var(--header-height, 0px))' }}>
       {/* Desktop sidebar — fixed height, never scrolls */}
-      <div className="hidden lg:flex lg:flex-col lg:w-56 xl:w-60 flex-shrink-0 shadow-lg h-full">
+      <div className="hidden lg:flex lg:flex-col lg:w-56 xl:w-60 flex-shrink-0 shadow-lg">
         <Sidebar pathname={pathname} />
       </div>
 
@@ -125,7 +127,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       )}
 
       {/* Main content — scrolls independently */}
-      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Mobile topbar */}
         <header className="lg:hidden flex items-center gap-3 px-4 py-3 bg-navbar-bg border-b border-white/10 shadow-sm flex-shrink-0">
           <button

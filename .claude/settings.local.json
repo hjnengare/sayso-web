@@ -87,7 +87,14 @@
       "Bash(if [ -f \"$f\" ])",
       "Bash(then echo \"EXISTS: $f\")",
       "Bash(else echo \"MISSING: $f\")",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(head:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(git restore:*)",
+      "mcp__playwright-test__browser_navigate",
+      "Bash(git -C /c/Users/HilarioNengare/Projects/sayso diff)",
+      "Bash(git -C /c/Users/HilarioNengare/Projects/sayso log --oneline -10)",
+      "Bash(git -C /c/Users/HilarioNengare/Projects/sayso add .claude/settings.local.json src/app/add-business/page.tsx src/app/admin/layout.tsx src/app/admin/page.tsx src/app/claim-business/layout.tsx src/app/claim-business/page.tsx src/app/components/Business/PremiumReviewCard.tsx src/app/components/BusinessPortal/PortalLayout.tsx src/app/components/Header/GlobalHeader.tsx src/app/components/Header/useHeaderState.ts src/app/types/supabase.ts src/app/admin/flagged-reviews/ src/app/api/admin/flags/)"
     ],
     "deny": [],
     "ask": [],

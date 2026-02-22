@@ -33,10 +33,6 @@ const urbanist = Urbanist({
     display: "swap",
 });
 
-const Footer = dynamic(() => import("../components/Footer/Footer"), {
-    loading: () => null,
-    ssr: false,
-});
 
 export default function AddBusinessPage() {
     const router = useRouter();
@@ -960,7 +956,6 @@ export default function AddBusinessPage() {
                     </div>
                 </div>
 
-                <Footer />
             </div>
         </>
     );

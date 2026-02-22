@@ -1,18 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import useSWR from "swr";
 import Link from "next/link";
 import {
   Store,
   FileCheck,
   Database,
+  Flag,
   ArrowRight,
-  Clock,
-  TrendingUp,
   Activity,
 } from "lucide-react";
 
-type SectionKey = "pending-businesses" | "claims" | "seed";
+type SectionKey = "pending-businesses" | "claims" | "flagged-reviews" | "seed";
 
 const CARDS: {
   key: SectionKey;
@@ -45,6 +44,16 @@ const CARDS: {
     iconColor: "text-sage",
   },
   {
+    key: "flagged-reviews",
+    href: "/admin/flagged-reviews",
+    label: "Flagged Reviews",
+    description: "Moderate user-reported reviews for spam, harassment, and inappropriate content.",
+    icon: Flag,
+    accentClass: "hover:border-red-300/60",
+    iconBg: "bg-red-50",
+    iconColor: "text-red-500",
+  },
+  {
     key: "seed",
     href: "/admin/seed",
     label: "Seed Data",
@@ -56,34 +65,26 @@ const CARDS: {
   },
 ];
 
-const STAT_ICONS = {
-  "pending-businesses": Clock,
-  claims: TrendingUp,
-};
+const fetcher = (url: string) => fetch(url).then((r) => (r.ok ? r.json() : null));
 
 export default function AdminDashboardPage() {
-  const [pendingBusinessCount, setPendingBusinessCount] = useState<number | null>(null);
-  const [pendingClaimCount, setPendingClaimCount] = useState<number | null>(null);
+  const { data: bizData } = useSWR("/api/admin/businesses/pending", fetcher, { revalidateOnFocus: false });
+  const { data: claimsData } = useSWR("/api/admin/claims?status=pending,under_review&limit=100", fetcher, { revalidateOnFocus: false });
+  const { data: flagsData } = useSWR("/api/admin/flags?status=pending&limit=1", fetcher, { revalidateOnFocus: false });
 
-  useEffect(() => {
-    fetch("/api/admin/businesses/pending")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => { if (data?.businesses) setPendingBusinessCount(data.businesses.length); })
-      .catch(() => {});
-
-    fetch("/api/admin/claims?status=pending,under_review&limit=100")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => { if (data?.claims) setPendingClaimCount(data.claims.length); })
-      .catch(() => {});
-  }, []);
+  const pendingBusinessCount: number | null = bizData?.businesses ? bizData.businesses.length : null;
+  const pendingClaimCount: number | null = claimsData?.claims ? claimsData.claims.length : null;
+  const pendingFlagCount: number | null = flagsData?.total != null ? flagsData.total : null;
 
   const countMap: Record<SectionKey, number | null> = {
     "pending-businesses": pendingBusinessCount,
     claims: pendingClaimCount,
+    "flagged-reviews": pendingFlagCount,
     seed: null,
   };
 
-  const totalPending = (pendingBusinessCount ?? 0) + (pendingClaimCount ?? 0);
+  const totalPending =
+    (pendingBusinessCount ?? 0) + (pendingClaimCount ?? 0) + (pendingFlagCount ?? 0);
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-8 max-w-5xl mx-auto">
@@ -101,13 +102,13 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Stats bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
-        <div className="rounded-2xl bg-white border border-charcoal/8 shadow-premium px-5 py-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+        <div className="rounded-2xl bg-white border border-charcoal/8 shadow-premium px-5 py-4 col-span-2 sm:col-span-1">
           <p className="font-urbanist text-xs font-semibold text-charcoal/45 uppercase tracking-widest mb-1">
             Awaiting Review
           </p>
           <p className="font-urbanist text-3xl font-bold text-charcoal tabular-nums">
-            {pendingBusinessCount == null && pendingClaimCount == null ? (
+            {pendingBusinessCount == null && pendingClaimCount == null && pendingFlagCount == null ? (
               <span className="text-charcoal/25 text-xl animate-pulse">—</span>
             ) : (
               totalPending
@@ -130,7 +131,7 @@ export default function AdminDashboardPage() {
           <p className="font-urbanist text-xs text-charcoal/45 mt-1">Pending approval</p>
         </div>
 
-        <div className="rounded-2xl bg-white border border-charcoal/8 shadow-premium px-5 py-4 col-span-2 sm:col-span-1">
+        <div className="rounded-2xl bg-white border border-charcoal/8 shadow-premium px-5 py-4">
           <p className="font-urbanist text-xs font-semibold text-charcoal/45 uppercase tracking-widest mb-1">
             Claims
           </p>
@@ -143,10 +144,24 @@ export default function AdminDashboardPage() {
           </p>
           <p className="font-urbanist text-xs text-charcoal/45 mt-1">Pending review</p>
         </div>
+
+        <div className="rounded-2xl bg-white border border-charcoal/8 shadow-premium px-5 py-4">
+          <p className="font-urbanist text-xs font-semibold text-charcoal/45 uppercase tracking-widest mb-1">
+            Flags
+          </p>
+          <p className="font-urbanist text-3xl font-bold text-red-500 tabular-nums">
+            {pendingFlagCount == null ? (
+              <span className="text-charcoal/25 text-xl animate-pulse">—</span>
+            ) : (
+              pendingFlagCount
+            )}
+          </p>
+          <p className="font-urbanist text-xs text-charcoal/45 mt-1">Flagged reviews</p>
+        </div>
       </div>
 
       {/* Section cards */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {CARDS.map((card) => {
           const Icon = card.icon;
           const count = countMap[card.key];
