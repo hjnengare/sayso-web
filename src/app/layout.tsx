@@ -31,7 +31,6 @@ import SWRProvider from "./components/Providers/SWRProvider";
 
 // Lazy load non-critical components for faster initial load
 const WebVitals = dynamicImport(() => import("./components/Performance/WebVitals"));
-const BusinessNotifications = dynamicImport(() => import("./components/Notifications/BusinessNotifications"));
 const ClientLayoutWrapper = dynamicImport(() => import("./components/Performance/ClientLayoutWrapper"));
 
 // Primary font - Urbanist (preloaded, critical)
@@ -224,7 +223,6 @@ export default function RootLayout({
             <OnboardingProvider>
               <SavedItemsProvider>
                 <NotificationsProvider>
-                  <BusinessNotifications />
                   <NotificationToasts />
                   <LazyMotionProvider>
                     <GlobalHeader />

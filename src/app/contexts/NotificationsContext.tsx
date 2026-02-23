@@ -70,7 +70,6 @@ interface NotificationsContextType {
 // ─── Fetcher ──────────────────────────────────────────────────────────────────
 
 const PERSONAL_NOTIFICATIONS_ENDPOINT = '/api/notifications/user';
-const BUSINESS_NOTIFICATIONS_ENDPOINT = '/api/notifications/business';
 
 async function fetchNotificationsFromApi(url: string): Promise<DatabaseNotification[]> {
   const res = await fetch(url);
@@ -107,18 +106,10 @@ const NotificationsContext = createContext<NotificationsContextType | undefined>
 export function NotificationsProvider({ children }: { children: ReactNode }) {
   const { user, isLoading: authLoading } = useAuth();
   const userId = user?.id ?? null;
-  const userCurrentRole = user?.profile?.account_role || user?.profile?.role || "user";
-  // Pin to "business" while auth resolves to avoid hitting the personal endpoint too early.
-  const isBusinessAccountUser = authLoading ? true : userCurrentRole === "business_owner";
+  const endpoint = PERSONAL_NOTIFICATIONS_ENDPOINT;
 
-  const endpoint = isBusinessAccountUser
-    ? BUSINESS_NOTIFICATIONS_ENDPOINT
-    : PERSONAL_NOTIFICATIONS_ENDPOINT;
-
-  // Fetch for any authenticated user; business accounts use their endpoint.
-  const swrKey = !authLoading && userId
-    ? `${endpoint}:${userId}`
-    : null;
+  // Fetch for any authenticated user (personal notifications only)
+  const swrKey = !authLoading && userId ? `${endpoint}:${userId}` : null;
 
   // realtime is working → no need for aggressive polling; fall back to 30 s if channel fails
   const [realtimeFailed, setRealtimeFailed] = useState(false);

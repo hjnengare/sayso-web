@@ -9,7 +9,6 @@ import { FilterState } from "../FilterModal/FilterModal";
 import { useSavedItems } from "../../contexts/SavedItemsContext";
 import { useNotifications } from "../../contexts/NotificationsContext";
 import { useRequireBusinessOwner } from "../../hooks/useBusinessAccess";
-import { useBusinessNotificationsFeed } from "../../hooks/useBusinessNotificationsFeed";
 import { useAuth } from "../../contexts/AuthContext";
 import {
   DISCOVER_LINKS,
@@ -104,14 +103,7 @@ export const useHeaderState = ({
     user?.profile?.account_role || user?.profile?.role || "user";
   const isAdminUser = userCurrentRole === "admin";
   const isBusinessAccountUser = !isAdminUser && userCurrentRole === "business_owner";
-  const isBusinessNotificationRoute = Boolean(
-    pathname?.startsWith("/my-businesses") ||
-    pathname?.startsWith("/add-business") ||
-    pathname?.startsWith("/claim-business") ||
-    pathname?.startsWith("/add-event") ||
-    pathname?.startsWith("/add-special")
-  );
-  const shouldUseBusinessNotifications = isBusinessAccountUser || isBusinessNotificationRoute;
+  const shouldUseBusinessNotifications = false;
   const hasMultipleRoles = user?.profile?.role === "both";
   const isGuest = !authLoading && !user;
   // ============================================================================
@@ -126,7 +118,6 @@ export const useHeaderState = ({
   const hasOwnedBusinesses = ownedBusinessesCount > 0;
 
   // SWR-backed business unread count — realtime + deduped, no manual fetch needed
-  const { unreadCount: businessUnreadCount } = useBusinessNotificationsFeed();
 
   // ============================================================================
   // NAVIGATION LINKS (COMPUTED)
@@ -137,9 +128,7 @@ export const useHeaderState = ({
     isCheckingBusinessOwner,
     hasOwnedBusinesses
   );
-  const unreadCount = shouldUseBusinessNotifications
-    ? businessUnreadCount
-    : Math.max(0, personalUnreadCount || 0);
+  const unreadCount = Math.max(0, personalUnreadCount || 0);
 
   // ============================================================================
   // REFS
