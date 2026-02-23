@@ -69,7 +69,8 @@ interface NotificationsContextType {
 
 // ─── Fetcher ──────────────────────────────────────────────────────────────────
 
-const USER_NOTIFICATIONS_ENDPOINT = '/api/notifications/user';
+const PERSONAL_NOTIFICATIONS_ENDPOINT = '/api/notifications/user';
+const BUSINESS_NOTIFICATIONS_ENDPOINT = '/api/notifications/business';
 
 async function fetchNotificationsFromApi(url: string): Promise<DatabaseNotification[]> {
   const res = await fetch(url);
@@ -110,9 +111,13 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   // Pin to "business" while auth resolves to avoid hitting the personal endpoint too early.
   const isBusinessAccountUser = authLoading ? true : userCurrentRole === "business_owner";
 
-  // Only fetch for authenticated personal users
-  const swrKey = !authLoading && userId && !isBusinessAccountUser
-    ? `${USER_NOTIFICATIONS_ENDPOINT}:${userId}`
+  const endpoint = isBusinessAccountUser
+    ? BUSINESS_NOTIFICATIONS_ENDPOINT
+    : PERSONAL_NOTIFICATIONS_ENDPOINT;
+
+  // Fetch for any authenticated user; business accounts use their endpoint.
+  const swrKey = !authLoading && userId
+    ? `${endpoint}:${userId}`
     : null;
 
   // realtime is working → no need for aggressive polling; fall back to 30 s if channel fails
@@ -121,7 +126,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   const { data: rawNotifications, isLoading: swrLoading, mutate } = useSWR<DatabaseNotification[]>(
     swrKey,
     // key is a composite string — pass the actual URL to the fetcher
-    () => fetchNotificationsFromApi(USER_NOTIFICATIONS_ENDPOINT),
+    () => fetchNotificationsFromApi(endpoint),
     {
       ...swrConfig,
       dedupingInterval: 10_000,
