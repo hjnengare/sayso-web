@@ -12,6 +12,7 @@ import OptimizedImage from "../Performance/OptimizedImage";
 import Tooltip from "../Tooltip/Tooltip";
 import { useSavedItems } from "../../contexts/SavedItemsContext";
 import { useToast } from "../../contexts/ToastContext";
+import { useBusinessRatings } from "../../hooks/useBusinessRatings";
 import { useAuth } from "../../contexts/AuthContext";
 import {
   getCategoryLabelFromBusiness,
@@ -506,17 +507,21 @@ function BusinessCard({
   const isImagePng = getDisplayImage.isPlaceholder;
   const displayAlt = business.alt || business.name;
 
-  const hasRating = business.hasRating !== undefined
-    ? business.hasRating
-    : (business.totalRating !== undefined && business.totalRating > 0) ||
-    (business.rating !== undefined && business.rating > 0) ||
-    (business?.stats?.average_rating !== undefined && business.stats.average_rating > 0);
+  const initialTotalReviews = business.reviews ?? 0;
+  const initialRating =
+    (typeof business.totalRating === "number" && business.totalRating) ||
+    (typeof business.rating === "number" && business.rating) ||
+    (typeof business?.stats?.average_rating === "number" && business.stats.average_rating) ||
+    0;
 
-  const displayRating =
-    (typeof business.totalRating === "number" && business.totalRating > 0 && business.totalRating) ||
-    (typeof business.rating === "number" && business.rating > 0 && business.rating) ||
-    (typeof business?.stats?.average_rating === "number" && business.stats.average_rating > 0 && business.stats.average_rating) ||
-    undefined;
+  const { rating: liveRating, totalReviews: liveTotalReviews } = useBusinessRatings(
+    business.id,
+    initialRating,
+    initialTotalReviews
+  );
+
+  const hasRating = liveRating > 0;
+  const displayRating = hasRating ? liveRating : undefined;
 
   const handleImageError = () => {
     if (!usingFallback && !isImagePng) {
@@ -681,7 +686,7 @@ function BusinessCard({
                 <BusinessCardReviews
                   hasRating={hasRating}
                   displayRating={displayRating}
-                  reviews={business.reviews}
+                  reviews={liveTotalReviews}
                   hasReviewed={hasReviewed}
                   onCardClick={(e) => { e.preventDefault(); e.stopPropagation(); handleCardClick(); }}
                   onWriteReview={(e) => { e.preventDefault(); e.stopPropagation(); if (!hasReviewed) handleWriteReview(); }}
