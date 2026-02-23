@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useSavedBusinesses } from "../hooks/useSavedBusinessesFull";
 import { AnimatePresence, m } from "framer-motion";
-import { ChevronRight, ChevronLeft, Store } from "lucide-react";
+import { ChevronRight, Store } from "lucide-react";
 import Pagination from "../components/EventsPage/Pagination";
 import EmailVerificationGuard from "../components/Auth/EmailVerificationGuard";
 import { useSavedItems } from "../contexts/SavedItemsContext";
@@ -138,7 +138,9 @@ export default function SavedPage() {
                     </Link>
                   </li>
                   <li className="flex items-center">
-                    <ChevronRight className="w-4 h-4 text-charcoal/60" />
+                    <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-off-white/70 text-charcoal/85 transition duration-200 ease-out hover:bg-off-white/90 hover:scale-[1.03] align-middle">
+                      <ChevronRight className="w-4 h-4" aria-hidden />
+                    </span>
                   </li>
                   <li>
                     <span className="text-charcoal font-semibold" style={{
@@ -269,7 +271,9 @@ export default function SavedPage() {
                       </div>
                     ) : (
                       <div className="text-center py-12">
-                        <Store className="w-12 h-12 mx-auto mb-4 text-charcoal/30" />
+                        <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-off-white/70 text-charcoal/85 transition duration-200 ease-out hover:bg-off-white/90 hover:scale-[1.03]">
+                          <Store className="w-6 h-6" aria-hidden />
+                        </span>
                         <p className="text-charcoal/60 text-body" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
                           No saved businesses yet
                         </p>

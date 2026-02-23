@@ -52,10 +52,10 @@ export default function EmptySavedState() {
     >
       <div className="text-center w-full">
         <m.div
-          className="w-20 h-20 mx-auto mb-6 bg-charcoal/10 rounded-full flex items-center justify-center"
+          className="w-12 h-12 mx-auto mb-6 bg-off-white/70 rounded-full flex items-center justify-center text-charcoal/85 transition duration-200 ease-out hover:bg-off-white/90 hover:scale-[1.03]"
           variants={iconVariants}
         >
-          <Bookmark className="w-10 h-10 text-charcoal/60" strokeWidth={1.5} />
+          <Bookmark className="w-6 h-6" strokeWidth={1.5} aria-hidden />
         </m.div>
 
         <m.h3
