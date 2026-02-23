@@ -269,7 +269,7 @@ export default function LoginPage() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: styles }} />
-      <div ref={containerRef} className="min-h-[100dvh]  bg-off-white   flex flex-col relative overflow-hidden ios-inertia hide-scrollbar safe-area-full">
+      <div ref={containerRef} className="   bg-off-white   flex flex-col relative overflow-hidden ios-inertia hide-scrollbar safe-area-full">
       {/* Back button with entrance animation */}
       <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-20 animate-slide-in-left animate-delay-200">
         <Link href="/onboarding" className="text-charcoal hover:text-charcoal/80 transition-colors duration-300 p-2 hover:bg-off-white/50 rounded-lg block backdrop-blur-sm">

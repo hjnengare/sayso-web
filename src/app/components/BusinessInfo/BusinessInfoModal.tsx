@@ -118,7 +118,9 @@ export default function BusinessInfoModal({
 
           {/* Price Range */}
           <div className="flex items-center gap-2 text-sm text-charcoal/70" style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}>
-            <DollarSign className={`w-4 h-4 flex-shrink-0 ${businessInfo.price_range ? 'text-sage' : 'text-charcoal/30'}`} />
+            <span className="grid h-6 w-6 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
+              <DollarSign className="w-3 h-3 text-charcoal/85" />
+            </span>
             <span className="font-medium text-charcoal/60">Price Range:</span>
             <span className={!businessInfo.price_range ? 'italic text-charcoal/60' : ''}>
               {displayPriceRange || 'Not specified'}
@@ -127,7 +129,9 @@ export default function BusinessInfoModal({
 
           {/* Verification Status */}
           <div className="flex items-center gap-2 text-sm" style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}>
-            <CheckCircle className={`w-4 h-4 flex-shrink-0 ${businessInfo.verified ? 'text-sage' : 'text-charcoal/60'}`} />
+            <span className="grid h-6 w-6 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
+              <CheckCircle className="w-3 h-3 text-charcoal/85" />
+            </span>
             <span className={`font-medium ${businessInfo.verified ? 'text-sage' : 'text-charcoal/60'}`}>
               {businessInfo.verified ? 'Verified Business' : 'Not Verified'}
             </span>
@@ -135,7 +139,9 @@ export default function BusinessInfoModal({
 
           {/* Location */}
           <div className="flex items-start gap-3">
-            <MapPin className={`w-4 h-4 mt-0.5 flex-shrink-0 ${businessInfo.location ? 'text-sage' : 'text-charcoal/30'}`} />
+            <span className="grid h-6 w-6 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors mt-0.5">
+              <MapPin className="w-3 h-3 text-charcoal/85" />
+            </span>
             <div className="flex-1">
               <p className="text-sm font-medium text-charcoal mb-0.5" style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}>Location</p>
               <p className={`text-sm ${businessInfo.location ? 'text-charcoal/70' : 'italic text-charcoal/60'}`} style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}>
@@ -157,7 +163,9 @@ export default function BusinessInfoModal({
 
           {/* Phone */}
           <div className="flex items-start gap-3">
-            <Phone className={`w-4 h-4 mt-0.5 flex-shrink-0 ${businessInfo.phone ? 'text-sage' : 'text-charcoal/30'}`} />
+            <span className="grid h-6 w-6 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors mt-0.5">
+              <Phone className="w-3 h-3 text-charcoal/85" />
+            </span>
             <div className="flex-1">
               <p className="text-sm font-medium text-charcoal mb-0.5" style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}>Phone</p>
               {businessInfo.phone ? (
@@ -174,7 +182,9 @@ export default function BusinessInfoModal({
 
           {/* Email */}
           <div className="flex items-start gap-3">
-            <Mail className={`w-4 h-4 mt-0.5 flex-shrink-0 ${businessInfo.email ? 'text-sage' : 'text-charcoal/30'}`} />
+            <span className="grid h-6 w-6 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors mt-0.5">
+              <Mail className="w-3 h-3 text-charcoal/85" />
+            </span>
             <div className="flex-1">
               <p className="text-sm font-medium text-charcoal mb-0.5" style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}>Email</p>
               {businessInfo.email ? (
@@ -191,7 +201,9 @@ export default function BusinessInfoModal({
 
           {/* Website */}
           <div className="flex items-start gap-3">
-            <Globe className={`w-4 h-4 mt-0.5 flex-shrink-0 ${businessInfo.website ? 'text-sage' : 'text-charcoal/30'}`} />
+            <span className="grid h-6 w-6 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors mt-0.5">
+              <Globe className="w-3 h-3 text-charcoal/85" />
+            </span>
             <div className="flex-1">
               <p className="text-sm font-medium text-charcoal mb-0.5" style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}>Website</p>
               {businessInfo.website ? (

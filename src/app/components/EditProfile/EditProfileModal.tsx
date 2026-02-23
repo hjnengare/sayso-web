@@ -142,7 +142,7 @@ export function EditProfileModal({
     }
   };
 
-  if (!isMounted) return null;
+  if (!isMounted || typeof document === "undefined") return null;
 
   return createPortal(
     <>
@@ -358,7 +358,7 @@ export function EditProfileModal({
         </>
       )}
     </AnimatePresence>
-    </>
+    </>,
+    document.body
   );
 }
-

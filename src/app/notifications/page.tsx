@@ -33,10 +33,6 @@ function getNotificationIcon(type: string) {
   }
 }
 
-function getNotificationColor(isRead: boolean) {
-  if (isRead) return 'bg-charcoal/5 text-navbar-bg/60 border-transparent';
-  return 'bg-navbar-bg/10 text-navbar-bg border-transparent';
-}
 
 type FilterType = 'All' | 'Unread' | 'Read';
 
@@ -158,14 +154,13 @@ function BusinessNotificationList({
             {filtered.map((notification, index) => {
               const isRead = readNotifications.has(notification.id);
               const Icon = getNotificationIcon(notification.type);
-              const colorClass = getNotificationColor(isRead);
-              const hasLink = Boolean(notification.link?.trim());
+const hasLink = Boolean(notification.link?.trim());
 
               const card = (
                 <>
-                  <div className={`flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center ${colorClass} transition-all duration-200`}>
-                    <Icon className="w-5 h-5" strokeWidth={2} />
-                  </div>
+                  <span className="grid flex-shrink-0 h-8 w-8 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
+                    <Icon className="w-4 h-4 text-charcoal/85" strokeWidth={2} />
+                  </span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
@@ -173,7 +168,9 @@ function BusinessNotificationList({
                           {notification.message} {notification.title}
                         </p>
                         <div className={`flex items-center gap-1.5 text-caption ${isRead ? 'text-charcoal/40' : 'text-charcoal/60'}`}>
-                          <Clock className="w-3 h-3" strokeWidth={2} />
+                          <span className="grid h-5 w-5 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
+                            <Clock className="w-2.5 h-2.5 text-charcoal/85" strokeWidth={2} />
+                          </span>
                           <span className="font-urbanist">{notification.timeAgo} ago</span>
                         </div>
                       </div>
@@ -183,19 +180,19 @@ function BusinessNotificationList({
                             <button
                               type="button"
                               onClick={() => markAsRead?.(notification.id)}
-                              className="p-1.5 hover:bg-charcoal/5 rounded-lg transition-all duration-200 group"
+                              className="grid h-6 w-6 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors"
                               aria-label="Mark as read"
                             >
-                              <Check className="w-4 h-4 text-charcoal/40 group-hover:text-navbar-bg transition-colors" strokeWidth={2} />
+                              <Check className="w-3 h-3 text-charcoal/85" strokeWidth={2} />
                             </button>
                           )}
                           <button
                             type="button"
                             onClick={() => deleteNotification?.(notification.id)}
-                            className="p-1.5 hover:bg-charcoal/5 rounded-lg transition-all duration-200 group"
+                            className="grid h-6 w-6 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors"
                             aria-label="Delete notification"
                           >
-                            <X className="w-4 h-4 text-charcoal/30 group-hover:text-charcoal/60 transition-colors" strokeWidth={2} />
+                            <X className="w-3 h-3 text-charcoal/85" strokeWidth={2} />
                           </button>
                         </div>
                       )}
@@ -322,9 +319,9 @@ export default function NotificationsPage() {
         <div className="p-4 sm:p-6 lg:p-8 max-w-2xl font-urbanist min-h-full flex flex-col">
           {/* Section header */}
           <div className="flex items-center gap-2.5 mb-6">
-            <div className="w-8 h-8 rounded-lg bg-navbar-bg/10 flex items-center justify-center">
-              <Building2 className="w-4 h-4 text-navbar-bg" strokeWidth={2} />
-            </div>
+            <span className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
+              <Building2 className="w-4 h-4 text-charcoal/85" strokeWidth={2} />
+            </span>
             <div>
               <h1 className="text-lg font-bold text-charcoal font-urbanist leading-tight">Business Notifications</h1>
               <p className="text-xs text-charcoal/50 font-urbanist">Activity from your business account</p>
@@ -353,7 +350,7 @@ export default function NotificationsPage() {
   // --- Personal account view ---------------------------------------------------
   return (
     <div
-      className="min-h-[100dvh] flex flex-col bg-off-white relative font-urbanist"
+      className="  flex flex-col bg-off-white relative font-urbanist"
       style={{ fontFamily: '"Urbanist", -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
     >
       <div className="absolute inset-0 bg-gradient-to-br from-sage/10 via-off-white to-coral/5" />

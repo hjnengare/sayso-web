@@ -433,7 +433,7 @@ export default function AuthPage({ defaultAuthMode }: AuthPageProps) {
       <div
         ref={containerRef}
         data-reduced={prefersReduced}
-        className="min-h-[100dvh] bg-off-white flex flex-col relative safe-area-full"
+        className="  bg-off-white flex flex-col relative safe-area-full"
         style={{ paddingBottom: "max(0px, env(safe-area-inset-bottom))" }}
       >
         {/* Premium floating orbs background */}

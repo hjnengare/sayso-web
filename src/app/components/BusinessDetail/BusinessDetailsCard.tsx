@@ -206,9 +206,9 @@ export default function BusinessDetailsCard({ priceRange, verified, hours }: Bus
       <div className="space-y-4">
         {/* Price Range */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-white/30 rounded-full flex items-center justify-center flex-shrink-0">
-            <Coins className="text-navbar-bg" size={18} />
-          </div>
+          <span className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
+            <Coins className="w-4 h-4 text-charcoal/85" />
+          </span>
           <div className="flex-1">
             <p
               className="text-caption text-charcoal/60"
@@ -246,9 +246,9 @@ export default function BusinessDetailsCard({ priceRange, verified, hours }: Bus
 
         {/* Hours */}
         <div className="flex items-start gap-3">
-          <div className="w-10 h-10 bg-white/30 rounded-full flex items-center justify-center flex-shrink-0">
-            <Clock className="text-navbar-bg" size={18} />
-          </div>
+          <span className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
+            <Clock className="w-4 h-4 text-charcoal/85" />
+          </span>
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
               <p
@@ -347,9 +347,9 @@ export default function BusinessDetailsCard({ priceRange, verified, hours }: Bus
 
         {/* Verification Status */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-white/30 rounded-full flex items-center justify-center flex-shrink-0">
-            <CheckCircle className="text-navbar-bg" size={18} />
-          </div>
+          <span className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
+            <CheckCircle className="w-4 h-4 text-charcoal/85" />
+          </span>
           <div>
             <p
               className="text-caption text-charcoal/60"
@@ -366,7 +366,9 @@ export default function BusinessDetailsCard({ priceRange, verified, hours }: Bus
               >
                 {verified ? (
                   <>
-                    <CheckCircle size={14} className="text-sage" />
+                    <span className="grid h-5 w-5 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
+                      <CheckCircle className="w-3 h-3 text-charcoal/85" />
+                    </span>
                     Verified
                   </>
                 ) : (

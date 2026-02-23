@@ -283,15 +283,19 @@ export default function ReviewerProfilePage() {
                                                                     </div>
                                                                 )}
                                                             </div>
-                                                            <div className="flex items-center gap-4 mb-4 text-sm text-charcoal/70 flex-wrap" style={{
+                                                            <div className="flex items-center gap-3 mb-4 text-sm text-charcoal/70 flex-wrap" style={{
                                                                 fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
                                                             }}>
-                                                                <div className="flex items-center gap-1">
-                                                                    <MapPin size={14} />
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <span className="grid h-6 w-6 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
+                                                                        <MapPin className="w-3 h-3 text-charcoal/85" />
+                                                                    </span>
                                                                     <span>{reviewer.location}</span>
                                                                 </div>
-                                                                <div className="flex items-center gap-1">
-                                                                    <Calendar size={14} />
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <span className="grid h-6 w-6 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
+                                                                        <Calendar className="w-3 h-3 text-charcoal/85" />
+                                                                    </span>
                                                                     <span>Member since {reviewer.memberSince}</span>
                                                                 </div>
                                                             </div>

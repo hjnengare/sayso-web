@@ -28,14 +28,7 @@ export default function BusinessInfoAside({ businessInfo, className = "", stacke
     render?: () => React.ReactNode;
   }> = [
     {
-      icon: (
-        <CheckCircle
-          size={20}
-          className={`flex-shrink-0 ${
-            businessInfo.verified ? "text-navbar-bg" : "text-navbar-bg/40"
-          }`}
-        />
-      ),
+      icon: <CheckCircle className="w-4 h-4 text-charcoal/85" />,
       label: "Verification",
       render: () => (
         <Text variant="body-sm" color={businessInfo.verified ? "sage" : "secondary"} className="font-semibold">
@@ -44,17 +37,17 @@ export default function BusinessInfoAside({ businessInfo, className = "", stacke
       ),
     },
     {
-      icon: <MapPin size={20} className="flex-shrink-0 text-navbar-bg" />,
+      icon: <MapPin className="w-4 h-4 text-charcoal/85" />,
       label: "Location",
       value: businessInfo.location,
     },
     {
-      icon: <MapPin size={20} className="flex-shrink-0 text-navbar-bg" />,
+      icon: <MapPin className="w-4 h-4 text-charcoal/85" />,
       label: "Address",
       value: businessInfo.address,
     },
     {
-      icon: <Phone size={20} className="flex-shrink-0 text-navbar-bg" />,
+      icon: <Phone className="w-4 h-4 text-charcoal/85" />,
       label: "Phone",
       render: () =>
         businessInfo.phone ? (
@@ -71,7 +64,7 @@ export default function BusinessInfoAside({ businessInfo, className = "", stacke
         ),
     },
     {
-      icon: <Mail size={20} className="flex-shrink-0 text-navbar-bg" />,
+      icon: <Mail className="w-4 h-4 text-charcoal/85" />,
       label: "Email",
       render: () =>
         businessInfo.email ? (
@@ -88,7 +81,7 @@ export default function BusinessInfoAside({ businessInfo, className = "", stacke
         ),
     },
     {
-      icon: <Globe size={20} className="flex-shrink-0 text-navbar-bg" />,
+      icon: <Globe className="w-4 h-4 text-charcoal/85" />,
       label: "Website",
       render: () =>
         businessInfo.website ? (
@@ -110,7 +103,7 @@ export default function BusinessInfoAside({ businessInfo, className = "", stacke
         ),
     },
     {
-      icon: <DollarSign size={20} className="flex-shrink-0 text-navbar-bg" />,
+      icon: <DollarSign className="w-4 h-4 text-charcoal/85" />,
       label: "Price Range",
       value: formatPriceRangeDisplay(businessInfo.price_range),
     },
@@ -137,7 +130,9 @@ export default function BusinessInfoAside({ businessInfo, className = "", stacke
         <header className="space-y-4 pb-6 border-b border-white/30 mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Award size={20} className="text-sage" />
+              <span className="grid h-6 w-6 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
+                <Award className="w-3 h-3 text-charcoal/85" />
+              </span>
               <Text variant="caption" color="secondary" className="uppercase tracking-[0.2em] font-bold">Business Information</Text>
             </div>
             {businessInfo.verified && (
@@ -187,9 +182,9 @@ export default function BusinessInfoAside({ businessInfo, className = "", stacke
               <div className="absolute inset-0 rounded-[12px] bg-gradient-to-br from-sage/5 to-coral/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               
               <div className="relative z-10 flex gap-4">
-                <div className="w-14 h-14 rounded-[12px] bg-gradient-to-br from-white/60 via-white/40 to-white/30   shadow-md grid place-items-center flex-shrink-0 backdrop-blur-sm group-hover:scale-110 transition-transform duration-300">
+                <span className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
                   {row.icon}
-                </div>
+                </span>
                 <div className="flex-1 min-w-0">
                   <Text variant="caption" color="secondary" className="font-bold uppercase tracking-wider mb-2">
                     {row.label}

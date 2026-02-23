@@ -75,14 +75,18 @@ export default function PersonalizationInsights({ business }: PersonalizationIns
       {/* Personalization Insights */}
       <div className="bg-gradient-to-br from-sage/10 via-sage/5 to-transparent border border-sage/20 rounded-[12px] p-4 space-y-3">
         <div className="flex items-center gap-2">
-          <Info className="w-4 h-4 text-sage" />
+          <span className="grid h-6 w-6 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
+            <Info className="w-3 h-3 text-charcoal/85" />
+          </span>
           <h3 className="text-sm font-semibold text-charcoal">Personalized for You</h3>
         </div>
 
         <div className="space-y-2">
           {positiveInsights.map((insight, index) => (
             <div key={index} className="flex items-start gap-2 text-sm text-charcoal/80">
-              <CheckCircle className="w-4 h-4 text-sage mt-0.5 flex-shrink-0" />
+              <span className="grid h-5 w-5 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors mt-0.5">
+                <CheckCircle className="w-3 h-3 text-charcoal/85" />
+              </span>
               <span>{insight}</span>
             </div>
           ))}

@@ -34,7 +34,9 @@ export default function BusinessContactInfo({ phone, website, address, email, lo
 
         <div className="space-y-2.5">
           <div className="flex items-center gap-2.5">
-            <Phone className="text-navbar-bg" size={16} />
+            <span className="grid h-6 w-6 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
+              <Phone className="w-3 h-3 text-charcoal/85" />
+            </span>
             {phone ? (
               <a
                 href={`tel:${phone}`}
@@ -53,7 +55,9 @@ export default function BusinessContactInfo({ phone, website, address, email, lo
             )}
           </div>
           <div className="flex items-center gap-2.5">
-            <Mail className="text-navbar-bg" size={16} />
+            <span className="grid h-6 w-6 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
+              <Mail className="w-3 h-3 text-charcoal/85" />
+            </span>
             {email ? (
               <a
                 href={`mailto:${email}`}
@@ -72,7 +76,9 @@ export default function BusinessContactInfo({ phone, website, address, email, lo
             )}
           </div>
           <div className="flex items-center gap-2.5">
-            <Globe className="text-navbar-bg" size={16} />
+            <span className="grid h-6 w-6 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
+              <Globe className="w-3 h-3 text-charcoal/85" />
+            </span>
             {website ? (
               <a
                 href={websiteHref}
@@ -94,7 +100,9 @@ export default function BusinessContactInfo({ phone, website, address, email, lo
             )}
           </div>
           <div className="flex items-center gap-2.5">
-            <MapPin className="text-navbar-bg" size={16} />
+            <span className="grid h-6 w-6 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
+              <MapPin className="w-3 h-3 text-charcoal/85" />
+            </span>
             {address || location ? (
               <span
                 className="text-body-sm text-charcoal/70"

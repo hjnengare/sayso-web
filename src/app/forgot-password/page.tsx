@@ -95,7 +95,7 @@ export default function ForgotPasswordPage() {
     return (
       <>
         <style dangerouslySetInnerHTML={{ __html: authStyles }} />
-        <div ref={containerRef} className="min-h-[100dvh] bg-off-white flex flex-col relative safe-area-full"
+        <div ref={containerRef} className="  bg-off-white flex flex-col relative safe-area-full"
         style={{ paddingBottom: "max(0px, env(safe-area-inset-bottom))" }}>
           {/* Premium floating orbs background — clipped inside own layer so root can scroll */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
@@ -204,7 +204,7 @@ export default function ForgotPasswordPage() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: authStyles }} />
-      <div ref={containerRef} className="min-h-[100dvh] bg-off-white flex flex-col relative safe-area-full"
+      <div ref={containerRef} className="  bg-off-white flex flex-col relative safe-area-full"
         style={{ paddingBottom: "max(0px, env(safe-area-inset-bottom))" }}>
 
         {/* Premium floating orbs background — clipped inside own layer so root can scroll */}

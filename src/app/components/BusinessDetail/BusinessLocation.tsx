@@ -196,9 +196,9 @@ export default function BusinessLocation({
                 <div className="px-4 sm:px-6 py-4 border-b border-white/20">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
-                            <div className="w-9 h-9 rounded-full bg-coral/10 flex items-center justify-center">
-                                <MapPin className="w-4.5 h-4.5 text-coral" />
-                            </div>
+                            <span className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
+                                <MapPin className="w-4 h-4 text-charcoal/85" />
+                            </span>
                             <h3
                                 className="text-base font-semibold text-charcoal"
                                 style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 600 }}

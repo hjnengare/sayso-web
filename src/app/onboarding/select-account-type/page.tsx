@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export default function SelectAccountTypePage() {
   return (
-    <div className="min-h-[100svh] md:min-h-[100dvh] bg-off-white flex flex-col items-center justify-center px-6 py-8">
+    <div className="min-h-[100svh] md:  bg-off-white flex flex-col items-center justify-center px-6 py-8">
       <div className="w-full mx-auto max-w-2xl flex flex-col items-center">
         <h1 className="font-urbanist text-3xl sm:text-4xl md:text-5xl font-700 leading-[1.2] tracking-tight text-charcoal mb-8" style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif", fontWeight: 700 }}>
           Welcome! Please choose an option:

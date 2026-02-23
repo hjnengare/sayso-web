@@ -123,7 +123,7 @@ export default function OnboardingPage() {
 
       <div
         ref={rootRef}
-        className="min-h-[100svh] md:min-h-[100dvh] bg-off-white flex flex-col items-center justify-center px-6 py-8 relative overflow-hidden safe-area-padding"
+        className="min-h-[100svh] md:  bg-off-white flex flex-col items-center justify-center px-6 py-8 relative overflow-hidden safe-area-padding"
       >
         <div className="w-full mx-auto max-w-xl relative z-10 flex flex-col items-center">
 

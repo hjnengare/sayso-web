@@ -337,7 +337,7 @@ export default function BusinessRegisterPage() {
     <>
       <style dangerouslySetInnerHTML={{ __html: authStyles }} />
       {/* Let the document handle scrolling to avoid nested scroll containers on mobile. */}
-      <div ref={containerRef} data-reduced={prefersReduced} className="min-h-[100dvh] bg-off-white flex flex-col relative safe-area-full" style={{ paddingBottom: "max(0px, env(safe-area-inset-bottom))" }}>
+      <div ref={containerRef} data-reduced={prefersReduced} className="  bg-off-white flex flex-col relative safe-area-full" style={{ paddingBottom: "max(0px, env(safe-area-inset-bottom))" }}>
 
         {/* Premium floating orbs background */}
         <div className="floating-orb floating-orb-1" aria-hidden="true" />

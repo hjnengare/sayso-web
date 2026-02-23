@@ -478,9 +478,7 @@ export default function BusinessProfilePage() {
                                             </Link>
                                         </li>
                                         <li className="flex items-center">
-                                            <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-off-white/70 text-charcoal/85 transition duration-200 ease-out hover:bg-off-white/90 hover:scale-[1.03] align-middle">
-                                                <ChevronRight className="w-4 h-4" aria-hidden />
-                                            </span>
+                                            <ChevronRight className="w-4 h-4 text-charcoal/60" aria-hidden />
                                         </li>
                                         <li>
                                             <span className="text-charcoal font-semibold truncate max-w-[200px] sm:max-w-none" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>

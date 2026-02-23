@@ -115,7 +115,7 @@ export default function SavedPage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(114,47,55,0.08)_0%,_transparent_50%)]" />
 
-        <main className="flex-1 relative z-10 min-h-[100dvh]">
+        <main className="flex-1 relative z-10  ">
           <div className="pb-12 sm:pb-16 md:pb-20">
             <m.div
               className="mx-auto w-full max-w-[2000px] px-2 relative mb-4"
@@ -138,7 +138,7 @@ export default function SavedPage() {
                     </Link>
                   </li>
                   <li className="flex items-center">
-                    <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-off-white/70 text-charcoal/85 transition duration-200 ease-out hover:bg-off-white/90 hover:scale-[1.03] align-middle">
+                    <span className="inline-flex items-center justify-center w-12 h-12 rounded-full text-charcoal/85 transition duration-200 ease-out hover:bg-off-white/90 hover:scale-[1.03] align-middle">
                       <ChevronRight className="w-4 h-4" aria-hidden />
                     </span>
                   </li>

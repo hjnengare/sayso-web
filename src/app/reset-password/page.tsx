@@ -193,7 +193,7 @@ export default function ResetPasswordPage() {
     return (
       <>
         <style dangerouslySetInnerHTML={{ __html: authStyles }} />
-        <div ref={containerRef} className="min-h-[100dvh] bg-off-white flex flex-col relative overflow-hidden ios-inertia hide-scrollbar safe-area-full">
+        <div ref={containerRef} className="  bg-off-white flex flex-col relative overflow-hidden ios-inertia hide-scrollbar safe-area-full">
           {/* Premium floating orbs background */}
           <div className="floating-orb floating-orb-1" aria-hidden="true" />
           <div className="floating-orb floating-orb-2" aria-hidden="true" />
@@ -279,7 +279,7 @@ export default function ResetPasswordPage() {
     return (
       <>
         <style dangerouslySetInnerHTML={{ __html: authStyles }} />
-        <div ref={containerRef} className="min-h-[100dvh] bg-off-white flex flex-col relative overflow-hidden ios-inertia hide-scrollbar safe-area-full">
+        <div ref={containerRef} className="  bg-off-white flex flex-col relative overflow-hidden ios-inertia hide-scrollbar safe-area-full">
           {/* Premium floating orbs background */}
           <div className="floating-orb floating-orb-1" aria-hidden="true" />
           <div className="floating-orb floating-orb-2" aria-hidden="true" />
@@ -356,7 +356,7 @@ export default function ResetPasswordPage() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: authStyles }} />
-      <div ref={containerRef} className="min-h-[100dvh] bg-off-white flex flex-col relative overflow-hidden ios-inertia hide-scrollbar safe-area-full">
+      <div ref={containerRef} className="  bg-off-white flex flex-col relative overflow-hidden ios-inertia hide-scrollbar safe-area-full">
 
         {/* Premium floating orbs background */}
         <div className="floating-orb floating-orb-1" aria-hidden="true" />
