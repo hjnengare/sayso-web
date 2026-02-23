@@ -211,7 +211,10 @@ export default function Header({
       return;
     }
 
-    const minWidth = 44;
+    // Keep enough room for the input to actually show when expanded.
+    // Using a larger min width prevents the search from collapsing to the same
+    // size as the trigger button on tighter desktop widths.
+    const minWidth = 180;
     const preferredWidth = 280;
     const interItemGap = 12; // gap-3 between search and icons
     const centerClearance = 16;
@@ -232,9 +235,19 @@ export default function Header({
       }
 
       const sideSpace = (rowWidth - navWidth) / 2;
-      const availableForSearch = Math.floor(sideSpace - iconsWidth - interItemGap - centerClearance);
-      const clamped = Math.max(minWidth, Math.min(preferredWidth, availableForSearch));
-      setDesktopSearchExpandedWidth(Number.isFinite(clamped) ? clamped : preferredWidth);
+      const availableForSearch = Math.max(
+        0,
+        Math.floor(sideSpace - iconsWidth - interItemGap - centerClearance)
+      );
+
+      // If there isn't enough free space to keep the nav perfectly centred,
+      // still give the search a readable width and allow the grid to reflow slightly.
+      const targetWidth =
+        availableForSearch < minWidth
+          ? Math.min(preferredWidth, Math.max(minWidth, Math.floor(sideSpace - centerClearance)))
+          : Math.min(preferredWidth, availableForSearch);
+
+      setDesktopSearchExpandedWidth(Number.isFinite(targetWidth) ? targetWidth : preferredWidth);
     };
 
     recalc();
