@@ -50,9 +50,16 @@ interface NotificationListProps {
   markAllAsRead?: () => void;
   deleteNotification?: (id: string) => void;
   isRealtimeConnected?: boolean;
+  renderCard?: (
+    content: React.ReactNode,
+    notification: any,
+    isRead: boolean,
+    hasLink: boolean,
+    onClickProps: Record<string, any>
+  ) => React.ReactNode;
 }
 
-function NotificationList({
+function BusinessNotificationList({
   notifications,
   readNotifications,
   filterType,
@@ -62,6 +69,7 @@ function NotificationList({
   markAllAsRead,
   deleteNotification,
   isRealtimeConnected = false,
+  renderCard,
 }: NotificationListProps) {
   const router = useRouter();
 
@@ -113,15 +121,20 @@ function NotificationList({
             filter === 'All' ? notifications.length
             : filter === 'Unread' ? unreadCount
             : notifications.length - unreadCount;
+          const baseClasses = isPersonal
+            ? 'px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-urbanist font-500 text-xs sm:text-sm transition-all duration-200 active:scale-95 flex-shrink-0 whitespace-nowrap border'
+            : 'px-4 py-2 rounded-lg font-urbanist text-body-sm transition-all duration-200 flex-shrink-0 whitespace-nowrap';
+          const selectedClasses = isPersonal
+            ? 'bg-card-bg text-white border-card-bg'
+            : 'bg-navbar-bg text-white';
+          const unselectedClasses = isPersonal
+            ? 'bg-white/50 text-charcoal/70 hover:bg-card-bg/10 hover:text-charcoal border-charcoal/10'
+            : 'bg-charcoal/5 text-charcoal/70 hover:bg-charcoal/10 hover:text-charcoal border-transparent';
           return (
             <button
               key={filter}
               onClick={() => setFilterType(filter)}
-              className={`px-4 py-2 rounded-lg font-urbanist text-body-sm transition-all duration-200 flex-shrink-0 whitespace-nowrap ${
-                isSelected
-                  ? 'bg-navbar-bg text-white'
-                  : 'bg-charcoal/5 text-charcoal/70 hover:bg-charcoal/10 hover:text-charcoal'
-              }`}
+              className={`${baseClasses} ${isSelected ? selectedClasses : unselectedClasses}`}
             >
               {filter}
               {count > 0 && (
@@ -191,6 +204,17 @@ function NotificationList({
                 </>
               );
 
+              const onClickProps = hasLink ? {
+                onClick: () => router.push(notification.link!),
+                onKeyDown: (e: any) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push(notification.link!); } },
+                role: 'button' as const,
+                tabIndex: 0,
+              } : {};
+
+              if (renderCard) {
+                return renderCard(card, notification, isRead, hasLink, onClickProps);
+              }
+
               return (
                 <m.div
                   key={notification.id}
@@ -201,12 +225,7 @@ function NotificationList({
                   className={`bg-transparent text-charcoal rounded-xl p-3.5 sm:p-4 mb-2.5 last:mb-0 transition-all duration-200 ${
                     isRead ? 'opacity-60' : 'border border-charcoal/10'
                   } ${hasLink ? 'cursor-pointer hover:border-navbar-bg/30 hover:shadow-sm' : ''}`}
-                  {...(hasLink && {
-                    onClick: () => router.push(notification.link!),
-                    onKeyDown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push(notification.link!); } },
-                    role: 'button' as const,
-                    tabIndex: 0,
-                  })}
+                  {...onClickProps}
                 >
                   <div className="flex items-start gap-3">{card}</div>
                 </m.div>
@@ -216,6 +235,50 @@ function NotificationList({
         </AnimatePresence>
       )}
     </div>
+  );
+}
+
+// Personal-only list with saved-page card styling
+function PersonalNotificationList(props: NotificationListProps) {
+  const { notifications } = props;
+  if (notifications.length === 0) {
+    return (
+      <div
+        className="mx-auto w-full max-w-[2000px] px-2 font-urbanist flex flex-1 items-center justify-center"
+        style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+      >
+        <div className="text-center w-full">
+          <div className="w-20 h-20 mx-auto mb-6 bg-charcoal/10 rounded-full flex items-center justify-center">
+            <Bell className="w-10 h-10 text-charcoal/60" strokeWidth={1.5} />
+          </div>
+          <h3 className="text-h2 font-semibold text-charcoal mb-2">No notifications yet</h3>
+          <p className="text-body-sm text-charcoal/60 mb-6 max-w-md mx-auto font-medium">
+            You'll see updates from your activity here.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <BusinessNotificationList
+      {...props}
+      renderCard={(content, notification, isRead, hasLink, onClickProps) => (
+        <m.div
+          key={notification.id}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+          className={`bg-card-bg text-charcoal rounded-[12px] p-4 sm:p-5 mb-3 last:mb-0 transition-all duration-200 border border-white/70 shadow-md ${
+            isRead ? 'opacity-70' : ''
+          } ${hasLink ? 'cursor-pointer hover:shadow-lg hover:border-navbar-bg/30' : ''}`}
+          {...onClickProps}
+        >
+          <div className="flex items-start gap-3">{content}</div>
+        </m.div>
+      )}
+    />
   );
 }
 
@@ -252,7 +315,7 @@ export default function NotificationsPage() {
 
   const isLoading = isBusinessAccountUser ? isBusinessLoading : isPersonalLoading;
 
-  // ─── Business portal view ────────────────────────────────────────────────────
+  // --- Business portal view ----------------------------------------------------
   if (isBusinessAccountUser) {
     return (
       <PortalLayout>
@@ -273,7 +336,7 @@ export default function NotificationsPage() {
               <PageLoader size="md" variant="wavy" color="sage" />
             </div>
           ) : (
-            <NotificationList
+            <BusinessNotificationList
               notifications={businessNotifications}
               readNotifications={businessReadNotifications}
               filterType={businessFilter}
@@ -287,62 +350,98 @@ export default function NotificationsPage() {
     );
   }
 
-  // ─── Personal account view ───────────────────────────────────────────────────
+  // --- Personal account view ---------------------------------------------------
   return (
-    <div className="bg-off-white font-urbanist" style={{ fontFamily: '"Urbanist", -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
-      <div className="fixed inset-0 bg-gradient-to-br from-sage/10 via-off-white to-coral/5 pointer-events-none" />
-      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)] pointer-events-none" />
-      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(114,47,55,0.08)_0%,_transparent_50%)] pointer-events-none" />
+    <div
+      className="min-h-dvh flex flex-col bg-off-white relative font-urbanist"
+      style={{ fontFamily: '"Urbanist", -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+    >
+      <div className="absolute inset-0 bg-gradient-to-br from-sage/10 via-off-white to-coral/5" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(114,47,55,0.08)_0%,_transparent_50%)]" />
 
-      <div className="relative z-10 pb-12 sm:pb-16 md:pb-20 min-h-[100dvh]">
-        {/* Breadcrumb */}
-        <div className="mx-auto w-full max-w-[2000px] px-2 mb-4">
-          <nav className="pb-1" aria-label="Breadcrumb">
-            <ol className="flex items-center gap-2 text-sm sm:text-base">
-              <li>
-                <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium font-urbanist">
-                  Home
-                </Link>
-              </li>
-              <li className="flex items-center"><ChevronRight className="w-4 h-4 text-charcoal/60" /></li>
-              <li><span className="text-charcoal font-semibold font-urbanist">Notifications</span></li>
-            </ol>
-          </nav>
-        </div>
+      <main className="flex-1 relative z-10">
+        <div className="pb-12 sm:pb-16 md:pb-20">
+          <m.div
+            className="mx-auto w-full max-w-[2000px] px-2 relative mb-4"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            {/* Breadcrumb */}
+            <nav className="pb-1" aria-label="Breadcrumb">
+              <ol className="flex items-center gap-2 text-sm sm:text-base">
+                <li>
+                  <Link
+                    href="/home"
+                    className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium"
+                  >
+                    Home
+                  </Link>
+                </li>
+                <li className="flex items-center">
+                  <ChevronRight className="w-4 h-4 text-charcoal/60" />
+                </li>
+                <li>
+                  <span className="text-charcoal font-semibold">
+                    Notifications
+                  </span>
+                </li>
+              </ol>
+            </nav>
+          </m.div>
 
-        <div className="mx-auto w-full max-w-[2000px] px-2">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <PageLoader size="md" variant="wavy" color="sage" />
             </div>
           ) : (
-            <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-              {/* Section header */}
-              <div className="flex items-center gap-2.5 mb-6 px-2">
-                <div>
-                  <h1 className="text-h2 sm:text-h1 font-bold text-charcoal font-urbanist leading-tight">Personal Notifications</h1>
-                  <p className="text-xs text-charcoal/50 font-urbanist">Activity from your personal account</p>
-                </div>
-              </div>
+            <m.div
+              className="relative z-10"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              <div className="mx-auto w-full max-w-[2000px] px-2">
+                {/* Title */}
+                <m.div
+                  className="mb-6 sm:mb-8 px-2"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.1 }}
+                >
+                  <h1
+                    className="text-2xl sm:text-3xl md:text-4xl font-bold text-charcoal"
+                    style={{ fontFamily: '"Urbanist", -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 800 }}
+                  >
+                    Your Notifications
+                  </h1>
+                  <p
+                    className="text-body-sm text-charcoal/60 mt-2"
+                    style={{ fontFamily: '"Urbanist", -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                  >
+                    Activity from your personal account
+                  </p>
+                </m.div>
 
-              <div className="px-2">
-                <NotificationList
-                  notifications={personalNotifications}
-                  readNotifications={personalReadNotifications}
-                  filterType={personalFilter}
-                  setFilterType={setPersonalFilter}
-                  isPersonal={true}
-                  markAsRead={markAsRead}
-                  markAllAsRead={markAllAsRead}
-                  deleteNotification={deleteNotification}
-                />
+                <div className="px-2">
+                  <PersonalNotificationList
+                    notifications={personalNotifications}
+                    readNotifications={personalReadNotifications}
+                    filterType={personalFilter}
+                    setFilterType={setPersonalFilter}
+                    isPersonal={true}
+                    markAsRead={markAsRead}
+                    markAllAsRead={markAllAsRead}
+                    deleteNotification={deleteNotification}
+                  />
+                </div>
               </div>
             </m.div>
           )}
         </div>
+      </main>
 
-        
-      </div>
       <Footer />
     </div>
   );

@@ -20,7 +20,7 @@ export default function HeaderSkeleton({
       aria-busy="true"
     >
       {/* Inner wrapper — matches Header.tsx: py-4, responsive px, min-h */}
-      <div className="relative py-4 z-[1] w-full px-4 sm:px-6 md:px-8 lg:px-10 flex items-center h-full min-h-[72px] lg:min-h-[80px]">
+      <div className="relative py-4 z-[1] w-full md:pl-2 flex items-center h-full min-h-[72px] lg:min-h-[80px]">
         <div className="w-full">
 
           {/* ── Mobile layout (lg:hidden) — matches Header personal mobile ── */}

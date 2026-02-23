@@ -759,8 +759,8 @@ export default function Header({
 
   const currentPaddingClass = heroMode ? "py-0" : reducedPadding ? "py-1" : "py-4";
   const horizontalPaddingClass = heroMode
-    ? "px-4 sm:px-6 md:px-8 lg:px-10"
-    : `px-4 sm:px-6 md:px-8 lg:px-10 ${currentPaddingClass}`;
+    ? "md:pl-2"
+    : `md:pl-2 ${currentPaddingClass}`;
 
   const desktopNavProps = {
     whiteText,
