@@ -792,7 +792,9 @@ function ProfileContent() {
                     >
                       <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border-none rounded-[12px] shadow-md p-4">
                         <div className="flex items-center gap-2 mb-2">
-                          <ThumbsUp className="w-5 h-5 text-navbar-bg" />
+                          <span className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
+                            <ThumbsUp className="w-4 h-4 text-charcoal/85" />
+                          </span>
                           <span className="text-sm text-charcoal/70">Helpful votes</span>
                         </div>
                         <p className="text-2xl font-bold text-charcoal">
@@ -802,7 +804,9 @@ function ProfileContent() {
                       </div>
                       <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border-none rounded-[12px] shadow-md p-4">
                         <div className="flex items-center gap-2 mb-2">
-                          <StarIcon className="w-5 h-5 text-navbar-bg" />
+                          <span className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
+                            <StarIcon className="w-4 h-4 text-charcoal/85" />
+                          </span>
                           <span className="text-sm text-charcoal/70">Reviews</span>
                         </div>
                         <p className="text-2xl font-bold text-charcoal">
@@ -812,7 +816,9 @@ function ProfileContent() {
                       </div>
                       <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border-none rounded-[12px] shadow-md p-4">
                         <div className="flex items-center gap-2 mb-2">
-                          <Award className="w-5 h-5 text-navbar-bg" />
+                          <span className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
+                            <Award className="w-4 h-4 text-charcoal/85" />
+                          </span>
                           <span className="text-sm text-charcoal/70">Badges</span>
                         </div>
                         <p className="text-2xl font-bold text-charcoal">{badgesCount}</p>
@@ -820,7 +826,9 @@ function ProfileContent() {
                       </div>
                       <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border-none rounded-[12px] shadow-md p-4">
                         <div className="flex items-center gap-2 mb-2">
-                          <Eye className="w-5 h-5 text-navbar-bg" />
+                          <span className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
+                            <Eye className="w-4 h-4 text-charcoal/85" />
+                          </span>
                           <span className="text-sm text-charcoal/70">Interests</span>
                         </div>
                         <p className="text-2xl font-bold text-charcoal">{interestsCount}</p>
@@ -829,7 +837,9 @@ function ProfileContent() {
                       {userStats && (
                         <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border-none rounded-[12px] shadow-md p-4 sm:col-span-2">
                           <div className="flex items-center gap-2 mb-2">
-                            <Briefcase className="w-5 h-5 text-navbar-bg" />
+                            <span className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
+                              <Briefcase className="w-4 h-4 text-charcoal/85" />
+                            </span>
                             <span className="text-sm text-charcoal/70">Saved</span>
                           </div>
                           <p className="text-2xl font-bold text-charcoal">

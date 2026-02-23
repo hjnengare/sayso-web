@@ -3,13 +3,15 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Star, Briefcase, Edit, Trash2, ThumbsUp } from 'lucide-react';
+import { Star, Edit, Trash2, ThumbsUp } from 'lucide-react';
 import { Text } from '@/components/atoms/Text';
 import { Badge } from '@/components/atoms/Badge';
+import { getCategoryPlaceholder } from '@/app/utils/categoryToPngMapping';
 
 export interface ReviewItemProps {
   businessName: string;
   businessImageUrl?: string | null;
+  businessCategory?: string | null;
   rating: number;
   reviewText?: string | null;
   reviewTitle?: string | null;
@@ -27,37 +29,29 @@ export interface ReviewItemProps {
 const BusinessThumb: React.FC<{
   name: string;
   imageUrl?: string | null;
+  category?: string | null;
   size?: number;
-}> = ({ name, imageUrl, size = 40 }) => {
+}> = ({ name, imageUrl, category, size = 48 }) => {
   const [err, setErr] = useState(false);
 
-  if (!imageUrl || err) {
-    return (
-      <div
-        className="relative rounded-full bg-gradient-to-br from-sage/15 to-coral/10 border-border-charcoal/10 flex items-center justify-center ring-2 ring-off-white shadow-sm"
-        style={{ width: size, height: size }}
-        aria-label={`${name} placeholder image`}
-      >
-        <Briefcase size={size * 0.5} className="text-white" />
-      </div>
-    );
-  }
+  const placeholderSrc = getCategoryPlaceholder(category ?? null);
+  const src = (!imageUrl || err) ? placeholderSrc : imageUrl;
 
   return (
     <div
-      className="relative rounded-full overflow-hidden ring-2 ring-off-white shadow-sm"
+      className="relative flex-shrink-0 overflow-hidden rounded-[12px] bg-off-white shadow-sm ring-1 ring-charcoal/[0.06]"
       style={{ width: size, height: size }}
+      aria-label={`${name} thumbnail`}
     >
-      <div className="w-full h-full rounded-full p-0.5 bg-off-white">
-        <Image
-          src={imageUrl}
-          alt={`${name} thumbnail`}
-          width={size}
-          height={size}
-          className="w-full h-full rounded-full object-cover"
-          onError={() => setErr(true)}
-        />
-      </div>
+      <Image
+        src={src}
+        alt={`${name} thumbnail`}
+        width={size}
+        height={size}
+        className="w-full h-full object-cover"
+        onError={() => setErr(true)}
+        priority={false}
+      />
     </div>
   );
 };
@@ -83,6 +77,7 @@ const StarRating: React.FC<{ rating: number }> = ({ rating }) => {
 export const ReviewItem: React.FC<ReviewItemProps> = ({
   businessName,
   businessImageUrl,
+  businessCategory,
   rating,
   reviewText,
   reviewTitle,
@@ -113,7 +108,7 @@ export const ReviewItem: React.FC<ReviewItemProps> = ({
       {/* Header: Business info, rating, date */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3 flex-1 min-w-0">
-          <BusinessThumb name={businessName} imageUrl={businessImageUrl} size={48} />
+          <BusinessThumb name={businessName} imageUrl={businessImageUrl} category={businessCategory} size={48} />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1 flex-wrap">
               <BusinessNameComponent 
@@ -148,11 +143,11 @@ export const ReviewItem: React.FC<ReviewItemProps> = ({
                     e.stopPropagation();
                     onEdit();
                   }}
-                  className="flex items-center justify-center rounded-full bg-navbar-bg hover:bg-navbar-bg/90 transition-colors min-h-[32px] min-w-[32px] p-1.5"
+                  className="flex items-center justify-center rounded-full bg-off-white/70 hover:bg-off-white hover:scale-[1.03] transition-all min-h-[32px] min-w-[32px] p-1.5 shadow-sm"
                   aria-label="Edit review"
                   title="Edit review"
                 >
-                  <Edit size={14} className="text-white" />
+                  <Edit size={14} className="text-charcoal/85" />
                 </button>
               )}
               {onDelete && (
@@ -161,11 +156,11 @@ export const ReviewItem: React.FC<ReviewItemProps> = ({
                     e.stopPropagation();
                     onDelete();
                   }}
-                  className="flex items-center justify-center rounded-full bg-navbar-bg hover:bg-navbar-bg/90 transition-colors min-h-[32px] min-w-[32px] p-1.5"
+                  className="flex items-center justify-center rounded-full bg-off-white/70 hover:bg-off-white hover:scale-[1.03] transition-all min-h-[32px] min-w-[32px] p-1.5 shadow-sm"
                   aria-label="Delete review"
                   title="Delete review"
                 >
-                  <Trash2 size={14} className="text-white" />
+                  <Trash2 size={14} className="text-charcoal/85" />
                 </button>
               )}
             </div>

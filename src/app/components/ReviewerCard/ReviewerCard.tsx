@@ -10,6 +10,7 @@ import ProfilePicture from "./ProfilePicture";
 import VerifiedBadge from "../VerifiedBadge/VerifiedBadge";
 import BadgePill, { BadgePillData } from "../Badges/BadgePill";
 
+import { m } from "framer-motion";
 import {
   Star,
   User,
@@ -46,7 +47,7 @@ export default function ReviewerCard({
   );
   const [imgError, setImgError] = useState(false);
 
-  const MAX_VISIBLE_BADGES = 3;
+  const MAX_VISIBLE_BADGES = 2;
   const propBadges = reviewerData?.badges;
 
   const { badges: fetchedBadges } = useUserBadgesById(
@@ -224,12 +225,14 @@ export default function ReviewerCard({
                     <BadgePill key={badge.id} badge={badge} size="sm" />
                   ))}
                   {overflowCount > 0 && (
-                    <span
-                      className="text-[10px] font-semibold text-charcoal/35 px-1.5 py-0.5 rounded-full bg-charcoal/[0.05] border border-charcoal/[0.08]"
+                    <m.div
+                      className="inline-flex items-center px-1.5 py-[3px] rounded-full text-[10px] font-semibold text-charcoal/60 bg-off-white/80 border border-charcoal/[0.13] shadow-sm backdrop-blur-sm cursor-default select-none flex-shrink-0"
                       style={{ fontFamily: "'Urbanist', system-ui, sans-serif" }}
+                      whileHover={{ scale: 1.03, y: -1 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
                     >
                       +{overflowCount}
-                    </span>
+                    </m.div>
                   )}
                 </div>
               )}
@@ -326,12 +329,14 @@ export default function ReviewerCard({
                 <BadgePill key={badge.id} badge={badge} size="sm" />
               ))}
               {overflowCount > 0 && (
-                <span
-                  className="inline-flex items-center px-1.5 py-[3px] rounded-full text-[10px] font-semibold text-charcoal/30 bg-charcoal/[0.05] border border-charcoal/[0.07] flex-shrink-0"
+                <m.div
+                  className="inline-flex items-center px-1.5 py-[3px] rounded-full text-[10px] font-semibold text-charcoal/60 bg-off-white/80 border border-charcoal/[0.13] shadow-sm backdrop-blur-sm cursor-default select-none flex-shrink-0"
                   style={{ fontFamily: "'Urbanist', system-ui, sans-serif" }}
+                  whileHover={{ scale: 1.03, y: -1 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 >
                   +{overflowCount}
-                </span>
+                </m.div>
               )}
             </div>
           )}

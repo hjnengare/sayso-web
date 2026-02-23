@@ -322,7 +322,9 @@ export default function ReviewerProfilePage() {
                                         <section className="grid grid-cols-2 sm:grid-cols-4 gap-6" aria-label="Reviewer statistics">
                                             <div className="bg-gradient-to-br bg-card-bg backdrop-blur-xl   rounded-[12px] shadow-xl p-6 animate-fade-in-up animate-delay-100 hover:shadow-2xl transition-all duration-300">
                                                 <div className="flex items-center gap-2 mb-2">
-                                                    <ThumbsUp className="w-5 h-5 text-coral" />
+                                                    <span className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
+                                                        <ThumbsUp className="w-4 h-4 text-charcoal/85" />
+                                                    </span>
                                                     <span className="text-sm text-charcoal/70" style={{
                                                         fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
                                                     }}>Helpful</span>
@@ -336,7 +338,9 @@ export default function ReviewerProfilePage() {
                                             </div>
                                             <div className="bg-gradient-to-br bg-card-bg backdrop-blur-xl   rounded-[12px] shadow-xl p-6 animate-fade-in-up animate-delay-300 hover:shadow-2xl transition-all duration-300">
                                                 <div className="flex items-center gap-2 mb-2">
-                                                    <Award className="w-5 h-5 text-coral" />
+                                                    <span className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
+                                                        <Award className="w-4 h-4 text-charcoal/85" />
+                                                    </span>
                                                     <span className="text-sm text-charcoal/70" style={{
                                                         fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
                                                     }}>Badges</span>
@@ -350,7 +354,9 @@ export default function ReviewerProfilePage() {
                                             </div>
                                             <div className="bg-gradient-to-br bg-card-bg backdrop-blur-xl   rounded-[12px] shadow-xl p-6 animate-fade-in-up animate-delay-200 hover:shadow-2xl transition-all duration-300">
                                                 <div className="flex items-center gap-2 mb-2">
-                                                    <TrendingUp className="w-5 h-5 text-coral" />
+                                                    <span className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
+                                                        <TrendingUp className="w-4 h-4 text-charcoal/85" />
+                                                    </span>
                                                     <span className="text-sm text-charcoal/70" style={{
                                                         fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
                                                     }}>Impact</span>
@@ -364,7 +370,9 @@ export default function ReviewerProfilePage() {
                                             </div>
                                             <div className="bg-gradient-to-br bg-card-bg backdrop-blur-xl   rounded-[12px] shadow-xl p-6 animate-fade-in-up animate-delay-300 hover:shadow-2xl transition-all duration-300">
                                                 <div className="flex items-center gap-2 mb-2">
-                                                    <TrendingUp className="w-5 h-5 text-coral" />
+                                                    <span className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
+                                                        <TrendingUp className="w-4 h-4 text-charcoal/85" />
+                                                    </span>
                                                     <span className="text-sm text-charcoal/70" style={{
                                                         fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
                                                     }}>Rating</span>
@@ -442,9 +450,10 @@ export default function ReviewerProfilePage() {
                                                 reviews={reviewer.reviews && reviewer.reviews.length > 0 ? reviewer.reviews.map((review) => ({
                                                     businessName: review.businessName,
                                                     businessImageUrl: review.businessImageUrl,
+                                                    businessCategory: review.businessType,
                                                     rating: review.rating,
                                                     reviewText: review.text,
-                                                    reviewTitle:  null, 
+                                                    reviewTitle:  null,
                                                     helpfulCount: review.likes,
                                                     tags: review.tags || [],
                                                     isFeatured: reviewer.badge === "top",
