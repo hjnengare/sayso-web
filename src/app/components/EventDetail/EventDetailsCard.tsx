@@ -31,8 +31,8 @@ export default function EventDetailsCard({ event }: EventDetailsCardProps) {
 
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-2.5">
-          <div className="w-10 h-10 bg-white/30 rounded-full flex items-center justify-center">
-            <Calendar className="text-navbar-bg" size={18} />
+          <div className="w-8 h-8 bg-off-white/70 rounded-full flex items-center justify-center text-charcoal/85 hover:bg-off-white/90 transition-colors">
+            <Calendar className="w-4 h-4" />
           </div>
           <div>
             <p
@@ -60,8 +60,8 @@ export default function EventDetailsCard({ event }: EventDetailsCardProps) {
 
         {event.segment && (
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 bg-white/30 rounded-full flex items-center justify-center">
-              <Clock className="text-navbar-bg" size={18} />
+            <div className="w-8 h-8 bg-off-white/70 rounded-full flex items-center justify-center text-charcoal/85 hover:bg-off-white/90 transition-colors">
+              <Clock className="w-4 h-4" />
             </div>
             <div>
               <p
@@ -82,8 +82,8 @@ export default function EventDetailsCard({ event }: EventDetailsCardProps) {
 
         {event.venueName && (
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 bg-white/30 rounded-full flex items-center justify-center">
-              <Users className="text-navbar-bg" size={18} />
+            <div className="w-8 h-8 bg-off-white/70 rounded-full flex items-center justify-center text-charcoal/85 hover:bg-off-white/90 transition-colors">
+              <Users className="w-4 h-4" />
             </div>
             <div>
               <p
@@ -104,8 +104,8 @@ export default function EventDetailsCard({ event }: EventDetailsCardProps) {
 
         {event.price && (
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 bg-white/30 rounded-full flex items-center justify-center">
-              <span className="text-navbar-bg font-bold text-base">R</span>
+            <div className="w-8 h-8 bg-off-white/70 rounded-full flex items-center justify-center text-charcoal/85 hover:bg-off-white/90 transition-colors">
+              <span className="font-bold text-sm">R</span>
             </div>
             <div>
               <p

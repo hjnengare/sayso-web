@@ -44,7 +44,9 @@ export default function EventInfo({ event, sharedTitleLayoutId }: EventInfoProps
 
         {(event.location || event.city || event.country) && (
           <div className="flex items-center gap-1.5 text-charcoal/70">
-            <MapPin size={14} />
+            <span className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
+              <MapPin className="w-4 h-4 text-charcoal/85" />
+            </span>
             <span
               className="text-body-sm font-medium"
               style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}

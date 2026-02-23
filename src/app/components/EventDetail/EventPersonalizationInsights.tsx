@@ -52,8 +52,8 @@ export default function EventPersonalizationInsights({
     return (
         <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border-none rounded-[12px] shadow-md p-5 sm:p-6">
             <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-full bg-card-bg/10 flex items-center justify-center">
-                    <Sparkles className="w-4 h-4 text-navbar-bg/90" />
+                <div className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
+                    <Sparkles className="w-4 h-4 text-charcoal/85" />
                 </div>
                 <h3
                     className="text-base font-semibold text-charcoal"
@@ -65,9 +65,9 @@ export default function EventPersonalizationInsights({
             <div className="space-y-3">
                 {insights.map((insight, index) => (
                     <div key={index} className="flex items-start gap-2.5">
-                        <div className={`${insight.color} mt-0.5 flex-shrink-0`}>
+                        <span className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors mt-0.5 text-charcoal/85">
                             {insight.icon}
-                        </div>
+                        </span>
                         <p
                             className="text-sm text-charcoal/80 leading-relaxed"
                             style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}

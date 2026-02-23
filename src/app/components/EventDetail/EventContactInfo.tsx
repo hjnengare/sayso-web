@@ -39,7 +39,9 @@ export default function EventContactInfo({ event }: EventContactInfoProps) {
           <div className="space-y-2.5">
             {contactText && (
               <div className="flex items-center gap-2.5">
-                <Phone className="text-navbar-bg" size={16} />
+                <span className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
+                  <Phone className="w-4 h-4 text-charcoal/85" />
+                </span>
                 <span
                   className="text-body-sm text-charcoal/70"
                   style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
@@ -51,7 +53,9 @@ export default function EventContactInfo({ event }: EventContactInfoProps) {
 
             {websiteUrl && (
               <div className="flex items-center gap-2.5">
-                <Globe className="text-navbar-bg" size={16} />
+                <span className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
+                  <Globe className="w-4 h-4 text-charcoal/85" />
+                </span>
                 <a
                   href={websiteUrl}
                   target="_blank"
@@ -66,7 +70,9 @@ export default function EventContactInfo({ event }: EventContactInfoProps) {
 
             {(primaryLocation || secondaryLocation) && (
               <div className="flex items-center gap-2.5">
-                <MapPin className="text-navbar-bg" size={16} />
+                <span className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
+                  <MapPin className="w-4 h-4 text-charcoal/85" />
+                </span>
                 <span
                   className="text-body-sm text-charcoal/70"
                   style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
