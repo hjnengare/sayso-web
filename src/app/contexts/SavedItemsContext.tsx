@@ -1,10 +1,11 @@
 "use client";
 
-import { createContext, useContext, ReactNode, useCallback, useMemo } from "react";
+import { createContext, useContext, ReactNode, useCallback, useMemo, useEffect, useRef } from "react";
 import useSWR, { mutate as globalMutate } from "swr";
 import { useAuth } from "./AuthContext";
 import { useToast } from "./ToastContext";
 import { swrConfig } from "../lib/swrConfig";
+import { getBrowserSupabase } from "../lib/supabase/client";
 
 interface SavedItemsContextType {
   savedItems: string[];
@@ -36,8 +37,9 @@ async function fetchSavedBusinessIds(url: string): Promise<string[]> {
 export function SavedItemsProvider({ children }: SavedItemsProviderProps) {
   const { user } = useAuth();
   const { showToast } = useToast();
+  const supabaseRef = useRef(getBrowserSupabase());
 
-  const swrKey = user ? '/api/saved/businesses?limit=100' : null;
+  const swrKey = user ? ['/api/saved/businesses', user.id] : null;
   const { data, isLoading, mutate } = useSWR(swrKey, fetchSavedBusinessIds, {
     ...swrConfig,
     onError: (err) => {
@@ -46,9 +48,45 @@ export function SavedItemsProvider({ children }: SavedItemsProviderProps) {
         console.warn('Error fetching saved items (non-critical):', msg);
       }
     },
+    keepPreviousData: true,
   });
 
   const savedItems = data ?? [];
+
+  // Realtime sync: listen to saved_businesses inserts/deletes for this user
+  useEffect(() => {
+    if (!user?.id) return;
+    const supabase = supabaseRef.current;
+    const channel = supabase
+      .channel(`saved-businesses-${user.id}-${Date.now()}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'saved_businesses',
+        filter: `user_id=eq.${user.id}`,
+      }, (payload) => {
+        const businessId = (payload.new as any)?.business_id;
+        if (!businessId) return;
+        mutate(prev => (prev?.includes(businessId) ? prev : [...(prev ?? []), businessId]), { revalidate: false });
+        globalMutate(['/api/user/saved', user.id]);
+      })
+      .on('postgres_changes', {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'saved_businesses',
+        filter: `user_id=eq.${user.id}`,
+      }, (payload) => {
+        const businessId = (payload.old as any)?.business_id;
+        if (!businessId) return;
+        mutate(prev => prev?.filter(id => id !== businessId) ?? [], { revalidate: false });
+        globalMutate(['/api/user/saved', user.id]);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, mutate]);
 
   const addSavedItem = useCallback(async (itemId: string): Promise<boolean> => {
     if (!user) {
