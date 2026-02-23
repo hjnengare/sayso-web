@@ -163,7 +163,7 @@ export default function ReviewerCard({
               `}</style>
               <div className="grid grid-cols-3 gap-1.5">
                 {/* Reviews */}
-                <div className="flex flex-col items-center px-2 py-2 rounded-xl bg-off-white/60 border border-charcoal/[0.06] shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] overflow-hidden">
+                <div className="flex flex-col items-center px-2 py-2 rounded-full bg-off-white/60 border border-charcoal/[0.06] shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] overflow-hidden">
                   <span
                     className={`stat-tick text-[22px] font-black leading-none tracking-tight ${
                       isTopReviewer
@@ -183,7 +183,7 @@ export default function ReviewerCard({
                 </div>
 
                 {/* Avg rating */}
-                <div className="flex flex-col items-center px-2 py-2 rounded-xl bg-off-white/60 border border-charcoal/[0.06] shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] overflow-hidden">
+                <div className="flex flex-col items-center px-2 py-2 rounded-full bg-off-white/60 border border-charcoal/[0.06] shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] overflow-hidden">
                   <span
                     className="stat-tick text-[22px] font-black leading-none tracking-tight text-charcoal"
                     style={{ fontFamily: "'Urbanist', system-ui, sans-serif", fontWeight: 900, animationDelay: '120ms' }}
@@ -201,7 +201,7 @@ export default function ReviewerCard({
                 </div>
 
                 {/* Helpful votes */}
-                <div className="flex flex-col items-center px-2 py-2 rounded-xl bg-off-white/60 border border-charcoal/[0.06] shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] overflow-hidden">
+                <div className="flex flex-col items-center px-2 py-2 rounded-full bg-off-white/60 border border-charcoal/[0.06] shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] overflow-hidden">
                   <span
                     className="stat-tick text-[22px] font-black leading-none tracking-tight text-charcoal"
                     style={{ fontFamily: "'Urbanist', system-ui, sans-serif", fontWeight: 900, animationDelay: '240ms' }}
