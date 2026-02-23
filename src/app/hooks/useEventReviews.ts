@@ -19,7 +19,21 @@ async function fetchEventReviews([, eventId]: [string, string]): Promise<EventRe
   }
 
   const data = await response.json();
-  return Array.isArray(data?.reviews) ? data.reviews : [];
+  const reviews = Array.isArray(data?.reviews) ? data.reviews : [];
+  // Ensure every review has a user object and a name for rendering safety
+  return reviews
+    .filter(Boolean)
+    .map((r: any) => ({
+      ...r,
+      user: {
+        id: r?.user?.id ?? r?.user_id ?? null,
+        name: r?.user?.name ?? r?.user?.display_name ?? r?.user?.username ?? r?.guest_name ?? 'Anonymous',
+        username: r?.user?.username ?? null,
+        display_name: r?.user?.display_name ?? null,
+        email: r?.user?.email ?? null,
+        avatar_url: r?.user?.avatar_url ?? null,
+      },
+    }));
 }
 
 export function useEventReviews(eventId: string | null | undefined) {
