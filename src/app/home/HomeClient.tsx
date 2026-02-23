@@ -24,7 +24,6 @@ import { useRoutePrefetch } from "../hooks/useRoutePrefetch";
 import { useUserPreferences } from "../hooks/useUserPreferences";
 import { useAuth } from "../contexts/AuthContext";
 import type { Event } from "../lib/types/Event";
-import EventAlertBanner from "../components/EventAlertBanner/EventAlertBanner";
 
 // Dynamically import HeroCarousel - it's heavy with images and animations
 import HeroSkeleton from "../components/Hero/HeroSkeleton";
@@ -468,7 +467,6 @@ export default function HomeClient({ initialTrending }: { initialTrending?: impo
           </div>
         )}
 
-        <EventAlertBanner />
 
         <main
           suppressHydrationWarning
