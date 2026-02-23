@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { m, AnimatePresence } from "framer-motion";
 import { X, User, Upload, Camera } from "lucide-react";
 import Image from "next/image";
@@ -34,6 +35,12 @@ export function EditProfileModal({
   const [error, setError] = useState<string | null>(externalError);
   const [imgError, setImgError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Ensure portal target is available (avoids SSR/next hydration issues)
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Update local state when props change
   useEffect(() => {
@@ -135,7 +142,9 @@ export function EditProfileModal({
     }
   };
 
-  return (
+  if (!isMounted) return null;
+
+  return createPortal(
     <>
       <style dangerouslySetInnerHTML={{ __html: authStyles }} />
       <AnimatePresence>
