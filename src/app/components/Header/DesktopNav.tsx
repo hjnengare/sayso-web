@@ -202,7 +202,7 @@ export default function DesktopNav(props: DesktopNavProps) {
   const isSavedActive = pathname === "/saved";
 
   const baseLinkClass =
-    "group capitalize px-2.5 lg:px-3.5 py-1.5 rounded-lg text-sm sm:text-xs md:text-sm font-semibold relative flex items-center gap-1.5 transition-[color,opacity] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]";
+    "group capitalize px-2.5 lg:px-3.5 py-1.5 rounded-full text-sm sm:text-xs md:text-sm font-semibold relative flex items-center gap-1.5 transition-[color,opacity] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]";
   const navLabelHoverClass =
     "relative z-10 inline-block whitespace-nowrap transition-[transform,text-shadow,opacity] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform lg:group-hover:-translate-y-[2px] lg:group-hover:[text-shadow:0_4px_10px_rgba(15,23,42,0.14)]";
   const activeTextClass = "text-sage";
@@ -242,7 +242,7 @@ export default function DesktopNav(props: DesktopNavProps) {
   // Sliding pill: show on hovered item, fall back to active item when idle
   const showPill = (key: string, isActive: boolean) =>
     hoveredNavKey === key || (hoveredNavKey === null && isActive);
-  const pillClass = `absolute inset-0 rounded-lg ${whiteText ? "bg-white/[0.13]" : "bg-charcoal/[0.07]"}`;
+  const pillClass = `absolute inset-0 rounded-full ${whiteText ? "bg-white/[0.13]" : "bg-charcoal/[0.07]"}`;
   const pillTransition = { type: "spring" as const, stiffness: 480, damping: 36, mass: 0.5 };
 
   // Keep runtime stable if account type isn't ready yet
