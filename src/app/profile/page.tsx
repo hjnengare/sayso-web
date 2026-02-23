@@ -889,7 +889,7 @@ function ProfileContent() {
                         className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border-none rounded-[12px] shadow-md p-6 sm:p-8"
                         aria-label="Your badges and achievements"
                       >
-                        <div className="flex items-center justify-between mb-6">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
                           <div className="flex items-center gap-3">
                             <span className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
                               <Award className="w-4 h-4 text-charcoal/85" />
