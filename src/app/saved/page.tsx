@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useSavedBusinesses } from "../hooks/useSavedBusinessesFull";
 import { AnimatePresence, m } from "framer-motion";
-import { ChevronRight, ChevronLeft, ChevronUp, Store } from "lucide-react";
+import { ChevronRight, ChevronLeft, Store } from "lucide-react";
 import Pagination from "../components/EventsPage/Pagination";
 import EmailVerificationGuard from "../components/Auth/EmailVerificationGuard";
 import { useSavedItems } from "../contexts/SavedItemsContext";
@@ -31,7 +31,6 @@ export default function SavedPage() {
   const { businesses: savedBusinesses, loading: isLoadingBusinesses, error } = useSavedBusinesses();
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [showScrollTop, setShowScrollTop] = useState(false);
   const [isPaginationLoading, setIsPaginationLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const previousPageRef = useRef(currentPage);
@@ -93,19 +92,7 @@ export default function SavedPage() {
   };
 
   // Handle scroll to top button visibility
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 100);
-    };
-
-    const options: AddEventListenerOptions = { passive: true };
-    window.addEventListener("scroll", handleScroll, options);
-    return () => window.removeEventListener("scroll", handleScroll, options);
-  }, []);
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  // (Scroll-to-top is handled globally; no local button needed on saved page.)
 
   const handleRefetch = () => {
     refetchBusinesses();
@@ -128,7 +115,7 @@ export default function SavedPage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(114,47,55,0.08)_0%,_transparent_50%)]" />
 
-        <main className="flex-1 relative z-10">
+        <main className="flex-1 relative z-10 min-h-[100dvh]">
           <div className="pb-12 sm:pb-16 md:pb-20">
             <m.div
               className="mx-auto w-full max-w-[2000px] px-2 relative mb-4"
@@ -316,17 +303,6 @@ export default function SavedPage() {
         </main>
 
         <Footer />
-
-        {/* Scroll to Top Button */}
-        {showScrollTop && (
-          <button
-            onClick={scrollToTop}
-            className="fixed bottom-6 right-6 z-40 w-12 h-12 bg-navbar-bg hover:bg-navbar-bg backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg border border-white/20 hover:scale-110 transition-all duration-300"
-            aria-label="Scroll to top"
-          >
-            <ChevronUp className="w-6 h-6 text-white" strokeWidth={2.5} />
-          </button>
-        )}
       </div>
     </EmailVerificationGuard>
   );
