@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Star, Edit, Trash2, ThumbsUp } from 'lucide-react';
+import { Edit, Trash2, ThumbsUp, ArrowRight } from 'lucide-react';
 import { Text } from '@/components/atoms/Text';
 import { Badge } from '@/components/atoms/Badge';
 import { getCategoryPlaceholder } from '@/app/utils/categoryToPngMapping';
@@ -56,18 +56,33 @@ const BusinessThumb: React.FC<{
   );
 };
 
+const STAR_GRAD_ID = 'reviewItemStarGold';
+
 const StarRating: React.FC<{ rating: number }> = ({ rating }) => {
   return (
     <div className="flex items-center gap-1">
+      {/* Gradient definition — same gold pattern as BusinessCard star badge */}
+      <svg width="0" height="0" style={{ position: 'absolute', overflow: 'hidden' }} aria-hidden>
+        <defs>
+          <linearGradient id={STAR_GRAD_ID} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style={{ stopColor: '#F5D547', stopOpacity: 1 }} />
+            <stop offset="100%" style={{ stopColor: '#E6A547', stopOpacity: 1 }} />
+          </linearGradient>
+        </defs>
+      </svg>
       {Array.from({ length: 5 }, (_, i) => {
         const active = i < rating;
         return (
-          <Star
-            key={i}
-            size={16}
-            className={`${active ? 'text-coral fill-coral' : 'text-gray-300'}`}
-            aria-hidden
-          />
+          <svg key={i} width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <polygon
+              points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+              fill={active ? `url(#${STAR_GRAD_ID})` : 'none'}
+              stroke={active ? `url(#${STAR_GRAD_ID})` : '#D1D5DB'}
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         );
       })}
     </div>
@@ -207,10 +222,19 @@ export const ReviewItem: React.FC<ReviewItemProps> = ({
       {onViewClick && (
         <div className="pl-[60px]">
           <button
+            type="button"
             onClick={onViewClick}
-            className="text-coral hover:text-coral/80 transition-colors duration-200 text-sm font-medium"
+            className="group inline-flex items-center gap-1 text-coral hover:text-coral/80 transition-colors duration-200 text-sm font-medium"
+            aria-label={`Read full review for ${businessName}`}
           >
-            Read full review →
+            <span className="group-hover:underline underline-offset-2 decoration-coral/50 transition-all duration-200">
+              Read full review
+            </span>
+            <ArrowRight
+              size={14}
+              className="transition-transform duration-200 group-hover:translate-x-0.5"
+              aria-hidden
+            />
           </button>
         </div>
       )}

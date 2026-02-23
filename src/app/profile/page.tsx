@@ -649,8 +649,8 @@ function ProfileContent() {
                         aria-labelledby="profile-heading"
                       >
                         <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border-none rounded-[12px] shadow-md relative overflow-hidden">
-                          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-sage/10 to-transparent rounded-full blur-lg"></div>
-                          <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-coral/10 to-transparent rounded-full blur-lg"></div>
+                          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-sage/10 to-transparent rounded-full blur-lg pointer-events-none"></div>
+                          <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-coral/10 to-transparent rounded-full blur-lg pointer-events-none"></div>
 
                           <div className="relative z-10 p-6 sm:p-8">
                             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
@@ -767,6 +767,7 @@ function ProfileContent() {
 
                                 <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                                   <button
+                                    type="button"
                                     onClick={() => setIsEditOpen(true)}
                                     className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-coral/90 hover:bg-charcoal/90 hover:border-white/30 text-white rounded-full text-caption sm:text-body-sm font-semibold transition-all duration-300 hover:scale-105 active:scale-95 shadow-md shadow-sage/20 border border-sage/20 whitespace-nowrap"
                                     aria-label="Edit profile"

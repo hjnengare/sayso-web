@@ -215,9 +215,9 @@ export default function ReviewerProfilePage() {
                                         <article className="w-full sm:mx-0" aria-labelledby="profile-heading">
                                             <div className="bg-gradient-to-br bg-card-bg backdrop-blur-xl border border-white/80 rounded-[12px] shadow-2xl relative overflow-hidden animate-fade-in-up">
                                                 {/* Decorative elements */}
-                                                <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-sage/15 via-coral/10 to-transparent rounded-full blur-xl"></div>
-                                                <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-coral/15 via-sage/10 to-transparent rounded-full blur-lg"></div>
-                                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+                                                <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-sage/15 via-coral/10 to-transparent rounded-full blur-xl pointer-events-none"></div>
+                                                <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-coral/15 via-sage/10 to-transparent rounded-full blur-lg pointer-events-none"></div>
+                                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none"></div>
 
                                                 <div className="relative z-10 p-8 sm:p-10">
                                                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-8">
