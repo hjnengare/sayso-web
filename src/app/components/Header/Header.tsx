@@ -163,7 +163,7 @@ export default function Header({
 
   const headerClassName =
     "sticky top-0 left-0 right-0 w-full z-50 pt-[var(--safe-area-top)]";
-  const headerSurfaceClass = "bg-navbar-bg shadow-md border-b border-white/10";
+  const headerSurfaceClass = "bg-navbar-bg shadow-md   ";
     
 
   const isPersonalLayout =

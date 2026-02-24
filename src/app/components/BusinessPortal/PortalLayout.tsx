@@ -14,7 +14,7 @@ interface PortalLayoutProps {
 function PortalSidebarShell({ onClose }: { onClose?: () => void }) {
   return (
     <aside className="flex h-full flex-col bg-navbar-bg text-off-white">
-      <div className="flex items-center justify-between border-b border-white/10 px-5 py-5">
+      <div className="flex items-center justify-between    px-5 py-5">
         <div className="flex items-center gap-2.5">
           <div className="h-7 w-7 rounded-lg bg-white/15 animate-pulse" />
           <div className="h-5 w-24 rounded bg-white/15 animate-pulse" />
@@ -111,7 +111,7 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Mobile topbar */}
-        <header className="lg:hidden flex items-center gap-3 px-4 py-3 bg-navbar-bg border-b border-white/10 shadow-sm flex-shrink-0">
+        <header className="lg:hidden flex items-center gap-3 px-4 py-3 bg-navbar-bg    shadow-sm flex-shrink-0">
           <button
             type="button"
             onClick={() => setMobileOpen(!mobileOpen)}
