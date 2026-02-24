@@ -21,6 +21,9 @@ import {
 import { Loader } from "../../components/Loader";
 
 const FONT = "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif";
+const ICON_CHIP_CLASS =
+  "inline-flex items-center justify-center rounded-full bg-off-white/80 text-charcoal/85 transition-colors duration-200 hover:bg-off-white/90";
+const SMALL_ICON_CHIP_CLASS = `${ICON_CHIP_CLASS} h-6 w-6`;
 
 const ERROR_CODE_MESSAGES: Record<string, string> = {
   NOT_AUTHENTICATED: "Please log in to claim this business.",
@@ -386,9 +389,9 @@ export default function ClaimBusinessFormPage() {
     return (
       <div className="min-h-dvh bg-off-white">
         <div className="mx-auto max-w-[640px] px-4 py-12 text-center">
-          <div className="w-14 h-14 bg-charcoal/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Store className="w-6 h-6 text-charcoal/50" />
-          </div>
+          <span className={`${ICON_CHIP_CLASS} w-14 h-14 mx-auto mb-4`}>
+            <Store className="w-6 h-6" />
+          </span>
           <h1
             className="text-lg font-semibold text-charcoal mb-2"
             style={{ fontFamily: FONT }}
@@ -443,9 +446,9 @@ export default function ClaimBusinessFormPage() {
         <div className="max-w-[640px] mx-auto pb-12 relative z-10">
           {/* Header */}
           <div className="py-8 text-center">
-            <div className="w-14 h-14 bg-card-bg/10 rounded-full flex items-center justify-center mx-auto mb-3 border border-sage/20">
-              <Store className="w-6 h-6 text-sage" />
-            </div>
+            <span className={`${ICON_CHIP_CLASS} w-14 h-14 mx-auto mb-3`}>
+              <Store className="w-6 h-6" />
+            </span>
             <h1
               className="text-xl font-bold text-charcoal mb-1"
               style={{ fontFamily: FONT }}
@@ -488,7 +491,9 @@ export default function ClaimBusinessFormPage() {
                 className="text-sm font-semibold text-charcoal flex items-center gap-2"
                 style={{ fontFamily: FONT }}
               >
-                <UserCheck className="w-4 h-4 text-sage" />
+                <span className={SMALL_ICON_CHIP_CLASS}>
+                  <UserCheck className="w-3.5 h-3.5" />
+                </span>
                 Your Role
               </label>
               <div className="grid grid-cols-2 gap-3">
@@ -526,7 +531,9 @@ export default function ClaimBusinessFormPage() {
                 className="text-sm font-semibold text-charcoal flex items-center gap-2 mb-2"
                 style={{ fontFamily: FONT }}
               >
-                <Mail className="w-4 h-4 text-sage" />
+                <span className={SMALL_ICON_CHIP_CLASS}>
+                  <Mail className="w-3.5 h-3.5" />
+                </span>
                 Business Email (optional)
               </label>
               <input
@@ -553,7 +560,9 @@ export default function ClaimBusinessFormPage() {
                 className="text-sm font-semibold text-charcoal flex items-center gap-2 mb-2"
                 style={{ fontFamily: FONT }}
               >
-                <Phone className="w-4 h-4 text-sage" />
+                <span className={SMALL_ICON_CHIP_CLASS}>
+                  <Phone className="w-3.5 h-3.5" />
+                </span>
                 Phone (optional)
               </label>
               <input
@@ -573,7 +582,9 @@ export default function ClaimBusinessFormPage() {
                 className="text-sm font-semibold text-charcoal flex items-center gap-2"
                 style={{ fontFamily: FONT }}
               >
-                <Building2 className="w-4 h-4 text-sage" />
+                <span className={SMALL_ICON_CHIP_CLASS}>
+                  <Building2 className="w-3.5 h-3.5" />
+                </span>
                 CIPC (optional)
               </label>
               <input
@@ -607,7 +618,9 @@ export default function ClaimBusinessFormPage() {
                 className="text-sm font-semibold text-charcoal flex items-center gap-2 mb-2"
                 style={{ fontFamily: FONT }}
               >
-                <FileText className="w-4 h-4 text-sage" />
+                <span className={SMALL_ICON_CHIP_CLASS}>
+                  <FileText className="w-3.5 h-3.5" />
+                </span>
                 Additional Notes (optional)
               </label>
               <textarea
@@ -628,7 +641,9 @@ export default function ClaimBusinessFormPage() {
                 role="status"
                 aria-live="polite"
               >
-                <Store className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                <span className={`${ICON_CHIP_CLASS} h-7 w-7 flex-shrink-0 mt-0.5`}>
+                  <Store className="w-4 h-4" />
+                </span>
                 <div className="space-y-1">
                   <p className="text-sm font-semibold">Claim in progress</p>
                   <p className="text-sm text-sage/90">{claimStateMessage}</p>
@@ -655,7 +670,9 @@ export default function ClaimBusinessFormPage() {
                 className="flex items-start gap-3 p-4 rounded-[10px] bg-coral/10 border border-coral/30 text-coral"
                 style={{ fontFamily: FONT }}
               >
-                <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                <span className={`${ICON_CHIP_CLASS} h-7 w-7 flex-shrink-0 mt-0.5`}>
+                  <AlertCircle className="w-4 h-4" />
+                </span>
                 <p className="text-sm font-medium">{formError}</p>
               </div>
             )}

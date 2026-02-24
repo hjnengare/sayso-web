@@ -14,6 +14,10 @@ export type { AnalyticsData };
 
 /** Chart stroke/fill use theme token navbar-bg */
 const CHART_COLOR = "#722F37";
+const ICON_CHIP_BASE_CLASS =
+  "rounded-full bg-off-white/70 text-charcoal/85 flex items-center justify-center transition-colors hover:bg-off-white/90";
+const ICON_CHIP_MEDIUM_CLASS = `w-10 h-10 ${ICON_CHIP_BASE_CLASS}`;
+const ICON_CHIP_SMALL_CLASS = `w-8 h-8 ${ICON_CHIP_BASE_CLASS}`;
 
 const chartAnimationDuration = 280;
 
@@ -47,8 +51,8 @@ export function BusinessAnalyticsSection({ businessId }: { businessId: string })
         aria-label="Stats & Analytics"
       >
         <div className="flex items-center gap-3">
-          <span className="grid h-10 w-10 place-items-center rounded-full bg-navbar-bg/15">
-            <BarChart3 className="w-5 h-5 text-navbar-bg" />
+          <span className={ICON_CHIP_MEDIUM_CLASS}>
+            <BarChart3 className="w-5 h-5" />
           </span>
           <div>
             <h3 className="text-base font-semibold text-charcoal">Stats & Analytics</h3>
@@ -72,8 +76,8 @@ export function BusinessAnalyticsSection({ businessId }: { businessId: string })
         aria-label="Stats & Analytics"
       >
         <div className="flex items-center gap-3 mb-4">
-          <span className="grid h-10 w-10 place-items-center rounded-full bg-navbar-bg/15">
-            <BarChart3 className="w-5 h-5 text-navbar-bg" />
+          <span className={ICON_CHIP_MEDIUM_CLASS}>
+            <BarChart3 className="w-5 h-5" />
           </span>
           <h3 className="text-base font-semibold text-charcoal">Stats & Analytics</h3>
         </div>
@@ -104,8 +108,8 @@ export function BusinessAnalyticsSection({ businessId }: { businessId: string })
       aria-label="Stats & Analytics"
     >
       <div className="flex items-center gap-3">
-        <span className="grid h-10 w-10 place-items-center rounded-full bg-navbar-bg/15">
-          <BarChart3 className="w-5 h-5 text-navbar-bg" />
+        <span className={ICON_CHIP_MEDIUM_CLASS}>
+          <BarChart3 className="w-5 h-5" />
         </span>
         <div>
           <h3 className="text-base font-semibold text-charcoal">Stats & Analytics</h3>
@@ -117,7 +121,9 @@ export function BusinessAnalyticsSection({ businessId }: { businessId: string })
         {/* Profile Views */}
         <div className="bg-white/60 border border-white/80 rounded-[12px] p-4 shadow-sm min-h-[220px]">
           <div className="flex items-center gap-2 mb-3">
-            <Eye className="w-4 h-4 text-navbar-bg" />
+            <span className={ICON_CHIP_SMALL_CLASS}>
+              <Eye className="w-4 h-4" />
+            </span>
             <span className="text-sm font-semibold text-charcoal">Profile Views</span>
           </div>
           <LineChart
@@ -138,7 +144,9 @@ export function BusinessAnalyticsSection({ businessId }: { businessId: string })
         {/* Reviews Over Time */}
         <div className="bg-white/60 border border-white/80 rounded-[12px] p-4 shadow-sm min-h-[220px]">
           <div className="flex items-center gap-2 mb-3">
-            <MessageSquare className="w-4 h-4 text-navbar-bg" />
+            <span className={ICON_CHIP_SMALL_CLASS}>
+              <MessageSquare className="w-4 h-4" />
+            </span>
             <span className="text-sm font-semibold text-charcoal">Reviews Over Time</span>
           </div>
           <BarChart
@@ -159,7 +167,9 @@ export function BusinessAnalyticsSection({ businessId }: { businessId: string })
         {/* Average Rating Trend */}
         <div className="bg-white/60 border border-white/80 rounded-[12px] p-4 shadow-sm min-h-[220px]">
           <div className="flex items-center gap-2 mb-3">
-            <Star className="w-4 h-4 text-navbar-bg" />
+            <span className={ICON_CHIP_SMALL_CLASS}>
+              <Star className="w-4 h-4" />
+            </span>
             <span className="text-sm font-semibold text-charcoal">Average Rating Trend</span>
           </div>
           <AreaChart
@@ -183,7 +193,9 @@ export function BusinessAnalyticsSection({ businessId }: { businessId: string })
         <div className="flex flex-col gap-4">
           <div className="bg-white/60 border border-white/80 rounded-[12px] p-4 shadow-sm">
             <div className="flex items-center gap-2 mb-2">
-              <ThumbsUp className="w-4 h-4 text-navbar-bg" />
+              <span className={ICON_CHIP_SMALL_CLASS}>
+                <ThumbsUp className="w-4 h-4" />
+              </span>
               <span className="text-sm font-semibold text-charcoal">Helpful Votes</span>
             </div>
             <p className="text-2xl font-bold text-charcoal">{data.totalHelpfulVotes}</p>
@@ -191,7 +203,9 @@ export function BusinessAnalyticsSection({ businessId }: { businessId: string })
           </div>
           <div className="bg-white/60 border border-white/80 rounded-[12px] p-4 shadow-sm">
             <div className="flex items-center gap-2 mb-2">
-              <Calendar className="w-4 h-4 text-navbar-bg" />
+              <span className={ICON_CHIP_SMALL_CLASS}>
+                <Calendar className="w-4 h-4" />
+              </span>
               <span className="text-sm font-semibold text-charcoal">Events & Specials</span>
             </div>
             <div className="flex gap-4">

@@ -21,6 +21,12 @@ const priceRangeOptions = [
     { value: '$$$$', label: 'RRRR', description: 'Luxury', Icon: Crown },
 ];
 
+const ICON_CHIP_CLASS =
+    "grid h-10 w-10 place-items-center rounded-full bg-off-white/70 text-charcoal/85 transition-colors duration-200 hover:bg-off-white/90";
+
+const SMALL_ICON_CHIP_CLASS =
+    "inline-flex h-6 w-6 items-center justify-center rounded-full bg-off-white/80 text-charcoal/85";
+
 const ContactSection: React.FC<ContactSectionProps> = ({
     formData,
     errors,
@@ -29,13 +35,13 @@ const ContactSection: React.FC<ContactSectionProps> = ({
     onBlur,
 }) => {
     return (
-        <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden border-none backdrop-blur-xl shadow-md px-4 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10">
+        <div className="relative bg-white rounded-[12px] overflow-hidden border border-charcoal/10 shadow-md px-4 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10">
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-sage/10 to-transparent rounded-full blur-lg pointer-events-none"></div>
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-coral/10 to-transparent rounded-full blur-lg pointer-events-none"></div>
             <div className="relative z-10">
                 <h3 className="font-urbanist text-base font-semibold text-charcoal mb-6 flex items-center gap-3" style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 600 }}>
-                    <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-navbar-bg/20 to-navbar-bg/10">
-                        <Phone className="w-5 h-5 text-navbar-bg" />
+                    <span className={ICON_CHIP_CLASS}>
+                        <Phone className="w-5 h-5" />
                     </span>
                     Contact Information
                 </h3>
@@ -44,7 +50,7 @@ const ContactSection: React.FC<ContactSectionProps> = ({
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {/* Phone */}
                         <div>
-                            <label className="block text-sm font-semibold text-white mb-2" style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 600 }}>
+                            <label className="block text-sm font-semibold text-charcoal mb-2" style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 600 }}>
                                 Phone Number
                             </label>
                             <input
@@ -56,18 +62,18 @@ const ContactSection: React.FC<ContactSectionProps> = ({
                                 className={`w-full bg-white/95 backdrop-blur-sm border pl-4 pr-4 py-3 sm:py-4 text-sm font-semibold text-charcoal placeholder-charcoal/50 placeholder:font-normal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 rounded-full ${
                                     errors.phone
                                         ? 'border-coral focus:border-coral focus:ring-coral/20'
-                                        : 'border-white/60 focus:ring-sage/30 focus:border-sage'
+                                        : 'border-charcoal/15 focus:ring-sage/30 focus:border-sage'
                                 }`}
                                 placeholder="+27 21 123 4567"
                             />
                             {touched.phone && errors.phone && (
-                                <p className="mt-2 text-sm text-coral font-medium" style={{ fontFamily: 'Urbanist, sans-serif', color: 'white' }}>{errors.phone}</p>
+                                <p className="mt-2 text-sm text-coral font-medium" style={{ fontFamily: 'Urbanist, sans-serif' }}>{errors.phone}</p>
                             )}
                         </div>
 
                         {/* Email */}
                         <div>
-                            <label className="block text-sm font-semibold text-white mb-2" style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 600 }}>
+                            <label className="block text-sm font-semibold text-charcoal mb-2" style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 600 }}>
                                 Email Address
                             </label>
                             <input
@@ -79,19 +85,19 @@ const ContactSection: React.FC<ContactSectionProps> = ({
                                 className={`w-full bg-white/95 backdrop-blur-sm border pl-4 pr-4 py-3 sm:py-4 text-sm font-semibold text-charcoal placeholder-charcoal/50 placeholder:font-normal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 rounded-full ${
                                     errors.email
                                         ? 'border-coral focus:border-coral focus:ring-coral/20'
-                                        : 'border-white/60 focus:ring-sage/30 focus:border-sage'
+                                        : 'border-charcoal/15 focus:ring-sage/30 focus:border-sage'
                                 }`}
                                 placeholder="business@example.com"
                             />
                             {touched.email && errors.email && (
-                                <p className="mt-2 text-sm text-coral font-medium" style={{ fontFamily: 'Urbanist, sans-serif', color: 'white' }}>{errors.email}</p>
+                                <p className="mt-2 text-sm text-coral font-medium" style={{ fontFamily: 'Urbanist, sans-serif' }}>{errors.email}</p>
                             )}
                         </div>
                     </div>
 
                     {/* Website */}
                     <div>
-                        <label className="block text-sm font-semibold text-white mb-2" style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 600 }}>
+                        <label className="block text-sm font-semibold text-charcoal mb-2" style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 600 }}>
                             Website
                         </label>
                         <input
@@ -103,12 +109,12 @@ const ContactSection: React.FC<ContactSectionProps> = ({
                             className={`w-full bg-white/95 backdrop-blur-sm border pl-4 pr-4 py-3 sm:py-4 text-sm font-semibold text-charcoal placeholder-charcoal/50 placeholder:font-normal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 rounded-full ${
                                 errors.website
                                     ? 'border-coral focus:border-coral focus:ring-coral/20'
-                                    : 'border-white/60 focus:ring-sage/30 focus:border-sage'
+                                    : 'border-charcoal/15 focus:ring-sage/30 focus:border-sage'
                             }`}
                             placeholder="https://www.example.com"
                         />
                         {touched.website && errors.website && (
-                            <p className="mt-2 text-sm text-coral font-medium" style={{ fontFamily: 'Urbanist, sans-serif', color: 'white' }}>{errors.website}</p>
+                            <p className="mt-2 text-sm text-coral font-medium" style={{ fontFamily: 'Urbanist, sans-serif' }}>{errors.website}</p>
                         )}
                     </div>
 
@@ -116,7 +122,9 @@ const ContactSection: React.FC<ContactSectionProps> = ({
                     <div>
                         <div className="flex items-center justify-between mb-3">
                             <label className="flex items-center gap-2 text-sm font-semibold text-charcoal" style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 600 }}>
-                                <Coins className="w-4 h-4 text-coral/80" />
+                                <span className={SMALL_ICON_CHIP_CLASS}>
+                                    <Coins className="w-3.5 h-3.5" />
+                                </span>
                                 Price Range
                             </label>
                             {formData.priceRange && (

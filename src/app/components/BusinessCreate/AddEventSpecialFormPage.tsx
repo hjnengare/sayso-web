@@ -106,13 +106,19 @@ const fontStyle = {
 };
 
 const sectionClassName =
-  "relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden border-none backdrop-blur-xl shadow-md px-4 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12";
+  "relative bg-white rounded-[12px] overflow-hidden border border-charcoal/10 shadow-md px-4 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12";
 
 const inputClassName =
-  "w-full bg-white/95 backdrop-blur-sm border pl-4 pr-4 py-3 sm:py-4 md:py-5 text-body font-semibold text-charcoal placeholder-charcoal/50 placeholder:font-normal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 input-mobile rounded-full border-white/60 focus:ring-navbar-bg/30 focus:border-navbar-bg";
+  "w-full bg-white border pl-4 pr-4 py-3 sm:py-4 md:py-5 text-body font-semibold text-charcoal placeholder-charcoal/50 placeholder:font-normal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 input-mobile rounded-full border-charcoal/15 focus:ring-navbar-bg/30 focus:border-navbar-bg";
 
 const textareaClassName =
-  "w-full bg-white/95 backdrop-blur-sm border pl-4 pr-4 py-3 sm:py-4 md:py-5 text-body font-semibold text-charcoal placeholder-charcoal/50 placeholder:font-normal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 input-mobile rounded-[12px] border-white/60 focus:ring-navbar-bg/30 focus:border-navbar-bg resize-none";
+  "w-full bg-white border pl-4 pr-4 py-3 sm:py-4 md:py-5 text-body font-semibold text-charcoal placeholder-charcoal/50 placeholder:font-normal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 input-mobile rounded-[12px] border-charcoal/15 focus:ring-navbar-bg/30 focus:border-navbar-bg resize-none";
+
+const ICON_CHIP_CLASS =
+  "grid h-10 w-10 place-items-center rounded-full bg-off-white/70 text-charcoal/85 transition-colors duration-200 hover:bg-off-white/90";
+
+const SMALL_ICON_CHIP_CLASS =
+  "inline-flex h-6 w-6 items-center justify-center rounded-full bg-off-white/80 text-charcoal/85";
 
 function isValidHttpUrl(url: string): boolean {
   try {
@@ -514,8 +520,8 @@ export default function AddEventSpecialFormPage({ type }: AddEventSpecialFormPag
                     <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-coral/10 to-transparent rounded-full blur-lg pointer-events-none" />
                     <div className="relative z-10">
                       <h3 className="font-urbanist text-base font-semibold text-charcoal mb-6 flex items-center gap-3" style={fontStyle}>
-                        <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-navbar-bg/20 to-navbar-bg/10">
-                          <Store className="w-5 h-5 text-navbar-bg" />
+                        <span className={ICON_CHIP_CLASS}>
+                          <Store className="w-5 h-5" />
                         </span>
                         Publishing Context
                       </h3>
@@ -555,7 +561,9 @@ export default function AddEventSpecialFormPage({ type }: AddEventSpecialFormPag
                           <div>
                             <label className="block text-sm font-semibold text-charcoal mb-2" style={fontStyle}>Listing Type</label>
                             <div className="rounded-full border-none bg-white/95 px-4 py-3 sm:py-4 md:py-5 text-sm font-semibold text-charcoal flex items-center gap-2">
-                              {type === "event" ? <CalendarDays className="w-4 h-4 text-navbar-bg" /> : <Sparkles className="w-4 h-4 text-navbar-bg" />}
+                              <span className={SMALL_ICON_CHIP_CLASS}>
+                                {type === "event" ? <CalendarDays className="w-3.5 h-3.5" /> : <Sparkles className="w-3.5 h-3.5" />}
+                              </span>
                               <span>{type === "event" ? "Event" : "Special"}</span>
                             </div>
                           </div>
@@ -574,8 +582,8 @@ export default function AddEventSpecialFormPage({ type }: AddEventSpecialFormPag
                       <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-coral/10 to-transparent rounded-full blur-lg pointer-events-none" />
                       <div className="relative z-10 space-y-6">
                         <h3 className="font-urbanist text-base font-semibold text-charcoal flex items-center gap-3" style={fontStyle}>
-                          <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-navbar-bg/20 to-navbar-bg/10">
-                            <CalendarDays className="w-5 h-5 text-navbar-bg" />
+                          <span className={ICON_CHIP_CLASS}>
+                            <CalendarDays className="w-5 h-5" />
                           </span>
                           Listing Details
                         </h3>
@@ -634,7 +642,7 @@ export default function AddEventSpecialFormPage({ type }: AddEventSpecialFormPag
                           <div className="space-y-3">
                             <label
                               className={`flex flex-col items-center justify-center rounded-[12px] border-2 border-dashed px-4 py-6 text-center transition-colors duration-200 cursor-pointer ${
-                                isDraggingImage ? "border-sage bg-card-bg/10" : "border-white/70 bg-white/70 hover:border-sage/40"
+                                isDraggingImage ? "border-sage bg-off-white/70" : "border-charcoal/20 bg-white hover:border-sage/40"
                               } ${isUploadingImage ? "opacity-75 cursor-not-allowed" : ""}`}
                               onDragOver={(e) => {
                                 e.preventDefault();
@@ -653,7 +661,9 @@ export default function AddEventSpecialFormPage({ type }: AddEventSpecialFormPag
                                 onChange={handleImageInputChange}
                                 disabled={isUploadingImage}
                               />
-                              <UploadCloud className="w-6 h-6 text-navbar-bg mb-2" />
+                              <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-off-white/80 text-charcoal/85 mb-2">
+                                <UploadCloud className="w-5 h-5" />
+                              </span>
                               <p className="text-sm font-semibold text-charcoal" style={fontStyle}>
                                 {isUploadingImage ? "Uploading image..." : "Drop image here or click to upload"}
                               </p>
@@ -695,8 +705,8 @@ export default function AddEventSpecialFormPage({ type }: AddEventSpecialFormPag
                       <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-coral/10 to-transparent rounded-full blur-lg pointer-events-none" />
                       <div className="relative z-10 space-y-6">
                         <h3 className="font-urbanist text-base font-semibold text-charcoal flex items-center gap-3" style={fontStyle}>
-                          <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-navbar-bg/20 to-navbar-bg/10">
-                            <Link2 className="w-5 h-5 text-navbar-bg" />
+                          <span className={ICON_CHIP_CLASS}>
+                            <Link2 className="w-5 h-5" />
                           </span>
                           Booking / Link (Optional)
                         </h3>
@@ -762,7 +772,7 @@ export default function AddEventSpecialFormPage({ type }: AddEventSpecialFormPag
                         </div>
 
                         {formData.ctaSource === "whatsapp" ? (
-                          <div className="space-y-4 rounded-[12px] border border-sage/20 bg-card-bg/5 p-4">
+                          <div className="space-y-4 rounded-[12px] border border-sage/20 bg-white p-4">
                             <div>
                               <label className="block text-sm font-semibold text-charcoal mb-2" style={fontStyle}>
                                 WhatsApp Number <span className="text-coral">*</span>

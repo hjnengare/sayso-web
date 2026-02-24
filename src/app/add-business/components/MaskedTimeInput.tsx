@@ -98,14 +98,14 @@ const MaskedTimeInput: React.FC<MaskedTimeInputProps> = ({
                 className={`w-full rounded-full bg-white border px-4 py-2.5 text-sm font-semibold text-charcoal placeholder-charcoal/40 focus:outline-none focus:ring-2 transition-all duration-200 text-center ${
                     !isValid
                         ? 'border-coral focus:ring-coral/30 focus:border-coral'
-                        : 'border-white/60 focus:ring-sage/30 focus:border-sage hover:border-sage/50'
+                        : 'border-charcoal/15 focus:ring-sage/30 focus:border-sage hover:border-sage/50'
                 }`}
             />
             {isFocused && (
                 <m.span
                     initial={{ opacity: 0, y: 4 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="absolute -bottom-5 left-0 right-0 text-center text-xs text-white/90"
+                    className="absolute -bottom-5 left-0 right-0 text-center text-xs text-charcoal/60"
                 >
                     24h format
                 </m.span>

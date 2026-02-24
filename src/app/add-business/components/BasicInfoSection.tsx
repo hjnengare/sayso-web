@@ -40,6 +40,9 @@ const INTEREST_LABELS: Record<string, string> = {
     miscellaneous: "Miscellaneous",
 };
 
+const ICON_CHIP_CLASS =
+    "grid h-10 w-10 place-items-center rounded-full bg-off-white/70 text-charcoal/85 transition-colors duration-200 hover:bg-off-white/90";
+
 const toTitleCase = (value: string) =>
     value
         .split("-")
@@ -118,13 +121,13 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
         subcategoryOptions.find((option) => option.value === formData.category)?.label || "";
 
     return (
-        <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden border-none backdrop-blur-xl shadow-md px-4 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12 animate-fade-in-up animate-delay-100">
+        <div className="relative bg-white rounded-[12px] overflow-hidden border border-charcoal/10 shadow-md px-4 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12 animate-fade-in-up animate-delay-100">
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-sage/10 to-transparent rounded-full blur-lg pointer-events-none"></div>
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-coral/10 to-transparent rounded-full blur-lg pointer-events-none"></div>
             <div className="relative z-10">
                 <h3 className="font-urbanist text-base font-semibold text-charcoal mb-6 flex items-center gap-3" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
-                    <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-navbar-bg/20 to-navbar-bg/10">
-                        <Store className="w-5 h-5 text-navbar-bg" />
+                    <span className={ICON_CHIP_CLASS}>
+                        <Store className="w-5 h-5" />
                     </span>
                     Basic Information
                 </h3>
@@ -132,7 +135,7 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
                 <div className="space-y-6">
                     {/* Business Name */}
                     <div>
-                        <label className="block text-sm font-semibold text-white mb-2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
+                        <label className="block text-sm font-semibold text-charcoal mb-2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>
                             Business Name <span className="text-coral">*</span>
                         </label>
                         <input
@@ -149,7 +152,7 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
                             className={`w-full bg-white/95 backdrop-blur-sm border pl-4 pr-4 py-3 sm:py-4 md:py-5 text-body font-semibold text-charcoal placeholder-charcoal/50 placeholder:font-normal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 input-mobile rounded-full ${
                                 errors.name
                                     ? 'border-navbar-bg focus:border-navbar-bg focus:ring-navbar-bg/20'
-                                    : 'border-white/60 focus:ring-navbar-bg/30 focus:border-navbar-bg'
+                                    : 'border-charcoal/15 focus:ring-navbar-bg/30 focus:border-navbar-bg'
                             }`}
                             placeholder="Enter business name"
                         />
@@ -352,7 +355,7 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
                             onChange={(e) => onInputChange('description', e.target.value)}
                             rows={4}
                             style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
-                            className="w-full bg-white/95 backdrop-blur-sm border pl-4 pr-4 py-3 sm:py-4 md:py-5 text-body font-semibold text-charcoal placeholder-charcoal/50 placeholder:font-normal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 input-mobile rounded-[12px] resize-none border-white/60 focus:ring-navbar-bg/30 focus:border-navbar-bg"
+                            className="w-full bg-white/95 backdrop-blur-sm border pl-4 pr-4 py-3 sm:py-4 md:py-5 text-body font-semibold text-charcoal placeholder-charcoal/50 placeholder:font-normal focus:outline-none focus:ring-2 transition-all duration-300 hover:border-sage/50 input-mobile rounded-[12px] resize-none border-charcoal/15 focus:ring-navbar-bg/30 focus:border-navbar-bg"
                             placeholder="Describe your business..."
                         />
                     </div>

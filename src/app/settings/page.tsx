@@ -5,6 +5,9 @@ import { useAuth } from "../contexts/AuthContext";
 import { LogOut, Trash2, UserRound, Mail, ShieldAlert } from "lucide-react";
 
 const FONT_STACK = "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif";
+const ICON_CHIP_CLASS =
+  "inline-flex items-center justify-center rounded-full bg-off-white/80 text-charcoal/85 transition-colors duration-200 hover:bg-off-white/90";
+const SMALL_ICON_CHIP_CLASS = `${ICON_CHIP_CLASS} h-6 w-6`;
 
 export default function SettingsPage() {
   const { user, logout } = useAuth();
@@ -63,11 +66,15 @@ export default function SettingsPage() {
                 </p>
                 <div className="space-y-2.5">
                   <div className="flex items-center gap-2.5 text-charcoal">
-                    <UserRound className="w-4 h-4 text-charcoal/60" />
+                    <span className={SMALL_ICON_CHIP_CLASS}>
+                      <UserRound className="w-3.5 h-3.5" />
+                    </span>
                     <span className="text-sm sm:text-base font-semibold truncate" style={{ fontFamily: FONT_STACK }}>{username}</span>
                   </div>
                   <div className="flex items-center gap-2.5 text-charcoal/75">
-                    <Mail className="w-4 h-4 text-charcoal/60" />
+                    <span className={SMALL_ICON_CHIP_CLASS}>
+                      <Mail className="w-3.5 h-3.5" />
+                    </span>
                     <span className="text-sm truncate" style={{ fontFamily: FONT_STACK }}>{user?.email}</span>
                   </div>
                 </div>
@@ -85,7 +92,9 @@ export default function SettingsPage() {
               className="w-full flex items-center justify-center gap-2.5 px-6 py-3.5 bg-white/85 hover:bg-white   hover:border-white rounded-[12px] text-charcoal font-semibold transition-all duration-200 text-sm shadow-sm hover:shadow-md"
               style={{ fontFamily: FONT_STACK }}
             >
-              <LogOut className="w-4 h-4" />
+              <span className={SMALL_ICON_CHIP_CLASS}>
+                <LogOut className="w-3.5 h-3.5" />
+              </span>
               Log Out
             </button>
           </section>
@@ -93,7 +102,9 @@ export default function SettingsPage() {
           {/* Danger Zone */}
           <section className="bg-gradient-to-br from-coral/10 via-coral/5 to-white/90 backdrop-blur-xl border border-coral/30 rounded-[16px] shadow-lg p-5 sm:p-6">
             <div className="flex items-center gap-2.5 mb-4">
-              <ShieldAlert className="w-5 h-5 text-coral" />
+              <span className={SMALL_ICON_CHIP_CLASS}>
+                <ShieldAlert className="w-4 h-4" />
+              </span>
               <h2 className="text-base sm:text-lg font-semibold text-charcoal" style={{ fontFamily: FONT_STACK }}>
                 Danger Zone
               </h2>
@@ -109,7 +120,9 @@ export default function SettingsPage() {
                 className="w-full flex items-center justify-center gap-2.5 px-6 py-3.5 bg-white/90 hover:bg-white border border-coral/40 hover:border-coral/55 rounded-[12px] text-coral font-semibold transition-all duration-200 text-sm shadow-sm hover:shadow-md"
                 style={{ fontFamily: FONT_STACK }}
               >
-                <Trash2 className="w-4 h-4" />
+                <span className={SMALL_ICON_CHIP_CLASS}>
+                  <Trash2 className="w-3.5 h-3.5" />
+                </span>
                 Delete Account
               </button>
             ) : (

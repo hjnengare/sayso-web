@@ -44,6 +44,8 @@ export default function AddBusinessPage() {
     const { user, isLoading: authLoading } = useAuth();
     const ownershipPricingNotice =
         "Please note: Business ownership on Sayso is currently free. However, within the coming months, business accounts may be subject to a subscription or ownership fee (pricing to be announced). We will communicate all details in advance.";
+    const iconChipClass =
+        "inline-flex items-center justify-center rounded-full bg-off-white/80 text-charcoal/85 transition-colors duration-200 hover:bg-off-white/90";
 
     // Form state
     const [formData, setFormData] = useState<BusinessFormData>({
@@ -865,7 +867,7 @@ export default function AddBusinessPage() {
                                             aria-label="Business ownership pricing notice"
                                         >
                                             <div className="flex items-start gap-3">
-                                                <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-coral/15 text-coral">
+                                                <span className={`${iconChipClass} mt-0.5 h-8 w-8 shrink-0`}>
                                                     <AlertCircle className="h-4 w-4" />
                                                 </span>
                                                 <div>

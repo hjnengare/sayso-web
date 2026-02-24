@@ -5,6 +5,8 @@ import { MapPin, Search, Loader2, AlertCircle } from "lucide-react";
 import dynamic from "next/dynamic";
 
 const CAPE_TOWN_CENTER: [number, number] = [18.4241, -33.9249];
+const ICON_CHIP_CLASS =
+  "inline-flex items-center justify-center rounded-full bg-off-white/80 text-charcoal/85 transition-colors duration-200 hover:bg-off-white/90";
 
 export interface MapPickerLocation {
   lat: number;
@@ -186,7 +188,9 @@ function MapPickerInner({ lat, lng, onLocationSelect, disabled, className = "" }
   if (hasError) {
     return (
       <div className={`rounded-[12px] border border-charcoal/10 bg-off-white/50 p-6 text-center ${className}`}>
-        <AlertCircle className="w-8 h-8 text-charcoal/50 mx-auto mb-2" />
+        <span className={`${ICON_CHIP_CLASS} mx-auto mb-2 h-10 w-10`}>
+          <AlertCircle className="h-5 w-5" />
+        </span>
         <p className="text-sm text-charcoal/70" style={{ fontFamily: "Urbanist, sans-serif" }}>
           Map unavailable. Use the search above or enter an address.
         </p>
@@ -207,7 +211,7 @@ function MapPickerInner({ lat, lng, onLocationSelect, disabled, className = "" }
           onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleSearch())}
           placeholder="Search for an address..."
           disabled={disabled}
-          className="flex-1 bg-white/95 border border-white/60 rounded-full px-4 py-2.5 text-sm font-medium text-charcoal placeholder-charcoal/50 focus:outline-none focus:ring-2 focus:ring-sage/30 focus:border-sage"
+          className="flex-1 bg-white border border-charcoal/15 rounded-full px-4 py-2.5 text-sm font-medium text-charcoal placeholder-charcoal/50 focus:outline-none focus:ring-2 focus:ring-sage/30 focus:border-sage"
           style={{ fontFamily: "Urbanist, sans-serif" }}
         />
         <button
@@ -250,7 +254,7 @@ function MapPickerInner({ lat, lng, onLocationSelect, disabled, className = "" }
           className="absolute bottom-3 left-3 right-3 text-center pointer-events-none"
           style={{ fontFamily: "Urbanist, sans-serif" }}
         >
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/95 text-charcoal/80 text-xs font-medium shadow-sm">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-off-white/85 text-charcoal/85 text-xs font-medium shadow-sm">
             <MapPin className="w-3.5 h-3.5" />
             {disabled ? "Map disabled" : "Click on the map to set location"}
           </span>

@@ -9,6 +9,12 @@ import { Store, MapPin, Star, MessageSquare, Edit, ArrowLeft, Eye, TrendingUp, C
 import Link from "next/link";
 import { ConfirmationDialog } from "@/components/molecules/ConfirmationDialog";
 
+const ICON_CHIP_BASE_CLASS =
+  "rounded-full bg-off-white/70 text-charcoal/85 flex items-center justify-center transition-colors hover:bg-off-white/90";
+const ICON_CHIP_SMALL_CLASS = `w-6 h-6 ${ICON_CHIP_BASE_CLASS}`;
+const ICON_CHIP_MEDIUM_CLASS = `w-8 h-8 ${ICON_CHIP_BASE_CLASS}`;
+const ICON_CHIP_LARGE_CLASS = `w-10 h-10 ${ICON_CHIP_BASE_CLASS}`;
+
 function formatRelativeDate(dateStr: string): string {
   const now = new Date();
   const date = new Date(dateStr);
@@ -295,7 +301,9 @@ export default function OwnerBusinessDashboard() {
           href="/my-businesses"
           className="inline-flex items-center gap-2 text-navbar-bg hover:text-navbar-bg/80 font-urbanist text-sm"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <span className={ICON_CHIP_SMALL_CLASS}>
+            <ArrowLeft className="w-3.5 h-3.5" />
+          </span>
           Back to Your Businesses
         </Link>
       </div>
@@ -349,7 +357,9 @@ export default function OwnerBusinessDashboard() {
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
-                                <Store className="text-navbar-bg" size={32} strokeWidth={2.5} />
+                                <span className="w-10 h-10 rounded-full bg-off-white/70 text-charcoal/85 flex items-center justify-center">
+                                  <Store className="w-5 h-5" />
+                                </span>
                               </div>
                             )}
                           </div>
@@ -394,11 +404,15 @@ export default function OwnerBusinessDashboard() {
 
                           <div className="flex items-center gap-3 mb-2 text-body-sm text-charcoal/70 flex-wrap">
                             <div className="flex items-center gap-1">
-                              <MapPin size={14} />
+                              <span className={ICON_CHIP_SMALL_CLASS}>
+                                <MapPin className="w-3.5 h-3.5" />
+                              </span>
                               <span>{business.location}</span>
                             </div>
                             <div className="flex items-center gap-1">
-                              <Store size={14} />
+                              <span className={ICON_CHIP_SMALL_CLASS}>
+                                <Store className="w-3.5 h-3.5" />
+                              </span>
                               <span>{business.category}</span>
                             </div>
                           </div>
@@ -443,7 +457,9 @@ export default function OwnerBusinessDashboard() {
                   >
                     <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/80 backdrop-blur-xl border-none rounded-[12px] shadow-lg p-4 min-h-[120px] flex flex-col justify-between hover:shadow-md transition-shadow duration-200">
                       <div className="flex items-center gap-2 mb-2">
-                        <Star className="w-5 h-5 text-coral" />
+                        <span className={ICON_CHIP_MEDIUM_CLASS}>
+                          <Star className="w-4 h-4" />
+                        </span>
                         <span className="text-sm text-charcoal/70">Average Rating</span>
                       </div>
                       <div>
@@ -458,7 +474,9 @@ export default function OwnerBusinessDashboard() {
 
                     <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/80 backdrop-blur-xl border-none rounded-[12px] shadow-lg p-4 min-h-[120px] flex flex-col justify-between hover:shadow-md transition-shadow duration-200">
                       <div className="flex items-center gap-2 mb-2">
-                        <MessageSquare className="w-5 h-5 text-coral" />
+                        <span className={ICON_CHIP_MEDIUM_CLASS}>
+                          <MessageSquare className="w-4 h-4" />
+                        </span>
                         <span className="text-sm text-charcoal/70">Reviews</span>
                       </div>
                       <div>
@@ -473,7 +491,9 @@ export default function OwnerBusinessDashboard() {
 
                     <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/80 backdrop-blur-xl border-none rounded-[12px] shadow-lg p-4 min-h-[120px] flex flex-col justify-between hover:shadow-md transition-shadow duration-200">
                       <div className="flex items-center gap-2 mb-2">
-                        <Eye className="w-5 h-5 text-coral" />
+                        <span className={ICON_CHIP_MEDIUM_CLASS}>
+                          <Eye className="w-4 h-4" />
+                        </span>
                         <span className="text-sm text-charcoal/70">Profile Views</span>
                       </div>
                       <div>
@@ -491,7 +511,9 @@ export default function OwnerBusinessDashboard() {
                       className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/80 backdrop-blur-xl border-none rounded-[12px] shadow-lg p-4 min-h-[120px] flex flex-col justify-between hover:shadow-md hover:border-sage/40 transition-all duration-200 block"
                     >
                       <div className="flex items-center gap-2 mb-2">
-                        <MessageSquare className="w-5 h-5 text-coral" />
+                        <span className={ICON_CHIP_MEDIUM_CLASS}>
+                          <MessageSquare className="w-4 h-4" />
+                        </span>
                         <span className="text-sm text-charcoal/70">Conversations</span>
                       </div>
                       <div>
@@ -509,8 +531,8 @@ export default function OwnerBusinessDashboard() {
                   {/* Quick Actions */}
                   <section aria-label="Quick actions" className="space-y-3">
                     <h3 className="text-base font-semibold text-charcoal flex items-center gap-3">
-                      <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-sage/20 to-sage/10">
-                        <Store className="w-4 h-4 text-navbar-bg" />
+                      <span className={ICON_CHIP_MEDIUM_CLASS}>
+                        <Store className="w-4 h-4" />
                       </span>
                       Quick Actions
                     </h3>
@@ -519,8 +541,8 @@ export default function OwnerBusinessDashboard() {
                         href={`/business/${businessId}/edit`}
                         className="group bg-gradient-to-br from-card-bg via-card-bg to-card-bg/80 backdrop-blur-xl border-none rounded-[12px] p-4 flex flex-col items-center gap-2 text-center hover:border-sage/40 hover:translate-y-[-2px] transition-all duration-200"
                       >
-                        <span className="grid h-10 w-10 place-items-center rounded-full bg-navbar-bg/15 group-hover:bg-navbar-bg/25 transition-colors">
-                          <Edit className="w-5 h-5 text-navbar-bg" />
+                        <span className={`${ICON_CHIP_LARGE_CLASS} group-hover:bg-off-white/90`}>
+                          <Edit className="w-5 h-5" />
                         </span>
                         <span className="text-sm font-semibold text-charcoal">Edit Details</span>
                       </Link>
@@ -528,8 +550,8 @@ export default function OwnerBusinessDashboard() {
                         href={`/business/${businessId}/edit`}
                         className="group bg-gradient-to-br from-card-bg via-card-bg to-card-bg/80 backdrop-blur-xl border-none rounded-[12px] p-4 flex flex-col items-center gap-2 text-center hover:border-sage/40 hover:translate-y-[-2px] transition-all duration-200"
                       >
-                        <span className="grid h-10 w-10 place-items-center rounded-full bg-navbar-bg/15 group-hover:bg-navbar-bg/25 transition-colors">
-                          <Upload className="w-5 h-5 text-navbar-bg" />
+                        <span className={`${ICON_CHIP_LARGE_CLASS} group-hover:bg-off-white/90`}>
+                          <Upload className="w-5 h-5" />
                         </span>
                         <span className="text-sm font-semibold text-charcoal">Upload Photos</span>
                       </Link>
@@ -537,8 +559,8 @@ export default function OwnerBusinessDashboard() {
                         href={`/my-businesses/businesses/${businessId}/reviews`}
                         className="group bg-gradient-to-br from-card-bg via-card-bg to-card-bg/80 backdrop-blur-xl border-none rounded-[12px] p-4 flex flex-col items-center gap-2 text-center hover:border-sage/40 hover:translate-y-[-2px] transition-all duration-200"
                       >
-                        <span className="grid h-10 w-10 place-items-center rounded-full bg-navbar-bg/15 group-hover:bg-navbar-bg/25 transition-colors">
-                          <MessageSquare className="w-5 h-5 text-navbar-bg" />
+                        <span className={`${ICON_CHIP_LARGE_CLASS} group-hover:bg-off-white/90`}>
+                          <MessageSquare className="w-5 h-5" />
                         </span>
                         <span className="text-sm font-semibold text-charcoal">View Reviews</span>
                       </Link>
@@ -546,16 +568,16 @@ export default function OwnerBusinessDashboard() {
                         href="/add-event"
                         className="group bg-gradient-to-br from-card-bg via-card-bg to-card-bg/80 backdrop-blur-xl border-none rounded-[12px] p-4 flex flex-col items-center gap-2 text-center hover:border-sage/40 hover:translate-y-[-2px] transition-all duration-200"
                       >
-                        <span className="grid h-10 w-10 place-items-center rounded-full bg-navbar-bg/15 group-hover:bg-navbar-bg/25 transition-colors">
-                          <Calendar className="w-5 h-5 text-navbar-bg" />
+                        <span className={`${ICON_CHIP_LARGE_CLASS} group-hover:bg-off-white/90`}>
+                          <Calendar className="w-5 h-5" />
                         </span>
                         <span className="text-sm font-semibold text-charcoal">Add Event / Special</span>
                       </Link>
                       <div
                         className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/80 backdrop-blur-xl border-none rounded-[12px] p-4 flex flex-col items-center gap-2 text-center opacity-60 cursor-default"
                       >
-                        <span className="grid h-10 w-10 place-items-center rounded-full bg-navbar-bg/15">
-                          <TrendingUp className="w-5 h-5 text-navbar-bg" />
+                        <span className={ICON_CHIP_LARGE_CLASS}>
+                          <TrendingUp className="w-5 h-5" />
                         </span>
                         <span className="text-sm font-semibold text-charcoal/60">Promote</span>
                         <span className="text-[10px] bg-card-bg/20 text-navbar-bg px-1.5 py-0.5 rounded-full font-semibold">Soon</span>
@@ -566,8 +588,8 @@ export default function OwnerBusinessDashboard() {
                         className="group bg-gradient-to-br from-card-bg via-card-bg to-card-bg/80 backdrop-blur-xl border border-coral/40 rounded-[12px] p-4 flex flex-col items-center gap-2 text-center hover:border-coral/70 hover:bg-coral/5 transition-all duration-200"
                         aria-label="Delete business"
                       >
-                        <span className="grid h-10 w-10 place-items-center rounded-full bg-navbar-bg/15 group-hover:bg-navbar-bg/25 transition-colors">
-                          <Trash2 className="w-5 h-5 text-navbar-bg" />
+                        <span className={`${ICON_CHIP_LARGE_CLASS} group-hover:bg-off-white/90`}>
+                          <Trash2 className="w-5 h-5" />
                         </span>
                         <span className="text-sm font-semibold text-coral">Delete Business</span>
                       </button>
@@ -580,8 +602,8 @@ export default function OwnerBusinessDashboard() {
                     aria-label="Growth suggestions"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-sage/20 to-sage/10">
-                        <TrendingUp className="w-4 h-4 text-navbar-bg" />
+                      <span className={ICON_CHIP_MEDIUM_CLASS}>
+                        <TrendingUp className="w-4 h-4" />
                       </span>
                       <h3 className="text-base font-semibold text-navbar-bg">Grow Your Visibility</h3>
                     </div>
@@ -600,12 +622,12 @@ export default function OwnerBusinessDashboard() {
                       {growthChecklist.map((item) => (
                         <li key={item.label} className="flex items-center gap-3">
                           <span className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
-                            item.done ? 'bg-navbar-bg/20' : 'bg-charcoal/5'
+                            item.done ? 'bg-off-white/90 text-charcoal/85' : 'bg-off-white/70 text-charcoal/60'
                           }`}>
                             {item.done ? (
-                              <CheckCircle className="w-3.5 h-3.5 text-navbar-bg" />
+                              <CheckCircle className="w-3.5 h-3.5" />
                             ) : (
-                              <span className="w-2 h-2 rounded-full bg-charcoal/20" />
+                              <span className="w-2 h-2 rounded-full bg-charcoal/35" />
                             )}
                           </span>
                           <span className={`text-sm ${item.done ? 'text-charcoal/50 line-through' : 'text-charcoal/80 font-medium'}`}>

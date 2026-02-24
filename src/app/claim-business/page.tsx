@@ -22,6 +22,9 @@ import { Suspense } from "react";
 import { usePreviousPageBreadcrumb } from "../hooks/usePreviousPageBreadcrumb";
 import { useUserBusinessClaims } from "../hooks/useUserBusinessClaims";
 
+const ICON_CHIP_CLASS =
+  "inline-flex items-center justify-center rounded-full bg-off-white/80 text-charcoal/85 transition-colors duration-200 hover:bg-off-white/90";
+
 
 function ClaimBusinessPageContent() {
   const router = useRouter();
@@ -271,9 +274,9 @@ function ClaimBusinessPageContent() {
 
                   {/* Header Section */}
                   <div className="py-12 text-center">
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 bg-card-bg/10 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-sm border border-sage/20">
-                      <Store className="w-6 h-6 sm:w-7 sm:h-7 text-sage" />
-                    </div>
+                    <span className={`${ICON_CHIP_CLASS} w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 shadow-sm`}>
+                      <Store className="w-6 h-6 sm:w-7 sm:h-7" />
+                    </span>
                     <h2 className="font-urbanist text-lg sm:text-xl md:text-2xl font-semibold text-charcoal mb-2 px-2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                       Own or manage a business?
                     </h2>
@@ -289,7 +292,7 @@ function ClaimBusinessPageContent() {
                     aria-label="Business ownership pricing notice"
                   >
                     <div className="flex items-start gap-3">
-                      <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-white">
+                      <span className={`${ICON_CHIP_CLASS} mt-0.5 h-8 w-8 shrink-0`}>
                         <AlertCircle className="h-4 w-4" />
                       </span>
                       <div>
@@ -414,10 +417,9 @@ function ClaimBusinessPageContent() {
                       >
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
                           <div className="flex items-center space-x-3 sm:space-x-4 flex-1 min-w-0">
-                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0
-                                            group-hover:bg-white/30 transition-colors duration-200">
-                              <Store className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                            </div>
+                            <span className={`${ICON_CHIP_CLASS} w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 group-hover:bg-off-white/90`}>
+                              <Store className="w-4 h-4 sm:w-5 sm:h-5" />
+                            </span>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-start justify-between gap-2 mb-1">
                                 <h3 className="font-urbanist text-sm sm:text-base font-semibold text-white
@@ -447,9 +449,9 @@ function ClaimBusinessPageContent() {
                   {/* Empty State */}
                   {searchQuery && !isSearching && businesses.length === 0 && (
                     <div className="text-center py-8 sm:py-12 px-4">
-                      <div className="w-14 h-14 sm:w-16 sm:h-16 bg-card-bg/10 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-sm border border-sage/20">
-                        <Search className="w-5 h-5 sm:w-6 sm:h-6 text-sage" />
-                      </div>
+                      <span className={`${ICON_CHIP_CLASS} w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 shadow-sm`}>
+                        <Search className="w-5 h-5 sm:w-6 sm:h-6" />
+                      </span>
                       <h3 className="font-urbanist text-base sm:text-lg font-semibold text-charcoal mb-2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                         Business not found
                       </h3>
