@@ -51,10 +51,10 @@ export default function SettingsPage() {
     <div className="p-4 sm:p-6 lg:p-8 max-w-2xl">
         <div className="space-y-5">
           {/* Account Summary */}
-          <section className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border-none rounded-[16px] shadow-lg p-5 sm:p-6">
-            <div className="absolute top-0 right-0 w-28 h-28 bg-gradient-to-br from-white/20 to-transparent rounded-full blur-xl pointer-events-none" />
+          <section className="relative bg-white border border-charcoal/10 rounded-[16px] shadow-sm p-5 sm:p-6">
+            <div className="absolute top-0 right-0 w-28 h-28 bg-gradient-to-br from-charcoal/5 to-transparent rounded-full blur-xl pointer-events-none" />
             <div className="relative flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full bg-white/90   flex items-center justify-center text-charcoal font-bold text-base shadow-sm" style={{ fontFamily: FONT_STACK }}>
+              <div className="w-12 h-12 rounded-full bg-charcoal/10 flex items-center justify-center text-charcoal font-bold text-base shadow-sm" style={{ fontFamily: FONT_STACK }}>
                 {username.charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
@@ -76,13 +76,13 @@ export default function SettingsPage() {
           </section>
 
           {/* Session Actions */}
-          <section className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border-none rounded-[16px] shadow-lg p-5 sm:p-6">
+          <section className="bg-white border border-charcoal/10 rounded-[16px] shadow-sm p-5 sm:p-6">
             <h2 className="text-base sm:text-lg font-semibold text-charcoal mb-4" style={{ fontFamily: FONT_STACK }}>
               Session
             </h2>
             <button
               onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2.5 px-6 py-3.5 bg-white/85 hover:bg-white   hover:border-white rounded-[12px] text-charcoal font-semibold transition-all duration-200 text-sm shadow-sm hover:shadow-md"
+              className="w-full flex items-center justify-center gap-2.5 px-6 py-3.5 bg-charcoal/5 hover:bg-charcoal/10 border border-charcoal/15 hover:border-charcoal/25 rounded-[12px] text-charcoal font-semibold transition-all duration-200 text-sm"
               style={{ fontFamily: FONT_STACK }}
             >
               <LogOut className="w-4 h-4" />
@@ -91,7 +91,7 @@ export default function SettingsPage() {
           </section>
 
           {/* Danger Zone */}
-          <section className="bg-gradient-to-br from-coral/10 via-coral/5 to-white/90 backdrop-blur-xl border border-coral/30 rounded-[16px] shadow-lg p-5 sm:p-6">
+          <section className="bg-white border border-coral/30 rounded-[16px] shadow-sm p-5 sm:p-6">
             <div className="flex items-center gap-2.5 mb-4">
               <ShieldAlert className="w-5 h-5 text-coral" />
               <h2 className="text-base sm:text-lg font-semibold text-charcoal" style={{ fontFamily: FONT_STACK }}>
@@ -106,14 +106,14 @@ export default function SettingsPage() {
             {!isDeleteConfirmOpen ? (
               <button
                 onClick={() => setIsDeleteConfirmOpen(true)}
-                className="w-full flex items-center justify-center gap-2.5 px-6 py-3.5 bg-white/90 hover:bg-white border border-coral/40 hover:border-coral/55 rounded-[12px] text-coral font-semibold transition-all duration-200 text-sm shadow-sm hover:shadow-md"
+                className="w-full flex items-center justify-center gap-2.5 px-6 py-3.5 bg-white hover:bg-coral/5 border border-coral/40 hover:border-coral/55 rounded-[12px] text-coral font-semibold transition-all duration-200 text-sm"
                 style={{ fontFamily: FONT_STACK }}
               >
                 <Trash2 className="w-4 h-4" />
                 Delete Account
               </button>
             ) : (
-              <div className="bg-white/85 border border-coral/35 rounded-[12px] shadow-sm p-4 sm:p-5 space-y-4">
+              <div className="bg-white border border-coral/35 rounded-[12px] shadow-sm p-4 sm:p-5 space-y-4">
                 <div>
                   <h3 className="font-semibold text-charcoal mb-2" style={{ fontFamily: FONT_STACK }}>Delete Account</h3>
                   <p className="text-sm text-charcoal/75 mb-3" style={{ fontFamily: FONT_STACK }}>
