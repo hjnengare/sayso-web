@@ -183,6 +183,16 @@ const SearchInput = forwardRef<HTMLFormElement, SearchInputProps>(
       [router, onSearch, onSubmitQuery]
     );
 
+    const dismissSuggestions = useCallback(() => {
+      dismissedQueryRef.current = searchQuery;
+      setIsFocused(false);
+      setActiveIndex(-1);
+      if (blurTimeoutRef.current != null) {
+        window.clearTimeout(blurTimeoutRef.current);
+        blurTimeoutRef.current = null;
+      }
+    }, [searchQuery]);
+
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (!enableSuggestions) return;
       if (!isOpen) return;
@@ -343,9 +353,9 @@ const SearchInput = forwardRef<HTMLFormElement, SearchInputProps>(
                     type="button"
                     onMouseDown={(e) => {
                       e.preventDefault();
-                      dismissedQueryRef.current = searchQuery;
-                      setActiveIndex(-1);
+                      dismissSuggestions();
                     }}
+                    onClick={dismissSuggestions}
                     className="w-8 h-8 flex items-center justify-center text-charcoal/60 hover:text-charcoal transition-colors focus:outline-none focus:ring-0"
                     aria-label="Close suggestions"
                   >
