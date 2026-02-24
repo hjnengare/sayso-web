@@ -138,7 +138,7 @@ export default function SavedPage() {
                     </Link>
                   </li>
                   <li className="flex items-center">
-                    <span className="inline-flex items-center justify-center w-12 h-12 rounded-full text-charcoal/85 transition duration-200 ease-out hover:bg-off-white/90 hover:scale-[1.03] align-middle">
+                    <span className="inline-flex items-center justify-center w-12 h-12 rounded-full text-charcoal/85 transition duration-200 ease-out hover:scale-[1.03] align-middle">
                       <ChevronRight className="w-4 h-4" aria-hidden />
                     </span>
                   </li>
