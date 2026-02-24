@@ -3,15 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
-import { useBusinessNotificationsFeed } from "../hooks/useBusinessNotificationsFeed";
 import { m, AnimatePresence } from "framer-motion";
-import { Bell, Check, X, MessageSquare, MessageCircle, Star, Heart, TrendingUp, Clock, ChevronRight, Award, ThumbsUp, CheckCircle, ImageIcon, Trophy, UserRound, Building2 } from "lucide-react";
+import { Bell, Check, X, MessageSquare, MessageCircle, Star, Heart, TrendingUp, Clock, ChevronRight, Award, ThumbsUp, CheckCircle, ImageIcon, Trophy, UserRound } from "lucide-react";
 import Footer from "../components/Footer/Footer";
 import { usePredefinedPageTitle } from "../hooks/usePageTitle";
 import { useNotifications } from "../contexts/NotificationsContext";
 import { useAuth } from "../contexts/AuthContext";
 import { LiveIndicator } from "../components/Realtime/RealtimeIndicators";
-import PortalLayout from "../components/BusinessPortal/PortalLayout";
 
 function getNotificationIcon(type: string) {
   switch (type) {
@@ -321,8 +319,10 @@ function NotificationsPageSkeleton() {
 
 export default function NotificationsPage() {
   usePredefinedPageTitle('notifications');
+  const router = useRouter();
   const { user } = useAuth();
-  const userCurrentRole = user?.profile?.account_role || user?.profile?.role || "user";
+  const userCurrentRole =
+    user?.profile?.account_role || user?.profile?.role || "user";
   const isBusinessAccountUser = userCurrentRole === "business_owner";
 
   const {
@@ -334,60 +334,26 @@ export default function NotificationsPage() {
     deleteNotification,
   } = useNotifications();
 
-  const {
-    notifications: businessNotifications,
-    readIds: businessReadNotifications,
-    loading: isBusinessLoading,
-  } = useBusinessNotificationsFeed();
-
   const [personalFilter, setPersonalFilter] = useState<FilterType>('All');
-  const [businessFilter, setBusinessFilter] = useState<FilterType>('All');
   const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
 
   useEffect(() => {
-    if (!isBusinessAccountUser || !user?.id) { setIsRealtimeConnected(false); return; }
+    if (!user?.id) { setIsRealtimeConnected(false); return; }
     setIsRealtimeConnected(true);
     return () => setIsRealtimeConnected(false);
-  }, [isBusinessAccountUser, user?.id]);
+  }, [user?.id]);
 
-  const isLoading = isBusinessAccountUser ? isBusinessLoading : isPersonalLoading;
+  useEffect(() => {
+    if (!isBusinessAccountUser) return;
+    router.replace("/my-businesses");
+  }, [isBusinessAccountUser, router]);
 
-  // --- Business portal view ----------------------------------------------------
+  const isLoading = isPersonalLoading;
+
   if (isBusinessAccountUser) {
-    return (
-      <PortalLayout>
-        <div className="p-4 sm:p-6 lg:p-8 max-w-2xl font-urbanist min-h-full flex flex-col">
-          {/* Section header */}
-          <div className="flex items-center gap-2.5 mb-6">
-            <span className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
-              <Building2 className="w-4 h-4 text-charcoal/85" strokeWidth={2} />
-            </span>
-            <div>
-              <h1 className="text-lg font-bold text-charcoal font-urbanist leading-tight">Business Notifications</h1>
-              <p className="text-xs text-charcoal/50 font-urbanist">Activity from your business account</p>
-            </div>
-          </div>
-
-          {isLoading ? (
-            <div className="flex-1">
-              <NotificationsPageSkeleton />
-            </div>
-          ) : (
-            <BusinessNotificationList
-              notifications={businessNotifications}
-              readNotifications={businessReadNotifications}
-              filterType={businessFilter}
-              setFilterType={setBusinessFilter}
-              isPersonal={false}
-              isRealtimeConnected={isRealtimeConnected}
-            />
-          )}
-        </div>
-      </PortalLayout>
-    );
+    return <NotificationsPageSkeleton />;
   }
 
-  // --- Personal account view ---------------------------------------------------
   return (
     <div
       className="  flex flex-col bg-off-white relative font-urbanist"

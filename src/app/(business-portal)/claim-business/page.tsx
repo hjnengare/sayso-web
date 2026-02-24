@@ -1,0 +1,511 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "../../contexts/AuthContext";
+import { useSimpleBusinessSearch } from "../../hooks/useSimpleBusinessSearch";
+import {
+  Search,
+  Store,
+  MapPin,
+  Check,
+  Clock,
+  XCircle,
+  AlertCircle,
+  FileCheck,
+  Loader2,
+} from "lucide-react";
+import { ChevronRight } from "lucide-react";
+import { PageLoader, Loader } from "../../components/Loader";
+import Link from "next/link";
+import { Suspense } from "react";
+import { usePreviousPageBreadcrumb } from "../../hooks/usePreviousPageBreadcrumb";
+import { useUserBusinessClaims } from "../../hooks/useUserBusinessClaims";
+
+const ICON_CHIP_CLASS =
+  "inline-flex items-center justify-center rounded-full bg-off-white/80 text-charcoal/85 transition-colors duration-200 hover:bg-off-white/90";
+
+
+function ClaimBusinessPageContent() {
+  const router = useRouter();
+  const { previousHref, previousLabel } = usePreviousPageBreadcrumb({
+    fallbackHref: "/my-businesses",
+    fallbackLabel: "My Businesses",
+  });
+  const searchParams = useSearchParams();
+  const { user, isLoading: authLoading } = useAuth();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [actionLoadingBusinessId, setActionLoadingBusinessId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const ownershipPricingNotice =
+    "Please note: Business ownership on Sayso is currently free. However, within the coming months, business accounts may be subject to a subscription or ownership fee (pricing to be announced). We will communicate all details in advance.";
+
+  const { results: businesses, isSearching } = useSimpleBusinessSearch(searchQuery, 300);
+
+  const { claims: myClaims, claimsLoading, claimsError } = useUserBusinessClaims(user?.id);
+
+  // Handle businessId from query params (after login redirect)
+  useEffect(() => {
+    const businessId = searchParams?.get('businessId');
+    if (businessId && user) {
+      router.replace(`/claim-business/${businessId}`);
+    }
+  }, [searchParams, user, router]);
+
+  const handleClaimClick = async (business: any) => {
+    setActionError(null);
+    setActionLoadingBusinessId(business.id);
+
+    try {
+      if (!user) {
+        router.push(`/login?redirect=/claim-business/${business.id}`);
+        return;
+      }
+
+      if (business.claimed_by_user) {
+        router.push(`/my-businesses/businesses/${business.id}`);
+        return;
+      }
+
+      if (business.pending_by_user) {
+        setActionError("You already have a claim pending for this business.");
+        return;
+      }
+
+      if (business.claim_status === 'claimed' && !business.claimed_by_user) {
+        setActionError("This business is already claimed. Contact support if you need assistance.");
+        return;
+      }
+
+      router.push(`/claim-business/${business.id}`);
+    } catch (error) {
+      console.error("[Claim business page] Claim button error:", error);
+      setActionError("Unable to start claim flow. Please try again.");
+    } finally {
+      setActionLoadingBusinessId(null);
+    }
+  };
+
+  // Refresh claims list when returning to this page (e.g. after successful claim)
+  // The fetchMyClaims useEffect above already handles this via the user dependency
+
+  const getClaimStatusBadge = (displayStatus: string, status: string) => {
+    const base = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-sm font-semibold border";
+    if (status === "verified") {
+      return <span className={`${base} bg-card-bg/15 text-sage border-sage/30`}><Check className="w-3.5 h-3.5" /> Verified</span>;
+    }
+    if (status === "rejected") {
+      return <span className={`${base} bg-red-50 text-red-700 border-red-200`}><XCircle className="w-3.5 h-3.5" /> Rejected</span>;
+    }
+    if (displayStatus === "Under Review") {
+      return <span className={`${base} bg-amber-50 text-amber-800 border-amber-200`}><FileCheck className="w-3.5 h-3.5" /> Under Review</span>;
+    }
+    if (displayStatus === "Action Required") {
+      return <span className={`${base} bg-coral/10 text-coral border-coral/30`}><AlertCircle className="w-3.5 h-3.5" /> Action Required</span>;
+    }
+    return <span className={`${base} bg-charcoal/10 text-charcoal/80 border-charcoal/20`}><Clock className="w-3.5 h-3.5" /> Pending Verification</span>;
+  };
+
+  const getStatusBadge = (business: any) => {
+    if (business.claimed_by_user) {
+      return null; // Don't show badge if user owns it
+    }
+
+    if (business.pending_by_user) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200">
+          <Clock className="w-3 h-3" />
+          Claim pending
+        </span>
+      );
+    }
+
+    if (business.claim_status === 'claimed') {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700 border border-red-200">
+          <XCircle className="w-3 h-3" />
+          Business already claimed
+        </span>
+      );
+    }
+
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold bg-card-bg/10 text-sage border border-sage/20">
+        <Check className="w-3 h-3" />
+        Unclaimed
+      </span>
+    );
+  };
+
+  const getActionButton = (business: any) => {
+    const isActionLoading = actionLoadingBusinessId === business.id;
+
+    if (!user) {
+      return (
+        <button
+          onClick={() => handleClaimClick(business)}
+          disabled={isActionLoading}
+          className="w-full sm:w-auto px-5 py-2.5 min-h-[44px] rounded-full text-sm font-semibold font-urbanist transition-all duration-200 flex-shrink-0
+            bg-gradient-to-br from-coral to-coral/90 text-white hover:from-coral/90 hover:to-coral/80 hover:shadow-lg active:scale-[0.98] touch-manipulation disabled:opacity-60 disabled:cursor-not-allowed"
+          style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+        >
+          {isActionLoading ? (
+            <span className="inline-flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Opening...
+            </span>
+          ) : (
+            "Log in to claim"
+          )}
+        </button>
+      );
+    }
+
+    if (business.claimed_by_user) {
+      return (
+        <button
+          onClick={() => handleClaimClick(business)}
+          disabled={isActionLoading}
+          className="w-full sm:w-auto px-5 py-2.5 min-h-[44px] rounded-full text-sm font-semibold font-urbanist transition-all duration-200 flex-shrink-0
+            bg-gradient-to-br from-sage to-sage/90 text-white hover:from-sage/90 hover:to-sage/80 hover:shadow-lg active:scale-[0.98] touch-manipulation disabled:opacity-60 disabled:cursor-not-allowed"
+          style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+        >
+          {isActionLoading ? (
+            <span className="inline-flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Opening...
+            </span>
+          ) : (
+            "Go to dashboard"
+          )}
+        </button>
+      );
+    }
+
+    if (business.pending_by_user) {
+      return (
+        <button
+          disabled
+          className="w-full sm:w-auto px-5 py-2.5 min-h-[44px] rounded-full text-sm font-semibold font-urbanist transition-all duration-200 flex-shrink-0
+            bg-charcoal/10 text-charcoal/60 cursor-not-allowed"
+          style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+        >
+          Claim pending review
+        </button>
+      );
+    }
+
+    if (business.claim_status === 'claimed' && !business.claimed_by_user) {
+      return (
+        <div className="flex flex-col gap-2">
+          <span className="text-xs text-charcoal/60 text-center sm:text-left">Business already claimed</span>
+          <Link
+            href="mailto:info@sayso.com?subject=Business%20claim%20support&body=Please%20share%20your%20business%20name%2C%20location%2C%20and%20ownership%20details."
+            className="w-full sm:w-auto px-5 py-2.5 min-h-[44px] rounded-full text-sm font-semibold font-urbanist transition-all duration-200 flex-shrink-0
+              border-2 border-charcoal/20 text-charcoal hover:bg-charcoal/5 text-center"
+            style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+            aria-label="Email support about an already claimed business"
+          >
+            Contact support
+          </Link>
+        </div>
+      );
+    }
+
+    return (
+      <button
+        onClick={() => handleClaimClick(business)}
+        disabled={isActionLoading}
+        className="w-full sm:w-auto px-5 py-2.5 min-h-[44px] rounded-full text-sm font-semibold font-urbanist transition-all duration-200 flex-shrink-0
+          bg-gradient-to-br from-coral to-coral/90 text-white hover:from-coral/90 hover:to-coral/80 hover:shadow-lg active:scale-[0.98] touch-manipulation disabled:opacity-60 disabled:cursor-not-allowed"
+        style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+      >
+        {isActionLoading ? (
+          <span className="inline-flex items-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Opening claim flow...
+          </span>
+        ) : (
+          "Claim this business"
+        )}
+      </button>
+    );
+  };
+
+  return (
+    <div className="min-h-dvh bg-off-white relative">
+      {/* Background Gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-sage/10 via-off-white to-coral/5 pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(114,47,55,0.08)_0%,_transparent_50%)] pointer-events-none" />
+      
+      {/* Header */}
+
+      <main className="relative">
+        {/* Background Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-sage/10 via-off-white to-coral/5 pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)] pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(114,47,55,0.08)_0%,_transparent_50%)] pointer-events-none" />
+        
+        <div className="mx-auto w-full max-w-[2000px] px-2 relative z-10">
+          {/* Breadcrumb Navigation */}
+          <nav className="pb-1" aria-label="Breadcrumb">
+            <ol className="flex items-center gap-2 text-sm sm:text-base">
+              <li>
+                <Link href={previousHref} className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                  {previousLabel}
+                </Link>
+              </li>
+              <li className="flex items-center">
+                <ChevronRight className="w-4 h-4 text-charcoal/60" />
+              </li>
+              <li>
+                <span className="text-charcoal font-semibold" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                  Claim Business
+                </span>
+              </li>
+            </ol>
+          </nav>
+
+          <div className="py-3 sm:py-4">
+            <div className="pt-4 sm:pt-6 md:pt-10">
+              <div className="max-w-6xl mx-auto">
+                <div className="max-w-[800px] mx-auto">
+
+                  {/* Header Section */}
+                  <div className="py-12 text-center">
+                    <span className={`${ICON_CHIP_CLASS} w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 shadow-sm`}>
+                      <Store className="w-6 h-6 sm:w-7 sm:h-7" />
+                    </span>
+                    <h2 className="font-urbanist text-lg sm:text-xl md:text-2xl font-semibold text-charcoal mb-2 px-2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                      Own or manage a business?
+                    </h2>
+                    <p className="font-urbanist text-sm sm:text-base text-charcoal/70 max-w-md mx-auto px-4 sm:px-0 break-keep" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', wordBreak: 'normal', overflowWrap: 'normal', whiteSpace: 'normal', hyphens: 'none', WebkitHyphens: 'none', MozHyphens: 'none', msHyphens: 'none' }}>
+                      Claim your business profile to respond to reviews, update information, and connect with customers
+                    </p>
+                  </div>
+
+                  {/* Ownership Pricing Disclaimer */}
+                  <div
+                    className="mb-8 rounded-[12px] bg-white border border-charcoal/10 p-4 sm:p-5 shadow-sm"
+                    role="note"
+                    aria-label="Business ownership pricing notice"
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className={`${ICON_CHIP_CLASS} mt-0.5 h-8 w-8 shrink-0`}>
+                        <AlertCircle className="h-4 w-4" />
+                      </span>
+                      <div>
+                        <p className="font-urbanist text-sm sm:text-base font-semibold text-charcoal" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                          Business Ownership Notice
+                        </p>
+                        <p className="mt-1 font-urbanist text-sm sm:text-base leading-relaxed text-charcoal/75" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                          {ownershipPricingNotice}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Your claims (status states: Pending Verification, Action Required, Under Review, Verified, Rejected) */}
+                  {user && (claimsLoading || myClaims.length > 0 || Boolean(claimsError)) && (
+                    <div className="mb-8">
+                      <h3 className="font-urbanist text-base font-semibold text-charcoal mb-3" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                        Your claims
+                      </h3>
+                      {claimsLoading ? (
+                        <div className="flex items-center justify-center py-6">
+                          <Loader2 className="w-6 h-6 text-sage animate-spin" />
+                        </div>
+                      ) : (
+                        <ul className="space-y-3">
+                          {myClaims.map((claim) => (
+                            <li
+                              key={claim.id}
+                              className="p-4 bg-white border border-charcoal/10 rounded-[12px] shadow-sm hover:border-charcoal/20 transition-colors"
+                            >
+                              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+                                <div className="min-w-0">
+                                  <p className="font-urbanist text-sm font-semibold text-charcoal truncate" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                                    {claim.business_name}
+                                  </p>
+                                  {(claim as { location?: string }).location && (
+                                    <p className="font-urbanist text-sm text-charcoal/70 mt-0.5" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                                      {(claim as { location?: string }).location}
+                                    </p>
+                                  )}
+                                  {claim.next_step && (
+                                    <p className="font-urbanist text-sm text-charcoal/60 mt-1.5" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                                      {claim.next_step}
+                                    </p>
+                                  )}
+                                  {claim.status === 'rejected' && claim.rejection_reason && (
+                                    <p className="font-urbanist text-sm text-red-600 mt-1" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                                      {claim.rejection_reason}
+                                    </p>
+                                  )}
+                                </div>
+                                <div className="flex-shrink-0 flex items-center gap-2">
+                                  {getClaimStatusBadge(claim.display_status, claim.status)}
+                                  {claim.status === 'verified' && claim.business_id && (
+                                    <Link
+                                      href={`/my-businesses/businesses/${claim.business_id}`}
+                                      className="font-urbanist text-sm font-semibold text-sage hover:text-sage/80 underline"
+                                      style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                                    >
+                                      Open dashboard
+                                    </Link>
+                                  )}
+                                </div>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      {claimsError && !claimsLoading && (
+                        <div
+                          className="mt-3 p-3 rounded-[10px] bg-coral/10 border border-coral/30 text-coral text-sm font-medium"
+                          style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                          role="alert"
+                        >
+                          {claimsError}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Search Section */}
+                  <div className="pb-8">
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none z-10">
+                        <Search className="w-5 h-5 text-charcoal/60" strokeWidth={2} />
+                      </div>
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search for your business..."
+                        className="w-full pl-8 pr-4 py-3 min-h-[48px] bg-transparent border-0 border-b-2 border-charcoal/20
+                                   text-base placeholder:text-base placeholder:text-charcoal/60 font-normal text-charcoal
+                                   focus:outline-none focus:border-charcoal/60
+                                   hover:border-charcoal/30 transition-all duration-200 touch-manipulation"
+                        style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Business Results */}
+                  <div className="space-y-3 sm:space-y-4 py-6">
+                    {actionError && (
+                      <div
+                        className="p-3 rounded-[10px] bg-coral/10 border border-coral/30 text-coral text-sm font-medium"
+                        style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                        role="alert"
+                      >
+                        {actionError}
+                      </div>
+                    )}
+                    {isSearching && (
+                      <div className="flex items-center justify-center py-8 sm:py-12">
+                        <Loader size="md" variant="wavy" color="sage" />
+                      </div>
+                    )}
+                    {!isSearching && businesses.map((business) => (
+                      <div
+                        key={business.id}
+                        className="p-4 sm:p-5 bg-card-bg border border-sage/20 rounded-[12px] shadow-sm
+                                   hover:border-sage/40 hover:shadow-md transition-all duration-300 group"
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                          <div className="flex items-center space-x-3 sm:space-x-4 flex-1 min-w-0">
+                            <span className={`${ICON_CHIP_CLASS} w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 group-hover:bg-off-white/90`}>
+                              <Store className="w-4 h-4 sm:w-5 sm:h-5" />
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between gap-2 mb-1">
+                                <h3 className="font-urbanist text-sm sm:text-base font-semibold text-white
+                                               transition-colors duration-200 truncate" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                                  {business.name}
+                                </h3>
+                                {getStatusBadge(business)}
+                              </div>
+                              <div className="flex items-center flex-wrap gap-1.5 sm:gap-2 font-urbanist text-xs sm:text-sm text-white/90" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                                <span className="truncate max-w-[120px] sm:max-w-none">{business.category}</span>
+                                <span className="text-white/60 hidden sm:inline">•</span>
+                                <div className="flex items-center gap-1 min-w-0">
+                                  <MapPin className="w-3 h-3 text-white/80 flex-shrink-0" />
+                                  <span className="truncate max-w-[100px] sm:max-w-none">{business.location}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex-shrink-0">
+                            {getActionButton(business)}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Empty State */}
+                  {searchQuery && !isSearching && businesses.length === 0 && (
+                    <div className="text-center py-8 sm:py-12 px-4">
+                      <span className={`${ICON_CHIP_CLASS} w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 shadow-sm`}>
+                        <Search className="w-5 h-5 sm:w-6 sm:h-6" />
+                      </span>
+                      <h3 className="font-urbanist text-base sm:text-lg font-semibold text-charcoal mb-2" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                        Business not found
+                      </h3>
+                      <p className="font-urbanist text-sm sm:text-base text-charcoal/70 pt-2 max-w-md mx-auto" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                        Can't find your business? You can add it to our directory.
+                      </p>
+                      <button className="px-6 py-2.5 min-h-[44px] bg-gradient-to-br from-sage to-sage/90 text-white rounded-full text-sm font-semibold font-urbanist
+                                         hover:from-sage/90 hover:to-sage/80 transition-all duration-300 hover:shadow-lg active:scale-[0.98] touch-manipulation"
+                                style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                        Add Your Business
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Help Section */}
+                  <div className="mt-8 sm:mt-12 mb-8 sm:mb-12 p-4 sm:p-6 bg-white border border-charcoal/10 rounded-[12px] shadow-sm">
+                    <h3 className="font-urbanist text-base sm:text-lg font-semibold text-charcoal mb-2 px-1" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                      Need help claiming your business?
+                    </h3>
+                    <p className="font-urbanist text-sm sm:text-base text-charcoal/75 mb-4 sm:mb-5 break-keep leading-relaxed" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', wordBreak: 'normal', overflowWrap: 'normal', whiteSpace: 'normal', hyphens: 'none', WebkitHyphens: 'none', MozHyphens: 'none', msHyphens: 'none' }}>
+                      Our business verification process is quick and easy. You'll need to provide proof of ownership
+                      or management authorisation.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <Link
+                        href="mailto:info@sayso.com?subject=Need%20help%20claiming%20my%20business&body=Please%20include%20your%20business%20name%2C%20location%2C%20and%20any%20documents%20you%20have%20ready."
+                        className="w-full sm:w-auto px-5 py-2.5 min-h-[44px] border-2 border-charcoal/20 text-charcoal rounded-full text-sm font-semibold font-urbanist
+                                         hover:bg-charcoal/5 transition-all duration-300 active:scale-[0.98] touch-manipulation whitespace-nowrap text-center"
+                        style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                        aria-label="Email business support for claim assistance"
+                      >
+                        Contact Support
+                      </Link>
+                      <Link href="/add-business" className="w-full sm:w-auto px-6 py-2.5 min-h-[44px] bg-gradient-to-br from-coral to-coral/90 text-white text-sm font-semibold font-urbanist rounded-full hover:from-coral/90 hover:to-coral/80 transition-all duration-300 hover:shadow-lg active:scale-[0.98] touch-manipulation whitespace-nowrap inline-flex items-center justify-center"
+                              style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                        Add New Business
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+    </div>
+  );
+}
+
+export default function ClaimBusinessPage() {
+  return (
+    <Suspense fallback={<PageLoader size="lg" variant="wavy" color="sage" />}>
+      <ClaimBusinessPageContent />
+    </Suspense>
+  );
+}

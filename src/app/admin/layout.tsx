@@ -36,7 +36,7 @@ function Sidebar({
   return (
     <aside className="flex flex-col h-full min-h-[100dvh] bg-navbar-bg text-off-white">
       {/* Brand */}
-      <div className="flex items-center justify-between px-5 py-5 border-b border-white/10">
+      <div className="flex items-center justify-between px-5 py-5">
         <Link href="/admin" className="flex items-center gap-1.5" onClick={onClose}>
           <Wordmark size="text-base" className="tracking-tight" />
           <span className="font-urbanist font-semibold text-sm text-white/85 tracking-tight">admin</span>
@@ -142,7 +142,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       {/* Main content — scrolls independently */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Mobile topbar */}
-        <header className="lg:hidden flex items-center gap-3 px-4 py-3 bg-navbar-bg border-b border-white/10 shadow-sm flex-shrink-0">
+        <header className="lg:hidden flex items-center gap-3 px-4 py-3 bg-navbar-bg    shadow-sm flex-shrink-0">
           <button
             type="button"
             onClick={() => setMobileOpen(true)}

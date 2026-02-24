@@ -444,7 +444,7 @@ export default function BusinessLocation({
                             onClick={(e) => e.stopPropagation()}
                         >
                             {/* Modal Header */}
-                            <div className="px-4 sm:px-6 py-4 bg-charcoal/90 backdrop-blur-md border-b border-white/10">
+                            <div className="px-4 sm:px-6 py-4 bg-charcoal/90 backdrop-blur-md   ">
                                 <div className="flex items-center justify-between mb-3">
                                     <Logo variant="mobile" />
                                     <m.button

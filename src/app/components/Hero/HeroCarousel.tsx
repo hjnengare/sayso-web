@@ -146,8 +146,7 @@ const HERO_IMAGES: string[] = [
 
 export default function HeroCarousel() {
   const router = useRouter();
-  const { user, isLoading: authLoading } = useAuth();
-  const [isHeroReady, setIsHeroReady] = useState(false);
+  const { user } = useAuth();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [textIndex, setTextIndex] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -224,13 +223,6 @@ export default function HeroCarousel() {
       currentIndexRef.current = 0;
     }
   }, [currentIndex, slides.length]);
-
-  // Mark hero as ready once auth state is known
-  useEffect(() => {
-    if (!authLoading) {
-      setIsHeroReady(true);
-    }
-  }, [authLoading]);
 
   // Preload first hero image for mobile-first LCP optimization
   useEffect(() => {
@@ -449,15 +441,6 @@ export default function HeroCarousel() {
     router.push(exploreUrl);
     closeFilters();
   };
-
-  // Show skeleton while auth is loading
-  if (!isHeroReady) {
-    return (
-      <div suppressHydrationWarning>
-        {heroViewport === "mobile" ? <MobileHeroSkeleton /> : <HeroSkeleton />}
-      </div>
-    );
-  }
 
   if (slides.length === 0) {
     return (

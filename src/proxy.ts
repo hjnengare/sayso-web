@@ -709,7 +709,7 @@ export async function proxy(request: NextRequest) {
     }
 
     // Business routes: Always allow
-    const isBusinessRoute = ['/claim-business', '/my-businesses', '/add-business', '/add-event', '/add-special', '/settings', '/dm', '/notifications'].some(route =>
+    const isBusinessRoute = ['/claim-business', '/my-businesses', '/add-business', '/add-event', '/add-special', '/settings', '/dm'].some(route =>
       pathname.startsWith(route)
     );
     if (isBusinessRoute) {

@@ -10,9 +10,9 @@ import {
   X,
   Calendar,
   Tag,
-  Bell,
   Settings,
 } from "lucide-react";
+import Wordmark from "../Logo/Wordmark";
 
 export const PORTAL_NAV_ITEMS = [
   { href: "/my-businesses", label: "My Businesses", icon: LayoutDashboard, exact: true },
@@ -20,7 +20,6 @@ export const PORTAL_NAV_ITEMS = [
   { href: "/add-event", label: "Add Event", icon: Calendar, exact: true },
   { href: "/add-special", label: "Add Special", icon: Tag, exact: true },
   { href: "/claim-business", label: "Claim a Business", icon: FileCheck, exact: false },
-  { href: "/notifications", label: "Notifications", icon: Bell, exact: true },
   { href: "/settings", label: "Settings", icon: Settings, exact: true },
 ] as const;
 
@@ -33,12 +32,12 @@ export default function PortalSidebar({ pathname, onClose }: PortalSidebarProps)
   return (
     <aside className="flex flex-col h-full bg-navbar-bg text-off-white">
       {/* Brand */}
-      <div className="flex items-center justify-between px-5 py-5 border-b border-white/10">
+      <div className="flex items-center justify-between px-5 py-5   ">
         <Link href="/my-businesses" className="flex items-center gap-2.5" onClick={onClose}>
           <div className="w-7 h-7 rounded-lg bg-white/15 flex items-center justify-center">
             <Store className="w-4 h-4 text-white" />
           </div>
-          <span className="font-urbanist font-bold text-base text-white tracking-tight">My Portal</span>
+          <Wordmark size="text-base" className="tracking-tight" />
         </Link>
         {onClose && (
           <button

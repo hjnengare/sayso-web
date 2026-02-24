@@ -12,7 +12,7 @@ import MobileMenu from "./MobileMenu";
 import MobileMenuToggleIcon from "./MobileMenuToggleIcon";
 import HeaderSkeleton from "./HeaderSkeleton";
 import { useHeaderState } from "./useHeaderState";
-import { PRIMARY_LINKS, DISCOVER_LINKS, getLogoHref } from "./headerActionsConfig";
+import { getLogoHref } from "./headerActionsConfig";
 import { useLiveSearch, type LiveSearchResult } from "../../hooks/useLiveSearch";
 import { usePrefetchRoutes } from "../../hooks/usePrefetchRoutes";
 
@@ -134,7 +134,7 @@ export default function Header({
   const effectiveIsBusinessAccountUser =
     !isAuthFallbackMode && isBusinessAccountUser;
   const effectiveNavLinks = isAuthFallbackMode
-    ? { ...navLinks, businessLinks: [] }
+    ? { primaryLinks: [], businessLinks: [], discoverLinks: [] }
     : navLinks;
 
   // Sync local state with URL params
@@ -163,7 +163,7 @@ export default function Header({
 
   const headerClassName =
     "sticky top-0 left-0 right-0 w-full z-50 pt-[var(--safe-area-top)]";
-  const headerSurfaceClass = "bg-navbar-bg shadow-md border-b border-white/10";
+  const headerSurfaceClass = "bg-navbar-bg shadow-md   ";
     
 
   const isPersonalLayout =
@@ -769,7 +769,7 @@ export default function Header({
     isClaimBusinessActive,
     isDiscoverActive,
     primaryLinks: effectiveNavLinks.primaryLinks,
-    discoverLinks: DISCOVER_LINKS,
+    discoverLinks: effectiveNavLinks.discoverLinks,
     businessLinks: effectiveNavLinks.businessLinks,
     isNotificationsActive,
     isProfileActive,
@@ -1075,33 +1075,6 @@ export default function Header({
               </div>
 
               <div className="relative z-[2] flex lg:hidden items-center gap-2 ml-auto">
-                <OptimizedLink
-                  href={effectiveIsGuest ? "/onboarding" : "/notifications"}
-                  className={`relative z-[2] w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 cursor-pointer pointer-events-auto select-none ${
-                    isNotificationsActive
-                      ? "text-sage bg-card-bg/5"
-                      : whiteText
-                        ? "text-white hover:text-white/80 hover:bg-white/10"
-                        : "text-charcoal/80 hover:text-sage hover:bg-card-bg/5"
-                  }`}
-                  aria-label={effectiveIsGuest ? "Sign in for notifications" : "Notifications"}
-                >
-                  <Bell className="w-5 h-5 pointer-events-none" fill={isNotificationsActive ? "currentColor" : "none"} />
-                  {effectiveIsGuest ? (
-                    <span
-                      className="pointer-events-none absolute -top-0.5 -right-0.5 flex items-center justify-center w-3.5 h-3.5 text-white/85"
-                      role="img"
-                      aria-label="Requires sign in"
-                    >
-                      <Lock className="w-2.5 h-2.5" strokeWidth={1.9} />
-                    </span>
-                  ) : (unreadCount && unreadCount > 0) ? (
-                    <span className="pointer-events-none absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[10px] leading-none font-extrabold tracking-tight rounded-full bg-white text-coral border border-coral/30 shadow-[0_6px_14px_rgba(0,0,0,0.2)]">
-                      {unreadCount > 99 ? "99+" : unreadCount}
-                    </span>
-                  ) : null}
-                </OptimizedLink>
-
                 {!effectiveIsBusinessAccountUser && !effectiveIsGuest && (
                   <OptimizedLink
                     href="/saved"
@@ -1186,7 +1159,7 @@ export default function Header({
           isBusinessAccountUser={effectiveIsBusinessAccountUser}
           isGuest={effectiveIsGuest}
           primaryLinks={effectiveNavLinks.primaryLinks}
-          discoverLinks={DISCOVER_LINKS}
+          discoverLinks={effectiveNavLinks.discoverLinks}
           businessLinks={effectiveNavLinks.businessLinks}
           handleNavClick={handleNavClick}
           sf={sf}

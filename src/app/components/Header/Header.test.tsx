@@ -43,7 +43,7 @@ jest.mock('./useHeaderState', () => ({
     isAdminUser: false,
     isBusinessAccountUser: false,
     pathname: '/',
-    navLinks: { primaryLinks: [], businessLinks: [] },
+    navLinks: { primaryLinks: [], businessLinks: [], discoverLinks: [] },
     setShowSearchBar: jest.fn(),
     fontStyle: {},
   }),

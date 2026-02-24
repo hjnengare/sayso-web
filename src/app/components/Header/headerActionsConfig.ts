@@ -20,6 +20,17 @@ export const BUSINESS_LINKS: readonly NavLink[] = [
   { key: "add-business", label: "Add a new Business", href: "/add-business", requiresAuth: true },
 ] as const;
 
+// Keep business nav aligned with routes explicitly allowed for business users in middleware.
+const MIDDLEWARE_ALLOWED_BUSINESS_NAV_ROUTES = new Set<string>([
+  "/my-businesses",
+  "/claim-business",
+  "/add-business",
+  "/add-event",
+  "/add-special",
+  "/settings",
+  "/dm",
+]);
+
 export const DISCOVER_LINKS: readonly NavLink[] = [
   { key: "for-you", label: "For You", description: "Personalized picks", href: "/for-you", requiresAuth: true },
   { key: "trending", label: "Trending", description: "What's hot right now", href: "/trending", requiresAuth: false },
@@ -49,6 +60,7 @@ export const ACTION_BUTTONS: readonly ActionButtonDefinition[] = [
     href: '/notifications',
     label: 'Notifications',
     requiresAuth: true,
+    requiresNotBusinessOwner: true,
     icon: 'bell',
     showOnMobile: true,
     showOnDesktop: true,
@@ -154,19 +166,23 @@ export const getBusinessNavLinks = (
   const claimBusinessLink = BUSINESS_LINKS.find(link => link.key === "claim-business")!;
 
   if (isCheckingBusinessOwner) {
-    return [myBusinessesLink, claimBusinessLink];
+    return [myBusinessesLink, claimBusinessLink].filter((link) =>
+      MIDDLEWARE_ALLOWED_BUSINESS_NAV_ROUTES.has(link.href)
+    );
   }
 
   if (hasOwnedBusinesses) {
     // Keep claim available even when user already owns businesses.
-    return BUSINESS_LINKS.filter((link, idx, arr) => arr.findIndex(l => l.key === link.key) === idx);
+    return BUSINESS_LINKS
+      .filter((link, idx, arr) => arr.findIndex(l => l.key === link.key) === idx)
+      .filter((link) => MIDDLEWARE_ALLOWED_BUSINESS_NAV_ROUTES.has(link.href));
   }
 
   // No businesses yet: show My Businesses + Claim a Business + Add a new Business
   return BUSINESS_LINKS.filter((link, idx, arr) => {
     // Only include each link once
     return arr.findIndex(l => l.key === link.key) === idx;
-  });
+  }).filter((link) => MIDDLEWARE_ALLOWED_BUSINESS_NAV_ROUTES.has(link.href));
 };
 
 /**
@@ -232,28 +248,24 @@ export const getAllNavLinksForRole = (
   isCheckingBusinessOwner: boolean,
   hasOwnedBusinesses: boolean
 ) => {
-  // Always provide at least one set of links for all roles
-  let primaryLinks = PRIMARY_LINKS;
-  let businessLinks = getBusinessNavLinks(
+  const businessLinks = getBusinessNavLinks(
     isBusinessAccountUser,
     isCheckingBusinessOwner,
     hasOwnedBusinesses
   );
-  let discoverLinks = DISCOVER_LINKS;
 
-  // If business account, show both business and discover/primary links
+  // Business accounts should only see business routes at render time.
   if (isBusinessAccountUser) {
-    // If businessLinks is empty (e.g. loading), still show discover/primary
-    if (businessLinks.length === 0) {
-      businessLinks = [];
-    }
-    // Optionally, you can choose to hide primaryLinks for business, but always show discover
-    // Or merge them as needed for your UX
+    return {
+      primaryLinks: [] as readonly NavLink[],
+      businessLinks,
+      discoverLinks: [] as readonly NavLink[],
+    };
   }
 
   return {
-    primaryLinks,
-    businessLinks,
-    discoverLinks,
+    primaryLinks: PRIMARY_LINKS,
+    businessLinks: [] as readonly NavLink[],
+    discoverLinks: DISCOVER_LINKS,
   };
 };
