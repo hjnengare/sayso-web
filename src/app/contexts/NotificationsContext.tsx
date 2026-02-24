@@ -105,6 +105,11 @@ const NotificationsContext = createContext<NotificationsContextType | undefined>
 
 export function NotificationsProvider({ children }: { children: ReactNode }) {
   const { user, isLoading: authLoading } = useAuth();
+  const userCurrentRole =
+    user?.profile?.account_role || user?.profile?.role || "user";
+  const isAdminUser = userCurrentRole === "admin";
+  const isBusinessAccountUser =
+    !isAdminUser && userCurrentRole === "business_owner";
   const userId = user?.id ?? null;
   const endpoint = PERSONAL_NOTIFICATIONS_ENDPOINT;
 

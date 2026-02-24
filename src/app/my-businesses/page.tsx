@@ -41,6 +41,8 @@ interface OwnerListingsFetchResult {
 }
 
 const LISTINGS_REQUEST_TIMEOUT_MS = 7000;
+const ICON_CHIP_BASE_CLASS =
+  "rounded-full bg-off-white/70 text-charcoal/85 flex items-center justify-center transition-colors hover:bg-off-white/90";
 
 function parseDate(value: string | null | undefined): Date | null {
   if (!value) return null;
@@ -271,7 +273,9 @@ export default function MyBusinessesPage() {
       <div className="flex items-start justify-between mb-8">
         <div>
           <div className="flex items-center gap-2.5 mb-1">
-            <Store className="w-5 h-5 text-card-bg" />
+            <span className={`w-8 h-8 ${ICON_CHIP_BASE_CLASS}`}>
+              <Store className="w-4 h-4" />
+            </span>
             <h1 className="font-urbanist text-2xl font-bold text-charcoal tracking-tight">
               My Businesses
             </h1>
@@ -289,7 +293,9 @@ export default function MyBusinessesPage() {
           href="/add-business"
           className="inline-flex items-center gap-1.5 rounded-xl bg-card-bg text-white px-4 py-2 text-sm font-semibold font-urbanist hover:bg-card-bg/90 transition-colors"
         >
-          <Plus className="w-4 h-4" />
+          <span className="w-6 h-6 rounded-full bg-off-white/90 text-charcoal flex items-center justify-center">
+            <Plus className="w-3.5 h-3.5" />
+          </span>
           Add Business
         </Link>
       </div>
@@ -297,8 +303,8 @@ export default function MyBusinessesPage() {
       {/* Empty state */}
       {businesses.length === 0 && ownerListings.length === 0 && (
         <div className="rounded-2xl border border-charcoal/10 bg-white shadow-premium flex flex-col items-center justify-center py-20 gap-3">
-          <div className="w-16 h-16 rounded-2xl bg-card-bg/10 flex items-center justify-center">
-            <Store className="w-8 h-8 text-card-bg/60" />
+          <div className={`w-16 h-16 ${ICON_CHIP_BASE_CLASS}`}>
+            <Store className="w-8 h-8" />
           </div>
           <p className="font-urbanist text-base font-semibold text-charcoal/70">
             No businesses or events yet
@@ -359,14 +365,18 @@ export default function MyBusinessesPage() {
                     href="/add-event"
                     className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-navbar-bg text-white text-xs font-semibold hover:bg-navbar-bg/90 transition-colors flex-1 font-urbanist"
                   >
-                    <Plus className="w-3.5 h-3.5" />
+                    <span className="w-5 h-5 rounded-full bg-off-white/90 text-charcoal flex items-center justify-center">
+                      <Plus className="w-3 h-3" />
+                    </span>
                     Event
                   </Link>
                   <Link
                     href="/add-special"
                     className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-coral text-white text-xs font-semibold hover:bg-coral/90 transition-colors flex-1 font-urbanist"
                   >
-                    <Plus className="w-3.5 h-3.5" />
+                    <span className="w-5 h-5 rounded-full bg-off-white/90 text-charcoal flex items-center justify-center">
+                      <Plus className="w-3 h-3" />
+                    </span>
                     Special
                   </Link>
                 </div>
@@ -459,11 +469,15 @@ export default function MyBusinessesPage() {
                         )}
                         <div className="space-y-1">
                           <div className="flex items-center gap-1.5 text-xs text-charcoal/60 font-urbanist">
-                            <Clock3 className="w-3.5 h-3.5 text-charcoal/40 flex-shrink-0" />
+                            <span className="w-6 h-6 rounded-full bg-off-white/70 text-charcoal/85 flex items-center justify-center flex-shrink-0">
+                              <Clock3 className="w-3.5 h-3.5" />
+                            </span>
                             <span className="truncate">{formatDateRange(listing.startDate, listing.endDate)}</span>
                           </div>
                           <div className="flex items-center gap-1.5 text-xs text-charcoal/60 font-urbanist">
-                            <MapPin className="w-3.5 h-3.5 text-charcoal/40 flex-shrink-0" />
+                            <span className="w-6 h-6 rounded-full bg-off-white/70 text-charcoal/85 flex items-center justify-center flex-shrink-0">
+                              <MapPin className="w-3.5 h-3.5" />
+                            </span>
                             <span className="line-clamp-1">{listing.location}</span>
                           </div>
                         </div>

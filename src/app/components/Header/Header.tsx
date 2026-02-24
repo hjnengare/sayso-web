@@ -12,7 +12,7 @@ import MobileMenu from "./MobileMenu";
 import MobileMenuToggleIcon from "./MobileMenuToggleIcon";
 import HeaderSkeleton from "./HeaderSkeleton";
 import { useHeaderState } from "./useHeaderState";
-import { PRIMARY_LINKS, DISCOVER_LINKS, getLogoHref } from "./headerActionsConfig";
+import { getLogoHref } from "./headerActionsConfig";
 import { useLiveSearch, type LiveSearchResult } from "../../hooks/useLiveSearch";
 import { usePrefetchRoutes } from "../../hooks/usePrefetchRoutes";
 
@@ -134,7 +134,7 @@ export default function Header({
   const effectiveIsBusinessAccountUser =
     !isAuthFallbackMode && isBusinessAccountUser;
   const effectiveNavLinks = isAuthFallbackMode
-    ? { ...navLinks, businessLinks: [] }
+    ? { primaryLinks: [], businessLinks: [], discoverLinks: [] }
     : navLinks;
 
   // Sync local state with URL params
@@ -769,7 +769,7 @@ export default function Header({
     isClaimBusinessActive,
     isDiscoverActive,
     primaryLinks: effectiveNavLinks.primaryLinks,
-    discoverLinks: DISCOVER_LINKS,
+    discoverLinks: effectiveNavLinks.discoverLinks,
     businessLinks: effectiveNavLinks.businessLinks,
     isNotificationsActive,
     isProfileActive,
@@ -1186,7 +1186,7 @@ export default function Header({
           isBusinessAccountUser={effectiveIsBusinessAccountUser}
           isGuest={effectiveIsGuest}
           primaryLinks={effectiveNavLinks.primaryLinks}
-          discoverLinks={DISCOVER_LINKS}
+          discoverLinks={effectiveNavLinks.discoverLinks}
           businessLinks={effectiveNavLinks.businessLinks}
           handleNavClick={handleNavClick}
           sf={sf}
