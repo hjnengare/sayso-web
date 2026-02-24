@@ -15,7 +15,6 @@ import { createPortal } from "react-dom";
 import { m, useAnimation } from "framer-motion";
 import {
   ChevronDown,
-  Lock,
   Bell,
   User,
   Settings,
@@ -23,7 +22,7 @@ import {
 } from "lucide-react";
 import OptimizedLink from "../Navigation/OptimizedLink";
 
-import { shouldShowLockIndicator, getLinkHref } from "./headerActionsConfig";
+import { getLinkHref } from "./headerActionsConfig";
 
 export type NavLink = {
   key: string;
@@ -202,9 +201,9 @@ export default function DesktopNav(props: DesktopNavProps) {
   const isSavedActive = pathname === "/saved";
 
   const baseLinkClass =
-    "group capitalize px-2.5 lg:px-3.5 py-1.5 rounded-full text-sm sm:text-xs md:text-sm font-semibold relative flex items-center gap-1.5 transition-[color,opacity] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]";
+    "group capitalize px-2.5 lg:px-3.5 py-1.5 rounded-full text-sm sm:text-xs md:text-sm font-semibold relative flex items-center gap-1.5 transition-[color,opacity,transform] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] lg:hover:scale-105 lg:focus-visible:scale-105";
   const navLabelHoverClass =
-    "relative z-10 inline-block whitespace-nowrap transition-[transform,text-shadow,opacity] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform lg:group-hover:-translate-y-[2px] lg:group-hover:[text-shadow:0_4px_10px_rgba(15,23,42,0.14)]";
+    "relative z-10 inline-block whitespace-nowrap transition-opacity duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]";
   const activeTextClass = "text-sage";
   const idleTextClass = whiteText
     ? "text-white/75 hover:text-white"
@@ -215,16 +214,16 @@ export default function DesktopNav(props: DesktopNavProps) {
     : "text-charcoal/70 md:text-charcoal/80 hover:text-charcoal/95";
 
   const iconWrapClass = (isActive: boolean) =>
-    `mi-tap group w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-150 active:scale-[0.88] relative ${
+    `mi-tap group w-10 h-10 flex items-center justify-center rounded-lg transition-[color,transform] duration-150 ease-in-out active:scale-[0.88] lg:hover:scale-105 lg:focus-visible:scale-105 relative ${
       isActive
         ? "text-sage bg-card-bg/5"
         : whiteText
-          ? "text-white hover:text-white/80 hover:bg-white/10"
-          : "text-charcoal/80 hover:text-sage hover:bg-card-bg/5"
+          ? "text-white hover:text-white/80"
+          : "text-charcoal/80 hover:text-sage"
     }`;
 
   const iconClass = (isActive: boolean) =>
-    `w-5 h-5 transition-all duration-200 group-hover:scale-110 ${
+    `w-5 h-5 transition-colors duration-200 ${
       isActive
         ? "text-sage"
         : whiteText
@@ -329,7 +328,7 @@ export default function DesktopNav(props: DesktopNavProps) {
                               className={`block px-4 py-2.5 text-sm font-semibold transition-all duration-200 mx-2 rounded-lg ${
                                 itemActive
                                   ? "text-sage bg-gradient-to-r from-sage/10 to-sage/5"
-                                  : "text-charcoal hover:bg-gradient-to-r hover:from-sage/10 hover:to-coral/5 hover:text-coral"
+                                  : "text-charcoal hover:text-coral lg:hover:scale-[1.02]"
                               }`}
                               style={sf}
                             >
@@ -368,7 +367,6 @@ export default function DesktopNav(props: DesktopNavProps) {
         {!isBusinessAccountUser &&
           primaryLinks.map(({ key, label, href, requiresAuth }, index) => {
             const isActive = isPathActive(href);
-            const showLockIndicator = shouldShowLockIndicator(isGuest, requiresAuth);
 
             return (
               <Fragment key={key}>
@@ -386,11 +384,6 @@ export default function DesktopNav(props: DesktopNavProps) {
                     <m.span layoutId="nav-pill" className={pillClass} transition={pillTransition} />
                   )}
                   <span className={navLabelHoverClass}>{label}</span>
-                  {showLockIndicator && (
-                    <Lock
-                      className="w-3.5 h-3.5 text-coral"
-                    />
-                  )}
                 </OptimizedLink>
 
                 {/* Insert Discover after first primary link (eg after Home) */}
@@ -472,10 +465,7 @@ export default function DesktopNav(props: DesktopNavProps) {
                                 requiresAuth: subAuth,
                               }) => {
                                 const subIsActive = isPathActive(subHref);
-                                const showLock = shouldShowLockIndicator(
-                                  isGuest,
-                                  subAuth
-                                );
+                                const isLocked = isGuest && subAuth;
                                 const target = getLinkHref(
                                   subHref ?? "",
                                   subAuth,
@@ -491,7 +481,7 @@ export default function DesktopNav(props: DesktopNavProps) {
                                       clearDiscoverHoverTimeout();
                                       closeDiscoverDropdown();
                                     }}
-                                    className={`group flex items-start gap-3 px-5 py-3 hover:bg-gradient-to-r hover:from-sage/10 hover:to-coral/5 transition-all duration-200 rounded-lg mx-2 ${
+                                    className={`group flex items-start gap-3 px-5 py-3 transition-[color,transform] duration-200 rounded-lg mx-2 lg:hover:scale-[1.02] ${
                                       subIsActive
                                         ? "bg-gradient-to-r from-sage/10 to-sage/5"
                                         : ""
@@ -507,12 +497,9 @@ export default function DesktopNav(props: DesktopNavProps) {
                                         }`}
                                       >
                                         <span className="truncate">{subLabel}</span>
-                                        {showLock && (
-                                          <Lock className="w-3 h-3 text-coral" />
-                                        )}
                                       </div>
                                       <div className="text-sm sm:text-xs text-charcoal/60 mt-0.5">
-                                        {showLock
+                                        {isLocked
                                           ? "Sign in for personalised picks"
                                           : description}
                                       </div>
@@ -549,9 +536,6 @@ export default function DesktopNav(props: DesktopNavProps) {
               style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
             />
           </m.span>
-          <span className="pointer-events-none absolute -bottom-0.5 -right-0.5 flex items-center justify-center w-4 h-4 text-coral">
-            <Lock className="w-2.5 h-2.5" />
-          </span>
         </OptimizedLink>
       ) : (
         <OptimizedLink
@@ -583,17 +567,17 @@ export default function DesktopNav(props: DesktopNavProps) {
             <div className="relative">
               <OptimizedLink
                 href="/saved"
-                className={`group flex w-10 h-10 items-center justify-center rounded-lg transition-all duration-200 relative ${
+                className={`group flex w-10 h-10 items-center justify-center rounded-lg transition-[color,transform] duration-200 ease-in-out relative lg:hover:scale-105 lg:focus-visible:scale-105 ${
                   isSavedActive
                     ? "text-sage bg-card-bg/5"
                     : whiteText
-                      ? "text-white hover:text-white/85 hover:bg-white/10"
-                      : "text-charcoal/80 hover:text-sage hover:bg-card-bg/5"
+                      ? "text-white hover:text-white/85"
+                      : "text-charcoal/80 hover:text-sage"
                 }`}
                 aria-label="Saved"
               >
                 <Bookmark
-                  className={`w-5 h-5 transition-all duration-200 group-hover:scale-110 ${
+                  className={`w-5 h-5 transition-colors duration-200 ${
                     isSavedActive
                       ? "text-sage"
                       : whiteText

@@ -2,7 +2,6 @@ import { CSSProperties, MouseEvent, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import {
   ChevronDown,
-  Lock,
 } from "lucide-react";
 import OptimizedLink from "../Navigation/OptimizedLink";
 import { NavLink } from "./DesktopNav";
@@ -131,7 +130,7 @@ export default function MobileMenu({
                 handleNavClick(href, e);
                 onClose();
               }}
-              className={`px-3 py-2 rounded-[12px] text-base font-normal relative min-h-[44px] flex items-center justify-center ${mobileTapFeedbackClass} ${mobileRevealClass} ${isActive ? "text-sage bg-white/5" : "text-white hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5"}`}
+              className={`px-3 py-2 rounded-[12px] text-base font-normal relative min-h-[44px] flex items-center justify-center ${mobileTapFeedbackClass} ${mobileRevealClass} ${isActive ? "text-sage bg-white/5" : "text-white hover:text-white"}`}
               style={{
                 ...sf,
                 transitionDelay: `${index * 60}ms`,
@@ -153,7 +152,7 @@ export default function MobileMenu({
               type="button"
               onClick={() => setIsAddSectionOpen((prev) => !prev)}
               className={`relative w-full px-3 py-2 min-h-[44px] rounded-[12px] text-base font-normal flex items-center justify-center ${mobileTapFeedbackClass} ${
-                isAddRouteActive ? "text-sage" : "text-white hover:text-white hover:bg-white/5"
+                isAddRouteActive ? "text-sage" : "text-white hover:text-white"
               }`}
               aria-expanded={isAddSectionOpen}
               aria-controls="mobile-add-nav"
@@ -186,7 +185,7 @@ export default function MobileMenu({
                       className={`block rounded-lg px-3 py-2 text-sm font-semibold ${mobileTapFeedbackClass} ${
                         itemActive
                           ? "text-sage bg-gradient-to-r from-sage/15 to-sage/5"
-                          : "text-white/90 hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5"
+                          : "text-white/90 hover:text-white"
                       }`}
                       style={sf}
                     >
@@ -213,13 +212,12 @@ export default function MobileMenu({
                 ...sf,
                 transitionDelay: `${(businessTopLinks.length + 1 + (item.delay ?? idx)) * 60}ms`,
               }}
-            >
-              <span className="text-center uppercase tracking-wide flex items-center gap-1.5">
-                {item.label}
-                {showLockIndicator && <Lock className="w-3 h-3 text-coral" />}
-              </span>
-            </OptimizedLink>
-          );
+              >
+                <span className="text-center uppercase tracking-wide flex items-center gap-1.5">
+                  {item.label}
+                </span>
+              </OptimizedLink>
+            );
         })}
       </div>
     );
@@ -238,7 +236,7 @@ export default function MobileMenu({
                   handleNavClick(href, e);
                   onClose();
                 }}
-                className={`px-3 py-2 rounded-[12px] text-base font-normal text-white hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 relative min-h-[44px] flex items-center justify-center ${mobileTapFeedbackClass} ${mobileRevealClass}`}
+                className={`px-3 py-2 rounded-[12px] text-base font-normal text-white hover:text-white relative min-h-[44px] flex items-center justify-center ${mobileTapFeedbackClass} ${mobileRevealClass}`}
                 style={{
                   ...sf,
                   transitionDelay: `${index * 60}ms`,
@@ -250,7 +248,6 @@ export default function MobileMenu({
                   style={showLockIndicator ? protectedLabelStyle : undefined}
                 >
                   {label}
-                  {showLockIndicator && <Lock className="w-3 h-3 text-white/80" strokeWidth={1.9} aria-hidden="true" />}
                 </span>
               </OptimizedLink>
             );
@@ -268,7 +265,7 @@ export default function MobileMenu({
                   handleNavClick(href, e);
                   onClose();
                 }}
-                className={`px-3 py-2 rounded-[12px] text-base font-normal text-white/90 hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 min-h-[44px] flex items-center justify-center ${mobileTapFeedbackClass} ${mobileRevealClass}`}
+                className={`px-3 py-2 rounded-[12px] text-base font-normal text-white/90 hover:text-white min-h-[44px] flex items-center justify-center ${mobileTapFeedbackClass} ${mobileRevealClass}`}
                 style={{
                   ...sf,
                   transitionDelay: `${(orderedPrimaryLinks.length + index) * 60}ms`,
@@ -280,7 +277,6 @@ export default function MobileMenu({
                   style={showLockIndicator ? protectedLabelStyle : undefined}
                 >
                   {label}
-                  {showLockIndicator && <Lock className="w-3 h-3 text-white/80" strokeWidth={1.9} aria-hidden="true" />}
                 </span>
               </OptimizedLink>
             );
@@ -324,7 +320,7 @@ export default function MobileMenu({
                   handleNavClick(href, e);
                   onClose();
                 }}
-                className={`px-3 py-2 rounded-[12px] text-base font-normal text-white hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 relative min-h-[44px] flex items-center justify-center ${mobileTapFeedbackClass} ${mobileRevealClass}`}
+                className={`px-3 py-2 rounded-[12px] text-base font-normal text-white hover:text-white relative min-h-[44px] flex items-center justify-center ${mobileTapFeedbackClass} ${mobileRevealClass}`}
                 style={{
                   ...sf,
                   transitionDelay: `${index * 60}ms`,
@@ -332,7 +328,6 @@ export default function MobileMenu({
               >
                 <span className="text-center uppercase flex items-center gap-1.5">
                   {label}
-                  {showLockIndicator && <Lock className="w-3 h-3 text-coral" />}
                 </span>
               </OptimizedLink>
             );
@@ -350,7 +345,7 @@ export default function MobileMenu({
                   handleNavClick(href, e);
                   onClose();
                 }}
-                className={`px-3 py-2 rounded-[12px] text-base font-normal text-white/90 hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 min-h-[44px] flex items-center justify-center ${mobileTapFeedbackClass} ${mobileRevealClass}`}
+                className={`px-3 py-2 rounded-[12px] text-base font-normal text-white/90 hover:text-white min-h-[44px] flex items-center justify-center ${mobileTapFeedbackClass} ${mobileRevealClass}`}
                 style={{
                   ...sf,
                   transitionDelay: `${(orderedPrimaryLinks.length + index) * 60}ms`,
@@ -358,7 +353,6 @@ export default function MobileMenu({
               >
                 <span className="text-center uppercase flex items-center gap-1.5">
                   {label}
-                  {showLockIndicator && <Lock className="w-3 h-3 text-coral" />}
                 </span>
               </OptimizedLink>
             );
@@ -402,7 +396,7 @@ export default function MobileMenu({
               <OptimizedLink
                 href="/onboarding"
                 onClick={() => onClose()}
-                className={`px-3 py-2 rounded-[12px] text-xs font-normal text-white/80 hover:text-white hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 min-h-[44px] flex items-center justify-center ${mobileTapFeedbackClass} ${mobileRevealClass}`}
+                className={`px-3 py-2 rounded-[12px] text-xs font-normal text-white/80 hover:text-white min-h-[44px] flex items-center justify-center ${mobileTapFeedbackClass} ${mobileRevealClass}`}
                 style={{
                   ...sf,
                   transitionDelay: `${(orderedPrimaryLinks.length + orderedSecondaryLinks.length + 1) * 60}ms`,

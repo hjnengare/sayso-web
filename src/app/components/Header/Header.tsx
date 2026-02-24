@@ -3,7 +3,7 @@
 
 import { useCallback, useEffect, useState, useRef, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Bell, Settings, Bookmark, Search, X, Lock, Shield, FileCheck, Database, LogOut } from "lucide-react";
+import { Bell, Settings, Bookmark, Search, X, Shield, FileCheck, Database, LogOut } from "lucide-react";
 import { m, AnimatePresence } from "framer-motion";
 import Logo from "../Logo/Logo";
 import OptimizedLink from "../Navigation/OptimizedLink";
@@ -615,7 +615,7 @@ export default function Header({
             <button
               type="button"
               onClick={expandDesktopSearch}
-              className="mi-tap w-11 h-10 flex items-center justify-center rounded-full bg-off-white/95 border border-charcoal/10 hover:bg-white transition-colors duration-200"
+              className="mi-tap w-11 h-10 flex items-center justify-center rounded-full bg-off-white/95 border border-charcoal/10 transition-[color,transform] duration-200 ease-in-out lg:hover:scale-105 lg:focus-visible:scale-105"
               aria-label="Open search"
             >
               <Search className="w-4 h-4 text-charcoal/60" strokeWidth={2} />
@@ -644,7 +644,7 @@ export default function Header({
                       if (headerSearchQuery) handleClearSearch();
                       collapseDesktopSearch();
                     }}
-                    className="mi-tap flex items-center justify-center w-7 h-7 rounded-full text-charcoal/60 hover:text-charcoal hover:bg-charcoal/5 transition-all duration-150"
+                    className="mi-tap flex items-center justify-center w-7 h-7 rounded-full text-charcoal/60 hover:text-charcoal transition-[color,transform] duration-150 ease-in-out lg:hover:scale-105 lg:focus-visible:scale-105"
                     aria-label={headerSearchQuery ? "Clear search" : "Close search"}
                   >
                     <X className="w-4 h-4" strokeWidth={2} />
@@ -759,7 +759,7 @@ export default function Header({
                   setIsMobileSearchOpen(false);
                 }
               }}
-              className="flex items-center justify-center w-8 h-8 rounded-full text-charcoal/60 hover:text-charcoal hover:bg-charcoal/10 active:bg-charcoal/20 transition-all duration-150"
+              className="flex items-center justify-center w-8 h-8 rounded-full text-charcoal/60 hover:text-charcoal transition-colors duration-150"
               aria-label={headerSearchQuery ? "Clear search" : "Close search"}
             >
               <X className="w-5 h-5" strokeWidth={2} />
@@ -861,10 +861,10 @@ export default function Header({
                       <OptimizedLink
                         key={item.href}
                         href={item.href}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-[color,transform] duration-200 ease-in-out ${
                           active
                             ? "bg-white/15 text-white"
-                            : "text-white/60 hover:text-white hover:bg-white/10"
+                            : "text-white/60 hover:text-white sm:hover:scale-105 sm:focus-visible:scale-105"
                         }`}
                         style={sf}
                       >
@@ -878,7 +878,7 @@ export default function Header({
                 <button
                   type="button"
                   onClick={handleAdminSignOut}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-white/60 hover:text-coral hover:bg-coral/10 transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-white/60 hover:text-coral transition-[color,transform] duration-200 ease-in-out sm:hover:scale-105 sm:focus-visible:scale-105"
                   style={sf}
                 >
                   <LogOut className="w-4 h-4" />
@@ -900,7 +900,7 @@ export default function Header({
                   <button
                     type="button"
                     onClick={handleAdminSignOut}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-white/60 hover:text-coral hover:bg-coral/10 transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-white/60 hover:text-coral transition-colors"
                     style={sf}
                   >
                     <LogOut className="w-4 h-4" />
@@ -916,7 +916,7 @@ export default function Header({
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                           active
                             ? "bg-white/15 text-white"
-                            : "text-white/60 hover:text-white hover:bg-white/10"
+                            : "text-white/60 hover:text-white"
                         }`}
                         style={sf}
                       >
@@ -1001,8 +1001,8 @@ export default function Header({
                       onClick={handleMobileSearchToggle}
                       className={`w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
                         whiteText
-                          ? "text-white hover:text-white/80 hover:bg-white/10"
-                          : "text-charcoal/80 hover:text-sage hover:bg-card-bg/5"
+                          ? "text-white hover:text-white/80"
+                          : "text-charcoal/80 hover:text-sage"
                       }`}
                       aria-label="Open search"
                     >
@@ -1018,21 +1018,13 @@ export default function Header({
                         isNotificationsActive
                           ? "text-sage bg-card-bg/5"
                           : whiteText
-                            ? "text-white hover:text-white/80 hover:bg-white/10"
-                            : "text-charcoal/80 hover:text-sage hover:bg-card-bg/5"
+                            ? "text-white hover:text-white/80"
+                            : "text-charcoal/80 hover:text-sage"
                       }`}
                       aria-label={effectiveIsGuest ? "Sign in for notifications" : "Notifications"}
                     >
                       <Bell className="w-5 h-5 pointer-events-none" fill={isNotificationsActive ? "currentColor" : "none"} />
-                      {effectiveIsGuest ? (
-                        <span
-                          className="pointer-events-none absolute -top-0.5 -right-0.5 flex items-center justify-center w-3.5 h-3.5 text-white/85"
-                          role="img"
-                          aria-label="Requires sign in"
-                        >
-                          <Lock className="w-2.5 h-2.5" strokeWidth={1.9} />
-                        </span>
-                      ) : (unreadCount && unreadCount > 0) ? (
+                      {(unreadCount && unreadCount > 0) ? (
                         <span className="pointer-events-none absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[10px] leading-none font-extrabold tracking-tight rounded-full bg-white text-coral border border-coral/30 shadow-[0_6px_14px_rgba(0,0,0,0.2)]">
                           {unreadCount > 99 ? "99+" : unreadCount}
                         </span>
@@ -1048,21 +1040,13 @@ export default function Header({
                         !effectiveIsGuest && isSavedActive
                           ? "text-sage bg-card-bg/5"
                           : whiteText
-                            ? "text-white hover:text-white/80 hover:bg-white/10"
-                            : "text-charcoal/80 hover:text-sage hover:bg-card-bg/5"
+                            ? "text-white hover:text-white/80"
+                            : "text-charcoal/80 hover:text-sage"
                       }`}
                       aria-label={effectiveIsGuest ? "Sign in for saved items" : "Saved"}
                     >
                       <Bookmark className="w-5 h-5" fill={!effectiveIsGuest && isSavedActive ? "currentColor" : "none"} />
-                      {effectiveIsGuest ? (
-                        <span
-                          className="pointer-events-none absolute -top-0.5 -right-0.5 flex items-center justify-center w-3.5 h-3.5 text-white/85"
-                          role="img"
-                          aria-label="Requires sign in"
-                        >
-                          <Lock className="w-2.5 h-2.5" strokeWidth={1.9} />
-                        </span>
-                      ) : savedCount > 0 ? (
+                      {savedCount > 0 ? (
                         <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-white text-[10px] font-bold rounded-full bg-gradient-to-br from-coral to-coral/90 border border-white/20">
                           {savedCount > 99 ? "99+" : savedCount}
                         </span>
@@ -1077,8 +1061,8 @@ export default function Header({
                       onClick={() => setIsMobileMenuOpen(true)}
                       className={`w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
                         whiteText
-                          ? "text-white hover:text-white/80 hover:bg-white/10"
-                          : "text-charcoal/80 hover:text-sage hover:bg-card-bg/5"
+                          ? "text-white hover:text-white/80"
+                          : "text-charcoal/80 hover:text-sage"
                       }`}
                       aria-label="Open menu"
                       aria-expanded={isMobileMenuOpen}
@@ -1118,8 +1102,8 @@ export default function Header({
                       isSavedActive
                         ? "text-sage bg-card-bg/5"
                         : whiteText
-                          ? "text-white hover:text-white/80 hover:bg-white/10"
-                          : "text-charcoal/80 hover:text-sage hover:bg-card-bg/5"
+                          ? "text-white hover:text-white/80"
+                          : "text-charcoal/80 hover:text-sage"
                     }`}
                     aria-label="Saved"
                   >
@@ -1139,8 +1123,8 @@ export default function Header({
                       isSettingsActive
                         ? "text-sage bg-card-bg/5"
                         : whiteText
-                          ? "text-white hover:text-white/80 hover:bg-white/10"
-                          : "text-charcoal/80 hover:text-sage hover:bg-card-bg/5"
+                          ? "text-white hover:text-white/80"
+                          : "text-charcoal/80 hover:text-sage"
                     }`}
                     aria-label="Settings"
                   >
@@ -1153,8 +1137,8 @@ export default function Header({
                   onClick={() => setIsMobileMenuOpen(true)}
                   className={`w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
                     whiteText
-                      ? "text-white hover:text-white/80 hover:bg-white/10"
-                      : "text-charcoal/80 hover:text-sage hover:bg-card-bg/5"
+                      ? "text-white hover:text-white/80"
+                      : "text-charcoal/80 hover:text-sage"
                   }`}
                   aria-label="Open menu"
                   aria-expanded={isMobileMenuOpen}

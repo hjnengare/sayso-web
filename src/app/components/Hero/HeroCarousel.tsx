@@ -551,7 +551,7 @@ export default function HeroCarousel() {
         {/* Hero Section - 75vh responsive height */}
         <section
           ref={containerRef as React.RefObject<HTMLElement>}
-          className="relative h-[100svh] sm:h-[90dvh] md:h-[80dvh] w-full overflow-hidden outline-none rounded-none min-h-[420px] sm:min-h-[520px] sm:max-h-[820px]"
+          className="relative h-[100svh] sm:h-[90dvh] md:h-[80dvh] w-full overflow-hidden outline-none rounded-none min-h-[100dvh] sm:max-h-[820px]"
           aria-label="Hero carousel"
           tabIndex={0}
           style={{
