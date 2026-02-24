@@ -114,15 +114,16 @@ export default function CommunityHighlights({
   const topReviewers: Reviewer[] = propTopReviewers ?? fetchedReviewers;
   const reviews: Review[] = propReviews ?? fetchedReviews;
   const reviewersMode: 'stage1' | 'normal' = fetchedMode;
+  const hasBusinesses = Array.isArray(businessesOfTheMonth) && businessesOfTheMonth.length > 0;
+  const contributorsLoading = !propTopReviewers && reviewersLoading;
+  const recentReviewsLoading = !propReviews && reviewsLoading;
 
-  const loading = !propTopReviewers && !propReviews && (reviewersLoading || reviewsLoading);
-
-  if (loading) {
+  // Keep legacy full-section skeleton when nothing else can render.
+  if (contributorsLoading && !hasBusinesses) {
     return <CommunityHighlightsSkeleton />;
   }
 
   const hasReviewers = !!topReviewers && topReviewers.length > 0;
-  const hasBusinesses = Array.isArray(businessesOfTheMonth) && businessesOfTheMonth.length > 0;
   const hasCoordinateBusinesses = (Array.isArray(businessesOfTheMonth) ? businessesOfTheMonth : []).some(
     (business) =>
       typeof business.lat === "number" && Number.isFinite(business.lat) &&
@@ -176,7 +177,7 @@ export default function CommunityHighlights({
 
         {/* Top Reviewers */}
         {hasReviewers && (
-          <div className="mt-1">
+          <div className="mt-1" aria-busy={recentReviewsLoading}>
             <div className="pb-1 sm:pb-2 flex flex-wrap items-center justify-between gap-2">
                 <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-gradient-to-r from-sage/20 to-sage/10 border border-sage/30">
                   <span className="text-sm font-semibold text-sage" style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}>
@@ -233,8 +234,40 @@ export default function CommunityHighlights({
           </div>
         )}
 
+        {/* Top Contributors Loading State (non-blocking for Featured Businesses) */}
+        {!hasReviewers && contributorsLoading && (
+          <div className="mt-1" aria-busy="true">
+            <div className="pb-2 flex flex-wrap items-center justify-between gap-2">
+              <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-gradient-to-r from-sage/20 to-sage/10 border border-sage/30 mb-4">
+                <span className="text-sm font-semibold text-sage" style={{ fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}>
+                  <span className="sm:hidden">{contributorsHeadingMobile}</span>
+                  <span className="hidden sm:inline">{contributorsHeadingDesktop}</span>
+                </span>
+              </div>
+            </div>
+            <ScrollableSection hideArrowsOnDesktop={hideCarouselArrowsOnDesktop}>
+              <div className="flex gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2 items-start py-2">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <div
+                    key={`reviewer-skeleton-${index}`}
+                    className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto sm:min-w-[25%] md:min-w-[25%] lg:min-w-[20%] xl:min-w-[18%] 2xl:min-w-[16%] list-none flex justify-center"
+                  >
+                    <div className="w-full max-w-[340px] rounded-[12px] border border-sage/20 bg-off-white p-4 sm:p-5">
+                      <div className="h-5 w-32 rounded bg-charcoal/10 animate-pulse mb-4" />
+                      <div className="h-4 w-20 rounded bg-charcoal/10 animate-pulse mb-3" />
+                      <div className="h-3 w-full rounded bg-charcoal/10 animate-pulse mb-2" />
+                      <div className="h-3 w-5/6 rounded bg-charcoal/10 animate-pulse mb-5" />
+                      <div className="h-10 w-full rounded-full bg-charcoal/10 animate-pulse" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollableSection>
+          </div>
+        )}
+
         {/* Top Contributors Empty State */}
-        {!hasReviewers && (
+        {!hasReviewers && !contributorsLoading && (
           <div className="mt-1">
             <div className="pb-2 flex flex-wrap items-center justify-between gap-2">
 

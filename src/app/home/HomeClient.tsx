@@ -163,7 +163,7 @@ export default function HomeClient({ initialTrending }: { initialTrending?: impo
     error: forYouError,
   } = useForYouBusinesses(20, undefined, {
     preferences,
-    preferencesLoading: false, // Fire immediately with available prefs; re-fetches when prefs load
+    preferencesLoading: prefsLoading, // Wait for preference hydration to avoid double-fetching For You
     skip: !user, // Don't fetch For You when not signed in; section shows teaser only
   });
 

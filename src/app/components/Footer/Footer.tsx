@@ -134,7 +134,7 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="relative overflow-hidden border-t border-charcoal/6 bg-gradient-to-br from-navbar-bg via-navbar-bg/95 to-navbar-bg/90 text-off-white">
+    <footer className="relative overflow-hidden border-t border-charcoal/6 bg-navbar-bg text-off-white">
 
       <div className="relative mx-auto w-full max-w-[2000px] px-4 sm:px-6 lg:px-8">
         <div className="border-t border-white/10 py-10 sm:py-12">

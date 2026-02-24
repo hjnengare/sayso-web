@@ -12,7 +12,6 @@ import OptimizedImage from "../Performance/OptimizedImage";
 import Tooltip from "../Tooltip/Tooltip";
 import { useSavedItems } from "../../contexts/SavedItemsContext";
 import { useToast } from "../../contexts/ToastContext";
-import { useBusinessRatings } from "../../hooks/useBusinessRatings";
 import { useAuth } from "../../contexts/AuthContext";
 import {
   getCategoryLabelFromBusiness,
@@ -513,15 +512,10 @@ function BusinessCard({
     (typeof business.rating === "number" && business.rating) ||
     (typeof business?.stats?.average_rating === "number" && business.stats.average_rating) ||
     0;
-
-  const { rating: liveRating, totalReviews: liveTotalReviews } = useBusinessRatings(
-    business.id,
-    initialRating,
-    initialTotalReviews
-  );
-
-  const hasRating = liveRating > 0;
-  const displayRating = hasRating ? liveRating : undefined;
+  const totalReviews = Number.isFinite(initialTotalReviews) ? Number(initialTotalReviews) : 0;
+  const resolvedRating = Number.isFinite(initialRating) ? Number(initialRating) : 0;
+  const hasRating = resolvedRating > 0;
+  const displayRating = hasRating ? resolvedRating : undefined;
 
   const handleImageError = () => {
     if (!usingFallback && !isImagePng) {
@@ -686,7 +680,7 @@ function BusinessCard({
                 <BusinessCardReviews
                   hasRating={hasRating}
                   displayRating={displayRating}
-                  reviews={liveTotalReviews}
+                  reviews={totalReviews}
                   hasReviewed={hasReviewed}
                   onCardClick={(e) => { e.preventDefault(); e.stopPropagation(); handleCardClick(); }}
                   onWriteReview={(e) => { e.preventDefault(); e.stopPropagation(); if (!hasReviewed) handleWriteReview(); }}
