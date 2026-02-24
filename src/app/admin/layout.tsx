@@ -25,7 +25,7 @@ const NAV_ITEMS = [
 
 function Sidebar({ pathname, onClose }: { pathname: string; onClose?: () => void }) {
   return (
-    <aside className="flex flex-col h-full bg-navbar-bg text-off-white">
+    <aside className="flex flex-col h-full min-h-[100dvh] bg-navbar-bg text-off-white">
       {/* Brand */}
       <div className="flex items-center justify-between px-5 py-5 border-b border-white/10">
         <Link href="/admin" className="flex items-center gap-2.5" onClick={onClose}>
@@ -110,9 +110,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex bg-page-bg overflow-hidden" style={{ height: 'calc(100dvh - var(--header-height, 0px))' }}>
+    <div className="flex h-[100dvh] min-h-[100dvh] bg-page-bg overflow-hidden">
       {/* Desktop sidebar — fixed height, never scrolls */}
-      <div className="hidden lg:flex lg:flex-col lg:w-56 xl:w-60 flex-shrink-0 shadow-lg">
+      <div className="hidden lg:flex lg:flex-col lg:w-56 xl:w-60 lg:min-h-[100dvh] flex-shrink-0 shadow-lg">
         <Sidebar pathname={pathname} />
       </div>
 
