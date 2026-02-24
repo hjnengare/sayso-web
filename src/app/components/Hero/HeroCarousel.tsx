@@ -547,7 +547,7 @@ export default function HeroCarousel() {
   return (
     <>
       {/* Hero Container with padding */}
-      <div className="relative w-full px-0 py-0 md:pt-2 md:px-2">
+      <div className="relative w-full px-0 py-0">
         {/* Hero Section - 75vh responsive height */}
         <section
           ref={containerRef as React.RefObject<HTMLElement>}
