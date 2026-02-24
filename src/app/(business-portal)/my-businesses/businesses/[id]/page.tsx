@@ -3,8 +3,8 @@
 import { useState, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { useRouter, useParams } from "next/navigation";
-import { useAuth } from "../../../contexts/AuthContext";
-import { PageLoader } from "../../../components/Loader";
+import { useAuth } from "../../../../contexts/AuthContext";
+import { PageLoader } from "../../../../components/Loader";
 import { Store, MapPin, Star, MessageSquare, Edit, ArrowLeft, Eye, TrendingUp, ChevronRight, Camera, Upload, Loader2, CheckCircle, Calendar, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { ConfirmationDialog } from "@/components/molecules/ConfirmationDialog";
@@ -48,14 +48,14 @@ const BusinessAnalyticsSection = dynamic(
     ),
   }
 );
-import { getBrowserSupabase } from "../../../lib/supabase/client";
-import { useToast } from "../../../contexts/ToastContext";
-import { STORAGE_BUCKETS } from "../../../lib/utils/storageBucketConfig";
+import { getBrowserSupabase } from "../../../../lib/supabase/client";
+import { useToast } from "../../../../contexts/ToastContext";
+import { STORAGE_BUCKETS } from "../../../../lib/utils/storageBucketConfig";
 import Image from "next/image";
-import { usePreviousPageBreadcrumb } from "../../../hooks/usePreviousPageBreadcrumb";
-import { useRealtimeBusinessStats, useRealtimeReviews, useRealtimeStatus } from "../../../hooks/useRealtime";
-import { LiveIndicator } from "../../../components/Realtime/RealtimeIndicators";
-import { useOwnerBusinessDashboard } from "../../../hooks/useOwnerBusinessDashboard";
+import { usePreviousPageBreadcrumb } from "../../../../hooks/usePreviousPageBreadcrumb";
+import { useRealtimeBusinessStats, useRealtimeReviews, useRealtimeStatus } from "../../../../hooks/useRealtime";
+import { LiveIndicator } from "../../../../components/Realtime/RealtimeIndicators";
+import { useOwnerBusinessDashboard } from "../../../../hooks/useOwnerBusinessDashboard";
 
 export default function OwnerBusinessDashboard() {
   const router = useRouter();
@@ -160,7 +160,7 @@ export default function OwnerBusinessDashboard() {
         return;
       }
       showToast("Business deleted", "sage", 3000);
-      const { notifyBusinessDeleted } = await import("../../../lib/utils/businessUpdateEvents");
+      const { notifyBusinessDeleted } = await import("../../../../lib/utils/businessUpdateEvents");
       notifyBusinessDeleted(business.id);
       setIsDeleteDialogOpen(false);
       router.push("/my-businesses");
@@ -176,7 +176,7 @@ export default function OwnerBusinessDashboard() {
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
 
-    import('../../../lib/utils/businessUpdateEvents').then(({ businessUpdateEvents }) => {
+    import('../../../../lib/utils/businessUpdateEvents').then(({ businessUpdateEvents }) => {
       unsubscribe = businessUpdateEvents.onDelete((deletedBusinessId: string) => {
         if (deletedBusinessId === businessId) {
           router.push('/my-businesses');
@@ -271,7 +271,7 @@ export default function OwnerBusinessDashboard() {
       setBusiness(prev => prev ? { ...prev, image_url: publicUrl } : null);
       showToast('Profile picture updated successfully!', 'success', 3000);
 
-      const { notifyBusinessUpdated } = await import('../../../lib/utils/businessUpdateEvents');
+      const { notifyBusinessUpdated } = await import('../../../../lib/utils/businessUpdateEvents');
       notifyBusinessUpdated(businessId);
     } catch (error: any) {
       console.error('[Owner Dashboard] Error uploading profile picture:', error);

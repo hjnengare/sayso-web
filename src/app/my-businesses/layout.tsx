@@ -1,6 +1,0 @@
-import { ReactNode } from "react";
-import PortalLayout from "../components/BusinessPortal/PortalLayout";
-
-export default function MyBusinessesLayout({ children }: { children: ReactNode }) {
-  return <PortalLayout>{children}</PortalLayout>;
-}

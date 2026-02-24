@@ -5,13 +5,13 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronRight } from "lucide-react";
-import type { Business } from "../components/BusinessCard/BusinessCard";
+import type { Business } from "../../components/BusinessCard/BusinessCard";
 import {
   getCategoryLabelFromBusiness,
   getCategorySlugFromBusiness,
   getSubcategoryPlaceholderFromCandidates,
   isPlaceholderImage,
-} from "../utils/subcategoryPlaceholders";
+} from "../../utils/subcategoryPlaceholders";
 
 const FONT_STACK = "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif";
 

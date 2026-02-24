@@ -25,7 +25,7 @@ import { useToast } from "@/app/contexts/ToastContext";
 import { PageLoader } from "@/app/components/Loader";
 import { usePreviousPageBreadcrumb } from "@/app/hooks/usePreviousPageBreadcrumb";
 import { authStyles } from "@/app/components/Auth/Shared/authStyles";
-import { animations } from "@/app/add-business/components/types";
+import { animations } from "@/app/(business-portal)/add-business/components/types";
 import { BusinessOwnershipService } from "@/app/lib/services/businessOwnershipService";
 import { ImageUploadService } from "@/app/lib/services/imageUploadService";
 

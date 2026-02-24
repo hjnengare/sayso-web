@@ -5,12 +5,12 @@ import { useRouter } from "next/navigation";
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { ChevronRight, ChevronLeft, AlertCircle } from "lucide-react";
 import { m, AnimatePresence } from "framer-motion";
-import { useToast } from "../contexts/ToastContext";
-import { useAuth } from "../contexts/AuthContext";
-import { PageLoader } from "../components/Loader";
-import { usePreviousPageBreadcrumb } from "../hooks/usePreviousPageBreadcrumb";
+import { useToast } from "../../contexts/ToastContext";
+import { useAuth } from "../../contexts/AuthContext";
+import { PageLoader } from "../../components/Loader";
+import { usePreviousPageBreadcrumb } from "../../hooks/usePreviousPageBreadcrumb";
 import dynamic from "next/dynamic";
-import { authStyles } from "../components/Auth/Shared/authStyles";
+import { authStyles } from "../../components/Auth/Shared/authStyles";
 import { Urbanist } from "next/font/google";
 
 // Import extracted components

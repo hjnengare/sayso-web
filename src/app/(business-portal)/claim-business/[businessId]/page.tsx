@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useAuth } from "../../contexts/AuthContext";
-import { useToast } from "../../contexts/ToastContext";
-import { getBrowserSupabase } from "../../lib/supabase/client";
-import PhoneOtpModal, { type PhoneOtpSessionState } from "../../components/BusinessClaim/PhoneOtpModal";
+import { useAuth } from "../../../contexts/AuthContext";
+import { useToast } from "../../../contexts/ToastContext";
+import { getBrowserSupabase } from "../../../lib/supabase/client";
+import PhoneOtpModal, { type PhoneOtpSessionState } from "../../../components/BusinessClaim/PhoneOtpModal";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -18,7 +18,7 @@ import {
   AlertCircle,
   MapPin,
 } from "lucide-react";
-import { Loader } from "../../components/Loader";
+import { Loader } from "../../../components/Loader";
 
 const FONT = "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif";
 const ICON_CHIP_CLASS =

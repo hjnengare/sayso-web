@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useAuth } from "../contexts/AuthContext";
-import { useSimpleBusinessSearch } from "../hooks/useSimpleBusinessSearch";
+import { useAuth } from "../../contexts/AuthContext";
+import { useSimpleBusinessSearch } from "../../hooks/useSimpleBusinessSearch";
 import {
   Search,
   Store,
@@ -16,11 +16,11 @@ import {
   Loader2,
 } from "lucide-react";
 import { ChevronRight } from "lucide-react";
-import { PageLoader, Loader } from "../components/Loader";
+import { PageLoader, Loader } from "../../components/Loader";
 import Link from "next/link";
 import { Suspense } from "react";
-import { usePreviousPageBreadcrumb } from "../hooks/usePreviousPageBreadcrumb";
-import { useUserBusinessClaims } from "../hooks/useUserBusinessClaims";
+import { usePreviousPageBreadcrumb } from "../../hooks/usePreviousPageBreadcrumb";
+import { useUserBusinessClaims } from "../../hooks/useUserBusinessClaims";
 
 const ICON_CHIP_CLASS =
   "inline-flex items-center justify-center rounded-full bg-off-white/80 text-charcoal/85 transition-colors duration-200 hover:bg-off-white/90";

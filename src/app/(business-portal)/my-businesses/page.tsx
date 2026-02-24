@@ -4,10 +4,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 import { getBrowserSupabase } from "@/app/lib/supabase/client";
-import { useOwnerBusinessesList } from "../hooks/useOwnerBusinessesList";
-import SkeletonList from "../components/shared/skeletons/SkeletonList";
+import { useOwnerBusinessesList } from "../../hooks/useOwnerBusinessesList";
+import SkeletonList from "../../components/shared/skeletons/SkeletonList";
 
 import {
   Store,
@@ -18,7 +18,7 @@ import {
   Plus,
   Loader2,
 } from "lucide-react";
-import type { Business } from "../components/BusinessCard/BusinessCard";
+import type { Business } from "../../components/BusinessCard/BusinessCard";
 import MyBusinessesTable from "./MyBusinessesTable";
 
 type ListingTypeFilter = "all" | "event" | "special";
@@ -202,7 +202,7 @@ export default function MyBusinessesPage() {
 
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
-    import("../lib/utils/businessUpdateEvents")
+    import("../../lib/utils/businessUpdateEvents")
       .then(({ businessUpdateEvents }) => {
         unsubscribe = businessUpdateEvents.onDelete((deletedBusinessId: string) => {
           setOwnerListings((prev) => prev.filter((l) => l.businessId !== deletedBusinessId));
