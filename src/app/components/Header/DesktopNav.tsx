@@ -242,7 +242,7 @@ export default function DesktopNav(props: DesktopNavProps) {
   // Sliding pill: show on hovered item, fall back to active item when idle
   const showPill = (key: string, isActive: boolean) =>
     hoveredNavKey === key || (hoveredNavKey === null && isActive);
-  const pillClass = `absolute inset-0 rounded-full ${whiteText ? "bg-white/[0.13]" : "bg-charcoal/[0.07]"}`;
+  const pillClass = "absolute inset-0 rounded-full bg-transparent";
   const pillTransition = { type: "spring" as const, stiffness: 480, damping: 36, mass: 0.5 };
 
   // Keep runtime stable if account type isn't ready yet
