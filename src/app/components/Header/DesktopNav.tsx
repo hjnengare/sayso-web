@@ -535,8 +535,8 @@ export default function DesktopNav(props: DesktopNavProps) {
 
   const renderIcons = () => (
     <div className="flex items-center justify-end gap-2 min-w-0">
-      {/* Notifications */}
-      {isGuest ? (
+      {/* Notifications (personal accounts only) */}
+      {!isBusinessAccountUser && (isGuest ? (
         <OptimizedLink
           href="/onboarding"
           className={`${iconWrapClass(false)} cursor-pointer pointer-events-auto select-none relative z-[2]`}
@@ -573,7 +573,7 @@ export default function DesktopNav(props: DesktopNavProps) {
             </span>
           )}
         </OptimizedLink>
-      )}
+      ))}
 
       {/* Personal actions (keep Saved closer to Profile) */}
       {!isBusinessAccountUser ? (

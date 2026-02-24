@@ -279,7 +279,11 @@ function PersonalNotificationList(props: NotificationListProps) {
 
 export default function NotificationsPage() {
   usePredefinedPageTitle('notifications');
+  const router = useRouter();
   const { user } = useAuth();
+  const userCurrentRole =
+    user?.profile?.account_role || user?.profile?.role || "user";
+  const isBusinessAccountUser = userCurrentRole === "business_owner";
 
   const {
     notifications: personalNotifications,
@@ -299,7 +303,16 @@ export default function NotificationsPage() {
     return () => setIsRealtimeConnected(false);
   }, [user?.id]);
 
+  useEffect(() => {
+    if (!isBusinessAccountUser) return;
+    router.replace("/my-businesses");
+  }, [isBusinessAccountUser, router]);
+
   const isLoading = isPersonalLoading;
+
+  if (isBusinessAccountUser) {
+    return <PageLoader size="md" variant="wavy" color="sage" />;
+  }
 
   return (
     <div

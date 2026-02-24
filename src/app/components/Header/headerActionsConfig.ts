@@ -29,7 +29,6 @@ const MIDDLEWARE_ALLOWED_BUSINESS_NAV_ROUTES = new Set<string>([
   "/add-special",
   "/settings",
   "/dm",
-  "/notifications",
 ]);
 
 export const DISCOVER_LINKS: readonly NavLink[] = [
@@ -61,6 +60,7 @@ export const ACTION_BUTTONS: readonly ActionButtonDefinition[] = [
     href: '/notifications',
     label: 'Notifications',
     requiresAuth: true,
+    requiresNotBusinessOwner: true,
     icon: 'bell',
     showOnMobile: true,
     showOnDesktop: true,
