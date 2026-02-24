@@ -161,14 +161,50 @@ export default function Header({
     return list.slice(0, 6);
   }, [suggestionResults]);
 
-  const headerClassName =
-    "sticky top-0 left-0 right-0 w-full z-50 pt-[var(--safe-area-top)]";
-  const headerSurfaceClass = "bg-navbar-bg shadow-md   ";
-    
+  const isHomePage = pathname === "/" || pathname === "/home";
+  const isHomepageHeroOverlay = isHomePage && urlSearchQuery.trim().length === 0;
+  const [isHomepageAtTop, setIsHomepageAtTop] = useState(() =>
+    typeof window === "undefined" ? true : window.scrollY <= 0.5
+  );
+
+  useEffect(() => {
+    if (!isHomepageHeroOverlay) {
+      setIsHomepageAtTop(true);
+      return;
+    }
+
+    let rafId = 0;
+    const updateScrollState = () => {
+      const nextAtTop = window.scrollY <= 0.5;
+      setIsHomepageAtTop((prev) => (prev === nextAtTop ? prev : nextAtTop));
+    };
+
+    const onScroll = () => {
+      if (rafId) return;
+      rafId = window.requestAnimationFrame(() => {
+        rafId = 0;
+        updateScrollState();
+      });
+    };
+
+    updateScrollState();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      if (rafId) window.cancelAnimationFrame(rafId);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, [isHomepageHeroOverlay]);
+
+  const headerClassName = `${
+    isHomepageHeroOverlay ? "fixed" : "sticky"
+  } top-0 left-0 right-0 w-full z-50 pt-[var(--safe-area-top)] transition-colors duration-300 ease-out`;
+  const headerSurfaceClass =
+    isHomepageHeroOverlay && isHomepageAtTop
+      ? "bg-transparent shadow-none"
+      : "bg-navbar-bg shadow-md";
 
   const isPersonalLayout =
     !effectiveIsBusinessAccountUser && !effectiveIsAdminUser;
-  const isHomePage = pathname === "/" || pathname === "/home";
 
   // Admin nav items
   const ADMIN_NAV = [

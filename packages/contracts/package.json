@@ -1,0 +1,19 @@
+{
+  "name": "@sayso/contracts",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Shared API/type contracts for Sayso web and mobile clients",
+  "license": "UNLICENSED",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\""
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

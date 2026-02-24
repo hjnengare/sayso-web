@@ -87,6 +87,10 @@ OPENAI_API_KEY=sk-...
 
 # Event ingestion (optional)
 TICKETMASTER_API_KEY=...
+
+# Mobile push dispatch (optional for Expo app)
+PUSH_DISPATCH_SECRET=...
+EXPO_ACCESS_TOKEN=...
 ```
 
 ### 3. Run locally
@@ -171,6 +175,8 @@ src/app/
 ├── hooks/              # Custom hooks
 ├── lib/                # Utilities, SWR config, SEO helpers
 └── styles/             # Global CSS overrides
+
+mobile/sayso-mobile/    # Expo React Native scaffold (bootstrap; move to separate repo for production)
 ```
 
 ---
