@@ -357,7 +357,7 @@ export default function NotificationsPage() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)]" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(114,47,55,0.08)_0%,_transparent_50%)]" />
 
-      <main className="flex-1 flex flex-col relative z-10">
+      <main className="min-h-[100dvh] flex-1 flex flex-col relative z-10">
         <div className="flex-1 flex flex-col pb-12 sm:pb-16 md:pb-20">
           <m.div
             className="mx-auto w-full max-w-[2000px] px-2 relative mb-4"
