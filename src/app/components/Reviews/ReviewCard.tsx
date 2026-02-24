@@ -18,6 +18,7 @@ import { useReviewSubmission } from '../../hooks/useReviews';
 import { getDisplayUsername } from '../../utils/generateUsername';
 import { ConfirmationDialog } from '@/app/components/molecules/ConfirmationDialog/ConfirmationDialog';
 import BadgePill, { BadgePillData } from '../Badges/BadgePill';
+import VerifiedBadge from '../VerifiedBadge/VerifiedBadge';
 import { isOptimisticId, isValidUUID } from '../../lib/utils/validation';
 
 interface ReviewCardProps {
@@ -377,15 +378,13 @@ function ReviewCard({
                       review.user_id
                     )}
                   </span>
-                  <span
-                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
-                      isAnonymousReview
-                        ? "bg-charcoal/10 text-charcoal/70"
-                        : "bg-card-bg/15 text-sage"
-                    }`}
-                  >
-                    {isAnonymousReview ? "Anonymous" : "Verified account"}
-                  </span>
+                  {isAnonymousReview ? (
+                    <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold bg-charcoal/10 text-charcoal/70">
+                      Anonymous
+                    </span>
+                  ) : (
+                    <VerifiedBadge size="sm" />
+                  )}
                 </div>
                 {/* Achievement badges — review author's earned badges */}
                 {userBadges.length > 0 && (
