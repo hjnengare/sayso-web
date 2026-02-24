@@ -287,7 +287,7 @@ function ClaimBusinessPageContent() {
 
                   {/* Ownership Pricing Disclaimer */}
                   <div
-                    className="mb-8 rounded-[12px] bg-navbar-bg/90 p-4 sm:p-5 shadow-sm"
+                    className="mb-8 rounded-[12px] bg-white border border-charcoal/10 p-4 sm:p-5 shadow-sm"
                     role="note"
                     aria-label="Business ownership pricing notice"
                   >
@@ -296,10 +296,10 @@ function ClaimBusinessPageContent() {
                         <AlertCircle className="h-4 w-4" />
                       </span>
                       <div>
-                        <p className="font-urbanist text-sm sm:text-base font-semibold text-white" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                        <p className="font-urbanist text-sm sm:text-base font-semibold text-charcoal" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                           Business Ownership Notice
                         </p>
-                        <p className="mt-1 font-urbanist text-sm sm:text-base leading-relaxed text-white/85" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                        <p className="mt-1 font-urbanist text-sm sm:text-base leading-relaxed text-charcoal/75" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                           {ownershipPricingNotice}
                         </p>
                       </div>
@@ -467,19 +467,19 @@ function ClaimBusinessPageContent() {
                   )}
 
                   {/* Help Section */}
-                  <div className="mt-8 sm:mt-12 mb-8 sm:mb-12 p-4 sm:p-6 bg-card-bg border border-sage/20 rounded-[12px] shadow-md">
-                    <h3 className="font-urbanist text-base sm:text-lg font-semibold text-white mb-2 px-1" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                  <div className="mt-8 sm:mt-12 mb-8 sm:mb-12 p-4 sm:p-6 bg-white border border-charcoal/10 rounded-[12px] shadow-sm">
+                    <h3 className="font-urbanist text-base sm:text-lg font-semibold text-charcoal mb-2 px-1" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                       Need help claiming your business?
                     </h3>
-                    <p className="font-urbanist text-sm sm:text-base text-white/90 mb-4 sm:mb-5 break-keep leading-relaxed" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', wordBreak: 'normal', overflowWrap: 'normal', whiteSpace: 'normal', hyphens: 'none', WebkitHyphens: 'none', MozHyphens: 'none', msHyphens: 'none' }}>
+                    <p className="font-urbanist text-sm sm:text-base text-charcoal/75 mb-4 sm:mb-5 break-keep leading-relaxed" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', wordBreak: 'normal', overflowWrap: 'normal', whiteSpace: 'normal', hyphens: 'none', WebkitHyphens: 'none', MozHyphens: 'none', msHyphens: 'none' }}>
                       Our business verification process is quick and easy. You'll need to provide proof of ownership
                       or management authorisation.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3">
                       <Link
                         href="mailto:info@sayso.com?subject=Need%20help%20claiming%20my%20business&body=Please%20include%20your%20business%20name%2C%20location%2C%20and%20any%20documents%20you%20have%20ready."
-                        className="w-full sm:w-auto px-5 py-2.5 min-h-[44px] border-2 border-white text-white rounded-full text-sm font-semibold font-urbanist
-                                         hover:bg-white hover:text-sage transition-all duration-300 active:scale-[0.98] touch-manipulation whitespace-nowrap text-center"
+                        className="w-full sm:w-auto px-5 py-2.5 min-h-[44px] border-2 border-charcoal/20 text-charcoal rounded-full text-sm font-semibold font-urbanist
+                                         hover:bg-charcoal/5 transition-all duration-300 active:scale-[0.98] touch-manipulation whitespace-nowrap text-center"
                         style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                         aria-label="Email business support for claim assistance"
                       >
