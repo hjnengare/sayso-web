@@ -10,7 +10,6 @@ import {
   X,
   Calendar,
   Tag,
-  Bell,
   Settings,
 } from "lucide-react";
 
@@ -20,7 +19,6 @@ export const PORTAL_NAV_ITEMS = [
   { href: "/add-event", label: "Add Event", icon: Calendar, exact: true },
   { href: "/add-special", label: "Add Special", icon: Tag, exact: true },
   { href: "/claim-business", label: "Claim a Business", icon: FileCheck, exact: false },
-  { href: "/notifications", label: "Notifications", icon: Bell, exact: true },
   { href: "/settings", label: "Settings", icon: Settings, exact: true },
 ] as const;
 
