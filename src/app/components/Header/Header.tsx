@@ -3,7 +3,7 @@
 
 import { useCallback, useEffect, useState, useRef, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Bell, MessageSquare, Settings, Bookmark, Search, X, Shield, FileCheck, Database, LogOut } from "lucide-react";
+import { Bell, MessageSquare, Settings, Bookmark, Search, X, Shield, FileCheck, Database, LogOut, User } from "lucide-react";
 import { m, AnimatePresence } from "framer-motion";
 import Logo from "../Logo/Logo";
 import OptimizedLink from "../Navigation/OptimizedLink";
@@ -1022,28 +1022,6 @@ export default function Header({
                   {/* Notifications */}
                   {!isMobileSearchOpen && (
                     <OptimizedLink
-                      href={messagesHref}
-                      className={`relative z-[2] w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 cursor-pointer pointer-events-auto select-none ${
-                        isMessagesActive
-                          ? "text-sage bg-card-bg/5"
-                          : whiteText
-                            ? "text-white hover:text-white/80"
-                            : "text-charcoal/80 hover:text-sage"
-                      }`}
-                      aria-label={effectiveIsGuest ? "Sign in for messages" : "Messages"}
-                    >
-                      <MessageSquare className="w-5 h-5 pointer-events-none" fill={isMessagesActive ? "currentColor" : "none"} />
-                      {(messageUnreadCount && messageUnreadCount > 0) ? (
-                        <span className="pointer-events-none absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[10px] leading-none font-extrabold tracking-tight rounded-full bg-white text-coral border border-coral/30 shadow-[0_6px_14px_rgba(0,0,0,0.2)]">
-                          {messageUnreadCount > 99 ? "99+" : messageUnreadCount}
-                        </span>
-                      ) : null}
-                    </OptimizedLink>
-                  )}
-
-                  {/* Notifications */}
-                  {!isMobileSearchOpen && (
-                    <OptimizedLink
                       href={effectiveIsGuest ? "/onboarding" : "/notifications"}
                       className={`relative z-[2] w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 cursor-pointer pointer-events-auto select-none ${
                         isNotificationsActive
@@ -1082,6 +1060,45 @@ export default function Header({
                           {savedCount > 99 ? "99+" : savedCount}
                         </span>
                       ) : null}
+                    </OptimizedLink>
+                  )}
+
+                  {/* Messages */}
+                  {!isMobileSearchOpen && (
+                    <OptimizedLink
+                      href={messagesHref}
+                      className={`relative z-[2] w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 cursor-pointer pointer-events-auto select-none ${
+                        isMessagesActive
+                          ? "text-sage bg-card-bg/5"
+                          : whiteText
+                            ? "text-white hover:text-white/80"
+                            : "text-charcoal/80 hover:text-sage"
+                      }`}
+                      aria-label={effectiveIsGuest ? "Sign in for messages" : "Messages"}
+                    >
+                      <MessageSquare className="w-5 h-5 pointer-events-none" fill={isMessagesActive ? "currentColor" : "none"} />
+                      {(messageUnreadCount && messageUnreadCount > 0) ? (
+                        <span className="pointer-events-none absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[10px] leading-none font-extrabold tracking-tight rounded-full bg-white text-coral border border-coral/30 shadow-[0_6px_14px_rgba(0,0,0,0.2)]">
+                          {messageUnreadCount > 99 ? "99+" : messageUnreadCount}
+                        </span>
+                      ) : null}
+                    </OptimizedLink>
+                  )}
+
+                  {/* Profile */}
+                  {!isMobileSearchOpen && (
+                    <OptimizedLink
+                      href={effectiveIsGuest ? "/onboarding" : "/profile"}
+                      className={`relative w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
+                        !effectiveIsGuest && isProfileActive
+                          ? "text-sage bg-card-bg/5"
+                          : whiteText
+                            ? "text-white hover:text-white/80"
+                            : "text-charcoal/80 hover:text-sage"
+                      }`}
+                      aria-label={effectiveIsGuest ? "Sign in for profile" : "Profile"}
+                    >
+                      <User className="w-5 h-5" fill={!effectiveIsGuest && isProfileActive ? "currentColor" : "none"} />
                     </OptimizedLink>
                   )}
 

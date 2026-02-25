@@ -532,132 +532,158 @@ export default function DesktopNav(props: DesktopNavProps) {
 
   const renderIcons = () => (
     <div className="flex items-center justify-end gap-2 min-w-0">
-      <OptimizedLink
-        href={messagesHref}
-        onClick={(e) => {
-          if (!isGuest) {
-            handleNavClick(messagesHref, e);
-          }
-        }}
-        className={`${iconWrapClass(isMessagesActive)} cursor-pointer pointer-events-auto select-none relative z-[2]`}
-        aria-label={isGuest ? "Sign in for messages" : "Messages"}
-      >
-        <MessageSquare
-          className={`${iconClass(isMessagesActive)} pointer-events-none`}
-          fill={isMessagesActive ? "currentColor" : "none"}
-          style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
-        />
-        {messageUnreadCount > 0 && (
-          <span className="pointer-events-none absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[10px] leading-none font-extrabold tracking-tight rounded-full bg-white text-coral border border-coral/30 shadow-[0_6px_14px_rgba(0,0,0,0.2)]">
-            {messageUnreadCount > 99 ? "99+" : messageUnreadCount}
-          </span>
-        )}
-      </OptimizedLink>
-
-      {/* Notifications (personal accounts only) */}
-      {!isBusinessAccountUser && (isGuest ? (
-        <OptimizedLink
-          href="/onboarding"
-          className={`${iconWrapClass(false)} cursor-pointer pointer-events-auto select-none relative z-[2]`}
-          aria-label="Sign in for notifications"
-        >
-          <m.span className="inline-flex" animate={bellControls}>
-            <Bell
-              className={`${iconClass(false)} pointer-events-none`}
-              fill="none"
-              style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
-            />
-          </m.span>
-        </OptimizedLink>
-      ) : (
-        <OptimizedLink
-          href="/notifications"
-          onClick={(e) => handleNavClick("/notifications", e)}
-          className={`${iconWrapClass(isNotificationsActive)} cursor-pointer pointer-events-auto select-none relative z-[2]`}
-          aria-label="Notifications"
-        >
-          <m.span className="inline-flex" animate={bellControls}>
-            <Bell
-              className={`${iconClass(isNotificationsActive)} pointer-events-none`}
-              fill={isNotificationsActive ? "currentColor" : "none"}
-              style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
-            />
-          </m.span>
-          {unreadCount > 0 && (
-            <span className="pointer-events-none absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[10px] leading-none font-extrabold tracking-tight rounded-full bg-white text-coral border border-coral/30 shadow-[0_6px_14px_rgba(0,0,0,0.2)]">
-              {unreadCount > 99 ? "99+" : unreadCount}
-            </span>
-          )}
-        </OptimizedLink>
-      ))}
-
-      {/* Personal actions (keep Saved closer to Profile) */}
       {!isBusinessAccountUser ? (
-        <div className="flex items-center gap-1">
-          {/* Saved (Bookmark) - ONLY authenticated personal users */}
-          {!isGuest && (
-            <div className="relative">
-              <OptimizedLink
-                href="/saved"
-                className={`group flex w-10 h-10 items-center justify-center rounded-lg transition-[color,transform] duration-200 ease-in-out relative lg:hover:scale-105 lg:focus-visible:scale-105 ${
-                  isSavedActive
-                    ? "text-sage bg-card-bg/5"
-                    : whiteText
-                      ? "text-white hover:text-white/85"
-                      : "text-charcoal/80 hover:text-sage"
-                }`}
-                aria-label="Saved"
-              >
-                <Bookmark
-                  className={`w-5 h-5 transition-colors duration-200 ${
-                    isSavedActive
-                      ? "text-sage"
-                      : whiteText
-                        ? "text-white group-hover:text-white/85"
-                        : "text-current group-hover:text-sage"
-                  }`}
-                  fill={isSavedActive ? "currentColor" : "none"}
+        <>
+          {/* Notifications (personal order: notifications -> saved -> messages -> profile) */}
+          {isGuest ? (
+            <OptimizedLink
+              href="/onboarding"
+              className={`${iconWrapClass(false)} cursor-pointer pointer-events-auto select-none relative z-[2]`}
+              aria-label="Sign in for notifications"
+            >
+              <m.span className="inline-flex" animate={bellControls}>
+                <Bell
+                  className={`${iconClass(false)} pointer-events-none`}
+                  fill="none"
                   style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
                 />
-                {savedCount > 0 && (
-                  <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[12px] h-5 px-1.5 text-white text-[11px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
-                    {savedCount > 99 ? "99+" : savedCount}
-                  </span>
-                )}
-              </OptimizedLink>
-            </div>
+              </m.span>
+            </OptimizedLink>
+          ) : (
+            <OptimizedLink
+              href="/notifications"
+              onClick={(e) => handleNavClick("/notifications", e)}
+              className={`${iconWrapClass(isNotificationsActive)} cursor-pointer pointer-events-auto select-none relative z-[2]`}
+              aria-label="Notifications"
+            >
+              <m.span className="inline-flex" animate={bellControls}>
+                <Bell
+                  className={`${iconClass(isNotificationsActive)} pointer-events-none`}
+                  fill={isNotificationsActive ? "currentColor" : "none"}
+                  style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
+                />
+              </m.span>
+              {unreadCount > 0 && (
+                <span className="pointer-events-none absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[10px] leading-none font-extrabold tracking-tight rounded-full bg-white text-coral border border-coral/30 shadow-[0_6px_14px_rgba(0,0,0,0.2)]">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
+            </OptimizedLink>
           )}
 
-          {/* Profile (personal only) */}
+          <div className="flex items-center gap-1">
+            {/* Saved (bookmark) */}
+            {!isGuest && (
+              <div className="relative">
+                <OptimizedLink
+                  href="/saved"
+                  className={`group flex w-10 h-10 items-center justify-center rounded-lg transition-[color,transform] duration-200 ease-in-out relative lg:hover:scale-105 lg:focus-visible:scale-105 ${
+                    isSavedActive
+                      ? "text-sage bg-card-bg/5"
+                      : whiteText
+                        ? "text-white hover:text-white/85"
+                        : "text-charcoal/80 hover:text-sage"
+                  }`}
+                  aria-label="Saved"
+                >
+                  <Bookmark
+                    className={`w-5 h-5 transition-colors duration-200 ${
+                      isSavedActive
+                        ? "text-sage"
+                        : whiteText
+                          ? "text-white group-hover:text-white/85"
+                          : "text-current group-hover:text-sage"
+                    }`}
+                    fill={isSavedActive ? "currentColor" : "none"}
+                    style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
+                  />
+                  {savedCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[12px] h-5 px-1.5 text-white text-[11px] font-bold rounded-full shadow-lg bg-gradient-to-br from-coral to-coral/90 border border-white/20">
+                      {savedCount > 99 ? "99+" : savedCount}
+                    </span>
+                  )}
+                </OptimizedLink>
+              </div>
+            )}
+
+            {/* Messages */}
+            <OptimizedLink
+              href={messagesHref}
+              onClick={(e) => {
+                if (!isGuest) {
+                  handleNavClick(messagesHref, e);
+                }
+              }}
+              className={`${iconWrapClass(isMessagesActive)} cursor-pointer pointer-events-auto select-none relative z-[2]`}
+              aria-label={isGuest ? "Sign in for messages" : "Messages"}
+            >
+              <MessageSquare
+                className={`${iconClass(isMessagesActive)} pointer-events-none`}
+                fill={isMessagesActive ? "currentColor" : "none"}
+                style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
+              />
+              {messageUnreadCount > 0 && (
+                <span className="pointer-events-none absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[10px] leading-none font-extrabold tracking-tight rounded-full bg-white text-coral border border-coral/30 shadow-[0_6px_14px_rgba(0,0,0,0.2)]">
+                  {messageUnreadCount > 99 ? "99+" : messageUnreadCount}
+                </span>
+              )}
+            </OptimizedLink>
+
+            {/* Profile */}
+            <div className="relative">
+              <OptimizedLink
+                href={isGuest ? "/onboarding" : "/profile"}
+                className={iconWrapClass(isProfileActive)}
+                aria-label={isGuest ? "Sign in" : "Profile"}
+              >
+                <User
+                  className={iconClass(isProfileActive)}
+                  fill={isProfileActive ? "currentColor" : "none"}
+                  style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
+                />
+              </OptimizedLink>
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Business actions */}
+          <OptimizedLink
+            href={messagesHref}
+            onClick={(e) => {
+              if (!isGuest) {
+                handleNavClick(messagesHref, e);
+              }
+            }}
+            className={`${iconWrapClass(isMessagesActive)} cursor-pointer pointer-events-auto select-none relative z-[2]`}
+            aria-label={isGuest ? "Sign in for messages" : "Messages"}
+          >
+            <MessageSquare
+              className={`${iconClass(isMessagesActive)} pointer-events-none`}
+              fill={isMessagesActive ? "currentColor" : "none"}
+              style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
+            />
+            {messageUnreadCount > 0 && (
+              <span className="pointer-events-none absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[10px] leading-none font-extrabold tracking-tight rounded-full bg-white text-coral border border-coral/30 shadow-[0_6px_14px_rgba(0,0,0,0.2)]">
+                {messageUnreadCount > 99 ? "99+" : messageUnreadCount}
+              </span>
+            )}
+          </OptimizedLink>
+
           <div className="relative">
             <OptimizedLink
-              href={isGuest ? "/onboarding" : "/profile"}
-              className={iconWrapClass(isProfileActive)}
-              aria-label={isGuest ? "Sign in" : "Profile"}
+              href={isGuest ? "/onboarding" : "/settings"}
+              className={iconWrapClass(isSettingsActive)}
+              aria-label={isGuest ? "Sign in" : "Settings"}
             >
-              <User
-                className={iconClass(isProfileActive)}
-                fill={isProfileActive ? "currentColor" : "none"}
+              <Settings
+                className={iconClass(isSettingsActive)}
+                fill={isSettingsActive ? "currentColor" : "none"}
                 style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
               />
             </OptimizedLink>
           </div>
-        </div>
-      ) : (
-        /* Business actions */
-        <div className="relative">
-          <OptimizedLink
-            href={isGuest ? "/onboarding" : "/settings"}
-            className={iconWrapClass(isSettingsActive)}
-            aria-label={isGuest ? "Sign in" : "Settings"}
-          >
-            <Settings
-              className={iconClass(isSettingsActive)}
-              fill={isSettingsActive ? "currentColor" : "none"}
-              style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
-            />
-          </OptimizedLink>
-        </div>
+        </>
       )}
     </div>
   );
