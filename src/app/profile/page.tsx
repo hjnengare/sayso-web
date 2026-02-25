@@ -30,7 +30,6 @@ import { LiveIndicator } from "../components/Realtime/RealtimeIndicators";
 // Import components directly for faster loading
 import Footer from "@/app/components/Footer/Footer";
 import { ReviewsList } from "@/components/organisms/ReviewsList";
-import { AchievementsList } from "@/components/organisms/AchievementsList";
 import { DangerAction } from "@/components/molecules/DangerAction";
 import { ConfirmationDialog } from "@/components/molecules/ConfirmationDialog";
 import SavedBusinessRow from "@/app/components/Saved/SavedBusinessRow";
@@ -45,13 +44,12 @@ import { getBadgePngPath } from "@/app/lib/badgeMappings";
 // SWR hooks
 import { useUserProfile } from "@/app/hooks/useUserProfile";
 import { useUserStats } from "@/app/hooks/useUserStats";
-import { useUserReviews, type Review } from "@/app/hooks/useUserReviews";
-import { useUserBadges, type UserAchievement } from "@/app/hooks/useUserBadges";
+import { useUserReviews } from "@/app/hooks/useUserReviews";
+import { useUserBadges } from "@/app/hooks/useUserBadges";
 import { useSavedBusinessesPreview } from "@/app/hooks/useSavedBusinessesDetails";
-import { GoldBanner } from "@/app/components/GoldBanner";
+import { ProfileBadgeRibbon } from "@/app/components/Badges/ProfileBadgeRibbon";
 
 // Types
-import type { EnhancedProfile, UserStats } from '@/app/lib/types/user';
 
 // Skeleton Components
 function ProfileHeaderSkeleton() {
@@ -575,13 +573,6 @@ function ProfileContent() {
     };
   });
 
-  const achievementsData = achievements.map((ua) => ({
-    name: ua.achievements.name,
-    description: ua.achievements.description,
-    icon: ua.achievements.icon,
-    earnedAt: ua.earned_at,
-  }));
-
   return (
     <>
       <style jsx global>{`
@@ -918,14 +909,6 @@ function ProfileContent() {
                           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                             {achievements.map((achievement, idx) => {
                               const correctPngPath = getBadgePngPath(achievement.achievement_id);
-                              const group = achievement.achievements.category || "general";
-                              const groupColors: Record<string, { bg: string; ring: string; accent: string }> = {
-                                explorer:   { bg: "from-blue-50 to-cyan-50/60",      ring: "ring-blue-200/50",    accent: "text-blue-600"    },
-                                specialist: { bg: "from-purple-50 to-fuchsia-50/60",  ring: "ring-purple-200/50",  accent: "text-purple-600"  },
-                                milestone:  { bg: "from-amber-50 to-yellow-50/60",    ring: "ring-amber-200/50",   accent: "text-amber-600"   },
-                                community:  { bg: "from-emerald-50 to-teal-50/60",    ring: "ring-emerald-200/50", accent: "text-emerald-600" },
-                              };
-                              const colors = groupColors[group] || { bg: "from-white to-off-white", ring: "ring-white/60", accent: "text-charcoal" };
                               return (
                                 <m.div
                                   key={achievement.achievement_id}
@@ -935,32 +918,26 @@ function ProfileContent() {
                                   whileHover={{ scale: 1.04, y: -2 }}
                                   className="cursor-default transition-shadow duration-300 hover:shadow-md"
                                 >
-                                  <GoldBanner className="rounded-2xl shadow-sm ring-1 ring-white/60   h-full">
-                                    <div className="flex flex-col items-center text-center p-4 rounded-2xl h-full">
-                                      <div className="relative w-12 h-12 mb-2">
+                                  <ProfileBadgeRibbon className="shadow-sm">
+                                    <div className="flex h-full w-full flex-col items-center justify-center text-center px-1.5 py-1 sm:px-2">
+                                      <div className="relative mb-1 h-7 w-7 sm:h-8 sm:w-8">
                                         <Image
                                           src={correctPngPath}
                                           alt={achievement.achievements.name}
-                                          width={48}
-                                          height={48}
-                                          className="w-12 h-12 object-contain drop-shadow-sm"
-                                        />
-                                        {/* Subtle shine sweep */}
-                                        <m.div
-                                          className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/40 to-transparent rounded-lg pointer-events-none"
-                                          initial={{ x: "-100%" }}
-                                          animate={{ x: "200%" }}
-                                          transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 4 + idx * 0.5 }}
+                                          width={32}
+                                          height={32}
+                                          sizes="(max-width: 640px) 28px, 32px"
+                                          className="h-7 w-7 object-contain drop-shadow-sm sm:h-8 sm:w-8"
                                         />
                                       </div>
-                                      <h4 className={`text-xs font-bold ${colors.accent} leading-tight mb-0.5`}>
+                                      <h4 className="line-clamp-1 text-[10px] font-bold leading-tight text-charcoal/95 sm:text-[11px]">
                                         {achievement.achievements.name}
                                       </h4>
-                                      <p className="text-[10px] text-charcoal/55 leading-snug line-clamp-2">
+                                      <p className="line-clamp-1 text-[9px] leading-tight text-charcoal/75 sm:line-clamp-2 sm:text-[10px]">
                                         {achievement.achievements.description}
                                       </p>
                                     </div>
-                                  </GoldBanner>
+                                  </ProfileBadgeRibbon>
                                 </m.div>
                               );
                             })}

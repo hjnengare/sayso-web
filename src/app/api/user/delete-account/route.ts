@@ -1,42 +1,61 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withUser } from '@/app/api/_lib/withAuth';
+import { getServiceSupabase } from '@/app/lib/admin';
+import { extractStoragePaths } from '@/app/lib/utils/storagePathExtraction';
+import { STORAGE_BUCKETS } from '@/app/lib/utils/storageBucketConfig';
+
+const CLAIMS_BUCKET = 'business-verification';
+
+function uniquePaths(paths: Array<string | null | undefined>): string[] {
+  return [...new Set(paths.filter((path): path is string => Boolean(path)))];
+}
+
+async function removeFromBucket(
+  bucket: string,
+  paths: string[],
+  context: string,
+) {
+  if (paths.length === 0) return;
+  const service = getServiceSupabase();
+  const { error } = await service.storage.from(bucket).remove(paths);
+  if (error) {
+    console.error(`Error deleting ${context} from storage (continuing with account deletion):`, error);
+    return;
+  }
+  console.log(`Deleted ${paths.length} ${context} file(s) from ${bucket}`);
+}
 
 export const DELETE = withUser(async (_req: NextRequest, { user, supabase }) => {
   try {
+    const service = getServiceSupabase();
+
     try {
-      const { data: files } = await supabase.storage.from('avatars').list(user.id);
+      const { data: files } = await service.storage.from('avatars').list(user.id);
       if (files && files.length > 0) {
-        const pathsToDelete = files.map(file => `${user.id}/${file.name}`);
-        await supabase.storage.from('avatars').remove(pathsToDelete);
+        const pathsToDelete = uniquePaths(files.map((file) => `${user.id}/${file.name}`));
+        await removeFromBucket('avatars', pathsToDelete, 'avatar');
       }
     } catch (storageError) {
       console.error('Error deleting avatar files:', storageError);
     }
 
     try {
-      const { data: reviews } = await supabase
+      const { data: reviews } = await service
         .from('reviews')
         .select('id')
         .eq('user_id', user.id);
 
       if (reviews && reviews.length > 0) {
         const reviewIds = reviews.map((r) => r.id);
-        const { data: images } = await supabase
+        const { data: images } = await service
           .from('review_images')
           .select('storage_path')
           .in('review_id', reviewIds);
 
-        const storagePaths = (images ?? [])
-          .map((img) => img?.storage_path)
-          .filter((path): path is string => Boolean(path));
+        const storagePaths = uniquePaths((images ?? []).map((img) => img?.storage_path));
 
         if (storagePaths.length > 0) {
-          const { error: storageError } = await supabase.storage.from('review_images').remove(storagePaths);
-          if (storageError) {
-            console.error('Error deleting review images from storage (continuing with account deletion):', storageError);
-          } else {
-            console.log(`Deleted ${storagePaths.length} review image file(s) for user ${user.id}`);
-          }
+          await removeFromBucket(STORAGE_BUCKETS.REVIEW_IMAGES, storagePaths, 'review image');
         }
       }
     } catch (storageError) {
@@ -44,27 +63,22 @@ export const DELETE = withUser(async (_req: NextRequest, { user, supabase }) => 
     }
 
     try {
-      const { data: eventReviews } = await supabase
+      const { data: eventReviews } = await service
         .from('event_reviews')
         .select('id')
         .eq('user_id', user.id);
 
       if (eventReviews && eventReviews.length > 0) {
         const eventReviewIds = eventReviews.map((r) => r.id);
-        const { data: eventImages } = await supabase
+        const { data: eventImages } = await service
           .from('event_review_images')
           .select('storage_path')
           .in('review_id', eventReviewIds);
 
-        const storagePaths = (eventImages ?? [])
-          .map((img) => img?.storage_path)
-          .filter((path): path is string => Boolean(path));
+        const storagePaths = uniquePaths((eventImages ?? []).map((img) => img?.storage_path));
 
         if (storagePaths.length > 0) {
-          const { error: storageError } = await supabase.storage.from('review_images').remove(storagePaths);
-          if (storageError) {
-            console.error('Error deleting event review images from storage (continuing):', storageError);
-          }
+          await removeFromBucket(STORAGE_BUCKETS.REVIEW_IMAGES, storagePaths, 'event review image');
         }
       }
     } catch (storageError) {
@@ -72,27 +86,22 @@ export const DELETE = withUser(async (_req: NextRequest, { user, supabase }) => 
     }
 
     try {
-      const { data: specialReviews } = await supabase
+      const { data: specialReviews } = await service
         .from('special_reviews')
         .select('id')
         .eq('user_id', user.id);
 
       if (specialReviews && specialReviews.length > 0) {
         const specialReviewIds = specialReviews.map((r) => r.id);
-        const { data: specialImages } = await supabase
+        const { data: specialImages } = await service
           .from('special_review_images')
           .select('storage_path')
           .in('review_id', specialReviewIds);
 
-        const storagePaths = (specialImages ?? [])
-          .map((img) => img?.storage_path)
-          .filter((path): path is string => Boolean(path));
+        const storagePaths = uniquePaths((specialImages ?? []).map((img) => img?.storage_path));
 
         if (storagePaths.length > 0) {
-          const { error: storageError } = await supabase.storage.from('review_images').remove(storagePaths);
-          if (storageError) {
-            console.error('Error deleting special review images from storage (continuing):', storageError);
-          }
+          await removeFromBucket(STORAGE_BUCKETS.REVIEW_IMAGES, storagePaths, 'special review image');
         }
       }
     } catch (storageError) {
@@ -100,43 +109,57 @@ export const DELETE = withUser(async (_req: NextRequest, { user, supabase }) => 
     }
 
     try {
-      const { data: businesses } = await supabase
+      const { data: businesses } = await service
         .from('businesses')
         .select('id')
         .eq('owner_id', user.id);
 
       if (businesses && businesses.length > 0) {
         const businessIds = businesses.map(b => b.id);
-        const { data: businessImages } = await supabase
+        const { data: businessImages } = await service
           .from('business_images')
           .select('url')
           .in('business_id', businessIds);
 
-        const allImageUrls: string[] = [];
-        if (businessImages) {
-          allImageUrls.push(...businessImages.map(img => img.url).filter(Boolean));
-        }
-
-        if (allImageUrls.length > 0) {
-          const { extractStoragePaths } = await import('../../../lib/utils/storagePathExtraction');
-          const storagePaths = extractStoragePaths(allImageUrls);
-
-          if (storagePaths.length > 0) {
-            const { STORAGE_BUCKETS } = await import('@/app/lib/utils/storageBucketConfig');
-            const { error: storageError } = await supabase.storage
-              .from(STORAGE_BUCKETS.BUSINESS_IMAGES)
-              .remove(storagePaths);
-
-            if (storageError) {
-              console.warn('Error deleting business images from storage (continuing with account deletion):', storageError);
-            } else {
-              console.log(`Deleted ${storagePaths.length} business image files for user ${user.id}`);
-            }
-          }
+        const imageUrls = uniquePaths((businessImages ?? []).map((img) => img?.url));
+        if (imageUrls.length > 0) {
+          const storagePaths = uniquePaths(extractStoragePaths(imageUrls));
+          await removeFromBucket(STORAGE_BUCKETS.BUSINESS_IMAGES, storagePaths, 'business image');
         }
       }
     } catch (storageError) {
       console.error('Error deleting business images:', storageError);
+    }
+
+    try {
+      const { data: claims } = await service
+        .from('business_claims')
+        .select('id')
+        .eq('claimant_user_id', user.id);
+
+      if (claims && claims.length > 0) {
+        const claimIds = claims.map((claim) => claim.id);
+
+        const [{ data: docsV2 }, { data: docsV1 }] = await Promise.all([
+          service
+            .from('business_claim_documents')
+            .select('storage_path')
+            .in('claim_id', claimIds),
+          service
+            .from('claim_documents')
+            .select('storage_path')
+            .in('claim_id', claimIds),
+        ]);
+
+        const claimDocPaths = uniquePaths([
+          ...(docsV2 ?? []).map((doc) => doc?.storage_path),
+          ...(docsV1 ?? []).map((doc) => doc?.storage_path),
+        ]);
+
+        await removeFromBucket(CLAIMS_BUCKET, claimDocPaths, 'claim document');
+      }
+    } catch (storageError) {
+      console.error('Error deleting claim documents:', storageError);
     }
 
     const { error } = await supabase.rpc('delete_user_account', { p_user_id: user.id });
