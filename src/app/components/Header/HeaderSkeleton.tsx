@@ -30,7 +30,7 @@ export default function HeaderSkeleton({
               <div className={`w-[70px] h-6 sm:w-[80px] sm:h-7 rounded-md ${sh}`} />
             </div>
 
-            {/* Right-side icons: search · bell · bookmark · message · profile · menu */}
+            {/* Right-side icons: search · bell · message · profile · menu */}
             <div className="flex items-center gap-1 ml-auto">
               {showSearch && (
                 <div className={`w-10 h-10 rounded-lg ${sh}`} style={{ animationDelay: '0ms' }} />
@@ -39,7 +39,6 @@ export default function HeaderSkeleton({
               <div className={`w-10 h-10 rounded-lg ${sh}`} style={{ animationDelay: '160ms' }} />
               <div className={`w-10 h-10 rounded-lg ${sh}`} style={{ animationDelay: '240ms' }} />
               <div className={`w-10 h-10 rounded-lg ${sh}`} style={{ animationDelay: '320ms' }} />
-              <div className={`w-10 h-10 rounded-lg ${sh}`} style={{ animationDelay: '400ms' }} />
             </div>
           </div>
 

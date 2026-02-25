@@ -105,7 +105,7 @@ export default function SavedPage() {
   return (
     <EmailVerificationGuard>
       <div
-        className="min-h-dvh flex flex-col bg-off-white relative font-urbanist"
+        className="min-h-[100dvh] flex flex-col bg-off-white relative font-urbanist"
         style={{
           fontFamily: '"Urbanist", -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
         }}
@@ -115,8 +115,8 @@ export default function SavedPage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(114,47,55,0.08)_0%,_transparent_50%)]" />
 
-        <main className="flex-1 relative z-10  ">
-          <div className="pb-12 sm:pb-16 md:pb-20">
+        <main className="min-h-[100dvh] flex-1 relative z-10">
+          <div className="min-h-[100dvh] pb-12 sm:pb-16 md:pb-20">
             <m.div
               className="mx-auto w-full max-w-[2000px] px-2 relative mb-4"
               initial={{ opacity: 0, y: -10 }}
@@ -154,11 +154,11 @@ export default function SavedPage() {
             </m.div>
 
             {isLoading ? (
-              <div className="flex items-center justify-center py-12">
+              <div className="min-h-[100dvh] flex items-center justify-center py-12">
                 <PageLoader size="md" variant="wavy" color="sage" />
               </div>
             ) : error ? (
-              <div className="pt-4 relative z-10">
+              <div className="min-h-[100dvh] pt-4 relative z-10 flex items-center justify-center">
                 <div className="text-center max-w-md mx-auto px-4">
                   <p
                     className="text-body text-charcoal/70 mb-4"
@@ -177,7 +177,7 @@ export default function SavedPage() {
               </div>
             ) : hasAnyContent ? (
               <m.div
-                className="relative z-10"
+                className="relative z-10 min-h-[100dvh]"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
@@ -299,7 +299,7 @@ export default function SavedPage() {
                 </div>
               </m.div>
             ) : (
-              <div className="relative z-10 min-h-[calc(100vh-200px)] flex items-center justify-center">
+              <div className="relative z-10 min-h-[100dvh] flex items-center justify-center">
                 <EmptySavedState />
               </div>
             )}

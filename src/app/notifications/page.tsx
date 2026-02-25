@@ -278,7 +278,7 @@ function PersonalNotificationList(props: NotificationListProps) {
 
 function NotificationsPageSkeleton() {
   return (
-    <div className="relative z-10 flex flex-col flex-1 animate-pulse">
+    <div className="relative z-10 min-h-[100dvh] flex flex-col flex-1 animate-pulse">
       <div className="mx-auto w-full max-w-[2000px] px-2 flex flex-col flex-1">
         <div className="mb-6 sm:mb-8 px-2">
           <div className="h-9 w-56 rounded-lg bg-charcoal/10" />
@@ -356,7 +356,7 @@ export default function NotificationsPage() {
 
   return (
     <div
-      className="  flex flex-col bg-off-white relative font-urbanist"
+      className="min-h-[100dvh] flex flex-col bg-off-white relative font-urbanist"
       style={{ fontFamily: '"Urbanist", -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
     >
       <div className="absolute inset-0 bg-gradient-to-br from-sage/10 via-off-white to-coral/5" />

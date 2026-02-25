@@ -3,7 +3,7 @@
 
 import { useCallback, useEffect, useState, useRef, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Bell, MessageSquare, Settings, Bookmark, Search, X, Shield, FileCheck, Database, LogOut, User } from "lucide-react";
+import { Bell, MessageSquare, Settings, Search, X, Shield, FileCheck, Database, LogOut, User } from "lucide-react";
 import { m, AnimatePresence } from "framer-motion";
 import Logo from "../Logo/Logo";
 import OptimizedLink from "../Navigation/OptimizedLink";
@@ -59,7 +59,6 @@ export default function Header({
     isDiscoverActive,
     isNotificationsActive,
     isMessagesActive,
-    isSavedActive,
     isProfileActive,
     isSettingsActive,
     isClaimBusinessActive,
@@ -1041,28 +1040,6 @@ export default function Header({
                     </OptimizedLink>
                   )}
 
-                  {/* Saved */}
-                  {!effectiveIsBusinessAccountUser && !isMobileSearchOpen && (
-                    <OptimizedLink
-                      href={effectiveIsGuest ? "/onboarding" : "/saved"}
-                      className={`relative w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
-                        !effectiveIsGuest && isSavedActive
-                          ? "text-sage bg-card-bg/5"
-                          : whiteText
-                            ? "text-white hover:text-white/80"
-                            : "text-charcoal/80 hover:text-sage"
-                      }`}
-                      aria-label={effectiveIsGuest ? "Sign in for saved items" : "Saved"}
-                    >
-                      <Bookmark className="w-5 h-5" fill={!effectiveIsGuest && isSavedActive ? "currentColor" : "none"} />
-                      {savedCount > 0 ? (
-                        <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-white text-[10px] font-bold rounded-full bg-gradient-to-br from-coral to-coral/90 border border-white/20">
-                          {savedCount > 99 ? "99+" : savedCount}
-                        </span>
-                      ) : null}
-                    </OptimizedLink>
-                  )}
-
                   {/* Messages */}
                   {!isMobileSearchOpen && (
                     <OptimizedLink
@@ -1159,27 +1136,6 @@ export default function Header({
                     {messageUnreadCount > 0 && (
                       <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-white text-[10px] font-bold rounded-full bg-gradient-to-br from-coral to-coral/90 border border-white/20">
                         {messageUnreadCount > 99 ? "99+" : messageUnreadCount}
-                      </span>
-                    )}
-                  </OptimizedLink>
-                )}
-
-                {!effectiveIsBusinessAccountUser && !effectiveIsGuest && (
-                  <OptimizedLink
-                    href="/saved"
-                    className={`relative w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
-                      isSavedActive
-                        ? "text-sage bg-card-bg/5"
-                        : whiteText
-                          ? "text-white hover:text-white/80"
-                          : "text-charcoal/80 hover:text-sage"
-                    }`}
-                    aria-label="Saved"
-                  >
-                    <Bookmark className="w-5 h-5" fill={isSavedActive ? "currentColor" : "none"} />
-                    {savedCount > 0 && (
-                      <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-white text-[10px] font-bold rounded-full bg-gradient-to-br from-coral to-coral/90 border border-white/20">
-                        {savedCount > 99 ? "99+" : savedCount}
                       </span>
                     )}
                   </OptimizedLink>

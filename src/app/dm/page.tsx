@@ -29,7 +29,7 @@ export default function DMPage() {
 
   if (authLoading || (role === 'business' && businessesLoading)) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-off-white">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-off-white">
         <div className="inline-flex items-center gap-2 text-sm text-charcoal/60" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
           <Loader2 className="h-4 w-4 animate-spin" />
           Loading messages...
@@ -47,20 +47,22 @@ export default function DMPage() {
     : undefined;
 
   return (
-    <MessagingWorkspace
-      role={role}
-      title={role === 'business' ? 'Inbox' : 'Messages'}
-      subtitle={
-        role === 'business'
-          ? 'Manage customer conversations'
-          : 'Message businesses directly'
-      }
-      viewportClassName="h-[calc(100dvh-4rem)] sm:h-[calc(100dvh-5rem)]"
-      businessOptions={businessOptions}
-      initialBusinessId={startBusinessId}
-      initialConversationId={initialConversationId}
-      startBusinessId={startBusinessId}
-      startUserId={startUserId}
-    />
+    <div className="min-h-[100dvh]">
+      <MessagingWorkspace
+        role={role}
+        title={role === 'business' ? 'Inbox' : 'Messages'}
+        subtitle={
+          role === 'business'
+            ? 'Manage customer conversations'
+            : 'Message businesses directly'
+        }
+        viewportClassName="h-[calc(100dvh-4rem)] sm:h-[calc(100dvh-5rem)]"
+        businessOptions={businessOptions}
+        initialBusinessId={startBusinessId}
+        initialConversationId={initialConversationId}
+        startBusinessId={startBusinessId}
+        startUserId={startUserId}
+      />
+    </div>
   );
 }
