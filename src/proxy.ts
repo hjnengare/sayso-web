@@ -360,7 +360,7 @@ export async function proxy(request: NextRequest) {
           }
 
           // Only redirect protected routes, allow public routes (/home is public)
-          const protectedRoutesFatal = ['/interests', '/subcategories', '/deal-breakers', '/complete', '/reviews', '/write-review', '/saved', '/dm'];
+          const protectedRoutesFatal = ['/interests', '/subcategories', '/deal-breakers', '/complete', '/reviews', '/write-review', '/saved'];
           const isProtectedRoute = protectedRoutesFatal.some(route =>
             request.nextUrl.pathname.startsWith(route)
           ) || request.nextUrl.pathname === '/profile';
@@ -427,7 +427,7 @@ export async function proxy(request: NextRequest) {
     // Onboarding routes
     '/interests', '/subcategories', '/deal-breakers', '/complete',
     // Main app routes (no /home — public)
-    '/dashboard', '/saved', '/dm',
+    '/dashboard', '/saved',
     // Content discovery routes
     '/explore', '/for-you', '/trending', '/events-specials',
     // Review routes
@@ -709,7 +709,7 @@ export async function proxy(request: NextRequest) {
     }
 
     // Business routes: Always allow
-    const isBusinessRoute = ['/claim-business', '/my-businesses', '/add-business', '/add-event', '/add-special', '/settings', '/dm'].some(route =>
+    const isBusinessRoute = ['/claim-business', '/my-businesses', '/add-business', '/add-event', '/add-special', '/settings'].some(route =>
       pathname.startsWith(route)
     );
     if (isBusinessRoute) {

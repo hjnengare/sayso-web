@@ -17,7 +17,6 @@ export default function robots(): MetadataRoute.Robots {
           '/claim-business',
           '/business/claim',
           '/settings',
-          '/dm',
           '/saved',
           '/write-review',
           '/verify-email',

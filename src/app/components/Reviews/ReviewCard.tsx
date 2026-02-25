@@ -617,20 +617,6 @@ function ReviewCard({
                 </m.button>
               )}
 
-              {/* Owner-only: Message Customer */}
-              {isOwnerView && user && review.user_id && (
-                <m.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => router.push(`/dm?user_id=${review.user_id}&business_id=${review.business_id}`)}
-                  className="flex items-center space-x-2 px-4 py-2 rounded-full transition-all duration-300 bg-coral text-white hover:bg-coral/90 font-semibold"
-                >
-                  <MessageCircle size={16} />
-                  <span className="font-urbanist text-sm">
-                    Message Customer
-                  </span>
-                </m.button>
-              )}
             </div>
 
             {!user && !isOwnerView && (

@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { PageLoader } from "../../../../components/Loader";
-import { Store, MapPin, Star, MessageSquare, Edit, ArrowLeft, Eye, TrendingUp, ChevronRight, Camera, Upload, Loader2, CheckCircle, Calendar, Trash2 } from "lucide-react";
+import { Store, MapPin, Star, Edit, ArrowLeft, Eye, TrendingUp, ChevronRight, Camera, Upload, Loader2, CheckCircle, Calendar, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { ConfirmationDialog } from "@/components/molecules/ConfirmationDialog";
 
@@ -506,25 +506,6 @@ export default function OwnerBusinessDashboard() {
                       </div>
                     </div>
 
-                    <Link
-                      href={`/dm?businessId=${business?.id || businessId}`}
-                      className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/80 backdrop-blur-xl border-none rounded-[12px] shadow-lg p-4 min-h-[120px] flex flex-col justify-between hover:shadow-md hover:border-sage/40 transition-all duration-200 block"
-                    >
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className={ICON_CHIP_MEDIUM_CLASS}>
-                          <MessageSquare className="w-4 h-4" />
-                        </span>
-                        <span className="text-sm text-charcoal/70">Conversations</span>
-                      </div>
-                      <div>
-                        <p className="text-3xl font-extrabold text-charcoal">
-                          {analytics?.newConversations ?? '--'}
-                        </p>
-                        <p className={`text-xs mt-0.5 ${(analytics?.newConversations || 0) > 0 ? 'text-navbar-bg font-medium' : 'text-charcoal/50'}`}>
-                          +{analytics?.newConversations || 0} in last 30d
-                        </p>
-                      </div>
-                    </Link>
                   </section>
 
 

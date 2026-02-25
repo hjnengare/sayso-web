@@ -183,7 +183,6 @@ export class EmailService {
                 <ul style="margin: 20px 0; padding-left: 20px;">
                   <li>Respond to customer reviews</li>
                   <li>Update business information</li>
-                  <li>Connect with customers through direct messages</li>
                   <li>View analytics and insights</li>
                 </ul>
                 

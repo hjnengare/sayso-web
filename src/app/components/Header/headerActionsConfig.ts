@@ -28,7 +28,6 @@ const MIDDLEWARE_ALLOWED_BUSINESS_NAV_ROUTES = new Set<string>([
   "/add-event",
   "/add-special",
   "/settings",
-  "/dm",
 ]);
 
 export const DISCOVER_LINKS: readonly NavLink[] = [

@@ -58,7 +58,6 @@ export const PageTitles = {
   subcategories: generatePageTitle("Categories", "Browse by category"),
   complete: generatePageTitle("Complete", "Onboarding complete"),
   verifyEmail: generatePageTitle("Verify Email", "Verify your email address"),
-  dm: generatePageTitle("Messages", "Your messages"),
   claimBusiness: generatePageTitle("Claim Business", "Claim your business listing"),
   manageBusiness: generatePageTitle("Manage Business", "Manage your business"),
   notifications: generatePageTitle("Notifications", "Stay updated with your notifications"),

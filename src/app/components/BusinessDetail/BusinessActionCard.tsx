@@ -2,7 +2,7 @@
 "use client";
 
 import { m } from "framer-motion";
-import { Facebook, Instagram, Twitter, MessageSquare } from "lucide-react";
+import { Facebook, Instagram, Twitter } from "lucide-react";
 import Link from "next/link";
 
 interface BusinessActionCardProps {
@@ -37,17 +37,6 @@ export default function BusinessActionCard({ businessSlug, businessId, isBusines
           >
             Leave a Review
           </Link>
-
-          {ownerId && !isBusinessOwner && (
-            <Link
-              href={`/dm?owner_id=${ownerId}&business_id=${businessId}`}
-              className="block w-full bg-gradient-to-br from-coral to-coral/90 text-white font-semibold py-3 px-5 rounded-full transition-all duration-300 hover:bg-coral/80 border border-white/30 shadow-md text-body-sm text-center flex items-center justify-center gap-2"
-              style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-            >
-              <MessageSquare size={18} strokeWidth={2.5} />
-              Message Owner
-            </Link>
-          )}
 
           {isBusinessOwner && (
             <Link

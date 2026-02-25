@@ -386,17 +386,6 @@ export const PageMetadata = {
       type: 'website',
     }),
 
-  dm: (): Metadata =>
-    generateSEOMetadata({
-      title: `Messages | ${SITE_NAME}`,
-      description: 'Read and send direct messages on Sayso.',
-      keywords: ['messages', 'sayso'],
-      url: '/dm',
-      noindex: true,
-      nofollow: true,
-      type: 'website',
-    }),
-
   settings: (): Metadata =>
     generateSEOMetadata({
       title: `Account settings | ${SITE_NAME}`,
