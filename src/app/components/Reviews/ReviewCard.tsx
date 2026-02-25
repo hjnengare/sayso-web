@@ -367,10 +367,18 @@ function ReviewCard({
         <div className="flex-1 min-w-0">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-3 space-y-2 md:space-y-0">
-            <div className="flex items-start sm:items-center gap-2">
-              <div className="flex flex-col gap-1">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2">
-                  <span className="font-urbanist text-lg font-600 text-charcoal-700 group-hover:text-sage transition-colors duration-300">
+            <div className="flex min-w-0 items-start sm:items-center gap-2">
+              <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                <div className="flex min-w-0 flex-nowrap items-center gap-2">
+                  <span
+                    className="min-w-0 truncate font-urbanist text-lg font-600 leading-tight text-charcoal-700 transition-colors duration-300 group-hover:text-sage"
+                    title={review.user?.name || getDisplayUsername(
+                      review.user?.username,
+                      review.user?.display_name,
+                      review.user?.email,
+                      review.user_id
+                    )}
+                  >
                     {review.user?.name || getDisplayUsername(
                       review.user?.username,
                       review.user?.display_name,
@@ -379,21 +387,28 @@ function ReviewCard({
                     )}
                   </span>
                   {isAnonymousReview ? (
-                    <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold bg-charcoal/10 text-charcoal/70">
+                    <span className="inline-flex flex-shrink-0 items-center rounded-full bg-charcoal/12 px-2 py-0.5 text-xs font-semibold text-charcoal/75">
                       Anonymous
                     </span>
                   ) : (
-                    <VerifiedBadge size="sm" />
+                    <span className="inline-flex flex-shrink-0 items-center">
+                      <VerifiedBadge size="sm" />
+                    </span>
                   )}
                 </div>
-                {/* Achievement badges — review author's earned badges */}
+                {/* Achievement badges - review author's earned badges */}
                 {userBadges.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap items-center gap-1.5">
                     {userBadges.slice(0, 3).map((badge) => (
-                      <BadgePill key={badge.id} badge={badge} size="sm" />
+                      <span
+                        key={badge.id}
+                        className="inline-flex origin-left scale-[1.03] rounded-full shadow-premium-sm sm:scale-100"
+                      >
+                        <BadgePill badge={badge} size="sm" />
+                      </span>
                     ))}
                     {userBadges.length > 3 && (
-                      <span className="inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-bold bg-charcoal/6 text-charcoal/50 border border-charcoal/10">
+                      <span className="inline-flex items-center rounded-full border border-charcoal/15 bg-charcoal/10 px-2 py-0.5 text-[10px] font-bold text-charcoal/60 shadow-premium-sm">
                         +{userBadges.length - 3}
                       </span>
                     )}
