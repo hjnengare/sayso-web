@@ -16,6 +16,7 @@ import { m, useAnimation } from "framer-motion";
 import {
   ChevronDown,
   Bell,
+  MessageSquare,
   User,
   Settings,
   Bookmark,
@@ -42,10 +43,12 @@ interface DesktopNavProps {
   discoverLinks: readonly NavLink[];
   businessLinks: readonly NavLink[];
   isNotificationsActive: boolean;
+  isMessagesActive: boolean;
   isProfileActive: boolean;
   isSettingsActive: boolean;
   savedCount: number;
   unreadCount: number;
+  messageUnreadCount: number;
   handleNavClick: (href: string, e?: ReactMouseEvent) => void;
 
   discoverDropdownRef: RefObject<HTMLDivElement>;
@@ -74,10 +77,12 @@ export default function DesktopNav(props: DesktopNavProps) {
     discoverLinks,
     businessLinks,
     isNotificationsActive,
+    isMessagesActive,
     isProfileActive,
     isSettingsActive,
     savedCount,
     unreadCount,
+    messageUnreadCount,
     handleNavClick,
     discoverDropdownRef,
     discoverMenuPortalRef,
@@ -199,6 +204,11 @@ export default function DesktopNav(props: DesktopNavProps) {
   }, [unreadCount, bellControls]);
 
   const isSavedActive = pathname === "/saved";
+  const messagesHref = isGuest
+    ? "/onboarding"
+    : isBusinessAccountUser
+      ? "/my-businesses/messages"
+      : "/dm";
 
   const baseLinkClass =
     "group capitalize px-2.5 lg:px-3.5 py-1.5 rounded-full text-sm sm:text-xs md:text-sm font-semibold relative flex items-center gap-1.5 transition-[color,opacity,transform] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] lg:hover:scale-105 lg:focus-visible:scale-105";
@@ -522,6 +532,28 @@ export default function DesktopNav(props: DesktopNavProps) {
 
   const renderIcons = () => (
     <div className="flex items-center justify-end gap-2 min-w-0">
+      <OptimizedLink
+        href={messagesHref}
+        onClick={(e) => {
+          if (!isGuest) {
+            handleNavClick(messagesHref, e);
+          }
+        }}
+        className={`${iconWrapClass(isMessagesActive)} cursor-pointer pointer-events-auto select-none relative z-[2]`}
+        aria-label={isGuest ? "Sign in for messages" : "Messages"}
+      >
+        <MessageSquare
+          className={`${iconClass(isMessagesActive)} pointer-events-none`}
+          fill={isMessagesActive ? "currentColor" : "none"}
+          style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
+        />
+        {messageUnreadCount > 0 && (
+          <span className="pointer-events-none absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[10px] leading-none font-extrabold tracking-tight rounded-full bg-white text-coral border border-coral/30 shadow-[0_6px_14px_rgba(0,0,0,0.2)]">
+            {messageUnreadCount > 99 ? "99+" : messageUnreadCount}
+          </span>
+        )}
+      </OptimizedLink>
+
       {/* Notifications (personal accounts only) */}
       {!isBusinessAccountUser && (isGuest ? (
         <OptimizedLink

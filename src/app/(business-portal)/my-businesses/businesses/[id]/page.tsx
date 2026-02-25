@@ -507,7 +507,7 @@ export default function OwnerBusinessDashboard() {
                     </div>
 
                     <Link
-                      href={`/dm?businessId=${business?.id || businessId}`}
+                      href={`/my-businesses/messages?business_id=${business?.id || businessId}`}
                       className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/80 backdrop-blur-xl border-none rounded-[12px] shadow-lg p-4 min-h-[120px] flex flex-col justify-between hover:shadow-md hover:border-sage/40 transition-all duration-200 block"
                     >
                       <div className="flex items-center gap-2 mb-2">

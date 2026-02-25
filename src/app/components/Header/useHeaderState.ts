@@ -10,6 +10,7 @@ import { useSavedItems } from "../../contexts/SavedItemsContext";
 import { useNotifications } from "../../contexts/NotificationsContext";
 import { useRequireBusinessOwner } from "../../hooks/useBusinessAccess";
 import { useAuth } from "../../contexts/AuthContext";
+import { useMessageUnreadCount } from "../../hooks/messaging";
 import {
   DISCOVER_LINKS,
   HEADER_FONT_STYLE,
@@ -28,6 +29,7 @@ export interface HeaderActiveStates {
   isSavedActive: boolean;
   isProfileActive: boolean;
   isSettingsActive: boolean;
+  isMessagesActive: boolean;
   isClaimBusinessActive: boolean;
 }
 
@@ -129,6 +131,10 @@ export const useHeaderState = ({
     hasOwnedBusinesses
   );
   const unreadCount = Math.max(0, personalUnreadCount || 0);
+  const { unreadCount: messageUnreadCount } = useMessageUnreadCount({
+    role: isBusinessAccountUser ? "business" : "user",
+    enabled: !authLoading && Boolean(user),
+  });
 
   // ============================================================================
   // REFS
@@ -195,6 +201,7 @@ export const useHeaderState = ({
     isProfileActive: pathname === "/profile" || pathname?.startsWith("/profile"),
     isSettingsActive:
       pathname === "/settings" || pathname?.startsWith("/settings"),
+    isMessagesActive: pathname === "/dm" || pathname?.startsWith("/dm") || pathname === "/my-businesses/messages" || pathname?.startsWith("/my-businesses/messages"),
     isClaimBusinessActive:
       pathname === "/claim-business" ||
       pathname?.startsWith("/claim-business"),
@@ -456,6 +463,7 @@ export const useHeaderState = ({
     // Counts
     savedCount,
     unreadCount,
+    messageUnreadCount,
 
     // Navigation
     pathname,

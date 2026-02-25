@@ -3,7 +3,7 @@
 
 import { useCallback, useEffect, useState, useRef, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Bell, Settings, Bookmark, Search, X, Shield, FileCheck, Database, LogOut } from "lucide-react";
+import { Bell, MessageSquare, Settings, Bookmark, Search, X, Shield, FileCheck, Database, LogOut } from "lucide-react";
 import { m, AnimatePresence } from "framer-motion";
 import Logo from "../Logo/Logo";
 import OptimizedLink from "../Navigation/OptimizedLink";
@@ -50,6 +50,7 @@ export default function Header({
     hasOwnedBusinesses,
     logout,
     unreadCount,
+    messageUnreadCount,
     savedCount,
     pathname,
     navLinks,
@@ -57,6 +58,7 @@ export default function Header({
     isNavReady,
     isDiscoverActive,
     isNotificationsActive,
+    isMessagesActive,
     isSavedActive,
     isProfileActive,
     isSettingsActive,
@@ -222,6 +224,11 @@ export default function Header({
   const logoHref = effectiveIsGuest
     ? "/home?guest=true" 
     : getLogoHref(effectiveIsBusinessAccountUser);
+  const messagesHref = effectiveIsGuest
+    ? "/onboarding"
+    : effectiveIsBusinessAccountUser
+      ? "/my-businesses/messages"
+      : "/dm";
 
 
 
@@ -808,10 +815,12 @@ export default function Header({
     discoverLinks: effectiveNavLinks.discoverLinks,
     businessLinks: effectiveNavLinks.businessLinks,
     isNotificationsActive,
+    isMessagesActive,
     isProfileActive,
     isSettingsActive,
     savedCount,
     unreadCount,
+    messageUnreadCount,
     handleNavClick,
     discoverDropdownRef,
     discoverMenuPortalRef,
@@ -1013,6 +1022,28 @@ export default function Header({
                   {/* Notifications */}
                   {!isMobileSearchOpen && (
                     <OptimizedLink
+                      href={messagesHref}
+                      className={`relative z-[2] w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 cursor-pointer pointer-events-auto select-none ${
+                        isMessagesActive
+                          ? "text-sage bg-card-bg/5"
+                          : whiteText
+                            ? "text-white hover:text-white/80"
+                            : "text-charcoal/80 hover:text-sage"
+                      }`}
+                      aria-label={effectiveIsGuest ? "Sign in for messages" : "Messages"}
+                    >
+                      <MessageSquare className="w-5 h-5 pointer-events-none" fill={isMessagesActive ? "currentColor" : "none"} />
+                      {(messageUnreadCount && messageUnreadCount > 0) ? (
+                        <span className="pointer-events-none absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[10px] leading-none font-extrabold tracking-tight rounded-full bg-white text-coral border border-coral/30 shadow-[0_6px_14px_rgba(0,0,0,0.2)]">
+                          {messageUnreadCount > 99 ? "99+" : messageUnreadCount}
+                        </span>
+                      ) : null}
+                    </OptimizedLink>
+                  )}
+
+                  {/* Notifications */}
+                  {!isMobileSearchOpen && (
+                    <OptimizedLink
                       href={effectiveIsGuest ? "/onboarding" : "/notifications"}
                       className={`relative z-[2] w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 cursor-pointer pointer-events-auto select-none ${
                         isNotificationsActive
@@ -1095,6 +1126,27 @@ export default function Header({
               </div>
 
               <div className="relative z-[2] flex lg:hidden items-center gap-2 ml-auto">
+                {!isMobileSearchOpen && (
+                  <OptimizedLink
+                    href={messagesHref}
+                    className={`relative w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
+                      isMessagesActive
+                        ? "text-sage bg-card-bg/5"
+                        : whiteText
+                          ? "text-white hover:text-white/80"
+                          : "text-charcoal/80 hover:text-sage"
+                    }`}
+                    aria-label={effectiveIsGuest ? "Sign in for messages" : "Messages"}
+                  >
+                    <MessageSquare className="w-5 h-5" fill={isMessagesActive ? "currentColor" : "none"} />
+                    {messageUnreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-white text-[10px] font-bold rounded-full bg-gradient-to-br from-coral to-coral/90 border border-white/20">
+                        {messageUnreadCount > 99 ? "99+" : messageUnreadCount}
+                      </span>
+                    )}
+                  </OptimizedLink>
+                )}
+
                 {!effectiveIsBusinessAccountUser && !effectiveIsGuest && (
                   <OptimizedLink
                     href="/saved"

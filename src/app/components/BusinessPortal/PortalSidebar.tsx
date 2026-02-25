@@ -6,6 +6,7 @@ import {
   Store,
   PlusCircle,
   FileCheck,
+  MessageSquare,
   ChevronRight,
   X,
   Calendar,
@@ -13,9 +14,11 @@ import {
   Settings,
 } from "lucide-react";
 import Wordmark from "../Logo/Wordmark";
+import { useMessageUnreadCount } from "@/app/hooks/messaging";
 
 export const PORTAL_NAV_ITEMS = [
   { href: "/my-businesses", label: "My Businesses", icon: LayoutDashboard, exact: true },
+  { href: "/my-businesses/messages", label: "Inbox", icon: MessageSquare, exact: true },
   { href: "/add-business", label: "Add Business", icon: PlusCircle, exact: true },
   { href: "/add-event", label: "Add Event", icon: Calendar, exact: true },
   { href: "/add-special", label: "Add Special", icon: Tag, exact: true },
@@ -29,6 +32,8 @@ interface PortalSidebarProps {
 }
 
 export default function PortalSidebar({ pathname, onClose }: PortalSidebarProps) {
+  const { unreadCount } = useMessageUnreadCount({ role: "business", enabled: true });
+
   return (
     <aside className="flex flex-col h-full bg-navbar-bg text-off-white">
       {/* Brand */}
@@ -54,6 +59,7 @@ export default function PortalSidebar({ pathname, onClose }: PortalSidebarProps)
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
         {PORTAL_NAV_ITEMS.map(({ href, label, icon: Icon, exact }) => {
           const active = exact ? pathname === href : pathname.startsWith(href);
+          const showInboxBadge = href === "/my-businesses/messages" && unreadCount > 0;
           return (
             <Link
               key={href}
@@ -67,6 +73,11 @@ export default function PortalSidebar({ pathname, onClose }: PortalSidebarProps)
             >
               <Icon className={`w-4 h-4 flex-shrink-0 ${active ? "text-white" : "text-white/50 group-hover:text-white/80"}`} />
               <span className="flex-1 font-urbanist">{label}</span>
+              {showInboxBadge && (
+                <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-coral px-1.5 text-[10px] font-bold text-white shadow-sm">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
               {active && <ChevronRight className="w-3.5 h-3.5 text-white/50" />}
             </Link>
           );
