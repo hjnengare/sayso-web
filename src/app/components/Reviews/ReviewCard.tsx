@@ -15,6 +15,7 @@ import type { ReviewWithUser } from '../../lib/types/database';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { useReviewSubmission } from '../../hooks/useReviews';
+import { useIsDesktop } from '../../hooks/useIsDesktop';
 import { getDisplayUsername } from '../../utils/generateUsername';
 import { ConfirmationDialog } from '@/app/components/molecules/ConfirmationDialog/ConfirmationDialog';
 import BadgePill, { BadgePillData } from '../Badges/BadgePill';
@@ -50,6 +51,7 @@ function ReviewCard({
   const { showToast } = useToast();
   const router = useRouter();
   const { likeReview, deleteReview } = useReviewSubmission();
+  const isDesktop = useIsDesktop();
   const isTransientReviewId = isOptimisticId(review.id) || !isValidUUID(review.id);
 
   // Helper function to check if current user owns this review with fallback logic
@@ -320,17 +322,19 @@ function ReviewCard({
 
   return (
     <m.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      whileHover={{ scale: 1.01, x: 5 }}
-      className="relative bg-gradient-to-br from-off-white via-off-white to-off-white/95 backdrop-blur-sm rounded-lg p-6 border-none transition-all duration-300 group hover:border-white/80 hover:-translate-y-1"
+      initial={isDesktop ? false : { opacity: 0, y: 20 }}
+      animate={isDesktop ? undefined : { opacity: 1, y: 0 }}
+      transition={isDesktop ? undefined : { duration: 0.5 }}
+      whileHover={isDesktop ? undefined : { scale: 1.01, x: 5 }}
+      className={`relative bg-gradient-to-br from-off-white via-off-white to-off-white/95 backdrop-blur-sm rounded-lg p-6 border-none ${
+        isDesktop ? '' : 'transition-all duration-300 group hover:border-white/80 hover:-translate-y-1'
+      }`}
     >
       <div className="flex items-start space-x-4">
         {/* Avatar */}
         <m.div
-          whileHover={{ scale: 1.1, rotate: 5 }}
-          transition={{ duration: 0.3 }}
+          whileHover={isDesktop ? undefined : { scale: 1.1, rotate: 5 }}
+          transition={isDesktop ? undefined : { duration: 0.3 }}
           className="flex-shrink-0"
         >
           {review.user.avatar_url ? (
@@ -346,7 +350,9 @@ function ReviewCard({
                   )}
                   width={48}
                   height={48}
-                  className="w-full h-full rounded-full object-cover group-hover:ring-2 group-hover:ring-sage/40 transition-all duration-300"
+                  className={`w-full h-full rounded-full object-cover ${
+                    isDesktop ? '' : 'group-hover:ring-2 group-hover:ring-sage/40 transition-all duration-300'
+                  }`}
                 />
               </div>
             </div>
@@ -371,7 +377,9 @@ function ReviewCard({
               <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                 <div className="flex min-w-0 flex-nowrap items-center gap-2">
                   <span
-                    className="min-w-0 truncate font-urbanist text-lg font-600 leading-tight text-charcoal-700 transition-colors duration-300 group-hover:text-sage"
+                    className={`min-w-0 truncate font-urbanist text-lg font-600 leading-tight text-charcoal-700 ${
+                      isDesktop ? '' : 'transition-colors duration-300 group-hover:text-sage'
+                    }`}
                     title={review.user?.name || getDisplayUsername(
                       review.user?.username,
                       review.user?.display_name,
@@ -415,65 +423,71 @@ function ReviewCard({
                   </div>
                 )}
               </div>
-              <div className="flex items-center space-x-1">
-                <svg width="0" height="0" className="absolute">
-                  <defs>
-                    <linearGradient id="reviewCardGoldStar" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#F5D547" />
-                      <stop offset="100%" stopColor="#E6A547" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-                {[...Array(5)].map((_, i) => (
-                  <m.div
-                    key={i}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: i * 0.05, duration: 0.3 }}
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      viewBox="0 0 24 24"
-                      aria-hidden
-                    >
-                      <path
-                        d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
-                        fill={i < review.rating ? "url(#reviewCardGoldStar)" : "none"}
-                        stroke={i < review.rating ? "url(#reviewCardGoldStar)" : "#9ca3af"}
-                        strokeWidth={i < review.rating ? 0 : 2}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </m.div>
-                ))}
-              </div>
             </div>
 
-            <div className="flex items-center space-x-2">
-              <span className="font-urbanist text-sm font-600 text-charcoal/60">
-                {formatDate(review.created_at)}
-              </span>
-              
+            <div className="flex items-start justify-between sm:justify-end gap-2 sm:gap-3">
+              <div className="flex flex-col items-start sm:items-end gap-1">
+                <div className="flex items-center space-x-1">
+                  <svg width="0" height="0" className="absolute">
+                    <defs>
+                      <linearGradient id="reviewCardGoldStar" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#F5D547" />
+                        <stop offset="100%" stopColor="#E6A547" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  {[...Array(5)].map((_, i) => (
+                    <m.div
+                      key={i}
+                      initial={isDesktop ? false : { scale: 0 }}
+                      animate={isDesktop ? undefined : { scale: 1 }}
+                      transition={isDesktop ? undefined : { delay: i * 0.05, duration: 0.3 }}
+                    >
+                      <svg
+                        className="w-3.5 h-3.5 sm:w-4 sm:h-4"
+                        viewBox="0 0 24 24"
+                        aria-hidden
+                      >
+                        <path
+                          d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+                          fill={i < review.rating ? "url(#reviewCardGoldStar)" : "none"}
+                          stroke={i < review.rating ? "url(#reviewCardGoldStar)" : "#9ca3af"}
+                          strokeWidth={i < review.rating ? 0 : 2}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </m.div>
+                  ))}
+                </div>
+                <span className="font-urbanist text-xs sm:text-sm font-600 text-charcoal/60">
+                  {formatDate(review.created_at)}
+                </span>
+              </div>
+               
               {/* Direct action icons - Mobile-first design */}
               <div className="flex items-center gap-1 sm:gap-1.5">
                 {isOwner && (
                   <>
                     <m.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
+                      whileHover={isDesktop ? undefined : { scale: 1.1 }}
+                      whileTap={isDesktop ? undefined : { scale: 0.9 }}
                       onClick={handleEdit}
-                      className="min-w-[44px] min-h-[44px] sm:min-w-[28px] sm:min-h-[28px] w-11 h-11 sm:w-7 sm:h-7 bg-navbar-bg rounded-full flex items-center justify-center hover:bg-navbar-bg/90 active:scale-95 transition-all duration-300 touch-manipulation"
+                      className={`min-w-[44px] min-h-[44px] sm:min-w-[28px] sm:min-h-[28px] w-11 h-11 sm:w-7 sm:h-7 bg-navbar-bg rounded-full flex items-center justify-center active:scale-95 touch-manipulation ${
+                        isDesktop ? '' : 'hover:bg-navbar-bg/90 transition-all duration-300'
+                      }`}
                       aria-label="Edit review"
                       title="Edit review"
                     >
                       <Edit className="w-5 h-5 sm:w-[18px] sm:h-[18px] text-white" />
                     </m.button>
                     <m.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
+                      whileHover={isDesktop ? undefined : { scale: 1.1 }}
+                      whileTap={isDesktop ? undefined : { scale: 0.9 }}
                       onClick={handleDelete}
-                      className="min-w-[44px] min-h-[44px] sm:min-w-[28px] sm:min-h-[28px] w-11 h-11 sm:w-7 sm:h-7 bg-navbar-bg rounded-full flex items-center justify-center hover:bg-navbar-bg/90 active:scale-95 transition-all duration-300 touch-manipulation"
+                      className={`min-w-[44px] min-h-[44px] sm:min-w-[28px] sm:min-h-[28px] w-11 h-11 sm:w-7 sm:h-7 bg-navbar-bg rounded-full flex items-center justify-center active:scale-95 touch-manipulation ${
+                        isDesktop ? '' : 'hover:bg-navbar-bg/90 transition-all duration-300'
+                      }`}
                       aria-label="Delete review"
                       title="Delete review"
                     >
@@ -499,7 +513,11 @@ function ReviewCard({
 
           {/* Review Title */}
           {review.title && (
-            <h4 className="font-urbanist text-xl font-600 text-charcoal mb-2 group-hover:text-sage transition-colors duration-300">
+            <h4
+              className={`font-urbanist text-xl font-600 text-charcoal mb-2 ${
+                isDesktop ? '' : 'group-hover:text-sage transition-colors duration-300'
+              }`}
+            >
               {review.title}
             </h4>
           )}
@@ -524,11 +542,13 @@ function ReviewCard({
               {review.tags.map((tag, index) => (
                 <m.span
                   key={tag}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: index * 0.05, duration: 0.3 }}
-                  whileHover={{ scale: 1.05 }}
-                  className="inline-flex items-center px-3 py-1 bg-card-bg/10 text-sage text-sm font-500 rounded-full border border-sage/20 hover:bg-card-bg/20 transition-colors duration-300"
+                  initial={isDesktop ? false : { opacity: 0, scale: 0.8 }}
+                  animate={isDesktop ? undefined : { opacity: 1, scale: 1 }}
+                  transition={isDesktop ? undefined : { delay: index * 0.05, duration: 0.3 }}
+                  whileHover={isDesktop ? undefined : { scale: 1.05 }}
+                  className={`inline-flex items-center px-3 py-1 bg-card-bg/10 text-sage text-sm font-500 rounded-full border border-sage/20 ${
+                    isDesktop ? '' : 'hover:bg-card-bg/20 transition-colors duration-300'
+                  }`}
                 >
                   {tag}
                 </m.span>
@@ -543,10 +563,10 @@ function ReviewCard({
                 {displayedImages?.map((image, index) => (
                   <m.div
                     key={image.id}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: index * 0.1, duration: 0.3 }}
-                    whileHover={{ scale: 1.05 }}
+                    initial={isDesktop ? false : { opacity: 0, scale: 0.8 }}
+                    animate={isDesktop ? undefined : { opacity: 1, scale: 1 }}
+                    transition={isDesktop ? undefined : { delay: index * 0.1, duration: 0.3 }}
+                    whileHover={isDesktop ? undefined : { scale: 1.05 }}
                     className="aspect-square rounded-lg overflow-hidden cursor-pointer group/image"
                     onClick={() => setSelectedImageIndex(index)}
                   >
@@ -555,7 +575,9 @@ function ReviewCard({
                       alt={image.alt_text || `Review image ${index + 1}`}
                       width={200}
                       height={200}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover/image:scale-110"
+                      className={`w-full h-full object-cover ${
+                        isDesktop ? '' : 'transition-transform duration-300 group-hover/image:scale-110'
+                      }`}
                     />
                   </m.div>
                 ))}
@@ -563,10 +585,12 @@ function ReviewCard({
 
               {!showAllImages && review.images.length > 3 && (
                 <m.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileHover={isDesktop ? undefined : { scale: 1.05 }}
+                  whileTap={isDesktop ? undefined : { scale: 0.95 }}
                   onClick={() => setShowAllImages(true)}
-                  className="text-sage hover:text-sage/80 font-urbanist text-sm font-500 flex items-center space-x-1"
+                  className={`text-sage font-urbanist text-sm font-500 flex items-center space-x-1 ${
+                    isDesktop ? '' : 'hover:text-sage/80'
+                  }`}
                 >
                   <ImageIcon size={16} />
                   <span>Show {review.images.length - 3} more images</span>
@@ -575,10 +599,12 @@ function ReviewCard({
 
               {showAllImages && review.images.length > 3 && (
                 <m.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileHover={isDesktop ? undefined : { scale: 1.05 }}
+                  whileTap={isDesktop ? undefined : { scale: 0.95 }}
                   onClick={() => setShowAllImages(false)}
-                  className="text-charcoal/60 hover:text-charcoal font-urbanist text-sm font-500 flex items-center space-x-1"
+                  className={`text-charcoal/60 font-urbanist text-sm font-500 flex items-center space-x-1 ${
+                    isDesktop ? '' : 'hover:text-charcoal'
+                  }`}
                 >
                   <ChevronUp size={16} />
                   <span>Show less</span>
@@ -596,13 +622,17 @@ function ReviewCard({
             <div className="flex items-center gap-3">
               {!isOwnerView && (
                 <m.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileHover={isDesktop ? undefined : { scale: 1.05 }}
+                  whileTap={isDesktop ? undefined : { scale: 0.95 }}
                   onClick={handleLike}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-full transition-all duration-300 ${
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-full ${
+                    isDesktop ? '' : 'transition-all duration-300'
+                  } ${
                     isLiked
                       ? 'bg-card-bg/10 text-sage'
-                      : 'text-charcoal/60 hover:bg-card-bg/10 hover:text-sage'
+                      : isDesktop
+                        ? 'text-charcoal/60'
+                        : 'text-charcoal/60 hover:bg-card-bg/10 hover:text-sage'
                   } ${loadingHelpful ? 'opacity-60 cursor-not-allowed' : ''}`}
                   disabled={!user || loadingHelpful}
                 >
@@ -616,13 +646,19 @@ function ReviewCard({
               {/* Reply button - available to all authenticated users */}
               {user && (
                 <m.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileHover={isDesktop ? undefined : { scale: 1.05 }}
+                  whileTap={isDesktop ? undefined : { scale: 0.95 }}
                   onClick={() => setShowReplyForm(!showReplyForm)}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-full transition-all duration-300 font-semibold ${
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-full font-semibold ${
+                    isDesktop ? '' : 'transition-all duration-300'
+                  } ${
                     isOwnerView
-                      ? 'bg-card-bg text-white hover:bg-card-bg/90 px-4'
-                      : 'text-charcoal/60 hover:bg-card-bg/10 hover:text-sage'
+                      ? isDesktop
+                        ? 'bg-card-bg text-white px-4'
+                        : 'bg-card-bg text-white hover:bg-card-bg/90 px-4'
+                      : isDesktop
+                        ? 'text-charcoal/60'
+                        : 'text-charcoal/60 hover:bg-card-bg/10 hover:text-sage'
                   }`}
                 >
                   <MessageCircle size={isOwnerView ? 16 : 18} />
@@ -635,10 +671,12 @@ function ReviewCard({
               {/* Owner-only: Message Customer */}
               {isOwnerView && user && review.user_id && (
                 <m.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileHover={isDesktop ? undefined : { scale: 1.05 }}
+                  whileTap={isDesktop ? undefined : { scale: 0.95 }}
                   onClick={() => router.push(`/my-businesses/messages?user_id=${review.user_id}&business_id=${review.business_id}`)}
-                  className="flex items-center space-x-2 px-4 py-2 rounded-full transition-all duration-300 bg-coral text-white hover:bg-coral/90 font-semibold"
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-full bg-coral text-white font-semibold ${
+                    isDesktop ? '' : 'transition-all duration-300 hover:bg-coral/90'
+                  }`}
                 >
                   <MessageCircle size={16} />
                   <span className="font-urbanist text-sm">
@@ -667,10 +705,14 @@ function ReviewCard({
               disabled={reportButtonDisabled}
               aria-label="Report review"
               title={isFlagged ? 'Review already reported' : 'Report review'}
-              className={`absolute bottom-4 right-4 sm:bottom-5 sm:right-5 z-10 inline-flex h-10 w-10 sm:h-9 sm:w-9 items-center justify-center rounded-full touch-manipulation transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-off-white ${
+              className={`absolute bottom-4 right-4 sm:bottom-5 sm:right-5 z-10 inline-flex h-10 w-10 sm:h-9 sm:w-9 items-center justify-center rounded-full touch-manipulation ${
+                isDesktop ? '' : 'transition-all duration-200'
+              } focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-off-white ${
                 isFlagged
                   ? 'text-red-500 bg-red-50/70 cursor-not-allowed'
-                  : 'text-charcoal/50 hover:text-red-500 hover:bg-red-50/70'
+                  : isDesktop
+                    ? 'text-charcoal/50'
+                    : 'text-charcoal/50 hover:text-red-500 hover:bg-red-50/70'
               } ${reportButtonDisabled && !isFlagged ? 'opacity-60 cursor-not-allowed' : ''}`}
             >
               {flagging ? (
@@ -685,9 +727,9 @@ function ReviewCard({
           <AnimatePresence>
             {showReplyForm && user && (
                 <m.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
+                  initial={isDesktop ? false : { opacity: 0, height: 0 }}
+                  animate={isDesktop ? undefined : { opacity: 1, height: 'auto' }}
+                  exit={isDesktop ? undefined : { opacity: 0, height: 0 }}
                   className="mt-4 pt-4 border-t border-sage/10"
                   ref={replyFormRef}
                 >
@@ -702,24 +744,28 @@ function ReviewCard({
                     />
                     <div className="flex items-center justify-end gap-2">
                       <m.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                        whileHover={isDesktop ? undefined : { scale: 1.05 }}
+                        whileTap={isDesktop ? undefined : { scale: 0.95 }}
                         onClick={() => {
                           setShowReplyForm(false);
                           setReplyText('');
                         }}
-                        className="px-4 py-2 text-sm font-semibold bg-charcoal/10 text-charcoal rounded-lg hover:bg-charcoal/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className={`px-4 py-2 text-sm font-semibold bg-charcoal/10 text-charcoal rounded-lg disabled:opacity-50 disabled:cursor-not-allowed ${
+                          isDesktop ? '' : 'hover:bg-charcoal/20 transition-colors'
+                        }`}
                         disabled={submittingReply}
                         style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                       >
                         Cancel
                       </m.button>
                       <m.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                        whileHover={isDesktop ? undefined : { scale: 1.05 }}
+                        whileTap={isDesktop ? undefined : { scale: 0.95 }}
                         onClick={handleSubmitReply}
                         disabled={!replyText.trim() || submittingReply}
-                        className="px-4 py-2 text-sm font-semibold bg-card-bg text-white rounded-lg hover:bg-card-bg/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        className={`px-4 py-2 text-sm font-semibold bg-card-bg text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 ${
+                          isDesktop ? '' : 'hover:bg-card-bg/90 transition-colors'
+                        }`}
                         style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                       >
                         <Send size={16} />
@@ -745,21 +791,25 @@ function ReviewCard({
                 const replyActionButtons = !isEditing && (isOwnerView || reply.user_id === user?.id) ? (
                   <div className="flex items-center gap-1 flex-shrink-0">
                     <m.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
+                      whileHover={isDesktop ? undefined : { scale: 1.1 }}
+                      whileTap={isDesktop ? undefined : { scale: 0.9 }}
                       onClick={() => handleEditReply(reply)}
-                      className="w-7 h-7 bg-card-bg rounded-full flex items-center justify-center hover:bg-card-bg/90 transition-colors"
+                      className={`w-7 h-7 bg-card-bg rounded-full flex items-center justify-center ${
+                        isDesktop ? '' : 'hover:bg-card-bg/90 transition-colors'
+                      }`}
                       aria-label="Edit reply"
                       title="Edit reply"
                     >
                       <Edit className="w-[18px] h-[18px] text-white" />
                     </m.button>
                     <m.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
+                      whileHover={isDesktop ? undefined : { scale: 1.1 }}
+                      whileTap={isDesktop ? undefined : { scale: 0.9 }}
                       onClick={() => handleDeleteReply(reply.id)}
                       disabled={isDeleting}
-                      className="w-7 h-7 bg-coral rounded-full flex items-center justify-center hover:bg-coral/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className={`w-7 h-7 bg-coral rounded-full flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed ${
+                        isDesktop ? '' : 'hover:bg-coral/90 transition-colors'
+                      }`}
                       aria-label="Delete reply"
                       title="Delete reply"
                     >
@@ -771,8 +821,8 @@ function ReviewCard({
                 return (
                   <m.div
                     key={reply.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    initial={isDesktop ? false : { opacity: 0, y: 10 }}
+                    animate={isDesktop ? undefined : { opacity: 1, y: 0 }}
                     className="pl-4 border-l-2 border-sage/20 bg-off-white/30 rounded-r-lg p-3 relative flex flex-col w-full min-w-0"
                   >
                     {/* Row 1: username + time (mobile: stacked/inline); desktop: same row as buttons */}
@@ -799,19 +849,23 @@ function ReviewCard({
                         />
                         <div className="flex items-center justify-end gap-2">
                           <m.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
+                            whileHover={isDesktop ? undefined : { scale: 1.05 }}
+                            whileTap={isDesktop ? undefined : { scale: 0.95 }}
                             onClick={handleCancelEdit}
-                            className="px-3 py-1.5 text-xs font-medium text-charcoal/70 hover:text-charcoal transition-colors"
+                            className={`px-3 py-1.5 text-xs font-medium text-charcoal/70 ${
+                              isDesktop ? '' : 'hover:text-charcoal transition-colors'
+                            }`}
                           >
                             Cancel
                           </m.button>
                           <m.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
+                            whileHover={isDesktop ? undefined : { scale: 1.05 }}
+                            whileTap={isDesktop ? undefined : { scale: 0.95 }}
                             onClick={() => handleSaveEdit(reply.id)}
                             disabled={!editReplyText.trim()}
-                            className="px-3 py-1.5 text-xs font-medium bg-navbar-bg text-white rounded-lg hover:bg-navbar-bg/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className={`px-3 py-1.5 text-xs font-medium bg-navbar-bg text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed ${
+                              isDesktop ? '' : 'hover:bg-navbar-bg/90 transition-colors'
+                            }`}
                           >
                             Save
                           </m.button>
@@ -840,16 +894,16 @@ function ReviewCard({
       <AnimatePresence>
         {selectedImageIndex !== null && review.images && (
           <m.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={isDesktop ? false : { opacity: 0 }}
+            animate={isDesktop ? undefined : { opacity: 1 }}
+            exit={isDesktop ? undefined : { opacity: 0 }}
             className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
             onClick={() => setSelectedImageIndex(null)}
           >
             <m.div
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.8 }}
+              initial={isDesktop ? false : { scale: 0.8 }}
+              animate={isDesktop ? undefined : { scale: 1 }}
+              exit={isDesktop ? undefined : { scale: 0.8 }}
               className="relative max-w-4xl max-h-full"
               onClick={(e) => e.stopPropagation()}
             >
@@ -861,8 +915,8 @@ function ReviewCard({
                 className="max-w-full max-h-full object-contain rounded-lg"
               />
               <m.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+                whileHover={isDesktop ? undefined : { scale: 1.1 }}
+                whileTap={isDesktop ? undefined : { scale: 0.9 }}
                 onClick={() => setSelectedImageIndex(null)}
                 className="absolute -top-4 -right-4 w-8 h-8 bg-off-white/95 backdrop-blur-xl text-black rounded-full flex items-center justify-center border-none"
               >
