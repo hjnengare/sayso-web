@@ -32,7 +32,7 @@ interface ReviewSidebarProps {
 const frostyPanel = `
   relative overflow-hidden rounded-[12px]
   bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md
-  border border-white/50 ring-1 ring-white/20
+   ring-1 ring-white/20
   shadow-lg shadow-sage/20
 `.replace(/\s+/g, " ");
 

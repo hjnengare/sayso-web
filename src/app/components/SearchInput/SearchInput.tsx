@@ -340,7 +340,7 @@ const SearchInput = forwardRef<HTMLFormElement, SearchInputProps>(
                     ? { duration: 0 }
                     : { duration: 0.22, ease: [0.16, 1, 0.3, 1] }
                 }
-                className="absolute left-0 right-0 top-[calc(100%+10px)] z-[60] rounded-[14px] border border-white/50 bg-off-white/95 backdrop-blur-xl shadow-[0_18px_50px_rgba(0,0,0,0.18),0_8px_20px_rgba(0,0,0,0.10)] overflow-hidden"
+                className="absolute left-0 right-0 top-[calc(100%+10px)] z-[60] rounded-[14px]  bg-off-white/95 backdrop-blur-xl shadow-[0_18px_50px_rgba(0,0,0,0.18),0_8px_20px_rgba(0,0,0,0.10)] overflow-hidden"
                 role="listbox"
                 aria-label="Search suggestions"
                 onMouseDown={(e) => e.preventDefault()}

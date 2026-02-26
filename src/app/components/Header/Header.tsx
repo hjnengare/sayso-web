@@ -468,7 +468,7 @@ export default function Header({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.99 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className={`absolute ${topClass} ${widthClass} z-[100] rounded-[14px] border border-white/50 bg-off-white/95 backdrop-blur-xl shadow-[0_18px_50px_rgba(0,0,0,0.18),0_8px_20px_rgba(0,0,0,0.10)] overflow-hidden`}
+            className={`absolute ${topClass} ${widthClass} z-[100] rounded-[14px]  bg-off-white/95 backdrop-blur-xl shadow-[0_18px_50px_rgba(0,0,0,0.18),0_8px_20px_rgba(0,0,0,0.10)] overflow-hidden`}
             style={mode === "desktop" ? { width: desktopWidth } : undefined}
             role="listbox"
             aria-label="Search suggestions"

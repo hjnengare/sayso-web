@@ -30,7 +30,7 @@ export const SettingsCard: React.FC<SettingsCardProps> = ({
   children,
 }) => {
   return (
-    <div className={`p-6 sm:p-8 bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-[12px] ring-1 ring-white/20 mb-6 ${className}`}>
+    <div className={`p-6 sm:p-8 bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md  rounded-[12px] ring-1 ring-white/20 mb-6 ${className}`}>
       <div className="flex items-center gap-3 mb-6">
         <div className={`grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br ${iconColorClasses[iconColor]}`}>
           <Icon className={`w-5 h-5 ${iconTextColors[iconColor]}`} />

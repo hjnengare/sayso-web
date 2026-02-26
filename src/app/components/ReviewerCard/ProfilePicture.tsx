@@ -84,7 +84,7 @@ export default function ProfilePicture({
           />
         </div>
         {badge && (
-          <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-gradient-to-br ${getUniqueBadgeColor(alt, badge)} flex items-center justify-center border border-white/50 `}>
+          <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-gradient-to-br ${getUniqueBadgeColor(alt, badge)} flex items-center justify-center  `}>
             {React.createElement(getBadgeIcon(badge), {
               className: `w-2.5 h-2.5 text-charcoal/70`,
               strokeWidth: 2.5
@@ -108,7 +108,7 @@ export default function ProfilePicture({
       />
 
       {badge && (
-        <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-gradient-to-br ${getUniqueBadgeColor(alt, badge)} flex items-center justify-center border border-white/50 `}>
+        <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-gradient-to-br ${getUniqueBadgeColor(alt, badge)} flex items-center justify-center  `}>
           {React.createElement(getBadgeIcon(badge), {
             className: `w-2.5 h-2.5 text-charcoal/70`,
             strokeWidth: 2.5

@@ -715,7 +715,7 @@ export default function BusinessEditPage() {
                                 <div className="max-w-6xl mx-auto pt-8 pb-8">
                     <div className="space-y-6">
                         {/* Basic Information Section */}
-                        <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden border border-white/50 backdrop-blur-md shadow-md ring-1 ring-white/20 px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12 animate-fade-in-up animate-delay-100">
+                        <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden  backdrop-blur-md shadow-md ring-1 ring-white/20 px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12 animate-fade-in-up animate-delay-100">
                             <div className="relative z-10">
                                 <h3 className="font-urbanist text-base font-600 text-charcoal mb-6 flex items-center gap-3">
                                     <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-sage/20 to-sage/10">
@@ -764,7 +764,7 @@ export default function BusinessEditPage() {
                         </div>
 
                         {/* Images Section */}
-                        <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden border border-white/50 backdrop-blur-md shadow-md ring-1 ring-white/20 px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12 animate-fade-in-up animate-delay-200">
+                        <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden  backdrop-blur-md shadow-md ring-1 ring-white/20 px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12 animate-fade-in-up animate-delay-200">
                             <div className="relative z-10">
                                 <h3 className="font-urbanist text-base font-600 text-charcoal mb-6 flex items-center gap-3">
                                     <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-sage/20 to-sage/10">
@@ -776,7 +776,7 @@ export default function BusinessEditPage() {
                                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
                                     {formData.images.map((image, index) => (
                                         <div key={index} className="relative group">
-                                            <div className="aspect-square rounded-sm overflow-hidden bg-white/20 border border-white/50 relative">
+                                            <div className="aspect-square rounded-sm overflow-hidden bg-white/20  relative">
                                                 {deletingImageIndex === index ? (
                                                     <div className="w-full h-full flex items-center justify-center bg-charcoal/20">
                                                         <PageLoader size="sm" variant="wavy" color="sage" />
@@ -869,7 +869,7 @@ export default function BusinessEditPage() {
                         </div>
 
                         {/* Contact Information Section */}
-                        <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden border border-white/50 backdrop-blur-md shadow-md ring-1 ring-white/20 px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12 animate-fade-in-up animate-delay-300">
+                        <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden  backdrop-blur-md shadow-md ring-1 ring-white/20 px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12 animate-fade-in-up animate-delay-300">
                             <div className="relative z-10">
                                 <h3 className="font-urbanist text-base font-600 text-charcoal mb-6 flex items-center gap-3">
                                     <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-sage/20 to-sage/10">
@@ -955,7 +955,7 @@ export default function BusinessEditPage() {
                         </div>
 
                         {/* Business Hours Section */}
-                        <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden border border-white/50 backdrop-blur-md shadow-md ring-1 ring-white/20 px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12 animate-fade-in-up">
+                        <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden  backdrop-blur-md shadow-md ring-1 ring-white/20 px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12 animate-fade-in-up">
                             <div className="relative z-10">
                                 <h3 className="font-urbanist text-base font-600 text-charcoal mb-6 flex items-center gap-3">
                                     <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-sage/20 to-sage/10">
@@ -982,7 +982,7 @@ export default function BusinessEditPage() {
                         </div>
 
                         {/* Specials Section */}
-                        <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden border border-white/50 backdrop-blur-md shadow-md ring-1 ring-white/20 px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12 animate-fade-in-up">
+                        <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden  backdrop-blur-md shadow-md ring-1 ring-white/20 px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12 animate-fade-in-up">
                             <div className="relative z-10">
                                 <div className="flex items-center justify-between mb-6">
                                     <h3 className="font-urbanist text-base font-600 text-charcoal flex items-center gap-3">
@@ -1002,7 +1002,7 @@ export default function BusinessEditPage() {
 
                                 <div className="space-y-4">
                                     {formData.specials.map((special) => (
-                                        <div key={special.id} className="bg-white/40 backdrop-blur-sm rounded-full p-4 border border-white/50 group relative">
+                                        <div key={special.id} className="bg-white/40 backdrop-blur-sm rounded-full p-4  group relative">
                                             <button
                                                 onClick={() => removeSpecial(special.id)}
                                                 className="absolute -top-2 -right-2 w-7 h-7 bg-gradient-to-br from-charcoal to-charcoal/90 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 border border-white/30 shadow-lg z-10"
@@ -1039,7 +1039,7 @@ export default function BusinessEditPage() {
                         </div>
 
                         {/* Events & Specials Management */}
-                        <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden border border-white/50 backdrop-blur-md shadow-md ring-1 ring-white/20 px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12">
+                        <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden  backdrop-blur-md shadow-md ring-1 ring-white/20 px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12">
                             <div className="relative z-10">
                                 {businessId && formData.name && (
                                     <EventsForm businessId={businessId} businessName={formData.name} />
@@ -1048,7 +1048,7 @@ export default function BusinessEditPage() {
                         </div>
 
                         {/* Danger Zone - Delete Business */}
-                        <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden border border-white/50 backdrop-blur-md shadow-md ring-1 ring-white/20 px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12">
+                        <div className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden  backdrop-blur-md shadow-md ring-1 ring-white/20 px-2 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-12 lg:py-10 xl:px-16 xl:py-12">
                             <div className="relative z-10">
                                 <div className="flex items-center gap-3 mb-4">
                                     <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-navbar-bg/20 to-navbar-bg/10">
@@ -1079,7 +1079,7 @@ export default function BusinessEditPage() {
                         <div className="flex justify-between items-center gap-3">
                             <Link
                                 href={`/business/${businessId}`}
-                                className="px-6 py-3 bg-white/40 text-charcoal rounded-full text-sm font-600 font-urbanist transition-all duration-300 hover:bg-white/60 border border-white/50"
+                                className="px-6 py-3 bg-white/40 text-charcoal rounded-full text-sm font-600 font-urbanist transition-all duration-300 hover:bg-white/60 "
                             >
                                 Cancel
                             </Link>

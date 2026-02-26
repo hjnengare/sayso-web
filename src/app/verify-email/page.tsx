@@ -962,7 +962,7 @@ export default function VerifyEmailPage() {
           </div>
 
           {/* Main Card */}
-          <div className="bg-card-bg rounded-lg p-5 sm:p-7 md:p-9 mb-4 relative overflow-hidden border border-white/50 shadow-md transition-shadow duration-300 animate-scale-in">
+          <div className="bg-card-bg rounded-lg p-5 sm:p-7 md:p-9 mb-4 relative overflow-hidden  shadow-md transition-shadow duration-300 animate-scale-in">
             <div className="text-center mb-6">
               <div className="w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center">
                 <Mail className="w-10 h-10 text-charcoal" />

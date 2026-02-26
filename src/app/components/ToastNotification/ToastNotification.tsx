@@ -97,7 +97,7 @@ export default function ToastNotification({
 
         {/* Image banner */}
         {notification.image && notification.image.trim() !== "" ? (
-          <div className="toast-banner flex-shrink-0 relative w-20 h-20 rounded-lg overflow-hidden bg-white/20 border border-white/50">
+          <div className="toast-banner flex-shrink-0 relative w-20 h-20 rounded-lg overflow-hidden bg-white/20 ">
             <Image
               src={notification.image}
               alt={notification.imageAlt || ""}
@@ -108,7 +108,7 @@ export default function ToastNotification({
             />
           </div>
         ) : (
-          <div className="toast-banner flex-shrink-0 relative w-20 h-20 rounded-lg overflow-hidden bg-white/20 border border-white/50 flex items-center justify-center">
+          <div className="toast-banner flex-shrink-0 relative w-20 h-20 rounded-lg overflow-hidden bg-white/20  flex items-center justify-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="32"

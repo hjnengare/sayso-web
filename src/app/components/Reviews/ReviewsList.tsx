@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { m } from 'framer-motion';
 import { AlertCircle, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
@@ -40,19 +40,12 @@ export default function ReviewsList({
   const isDesktop = useIsDesktop();
   
   // Use realtime reviews if businessId is provided, otherwise use initial reviews
-  const { reviews: realtimeReviews, isLive, setReviews } = useRealtimeReviews(businessId, initialReviews);
+  const { reviews: realtimeReviews, isLive } = useRealtimeReviews(businessId, initialReviews);
   const reviews = businessId ? realtimeReviews : initialReviews;
   
   // Subscribe to helpful votes for all visible reviews
   const reviewIds = reviews.map(r => r.id);
   const { helpfulCounts } = useRealtimeHelpfulVotes(businessId, reviewIds);
-
-  // Sync initial reviews when they change (e.g., from refetch)
-  useEffect(() => {
-    if (businessId && initialReviews.length !== reviews.length) {
-      setReviews(initialReviews);
-    }
-  }, [businessId, initialReviews, reviews.length, setReviews]);
 
   if (loading) {
     return (

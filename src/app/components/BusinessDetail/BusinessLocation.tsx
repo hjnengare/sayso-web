@@ -190,7 +190,7 @@ export default function BusinessLocation({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md border border-white/50 rounded-[12px] ring-1 ring-white/20 shadow-md overflow-hidden"
+                className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-md  rounded-[12px] ring-1 ring-white/20 shadow-md overflow-hidden"
             >
                 {/* Header */}
                 <div className="px-4 sm:px-6 py-4 border-b border-white/20">
