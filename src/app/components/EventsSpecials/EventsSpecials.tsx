@@ -7,7 +7,7 @@ import EventCard from "../EventCard/EventCard";
 import EventCardSkeleton from "../EventCard/EventCardSkeleton";
 import type { Event } from "../../lib/types/Event";
 import ScrollableSection from "../ScrollableSection/ScrollableSection";
-import { m } from "framer-motion";
+import { m, useReducedMotion } from "framer-motion";
 import { useMemo, useState } from "react";
 import { useIsDesktop } from "../../hooks/useIsDesktop";
 import WavyTypedTitle from "../Animations/WavyTypedTitle";
@@ -51,6 +51,7 @@ export default function EventsSpecials({
   showTypeFilters = false,
   showAllTypeFilter = false,
   dateRibbonPosition = "corner",
+  alignTitleWithFilters = false,
 }: {
   title?: string;
   events: Event[];
@@ -81,10 +82,14 @@ export default function EventsSpecials({
   showAllTypeFilter?: boolean;
   /** Override date ribbon position on cards rendered by this section. */
   dateRibbonPosition?: "corner" | "middle";
+  /** Remove title left padding so it aligns with the filter row. */
+  alignTitleWithFilters?: boolean;
 }) {
   const router = useRouter();
   const isDesktop = useIsDesktop();
+  const prefersReducedMotion = useReducedMotion();
   const [activeTypeFilter, setActiveTypeFilter] = useState<ListingTypeFilter>(null);
+  const filterEase = [0.22, 1, 0.36, 1] as const;
   const containerClass = fullBleed
     ? "w-full relative z-10 px-2 sm:px-3"
     : "mx-auto w-full max-w-[2000px] relative z-10 px-2";
@@ -110,8 +115,9 @@ export default function EventsSpecials({
 
   const hasEvents = displayEvents.length > 0;
   const hasFilteredEvents = filteredEvents.length > 0;
-  const headingClass =
-    "font-urbanist text-2xl sm:text-3xl md:text-2xl font-bold text-charcoal hover:text-sage transition-all duration-300 px-3 sm:px-4 py-1 hover:bg-card-bg/5 rounded-lg cursor-default";
+  const headingClass = `font-urbanist text-2xl sm:text-3xl md:text-2xl font-bold text-charcoal hover:text-sage transition-all duration-300 ${
+    alignTitleWithFilters ? "pl-0 pr-3 sm:pr-4 py-1" : "px-3 sm:px-4 py-1"
+  } hover:bg-card-bg/5 rounded-lg cursor-default`;
   const headingStyle = {
     fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
     fontWeight: titleFontWeight,
@@ -247,16 +253,28 @@ export default function EventsSpecials({
                 : activeTypeFilter === filter.type;
 
               return (
-                <div key={filter.type ?? "all"} className="inline-flex items-center shrink-0">
+                <m.div
+                  key={filter.type ?? "all"}
+                  initial={disableAnimations || prefersReducedMotion ? false : { opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={
+                    disableAnimations || prefersReducedMotion
+                      ? { duration: 0 }
+                      : { duration: 0.25, ease: filterEase, delay: index * 0.04 }
+                  }
+                  className="inline-flex items-center shrink-0"
+                >
                   {index > 0 && (
                     <span aria-hidden className="mx-2 text-charcoal/55">
                       |
                     </span>
                   )}
-                  <button
+                  <m.button
                     type="button"
                     onClick={() => setActiveTypeFilter(filter.type)}
                     aria-pressed={isSelected}
+                    whileHover={disableAnimations || prefersReducedMotion ? undefined : { y: -1 }}
+                    whileTap={disableAnimations || prefersReducedMotion ? undefined : { y: 1 }}
                     className={`font-urbanist text-xs sm:text-sm transition-colors duration-200 ${
                       isSelected
                         ? "text-card-bg underline underline-offset-4 decoration-1 font-600"
@@ -267,8 +285,8 @@ export default function EventsSpecials({
                     <span className={`ml-1 text-xs ${isSelected ? "opacity-95" : "opacity-70"}`}>
                       ({filter.count})
                     </span>
-                  </button>
-                </div>
+                  </m.button>
+                </m.div>
               );
             })}
           </div>

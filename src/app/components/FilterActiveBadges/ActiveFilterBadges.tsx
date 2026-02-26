@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { X, Star, MapPin, ChevronDown } from "lucide-react";
 import { FilterState } from "../FilterModal/FilterModal";
-import { m, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence, useReducedMotion } from "framer-motion";
 
 interface ActiveFilterBadgesProps {
   filters: FilterState;
@@ -21,6 +21,8 @@ export default function ActiveFilterBadges({
   const [openDropdown, setOpenDropdown] = useState<'rating' | 'distance' | null>(null);
   const ratingRef = useRef<HTMLDivElement>(null);
   const distanceRef = useRef<HTMLDivElement>(null);
+  const prefersReducedMotion = useReducedMotion();
+  const filterEase = [0.22, 1, 0.36, 1] as const;
 
   const hasActiveFilters = filters.minRating !== null || filters.distance !== null;
 
@@ -59,14 +61,31 @@ export default function ActiveFilterBadges({
   const showClearAllControl = hasActiveFilters && Boolean(onClearAll);
 
   return (
-    <div className="flex items-center overflow-x-auto whitespace-nowrap scrollbar-hide px-4 sm:px-6 py-2">
+    <m.div
+      className="flex items-center overflow-x-auto whitespace-nowrap scrollbar-hide px-4 sm:px-6 py-2"
+      initial={prefersReducedMotion ? false : { opacity: 0, y: 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.24, ease: filterEase }}
+    >
       {/* Rating Filter Pill with Dropdown */}
       {showRatingControl && (
-        <div ref={ratingRef} className="relative inline-flex items-center shrink-0">
-          <button
+        <m.div
+          ref={ratingRef}
+          className="relative inline-flex items-center shrink-0"
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={
+            prefersReducedMotion
+              ? { duration: 0 }
+              : { duration: 0.24, ease: filterEase, delay: 0.03 }
+          }
+        >
+          <m.button
             type="button"
             onClick={() => setOpenDropdown(openDropdown === 'rating' ? null : 'rating')}
             aria-pressed={openDropdown === 'rating'}
+            whileHover={prefersReducedMotion ? undefined : { y: -1 }}
+            whileTap={prefersReducedMotion ? undefined : { y: 0, scale: 0.99 }}
             className="inline-flex items-center gap-1.5 text-sm text-sage underline underline-offset-4 decoration-1 font-600 hover:text-sage/80 transition-colors duration-200"
             style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
             aria-label="Edit rating filter"
@@ -95,7 +114,7 @@ export default function ActiveFilterBadges({
             >
               <X className="w-3 h-3" />
             </span>
-          </button>
+          </m.button>
 
           <AnimatePresence>
             {openDropdown === 'rating' && (
@@ -129,7 +148,7 @@ export default function ActiveFilterBadges({
               </m.div>
             )}
           </AnimatePresence>
-        </div>
+        </m.div>
       )}
 
       {showRatingControl && (showDistanceControl || showClearAllControl) && (
@@ -140,11 +159,23 @@ export default function ActiveFilterBadges({
 
       {/* Distance Filter Pill with Dropdown */}
       {showDistanceControl && (
-        <div ref={distanceRef} className="relative inline-flex items-center shrink-0">
-          <button
+        <m.div
+          ref={distanceRef}
+          className="relative inline-flex items-center shrink-0"
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={
+            prefersReducedMotion
+              ? { duration: 0 }
+              : { duration: 0.24, ease: filterEase, delay: 0.07 }
+          }
+        >
+          <m.button
             type="button"
             onClick={() => setOpenDropdown(openDropdown === 'distance' ? null : 'distance')}
             aria-pressed={openDropdown === 'distance'}
+            whileHover={prefersReducedMotion ? undefined : { y: -1 }}
+            whileTap={prefersReducedMotion ? undefined : { y: 0, scale: 0.99 }}
             className="inline-flex items-center gap-1.5 text-sm text-coral underline underline-offset-4 decoration-1 font-600 hover:text-coral/80 transition-colors duration-200"
             style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
             aria-label="Edit distance filter"
@@ -173,7 +204,7 @@ export default function ActiveFilterBadges({
             >
               <X className="w-3 h-3" />
             </span>
-          </button>
+          </m.button>
 
           <AnimatePresence>
             {openDropdown === 'distance' && (
@@ -207,7 +238,7 @@ export default function ActiveFilterBadges({
               </m.div>
             )}
           </AnimatePresence>
-        </div>
+        </m.div>
       )}
 
       {showDistanceControl && showClearAllControl && (
@@ -218,15 +249,24 @@ export default function ActiveFilterBadges({
 
       {/* Clear All Button */}
       {showClearAllControl && (
-        <button
+        <m.button
           type="button"
           onClick={onClearAll}
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={
+            prefersReducedMotion
+              ? { duration: 0 }
+              : { duration: 0.24, ease: filterEase, delay: 0.11 }
+          }
+          whileHover={prefersReducedMotion ? undefined : { y: -1 }}
+          whileTap={prefersReducedMotion ? undefined : { y: 0, scale: 0.99 }}
           className="shrink-0 text-sm text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-500"
           style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
         >
           Clear all
-        </button>
+        </m.button>
       )}
-    </div>
+    </m.div>
   );
 }

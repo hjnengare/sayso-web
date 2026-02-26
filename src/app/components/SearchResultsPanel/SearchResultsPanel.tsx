@@ -4,6 +4,7 @@ import BusinessCard from "../BusinessCard/BusinessCard";
 import type { LiveSearchFilters, LiveSearchResult } from "@/app/hooks/useLiveSearch";
 import { useMemo } from "react";
 import LocationPromptBanner from "../Location/LocationPromptBanner";
+import { m, useReducedMotion } from "framer-motion";
 
 const DISTANCE_FILTERS: { label: string; value: number }[] = [
   { label: "1 km", value: 1 },
@@ -40,6 +41,8 @@ export default function SearchResultsPanel({
   onRatingChange,
   onResetFilters,
 }: SearchResultsPanelProps) {
+  const prefersReducedMotion = useReducedMotion();
+  const filterEase = [0.22, 1, 0.36, 1] as const;
   const hasFilters = Boolean(filters.distanceKm || filters.minRating);
   const hasCoordinateBusinesses = useMemo(
     () =>
@@ -54,12 +57,22 @@ export default function SearchResultsPanel({
   const renderFilterLink = (
     label: string,
     active: boolean,
-    onClick: () => void
+    onClick: () => void,
+    index: number
   ) => (
-    <button
+    <m.button
       type="button"
       onClick={onClick}
       aria-pressed={active}
+      initial={prefersReducedMotion ? false : { opacity: 0, y: 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={
+        prefersReducedMotion
+          ? { duration: 0 }
+          : { duration: 0.24, ease: filterEase, delay: index * 0.04 }
+      }
+      whileHover={prefersReducedMotion ? undefined : { y: -1 }}
+      whileTap={prefersReducedMotion ? undefined : { y: 0, scale: 0.99 }}
       className={`text-sm transition-colors duration-200 ${
         active
           ? "text-sage underline underline-offset-4 decoration-1 font-600"
@@ -67,7 +80,7 @@ export default function SearchResultsPanel({
       }`}
     >
       {label}
-    </button>
+    </m.button>
   );
 
   return (
@@ -88,13 +101,18 @@ export default function SearchResultsPanel({
           </div>
           <div className="flex flex-wrap gap-2">
             {hasFilters && (
-              <button
+              <m.button
                 type="button"
                 onClick={onResetFilters}
+                initial={prefersReducedMotion ? false : { opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2, ease: filterEase }}
+                whileHover={prefersReducedMotion ? undefined : { y: -1 }}
+                whileTap={prefersReducedMotion ? undefined : { y: 0, scale: 0.99 }}
                 className="text-sm text-charcoal/80 hover:text-charcoal underline underline-offset-4 decoration-1 font-600 transition-colors duration-200"
               >
                 Clear filters
-              </button>
+              </m.button>
             )}
           </div>
         </div>
@@ -115,7 +133,8 @@ export default function SearchResultsPanel({
                   {renderFilterLink(
                     filter.label,
                     filters.distanceKm === filter.value,
-                    () => onDistanceChange(filters.distanceKm === filter.value ? null : filter.value)
+                    () => onDistanceChange(filters.distanceKm === filter.value ? null : filter.value),
+                    index
                   )}
                 </div>
               ))}
@@ -137,7 +156,8 @@ export default function SearchResultsPanel({
                   {renderFilterLink(
                     filter.label,
                     filters.minRating === filter.value,
-                    () => onRatingChange(filters.minRating === filter.value ? null : filter.value)
+                    () => onRatingChange(filters.minRating === filter.value ? null : filter.value),
+                    index
                   )}
                 </div>
               ))}

@@ -72,7 +72,7 @@ export default function InlineFilters({
         },
       };
 
-  // Group animations with stagger for cascading effect
+  // Group animations with subtle stagger
   const groupVariants: any = prefersReducedMotion
     ? {
         hidden: { opacity: 0 },
@@ -89,7 +89,7 @@ export default function InlineFilters({
         },
       };
 
-  // Individual chip animations with spring physics for bouncy feel
+  // Individual filter link animation: soft fade-up with no bounce
   const chipVariants: any = prefersReducedMotion
     ? {
         hidden: { opacity: 0 },
@@ -98,18 +98,14 @@ export default function InlineFilters({
     : {
         hidden: {
           opacity: 0,
-          scale: 0.85,
-          y: 10,
+          y: 4,
         },
         visible: {
           opacity: 1,
-          scale: 1,
           y: 0,
           transition: {
-            type: "spring",
-            damping: 20,
-            stiffness: 300,
-            mass: 0.8,
+            duration: 0.24,
+            ease: [0.22, 1, 0.36, 1],
           },
         },
       };
@@ -149,8 +145,8 @@ export default function InlineFilters({
                       <m.button
                         type="button"
                         variants={chipVariants}
-                        whileHover={prefersReducedMotion ? {} : { y: -1 }}
-                        whileTap={prefersReducedMotion ? {} : { y: 1 }}
+                        whileHover={prefersReducedMotion ? undefined : { y: -1, scale: 1.01 }}
+                        whileTap={prefersReducedMotion ? undefined : { y: 0, scale: 0.99 }}
                         onClick={() => onDistanceChange(option.value)}
                         aria-pressed={isActive}
                         className={`text-sm transition-colors duration-200 ${
@@ -192,8 +188,8 @@ export default function InlineFilters({
                       <m.button
                         type="button"
                         variants={chipVariants}
-                        whileHover={prefersReducedMotion ? {} : { y: -1 }}
-                        whileTap={prefersReducedMotion ? {} : { y: 1 }}
+                        whileHover={prefersReducedMotion ? undefined : { y: -1, scale: 1.01 }}
+                        whileTap={prefersReducedMotion ? undefined : { y: 0, scale: 0.99 }}
                         onClick={() => onRatingChange(option.value)}
                         aria-pressed={isActive}
                         className={`text-sm transition-colors duration-200 flex items-center gap-1 ${
