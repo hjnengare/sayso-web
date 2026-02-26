@@ -170,7 +170,7 @@ export default function EventsSpecialsPage() {
               variants={itemVariants}
               className="list-none"
             >
-              <EventCardSkeleton />
+              <EventCardSkeleton fullWidth />
             </m.div>
           ))}
         </m.div>
@@ -205,7 +205,7 @@ export default function EventsSpecialsPage() {
             {/* Optimistic skeleton cards during load more */}
             {optimisticSkeletons > 0 && Array.from({ length: optimisticSkeletons }).map((_, idx) => (
               <div key={`skeleton-${idx}`} className="list-none">
-                <EventCardSkeleton />
+                <EventCardSkeleton fullWidth />
               </div>
             ))}
           </div>
@@ -311,7 +311,7 @@ export default function EventsSpecialsPage() {
 
           <div className="py-3 sm:py-4">
             {isLoading ? (
-              <EventsGridSkeleton count={ITEMS_PER_PAGE} />
+              <EventsGridSkeleton count={ITEMS_PER_PAGE} fullWidthCards />
             ) : isBlockingError ? (
               <div className="text-center py-20">
                 <p className="text-coral mb-4">Failed to load events & specials</p>

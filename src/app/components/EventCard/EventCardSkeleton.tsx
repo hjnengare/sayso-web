@@ -6,17 +6,23 @@ import React from "react";
  * Skeleton for EventCard — structure and dimensions match EventCard exactly
  * so loading → content transition has no layout shift.
  */
-export default function EventCardSkeleton() {
+interface EventCardSkeletonProps {
+  fullWidth?: boolean;
+}
+
+export default function EventCardSkeleton({ fullWidth = false }: EventCardSkeletonProps) {
   return (
     <li
-      className="flex w-full"
+      className={fullWidth ? "flex w-full" : "flex w-[100vw] sm:w-auto sm:w-[260px] md:w-[340px]"}
       style={{
         fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
       }}
     >
       <article
-        className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden w-full flex flex-col border-none backdrop-blur-xl shadow-md md:w-[340px] animate-pulse"
-        style={{ maxWidth: "540px" } as React.CSSProperties}
+        className={`relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden w-full flex flex-col border-none backdrop-blur-xl shadow-md animate-pulse ${
+          fullWidth ? "" : "sm:w-[260px] md:w-[340px]"
+        }`}
+        style={(fullWidth ? undefined : { maxWidth: "540px" }) as React.CSSProperties | undefined}
       >
         {/* MEDIA — aspect-ratio 4/3, p-1, rounded-[12px] */}
         <div className="relative w-full flex-shrink-0 z-10 p-1">
