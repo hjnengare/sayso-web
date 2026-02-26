@@ -59,7 +59,7 @@ export function useUserBadges() {
   const { user, isLoading: authLoading } = useAuth();
 
   const swrKey = (!authLoading && user?.id)
-    ? (['/api/badges/user', user.id] as [string, string])
+    ? (['/api/badges/user:achievements', user.id] as [string, string])
     : null;
 
   const { data, error, isLoading, mutate } = useSWR(swrKey, fetchUserBadges, {
@@ -120,7 +120,7 @@ async function fetchPublicUserBadges([, userId]: [string, string]): Promise<Badg
  * Skips when userId is falsy.
  */
 export function useUserBadgesById(userId: string | null | undefined) {
-  const swrKey = userId ? (['/api/badges/user', userId] as [string, string]) : null;
+  const swrKey = userId ? (['/api/badges/user:public', userId] as [string, string]) : null;
 
   const { data, isLoading } = useSWR(swrKey, fetchPublicUserBadges, {
     ...swrConfig,

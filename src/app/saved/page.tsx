@@ -118,7 +118,7 @@ export default function SavedPage() {
         <main className="min-h-[100dvh] flex-1 relative z-10">
           <div className="min-h-[100dvh] pb-12 sm:pb-16 md:pb-20">
             <m.div
-              className="mx-auto w-full max-w-[2000px] px-2 relative mb-4"
+              className="mx-auto w-full max-w-[2000px] px-2 relative"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
