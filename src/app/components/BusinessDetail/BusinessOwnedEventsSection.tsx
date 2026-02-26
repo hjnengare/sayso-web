@@ -73,6 +73,7 @@ export default function BusinessOwnedEventsSection({
         events={normalizedEvents}
         showHeaderCta={false}
         showTypeFilters
+        showAllTypeFilter
         dateRibbonPosition="middle"
         loading={showSkeleton}
         premiumCtaHover

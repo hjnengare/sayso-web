@@ -165,7 +165,7 @@ export default function EventBadge({
     return (
       <div className="absolute left-1/2 bottom-0 z-20 -translate-x-1/2 translate-y-1/2">
         <div
-          className="inline-flex items-center justify-center rounded-full bg-coral px-5 py-2.5 text-white shadow-md"
+          className="inline-flex items-center justify-center rounded-full bg-off-white/80 px-5 py-2.5 text-charcoal/85 shadow-md"
           style={{
             minWidth: "160px",
             textAlign: "center",

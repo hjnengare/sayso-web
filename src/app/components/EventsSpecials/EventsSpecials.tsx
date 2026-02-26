@@ -49,6 +49,7 @@ export default function EventsSpecials({
   showHeaderCta = true,
   useTypedTitle = false,
   showTypeFilters = false,
+  showAllTypeFilter = false,
   dateRibbonPosition = "corner",
 }: {
   title?: string;
@@ -76,6 +77,8 @@ export default function EventsSpecials({
   useTypedTitle?: boolean;
   /** Show Events/Specials pills (notifications styling) for local filtering. */
   showTypeFilters?: boolean;
+  /** Include explicit "All" pill in type filters. */
+  showAllTypeFilter?: boolean;
   /** Override date ribbon position on cards rendered by this section. */
   dateRibbonPosition?: "corner" | "middle";
 }) {
@@ -228,31 +231,44 @@ export default function EventsSpecials({
         </div>
 
         {showTypeFilters && hasEvents && (
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide mb-5" style={{ WebkitOverflowScrolling: "touch" }}>
+          <div
+            className="flex items-center overflow-x-auto whitespace-nowrap scrollbar-hide mb-5"
+            style={{ WebkitOverflowScrolling: "touch" }}
+          >
             {[
+              ...(showAllTypeFilter
+                ? [{ label: "All", type: null as const, count: displayEvents.length }]
+                : []),
               { label: "Events", type: "event" as const, count: typeCounts.eventCount },
               { label: "Specials", type: "special" as const, count: typeCounts.specialCount },
-            ].map((filter) => {
-              const isSelected = !activeTypeFilter || activeTypeFilter === filter.type;
-              const baseClasses =
-                "px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-urbanist font-500 text-xs sm:text-sm transition-all duration-200 active:scale-95 flex-shrink-0 whitespace-nowrap border";
-              const selectedClasses = "bg-card-bg text-white border-card-bg";
-              const unselectedClasses = "bg-white/50 text-charcoal/70 hover:bg-card-bg/10 hover:text-charcoal border-charcoal/10";
+            ].map((filter, index) => {
+              const isSelected = filter.type === null
+                ? activeTypeFilter === null
+                : activeTypeFilter === filter.type;
 
               return (
-                <button
-                  key={filter.type}
-                  type="button"
-                  onClick={() =>
-                    setActiveTypeFilter((current) => (current === filter.type ? null : filter.type))
-                  }
-                  className={`${baseClasses} ${isSelected ? selectedClasses : unselectedClasses}`}
-                >
-                  {filter.label}
-                  <span className={`ml-1.5 text-xs ${isSelected ? "opacity-80" : "opacity-60"}`}>
-                    ({filter.count})
-                  </span>
-                </button>
+                <div key={filter.type ?? "all"} className="inline-flex items-center shrink-0">
+                  {index > 0 && (
+                    <span aria-hidden className="mx-2 text-charcoal/55">
+                      |
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setActiveTypeFilter(filter.type)}
+                    aria-pressed={isSelected}
+                    className={`font-urbanist text-xs sm:text-sm transition-colors duration-200 ${
+                      isSelected
+                        ? "text-card-bg underline underline-offset-4 decoration-1 font-600"
+                        : "text-charcoal/70 hover:text-card-bg font-500"
+                    }`}
+                  >
+                    {filter.label}
+                    <span className={`ml-1 text-xs ${isSelected ? "opacity-95" : "opacity-70"}`}>
+                      ({filter.count})
+                    </span>
+                  </button>
+                </div>
               );
             })}
           </div>

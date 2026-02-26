@@ -10,38 +10,38 @@ export default function FilterTabs({
   selectedFilter,
   onFilterChange,
 }: FilterTabsProps) {
+  const tabs = [
+    { key: "all" as const, label: "All" },
+    { key: "event" as const, label: "Events" },
+    { key: "special" as const, label: "Specials" },
+  ];
+
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <button
-        onClick={() => onFilterChange("all")}
-        className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-urbanist font-600 text-body-sm sm:text-body transition-all duration-200 active:scale-95 ${
-          selectedFilter === "all"
-            ? "bg-coral text-white shadow-lg"
-            : "bg-off-white text-charcoal/70 hover:bg-coral/10 hover:text-coral border border-charcoal/20"
-        }`}
-      >
-        All
-      </button>
-      <button
-        onClick={() => onFilterChange("event")}
-        className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-urbanist font-600 text-body-sm sm:text-body transition-all duration-200 active:scale-95 ${
-          selectedFilter === "event"
-            ? "bg-coral text-white shadow-lg"
-            : "bg-off-white text-charcoal/70 hover:bg-coral/10 hover:text-coral border border-charcoal/20"
-        }`}
-      >
-        Events
-      </button>
-      <button
-        onClick={() => onFilterChange("special")}
-        className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-urbanist font-600 text-body-sm sm:text-body transition-all duration-200 active:scale-95 ${
-          selectedFilter === "special"
-            ? "bg-coral text-white shadow-lg"
-            : "bg-off-white text-charcoal/70 hover:bg-coral/10 hover:text-coral border border-charcoal/20"
-        }`}
-      >
-        Specials
-      </button>
+    <div className="flex items-center overflow-x-auto whitespace-nowrap scrollbar-hide">
+      {tabs.map((tab, index) => {
+        const isActive = selectedFilter === tab.key;
+        return (
+          <div key={tab.key} className="inline-flex items-center shrink-0">
+            {index > 0 && (
+              <span aria-hidden className="mx-2 text-charcoal/55">
+                |
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={() => onFilterChange(tab.key)}
+              aria-pressed={isActive}
+              className={`font-urbanist text-body-sm sm:text-body transition-colors duration-200 ${
+                isActive
+                  ? "text-coral underline underline-offset-4 decoration-1 font-600"
+                  : "text-charcoal/70 hover:text-coral font-500"
+              }`}
+            >
+              {tab.label}
+            </button>
+          </div>
+        );
+      })}
     </div>
   );
 }

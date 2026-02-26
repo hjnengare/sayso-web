@@ -2,7 +2,7 @@
 
 import BusinessCard from "../BusinessCard/BusinessCard";
 import type { LiveSearchFilters, LiveSearchResult } from "@/app/hooks/useLiveSearch";
-import { Fragment, useMemo } from "react";
+import { useMemo } from "react";
 import LocationPromptBanner from "../Location/LocationPromptBanner";
 
 const DISTANCE_FILTERS: { label: string; value: number }[] = [
@@ -51,17 +51,19 @@ export default function SearchResultsPanel({
     [results]
   );
 
-  const renderPill = (
+  const renderFilterLink = (
     label: string,
     active: boolean,
     onClick: () => void
   ) => (
     <button
+      type="button"
       onClick={onClick}
-      className={`rounded-full border px-4 py-1.5 text-sm font-semibold transition-all duration-200 ${
+      aria-pressed={active}
+      className={`text-sm transition-colors duration-200 ${
         active
-          ? "border-sage bg-card-bg/15 shadow-sm text-charcoal"
-          : "border-charcoal/10 bg-off-white text-charcoal/80 hover:border-charcoal/30"
+          ? "text-sage underline underline-offset-4 decoration-1 font-600"
+          : "text-charcoal/80 hover:text-sage font-500"
       }`}
     >
       {label}
@@ -89,7 +91,7 @@ export default function SearchResultsPanel({
               <button
                 type="button"
                 onClick={onResetFilters}
-                className="rounded-full border border-charcoal/30 bg-white/80 px-4 py-1.5 text-sm font-semibold text-charcoal/80 shadow-sm transition hover:border-charcoal hover:text-charcoal"
+                className="text-sm text-charcoal/80 hover:text-charcoal underline underline-offset-4 decoration-1 font-600 transition-colors duration-200"
               >
                 Clear filters
               </button>
@@ -102,15 +104,20 @@ export default function SearchResultsPanel({
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-charcoal/60">
               Distance
             </p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {DISTANCE_FILTERS.map((filter) => (
-                <Fragment key={`distance-${filter.value}-${filter.label}`}>
-                  {renderPill(
+            <div className="mt-2 flex items-center overflow-x-auto whitespace-nowrap scrollbar-hide">
+              {DISTANCE_FILTERS.map((filter, index) => (
+                <div key={`distance-${filter.value}-${filter.label}`} className="inline-flex items-center shrink-0">
+                  {index > 0 && (
+                    <span aria-hidden className="mx-2 text-charcoal/55">
+                      |
+                    </span>
+                  )}
+                  {renderFilterLink(
                     filter.label,
                     filters.distanceKm === filter.value,
                     () => onDistanceChange(filters.distanceKm === filter.value ? null : filter.value)
                   )}
-                </Fragment>
+                </div>
               ))}
             </div>
           </div>
@@ -119,15 +126,20 @@ export default function SearchResultsPanel({
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-charcoal/60">
               Rating
             </p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {RATING_FILTERS.map((filter) => (
-                <Fragment key={`rating-${filter.value}-${filter.label}`}>
-                  {renderPill(
+            <div className="mt-2 flex items-center overflow-x-auto whitespace-nowrap scrollbar-hide">
+              {RATING_FILTERS.map((filter, index) => (
+                <div key={`rating-${filter.value}-${filter.label}`} className="inline-flex items-center shrink-0">
+                  {index > 0 && (
+                    <span aria-hidden className="mx-2 text-charcoal/55">
+                      |
+                    </span>
+                  )}
+                  {renderFilterLink(
                     filter.label,
                     filters.minRating === filter.value,
                     () => onRatingChange(filters.minRating === filter.value ? null : filter.value)
                   )}
-                </Fragment>
+                </div>
               ))}
             </div>
           </div>

@@ -136,24 +136,35 @@ export default function InlineFilters({
                 <MapPin className="w-4 h-4" />
                 <span style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>Distance</span>
               </div>
-              <div className="flex gap-2 flex-wrap">
-                {DISTANCE_OPTIONS.map((option) => (
-                  <m.button
-                    key={option.value}
-                    variants={chipVariants}
-                    whileHover={prefersReducedMotion ? {} : { scale: 1.05, y: -2 }}
-                    whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
-                    onClick={() => onDistanceChange(option.value)}
-                    className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
-                      filters.distance === option.value
-                        ? "bg-card-bg text-white shadow-md"
-                        : "bg-white/80 text-charcoal/70 border border-charcoal/20 hover:border-sage hover:bg-card-bg/10"
-                    }`}
-                    style={{ fontFamily: 'Urbanist, system-ui, sans-serif', fontWeight: 600 }}
-                  >
-                    {option.label}
-                  </m.button>
-                ))}
+              <div className="flex items-center overflow-x-auto whitespace-nowrap scrollbar-hide">
+                {DISTANCE_OPTIONS.map((option, index) => {
+                  const isActive = filters.distance === option.value;
+                  return (
+                    <div key={option.value} className="inline-flex items-center shrink-0">
+                      {index > 0 && (
+                        <span aria-hidden className="mx-2 text-charcoal/55">
+                          |
+                        </span>
+                      )}
+                      <m.button
+                        type="button"
+                        variants={chipVariants}
+                        whileHover={prefersReducedMotion ? {} : { y: -1 }}
+                        whileTap={prefersReducedMotion ? {} : { y: 1 }}
+                        onClick={() => onDistanceChange(option.value)}
+                        aria-pressed={isActive}
+                        className={`text-sm transition-colors duration-200 ${
+                          isActive
+                            ? "text-sage underline underline-offset-4 decoration-1 font-600"
+                            : "text-charcoal/70 hover:text-sage font-500"
+                        }`}
+                        style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
+                      >
+                        {option.label}
+                      </m.button>
+                    </div>
+                  );
+                })}
               </div>
             </m.div>
 
@@ -168,25 +179,36 @@ export default function InlineFilters({
                 <Star className="w-4 h-4 fill-current" />
                 <span style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>Minimum Rating</span>
               </div>
-              <div className="flex gap-2 flex-wrap">
-                {RATING_OPTIONS.map((option) => (
-                  <m.button
-                    key={option.value}
-                    variants={chipVariants}
-                    whileHover={prefersReducedMotion ? {} : { scale: 1.05, y: -2 }}
-                    whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
-                    onClick={() => onRatingChange(option.value)}
-                    className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 flex items-center gap-1.5 ${
-                      filters.minRating === option.value
-                        ? "bg-coral text-white shadow-md"
-                        : "bg-white/80 text-charcoal/70 border border-charcoal/20 hover:border-coral hover:bg-coral/10"
-                    }`}
-                    style={{ fontFamily: 'Urbanist, system-ui, sans-serif', fontWeight: 600 }}
-                  >
-                    <Star className="w-3.5 h-3.5 fill-current" />
-                    {option.label}
-                  </m.button>
-                ))}
+              <div className="flex items-center overflow-x-auto whitespace-nowrap scrollbar-hide">
+                {RATING_OPTIONS.map((option, index) => {
+                  const isActive = filters.minRating === option.value;
+                  return (
+                    <div key={option.value} className="inline-flex items-center shrink-0">
+                      {index > 0 && (
+                        <span aria-hidden className="mx-2 text-charcoal/55">
+                          |
+                        </span>
+                      )}
+                      <m.button
+                        type="button"
+                        variants={chipVariants}
+                        whileHover={prefersReducedMotion ? {} : { y: -1 }}
+                        whileTap={prefersReducedMotion ? {} : { y: 1 }}
+                        onClick={() => onRatingChange(option.value)}
+                        aria-pressed={isActive}
+                        className={`text-sm transition-colors duration-200 flex items-center gap-1 ${
+                          isActive
+                            ? "text-coral underline underline-offset-4 decoration-1 font-600"
+                            : "text-charcoal/70 hover:text-coral font-500"
+                        }`}
+                        style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
+                      >
+                        <Star className="w-3.5 h-3.5 fill-current" />
+                        {option.label}
+                      </m.button>
+                    </div>
+                  );
+                })}
               </div>
             </m.div>
           </div>

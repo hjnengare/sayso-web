@@ -54,15 +54,20 @@ export default function ActiveFilterBadges({
 
   const ratingOptions = [5, 4, 3, 2, 1];
   const distanceOptions = ["1 km", "5 km", "10 km", "25 km"];
+  const showRatingControl = filters.minRating !== null;
+  const showDistanceControl = Boolean(filters.distance);
+  const showClearAllControl = hasActiveFilters && Boolean(onClearAll);
 
   return (
-    <div className="flex flex-wrap items-center gap-2 px-4 sm:px-6 py-2">
+    <div className="flex items-center overflow-x-auto whitespace-nowrap scrollbar-hide px-4 sm:px-6 py-2">
       {/* Rating Filter Pill with Dropdown */}
-      {filters.minRating !== null && (
-        <div ref={ratingRef} className="relative">
+      {showRatingControl && (
+        <div ref={ratingRef} className="relative inline-flex items-center shrink-0">
           <button
+            type="button"
             onClick={() => setOpenDropdown(openDropdown === 'rating' ? null : 'rating')}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card-bg/10 text-sage border border-sage/30 hover:bg-card-bg/20 transition-colors text-sm font-semibold"
+            aria-pressed={openDropdown === 'rating'}
+            className="inline-flex items-center gap-1.5 text-sm text-sage underline underline-offset-4 decoration-1 font-600 hover:text-sage/80 transition-colors duration-200"
             style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
             aria-label="Edit rating filter"
           >
@@ -85,7 +90,7 @@ export default function ActiveFilterBadges({
               }}
               role="button"
               tabIndex={0}
-              className="ml-1 hover:bg-card-bg/30 rounded-full p-0.5 transition-colors cursor-pointer"
+              className="ml-1 rounded-full p-0.5 transition-colors cursor-pointer text-current/80 hover:text-current"
               aria-label="Remove rating filter"
             >
               <X className="w-3 h-3" />
@@ -127,12 +132,20 @@ export default function ActiveFilterBadges({
         </div>
       )}
 
+      {showRatingControl && (showDistanceControl || showClearAllControl) && (
+        <span aria-hidden className="mx-2 shrink-0 text-charcoal/55">
+          |
+        </span>
+      )}
+
       {/* Distance Filter Pill with Dropdown */}
-      {filters.distance && (
-        <div ref={distanceRef} className="relative">
+      {showDistanceControl && (
+        <div ref={distanceRef} className="relative inline-flex items-center shrink-0">
           <button
+            type="button"
             onClick={() => setOpenDropdown(openDropdown === 'distance' ? null : 'distance')}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-coral/10 text-coral border border-coral/30 hover:bg-coral/20 transition-colors text-sm font-semibold"
+            aria-pressed={openDropdown === 'distance'}
+            className="inline-flex items-center gap-1.5 text-sm text-coral underline underline-offset-4 decoration-1 font-600 hover:text-coral/80 transition-colors duration-200"
             style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
             aria-label="Edit distance filter"
           >
@@ -155,7 +168,7 @@ export default function ActiveFilterBadges({
               }}
               role="button"
               tabIndex={0}
-              className="ml-1 hover:bg-coral/30 rounded-full p-0.5 transition-colors cursor-pointer"
+              className="ml-1 rounded-full p-0.5 transition-colors cursor-pointer text-current/80 hover:text-current"
               aria-label="Remove distance filter"
             >
               <X className="w-3 h-3" />
@@ -197,11 +210,18 @@ export default function ActiveFilterBadges({
         </div>
       )}
 
+      {showDistanceControl && showClearAllControl && (
+        <span aria-hidden className="mx-2 shrink-0 text-charcoal/55">
+          |
+        </span>
+      )}
+
       {/* Clear All Button */}
-      {hasActiveFilters && onClearAll && (
+      {showClearAllControl && (
         <button
+          type="button"
           onClick={onClearAll}
-          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-charcoal/5 text-charcoal/70 hover:bg-charcoal/10 transition-colors text-sm font-medium border border-charcoal/10"
+          className="shrink-0 text-sm text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-500"
           style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
         >
           Clear all
