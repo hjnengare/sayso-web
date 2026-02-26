@@ -237,7 +237,7 @@ export default function EventsSpecials({
           >
             {[
               ...(showAllTypeFilter
-                ? [{ label: "All", type: null as const, count: displayEvents.length }]
+                ? [{ label: "All", type: null as ListingTypeFilter, count: displayEvents.length }]
                 : []),
               { label: "Events", type: "event" as const, count: typeCounts.eventCount },
               { label: "Specials", type: "special" as const, count: typeCounts.specialCount },
