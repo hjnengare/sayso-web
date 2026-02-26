@@ -217,7 +217,7 @@ export default function GeneralReviewsPage() {
   };
 
   return (
-    <div className="min-h-screen  bg-off-white   relative overflow-hidden">
+    <div className="min-h-[100dvh]  bg-off-white   relative overflow-hidden">
       {/* Background Gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-sage/10 via-off-white to-coral/5" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)]" />

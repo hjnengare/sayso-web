@@ -132,7 +132,7 @@ export default function EmailVerificationGuard({
   }
 
   return (
-    <div className="min-h-screen bg-off-white flex items-center justify-center px-4">
+    <div className="min-h-[100dvh] bg-off-white flex items-center justify-center px-4">
       <div className="max-w-md w-full">
         <div className="bg-off-white rounded-lg shadow-lg border border-charcoal/10 p-8 text-center">
           {/* Icon */}

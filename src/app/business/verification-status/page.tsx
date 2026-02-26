@@ -1,6 +1,6 @@
 export default function VerificationStatusPage() {
   return (
-    <main className="min-h-screen bg-off-white px-4 sm:px-6 lg:px-8 py-10 flex flex-col items-start relative overflow-hidden">
+    <main className="min-h-[100dvh] bg-off-white px-4 sm:px-6 lg:px-8 py-10 flex flex-col items-start relative overflow-hidden">
       {/* Background Gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-sage/10 via-off-white to-coral/5" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)]" />

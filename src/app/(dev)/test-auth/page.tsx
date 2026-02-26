@@ -28,7 +28,7 @@ export default function TestAuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-off-white p-8">
+    <div className="min-h-[100dvh] bg-off-white p-8">
       <div className="max-w-md mx-auto">
         <h1 className="text-lg font-bold mb-6">Auth Test Page</h1>
         

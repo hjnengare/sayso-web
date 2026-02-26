@@ -104,7 +104,7 @@ export default function OnboardingPerformanceTestPage() {
   const targetTime = 2000; // 2 seconds
 
   return (
-    <div className="min-h-screen bg-off-white p-8">
+    <div className="min-h-[100dvh] bg-off-white p-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-6">Onboarding Performance Test</h1>
         

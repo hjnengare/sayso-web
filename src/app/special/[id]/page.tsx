@@ -182,7 +182,7 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
   if (error || !special || isExpired) {
     const isExpiredError = isExpired;
     return (
-      <div className="min-h-screen bg-gradient-to-br from-white via-coral/[0.02] to-white flex items-center justify-center">
+      <div className="min-h-[100dvh] bg-gradient-to-br from-white via-coral/[0.02] to-white flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-charcoal mb-4" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
             {isExpiredError ? 'Special Expired' : 'Special Not Found'}
@@ -203,7 +203,7 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
   return (
     <>
       <div 
-        className="min-h-screen bg-gradient-to-br from-white via-coral/[0.02] to-white relative overflow-hidden font-urbanist"
+        className="min-h-[100dvh] bg-gradient-to-br from-white via-coral/[0.02] to-white relative overflow-hidden font-urbanist"
         style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
       >
         {/* Background Gradient */}

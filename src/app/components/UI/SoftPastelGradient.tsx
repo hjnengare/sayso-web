@@ -9,7 +9,7 @@
  *
  * @example
  * // Full page background
- * <div className="relative min-h-screen">
+ * <div className="relative min-h-[100dvh]">
  *   <SoftPastelGradient />
  *   <div className="relative z-10">Your content here</div>
  * </div>

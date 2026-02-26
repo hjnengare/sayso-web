@@ -48,7 +48,7 @@ import { AdvancedFilters } from './AdvancedFilters';
 export function FilterDemo() {
   return (
     <FilterProvider>
-      <div className="min-h-screen bg-off-white">
+      <div className="min-h-[100dvh] bg-off-white">
         {/* Header */}
         <div className="bg-white border-b border-charcoal/10 p-4">
           <div className="max-w-7xl mx-auto">

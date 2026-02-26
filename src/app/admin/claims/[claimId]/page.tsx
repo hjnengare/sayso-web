@@ -143,7 +143,7 @@ export default function AdminClaimDetailPage() {
 
   if (loading || !data) {
     return (
-      <div className="min-h-screen bg-charcoal/5 flex items-center justify-center">
+      <div className="min-h-[100dvh] bg-charcoal/5 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-sage" />
       </div>
     );

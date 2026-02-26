@@ -155,7 +155,7 @@ export default function ReviewerProfilePage() {
 
     if (!reviewer) {
         return (
-            <div className="min-h-screen bg-off-white">
+            <div className="min-h-[100dvh] bg-off-white">
                 <div className="container mx-auto px-4 py-20 text-center">
                     <div className="text-charcoal">Reviewer not found</div>
                 </div>

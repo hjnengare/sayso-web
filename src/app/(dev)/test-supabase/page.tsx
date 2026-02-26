@@ -55,7 +55,7 @@ export default function TestSupabasePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-off-white p-8">
+    <div className="min-h-[100dvh] bg-off-white p-8">
       <div className="max-w-lg mx-auto">
         <h1 className="text-lg font-bold mb-6">Supabase Connection Test</h1>
         

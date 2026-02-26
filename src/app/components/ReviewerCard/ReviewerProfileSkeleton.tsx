@@ -8,7 +8,7 @@ import React from "react";
  */
 export default function ReviewerProfileSkeleton() {
   return (
-    <div className="min-h-screen bg-off-white">
+    <div className="min-h-[100dvh] bg-off-white">
       <main className="relative font-urbanist" role="main" aria-label="Loading reviewer profile">
         <div className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-8 2xl:px-12 relative z-10">
           {/* Breadcrumb Skeleton */}

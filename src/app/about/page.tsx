@@ -157,7 +157,7 @@ function StatPill({ value, label }: { value: string; label: string }) {
 export default function AboutPage() {
   return (
     <main
-      className="bg-navbar-bg text-white min-h-screen"
+      className="bg-navbar-bg text-white min-h-[100dvh]"
       style={{ fontFamily: "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}
     >
 

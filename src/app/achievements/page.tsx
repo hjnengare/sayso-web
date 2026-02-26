@@ -40,7 +40,7 @@ export default function AchievementsPage() {
   if (isLoading) {
     return (
       <ProtectedRoute requiresAuth={true}>
-        <div className="min-h-screen bg-page-bg flex items-center justify-center">
+        <div className="min-h-[100dvh] bg-page-bg flex items-center justify-center">
           <Loader size="lg" variant="wavy" color="sage" />
         </div>
       </ProtectedRoute>
@@ -50,7 +50,7 @@ export default function AchievementsPage() {
   if (error) {
     return (
       <ProtectedRoute requiresAuth={true}>
-        <div className="min-h-screen bg-page-bg flex items-center justify-center">
+        <div className="min-h-[100dvh] bg-page-bg flex items-center justify-center">
           <p className="text-red-500">Error loading badges: {(error as Error).message}</p>
         </div>
       </ProtectedRoute>
@@ -59,7 +59,7 @@ export default function AchievementsPage() {
 
   return (
     <ProtectedRoute requiresAuth={true}>
-      <div className="min-h-screen bg-page-bg pb-20 relative overflow-hidden">
+      <div className="min-h-[100dvh] bg-page-bg pb-20 relative overflow-hidden">
         {/* Background Gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-sage/10 via-off-white to-coral/5" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(157,171,155,0.15)_0%,_transparent_50%)]" />

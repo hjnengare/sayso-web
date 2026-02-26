@@ -169,9 +169,9 @@ export default function PageTransitionProvider({ children }: PageTransitionProvi
 
   return (
     <PageTransitionContext.Provider value={value}>
-      <div className="min-h-screen w-full" data-page-transition={isTransitioning ? "1" : "0"}>
+      <div className="min-h-[100dvh] w-full" data-page-transition={isTransitioning ? "1" : "0"}>
         {/* Animate only route body content; header/navbar is outside this provider. */}
-        <div className="relative min-h-screen w-full overflow-x-clip">
+        <div className="relative min-h-[100dvh] w-full overflow-x-clip">
           {hasMounted ? (
             <AnimatePresence initial={false} mode="wait">
               <m.div
@@ -183,14 +183,14 @@ export default function PageTransitionProvider({ children }: PageTransitionProvi
                   duration: durationSeconds,
                   ease: [0.22, 1, 0.36, 1],
                 }}
-                className="min-h-screen w-full will-change-[opacity,transform]"
+                className="min-h-[100dvh] w-full will-change-[opacity,transform]"
               >
                 {children}
               </m.div>
             </AnimatePresence>
           ) : (
             // Hydration-safe fallback: keep SSR and initial client tree identical.
-            <div className="min-h-screen w-full">
+            <div className="min-h-[100dvh] w-full">
               {children}
             </div>
           )}

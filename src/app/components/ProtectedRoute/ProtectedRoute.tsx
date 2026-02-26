@@ -226,7 +226,7 @@ export default function ProtectedRoute({
   // State 1: loading — show loader; do not render children or run any checks (avoids 401s from children calling APIs before session is ready)
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-off-white">
+      <div className="min-h-[100dvh] flex items-center justify-center bg-off-white">
         <PageLoader size="lg" variant="wavy" color="sage" />
       </div>
     );

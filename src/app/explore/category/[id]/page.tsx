@@ -434,7 +434,7 @@ function CategoryDetailContent() {
 export default function CategoryDetailPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-off-white">
+      <div className="min-h-[100dvh] flex items-center justify-center bg-off-white">
         <Loader size="lg" variant="wavy" color="sage" />
       </div>
     }>

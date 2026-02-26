@@ -251,7 +251,7 @@ export default function SavedPage() {
 
                   {/* Loading Spinner Overlay for Pagination */}
                   {isPaginationLoading && (
-                    <div className="fixed inset-0 z-[9998] bg-off-white/95 backdrop-blur-sm flex items-center justify-center min-h-screen">
+                    <div className="fixed inset-0 z-[9998] bg-off-white/95 backdrop-blur-sm flex items-center justify-center min-h-[100dvh]">
                       <Loader size="lg" variant="wavy" color="sage" />
                     </div>
                   )}
