@@ -11,9 +11,9 @@ import EmailVerificationGuard from "../components/Auth/EmailVerificationGuard";
 import { useSavedItems } from "../contexts/SavedItemsContext";
 import BusinessCard from "../components/BusinessCard/BusinessCard";
 import EmptySavedState from "../components/Saved/EmptySavedState";
-import { PageLoader, Loader } from "../components/Loader";
 import { usePredefinedPageTitle } from "../hooks/usePageTitle";
 import { Business } from "../components/BusinessCard/BusinessCard";
+import BusinessGridSkeleton from "../components/Explore/BusinessGridSkeleton";
 
 const ITEMS_PER_PAGE = 12;
 
@@ -21,6 +21,32 @@ const Footer = nextDynamic(() => import("../components/Footer/Footer"), {
   loading: () => null,
   ssr: false,
 });
+
+function SavedPageSkeleton({ showHeader = true }: { showHeader?: boolean }) {
+  return (
+    <div className="relative z-10">
+      <div className="mx-auto w-full max-w-[2000px] px-2">
+        {showHeader && (
+          <div className="mb-6 sm:mb-8 px-2 animate-pulse">
+            <div className="h-9 w-56 rounded-lg bg-charcoal/10" />
+            <div className="mt-3 h-4 w-40 rounded bg-charcoal/10" />
+          </div>
+        )}
+
+        <div className="mb-6 px-2 animate-pulse">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+            <div className="h-8 w-16 rounded-full bg-charcoal/10 shrink-0" />
+            <div className="h-8 w-20 rounded-full bg-charcoal/10 shrink-0" />
+            <div className="h-8 w-24 rounded-full bg-charcoal/10 shrink-0" />
+            <div className="h-8 w-20 rounded-full bg-charcoal/10 shrink-0" />
+          </div>
+        </div>
+
+        <BusinessGridSkeleton />
+      </div>
+    </div>
+  );
+}
 
 
 export default function SavedPage() {
@@ -154,9 +180,7 @@ export default function SavedPage() {
             </m.div>
 
             {isLoading ? (
-              <div className="min-h-[100dvh] flex items-center justify-center py-12">
-                <PageLoader size="md" variant="wavy" color="sage" />
-              </div>
+              <SavedPageSkeleton />
             ) : error ? (
               <div className="min-h-[100dvh] pt-4 relative z-10 flex items-center justify-center">
                 <div className="text-center max-w-md mx-auto px-4">
@@ -251,8 +275,10 @@ export default function SavedPage() {
 
                   {/* Loading Spinner Overlay for Pagination */}
                   {isPaginationLoading && (
-                    <div className="fixed inset-0 z-[9998] bg-off-white/95 backdrop-blur-sm flex items-center justify-center min-h-[100dvh]">
-                      <Loader size="lg" variant="wavy" color="sage" />
+                    <div className="fixed inset-0 z-[9998] bg-off-white/92 backdrop-blur-sm overflow-y-auto">
+                      <div className="pt-24 pb-10">
+                        <SavedPageSkeleton showHeader={false} />
+                      </div>
                     </div>
                   )}
 

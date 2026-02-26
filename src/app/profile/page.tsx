@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { m, AnimatePresence } from "framer-motion";
+import { m } from "framer-motion";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { usePredefinedPageTitle } from "@/app/hooks/usePageTitle";
 import {
@@ -584,18 +584,40 @@ function ProfileContent() {
           font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
         }
       `}</style>
-      <AnimatePresence mode="wait">
-        <m.div
-          key="profile"
-          initial={{ opacity: 0, y: 20, scale: 0.98, filter: "blur(8px)" }}
-          animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-          exit={{ opacity: 0, y: -20, scale: 0.98, filter: "blur(8px)" }}
-          transition={{
-            duration: 0.6,
-            ease: [0.16, 1, 0.3, 1],
-            opacity: { duration: 0.5 },
-            filter: { duration: 0.55 }
-          }}
+      <style jsx>{`
+        .profile-load-item {
+          opacity: 0;
+          transform: translateY(6px);
+          animation: profileSectionLoadIn 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+          will-change: opacity, transform;
+        }
+        .profile-load-delay-0 { animation-delay: 0ms; }
+        .profile-load-delay-1 { animation-delay: 70ms; }
+        .profile-load-delay-2 { animation-delay: 120ms; }
+        .profile-load-delay-3 { animation-delay: 170ms; }
+        .profile-load-delay-4 { animation-delay: 220ms; }
+        .profile-load-delay-5 { animation-delay: 270ms; }
+        .profile-load-delay-6 { animation-delay: 320ms; }
+        .profile-load-delay-7 { animation-delay: 370ms; }
+        @keyframes profileSectionLoadIn {
+          0% {
+            opacity: 0;
+            transform: translateY(6px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .profile-load-item {
+            animation: none;
+            opacity: 1;
+            transform: none;
+          }
+        }
+      `}</style>
+        <div
           className="min-h-dvh bg-off-white relative overflow-hidden font-urbanist"
           style={{
             fontFamily:
@@ -616,7 +638,7 @@ function ProfileContent() {
               >
                 <div className="mx-auto w-full max-w-[2000px] px-2 sm:px-4 lg:px-6 2xl:px-8 relative z-10">
                   {/* Breadcrumb Navigation */}
-                  <nav className="pb-1" aria-label="Breadcrumb">
+                  <nav className="pb-1 profile-load-item profile-load-delay-0" aria-label="Breadcrumb">
                     <ol className="flex items-center gap-2 text-sm sm:text-base">
                       <li>
                         <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
@@ -636,7 +658,7 @@ function ProfileContent() {
                   <div className="pt-2 pb-12 sm:pb-16 md:pb-20">
                     <div className="space-y-6">
                       <article
-                        className="w-full sm:mx-0"
+                        className="w-full sm:mx-0 profile-load-item profile-load-delay-1"
                         aria-labelledby="profile-heading"
                       >
                         <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border-none rounded-[12px] shadow-md relative overflow-hidden">
@@ -781,13 +803,14 @@ function ProfileContent() {
 
                   {/* End of profile card */}
 
-                  {statsLoading ? (
-                    <StatsGridSkeleton />
-                  ) : (
-                    <section
-                      className="grid grid-cols-2 sm:grid-cols-4 gap-4"
-                      aria-label="Profile statistics"
-                    >
+                  <div className="profile-load-item profile-load-delay-2">
+                    {statsLoading ? (
+                      <StatsGridSkeleton />
+                    ) : (
+                      <section
+                        className="grid grid-cols-2 sm:grid-cols-4 gap-4"
+                        aria-label="Profile statistics"
+                      >
                       <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border-none rounded-[12px] shadow-md p-4">
                         <div className="flex items-center gap-2 mb-2">
                           <span className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
@@ -856,13 +879,14 @@ function ProfileContent() {
                           </Link>
                         </div>
                       )}
-                    </section>
-                  )}
+                      </section>
+                    )}
+                  </div>
 
                       {/* Saved Businesses - Mobile Only */}
                       {savedBusinesses.length > 0 && (
                         <section
-                          className="md:hidden bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border-none rounded-[12px] shadow-md p-6 space-y-4"
+                          className="md:hidden bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border-none rounded-[12px] shadow-md p-6 space-y-4 profile-load-item profile-load-delay-3"
                           aria-label="Saved businesses"
                         >
                           <SavedBusinessRow
@@ -873,13 +897,14 @@ function ProfileContent() {
                         </section>
                       )}
 
-                      {achievementsLoading ? (
-                        <AchievementsSkeleton />
-                      ) : (
-                      <section
-                        className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border-none rounded-[12px] shadow-md p-6 sm:p-8"
-                        aria-label="Your badges and achievements"
-                      >
+                      <div className="profile-load-item profile-load-delay-4">
+                        {achievementsLoading ? (
+                          <AchievementsSkeleton />
+                        ) : (
+                        <section
+                          className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border-none rounded-[12px] shadow-md p-6 sm:p-8"
+                          aria-label="Your badges and achievements"
+                        >
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
                           <div className="flex items-center gap-3">
                             <span className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
@@ -954,16 +979,18 @@ function ProfileContent() {
                             })}
                           </div>
                         )}
-                      </section>
-                      )}
+                        </section>
+                        )}
+                      </div>
 
-                      {reviewsLoading ? (
-                        <ReviewsSkeleton />
-                      ) : (
-                      <section
-                        className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border-none rounded-[12px] shadow-md p-6 sm:p-8"
-                        aria-label="Your contributions"
-                      >
+                      <div className="profile-load-item profile-load-delay-5">
+                        {reviewsLoading ? (
+                          <ReviewsSkeleton />
+                        ) : (
+                        <section
+                          className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border-none rounded-[12px] shadow-md p-6 sm:p-8"
+                          aria-label="Your contributions"
+                        >
                         {reviewsData.length > 0 ? (
                           <ReviewsList
                             reviews={reviewsData}
@@ -976,11 +1003,12 @@ function ProfileContent() {
                             <p className="text-charcoal/70">You haven't written any reviews yet.</p>
                           </div>
                         )}
-                      </section>
-                      )}
+                        </section>
+                        )}
+                      </div>
                       {/* Preferences */}
                       <section
-                        className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border-none rounded-[12px] shadow-md p-6 sm:p-8 space-y-4"
+                        className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border-none rounded-[12px] shadow-md p-6 sm:p-8 space-y-4 profile-load-item profile-load-delay-6"
                         aria-label="Preferences"
                       >
                         <div className="flex items-center gap-3">
@@ -1038,7 +1066,7 @@ function ProfileContent() {
                       </section>
 
                       <section
-                        className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border-none rounded-[12px] shadow-md p-6 sm:p-8 space-y-4"
+                        className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border-none rounded-[12px] shadow-md p-6 sm:p-8 space-y-4 profile-load-item profile-load-delay-7"
                         aria-label="Account actions"
                       >
                         <div className="flex items-center gap-3">
@@ -1076,8 +1104,7 @@ function ProfileContent() {
           </div>
 
           <Footer />
-        </m.div>
-      </AnimatePresence>
+        </div>
 
       {/* Edit Profile Modal */}
       <EditProfileModal

@@ -230,7 +230,7 @@ export default function EventsSpecialsPage() {
       >
         
         <div className="relative mx-auto w-full max-w-[2000px] px-2">
-          <nav className="relative z-10 pb-1" aria-label="Breadcrumb">
+          <nav className="relative z-10 pb-1 es-load-item es-delay-0" aria-label="Breadcrumb">
             <ol className="flex items-center gap-2 text-sm sm:text-base">
               <li>
                 <Link
@@ -253,7 +253,7 @@ export default function EventsSpecialsPage() {
           </nav>
 
           {/* Title and Description Block */}
-          <div className="relative z-10 mb-6 sm:mb-8 px-4 sm:px-6 text-center pt-4">
+          <div className="relative z-10 mb-6 sm:mb-8 px-4 sm:px-6 text-center pt-4 es-load-item es-delay-1">
             <div className="my-4">
               <h1 
                 className="text-2xl sm:text-3xl md:text-4xl font-bold leading-[1.2] tracking-tight text-charcoal mx-auto font-urbanist"
@@ -280,7 +280,7 @@ export default function EventsSpecialsPage() {
             </p>
           </div>
 
-          <div className="relative z-10 py-4 px-4">
+          <div className="relative z-10 py-4 px-4 es-load-item es-delay-2">
             <SearchInput
               variant="header"
               placeholder="Search events and limited-time offers..."
@@ -304,12 +304,12 @@ export default function EventsSpecialsPage() {
             )}
           </div>
 
-          <div className="py-3 sm:py-4 flex flex-col gap-3">
+          <div className="py-3 sm:py-4 flex flex-col gap-3 es-load-item es-delay-3">
             <FilterTabs selectedFilter={selectedFilter} onFilterChange={handleFilterChange} />
             <ResultsCount count={filteredEvents.length} filterType={selectedFilter} />
           </div>
 
-          <div className="py-3 sm:py-4">
+          <div className="py-3 sm:py-4 es-load-item es-delay-4">
             {isLoading ? (
               <EventsGridSkeleton count={ITEMS_PER_PAGE} fullWidthCards />
             ) : isBlockingError ? (
@@ -393,6 +393,37 @@ export default function EventsSpecialsPage() {
           </div>
         </div>
       </main>
+
+      <style jsx>{`
+        .es-load-item {
+          opacity: 0;
+          transform: translateY(6px);
+          animation: eventsSpecialsLoadIn 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+          will-change: opacity, transform;
+        }
+        .es-delay-0 { animation-delay: 0ms; }
+        .es-delay-1 { animation-delay: 70ms; }
+        .es-delay-2 { animation-delay: 120ms; }
+        .es-delay-3 { animation-delay: 170ms; }
+        .es-delay-4 { animation-delay: 220ms; }
+        @keyframes eventsSpecialsLoadIn {
+          0% {
+            opacity: 0;
+            transform: translateY(6px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .es-load-item {
+            animation: none;
+            opacity: 1;
+            transform: none;
+          }
+        }
+      `}</style>
 
       {isDesktop && (
         <style jsx>{`
