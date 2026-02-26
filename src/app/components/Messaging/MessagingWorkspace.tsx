@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, Loader2, MessageCircle, Search, Send } from 'lucide-react';
+import { useReducedMotion } from 'framer-motion';
 import { useAuth } from '@/app/contexts/AuthContext';
 import {
   useConversationMessages,
@@ -29,6 +30,73 @@ interface MessagingWorkspaceProps {
   initialConversationId?: string | null;
   startBusinessId?: string | null;
   startUserId?: string | null;
+}
+
+interface MessageVisualIdentity {
+  name: string;
+  avatarUrl: string | null;
+}
+
+interface MessageBubbleAvatarProps {
+  name: string;
+  avatarUrl?: string | null;
+}
+
+function buildInitials(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return 'U';
+
+  const segments = trimmed.split(/\s+/).filter(Boolean);
+  if (segments.length === 1) {
+    return segments[0].slice(0, 2).toUpperCase();
+  }
+
+  return `${segments[0][0] || ''}${segments[1][0] || ''}`.toUpperCase();
+}
+
+function MessageBubbleAvatar({ name, avatarUrl }: MessageBubbleAvatarProps) {
+  const normalizedAvatarUrl = typeof avatarUrl === 'string' ? avatarUrl.trim() : '';
+  const [hasImageError, setHasImageError] = useState(false);
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
+
+  useEffect(() => {
+    setHasImageError(false);
+    setIsImageLoaded(false);
+  }, [normalizedAvatarUrl]);
+
+  const shouldRenderImage = normalizedAvatarUrl.length > 0 && !hasImageError;
+  const initials = useMemo(() => buildInitials(name), [name]);
+
+  return (
+    <div className="relative h-8 w-8 flex-shrink-0 overflow-hidden rounded-full border border-charcoal/15 bg-charcoal/10 sm:h-9 sm:w-9">
+      {shouldRenderImage ? (
+        <>
+          {!isImageLoaded && (
+            <div className="absolute inset-0 animate-pulse bg-charcoal/10" aria-hidden />
+          )}
+          <Image
+            src={normalizedAvatarUrl}
+            alt={`${name} avatar`}
+            fill
+            sizes="(max-width: 640px) 32px, 36px"
+            className={`object-cover transition-opacity duration-150 ${
+              isImageLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
+            unoptimized={normalizedAvatarUrl.includes('supabase.co')}
+            onLoad={() => setIsImageLoaded(true)}
+            onError={() => {
+              setHasImageError(true);
+              setIsImageLoaded(false);
+            }}
+          />
+        </>
+      ) : (
+        <div className="flex h-full w-full items-center justify-center text-[11px] font-semibold text-charcoal/70 sm:text-xs">
+          {initials}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function formatListTimestamp(value: string): string {
@@ -116,6 +184,7 @@ export default function MessagingWorkspace({
   startUserId,
 }: MessagingWorkspaceProps) {
   const { user } = useAuth();
+  const prefersReducedMotion = useReducedMotion();
 
   const [activeBusinessId, setActiveBusinessId] = useState<string | null>(initialBusinessId || null);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(
@@ -127,6 +196,10 @@ export default function MessagingWorkspace({
   const [isResolvingStartConversation, setIsResolvingStartConversation] = useState(false);
   const [startConversationError, setStartConversationError] = useState<string | null>(null);
   const [mobileThreadOpen, setMobileThreadOpen] = useState(Boolean(initialConversationId));
+  const [animatedMessageIds, setAnimatedMessageIds] = useState<Set<string>>(new Set());
+  const previousMessageIdsRef = useRef<string[]>([]);
+  const hasInitializedMessagesRef = useRef(false);
+  const animationTimeoutsRef = useRef<Map<string, number>>(new Map());
 
   useEffect(() => {
     if (role !== 'business') return;
@@ -196,6 +269,75 @@ export default function MessagingWorkspace({
   }, [conversations, role, searchQuery]);
 
   const resolveStartRef = useRef(false);
+
+  useEffect(() => {
+    return () => {
+      animationTimeoutsRef.current.forEach((timeoutId) => {
+        window.clearTimeout(timeoutId);
+      });
+      animationTimeoutsRef.current.clear();
+    };
+  }, []);
+
+  useEffect(() => {
+    previousMessageIdsRef.current = [];
+    hasInitializedMessagesRef.current = false;
+    setAnimatedMessageIds(new Set());
+    animationTimeoutsRef.current.forEach((timeoutId) => {
+      window.clearTimeout(timeoutId);
+    });
+    animationTimeoutsRef.current.clear();
+  }, [selectedConversationId]);
+
+  useEffect(() => {
+    if (!selectedConversationId) return;
+
+    const currentMessageIds = messages.map((message) => message.id);
+    const previousMessageIds = previousMessageIdsRef.current;
+
+    if (!hasInitializedMessagesRef.current) {
+      previousMessageIdsRef.current = currentMessageIds;
+      hasInitializedMessagesRef.current = true;
+      return;
+    }
+
+    const hasAppendedMessages =
+      currentMessageIds.length > previousMessageIds.length &&
+      previousMessageIds.every((id, index) => currentMessageIds[index] === id);
+
+    if (hasAppendedMessages) {
+      const appendedMessageIds = currentMessageIds.slice(previousMessageIds.length);
+
+      if (appendedMessageIds.length > 0) {
+        setAnimatedMessageIds((prev) => {
+          const next = new Set(prev);
+          appendedMessageIds.forEach((id) => next.add(id));
+          return next;
+        });
+
+        appendedMessageIds.forEach((id) => {
+          const existingTimeout = animationTimeoutsRef.current.get(id);
+          if (existingTimeout) {
+            window.clearTimeout(existingTimeout);
+          }
+
+          const timeoutId = window.setTimeout(() => {
+            setAnimatedMessageIds((prev) => {
+              if (!prev.has(id)) return prev;
+              const next = new Set(prev);
+              next.delete(id);
+              return next;
+            });
+            animationTimeoutsRef.current.delete(id);
+          }, prefersReducedMotion ? 120 : 220);
+
+          animationTimeoutsRef.current.set(id, timeoutId);
+        });
+      }
+    }
+
+    previousMessageIdsRef.current = currentMessageIds;
+  }, [messages, prefersReducedMotion, selectedConversationId]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -334,10 +476,84 @@ export default function MessagingWorkspace({
 
   const listPaneVisibleClass = mobileThreadOpen ? 'hidden lg:flex' : 'flex';
   const threadPaneVisibleClass = mobileThreadOpen ? 'flex' : 'hidden lg:flex';
+  const selectedBusinessOption = useMemo(() => {
+    if (!businessOptions || businessOptions.length === 0) return null;
+
+    const targetBusinessId =
+      selectedConversation?.business?.id ||
+      selectedConversation?.business_id ||
+      activeBusinessId;
+
+    if (!targetBusinessId) return null;
+    return businessOptions.find((business) => business.id === targetBusinessId) || null;
+  }, [
+    activeBusinessId,
+    businessOptions,
+    selectedConversation?.business?.id,
+    selectedConversation?.business_id,
+  ]);
+
+  const businessIdentity = useMemo<MessageVisualIdentity>(
+    () => ({
+      name: selectedConversation?.business?.name || selectedBusinessOption?.name || 'Business',
+      avatarUrl: selectedConversation?.business?.image_url || selectedBusinessOption?.image_url || null,
+    }),
+    [
+      selectedBusinessOption?.image_url,
+      selectedBusinessOption?.name,
+      selectedConversation?.business?.image_url,
+      selectedConversation?.business?.name,
+    ]
+  );
+
+  const participantIdentity = useMemo<MessageVisualIdentity>(
+    () => ({
+      name:
+        selectedConversation?.participant?.display_name ||
+        selectedConversation?.participant?.username ||
+        'Customer',
+      avatarUrl: selectedConversation?.participant?.avatar_url || null,
+    }),
+    [
+      selectedConversation?.participant?.avatar_url,
+      selectedConversation?.participant?.display_name,
+      selectedConversation?.participant?.username,
+    ]
+  );
+
+  const userIdentity = useMemo<MessageVisualIdentity>(
+    () => ({
+      name:
+        user?.profile?.display_name ||
+        user?.profile?.username ||
+        (user?.email ? user.email.split('@')[0] : '') ||
+        'You',
+      avatarUrl: user?.profile?.avatar_url || user?.avatar_url || null,
+    }),
+    [
+      user?.avatar_url,
+      user?.email,
+      user?.profile?.avatar_url,
+      user?.profile?.display_name,
+      user?.profile?.username,
+    ]
+  );
+
+  const resolveMessageIdentity = useCallback(
+    (ownMessage: boolean): MessageVisualIdentity => {
+      if (role === 'user') {
+        return ownMessage ? userIdentity : businessIdentity;
+      }
+
+      return ownMessage ? businessIdentity : participantIdentity;
+    },
+    [businessIdentity, participantIdentity, role, userIdentity]
+  );
 
   return (
-    <div className={`bg-off-white ${topPaddingClassName}`}>
-      <div className={`mx-auto flex w-full max-w-7xl overflow-hidden ${viewportClassName}`}>
+    <>
+      <div className={`bg-off-white ${topPaddingClassName}`}>
+        <div className={`mx-auto flex w-full max-w-7xl overflow-hidden ${viewportClassName}`}>
         <aside
           className={`${listPaneVisibleClass} w-full lg:w-[360px] xl:w-[420px] flex-col border-r border-charcoal/10 bg-off-white`}
         >
@@ -563,43 +779,53 @@ export default function MessagingWorkspace({
                         {messages.map((message) => {
                           const ownMessage = message.sender_type === role;
                           const statusLabel = getStatusLabel(message);
+                          const senderIdentity = resolveMessageIdentity(ownMessage);
+                          const shouldAnimateMessage = animatedMessageIds.has(message.id);
+                          const animationClassName = shouldAnimateMessage
+                            ? prefersReducedMotion
+                              ? 'message-bubble-enter-reduced'
+                              : 'message-bubble-enter'
+                            : '';
 
                           return (
                             <div
                               key={message.id}
-                              className={`flex ${ownMessage ? 'justify-end' : 'justify-start'}`}
+                              className={`flex ${ownMessage ? 'justify-end' : 'justify-start'} ${animationClassName}`}
                             >
-                              <div
-                                className={`max-w-[82%] rounded-2xl px-3.5 py-2.5 sm:max-w-[75%] ${
-                                  ownMessage
-                                    ? 'rounded-br-md bg-navbar-bg text-white shadow-[0_8px_20px_rgba(114,47,55,0.22)]'
-                                    : 'rounded-bl-md border border-charcoal/10 bg-white text-charcoal'
-                                }`}
-                              >
-                                <p
-                                  className="whitespace-pre-wrap break-words text-sm"
-                                  style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
+                              <div className={`flex items-end gap-2 ${ownMessage ? 'flex-row-reverse' : 'flex-row'}`}>
+                                <MessageBubbleAvatar name={senderIdentity.name} avatarUrl={senderIdentity.avatarUrl} />
+                                <div
+                                  className={`max-w-[82%] rounded-2xl px-3.5 py-2.5 sm:max-w-[75%] ${
+                                    ownMessage
+                                      ? 'rounded-br-md bg-navbar-bg text-white shadow-sm'
+                                      : 'rounded-bl-md border border-charcoal/10 bg-white text-charcoal shadow-sm'
+                                  }`}
                                 >
-                                  {message.body}
-                                </p>
-                                <div className={`mt-1.5 flex items-center gap-2 text-[11px] ${ownMessage ? 'text-white/70' : 'text-charcoal/45'}`}>
-                                  <span>{formatThreadTimestamp(message.created_at)}</span>
-                                  {ownMessage && (
-                                    <>
-                                      <span>{statusLabel}</span>
-                                      {message.client_state === 'failed' && (
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            void retryMessage(message);
-                                          }}
-                                          className="rounded-full border border-white/35 px-2 py-0.5 text-[10px] font-semibold text-white transition-colors hover:bg-white/15"
-                                        >
-                                          Retry
-                                        </button>
-                                      )}
-                                    </>
-                                  )}
+                                  <p
+                                    className="whitespace-pre-wrap break-words text-sm"
+                                    style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
+                                  >
+                                    {message.body}
+                                  </p>
+                                  <div className={`mt-1.5 flex items-center gap-2 text-[11px] ${ownMessage ? 'text-white/70' : 'text-charcoal/45'}`}>
+                                    <span>{formatThreadTimestamp(message.created_at)}</span>
+                                    {ownMessage && (
+                                      <>
+                                        <span>{statusLabel}</span>
+                                        {message.client_state === 'failed' && (
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              void retryMessage(message);
+                                            }}
+                                            className="rounded-full border border-white/35 px-2 py-0.5 text-[10px] font-semibold text-white transition-colors hover:bg-white/15"
+                                          >
+                                            Retry
+                                          </button>
+                                        )}
+                                      </>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -636,8 +862,38 @@ export default function MessagingWorkspace({
               </div>
             </>
           )}
-        </section>
+          </section>
+        </div>
       </div>
-    </div>
+      <style jsx>{`
+        @keyframes messageBubbleEnter {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes messageBubbleFade {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        .message-bubble-enter {
+          animation: messageBubbleEnter 190ms cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        .message-bubble-enter-reduced {
+          animation: messageBubbleFade 110ms ease-out both;
+        }
+      `}</style>
+    </>
   );
 }

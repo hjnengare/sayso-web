@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect, memo } from 'react';
 import { useReviewHelpful } from '../../hooks/useReviewHelpful';
 import { useReviewReplies } from '../../hooks/useReviewReplies';
 import { useUserBadgesById } from '../../hooks/useUserBadges';
-import { m, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence, useReducedMotion } from 'framer-motion';
 import Image from 'next/image';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -52,6 +52,7 @@ function ReviewCard({
   const router = useRouter();
   const { likeReview, deleteReview } = useReviewSubmission();
   const isDesktop = useIsDesktop();
+  const prefersReducedMotion = useReducedMotion();
   const isTransientReviewId = isOptimisticId(review.id) || !isValidUUID(review.id);
 
   // Helper function to check if current user owns this review with fallback logic
@@ -233,6 +234,11 @@ function ReviewCard({
   const isOwner = isReviewOwner();
   const reportButtonDisabled =
     isOwner || flagging || isFlagged || isTransientReviewId || checkingFlagStatus;
+  const rootInitial = prefersReducedMotion ? { opacity: 0, y: 0 } : { opacity: 0, y: 10 };
+  const rootAnimate = { opacity: 1, y: 0 };
+  const rootTransition = prefersReducedMotion
+    ? { duration: 0.01 }
+    : { duration: 0.2, ease: 'easeOut' as const };
 
   useEffect(() => {
     let cancelled = false;
@@ -322,9 +328,9 @@ function ReviewCard({
 
   return (
     <m.div
-      initial={isDesktop ? false : { opacity: 0, y: 20 }}
-      animate={isDesktop ? undefined : { opacity: 1, y: 0 }}
-      transition={isDesktop ? undefined : { duration: 0.5 }}
+      initial={rootInitial}
+      animate={rootAnimate}
+      transition={rootTransition}
       whileHover={isDesktop ? undefined : { scale: 1.01, x: 5 }}
       className={`relative bg-gradient-to-br from-off-white via-off-white to-off-white/95 backdrop-blur-sm rounded-lg p-6 border-none ${
         isDesktop ? '' : 'transition-all duration-300 group hover:border-white/80 hover:-translate-y-1'

@@ -1,12 +1,11 @@
 'use client';
 
 import React from 'react';
-import { m } from 'framer-motion';
+import { m, useReducedMotion } from 'framer-motion';
 import { AlertCircle, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 import ReviewCard from './ReviewCard';
 import type { ReviewWithUser } from '../../lib/types/database';
-import { useIsDesktop } from '../../hooks/useIsDesktop';
 import { useRealtimeReviews, useRealtimeHelpfulVotes } from '../../hooks/useRealtime';
 import { LiveIndicator } from '../Realtime/RealtimeIndicators';
 
@@ -37,7 +36,12 @@ export default function ReviewsList({
   isOwnerView = false,
   businessId,
 }: ReviewsListProps) {
-  const isDesktop = useIsDesktop();
+  const prefersReducedMotion = useReducedMotion();
+  const entryInitial = prefersReducedMotion ? { opacity: 0, y: 0 } : { opacity: 0, y: 10 };
+  const entryAnimate = { opacity: 1, y: 0 };
+  const entryTransition = prefersReducedMotion
+    ? { duration: 0.01 }
+    : { duration: 0.2, ease: 'easeOut' as const };
   
   // Use realtime reviews if businessId is provided, otherwise use initial reviews
   const { reviews: realtimeReviews, isLive } = useRealtimeReviews(businessId, initialReviews);
@@ -83,8 +87,9 @@ export default function ReviewsList({
     return (
       <div className="flex flex-1 items-center justify-center">
         <m.div
-          initial={isDesktop ? { opacity: 0, y: 20 } : false}
-          animate={isDesktop ? { opacity: 1, y: 0 } : undefined}
+          initial={entryInitial}
+          animate={entryAnimate}
+          transition={entryTransition}
           className="bg-red-50 border border-red-200 rounded-lg p-6 text-center"
         >
           <div className="flex items-center justify-center mb-3">
@@ -165,9 +170,9 @@ export default function ReviewsList({
       {reviews.map((review, index) => (
         <m.div
           key={review.id}
-          initial={!isDesktop ? { opacity: 0, y: 20 } : false}
-          animate={!isDesktop ? { opacity: 1, y: 0 } : undefined}
-          transition={!isDesktop ? { delay: index * 0.1, duration: 0.5 } : undefined}
+          initial={entryInitial}
+          animate={entryAnimate}
+          transition={entryTransition}
         >
           <ReviewCard
             review={review}
@@ -181,9 +186,9 @@ export default function ReviewsList({
 
       {reviews.length > 0 && (
         <m.div
-          initial={!isDesktop ? { opacity: 0 } : false}
-          animate={!isDesktop ? { opacity: 1 } : undefined}
-          transition={!isDesktop ? { delay: reviews.length * 0.1 + 0.2 } : undefined}
+          initial={entryInitial}
+          animate={entryAnimate}
+          transition={entryTransition}
           className="text-center pt-4"
         >
           <p className="font-urbanist text-sm text-charcoal/60">
