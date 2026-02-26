@@ -49,6 +49,7 @@ export default function EventsSpecials({
   showHeaderCta = true,
   useTypedTitle = false,
   showTypeFilters = false,
+  dateRibbonPosition = "corner",
 }: {
   title?: string;
   events: Event[];
@@ -75,6 +76,8 @@ export default function EventsSpecials({
   useTypedTitle?: boolean;
   /** Show Events/Specials pills (notifications styling) for local filtering. */
   showTypeFilters?: boolean;
+  /** Override date ribbon position on cards rendered by this section. */
+  dateRibbonPosition?: "corner" | "middle";
 }) {
   const router = useRouter();
   const isDesktop = useIsDesktop();
@@ -272,7 +275,7 @@ export default function EventsSpecials({
                           key={event.id ?? `event-${index}`}
                           className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto min-w-[clamp(220px,18vw,320px)] list-none flex justify-center"
                         >
-                          <EventCard event={event} index={index} />
+                          <EventCard event={event} index={index} dateRibbonPosition={dateRibbonPosition} />
                         </div>
                       ))}
                     </div>
@@ -290,7 +293,7 @@ export default function EventsSpecials({
                           variants={itemVariants}
                           className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto min-w-[clamp(220px,18vw,320px)] list-none flex justify-center"
                         >
-                          <EventCard event={event} index={index} />
+                          <EventCard event={event} index={index} dateRibbonPosition={dateRibbonPosition} />
                         </m.div>
                       ))}
                     </m.div>
@@ -302,7 +305,7 @@ export default function EventsSpecials({
                         key={event.id ?? `event-${index}`}
                         className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto min-w-[clamp(220px,18vw,320px)] list-none flex justify-center"
                       >
-                        <EventCard event={event} index={index} />
+                        <EventCard event={event} index={index} dateRibbonPosition={dateRibbonPosition} />
                       </div>
                     ))}
                   </>

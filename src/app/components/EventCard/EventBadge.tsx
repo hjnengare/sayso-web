@@ -83,6 +83,7 @@ interface EventBadgeProps {
   endDateISO?: string;
   occurrences?: Array<{ startDate: string; endDate?: string; bookingUrl?: string }>;
   eventId?: string;
+  position?: "corner" | "middle";
 }
 
 const EN_DASH = '–';
@@ -136,7 +137,15 @@ const formatFallbackCompact = (start?: string, end?: string): string => {
   return `${s.day} ${s.month}${EN_DASH}${e.day} ${e.month}`;
 };
 
-export default function EventBadge({ startDate, endDate, startDateISO, endDateISO, occurrences, eventId }: EventBadgeProps) {
+export default function EventBadge({
+  startDate,
+  endDate,
+  startDateISO,
+  endDateISO,
+  occurrences,
+  eventId,
+  position = "corner",
+}: EventBadgeProps) {
   // Determine earliest and latest using occurrences or ISO
   let earliest: string | undefined = startDateISO;
   let latest: string | undefined = endDateISO;
@@ -151,6 +160,27 @@ export default function EventBadge({ startDate, endDate, startDateISO, endDateIS
   const startParsed = tryParse(earliest);
   const endParsed = tryParse(latest);
   const dateText = startParsed ? formatCompact(startParsed, endParsed || undefined) : formatFallbackCompact(startDate, endDate);
+
+  if (position === "middle") {
+    return (
+      <div className="absolute left-1/2 bottom-0 z-20 -translate-x-1/2 translate-y-1/2">
+        <div
+          className="inline-flex items-center justify-center rounded-full bg-coral px-5 py-2.5 text-white shadow-md"
+          style={{
+            minWidth: "160px",
+            textAlign: "center",
+            fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+            fontWeight: 700,
+            fontSize: "0.75rem",
+            letterSpacing: "0.015em",
+            lineHeight: 1,
+          }}
+        >
+          {dateText}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="absolute -left-1 -top-1 z-20 overflow-hidden" style={{ width: '150px', height: '120px' }}>

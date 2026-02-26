@@ -125,9 +125,10 @@ const getEventMediaImage = (event: Event) => {
 interface EventCardProps {
   event: Event;
   index?: number;
+  dateRibbonPosition?: "corner" | "middle";
 }
 
-function EventCard({ event, index = 0 }: EventCardProps) {
+function EventCard({ event, index = 0, dateRibbonPosition = "corner" }: EventCardProps) {
   const router = useRouter();
   const { toggleSavedItem, isItemSaved } = useSavedItems();
   const { showToast } = useToast();
@@ -519,11 +520,14 @@ function EventCard({ event, index = 0 }: EventCardProps) {
               endDateISO={event.endDateISO}
               occurrences={event.occurrences}
               eventId={event.id}
+              position={dateRibbonPosition}
             />
           </div>
 
           {/* CONTENT - Minimal, premium spacing */}
-          <div className="px-4 pt-3 pb-0 bg-gradient-to-b from-card-bg/95 to-card-bg  gap-2 rounded-b-[12px]">
+          <div
+            className={`px-4 ${dateRibbonPosition === "middle" ? "pt-7" : "pt-3"} pb-0 bg-gradient-to-b from-card-bg/95 to-card-bg gap-2 rounded-b-[12px]`}
+          >
             <div className="flex flex-col gap-2">
               <m.h3
                 layoutId={eventTitleLayoutId}
