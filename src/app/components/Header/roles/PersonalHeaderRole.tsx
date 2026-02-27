@@ -120,7 +120,7 @@ export function PersonalHeaderRole({
           {isMobileSearchOpen && showSearch && isHomePage && renderMobileSearchInput()}
         </AnimatePresence>
 
-        <div className="relative z-[2] flex items-center gap-1 ml-auto">
+        <div className="relative z-[2] flex items-center gap-3 ml-auto">
           {showSearch && isHomePage && !isMobileSearchOpen && (
             <button
               type="button"
