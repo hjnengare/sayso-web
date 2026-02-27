@@ -571,7 +571,7 @@ export default function DesktopNav(props: DesktopNavProps) {
             </OptimizedLink>
           )}
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
             {/* Saved (bookmark) */}
             {!isGuest && (
               <div className="relative">
