@@ -273,7 +273,7 @@ export default function CommunityHighlights({
               </div>
             </div>
             
-            <div className="w-full bg-off-white border border-sage/20 rounded-3xl px-6 pt-16 pb-6 text-center space-y-3">
+            <div className="w-full bg-off-white border border-sage/20 rounded-3xl pt-16 pb-6 text-center space-y-3">
               <h2 className="text-h2 font-semibold text-charcoal" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
                 {contributorsEmptyTitle}
               </h2>

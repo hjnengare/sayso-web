@@ -49,7 +49,7 @@ export default function ReviewsList({
         {[...Array(3)].map((_, i) => (
           <div
             key={i}
-            className="bg-gradient-to-br from-white/80 to-white/60 backdrop-blur-sm rounded-lg p-6 border border-sage/5"
+            className="bg-gradient-to-br from-white/80 to-white/60 backdrop-blur-sm rounded-lg p-2 border border-sage/5"
           >
             <div className="flex items-start space-x-4 animate-pulse">
               <div className="w-12 h-12 bg-card-bg/20 rounded-full flex-shrink-0" />
@@ -102,8 +102,8 @@ export default function ReviewsList({
         }}
       >
         <div className="text-center w-full max-w-md">
-          <div className="w-20 h-20 mx-auto mb-3 bg-card-bg/10 rounded-full flex items-center justify-center">
-            <MessageCircle className="w-8 h-8 text-navbar-bg/90" />
+          <div className="w-20 h-20 mx-auto mb-3 bg-off-white/80 rounded-full flex items-center justify-center">
+            <MessageCircle className="w-8 h-8 text-charcoal/90" />
           </div>
           <h3 
             className="text-h2 font-semibold text-charcoal mb-2"
@@ -147,13 +147,7 @@ export default function ReviewsList({
 
   return (
     <div className="space-y-6">
-      {/* Live Indicator */}
-      {businessId && isLive && (
-        <div className="flex justify-end">
-          <LiveIndicator isLive={isLive} />
-        </div>
-      )}
-      
+  
       {reviews.map((review) => (
         <div key={review.id}>
           <ReviewCard

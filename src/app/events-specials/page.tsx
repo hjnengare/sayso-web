@@ -3,8 +3,9 @@
 import { useMemo, useState, useEffect } from "react";
 import { useEventsSpecials } from "../hooks/useEventsSpecials";
 import Link from "next/link";
-import { m } from "framer-motion";
+import { m, useReducedMotion } from "framer-motion";
 import Footer from "../components/Footer/Footer";
+import { getChoreoItemMotion } from "../lib/motion/choreography";
 import FilterTabs from "../components/EventsPage/FilterTabs";
 import ResultsCount from "../components/EventsPage/ResultsCount";
 import EventCard from "../components/EventCard/EventCard";
@@ -41,6 +42,8 @@ const itemVariants = {
 };
 
 export default function EventsSpecialsPage() {
+  const prefersReducedMotion = useReducedMotion() ?? false;
+  const choreoEnabled = !prefersReducedMotion;
   const [selectedFilter, setSelectedFilter] = useState<"all" | "event" | "special">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [isDesktop, setIsDesktop] = useState(false);
@@ -230,7 +233,11 @@ export default function EventsSpecialsPage() {
       >
         
         <div className="relative mx-auto w-full max-w-[2000px] px-2">
-          <nav className="relative z-10 pb-1 es-load-item es-delay-0" aria-label="Breadcrumb">
+          <m.nav
+            className="relative z-10 pb-1"
+            aria-label="Breadcrumb"
+            {...getChoreoItemMotion({ order: 0, intent: "inline", enabled: choreoEnabled })}
+          >
             <ol className="flex items-center gap-2 text-sm sm:text-base">
               <li>
                 <Link
@@ -250,10 +257,13 @@ export default function EventsSpecialsPage() {
                 </span>
               </li>
             </ol>
-          </nav>
+          </m.nav>
 
           {/* Title and Description Block */}
-          <div className="relative z-10 mb-6 sm:mb-8 px-4 sm:px-6 text-center pt-4 es-load-item es-delay-1">
+          <m.div
+            className="relative z-10 mb-6 sm:mb-8 px-4 sm:px-6 text-center pt-4"
+            {...getChoreoItemMotion({ order: 1, intent: "heading", enabled: choreoEnabled })}
+          >
             <div className="my-4">
               <h1 
                 className="text-2xl sm:text-3xl md:text-4xl font-bold leading-[1.2] tracking-tight text-charcoal mx-auto font-urbanist"
@@ -278,9 +288,12 @@ export default function EventsSpecialsPage() {
               Discover exciting local events and exclusive special offers. 
               Find concerts, festivals, workshops, and limited-time deals happening near you.
             </p>
-          </div>
+          </m.div>
 
-          <div className="relative z-10 py-4 px-4 es-load-item es-delay-2">
+          <m.div
+            className="relative z-10 py-4 px-4"
+            {...getChoreoItemMotion({ order: 2, intent: "section", enabled: choreoEnabled })}
+          >
             <SearchInput
               variant="header"
               placeholder="Search events and limited-time offers..."
@@ -302,14 +315,20 @@ export default function EventsSpecialsPage() {
                 }
               </div>
             )}
-          </div>
+          </m.div>
 
-          <div className="py-3 sm:py-4 flex flex-col gap-3 es-load-item es-delay-3">
+          <m.div
+            className="py-3 sm:py-4 flex flex-col gap-3"
+            {...getChoreoItemMotion({ order: 3, intent: "section", enabled: choreoEnabled })}
+          >
             <FilterTabs selectedFilter={selectedFilter} onFilterChange={handleFilterChange} />
             <ResultsCount count={filteredEvents.length} filterType={selectedFilter} />
-          </div>
+          </m.div>
 
-          <div className="py-3 sm:py-4 es-load-item es-delay-4">
+          <m.div
+            className="py-3 sm:py-4"
+            {...getChoreoItemMotion({ order: 4, intent: "section", enabled: choreoEnabled })}
+          >
             {isLoading ? (
               <EventsGridSkeleton count={ITEMS_PER_PAGE} fullWidthCards />
             ) : isBlockingError ? (
@@ -390,39 +409,11 @@ export default function EventsSpecialsPage() {
                 )}
               </div>
             )}
-          </div>
+          </m.div>
         </div>
       </main>
 
       <style jsx>{`
-        .es-load-item {
-          opacity: 0;
-          transform: translateY(6px);
-          animation: eventsSpecialsLoadIn 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
-          will-change: opacity, transform;
-        }
-        .es-delay-0 { animation-delay: 0ms; }
-        .es-delay-1 { animation-delay: 70ms; }
-        .es-delay-2 { animation-delay: 120ms; }
-        .es-delay-3 { animation-delay: 170ms; }
-        .es-delay-4 { animation-delay: 220ms; }
-        @keyframes eventsSpecialsLoadIn {
-          0% {
-            opacity: 0;
-            transform: translateY(6px);
-          }
-          100% {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .es-load-item {
-            animation: none;
-            opacity: 1;
-            transform: none;
-          }
-        }
         .desktop-card-shimmer {
           position: relative;
         }

@@ -146,7 +146,7 @@ export function PersonalHeaderRole({
             >
               <Bell className="w-5 h-5 pointer-events-none" fill={isNotificationsActive ? "currentColor" : "none"} />
               {unreadCount > 0 ? (
-                <span className="pointer-events-none absolute -bottom-1.5 -right-1.5 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[10px] leading-none font-extrabold tracking-tight rounded-full bg-white text-coral border border-coral/30 shadow-[0_6px_14px_rgba(0,0,0,0.2)]">
+                <span className="pointer-events-none absolute -bottom-1.5 -right-1.5 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[10px] leading-none font-extrabold tracking-tight rounded-full bg-coral text-white ring-[1.5px] ring-white/85 shadow-sm">
                   {unreadCount > 99 ? "99+" : unreadCount}
                 </span>
               ) : null}
@@ -167,7 +167,7 @@ export function PersonalHeaderRole({
             >
               <MessageSquare className="w-5 h-5 pointer-events-none" fill={isMessagesActive ? "currentColor" : "none"} />
               {messageUnreadCount > 0 ? (
-                <span className="pointer-events-none absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[10px] leading-none font-extrabold tracking-tight rounded-full bg-white text-coral border border-coral/30 shadow-[0_6px_14px_rgba(0,0,0,0.2)]">
+                <span className="pointer-events-none absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[10px] leading-none font-extrabold tracking-tight rounded-full bg-coral text-white ring-[1.5px] ring-white/85 shadow-sm">
                   {messageUnreadCount > 99 ? "99+" : messageUnreadCount}
                 </span>
               ) : null}
