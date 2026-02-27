@@ -15,6 +15,7 @@ import { useToast } from "../../contexts/ToastContext";
 import { useEventRatings } from "../../hooks/useEventRatings";
 
 const EVENT_IMAGE_BASE_PATH = "/png";
+const loadedEventImageKeys = new Set<string>();
 
 // Tiny 4x3 SVG for instant visual fill while image loads
 const BLUR_DATA_URL =
@@ -58,6 +59,25 @@ const EVENT_SPORT_KEYWORDS = [
 
 const fixImageUrl = (url: string): string =>
   url.startsWith("//") ? `https:${url}` : url;
+
+const getImageCacheKey = (url: string): string => {
+  const normalizedUrl = fixImageUrl(url.trim());
+  if (!normalizedUrl) return "";
+
+  if (normalizedUrl.startsWith("/")) {
+    return normalizedUrl.toLowerCase();
+  }
+
+  try {
+    const parsed = new URL(normalizedUrl);
+    return `${parsed.origin}${parsed.pathname}${parsed.search}`.toLowerCase();
+  } catch {
+    return normalizedUrl.toLowerCase();
+  }
+};
+
+const isFallbackEventArtwork = (url: string): boolean =>
+  getImageCacheKey(url).startsWith(`${EVENT_IMAGE_BASE_PATH}/`);
 
 const getEventMediaImage = (event: Event) => {
   // Priority 0: Uploaded images array (newer events)
@@ -142,8 +162,11 @@ function EventCard({
   const eventTitleLayoutId = `event-title-${event.id}`;
   const iconPng = getEventIconPng(event.icon);
   const mediaImage = getEventMediaImage(event);
-  const hasRealImage = Boolean(event.image?.trim() || (event as any).businessImages?.length);
-  const [imageLoaded, setImageLoaded] = useState(!hasRealImage);
+  const mediaImageCacheKey = useMemo(() => getImageCacheKey(mediaImage), [mediaImage]);
+  const hasRealImage = !isFallbackEventArtwork(mediaImage);
+  const [imageLoaded, setImageLoaded] = useState(
+    () => !hasRealImage || (mediaImageCacheKey ? loadedEventImageKeys.has(mediaImageCacheKey) : true)
+  );
   const showLoadingOverlay = hasRealImage && !imageLoaded;
 
   const eventDetailHref = event.type === "event" ? `/event/${event.id}` : `/special/${event.id}`;
@@ -222,6 +245,20 @@ function EventCard({
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!hasRealImage) {
+      setImageLoaded(true);
+      return;
+    }
+
+    if (!mediaImageCacheKey) {
+      setImageLoaded(true);
+      return;
+    }
+
+    setImageLoaded(loadedEventImageKeys.has(mediaImageCacheKey));
+  }, [hasRealImage, mediaImageCacheKey]);
 
   const initialReviews = (event as any).reviews ?? (event as any).totalReviews ?? 0;
   const { rating: liveRating, totalReviews: liveTotalReviews } = useEventRatings(
@@ -395,8 +432,18 @@ function EventCard({
                 className={hasRealImage ? "object-cover card-img-zoom sm:group-active:scale-[0.98] motion-reduce:transition-none" : "object-contain w-32 h-32 sm:w-36 sm:h-36 md:w-32 md:h-32 card-img-zoom sm:group-active:scale-[0.98] motion-reduce:transition-none"}
                 quality={hasRealImage ? 75 : 60}
                 priority={false}
-                onLoadingComplete={() => setImageLoaded(true)}
-                onError={() => setImageLoaded(true)}
+                onLoadingComplete={() => {
+                  if (mediaImageCacheKey) {
+                    loadedEventImageKeys.add(mediaImageCacheKey);
+                  }
+                  setImageLoaded(true);
+                }}
+                onError={() => {
+                  if (mediaImageCacheKey) {
+                    loadedEventImageKeys.add(mediaImageCacheKey);
+                  }
+                  setImageLoaded(true);
+                }}
                 placeholder="blur"
                 blurDataURL={BLUR_DATA_URL}
               />

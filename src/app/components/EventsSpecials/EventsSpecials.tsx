@@ -34,6 +34,26 @@ const itemVariants = {
 
 type ListingTypeFilter = "event" | "special" | null;
 
+const normalizeEventKeyPart = (value: string | null | undefined): string =>
+  (value ?? "").trim().toLowerCase();
+
+const getStableEventRailKey = (event: Event): string => {
+  if (event.id?.trim()) {
+    return event.id;
+  }
+
+  return [
+    normalizeEventKeyPart(event.type),
+    normalizeEventKeyPart(event.title),
+    normalizeEventKeyPart(event.startDateISO || event.startDate),
+    normalizeEventKeyPart(event.endDateISO || event.endDate),
+    normalizeEventKeyPart(event.location),
+    normalizeEventKeyPart(event.businessId),
+    normalizeEventKeyPart(event.href),
+    normalizeEventKeyPart(event.canonicalKey),
+  ].join("|");
+};
+
 export default function EventsSpecials({
   title = "Events & Specials",
   events,
@@ -269,7 +289,7 @@ export default function EventsSpecials({
                     <div className="flex gap-3 items-stretch">
                       {filteredEvents.map((event, index) => (
                         <div
-                          key={event.id ?? `event-${index}`}
+                          key={getStableEventRailKey(event)}
                           className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto min-w-[clamp(220px,18vw,320px)] list-none flex justify-center"
                         >
                           <EventCard event={event} index={index} dateRibbonPosition={dateRibbonPosition} />
@@ -286,7 +306,7 @@ export default function EventsSpecials({
                     >
                       {filteredEvents.map((event, index) => (
                         <m.div
-                          key={event.id ?? `event-${index}`}
+                          key={getStableEventRailKey(event)}
                           variants={itemVariants}
                           className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto min-w-[clamp(220px,18vw,320px)] list-none flex justify-center"
                         >
@@ -299,7 +319,7 @@ export default function EventsSpecials({
                   <>
                     {filteredEvents.map((event, index) => (
                       <div
-                        key={event.id ?? `event-${index}`}
+                        key={getStableEventRailKey(event)}
                         className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto min-w-[clamp(220px,18vw,320px)] list-none flex justify-center"
                       >
                         <EventCard event={event} index={index} dateRibbonPosition={dateRibbonPosition} />
