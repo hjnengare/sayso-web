@@ -14,6 +14,7 @@ import ScrollableSection from "../ScrollableSection/ScrollableSection";
 import { m } from "framer-motion";
 import LocationPromptBanner from "../Location/LocationPromptBanner";
 import CommunityHighlightsSkeleton from "./CommunityHighlightsSkeleton";
+import ReviewerCardSkeleton from "../ReviewerCard/ReviewerCardSkeleton";
 import { useIsDesktop } from "../../hooks/useIsDesktop";
 import {
   Review,
@@ -252,13 +253,7 @@ export default function CommunityHighlights({
                     key={`reviewer-skeleton-${index}`}
                     className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto sm:min-w-[25%] md:min-w-[25%] lg:min-w-[20%] xl:min-w-[18%] 2xl:min-w-[16%] list-none flex justify-center"
                   >
-                    <div className="w-full max-w-[340px] rounded-[12px] border border-sage/20 bg-off-white p-4 sm:p-5">
-                      <div className="h-5 w-32 rounded bg-charcoal/10 animate-pulse mb-4" />
-                      <div className="h-4 w-20 rounded bg-charcoal/10 animate-pulse mb-3" />
-                      <div className="h-3 w-full rounded bg-charcoal/10 animate-pulse mb-2" />
-                      <div className="h-3 w-5/6 rounded bg-charcoal/10 animate-pulse mb-5" />
-                      <div className="h-10 w-full rounded-full bg-charcoal/10 animate-pulse" />
-                    </div>
+                    <ReviewerCardSkeleton />
                   </div>
                 ))}
               </div>

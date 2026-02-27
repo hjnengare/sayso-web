@@ -30,18 +30,17 @@ export default function ReviewerCardSkeleton() {
           {/* Stats row */}
           <div className="grid grid-cols-3 gap-1.5">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="flex flex-col items-center px-2 py-2 rounded-xl bg-off-white/60 border border-charcoal/[0.06] gap-1">
+              <div key={i} className="flex flex-col items-center px-2 py-2 rounded-full bg-off-white/60 border border-charcoal/[0.06] gap-1">
                 <div className="h-6 w-8 bg-charcoal/8 rounded-md animate-pulse" />
                 <div className="h-2 w-10 bg-charcoal/5 rounded-md animate-pulse" />
               </div>
             ))}
           </div>
 
-          {/* Badges */}
+          {/* Badges (max 2 visible, matching real card MAX_VISIBLE_BADGES) */}
           <div className="flex items-center gap-1">
             <div className="h-5 w-16 bg-charcoal/8 rounded-full animate-pulse" />
             <div className="h-5 w-14 bg-charcoal/8 rounded-full animate-pulse" />
-            <div className="h-5 w-12 bg-charcoal/8 rounded-full animate-pulse" />
           </div>
 
           {/* Latest review snippet */}
