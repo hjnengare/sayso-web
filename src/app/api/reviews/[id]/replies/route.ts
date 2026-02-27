@@ -1,63 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { getServerSupabase } from '../../../../lib/supabase/server';
 import { withUser } from '@/app/api/_lib/withAuth';
 import { isOptimisticId, isValidUUID } from '../../../../lib/utils/validation';
+import { notifyReplyRecipients } from '@/app/lib/notifications';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-type ReplyNotificationFallbackArgs = {
-  reviewOwnerId: string;
-  replierId: string;
-  replyId: string;
-  replierName: string;
-  businessSlug: string | null;
-};
-
 function isInvalidReviewId(reviewId: string): boolean {
   return isOptimisticId(reviewId) || !isValidUUID(reviewId);
-}
-
-function isMissingCommentReplyNotificationRpc(error: any): boolean {
-  const code = typeof error?.code === 'string' ? error.code : '';
-  const message = `${error?.message ?? ''} ${error?.details ?? ''}`.toLowerCase();
-  return (
-    code === '42883' ||
-    code === 'PGRST202' ||
-    (message.includes('create_comment_reply_notification') && message.includes('does not exist')) ||
-    message.includes('could not find the function public.create_comment_reply_notification')
-  );
-}
-
-async function createReplyNotificationFallback(args: ReplyNotificationFallbackArgs): Promise<void> {
-  if (args.reviewOwnerId === args.replierId) return;
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!supabaseUrl || !serviceRoleKey) {
-    console.warn('[Reply Create] Notification fallback skipped: missing Supabase env config');
-    return;
-  }
-  const adminSupabase = createClient(supabaseUrl, serviceRoleKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
-  const { data: existing, error: existingError } = await adminSupabase
-    .from('notifications')
-    .select('id')
-    .eq('user_id', args.reviewOwnerId)
-    .eq('type', 'comment_reply')
-    .eq('entity_id', args.replyId)
-    .limit(1)
-    .maybeSingle();
-  if (existingError) { console.error('[Reply Create] Notification fallback dedupe check failed:', existingError); return; }
-  if (existing?.id) return;
-  const link = args.businessSlug ? `/business/${args.businessSlug}` : '/profile';
-  const { error: insertError } = await adminSupabase.from('notifications').insert({
-    user_id: args.reviewOwnerId, type: 'comment_reply', title: 'New Reply',
-    message: `${args.replierName} replied to your review`,
-    image: '/png/restaurants.png', image_alt: 'Comment reply', link,
-    entity_id: args.replyId, read: false,
-  });
-  if (insertError) console.error('[Reply Create] Notification fallback insert failed:', insertError);
 }
 
 function transformReply(reply: any) {
@@ -130,26 +80,16 @@ export const POST = withUser(async (req: NextRequest, { user, supabase, params }
     const transformedReply = transformReply(reply);
     const profile = Array.isArray(reply.profile) ? reply.profile[0] : reply.profile;
     try {
-      const { data: reviewOwner } = await supabase.from('reviews').select('user_id, business_id').eq('id', reviewId).maybeSingle();
-      if (reviewOwner && reviewOwner.user_id !== user.id) {
-        const { data: businessData } = await supabase.from('businesses').select('slug').eq('id', reviewOwner.business_id).maybeSingle();
-        const replierName = profile?.display_name || profile?.username || 'Someone';
-        const replyId = String(reply.id);
-        const rpcPayload = {
-          p_review_owner_id: reviewOwner.user_id, p_replier_id: user.id, p_review_id: reviewId,
-          p_reply_id: replyId, p_replier_name: replierName, p_business_slug: businessData?.slug || null,
-        };
-        const { error: notificationError } = await supabase.rpc('create_comment_reply_notification', rpcPayload);
-        if (notificationError) {
-          if (isMissingCommentReplyNotificationRpc(notificationError)) {
-            console.warn('[Reply Create] create_comment_reply_notification RPC missing; using fallback insert');
-            await createReplyNotificationFallback({ reviewOwnerId: reviewOwner.user_id, replierId: user.id, replyId, replierName, businessSlug: businessData?.slug || null });
-          } else {
-            console.error('[Reply Create] Failed to create notification:', notificationError);
-          }
-        }
-      }
-    } catch (notifError) { console.error('[Reply Create] Failed to create notification:', notifError); }
+      const replierName = profile?.display_name || profile?.username || 'Someone';
+      await notifyReplyRecipients({
+        reviewId,
+        replyId: String(reply.id),
+        replierId: user.id,
+        replierName,
+      });
+    } catch (notifError) {
+      console.error('[Reply Create] Failed to fan out notifications:', notifError);
+    }
     try {
       const { revalidatePath } = await import('next/cache');
       const { data: reviewData } = await supabase.from('reviews').select('business_id').eq('id', reviewId).maybeSingle();

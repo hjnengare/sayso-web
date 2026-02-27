@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo, useRef } from "react";
-import useSWR, { mutate as globalMutate } from "swr";
+import useSWR from "swr";
 import { useAuth } from "./AuthContext";
 import { formatTimeAgo } from "../utils/formatTimeAgo";
 import { getBrowserSupabase } from "../lib/supabase/client";
@@ -74,6 +74,7 @@ interface NotificationsContextType {
 // ─── Fetcher ──────────────────────────────────────────────────────────────────
 
 const PERSONAL_NOTIFICATIONS_ENDPOINT = '/api/notifications/user';
+const BUSINESS_NOTIFICATIONS_ENDPOINT = '/api/notifications/business';
 
 async function fetchNotificationsFromApi(url: string): Promise<DatabaseNotification[]> {
   const res = await fetch(url);
@@ -111,16 +112,14 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   const { user, isLoading: authLoading } = useAuth();
   const userCurrentRole =
     user?.profile?.account_role || user?.profile?.role || "user";
-  const isAdminUser = userCurrentRole === "admin";
-  const isBusinessAccountUser =
-    !isAdminUser && userCurrentRole === "business_owner";
+  const isBusinessAccountUser = userCurrentRole === "business_owner";
   const userId = user?.id ?? null;
-  const endpoint = PERSONAL_NOTIFICATIONS_ENDPOINT;
+  const endpoint = isBusinessAccountUser
+    ? BUSINESS_NOTIFICATIONS_ENDPOINT
+    : PERSONAL_NOTIFICATIONS_ENDPOINT;
 
-  // Personal notifications endpoint should not be queried by business accounts.
-  const shouldFetchPersonalNotifications =
-    !authLoading && Boolean(userId) && !isBusinessAccountUser;
-  const swrKey = shouldFetchPersonalNotifications ? `${endpoint}:${userId}` : null;
+  const shouldFetchNotifications = !authLoading && Boolean(userId);
+  const swrKey = shouldFetchNotifications ? `${endpoint}:${userId}` : null;
 
   // realtime is working → no need for aggressive polling; fall back to 30 s if channel fails
   const [realtimeFailed, setRealtimeFailed] = useState(false);
@@ -167,7 +166,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   const supabaseRef = useRef(getBrowserSupabase());
 
   useEffect(() => {
-    if (authLoading || !userId || isBusinessAccountUser) return;
+    if (authLoading || !userId) return;
 
     const supabase = supabaseRef.current;
 
@@ -223,7 +222,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId, isBusinessAccountUser, authLoading, mutate]);
+  }, [userId, authLoading, mutate]);
 
   // ── Mutations ────────────────────────────────────────────────────────────────
 
@@ -279,10 +278,10 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   const stableUnreadCountRef = useRef(0);
 
   useEffect(() => {
-    if (!shouldFetchPersonalNotifications) {
+    if (!shouldFetchNotifications) {
       stableUnreadCountRef.current = 0;
     }
-  }, [shouldFetchPersonalNotifications]);
+  }, [shouldFetchNotifications]);
 
   const unreadCount = useMemo(() => {
     // rawNotifications is undefined when swrKey is null (auth resolving).

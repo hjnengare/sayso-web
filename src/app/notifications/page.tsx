@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
 import { m, AnimatePresence, useReducedMotion } from "framer-motion";
 import { getChoreoItemMotion } from "../lib/motion/choreography";
-import { Bell, Check, X, MessageSquare, MessageCircle, Star, Heart, TrendingUp, Clock, ChevronRight, Award, ThumbsUp, CheckCircle, ImageIcon, Trophy, UserRound } from "lucide-react";
+import { Bell, Check, X, MessageSquare, MessageCircle, Star, Heart, TrendingUp, Clock, ChevronRight, Award, ThumbsUp, CheckCircle, ImageIcon, Trophy } from "lucide-react";
 import Footer from "../components/Footer/Footer";
 import { usePredefinedPageTitle } from "../hooks/usePageTitle";
 import { useNotifications } from "../contexts/NotificationsContext";
@@ -305,11 +305,14 @@ export default function NotificationsPage() {
   usePredefinedPageTitle('notifications');
   const prefersReducedMotion = useReducedMotion() ?? false;
   const choreoEnabled = !prefersReducedMotion;
-  const router = useRouter();
   const { user } = useAuth();
   const userCurrentRole =
     user?.profile?.account_role || user?.profile?.role || "user";
   const isBusinessAccountUser = userCurrentRole === "business_owner";
+  const headingTitle = isBusinessAccountUser ? "Business Notifications" : "Your Notifications";
+  const headingSubtitle = isBusinessAccountUser
+    ? "Activity from your business account"
+    : "Activity from your personal account";
 
   const {
     notifications: personalNotifications,
@@ -329,16 +332,7 @@ export default function NotificationsPage() {
     return () => setIsRealtimeConnected(false);
   }, [user?.id]);
 
-  useEffect(() => {
-    if (!isBusinessAccountUser) return;
-    router.replace("/my-businesses");
-  }, [isBusinessAccountUser, router]);
-
   const isLoading = isPersonalLoading;
-
-  if (isBusinessAccountUser) {
-    return <NotificationsPageSkeleton />;
-  }
 
   return (
     <div
@@ -395,13 +389,13 @@ export default function NotificationsPage() {
                     className="text-2xl sm:text-3xl md:text-4xl font-bold text-charcoal"
                     style={{ fontFamily: '"Urbanist", -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 800 }}
                   >
-                    Your Notifications
+                    {headingTitle}
                   </h1>
                   <p
                     className="text-body-sm text-charcoal/60 mt-2"
                     style={{ fontFamily: '"Urbanist", -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
                   >
-                    Activity from your personal account
+                    {headingSubtitle}
                   </p>
                 </m.div>
 
