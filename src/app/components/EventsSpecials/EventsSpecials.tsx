@@ -174,7 +174,7 @@ export default function EventsSpecials({
       }}
     >
       <div className={containerClass}>
-        <div className="pb-4 sm:pb-8 md:pb-10 flex flex-wrap items-center justify-between gap-2">
+        <div className={`${showTypeFilters && hasEvents ? "pb-2 sm:pb-3" : "pb-4 sm:pb-8 md:pb-10"} flex flex-wrap items-center justify-between gap-2`}>
           {useTypedTitle ? (
             <WavyTypedTitle
               text={title}
@@ -238,7 +238,7 @@ export default function EventsSpecials({
 
         {showTypeFilters && hasEvents && (
           <div
-            className="flex items-center overflow-x-auto whitespace-nowrap scrollbar-hide mb-5"
+            className="flex items-center overflow-x-auto whitespace-nowrap scrollbar-hide mb-3"
             style={{ WebkitOverflowScrolling: "touch" }}
           >
             {[
