@@ -115,7 +115,7 @@ export default function EventsSpecials({
 
   const hasEvents = displayEvents.length > 0;
   const hasFilteredEvents = filteredEvents.length > 0;
-  const headingClass = `font-urbanist text-2xl sm:text-3xl md:text-2xl font-bold text-charcoal hover:text-sage transition-all duration-300 ${
+  const headingClass = `font-urbanist text-xl sm:text-2xl md:text-2xl font-bold text-charcoal hover:text-sage transition-all duration-300 ${
     alignTitleWithFilters ? "pl-0 pr-3 sm:pr-4 py-1" : "px-3 sm:px-4 py-1"
   } hover:bg-card-bg/5 rounded-lg cursor-default`;
   const headingStyle = {

@@ -423,28 +423,23 @@ export default function EventsSpecialsPage() {
             transform: none;
           }
         }
+        .desktop-card-shimmer {
+          position: relative;
+        }
+        .desktop-shimmer-veil {
+          position: absolute;
+          inset: -2px;
+          pointer-events: none;
+          background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.04) 35%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 65%, transparent 100%);
+          opacity: 0.08;
+          animation: desktopShimmer 10s linear infinite;
+        }
+        @keyframes desktopShimmer {
+          0% { transform: translateX(-120%); }
+          40% { transform: translateX(120%); }
+          100% { transform: translateX(120%); }
+        }
       `}</style>
-
-      {isDesktop && (
-        <style jsx>{`
-          .desktop-card-shimmer {
-            position: relative;
-          }
-          .desktop-shimmer-veil {
-            position: absolute;
-            inset: -2px;
-            pointer-events: none;
-            background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.04) 35%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 65%, transparent 100%);
-            opacity: 0.08;
-            animation: desktopShimmer 10s linear infinite;
-          }
-          @keyframes desktopShimmer {
-            0% { transform: translateX(-120%); }
-            40% { transform: translateX(120%); }
-            100% { transform: translateX(120%); }
-          }
-        `}</style>
-      )}
 
       <Footer />
     </div>

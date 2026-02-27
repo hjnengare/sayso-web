@@ -254,6 +254,27 @@ export const WavyTypedTitle: React.FC<WavyTypedTitleProps> = ({
     return text.split("");
   }, [text]);
 
+  // Group characters into words so line-breaks only happen at spaces, not mid-word
+  const wordGroups = useMemo(() => {
+    const groups: { chars: { char: string; globalIndex: number }[]; isSpace: boolean }[] = [];
+    let currentWord: { char: string; globalIndex: number }[] = [];
+    characters.forEach((char, index) => {
+      if (char === " ") {
+        if (currentWord.length > 0) {
+          groups.push({ chars: currentWord, isSpace: false });
+          currentWord = [];
+        }
+        groups.push({ chars: [{ char, globalIndex: index }], isSpace: true });
+      } else {
+        currentWord.push({ char, globalIndex: index });
+      }
+    });
+    if (currentWord.length > 0) {
+      groups.push({ chars: currentWord, isSpace: false });
+    }
+    return groups;
+  }, [characters]);
+
   // Typing animation - only starts when hasStartedTyping is true
   useEffect(() => {
     if (prefersReducedMotion) {
@@ -358,47 +379,53 @@ export const WavyTypedTitle: React.FC<WavyTypedTitleProps> = ({
           ...(style || {}),
         }}
       >
-        <span 
+        <span
           ref={elementRef}
-          className="inline-block" 
-          style={{ fontFamily: "inherit", wordBreak: "keep-all", overflowWrap: "normal" }}
+          className="inline"
+          style={{ fontFamily: "inherit" }}
         >
-          {characters.map((char, index) => {
-            const isVisible = index < visibleCount;
-            const isSpace = char === " ";
-            // Wave animates based on trigger mode:
-            // - If triggerOnTypingComplete: animates once after typing completes
-            // - If enableScrollTrigger: animates on scroll when typing is complete
-            // Skip wave animation if disableWave is true
+          {wordGroups.map((group, groupIndex) => {
             const shouldAnimate = isTypingComplete && !prefersReducedMotion && shouldWave && !disableWave;
-
             return (
+              // Each word is inline-block + nowrap so the browser treats it as
+              // an atomic unit — line breaks only occur at spaces, never mid-word.
+              // Space groups use inline so they collapse naturally.
               <span
-                key={`${char}-${index}`}
-                aria-hidden="true"
-                className="inline-block"
+                key={groupIndex}
                 style={{
-                  opacity: isVisible ? 1 : 0,
-                  transform: isVisible ? "translateY(0)" : "translateY(4px)",
-                  transition: isVisible
-                    ? `opacity 200ms ease-out, transform 200ms ease-out`
-                    : "none",
-                  // Use separate animation properties to avoid mixing shorthand and non-shorthand
-                  // Force animation restart by using a unique animation name when shouldWave changes
-                  animationName: shouldAnimate ? animationName : "none",
-                  animationDuration: shouldAnimate ? `${duration}ms` : "0ms",
-                  animationTimingFunction: shouldAnimate ? "ease-in-out" : "ease",
-                  animationIterationCount: shouldAnimate && loopWave ? "infinite" : shouldAnimate ? "1" : "0",
-                  animationDelay: shouldAnimate ? `${index * stagger}ms` : "0ms",
-                  animationFillMode: shouldAnimate ? "both" : "none",
-                  willChange: shouldAnimate ? "transform" : "auto",
-                  // Preserve space width even when hidden
-                  minWidth: isSpace ? "0.25em" : "auto",
-                  // CRITICAL: Inherit font from parent Component - ensures Urbanist is applied from start
-                  fontFamily: "inherit",
+                  display: group.isSpace ? "inline" : "inline-block",
+                  whiteSpace: group.isSpace ? undefined : "nowrap",
                 }}
               >
-                {char === " " ? "\u00A0" : char}
+                {group.chars.map(({ char, globalIndex }) => {
+                  const isVisible = globalIndex < visibleCount;
+                  const isSpace = char === " ";
+                  return (
+                    <span
+                      key={`${char}-${globalIndex}`}
+                      aria-hidden="true"
+                      className="inline-block"
+                      style={{
+                        opacity: isVisible ? 1 : 0,
+                        transform: isVisible ? "translateY(0)" : "translateY(4px)",
+                        transition: isVisible
+                          ? `opacity 200ms ease-out, transform 200ms ease-out`
+                          : "none",
+                        animationName: shouldAnimate ? animationName : "none",
+                        animationDuration: shouldAnimate ? `${duration}ms` : "0ms",
+                        animationTimingFunction: shouldAnimate ? "ease-in-out" : "ease",
+                        animationIterationCount: shouldAnimate && loopWave ? "infinite" : shouldAnimate ? "1" : "0",
+                        animationDelay: shouldAnimate ? `${globalIndex * stagger}ms` : "0ms",
+                        animationFillMode: shouldAnimate ? "both" : "none",
+                        willChange: shouldAnimate ? "transform" : "auto",
+                        minWidth: isSpace ? "0.25em" : "auto",
+                        fontFamily: "inherit",
+                      }}
+                    >
+                      {char === " " ? "\u00A0" : char}
+                    </span>
+                  );
+                })}
               </span>
             );
           })}
