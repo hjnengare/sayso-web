@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, Loader2, MessageCircle, Search, Send } from 'lucide-react';
 import { useReducedMotion } from 'framer-motion';
@@ -12,6 +13,7 @@ import {
   type ConversationMessage,
   type MessagingRole,
 } from '@/app/hooks/messaging';
+import { useUserReviews } from '@/app/hooks/useUserReviews';
 
 interface BusinessOption {
   id: string;
@@ -193,6 +195,7 @@ export default function MessagingWorkspace({
 }: MessagingWorkspaceProps) {
   const { user } = useAuth();
   const prefersReducedMotion = useReducedMotion();
+  const { reviews } = useUserReviews();
 
   const [activeBusinessId, setActiveBusinessId] = useState<string | null>(initialBusinessId || null);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(
@@ -277,6 +280,16 @@ export default function MessagingWorkspace({
   }, [conversations, role, searchQuery]);
 
   const resolveStartRef = useRef(false);
+
+  // Auto-select first conversation when none is selected (deep-links take priority)
+  useEffect(() => {
+    if (initialConversationId || startBusinessId) return;
+    if (conversationsLoading || isResolvingStartConversation) return;
+    if (selectedConversationId) return;
+    if (conversations.length > 0) {
+      setSelectedConversationId(conversations[0].id);
+    }
+  }, [conversations, conversationsLoading, initialConversationId, isResolvingStartConversation, selectedConversationId, startBusinessId]);
 
   useEffect(() => {
     return () => {
@@ -488,6 +501,18 @@ export default function MessagingWorkspace({
     () => new Map((businessOptions || []).map((business) => [business.id, business.name])),
     [businessOptions]
   );
+
+  const reviewedBusinessSuggestions = useMemo(() => {
+    if (role !== 'user') return [];
+    return reviews
+      .filter((r) => r.business_id)
+      .slice(0, 3)
+      .map((r) => ({
+        business_id: r.business_id!,
+        business_name: r.business_name,
+        business_image_url: r.business_image_url || null,
+      }));
+  }, [reviews, role]);
   const getFallbackBusinessName = useCallback(
     (conversation: ConversationListItem | null | undefined): string | undefined => {
       if (!conversation) return undefined;
@@ -647,15 +672,89 @@ export default function MessagingWorkspace({
             )}
 
             {!conversationsLoading && !isResolvingStartConversation && filteredConversations.length === 0 && (
-              <div className="flex h-full flex-col items-center justify-center px-6 text-center">
-                <MessageCircle className="mb-2 h-8 w-8 text-charcoal/25" />
-                <p className="text-sm font-semibold text-charcoal/65" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                  No conversations yet
-                </p>
-                <p className="mt-1 text-xs text-charcoal/45" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                  Your inbox will appear here.
-                </p>
-              </div>
+              <>
+                {searchQuery.trim() ? (
+                  <div className="flex h-full flex-col items-center justify-center px-6 text-center">
+                    <Search className="mb-2 h-7 w-7 text-charcoal/25" />
+                    <p className="text-sm font-semibold text-charcoal/65" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                      No results for &ldquo;{searchQuery}&rdquo;
+                    </p>
+                  </div>
+                ) : role === 'user' ? (
+                  <div className="flex h-full flex-col items-center justify-center px-5 py-8 text-center">
+                    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-sage/15">
+                      <MessageCircle className="h-6 w-6 text-sage" />
+                    </div>
+                    <p className="text-base font-bold text-charcoal" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                      No conversations yet
+                    </p>
+                    {reviewedBusinessSuggestions.length > 0 ? (
+                      <>
+                        <p className="mt-1.5 text-sm text-charcoal/55" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                          Message businesses you&apos;ve reviewed
+                        </p>
+                        <ul className="mt-5 w-full max-w-[280px] space-y-2.5">
+                          {reviewedBusinessSuggestions.map((suggestion) => (
+                            <li key={suggestion.business_id}>
+                              <Link
+                                href={`/dm?business_id=${suggestion.business_id}`}
+                                className="flex items-center gap-3 rounded-2xl border border-charcoal/8 bg-white/80 px-3.5 py-2.5 text-left shadow-sm transition-all hover:border-charcoal/15 hover:bg-white hover:shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navbar-bg/40"
+                              >
+                                <div className="relative h-9 w-9 flex-shrink-0 overflow-hidden rounded-full bg-sage/15">
+                                  {suggestion.business_image_url ? (
+                                    <Image
+                                      src={suggestion.business_image_url}
+                                      alt={suggestion.business_name}
+                                      fill
+                                      sizes="36px"
+                                      className="object-cover"
+                                    />
+                                  ) : (
+                                    <div className="flex h-full w-full items-center justify-center text-[11px] font-bold text-sage">
+                                      {buildInitials(suggestion.business_name)}
+                                    </div>
+                                  )}
+                                </div>
+                                <span className="flex-1 truncate text-sm font-semibold text-charcoal" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                                  {suggestion.business_name}
+                                </span>
+                                <span className="inline-flex flex-shrink-0 items-center rounded-full bg-gradient-to-r from-coral to-coral/80 px-3 py-1 text-[11px] font-bold text-white shadow-sm">
+                                  Message
+                                </span>
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </>
+                    ) : (
+                      <>
+                        <p className="mt-1.5 text-sm text-charcoal/55" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                          Discover and review local businesses to start a conversation
+                        </p>
+                        <Link
+                          href="/home"
+                          className="mt-5 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-coral to-coral/80 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:from-coral/90 hover:to-coral focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navbar-bg/40"
+                          style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
+                        >
+                          Discover businesses
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex h-full flex-col items-center justify-center px-6 text-center">
+                    <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-sage/15">
+                      <MessageCircle className="h-5 w-5 text-sage" />
+                    </div>
+                    <p className="text-sm font-semibold text-charcoal/65" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                      No customer messages yet
+                    </p>
+                    <p className="mt-1 text-xs text-charcoal/45" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                      Customer conversations will appear here.
+                    </p>
+                  </div>
+                )}
+              </>
             )}
 
             {startConversationError && (
@@ -680,11 +779,11 @@ export default function MessagingWorkspace({
                         onClick={() => handleSelectConversation(conversation.id)}
                         className={`flex w-full items-center gap-3 rounded-2xl border px-3.5 py-3 text-left transition-[background-color,border-color,box-shadow] duration-150 sm:px-4 ${
                           isSelected
-                            ? 'border-navbar-bg/25 bg-white shadow-sm ring-1 ring-navbar-bg/10'
-                            : 'border-charcoal/10 bg-white/90 shadow-sm hover:border-charcoal/18 hover:bg-white hover:shadow'
+                            ? 'border-navbar-bg/30 bg-white shadow ring-2 ring-navbar-bg/15'
+                            : 'border-charcoal/8 bg-white/85 shadow-sm hover:border-charcoal/15 hover:bg-white hover:shadow'
                         }`}
                       >
-                        <div className="relative h-11 w-11 flex-shrink-0 overflow-hidden rounded-full bg-charcoal/10">
+                        <div className="relative h-11 w-11 flex-shrink-0 overflow-hidden rounded-full bg-sage/15">
                           {avatar ? (
                             <Image
                               src={avatar}
@@ -694,27 +793,27 @@ export default function MessagingWorkspace({
                               className="object-cover"
                             />
                           ) : (
-                            <div className="flex h-full w-full items-center justify-center">
-                              <MessageCircle className="h-5 w-5 text-charcoal/40" />
+                            <div className="flex h-full w-full items-center justify-center text-sm font-bold text-sage">
+                              {buildInitials(name)}
                             </div>
                           )}
                         </div>
 
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center justify-between gap-2">
-                            <p className="truncate text-sm font-semibold text-charcoal" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                            <p className={`truncate text-sm font-semibold ${isSelected ? 'text-charcoal' : 'text-charcoal/90'}`} style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
                               {name}
                             </p>
-                            <span className="text-xs text-charcoal/45" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                            <span className="flex-shrink-0 text-[11px] text-charcoal/40" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
                               {formatListTimestamp(conversation.last_message_at)}
                             </span>
                           </div>
-                          <div className="mt-1 flex items-center gap-2">
-                            <p className="truncate text-xs text-charcoal/55" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                          <div className="mt-0.5 flex items-center gap-2">
+                            <p className={`truncate text-xs ${conversation.unread_count > 0 ? 'font-medium text-charcoal/70' : 'text-charcoal/50'}`} style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
                               {conversation.last_message_preview || subtitleValue}
                             </p>
                             {conversation.unread_count > 0 && (
-                              <span className="inline-flex h-5 min-w-[20px] flex-shrink-0 items-center justify-center rounded-full bg-coral px-1.5 text-[11px] font-bold text-white">
+                              <span className="inline-flex h-4.5 min-w-[18px] flex-shrink-0 items-center justify-center rounded-full bg-navbar-bg px-1.5 text-[10px] font-bold text-white">
                                 {conversation.unread_count > 99 ? '99+' : conversation.unread_count}
                               </span>
                             )}
@@ -877,7 +976,7 @@ export default function MessagingWorkspace({
                                   className={`max-w-[80%] rounded-[18px] border px-3.5 py-2.5 sm:max-w-[72%] ${
                                     ownMessage
                                       ? 'rounded-br-md border-white/25 bg-navbar-bg text-white shadow-sm'
-                                      : 'rounded-bl-md border-charcoal/12 bg-white text-charcoal shadow-sm'
+                                      : 'rounded-bl-md border-sage/25 bg-sage/[0.12] text-charcoal shadow-sm'
                                   }`}
                                 >
                                   <p

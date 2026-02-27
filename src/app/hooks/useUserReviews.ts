@@ -10,6 +10,7 @@ import { swrConfig } from '../lib/swrConfig';
 
 export interface Review {
   id: string;
+  business_id: string | null;
   business_name: string;
   rating: number;
   review_text: string | null;
@@ -31,6 +32,7 @@ async function fetchUserReviews([,]: [string, string]): Promise<Review[]> {
   if (result.data?.data && Array.isArray(result.data.data)) {
     return result.data.data.map((r: any) => ({
       id: r.id,
+      business_id: r.business?.id || null,
       business_name: r.business?.name || 'Unknown Business',
       rating: r.rating,
       review_text: r.body || r.title || null,

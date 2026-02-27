@@ -242,7 +242,7 @@ export default function SimilarBusinesses({
               waveVariant="subtle"
               loopWave={false}
               triggerOnTypingComplete={false}
-              enableScrollTrigger={false}
+              enableScrollTrigger={true}
               style={{
                 fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
               }}
