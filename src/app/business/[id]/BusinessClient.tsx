@@ -594,7 +594,7 @@ export default function BusinessProfilePage() {
                 <section className="mx-auto w-full max-w-[2000px] px-2 pb-4 relative z-10">
                     {/* Reviews Section */}
                     <section className="space-y-6" aria-labelledby="reviews-heading">
-                        <div className="text-center justify-center pb-2 px-3 sm:px-4 py-1">
+                        <div className="text-center justify-center py-2 px-3 sm:px-4">
                             <h1 id="reviews-heading" className="sr-only">Community Reviews</h1>
                             <WavyTypedTitle
                                 text="Community Reviews"
