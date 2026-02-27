@@ -607,442 +607,444 @@ export default function MessagingWorkspace({
 
   return (
     <>
-      <div className={`bg-off-white ${topPaddingClassName}`}>
-        <div className={`mx-auto flex w-full max-w-7xl overflow-hidden ${viewportClassName}`}>
-        <aside
-          className={`${listPaneVisibleClass} w-full lg:w-[360px] xl:w-[420px] flex-col border-r border-charcoal/10 bg-off-white`}
-        >
-          <div className="border-b border-charcoal/10 px-4 py-4 sm:px-5">
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                {title}
-              </h1>
-              {unreadTotal > 0 && (
-                <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-coral px-1.5 text-[11px] font-bold text-white">
-                  {unreadTotal > 99 ? '99+' : unreadTotal}
-                </span>
-              )}
-            </div>
-            <p className="mt-0.5 text-sm text-charcoal/50" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-              {subtitle || (unreadTotal > 0 ? `${unreadTotal} unread` : 'All caught up')}
-            </p>
+      <div className={`bg-white ${topPaddingClassName}`}>
+        <div className={`mx-auto flex w-full max-w-7xl overflow-hidden rounded-xl border border-charcoal/8 shadow-sm ${viewportClassName}`}>
 
-            {role === 'business' && businessOptions && businessOptions.length > 0 && (
-              <div className="mt-3">
-                <label className="sr-only" htmlFor="business-filter">Business filter</label>
-                <select
-                  id="business-filter"
-                  value={activeBusinessId || '__all__'}
-                  onChange={(event) => {
-                    const value = event.target.value;
-                    setActiveBusinessId(value === '__all__' ? null : value);
-                    setSelectedConversationId(null);
-                    setMobileThreadOpen(false);
-                  }}
-                  className="w-full rounded-2xl border border-charcoal/12 bg-white/95 px-3 py-2 text-sm text-charcoal shadow-sm focus:border-navbar-bg/40 focus:outline-none focus:ring-2 focus:ring-navbar-bg/20"
-                  style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
-                >
-                  <option value="__all__">All businesses</option>
-                  {businessOptions.map((business) => (
-                    <option key={business.id} value={business.id}>
-                      {business.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+          {/* ── Sidebar ──────────────────────────────────────────── */}
+          <aside className={`${listPaneVisibleClass} w-full lg:w-[360px] xl:w-[400px] flex-col border-r border-charcoal/8 bg-white`}>
 
-            <div className="relative mt-3">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-charcoal/45" />
-              <input
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Search conversations"
-                className="w-full rounded-full border border-charcoal/12 bg-white/95 py-2 pl-9 pr-3 text-sm text-charcoal placeholder:text-charcoal/45 focus:border-navbar-bg/40 focus:outline-none focus:ring-2 focus:ring-navbar-bg/20"
-                style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
-              />
-            </div>
-          </div>
-
-          <div className="min-h-0 flex-1 overflow-y-auto">
-            {(conversationsLoading || isResolvingStartConversation) && (
-              <div className="flex h-full items-center justify-center">
-                <div className="inline-flex items-center gap-2 text-sm text-charcoal/55" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Loading conversations...
-                </div>
-              </div>
-            )}
-
-            {!conversationsLoading && !isResolvingStartConversation && filteredConversations.length === 0 && (
-              <>
-                {searchQuery.trim() ? (
-                  <div className="flex h-full flex-col items-center justify-center px-6 text-center">
-                    <Search className="mb-2 h-7 w-7 text-charcoal/25" />
-                    <p className="text-sm font-semibold text-charcoal/65" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                      No results for &ldquo;{searchQuery}&rdquo;
-                    </p>
-                  </div>
-                ) : role === 'user' ? (
-                  <div className="flex h-full flex-col items-center justify-center px-5 py-8 text-center">
-                    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-sage/15">
-                      <MessageCircle className="h-6 w-6 text-sage" />
-                    </div>
-                    <p className="text-base font-bold text-charcoal" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                      No conversations yet
-                    </p>
-                    {reviewedBusinessSuggestions.length > 0 ? (
-                      <>
-                        <p className="mt-1.5 text-sm text-charcoal/55" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                          Message businesses you&apos;ve reviewed
-                        </p>
-                        <ul className="mt-5 w-full max-w-[280px] space-y-2.5">
-                          {reviewedBusinessSuggestions.map((suggestion) => (
-                            <li key={suggestion.business_id}>
-                              <Link
-                                href={`/dm?business_id=${suggestion.business_id}`}
-                                className="flex items-center gap-3 rounded-2xl border border-charcoal/8 bg-white/80 px-3.5 py-2.5 text-left shadow-sm transition-all hover:border-charcoal/15 hover:bg-white hover:shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navbar-bg/40"
-                              >
-                                <div className="relative h-9 w-9 flex-shrink-0 overflow-hidden rounded-full bg-sage/15">
-                                  {suggestion.business_image_url ? (
-                                    <Image
-                                      src={suggestion.business_image_url}
-                                      alt={suggestion.business_name}
-                                      fill
-                                      sizes="36px"
-                                      className="object-cover"
-                                    />
-                                  ) : (
-                                    <div className="flex h-full w-full items-center justify-center text-[11px] font-bold text-sage">
-                                      {buildInitials(suggestion.business_name)}
-                                    </div>
-                                  )}
-                                </div>
-                                <span className="flex-1 truncate text-sm font-semibold text-charcoal" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                                  {suggestion.business_name}
-                                </span>
-                                <span className="inline-flex flex-shrink-0 items-center rounded-full bg-gradient-to-r from-coral to-coral/80 px-3 py-1 text-[11px] font-bold text-white shadow-sm">
-                                  Message
-                                </span>
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
-                      </>
-                    ) : (
-                      <>
-                        <p className="mt-1.5 text-sm text-charcoal/55" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                          Discover and review local businesses to start a conversation
-                        </p>
-                        <Link
-                          href="/home"
-                          className="mt-5 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-coral to-coral/80 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:from-coral/90 hover:to-coral focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navbar-bg/40"
-                          style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
-                        >
-                          Discover businesses
-                        </Link>
-                      </>
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex h-full flex-col items-center justify-center px-6 text-center">
-                    <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-sage/15">
-                      <MessageCircle className="h-5 w-5 text-sage" />
-                    </div>
-                    <p className="text-sm font-semibold text-charcoal/65" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                      No customer messages yet
-                    </p>
-                    <p className="mt-1 text-xs text-charcoal/45" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                      Customer conversations will appear here.
-                    </p>
-                  </div>
+            {/* Header */}
+            <div className="px-5 pb-3 pt-5">
+              <div className="flex items-center justify-between">
+                <h1 className="text-lg font-bold text-charcoal" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                  {title}
+                </h1>
+                {unreadTotal > 0 && (
+                  <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-navbar-bg px-1.5 text-[11px] font-bold text-white">
+                    {unreadTotal > 99 ? '99+' : unreadTotal}
+                  </span>
                 )}
-              </>
-            )}
-
-            {startConversationError && (
-              <div className="mx-4 mt-4 rounded-xl border border-coral/25 bg-coral/10 px-3 py-2 text-xs text-coral">
-                {startConversationError}
               </div>
-            )}
 
-            {!conversationsLoading && filteredConversations.length > 0 && (
-              <ul className="space-y-2 p-2 sm:space-y-2.5 sm:p-3">
-                {filteredConversations.map((conversation) => {
-                  const isSelected = selectedConversationId === conversation.id;
-                  const fallbackBusinessName = getFallbackBusinessName(conversation);
-                  const avatar = getConversationAvatar(conversation, role);
-                  const name = getConversationTitle(conversation, role, fallbackBusinessName);
-                  const subtitleValue = getConversationSubtitle(conversation, role, fallbackBusinessName);
+              {role === 'business' && businessOptions && businessOptions.length > 0 && (
+                <div className="mt-3">
+                  <label className="sr-only" htmlFor="business-filter">Business filter</label>
+                  <select
+                    id="business-filter"
+                    value={activeBusinessId || '__all__'}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      setActiveBusinessId(value === '__all__' ? null : value);
+                      setSelectedConversationId(null);
+                      setMobileThreadOpen(false);
+                    }}
+                    className="w-full rounded-xl border-0 bg-charcoal/[0.06] px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-sage/25"
+                    style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
+                  >
+                    <option value="__all__">All businesses</option>
+                    {businessOptions.map((business) => (
+                      <option key={business.id} value={business.id}>
+                        {business.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
-                  return (
-                    <li key={conversation.id}>
-                      <button
-                        type="button"
-                        onClick={() => handleSelectConversation(conversation.id)}
-                        className={`flex w-full items-center gap-3 rounded-2xl border px-3.5 py-3 text-left transition-[background-color,border-color,box-shadow] duration-150 sm:px-4 ${
-                          isSelected
-                            ? 'border-navbar-bg/30 bg-white shadow ring-2 ring-navbar-bg/15'
-                            : 'border-charcoal/8 bg-white/85 shadow-sm hover:border-charcoal/15 hover:bg-white hover:shadow'
-                        }`}
-                      >
-                        <div className="relative h-11 w-11 flex-shrink-0 overflow-hidden rounded-full bg-sage/15">
-                          {avatar ? (
-                            <Image
-                              src={avatar}
-                              alt={name}
-                              fill
-                              sizes="44px"
-                              className="object-cover"
-                            />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center text-sm font-bold text-sage">
-                              {buildInitials(name)}
+              {/* Search — borderless, filled like Instagram */}
+              <div className="relative mt-3">
+                <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-charcoal/40" />
+                <input
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder="Search"
+                  className="w-full rounded-full border-0 bg-charcoal/[0.06] py-2 pl-10 pr-4 text-sm text-charcoal placeholder:text-charcoal/40 focus:bg-charcoal/[0.09] focus:outline-none"
+                  style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
+                />
+              </div>
+            </div>
+
+            {/* Conversation list */}
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              {(conversationsLoading || isResolvingStartConversation) && (
+                <div className="flex h-full items-center justify-center">
+                  <div className="inline-flex items-center gap-2 text-sm text-charcoal/50" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading...
+                  </div>
+                </div>
+              )}
+
+              {!conversationsLoading && !isResolvingStartConversation && filteredConversations.length === 0 && (
+                <>
+                  {searchQuery.trim() ? (
+                    <div className="flex h-full flex-col items-center justify-center px-6 text-center">
+                      <Search className="mb-2 h-7 w-7 text-charcoal/20" />
+                      <p className="text-sm font-semibold text-charcoal/60" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                        No results for &ldquo;{searchQuery}&rdquo;
+                      </p>
+                    </div>
+                  ) : role === 'user' ? (
+                    <div className="flex h-full flex-col items-center justify-center px-5 py-8 text-center">
+                      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-sage/15">
+                        <MessageCircle className="h-6 w-6 text-sage" />
+                      </div>
+                      <p className="text-base font-bold text-charcoal" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                        No conversations yet
+                      </p>
+                      {reviewedBusinessSuggestions.length > 0 ? (
+                        <>
+                          <p className="mt-1.5 text-sm text-charcoal/50" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                            Message businesses you&apos;ve reviewed
+                          </p>
+                          <ul className="mt-5 w-full max-w-[280px] space-y-2.5">
+                            {reviewedBusinessSuggestions.map((suggestion) => (
+                              <li key={suggestion.business_id}>
+                                <Link
+                                  href={`/dm?business_id=${suggestion.business_id}`}
+                                  className="flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-left transition-colors hover:bg-charcoal/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navbar-bg/40"
+                                >
+                                  <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-sage/15">
+                                    {suggestion.business_image_url ? (
+                                      <Image src={suggestion.business_image_url} alt={suggestion.business_name} fill sizes="40px" className="object-cover" />
+                                    ) : (
+                                      <div className="flex h-full w-full items-center justify-center text-[11px] font-bold text-sage">
+                                        {buildInitials(suggestion.business_name)}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <span className="flex-1 truncate text-sm font-semibold text-charcoal" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                                    {suggestion.business_name}
+                                  </span>
+                                  <span className="inline-flex flex-shrink-0 items-center rounded-full bg-navbar-bg px-3 py-1 text-[11px] font-bold text-white">
+                                    Message
+                                  </span>
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        </>
+                      ) : (
+                        <>
+                          <p className="mt-1.5 text-sm text-charcoal/50" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                            Discover and review local businesses to start a conversation
+                          </p>
+                          <Link
+                            href="/home"
+                            className="mt-5 inline-flex items-center gap-2 rounded-full bg-navbar-bg px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-navbar-bg/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navbar-bg/40"
+                            style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
+                          >
+                            Discover businesses
+                          </Link>
+                        </>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex h-full flex-col items-center justify-center px-6 text-center">
+                      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-sage/15">
+                        <MessageCircle className="h-5 w-5 text-sage" />
+                      </div>
+                      <p className="text-sm font-semibold text-charcoal/60" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                        No customer messages yet
+                      </p>
+                      <p className="mt-1 text-xs text-charcoal/40" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                        Customer conversations will appear here.
+                      </p>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {startConversationError && (
+                <div className="mx-4 mt-4 rounded-xl border border-coral/25 bg-coral/10 px-3 py-2 text-xs text-coral">
+                  {startConversationError}
+                </div>
+              )}
+
+              {!conversationsLoading && filteredConversations.length > 0 && (
+                <ul className="py-2">
+                  {filteredConversations.map((conversation) => {
+                    const isSelected = selectedConversationId === conversation.id;
+                    const fallbackBusinessName = getFallbackBusinessName(conversation);
+                    const avatar = getConversationAvatar(conversation, role);
+                    const name = getConversationTitle(conversation, role, fallbackBusinessName);
+                    const subtitleValue = getConversationSubtitle(conversation, role, fallbackBusinessName);
+                    const hasUnread = conversation.unread_count > 0;
+
+                    return (
+                      <li key={conversation.id}>
+                        <button
+                          type="button"
+                          onClick={() => handleSelectConversation(conversation.id)}
+                          className={`flex w-full items-center gap-3.5 px-4 py-3 text-left transition-colors duration-100 ${
+                            isSelected ? 'bg-sage/[0.08]' : 'hover:bg-charcoal/[0.04]'
+                          }`}
+                        >
+                          {/* Avatar — larger (56 px) with unread ring */}
+                          <div className="relative flex-shrink-0">
+                            <div className="relative h-14 w-14 overflow-hidden rounded-full bg-sage/15">
+                              {avatar ? (
+                                <Image src={avatar} alt={name} fill sizes="56px" className="object-cover" />
+                              ) : (
+                                <div className="flex h-full w-full items-center justify-center text-base font-bold text-sage">
+                                  {buildInitials(name)}
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
-
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className={`truncate text-sm font-semibold ${isSelected ? 'text-charcoal' : 'text-charcoal/90'}`} style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                              {name}
-                            </p>
-                            <span className="flex-shrink-0 text-[11px] text-charcoal/40" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                              {formatListTimestamp(conversation.last_message_at)}
-                            </span>
-                          </div>
-                          <div className="mt-0.5 flex items-center gap-2">
-                            <p className={`truncate text-xs ${conversation.unread_count > 0 ? 'font-medium text-charcoal/70' : 'text-charcoal/50'}`} style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                              {conversation.last_message_preview || subtitleValue}
-                            </p>
-                            {conversation.unread_count > 0 && (
-                              <span className="inline-flex h-4.5 min-w-[18px] flex-shrink-0 items-center justify-center rounded-full bg-navbar-bg px-1.5 text-[10px] font-bold text-white">
-                                {conversation.unread_count > 99 ? '99+' : conversation.unread_count}
-                              </span>
+                            {hasUnread && (
+                              <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white bg-navbar-bg" aria-hidden />
                             )}
                           </div>
-                        </div>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
-        </aside>
 
-        <section className={`${threadPaneVisibleClass} min-w-0 flex-1 flex-col bg-off-white`}>
-          {!selectedConversation && (
-            <div className="flex h-full flex-col items-center justify-center px-6 text-center">
-              <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-charcoal/[0.06]">
-                <MessageCircle className="h-7 w-7 text-charcoal/30" />
-              </div>
-              <p className="text-sm font-semibold text-charcoal/55" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                Select a conversation
-              </p>
-              <p className="mt-1 text-xs text-charcoal/35" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                Choose from your list to start messaging
-              </p>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-baseline justify-between gap-2">
+                              <p
+                                className={`truncate text-sm ${hasUnread ? 'font-bold text-charcoal' : 'font-semibold text-charcoal/85'}`}
+                                style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
+                              >
+                                {name}
+                              </p>
+                              <span className="flex-shrink-0 text-[11px] text-charcoal/35" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                                {formatListTimestamp(conversation.last_message_at)}
+                              </span>
+                            </div>
+                            <p
+                              className={`mt-0.5 truncate text-xs ${hasUnread ? 'font-semibold text-charcoal/70' : 'text-charcoal/45'}`}
+                              style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
+                            >
+                              {conversation.last_message_preview || subtitleValue}
+                            </p>
+                          </div>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </div>
-          )}
+          </aside>
 
-          {selectedConversation && (
-            <>
-              <header className="sticky top-0 z-10 border-b border-charcoal/10 bg-off-white/98 px-4 py-3 shadow-sm backdrop-blur sm:px-5">
-                <div className="flex items-center gap-3">
+          {/* ── Thread pane ──────────────────────────────────────── */}
+          <section className={`${threadPaneVisibleClass} min-w-0 flex-1 flex-col bg-white`}>
+            {!selectedConversation && (
+              <div className="flex h-full flex-col items-center justify-center px-6 text-center">
+                <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full border-2 border-charcoal/15">
+                  <MessageCircle className="h-9 w-9 text-charcoal/25" />
+                </div>
+                <p className="text-base font-bold text-charcoal" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                  Your messages
+                </p>
+                <p className="mt-1 text-sm text-charcoal/45" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                  Select a conversation to start messaging
+                </p>
+              </div>
+            )}
+
+            {selectedConversation && (
+              <>
+                {/* Thread header */}
+                <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-charcoal/8 bg-white/98 px-4 py-3 backdrop-blur sm:px-5">
                   {(() => {
                     const fallbackBusinessName = getFallbackBusinessName(selectedConversation);
-                    const selectedConversationTitle = getConversationTitle(
-                      selectedConversation,
-                      role,
-                      fallbackBusinessName
-                    );
-                    const selectedConversationSubtitle = getConversationSubtitle(
-                      selectedConversation,
-                      role,
-                      fallbackBusinessName
-                    );
+                    const selectedConversationTitle = getConversationTitle(selectedConversation, role, fallbackBusinessName);
+                    const selectedConversationSubtitle = getConversationSubtitle(selectedConversation, role, fallbackBusinessName);
                     const selectedAvatar = getConversationAvatar(selectedConversation, role);
 
                     return (
                       <>
-                  <button
-                    type="button"
-                    onClick={() => setMobileThreadOpen(false)}
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-charcoal/12 text-charcoal/70 transition-colors hover:bg-charcoal/5 lg:hidden"
-                    aria-label="Back to conversations"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </button>
+                        {/* Back — mobile only */}
+                        <button
+                          type="button"
+                          onClick={() => setMobileThreadOpen(false)}
+                          className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-charcoal/70 transition-colors hover:bg-charcoal/[0.06] lg:hidden"
+                          aria-label="Back to conversations"
+                        >
+                          <ChevronLeft className="h-5 w-5" />
+                        </button>
 
-                  <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-charcoal/10">
-                    {selectedAvatar ? (
-                      <Image
-                        src={selectedAvatar || ''}
-                        alt={selectedConversationTitle}
-                        fill
-                        sizes="40px"
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center">
-                        <MessageCircle className="h-4 w-4 text-charcoal/40" />
-                      </div>
-                    )}
-                  </div>
+                        {/* Avatar */}
+                        <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-charcoal/[0.08]">
+                          {selectedAvatar ? (
+                            <Image src={selectedAvatar} alt={selectedConversationTitle} fill sizes="40px" className="object-cover" />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center">
+                              <MessageCircle className="h-4 w-4 text-charcoal/35" />
+                            </div>
+                          )}
+                        </div>
 
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-charcoal" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                      {selectedConversationTitle}
-                    </p>
-                    <p className="truncate text-xs text-charcoal/50" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                      {selectedConversationSubtitle}
-                    </p>
-                  </div>
+                        {/* Name + subtitle */}
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-bold text-charcoal" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                            {selectedConversationTitle}
+                          </p>
+                          <p className="truncate text-xs text-charcoal/45" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                            {selectedConversationSubtitle}
+                          </p>
+                        </div>
                       </>
                     );
                   })()}
-                </div>
-              </header>
+                </header>
 
-              <div ref={threadScrollRef} className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">
-                {messagesLoading && (
-                  <div className="flex h-full items-center justify-center">
-                    <Loader2 className="h-5 w-5 animate-spin text-charcoal/40" />
-                  </div>
-                )}
+                {/* Messages */}
+                <div ref={threadScrollRef} className="min-h-0 flex-1 overflow-y-auto bg-white px-4 py-5 sm:px-6">
+                  {messagesLoading && (
+                    <div className="flex h-full items-center justify-center">
+                      <Loader2 className="h-5 w-5 animate-spin text-charcoal/35" />
+                    </div>
+                  )}
 
-                {!messagesLoading && (
-                  <>
-                    {hasMore && (
-                      <div className="mb-4 flex justify-center">
-                        <button
-                          type="button"
-                          onClick={loadOlder}
-                          disabled={isLoadingOlder}
-                          className="inline-flex items-center gap-1 rounded-full border border-charcoal/15 bg-white px-3 py-1.5 text-xs font-semibold text-charcoal/70 transition-colors hover:bg-charcoal/[0.03] disabled:opacity-60"
-                          style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
-                        >
-                          {isLoadingOlder ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
-                          Load earlier messages
-                        </button>
-                      </div>
-                    )}
+                  {!messagesLoading && (
+                    <>
+                      {hasMore && (
+                        <div className="mb-5 flex justify-center">
+                          <button
+                            type="button"
+                            onClick={loadOlder}
+                            disabled={isLoadingOlder}
+                            className="inline-flex items-center gap-1.5 rounded-full bg-charcoal/[0.06] px-4 py-1.5 text-xs font-semibold text-charcoal/55 transition-colors hover:bg-charcoal/[0.09] disabled:opacity-60"
+                            style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
+                          >
+                            {isLoadingOlder ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                            Load earlier messages
+                          </button>
+                        </div>
+                      )}
 
-                    {messages.length === 0 && (
-                      <div className="flex h-full items-center justify-center">
-                        <p className="text-sm text-charcoal/55" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-                          Start the conversation.
-                        </p>
-                      </div>
-                    )}
+                      {messages.length === 0 && (
+                        <div className="flex h-full items-center justify-center">
+                          <p className="text-sm text-charcoal/45" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                            Start the conversation.
+                          </p>
+                        </div>
+                      )}
 
-                    {messages.length > 0 && (
-                      <div>
-                        {messages.map((message, index) => {
-                          const ownMessage = message.sender_type === role;
-                          const prevMessage = index > 0 ? messages[index - 1] : null;
-                          const senderChanged = !prevMessage || prevMessage.sender_type !== message.sender_type;
-                          const statusLabel = getStatusLabel(message);
-                          const senderIdentity = resolveMessageIdentity(ownMessage);
-                          const shouldAnimateMessage = animatedMessageIds.has(message.id);
-                          const animationClassName = shouldAnimateMessage
-                            ? prefersReducedMotion
-                              ? 'message-bubble-enter-reduced'
-                              : 'message-bubble-enter'
-                            : '';
+                      {messages.length > 0 && (
+                        <div className="space-y-[2px]">
+                          {messages.map((message, index) => {
+                            const ownMessage = message.sender_type === role;
+                            const prevMessage = index > 0 ? messages[index - 1] : null;
+                            const nextMessage = index < messages.length - 1 ? messages[index + 1] : null;
+                            const isFirstInGroup = !prevMessage || prevMessage.sender_type !== message.sender_type;
+                            const isLastInGroup = !nextMessage || nextMessage.sender_type !== message.sender_type;
+                            const statusLabel = getStatusLabel(message);
+                            const senderIdentity = resolveMessageIdentity(ownMessage);
+                            const shouldAnimateMessage = animatedMessageIds.has(message.id);
+                            const animationClassName = shouldAnimateMessage
+                              ? prefersReducedMotion
+                                ? 'message-bubble-enter-reduced'
+                                : 'message-bubble-enter'
+                              : '';
 
-                          return (
-                            <div
-                              key={message.id}
-                              className={`flex flex-col ${ownMessage ? 'items-end' : 'items-start'} ${
-                                index === 0 ? '' : senderChanged ? 'mt-5' : 'mt-1'
-                              } ${animationClassName}`}
-                            >
-                              {senderChanged && (
-                                <span
-                                  className={`mb-1 text-[11px] font-medium text-charcoal/45 ${
-                                    ownMessage ? 'pr-10 sm:pr-11' : 'pl-10 sm:pl-11'
-                                  }`}
-                                  style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
-                                >
-                                  {senderIdentity.name}
-                                </span>
-                              )}
-                              <div className={`flex items-end gap-2 ${ownMessage ? 'flex-row-reverse' : 'flex-row'}`}>
-                                {senderChanged ? (
-                                  <MessageBubbleAvatar name={senderIdentity.name} avatarUrl={senderIdentity.avatarUrl} />
-                                ) : (
-                                  <div className="h-8 w-8 flex-shrink-0 sm:h-9 sm:w-9" aria-hidden />
-                                )}
-                                <div
-                                  className={`max-w-[80%] rounded-[18px] border px-3.5 py-2.5 sm:max-w-[72%] ${
-                                    ownMessage
-                                      ? 'rounded-br-md border-white/25 bg-navbar-bg text-white shadow-sm'
-                                      : 'rounded-bl-md border-sage/25 bg-sage/[0.12] text-charcoal shadow-sm'
-                                  }`}
-                                >
-                                  <p
-                                    className="whitespace-pre-wrap break-words text-sm"
-                                    style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
-                                  >
-                                    {message.body}
-                                  </p>
-                                  <div className={`mt-1.5 flex items-center gap-2 text-[11px] ${ownMessage ? 'text-white/70' : 'text-charcoal/45'}`}>
-                                    <span>{formatThreadTimestamp(message.created_at)}</span>
-                                    {ownMessage && (
-                                      <>
-                                        <span>{statusLabel}</span>
-                                        {message.client_state === 'failed' && (
-                                          <button
-                                            type="button"
-                                            onClick={() => {
-                                              void retryMessage(message);
-                                            }}
-                                            className="rounded-full border border-white/35 px-2 py-0.5 text-[10px] font-semibold text-white transition-colors hover:bg-white/15"
-                                          >
-                                            Retry
-                                          </button>
+                            // Instagram-style corner radii: full round except the corner touching the avatar side
+                            const ownBubbleRadius = isFirstInGroup && isLastInGroup
+                              ? 'rounded-[20px]'
+                              : isFirstInGroup
+                                ? 'rounded-[20px] rounded-br-[6px]'
+                                : isLastInGroup
+                                  ? 'rounded-[20px] rounded-tr-[6px]'
+                                  : 'rounded-[20px] rounded-r-[6px]';
+                            const otherBubbleRadius = isFirstInGroup && isLastInGroup
+                              ? 'rounded-[20px]'
+                              : isFirstInGroup
+                                ? 'rounded-[20px] rounded-bl-[6px]'
+                                : isLastInGroup
+                                  ? 'rounded-[20px] rounded-tl-[6px]'
+                                  : 'rounded-[20px] rounded-l-[6px]';
+
+                            return (
+                              <div
+                                key={message.id}
+                                className={`flex ${ownMessage ? 'justify-end' : 'justify-start'} ${isFirstInGroup ? 'mt-4' : 'mt-[3px]'} ${animationClassName}`}
+                              >
+                                <div className={`flex items-end gap-2 max-w-[75%] sm:max-w-[65%] ${ownMessage ? 'flex-row-reverse' : 'flex-row'}`}>
+                                  {/* Avatar — only on last message of group, recipient side only */}
+                                  {!ownMessage ? (
+                                    isLastInGroup ? (
+                                      <MessageBubbleAvatar name={senderIdentity.name} avatarUrl={senderIdentity.avatarUrl} />
+                                    ) : (
+                                      <div className="h-8 w-8 flex-shrink-0 sm:h-9 sm:w-9" aria-hidden />
+                                    )
+                                  ) : null}
+
+                                  <div className="flex flex-col gap-[2px]">
+                                    {/* Bubble */}
+                                    <div
+                                      className={`px-4 py-2.5 ${
+                                        ownMessage
+                                          ? `bg-navbar-bg text-white ${ownBubbleRadius}`
+                                          : `bg-charcoal/[0.08] text-charcoal ${otherBubbleRadius}`
+                                      }`}
+                                    >
+                                      <p
+                                        className="whitespace-pre-wrap break-words text-sm leading-relaxed"
+                                        style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
+                                      >
+                                        {message.body}
+                                      </p>
+                                    </div>
+
+                                    {/* Timestamp + status — only on last message of group */}
+                                    {isLastInGroup && (
+                                      <div className={`flex items-center gap-1 px-1 text-[11px] text-charcoal/40 ${ownMessage ? 'justify-end' : 'justify-start'}`}>
+                                        <span>{formatThreadTimestamp(message.created_at)}</span>
+                                        {ownMessage && (
+                                          <>
+                                            <span aria-hidden>·</span>
+                                            <span>{statusLabel}</span>
+                                            {message.client_state === 'failed' && (
+                                              <button
+                                                type="button"
+                                                onClick={() => { void retryMessage(message); }}
+                                                className="ml-1 rounded-full bg-coral/10 px-2 py-0.5 text-[10px] font-semibold text-coral transition-colors hover:bg-coral/20"
+                                              >
+                                                Retry
+                                              </button>
+                                            )}
+                                          </>
                                         )}
-                                      </>
+                                      </div>
                                     )}
                                   </div>
                                 </div>
                               </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-
-              <div className="border-t border-charcoal/10 px-4 py-3 sm:px-5">
-                <div className="flex items-end gap-2">
-                  <textarea
-                    value={composerValue}
-                    onChange={(event) => setComposerValue(event.target.value)}
-                    onKeyDown={handleComposerKeyDown}
-                    disabled={isSending}
-                    placeholder="Type a message..."
-                    rows={1}
-                    className="min-h-[42px] max-h-[140px] flex-1 resize-y rounded-2xl border border-charcoal/12 bg-white/95 px-3 py-2 text-sm text-charcoal shadow-sm placeholder:text-charcoal/45 focus:border-navbar-bg/35 focus:outline-none focus:ring-2 focus:ring-navbar-bg/20 disabled:opacity-70"
-                    style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => void handleSend()}
-                    disabled={isSending || !composerValue.trim()}
-                    className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-navbar-bg/40 bg-navbar-bg text-white shadow-sm transition-[background-color,box-shadow] hover:bg-navbar-bg/90 hover:shadow disabled:cursor-not-allowed disabled:border-charcoal/20 disabled:bg-charcoal/30"
-                    aria-label="Send message"
-                  >
-                    {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                  </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
-              </div>
-            </>
-          )}
+
+                {/* Composer — Instagram pill style */}
+                <div className="border-t border-charcoal/8 bg-white px-4 py-3 sm:px-5">
+                  <div className="flex items-end gap-3">
+                    <div className="flex flex-1 items-end rounded-[24px] border border-charcoal/15 bg-white px-4 py-2.5 focus-within:border-charcoal/25 transition-colors">
+                      <textarea
+                        value={composerValue}
+                        onChange={(event) => setComposerValue(event.target.value)}
+                        onKeyDown={handleComposerKeyDown}
+                        disabled={isSending}
+                        placeholder="Message..."
+                        rows={1}
+                        className="max-h-[120px] min-h-[22px] flex-1 resize-none bg-transparent text-sm text-charcoal placeholder:text-charcoal/40 focus:outline-none disabled:opacity-70"
+                        style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => void handleSend()}
+                      disabled={isSending || !composerValue.trim()}
+                      className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-navbar-bg text-white transition-[background-color,opacity] hover:bg-navbar-bg/90 disabled:cursor-not-allowed disabled:opacity-30"
+                      aria-label="Send message"
+                    >
+                      {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
           </section>
         </div>
       </div>
@@ -1059,12 +1061,8 @@ export default function MessagingWorkspace({
         }
 
         @keyframes messageBubbleFade {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
+          from { opacity: 0; }
+          to   { opacity: 1; }
         }
 
         .message-bubble-enter {

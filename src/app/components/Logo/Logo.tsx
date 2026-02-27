@@ -9,12 +9,14 @@ interface LogoProps {
   variant?: "default" | "mobile" | "footer" | "onboarding";
   className?: string;
   showMark?: boolean;
+  wordmarkClassName?: string;
 }
 
 export default function Logo({
   variant = "default",
   className = "",
-  showMark = true
+  showMark = true,
+  wordmarkClassName = "",
 }: LogoProps) {
   const containerClasses = {
     default: "h-18",
@@ -46,7 +48,10 @@ export default function Logo({
       )}
 
       {variant !== "footer" && (
-        <Wordmark size="text-xl sm:text-2xl md:text-3xl" className={`tracking-tight ${wordmarkSpacingClass}`} />
+        <Wordmark
+          size="text-xl sm:text-2xl md:text-3xl"
+          className={`tracking-tight ${wordmarkSpacingClass} ${wordmarkClassName}`}
+        />
       )}
     </div>
   );

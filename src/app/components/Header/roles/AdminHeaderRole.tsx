@@ -45,6 +45,7 @@ export function AdminHeaderRole({
           <Logo
             variant="default"
             showMark={false}
+            wordmarkClassName="md:px-2"
             className={`transition-all duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${logoScaleClass}`}
           />
           <span className="text-sage text-sm font-semibold" style={sf}>
@@ -94,6 +95,7 @@ export function AdminHeaderRole({
             <Logo
               variant="mobile"
               showMark={false}
+              wordmarkClassName="md:px-2"
               className={`transition-all duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${logoScaleClass}`}
             />
             <span className="text-sage text-sm font-semibold" style={sf}>
