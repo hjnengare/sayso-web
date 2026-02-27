@@ -3,7 +3,6 @@
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useState } from "react";
 import { useReviewersTop } from "../../hooks/useReviewersTop";
 import { useRecentReviews } from "../../hooks/useRecentReviews";
 import Image from "next/image";
@@ -44,6 +43,15 @@ const badgePreviews = badgePreviewIds
     };
   })
   .filter(Boolean) as Array<{ label: string; description: string; pngPath: string; fallbackIcon: string }>;
+
+const badgeTileGradients = [
+  "from-sage/20 via-off-white/80 to-card-bg/18 border-sage/35",
+  "from-coral/16 via-off-white/82 to-sage/12 border-coral/30",
+  "from-navbar-bg/14 via-off-white/82 to-sage/10 border-navbar-bg/25",
+  "from-card-bg/18 via-off-white/80 to-coral/14 border-card-bg/30",
+  "from-sage/16 via-off-white/84 to-coral/10 border-sage/24",
+  "from-coral/14 via-off-white/84 to-navbar-bg/10 border-coral/24",
+] as const;
 
 // Sample review texts for variety
 const sampleReviewTexts = [
@@ -293,71 +301,67 @@ export default function CommunityHighlights({
               </div>
 
               {/* Badge preview strip — pure CSS marquee at all breakpoints */}
-                <div className="pt-5 w-[100vw] relative left-1/2 -translate-x-1/2 sm:w-auto sm:left-auto sm:translate-x-0">
+                <div className="pt-5 -mx-6">
                   <div className="relative badge-marquee" aria-label="Badge previews">
                     <div className="badge-track">
                       {[...badgePreviews, ...badgePreviews].map((badge, idx) => (
-                        <div
+                        <Link
                           key={`${badge.label}-${idx}`}
-                          className="group relative flex items-center gap-2 rounded-full bg-white/70 backdrop-blur-sm border border-charcoal/10 px-4 py-2 shadow-[0_6px_18px_rgba(0,0,0,0.06)] transition-transform duration-200 hover:-translate-y-0.5"
+                          href="/badges"
+                          className={`group relative flex h-[132px] w-[132px] shrink-0 flex-col items-center justify-between rounded-2xl border bg-gradient-to-br p-2.5 shadow-[0_8px_22px_rgba(0,0,0,0.08)] transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage/45 focus-visible:ring-offset-2 focus-visible:ring-offset-off-white ${badgeTileGradients[idx % badgeTileGradients.length]}`}
                           title={badge.description}
-                          tabIndex={0}
+                          aria-label={`Explore badges: ${badge.label}`}
                         >
-                        <span
-                          className="flex items-center justify-center w-5 h-5 flex-shrink-0"
-                          aria-hidden
-                        >
-                          {badge.pngPath ? (
-                            <Image
-                              src={badge.pngPath}
-                              alt=""
-                              width={18}
-                              height={18}
-                              className="object-contain"
-                            />
-                          ) : (
-                            <span className="text-base leading-none">{badge.fallbackIcon}</span>
-                          )}
-                        </span>
-                        <span className="text-sm font-semibold text-charcoal/80 whitespace-nowrap">
-                          {badge.label}
-                        </span>
-
-                        {/* Tooltip (desktop) */}
-                        <div className="hidden md:block pointer-events-none absolute -top-11 left-1/2 -translate-x-1/2 opacity-0 translate-y-1 transition-all duration-200 md:group-hover:opacity-100 md:group-hover:translate-y-0 md:group-focus:opacity-100 md:group-focus:translate-y-0">
-                          <div className="rounded-xl bg-charcoal text-off-white text-xs font-medium px-3 py-2 shadow-[0_10px_30px_rgba(0,0,0,0.18)] border border-white/10 whitespace-nowrap">
-                            {badge.description}
-                          </div>
-                        </div>
-                      </div>
+                          <span
+                            className="flex h-[78px] w-full items-center justify-center rounded-xl border border-white/60 bg-white/55 backdrop-blur-[1px]"
+                            aria-hidden
+                          >
+                            {badge.pngPath ? (
+                              <Image
+                                src={badge.pngPath}
+                                alt=""
+                                width={68}
+                                height={68}
+                                className="h-[64px] w-[64px] object-contain drop-shadow-[0_6px_10px_rgba(0,0,0,0.12)]"
+                              />
+                            ) : (
+                              <span className="text-3xl leading-none">{badge.fallbackIcon}</span>
+                            )}
+                          </span>
+                          <span className="line-clamp-2 px-1 text-center text-xs font-semibold leading-tight text-charcoal/85">
+                            {badge.label}
+                          </span>
+                        </Link>
                     ))}
                   </div>
 
                   <style dangerouslySetInnerHTML={{ __html: `
                     .badge-marquee {
                       overflow: hidden;
+                      width: 100%;
                       scrollbar-width: none;
                     }
                     .badge-marquee::-webkit-scrollbar { display: none; }
 
                     .badge-track {
                       display: flex;
-                      gap: 12px;
+                      gap: 14px;
                       width: max-content;
-                      padding: 0 6px 4px 6px;
-                      align-items: center;
-                      animation: badge-scroll 20s linear infinite;
+                      padding: 0 10px 6px 10px;
+                      align-items: stretch;
+                      animation: badge-scroll 24s linear infinite;
                       will-change: transform;
                     }
 
                     @media (max-width: 767px) {
                       .badge-marquee {
-                        /* Safari/Chrome mobile fallback: avoid mask clipping animated content */
+                        overflow-x: hidden;
                         mask-image: none;
                         -webkit-mask-image: none;
                       }
                       .badge-track {
-                        animation-duration: 8s;
+                        gap: 12px;
+                        animation-duration: 18s;
                       }
                     }
 
@@ -368,12 +372,12 @@ export default function CommunityHighlights({
 
                     @media (min-width: 768px) {
                       .badge-marquee {
-                        padding: 0 8px;
-                        mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
-                        -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+                        padding: 0 6px;
+                        mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+                        -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
                       }
                       .badge-track {
-                        animation-duration: 22s;
+                        animation-duration: 26s;
                       }
                       .badge-marquee:hover .badge-track {
                         animation-play-state: paused;
@@ -381,7 +385,15 @@ export default function CommunityHighlights({
                     }
 
                     @media (prefers-reduced-motion: reduce) {
-                      .badge-track { animation: none !important; }
+                      .badge-marquee {
+                        overflow-x: auto;
+                        -webkit-overflow-scrolling: touch;
+                        mask-image: none !important;
+                        -webkit-mask-image: none !important;
+                      }
+                      .badge-track {
+                        animation: none !important;
+                      }
                     }
 
                     @keyframes badge-scroll {

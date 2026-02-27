@@ -233,7 +233,7 @@ export default function Footer() {
                       aria-disabled="true"
                       aria-label={badge.comingSoonLabel}
                       title={badge.comingSoonLabel}
-                      className="inline-flex items-center rounded-[10px] bg-white/5 ring-1 ring-white/10 px-1 py-1  "
+                      className="inline-flex items-center rounded-[10px] px-1 py-1"
                     >
                       <Image
                         src={badge.src}
