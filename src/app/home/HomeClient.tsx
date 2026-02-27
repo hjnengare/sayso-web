@@ -21,6 +21,7 @@ import BusinessRowSkeleton from "../components/BusinessRow/BusinessRowSkeleton";
 import FeaturedBusinessesSkeleton from "../components/CommunityHighlights/FeaturedBusinessesSkeleton";
 import CommunityHighlightsSkeleton from "../components/CommunityHighlights/CommunityHighlightsSkeleton";
 import { useBusinesses, useForYouBusinesses, useTrendingBusinesses } from "../hooks/useBusinesses";
+import { getBrowserSupabase } from "../lib/supabase/client";
 import { useFeaturedBusinesses } from "../hooks/useFeaturedBusinesses";
 import { useRoutePrefetch } from "../hooks/useRoutePrefetch";
 import { useUserPreferences } from "../hooks/useUserPreferences";
@@ -106,6 +107,27 @@ export default function HomeClient({ initialTrending }: { initialTrending?: impo
   );
   const eventsAndSpecials = eventsData ?? [];
 
+  // ── Realtime: refresh feed sections when any new review is inserted ──────────
+  // Keep a ref to the latest refetch callbacks so the channel doesn't need
+  // to be recreated when user auth state or SWR mutate identity changes.
+  const supabaseHomeRef = useRef(getBrowserSupabase());
+  const refetchFeedsRef = useRef<() => void>(() => {});
+  refetchFeedsRef.current = () => {
+    refetchTrending();
+    if (user) refetchForYou();
+  };
+
+  useEffect(() => {
+    const supabase = supabaseHomeRef.current;
+    const channel = supabase
+      .channel('home-reviews-feed')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'reviews' }, () => {
+        refetchFeedsRef.current();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []); // subscribe once on mount
+
   usePredefinedPageTitle('home');
   const isIOS = useMemo(() => isIOSBrowser(), []);
   // Start false so server and client render the same markup; enable after mount.
@@ -165,6 +187,7 @@ export default function HomeClient({ initialTrending }: { initialTrending?: impo
     businesses: forYouBusinesses,
     loading: forYouLoading,
     error: forYouError,
+    refetch: refetchForYou,
   } = useForYouBusinesses(20, undefined, {
     preferences,
     preferencesLoading: prefsLoading, // Wait for preference hydration to avoid double-fetching For You
@@ -176,6 +199,7 @@ export default function HomeClient({ initialTrending }: { initialTrending?: impo
     loading: trendingLoading,
     error: trendingError,
     statusCode: trendingStatus,
+    refetch: refetchTrending,
   } = useTrendingBusinesses({ fallbackData: initialTrending });
 
   // Debug logging for user preferences
