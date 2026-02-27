@@ -2,7 +2,8 @@
 
 import { useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
-import { AnimatePresence, m } from "framer-motion";
+import { AnimatePresence, m, useReducedMotion } from "framer-motion";
+import { getChoreoItemMotion } from "../lib/motion/choreography";
 import BusinessCard from "../components/BusinessCard/BusinessCard";
 import Footer from "../components/Footer/Footer";
 import { ChevronRight } from "lucide-react";
@@ -52,6 +53,8 @@ interface TrendingClientProps {
 export default function TrendingClient({ fallbackData }: TrendingClientProps = {}) {
   usePredefinedPageTitle('trending');
   useScrollReveal({ threshold: 0.12, rootMargin: "0px 0px -120px 0px", once: true });
+  const prefersReducedMotion = useReducedMotion() ?? false;
+  const choreoEnabled = !prefersReducedMotion;
   const [currentPage, setCurrentPage] = useState(1);
 
   const [isDesktop, setIsDesktop] = useState(false);
@@ -281,7 +284,11 @@ export default function TrendingClient({ fallbackData }: TrendingClientProps = {
         
         <div className="relative mx-auto w-full max-w-[2000px] px-2">
           {/* Breadcrumb */}
-          <nav className="relative z-10 pb-1 trending-load-item trending-load-delay-0" aria-label="Breadcrumb">
+          <m.nav
+            className="relative z-10 pb-1"
+            aria-label="Breadcrumb"
+            {...getChoreoItemMotion({ order: 0, intent: "inline", enabled: choreoEnabled })}
+          >
             <ol className="flex items-center gap-2 text-sm sm:text-base">
               <li>
                 <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
@@ -297,10 +304,13 @@ export default function TrendingClient({ fallbackData }: TrendingClientProps = {
                 </span>
               </li>
             </ol>
-          </nav>
+          </m.nav>
 
           {/* Title and Description Block */}
-          <div className="relative z-10 mb-6 sm:mb-8 px-4 sm:px-6 text-center pt-4 trending-load-item trending-load-delay-1">
+          <m.div
+            className="relative z-10 mb-6 sm:mb-8 px-4 sm:px-6 text-center pt-4"
+            {...getChoreoItemMotion({ order: 1, intent: "heading", enabled: choreoEnabled })}
+          >
             <div className="my-4">
               <h1
                 className="font-urbanist text-2xl sm:text-3xl md:text-4xl font-bold leading-[1.2] tracking-tight text-charcoal mx-auto"
@@ -325,9 +335,11 @@ export default function TrendingClient({ fallbackData }: TrendingClientProps = {
               See what's hot right now! Explore the most popular and highly-rated businesses
               that everyone's talking about in your area.
             </p>
-          </div>
+          </m.div>
 
-          <div className="trending-load-item trending-load-delay-2">
+          <m.div
+            {...getChoreoItemMotion({ order: 2, intent: "section", enabled: choreoEnabled })}
+          >
             <SearchFilterBar
               searchWrapRef={searchWrapRef}
               isSearching={isSearching}
@@ -344,9 +356,12 @@ export default function TrendingClient({ fallbackData }: TrendingClientProps = {
               onUpdateFilter={handleUpdateFilter}
               onClearAll={handleClearFilters}
             />
-          </div>
+          </m.div>
 
-          <div className="py-3 sm:py-4 trending-load-item trending-load-delay-3">
+          <m.div
+            className="py-3 sm:py-4"
+            {...getChoreoItemMotion({ order: 3, intent: "section", enabled: choreoEnabled })}
+          >
             <div className="pt-4 sm:pt-6 md:pt-10">
             {/* Show skeleton loader while businesses are loading */}
             {loading && (
@@ -507,42 +522,11 @@ export default function TrendingClient({ fallbackData }: TrendingClientProps = {
               </>
             )}
             </div>
-          </div>
+          </m.div>
         </div>
       </main>
 
       <style jsx>{`
-        .trending-load-item {
-          opacity: 0;
-          transform: translate3d(0, 12px, 0);
-          filter: blur(2px);
-          animation: trendingSectionLoadIn 560ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
-          will-change: transform, opacity, filter;
-        }
-        .trending-load-delay-0 { animation-delay: 40ms; }
-        .trending-load-delay-1 { animation-delay: 90ms; }
-        .trending-load-delay-2 { animation-delay: 140ms; }
-        .trending-load-delay-3 { animation-delay: 190ms; }
-        @keyframes trendingSectionLoadIn {
-          0% {
-            opacity: 0;
-            transform: translate3d(0, 12px, 0);
-            filter: blur(2px);
-          }
-          100% {
-            opacity: 1;
-            transform: translate3d(0, 0, 0);
-            filter: blur(0);
-          }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .trending-load-item {
-            opacity: 1;
-            transform: none;
-            filter: none;
-            animation: none;
-          }
-        }
         .desktop-card-shimmer {
           position: relative;
         }

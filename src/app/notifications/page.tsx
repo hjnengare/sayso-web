@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
-import { m, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence, useReducedMotion } from "framer-motion";
+import { getChoreoItemMotion } from "../lib/motion/choreography";
 import { Bell, Check, X, MessageSquare, MessageCircle, Star, Heart, TrendingUp, Clock, ChevronRight, Award, ThumbsUp, CheckCircle, ImageIcon, Trophy, UserRound } from "lucide-react";
 import Footer from "../components/Footer/Footer";
 import { usePredefinedPageTitle } from "../hooks/usePageTitle";
@@ -319,6 +320,8 @@ function NotificationsPageSkeleton() {
 
 export default function NotificationsPage() {
   usePredefinedPageTitle('notifications');
+  const prefersReducedMotion = useReducedMotion() ?? false;
+  const choreoEnabled = !prefersReducedMotion;
   const router = useRouter();
   const { user } = useAuth();
   const userCurrentRole =
@@ -365,7 +368,10 @@ export default function NotificationsPage() {
 
       <main className="min-h-[100dvh] flex-1 flex flex-col relative z-10">
         <div className="flex-1 flex flex-col pb-12 sm:pb-16 md:pb-20">
-          <div className="mx-auto w-full max-w-[2000px] px-2 relative mb-4 notifications-load-item notifications-load-delay-0">
+          <m.div
+            className="mx-auto w-full max-w-[2000px] px-2 relative mb-4"
+            {...getChoreoItemMotion({ order: 0, intent: "inline", enabled: choreoEnabled })}
+          >
             {/* Breadcrumb */}
             <nav className="pb-1" aria-label="Breadcrumb">
               <ol className="flex items-center gap-2 text-sm sm:text-base">
@@ -387,15 +393,21 @@ export default function NotificationsPage() {
                 </li>
               </ol>
             </nav>
-          </div>
+          </m.div>
 
           {isLoading ? (
             <NotificationsPageSkeleton />
           ) : (
-            <div className="relative z-10 flex flex-col flex-1 notifications-load-item notifications-load-delay-1">
+            <m.div
+              className="relative z-10 flex flex-col flex-1"
+              {...getChoreoItemMotion({ order: 1, intent: "section", enabled: choreoEnabled })}
+            >
               <div className="mx-auto w-full max-w-[2000px] px-2 flex flex-col flex-1">
                 {/* Title */}
-                <div className="mb-6 sm:mb-8 px-2 notifications-load-item notifications-load-delay-2">
+                <m.div
+                  className="mb-6 sm:mb-8 px-2"
+                  {...getChoreoItemMotion({ order: 2, intent: "heading", enabled: choreoEnabled })}
+                >
                   <h1
                     className="text-2xl sm:text-3xl md:text-4xl font-bold text-charcoal"
                     style={{ fontFamily: '"Urbanist", -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 800 }}
@@ -408,9 +420,12 @@ export default function NotificationsPage() {
                   >
                     Activity from your personal account
                   </p>
-                </div>
+                </m.div>
 
-                <div className="px-2 flex flex-col flex-1 notifications-load-item notifications-load-delay-3">
+                <m.div
+                  className="px-2 flex flex-col flex-1"
+                  {...getChoreoItemMotion({ order: 3, intent: "section", enabled: choreoEnabled })}
+                >
                   <PersonalNotificationList
                     notifications={personalNotifications}
                     readNotifications={personalReadNotifications}
@@ -421,46 +436,12 @@ export default function NotificationsPage() {
                     markAllAsRead={markAllAsRead}
                     deleteNotification={deleteNotification}
                   />
-                </div>
+                </m.div>
               </div>
-            </div>
+            </m.div>
           )}
         </div>
       </main>
-
-      <style jsx>{`
-        .notifications-load-item {
-          opacity: 0;
-          transform: translate3d(0, 12px, 0);
-          filter: blur(2px);
-          animation: notificationsSectionLoadIn 560ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
-          will-change: transform, opacity, filter;
-        }
-        .notifications-load-delay-0 { animation-delay: 40ms; }
-        .notifications-load-delay-1 { animation-delay: 90ms; }
-        .notifications-load-delay-2 { animation-delay: 140ms; }
-        .notifications-load-delay-3 { animation-delay: 190ms; }
-        @keyframes notificationsSectionLoadIn {
-          0% {
-            opacity: 0;
-            transform: translate3d(0, 12px, 0);
-            filter: blur(2px);
-          }
-          100% {
-            opacity: 1;
-            transform: translate3d(0, 0, 0);
-            filter: blur(0);
-          }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .notifications-load-item {
-            opacity: 1;
-            transform: none;
-            filter: none;
-            animation: none;
-          }
-        }
-      `}</style>
 
       <Footer />
     </div>

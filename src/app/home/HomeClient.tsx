@@ -6,6 +6,8 @@
 "use client";
 
 import { memo, useState, useEffect, useMemo, useRef } from "react";
+import { m, useReducedMotion } from "framer-motion";
+import { getChoreoItemMotion } from "../lib/motion/choreography";
 import useSWR from "swr";
 import { swrConfig } from "../lib/swrConfig";
 import { useSearchParams } from "next/navigation";
@@ -82,6 +84,8 @@ function isIOSBrowser(): boolean {
 export default function HomeClient({ initialTrending }: { initialTrending?: import('../components/BusinessCard/BusinessCard').Business[] }) {
   const isDesktop = useIsDesktop();
   const isDev = process.env.NODE_ENV === "development";
+  const prefersReducedMotion = useReducedMotion() ?? false;
+  const choreoEnabled = !prefersReducedMotion;
 
   // Defer below-fold Events fetch to prioritize above-fold content (For You, Trending)
   const [eventsReady, setEventsReady] = useState(false);
@@ -480,7 +484,10 @@ export default function HomeClient({ initialTrending }: { initialTrending?: impo
           <div suppressHydrationWarning ref={contentRef} className="relative mx-auto w-full max-w-[2000px]">
             {isSearchActive ? (
               /* Search Results Mode */
-              <div className="px-4 sm:px-6 lg:px-8 home-load-item home-load-delay-0">
+              <m.div
+                className="px-4 sm:px-6 lg:px-8"
+                {...getChoreoItemMotion({ order: 0, intent: "section", enabled: choreoEnabled })}
+              >
                 <SearchResultsPanel
                   query={liveQuery.trim() || searchQueryParam.trim()}
                   loading={liveLoading}
@@ -491,16 +498,16 @@ export default function HomeClient({ initialTrending }: { initialTrending?: impo
                   onRatingChange={(value) => setMinRating(value)}
                   onResetFilters={resetFilters}
                 />
-              </div>
+              </m.div>
             ) : (
               /* Discovery Mode - Default Home Page Content */
               <div className="flex flex-col gap-8 sm:gap-10 md:gap-12 pt-0">
                   {/* For You Section - Only show when NOT filtered */}
                   {!isFiltered && (
-                    (() => {
-                      const className = "relative z-10 snap-start home-load-item home-load-delay-0";
-                      const children = (
-                        <>
+                    <m.div
+                      className="relative z-10 snap-start"
+                      {...getChoreoItemMotion({ order: 0, intent: "section", enabled: choreoEnabled })}
+                    >
                       {!user ? (
                         /* Not signed in: Show Locked For You Section (teaser only) */
                         <div className="mx-auto w-full max-w-[2000px] px-2 pt-4 sm:pt-8 md:pt-10">
@@ -567,17 +574,15 @@ export default function HomeClient({ initialTrending }: { initialTrending?: impo
                           )}
                         </>
                       )}
-                        </>
-                      );
-                      return (
-                        <div className={className}>{children}</div>
-                      );
-                    })()
+                    </m.div>
                   )}
 
                   {/* Filtered Results Section - Show when filters are active */}
                   {isFiltered && (
-                    <div className="relative z-10 snap-start home-load-item home-load-delay-1">
+                    <m.div
+                      className="relative z-10 snap-start"
+                      {...getChoreoItemMotion({ order: 0, intent: "section", enabled: choreoEnabled })}
+                    >
                       {allBusinessesLoading ? (
                         <BusinessRowSkeleton title="Filtered Results" />
                       ) : allBusinesses.length > 0 ? (
@@ -593,12 +598,15 @@ export default function HomeClient({ initialTrending }: { initialTrending?: impo
                           No businesses match your filters. Try adjusting your selections.
                         </div>
                       )}
-                    </div>
+                    </m.div>
                   )}
 
                   {/* Trending Section - Only show when not filtered */}
                   {!isFiltered && (
-                    <div className="relative z-10 snap-start home-load-item home-load-delay-1">
+                    <m.div
+                      className="relative z-10 snap-start"
+                      {...getChoreoItemMotion({ order: 1, intent: "section", enabled: choreoEnabled })}
+                    >
                       {trendingLoading && <BusinessRowSkeleton title="Trending Now" />}
                       {!trendingLoading && hasTrendingBusinesses && (
                         <MemoizedBusinessRow title="Trending Now" businesses={trendingBusinesses} cta="See More" href="/trending" disableAnimations />
@@ -615,11 +623,14 @@ export default function HomeClient({ initialTrending }: { initialTrending?: impo
                           )}
                         </div>
                       )}
-                    </div>
+                    </m.div>
                   )}
 
                   {/* Events & Specials */}
-                  <div className="relative z-10 snap-start home-load-item home-load-delay-2">
+                  <m.div
+                    className="relative z-10 snap-start"
+                    {...getChoreoItemMotion({ order: 2, intent: "section", enabled: choreoEnabled })}
+                  >
                     <EventsSpecials
                       events={eventsAndSpecials}
                       loading={eventsAndSpecialsLoading}
@@ -628,10 +639,13 @@ export default function HomeClient({ initialTrending }: { initialTrending?: impo
                       premiumCtaHover
                       disableAnimations
                     />
-                  </div>
+                  </m.div>
 
                   {/* Community Highlights (Featured by Category) */}
-                  <div className="relative z-10 snap-start home-load-item home-load-delay-3">
+                  <m.div
+                    className="relative z-10 snap-start"
+                    {...getChoreoItemMotion({ order: 3, intent: "section", enabled: choreoEnabled })}
+                  >
                     {featuredError && !featuredLoading ? (
                       <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral space-y-1">
                         <p className="font-medium">Featured</p>
@@ -649,44 +663,11 @@ export default function HomeClient({ initialTrending }: { initialTrending?: impo
                         disableAnimations
                       />
                     )}
-                  </div>
+                  </m.div>
                 </div>
               )}
           </div>
         </main>
-        <style jsx>{`
-          .home-load-item {
-            opacity: 0;
-            transform: translate3d(0, 12px, 0);
-            filter: blur(2px);
-            animation: homeSectionLoadIn 560ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            will-change: transform, opacity, filter;
-          }
-          .home-load-delay-0 { animation-delay: 50ms; }
-          .home-load-delay-1 { animation-delay: 120ms; }
-          .home-load-delay-2 { animation-delay: 190ms; }
-          .home-load-delay-3 { animation-delay: 260ms; }
-          @keyframes homeSectionLoadIn {
-            0% {
-              opacity: 0;
-              transform: translate3d(0, 12px, 0);
-              filter: blur(2px);
-            }
-            100% {
-              opacity: 1;
-              transform: translate3d(0, 0, 0);
-              filter: blur(0);
-            }
-          }
-          @media (prefers-reduced-motion: reduce) {
-            .home-load-item {
-              opacity: 1;
-              transform: none;
-              filter: none;
-              animation: none;
-            }
-          }
-        `}</style>
         <Footer />
       </div>
 

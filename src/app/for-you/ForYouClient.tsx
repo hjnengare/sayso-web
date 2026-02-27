@@ -3,7 +3,8 @@
 import { useMemo, useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { AnimatePresence, m } from "framer-motion";
+import { AnimatePresence, m, useReducedMotion } from "framer-motion";
+import { getChoreoItemMotion } from "../lib/motion/choreography";
 import Footer from "../components/Footer/Footer";
 import BusinessCard from "../components/BusinessCard/BusinessCard";
 import { useForYouBusinesses } from "../hooks/useBusinesses";
@@ -85,6 +86,8 @@ export default function ForYouClient({
     skipInitialFetch: initialPreferencesLoaded,
   });
   const hasInitialBusinesses = initialBusinesses.length > 0;
+  const prefersReducedMotion = useReducedMotion() ?? false;
+  const choreoEnabled = !prefersReducedMotion;
   const preferences = useMemo(
     () => ({ interests, subcategories, dealbreakers }),
     [interests, subcategories, dealbreakers]
@@ -477,7 +480,11 @@ export default function ForYouClient({
         
         <div className="relative mx-auto w-full max-w-[2000px] px-2">
           {/* Breadcrumb */}
-          <nav className="relative z-10 pb-1 foryou-load-item foryou-load-delay-0" aria-label="Breadcrumb">
+          <m.nav
+            className="relative z-10 pb-1"
+            aria-label="Breadcrumb"
+            {...getChoreoItemMotion({ order: 0, intent: "inline", enabled: choreoEnabled })}
+          >
             <ol className="flex items-center gap-2 text-sm sm:text-base">
               <li>
                 <Link href="/home" className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
@@ -493,10 +500,13 @@ export default function ForYouClient({
                 </span>
               </li>
             </ol>
-          </nav>
+          </m.nav>
 
           {/* Title and Description Block */}
-          <div className="relative z-10 mb-6 sm:mb-8 px-4 sm:px-6 text-center pt-4 foryou-load-item foryou-load-delay-1">
+          <m.div
+            className="relative z-10 mb-6 sm:mb-8 px-4 sm:px-6 text-center pt-4"
+            {...getChoreoItemMotion({ order: 1, intent: "heading", enabled: choreoEnabled })}
+          >
             <div className="my-4">
               <h1
                 className="font-urbanist text-2xl sm:text-3xl md:text-4xl font-bold leading-[1.2] tracking-tight text-charcoal mx-auto"
@@ -533,10 +543,14 @@ export default function ForYouClient({
                 <span>Personalizing...</span>
               </div>
             )}
-          </div>
+          </m.div>
 
           {/* Search Input at top of main content */}
-          <div ref={searchWrapRef} className="relative z-10 py-3 sm:py-4 px-4 foryou-load-item foryou-load-delay-2">
+          <m.div
+            ref={searchWrapRef}
+            className="relative z-10 py-3 sm:py-4 px-4"
+            {...getChoreoItemMotion({ order: 2, intent: "section", enabled: choreoEnabled })}
+          >
             <SearchInput
               variant="header"
               placeholder="Discover exceptional local hidden gems..."
@@ -546,20 +560,24 @@ export default function ForYouClient({
               showFilter={false}
               enableSuggestions={true}
             />
-          </div>
+          </m.div>
 
           {/* Inline Filters - Only show when searching */}
-          <div className="foryou-load-item foryou-load-delay-3">
+          <m.div
+            {...getChoreoItemMotion({ order: 3, intent: "section", enabled: choreoEnabled })}
+          >
             <InlineFilters
               show={isSearchActive && debouncedSearchQuery.trim().length > 0}
               filters={filters}
               onDistanceChange={handleInlineDistanceChange}
               onRatingChange={handleInlineRatingChange}
             />
-          </div>
+          </m.div>
 
           {/* Active Filter Badges - Show when filters are active */}
-          <div className="foryou-load-item foryou-load-delay-4">
+          <m.div
+            {...getChoreoItemMotion({ order: 4, intent: "section", enabled: choreoEnabled })}
+          >
             <ActiveFilterBadges
               filters={filters}
               onRemoveFilter={(filterType) => {
@@ -570,9 +588,12 @@ export default function ForYouClient({
               onUpdateFilter={handleUpdateFilter}
               onClearAll={handleClearFilters}
             />
-          </div>
+          </m.div>
 
-          <div className="py-3 sm:py-4 foryou-load-item foryou-load-delay-5">
+          <m.div
+            className="py-3 sm:py-4"
+            {...getChoreoItemMotion({ order: 5, intent: "section", enabled: choreoEnabled })}
+          >
             <div ref={resultsContainerRef} className="pt-4 sm:pt-6 md:pt-10">
           {/* ✅ Show skeleton loader while prefs are loading OR businesses are loading OR simple search is loading */}
           {shouldShowSkeleton && (
@@ -770,44 +791,11 @@ export default function ForYouClient({
             </>
           )}
             </div>
-          </div>
+          </m.div>
         </div>
       </main>
 
       <style jsx>{`
-        .foryou-load-item {
-          opacity: 0;
-          transform: translate3d(0, 12px, 0);
-          filter: blur(2px);
-          animation: forYouSectionLoadIn 560ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
-          will-change: transform, opacity, filter;
-        }
-        .foryou-load-delay-0 { animation-delay: 40ms; }
-        .foryou-load-delay-1 { animation-delay: 90ms; }
-        .foryou-load-delay-2 { animation-delay: 140ms; }
-        .foryou-load-delay-3 { animation-delay: 180ms; }
-        .foryou-load-delay-4 { animation-delay: 220ms; }
-        .foryou-load-delay-5 { animation-delay: 260ms; }
-        @keyframes forYouSectionLoadIn {
-          0% {
-            opacity: 0;
-            transform: translate3d(0, 12px, 0);
-            filter: blur(2px);
-          }
-          100% {
-            opacity: 1;
-            transform: translate3d(0, 0, 0);
-            filter: blur(0);
-          }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .foryou-load-item {
-            opacity: 1;
-            transform: none;
-            filter: none;
-            animation: none;
-          }
-        }
         .desktop-card-shimmer {
           position: relative;
         }
