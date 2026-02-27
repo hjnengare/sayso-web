@@ -79,7 +79,7 @@ export function ImageCarousel({
         <div className="relative w-full mx-auto overflow-visible sm:overflow-hidden border-0 sm:border border-sage/10 bg-card-bg rounded-none">
             {/* Slides */}
             <div
-                className="relative h-[80dvh] sm:h-[40vh] overflow-visible sm:overflow-hidden cursor-pointer group bg-card-bg flex items-center justify-center rounded-none"
+                className="relative h-[85dvh] sm:h-[45vh] overflow-visible sm:overflow-hidden cursor-pointer group bg-card-bg flex items-center justify-center rounded-none"
                 onClick={hasImages ? openModal : undefined}
             >
                 {hasImages ? (

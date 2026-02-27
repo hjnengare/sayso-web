@@ -585,11 +585,18 @@ export default function MessagingWorkspace({
           className={`${listPaneVisibleClass} w-full lg:w-[360px] xl:w-[420px] flex-col border-r border-charcoal/10 bg-off-white`}
         >
           <div className="border-b border-charcoal/10 px-4 py-4 sm:px-5">
-            <h1 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-              {title}
-            </h1>
-            <p className="mt-0.5 text-sm text-charcoal/55" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
-              {subtitle || `${unreadTotal} unread`}
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                {title}
+              </h1>
+              {unreadTotal > 0 && (
+                <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-coral px-1.5 text-[11px] font-bold text-white">
+                  {unreadTotal > 99 ? '99+' : unreadTotal}
+                </span>
+              )}
+            </div>
+            <p className="mt-0.5 text-sm text-charcoal/50" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+              {subtitle || (unreadTotal > 0 ? `${unreadTotal} unread` : 'All caught up')}
             </p>
 
             {role === 'business' && businessOptions && businessOptions.length > 0 && (
@@ -671,13 +678,13 @@ export default function MessagingWorkspace({
                       <button
                         type="button"
                         onClick={() => handleSelectConversation(conversation.id)}
-                        className={`flex w-full items-center gap-3 rounded-2xl border px-3.5 py-3 text-left shadow-sm transition-[background-color,border-color,box-shadow] duration-150 sm:px-4 ${
+                        className={`flex w-full items-center gap-3 rounded-2xl border px-3.5 py-3 text-left transition-[background-color,border-color,box-shadow] duration-150 sm:px-4 ${
                           isSelected
-                            ? 'border-navbar-bg/20 bg-card-bg/10'
-                            : 'border-charcoal/10 bg-white/95 hover:border-charcoal/20 hover:bg-white'
+                            ? 'border-navbar-bg/25 bg-white shadow-sm ring-1 ring-navbar-bg/10'
+                            : 'border-charcoal/10 bg-white/90 shadow-sm hover:border-charcoal/18 hover:bg-white hover:shadow'
                         }`}
                       >
-                        <div className="relative h-11 w-11 flex-shrink-0 overflow-hidden rounded-xl bg-charcoal/10">
+                        <div className="relative h-11 w-11 flex-shrink-0 overflow-hidden rounded-full bg-charcoal/10">
                           {avatar ? (
                             <Image
                               src={avatar}
@@ -725,16 +732,21 @@ export default function MessagingWorkspace({
         <section className={`${threadPaneVisibleClass} min-w-0 flex-1 flex-col bg-off-white`}>
           {!selectedConversation && (
             <div className="flex h-full flex-col items-center justify-center px-6 text-center">
-              <MessageCircle className="mb-2 h-10 w-10 text-charcoal/20" />
-              <p className="text-sm font-semibold text-charcoal/60" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+              <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-charcoal/[0.06]">
+                <MessageCircle className="h-7 w-7 text-charcoal/30" />
+              </div>
+              <p className="text-sm font-semibold text-charcoal/55" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
                 Select a conversation
+              </p>
+              <p className="mt-1 text-xs text-charcoal/35" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
+                Choose from your list to start messaging
               </p>
             </div>
           )}
 
           {selectedConversation && (
             <>
-              <header className="sticky top-0 z-10 border-b border-charcoal/10 bg-off-white/95 px-4 py-3 backdrop-blur sm:px-5">
+              <header className="sticky top-0 z-10 border-b border-charcoal/10 bg-off-white/98 px-4 py-3 shadow-sm backdrop-blur sm:px-5">
                 <div className="flex items-center gap-3">
                   {(() => {
                     const fallbackBusinessName = getFallbackBusinessName(selectedConversation);
@@ -761,7 +773,7 @@ export default function MessagingWorkspace({
                     <ChevronLeft className="h-4 w-4" />
                   </button>
 
-                  <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-xl bg-charcoal/10">
+                  <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-charcoal/10">
                     {selectedAvatar ? (
                       <Image
                         src={selectedAvatar || ''}
@@ -824,9 +836,11 @@ export default function MessagingWorkspace({
                     )}
 
                     {messages.length > 0 && (
-                      <div className="space-y-3">
-                        {messages.map((message) => {
+                      <div>
+                        {messages.map((message, index) => {
                           const ownMessage = message.sender_type === role;
+                          const prevMessage = index > 0 ? messages[index - 1] : null;
+                          const senderChanged = !prevMessage || prevMessage.sender_type !== message.sender_type;
                           const statusLabel = getStatusLabel(message);
                           const senderIdentity = resolveMessageIdentity(ownMessage);
                           const shouldAnimateMessage = animatedMessageIds.has(message.id);
@@ -839,15 +853,31 @@ export default function MessagingWorkspace({
                           return (
                             <div
                               key={message.id}
-                              className={`flex ${ownMessage ? 'justify-end' : 'justify-start'} ${animationClassName}`}
+                              className={`flex flex-col ${ownMessage ? 'items-end' : 'items-start'} ${
+                                index === 0 ? '' : senderChanged ? 'mt-5' : 'mt-1'
+                              } ${animationClassName}`}
                             >
+                              {senderChanged && (
+                                <span
+                                  className={`mb-1 text-[11px] font-medium text-charcoal/45 ${
+                                    ownMessage ? 'pr-10 sm:pr-11' : 'pl-10 sm:pl-11'
+                                  }`}
+                                  style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
+                                >
+                                  {senderIdentity.name}
+                                </span>
+                              )}
                               <div className={`flex items-end gap-2 ${ownMessage ? 'flex-row-reverse' : 'flex-row'}`}>
-                                <MessageBubbleAvatar name={senderIdentity.name} avatarUrl={senderIdentity.avatarUrl} />
+                                {senderChanged ? (
+                                  <MessageBubbleAvatar name={senderIdentity.name} avatarUrl={senderIdentity.avatarUrl} />
+                                ) : (
+                                  <div className="h-8 w-8 flex-shrink-0 sm:h-9 sm:w-9" aria-hidden />
+                                )}
                                 <div
-                                  className={`max-w-[82%] rounded-[18px] border px-3.5 py-2.5 sm:max-w-[75%] ${
+                                  className={`max-w-[80%] rounded-[18px] border px-3.5 py-2.5 sm:max-w-[72%] ${
                                     ownMessage
-                                      ? 'rounded-br-lg border-white/25 bg-navbar-bg text-white shadow-sm'
-                                      : 'rounded-bl-lg border-charcoal/12 bg-white text-charcoal shadow-sm'
+                                      ? 'rounded-br-md border-white/25 bg-navbar-bg text-white shadow-sm'
+                                      : 'rounded-bl-md border-charcoal/12 bg-white text-charcoal shadow-sm'
                                   }`}
                                 >
                                   <p

@@ -55,9 +55,9 @@ export default function DMPage() {
     : undefined;
 
   return (
-    <div className="min-h-[100dvh]">
-      <div className="mx-auto w-full max-w-7xl px-4 sm:px-5 pt-2">
-        <nav aria-label="Breadcrumb">
+    <div className="min-h-[100dvh] bg-off-white">
+      <div className="mx-auto w-full max-w-[2000px] px-2 relative pb-1">
+        <nav className="pb-1" aria-label="Breadcrumb">
           <ol
             className="flex items-center gap-2 text-sm sm:text-base"
             style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
