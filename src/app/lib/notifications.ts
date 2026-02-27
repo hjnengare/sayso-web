@@ -35,6 +35,13 @@ interface CreateNotificationParams {
   imageAlt?: string;
 }
 
+interface NotifyReplyRecipientsParams {
+  reviewId: string;
+  replyId: string;
+  replierId: string;
+  replierName: string;
+}
+
 /**
  * Centralized server-side notification creation helper.
  * Uses service role client to bypass RLS.
@@ -133,6 +140,83 @@ export async function notifyCommentReply(
     entityId: replyId,
     link: businessSlug ? `/business/${businessSlug}` : '/profile',
   });
+}
+
+/**
+ * Fan out notifications for a newly created review reply.
+ * Source of truth lives in API; this helper ensures deterministic recipients:
+ * - Review author gets `comment_reply`
+ * - Business owner gets `review`
+ */
+export async function notifyReplyRecipients(params: NotifyReplyRecipientsParams) {
+  const supabase = getServiceSupabase();
+
+  const { data: review, error: reviewError } = await (supabase as any)
+    .from('reviews')
+    .select('id, user_id, business_id')
+    .eq('id', params.reviewId)
+    .maybeSingle();
+
+  if (reviewError || !review) {
+    console.error('[Notifications] notifyReplyRecipients failed to resolve review:', reviewError);
+    return { authorNotificationId: null, ownerNotificationId: null };
+  }
+
+  const { data: business, error: businessError } = await (supabase as any)
+    .from('businesses')
+    .select('id, name, slug, owner_id')
+    .eq('id', review.business_id)
+    .maybeSingle();
+
+  if (businessError || !business) {
+    console.error('[Notifications] notifyReplyRecipients failed to resolve business:', businessError);
+    return { authorNotificationId: null, ownerNotificationId: null };
+  }
+
+  const reviewAuthorId = review.user_id ? String(review.user_id) : null;
+  const businessOwnerId = business.owner_id ? String(business.owner_id) : null;
+  const businessId = String(business.id || review.business_id);
+  const businessName = String(business.name || 'this business');
+  const replierName = params.replierName?.trim() || 'Someone';
+  const authorLink = business.slug ? `/business/${business.slug}` : `/business/${businessId}`;
+  const ownerLink = `/my-businesses/businesses/${businessId}/reviews`;
+
+  let authorNotificationId: string | null = null;
+  let ownerNotificationId: string | null = null;
+
+  // Review author notification (comment_reply), unless self-reply
+  if (reviewAuthorId && reviewAuthorId !== params.replierId) {
+    authorNotificationId = await createNotification({
+      userId: reviewAuthorId,
+      type: 'comment_reply',
+      title: 'New Reply',
+      message: `${replierName} replied to your review`,
+      entityId: `reply:${params.replyId}:author`,
+      link: authorLink,
+      image: '/png/restaurants.png',
+      imageAlt: 'Comment reply',
+    });
+  }
+
+  // Business owner notification (review), with dedupe + self/overlap guards
+  if (
+    businessOwnerId &&
+    businessOwnerId !== params.replierId &&
+    businessOwnerId !== reviewAuthorId
+  ) {
+    ownerNotificationId = await createNotification({
+      userId: businessOwnerId,
+      type: 'review',
+      title: 'Reply on Review',
+      message: `${replierName} replied to a review on ${businessName}`,
+      entityId: `reply:${params.replyId}:owner`,
+      link: ownerLink,
+      image: '/png/restaurants.png',
+      imageAlt: 'Reply on review',
+    });
+  }
+
+  return { authorNotificationId, ownerNotificationId };
 }
 
 /**
