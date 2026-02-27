@@ -598,7 +598,7 @@ export default function DesktopNav(props: DesktopNavProps) {
                     style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
                   />
                   {savedCount > 0 && (
-                    <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[12px] h-5 px-1.5 text-white text-[11px] font-bold rounded-full bg-coral ring-[1.5px] ring-white/85 shadow-sm">
+                    <span className="pointer-events-none absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[10px] leading-none font-extrabold tracking-tight rounded-full bg-coral text-white ring-[1.5px] ring-white/85 shadow-sm">
                       {savedCount > 99 ? "99+" : savedCount}
                     </span>
                   )}
