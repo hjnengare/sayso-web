@@ -548,15 +548,10 @@ function BusinessCard({
   }, [displayRating]);
 
   return (
-    <m.li
+    <li
       id={idForSnap}
       className={`snap-start snap-always flex-shrink-0 ${compact ? 'w-auto' : 'w-[240px] sm:w-[260px] md:w-[340px]'}`}
       style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ type: "spring", stiffness: 300, damping: 25 }}
     >
       <Link
         href={businessProfileRoute}
@@ -721,7 +716,7 @@ function BusinessCard({
           </div>
         </div>
       </Link>
-    </m.li>
+    </li>
   );
 }
 

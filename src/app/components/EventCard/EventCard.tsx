@@ -409,13 +409,8 @@ function EventCard({
         onMouseLeave={handleCardMouseLeave}
         onTouchStart={handleCardTouchStart}
       >
-      <m.article
+      <article
         className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden group cursor-pointer w-full flex flex-col backdrop-blur-xl shadow-md pb-4"
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ type: "spring", stiffness: 300, damping: 25 }}
       >
           {/* MEDIA - Full bleed with premium overlay */}
           <div className="relative w-full flex-shrink-0 z-10">
@@ -702,7 +697,7 @@ function EventCard({
               </button>
             </div>
           </div>
-        </m.article>
+        </article>
       </Link>
     </li>
   );
