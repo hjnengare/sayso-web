@@ -211,7 +211,7 @@ export function formatConversationListItem(conversation: any, role: MessagingRol
             participantProfile?.display_name ||
             participantProfile?.username ||
             participantProfile?.full_name ||
-            'Customer',
+            'Unknown',
           username: participantProfile?.username || null,
           avatar_url: participantProfile?.avatar_url || null,
         }

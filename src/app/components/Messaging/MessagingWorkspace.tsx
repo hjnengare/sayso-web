@@ -150,9 +150,9 @@ function getConversationTitle(
   fallbackBusinessName?: string
 ): string {
   if (role === 'business') {
-    return conversation.participant?.display_name || 'Customer';
+    return conversation.participant?.display_name || 'Unknown';
   }
-  return conversation.business?.name || fallbackBusinessName || 'Conversation';
+  return conversation.business?.name || fallbackBusinessName || 'Unknown';
 }
 
 function getConversationSubtitle(
@@ -161,9 +161,9 @@ function getConversationSubtitle(
   fallbackBusinessName?: string
 ): string {
   if (role === 'business') {
-    return conversation.business?.name || fallbackBusinessName || 'Conversation';
+    return conversation.business?.name || fallbackBusinessName || 'Unknown';
   }
-  return conversation.business?.category || conversation.business?.name || fallbackBusinessName || 'Conversation';
+  return conversation.business?.category || conversation.business?.name || fallbackBusinessName || 'Unknown';
 }
 
 function getConversationAvatar(conversation: ConversationListItem, role: MessagingRole): string | null {
@@ -518,9 +518,12 @@ export default function MessagingWorkspace({
       if (!conversation) return undefined;
       const businessId = conversation.business?.id || conversation.business_id || null;
       if (!businessId) return undefined;
-      return businessNameById.get(businessId);
+      return (
+        businessNameById.get(businessId) ||
+        reviewedBusinessSuggestions.find((s) => s.business_id === businessId)?.business_name
+      );
     },
-    [businessNameById]
+    [businessNameById, reviewedBusinessSuggestions]
   );
   const selectedBusinessOption = useMemo(() => {
     if (!businessOptions || businessOptions.length === 0) return null;
@@ -545,7 +548,7 @@ export default function MessagingWorkspace({
         selectedConversation?.business?.name ||
         selectedBusinessOption?.name ||
         getFallbackBusinessName(selectedConversation) ||
-        'Conversation',
+        'Unknown',
       avatarUrl: selectedConversation?.business?.image_url || selectedBusinessOption?.image_url || null,
     }),
     [
@@ -563,7 +566,7 @@ export default function MessagingWorkspace({
       name:
         selectedConversation?.participant?.display_name ||
         selectedConversation?.participant?.username ||
-        'Customer',
+        'Unknown',
       avatarUrl: selectedConversation?.participant?.avatar_url || null,
     }),
     [
@@ -655,7 +658,7 @@ export default function MessagingWorkspace({
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder="Search conversations"
-                className="w-full rounded-2xl border border-charcoal/12 bg-white/95 py-2 pl-9 pr-3 text-sm text-charcoal shadow-sm placeholder:text-charcoal/45 focus:border-navbar-bg/40 focus:outline-none focus:ring-2 focus:ring-navbar-bg/20"
+                className="w-full rounded-full border border-charcoal/12 bg-white/95 py-2 pl-9 pr-3 text-sm text-charcoal placeholder:text-charcoal/45 focus:border-navbar-bg/40 focus:outline-none focus:ring-2 focus:ring-navbar-bg/20"
                 style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}
               />
             </div>

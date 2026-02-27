@@ -6,6 +6,7 @@ import { useAuth } from "./AuthContext";
 import { formatTimeAgo } from "../utils/formatTimeAgo";
 import { getBrowserSupabase } from "../lib/supabase/client";
 import { swrConfig } from "../lib/swrConfig";
+import { fireBadgeCelebration } from "../lib/celebration/badgeCelebration";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -38,6 +39,9 @@ export interface ToastNotificationData {
   image: string;
   imageAlt: string;
   link?: string;
+  /** Optional badge metadata for badge_earned notifications */
+  badge_id?: string;
+  badge_name?: string;
 }
 
 interface DatabaseNotification {
@@ -180,6 +184,10 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         mutate(prev => [newRow, ...(prev ?? [])], { revalidate: false });
         // Show as toast
         setToastQueue(prev => [...prev, toToast(newRow)]);
+        // Fire badge celebration for badge_earned notifications
+        if (newRow.type === 'badge_earned') {
+          void fireBadgeCelebration(`realtime-badge-${newRow.id}`);
+        }
       })
       .on('postgres_changes', {
         event: 'UPDATE',
