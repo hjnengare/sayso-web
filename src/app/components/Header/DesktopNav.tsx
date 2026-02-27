@@ -550,25 +550,27 @@ export default function DesktopNav(props: DesktopNavProps) {
               </m.span>
             </OptimizedLink>
           ) : (
-            <OptimizedLink
-              href="/notifications"
-              onClick={(e) => handleNavClick("/notifications", e)}
-              className={`${iconWrapClass(isNotificationsActive)} cursor-pointer pointer-events-auto select-none relative z-[2]`}
-              aria-label="Notifications"
-            >
-              <m.span className="inline-flex" animate={bellControls}>
-                <Bell
-                  className={`${iconClass(isNotificationsActive)} pointer-events-none`}
-                  fill={isNotificationsActive ? "currentColor" : "none"}
-                  style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
-                />
-              </m.span>
+            <div className="relative">
+              <OptimizedLink
+                href="/notifications"
+                onClick={(e) => handleNavClick("/notifications", e)}
+                className={`${iconWrapClass(isNotificationsActive)} cursor-pointer pointer-events-auto select-none z-[2]`}
+                aria-label="Notifications"
+              >
+                <m.span className="inline-flex" animate={bellControls}>
+                  <Bell
+                    className={`${iconClass(isNotificationsActive)} pointer-events-none`}
+                    fill={isNotificationsActive ? "currentColor" : "none"}
+                    style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
+                  />
+                </m.span>
+              </OptimizedLink>
               {unreadCount > 0 && (
-                <span className="pointer-events-none absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[10px] leading-none font-extrabold tracking-tight rounded-full bg-coral text-white ring-[1.5px] ring-white/85 shadow-sm">
+                <span className="pointer-events-none absolute -top-1.5 -right-1.5 z-10 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[10px] leading-none font-extrabold tracking-tight rounded-full bg-coral text-white ring-[1.5px] ring-white/85 shadow-sm">
                   {unreadCount > 99 ? "99+" : unreadCount}
                 </span>
               )}
-            </OptimizedLink>
+            </div>
           )}
 
           <div className="flex items-center gap-2">
@@ -577,7 +579,7 @@ export default function DesktopNav(props: DesktopNavProps) {
               <div className="relative">
                 <OptimizedLink
                   href="/saved"
-                  className={`group flex w-10 h-10 items-center justify-center rounded-lg transition-[color,transform] duration-200 ease-in-out relative lg:hover:scale-105 lg:focus-visible:scale-105 ${
+                  className={`group flex w-10 h-10 items-center justify-center rounded-lg transition-[color,transform] duration-200 ease-in-out lg:hover:scale-105 lg:focus-visible:scale-105 ${
                     isSavedActive
                       ? "text-sage bg-card-bg/5"
                       : whiteText
@@ -597,37 +599,39 @@ export default function DesktopNav(props: DesktopNavProps) {
                     fill={isSavedActive ? "currentColor" : "none"}
                     style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
                   />
-                  {savedCount > 0 && (
-                    <span className="pointer-events-none absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[10px] leading-none font-extrabold tracking-tight rounded-full bg-coral text-white ring-[1.5px] ring-white/85 shadow-sm">
-                      {savedCount > 99 ? "99+" : savedCount}
-                    </span>
-                  )}
                 </OptimizedLink>
+                {savedCount > 0 && (
+                  <span className="pointer-events-none absolute -top-1.5 -right-1.5 z-10 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[10px] leading-none font-extrabold tracking-tight rounded-full bg-coral text-white ring-[1.5px] ring-white/85 shadow-sm">
+                    {savedCount > 99 ? "99+" : savedCount}
+                  </span>
+                )}
               </div>
             )}
 
             {/* Messages */}
-            <OptimizedLink
-              href={messagesHref}
-              onClick={(e) => {
-                if (!isGuest) {
-                  handleNavClick(messagesHref, e);
-                }
-              }}
-              className={`${iconWrapClass(isMessagesActive)} cursor-pointer pointer-events-auto select-none relative z-[2]`}
-              aria-label={isGuest ? "Sign in for messages" : "Messages"}
-            >
-              <MessageSquare
-                className={`${iconClass(isMessagesActive)} pointer-events-none`}
-                fill={isMessagesActive ? "currentColor" : "none"}
-                style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
-              />
+            <div className="relative">
+              <OptimizedLink
+                href={messagesHref}
+                onClick={(e) => {
+                  if (!isGuest) {
+                    handleNavClick(messagesHref, e);
+                  }
+                }}
+                className={`${iconWrapClass(isMessagesActive)} cursor-pointer pointer-events-auto select-none z-[2]`}
+                aria-label={isGuest ? "Sign in for messages" : "Messages"}
+              >
+                <MessageSquare
+                  className={`${iconClass(isMessagesActive)} pointer-events-none`}
+                  fill={isMessagesActive ? "currentColor" : "none"}
+                  style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
+                />
+              </OptimizedLink>
               {messageUnreadCount > 0 && (
-                <span className="pointer-events-none absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[10px] leading-none font-extrabold tracking-tight rounded-full bg-coral text-white ring-[1.5px] ring-white/85 shadow-sm">
+                <span className="pointer-events-none absolute -top-1.5 -right-1.5 z-10 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[10px] leading-none font-extrabold tracking-tight rounded-full bg-coral text-white ring-[1.5px] ring-white/85 shadow-sm">
                   {messageUnreadCount > 99 ? "99+" : messageUnreadCount}
                 </span>
               )}
-            </OptimizedLink>
+            </div>
 
             {/* Profile */}
             <div className="relative">
@@ -648,27 +652,29 @@ export default function DesktopNav(props: DesktopNavProps) {
       ) : (
         <>
           {/* Business actions */}
-          <OptimizedLink
-            href={messagesHref}
-            onClick={(e) => {
-              if (!isGuest) {
-                handleNavClick(messagesHref, e);
-              }
-            }}
-            className={`${iconWrapClass(isMessagesActive)} cursor-pointer pointer-events-auto select-none relative z-[2]`}
-            aria-label={isGuest ? "Sign in for messages" : "Messages"}
-          >
-            <MessageSquare
-              className={`${iconClass(isMessagesActive)} pointer-events-none`}
-              fill={isMessagesActive ? "currentColor" : "none"}
-              style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
-            />
+          <div className="relative">
+            <OptimizedLink
+              href={messagesHref}
+              onClick={(e) => {
+                if (!isGuest) {
+                  handleNavClick(messagesHref, e);
+                }
+              }}
+              className={`${iconWrapClass(isMessagesActive)} cursor-pointer pointer-events-auto select-none z-[2]`}
+              aria-label={isGuest ? "Sign in for messages" : "Messages"}
+            >
+              <MessageSquare
+                className={`${iconClass(isMessagesActive)} pointer-events-none`}
+                fill={isMessagesActive ? "currentColor" : "none"}
+                style={{ textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)" }}
+              />
+            </OptimizedLink>
             {messageUnreadCount > 0 && (
-              <span className="pointer-events-none absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[10px] leading-none font-extrabold tracking-tight rounded-full bg-coral text-white ring-[1.5px] ring-white/85 shadow-sm">
+              <span className="pointer-events-none absolute -top-1.5 -right-1.5 z-10 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[10px] leading-none font-extrabold tracking-tight rounded-full bg-coral text-white ring-[1.5px] ring-white/85 shadow-sm">
                 {messageUnreadCount > 99 ? "99+" : messageUnreadCount}
               </span>
             )}
-          </OptimizedLink>
+          </div>
 
           <div className="relative">
             <OptimizedLink

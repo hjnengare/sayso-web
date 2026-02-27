@@ -135,45 +135,49 @@ export function PersonalHeaderRole({
           )}
 
           {!isMobileSearchOpen && (
-            <OptimizedLink
-              href={isGuest ? "/onboarding" : "/notifications"}
-              className={`relative z-[2] w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 cursor-pointer pointer-events-auto select-none ${
-                isNotificationsActive
-                  ? "text-sage bg-card-bg/5"
-                  : whiteText
-                    ? "text-white hover:text-white/80"
-                    : "text-charcoal/80 hover:text-sage"
-              }`}
-              aria-label={isGuest ? "Sign in for notifications" : "Notifications"}
-            >
-              <Bell className="w-5 h-5 pointer-events-none" fill={isNotificationsActive ? "currentColor" : "none"} />
-              {unreadCount > 0 ? (
-                <span className="pointer-events-none absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[10px] leading-none font-extrabold tracking-tight rounded-full bg-coral text-white ring-[1.5px] ring-white/85 shadow-sm">
+            <div className="relative">
+              <OptimizedLink
+                href={isGuest ? "/onboarding" : "/notifications"}
+                className={`z-[2] w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 cursor-pointer pointer-events-auto select-none ${
+                  isNotificationsActive
+                    ? "text-sage bg-card-bg/5"
+                    : whiteText
+                      ? "text-white hover:text-white/80"
+                      : "text-charcoal/80 hover:text-sage"
+                }`}
+                aria-label={isGuest ? "Sign in for notifications" : "Notifications"}
+              >
+                <Bell className="w-5 h-5 pointer-events-none" fill={isNotificationsActive ? "currentColor" : "none"} />
+              </OptimizedLink>
+              {unreadCount > 0 && (
+                <span className="pointer-events-none absolute -top-1.5 -right-1.5 z-10 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[10px] leading-none font-extrabold tracking-tight rounded-full bg-coral text-white ring-[1.5px] ring-white/85 shadow-sm">
                   {unreadCount > 99 ? "99+" : unreadCount}
                 </span>
-              ) : null}
-            </OptimizedLink>
+              )}
+            </div>
           )}
 
           {!isMobileSearchOpen && (
-            <OptimizedLink
-              href={messagesHref}
-              className={`relative z-[2] w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 cursor-pointer pointer-events-auto select-none ${
-                isMessagesActive
-                  ? "text-sage bg-card-bg/5"
-                  : whiteText
-                    ? "text-white hover:text-white/80"
-                    : "text-charcoal/80 hover:text-sage"
-              }`}
-              aria-label={isGuest ? "Sign in for messages" : "Messages"}
-            >
-              <MessageSquare className="w-5 h-5 pointer-events-none" fill={isMessagesActive ? "currentColor" : "none"} />
-              {messageUnreadCount > 0 ? (
-                <span className="pointer-events-none absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[10px] leading-none font-extrabold tracking-tight rounded-full bg-coral text-white ring-[1.5px] ring-white/85 shadow-sm">
+            <div className="relative">
+              <OptimizedLink
+                href={messagesHref}
+                className={`z-[2] w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 cursor-pointer pointer-events-auto select-none ${
+                  isMessagesActive
+                    ? "text-sage bg-card-bg/5"
+                    : whiteText
+                      ? "text-white hover:text-white/80"
+                      : "text-charcoal/80 hover:text-sage"
+                }`}
+                aria-label={isGuest ? "Sign in for messages" : "Messages"}
+              >
+                <MessageSquare className="w-5 h-5 pointer-events-none" fill={isMessagesActive ? "currentColor" : "none"} />
+              </OptimizedLink>
+              {messageUnreadCount > 0 && (
+                <span className="pointer-events-none absolute -top-1.5 -right-1.5 z-10 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[10px] leading-none font-extrabold tracking-tight rounded-full bg-coral text-white ring-[1.5px] ring-white/85 shadow-sm">
                   {messageUnreadCount > 99 ? "99+" : messageUnreadCount}
                 </span>
-              ) : null}
-            </OptimizedLink>
+              )}
+            </div>
           )}
 
           {!isMobileSearchOpen && (
