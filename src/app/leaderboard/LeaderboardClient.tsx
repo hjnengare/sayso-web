@@ -344,7 +344,7 @@ function LeaderboardPage() {
         </m.div>
 
         {/* Badge Definitions Section - Before Footer */}
-        <section className="relative z-50 py-4 sm:py-8 bg-navbar-bg">
+        <section className="relative py-4 sm:py-8 bg-navbar-bg">
           <div className="mx-auto w-full max-w-[2000px] px-4 sm:px-6">
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
               <div className="text-center sm:text-left">
