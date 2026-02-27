@@ -533,7 +533,7 @@ function BusinessCard({
   };
 
   const mediaBaseClass =
-    "relative overflow-hidden z-10 cursor-pointer bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl";
+    "relative overflow-hidden z-10 cursor-pointer bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-none md:backdrop-blur-xl";
   const mediaClass = compact
     ? `${mediaBaseClass} h-[280px] sm:h-[300px] md:h-[220px]`
     : `${mediaBaseClass} h-[280px] sm:h-[300px] md:h-[220px]`;
@@ -584,7 +584,7 @@ function BusinessCard({
           )}
           {/* Star/Rating badge */}
           {!hideStar && hasRating && displayRating !== undefined && (
-            <div className="absolute right-4 top-4 z-20 inline-flex items-center gap-1 rounded-full bg-off-white/95 backdrop-blur-xl px-3 py-1.5 text-charcoal">
+            <div className="absolute right-4 top-4 z-20 inline-flex items-center gap-1 rounded-full bg-off-white/95 backdrop-blur-none md:backdrop-blur-xl px-3 py-1.5 text-charcoal">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="rounded-full p-1" aria-hidden>
                 <defs>
                   {starGradientId === 'Gold' && (
@@ -612,12 +612,12 @@ function BusinessCard({
             </div>
           )}
           {!hideStar && !hasRating && (
-            <div className="absolute right-4 top-4 z-20 inline-flex items-center gap-1 rounded-full bg-off-white/95 backdrop-blur-xl px-3 py-1.5 text-charcoal shadow-md">
+            <div className="absolute right-4 top-4 z-20 inline-flex items-center gap-1 rounded-full bg-off-white/95 backdrop-blur-none md:backdrop-blur-xl px-3 py-1.5 text-charcoal shadow-md">
               <span className="text-sm font-semibold text-charcoal" style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}>New</span>
             </div>
           )}
           {distanceBadgeText && (
-            <div className="absolute left-3 bottom-3 z-20 inline-flex items-center rounded-full bg-off-white/90 backdrop-blur-[2px] px-2.5 py-1 text-[11px] font-medium text-charcoal shadow-[0_2px_8px_rgba(0,0,0,0.12)]">
+            <div className="absolute left-3 bottom-3 z-20 inline-flex items-center rounded-full bg-off-white/90 backdrop-blur-none md:backdrop-blur-[2px] px-2.5 py-1 text-[11px] font-medium text-charcoal shadow-[0_2px_8px_rgba(0,0,0,0.12)]">
               <span
                 className="leading-none"
                 style={{

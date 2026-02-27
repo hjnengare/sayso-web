@@ -4,6 +4,10 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
 import { AnimatePresence, m, useReducedMotion } from "framer-motion";
 import { getChoreoItemMotion } from "../lib/motion/choreography";
+import {
+  getMobileSafeContainerMotion,
+  getMobileSafeItemMotion,
+} from "../lib/motion/mobileMotionPolicy";
 import BusinessCard from "../components/BusinessCard/BusinessCard";
 import Footer from "../components/Footer/Footer";
 import { ChevronRight } from "lucide-react";
@@ -53,8 +57,10 @@ interface TrendingClientProps {
 export default function TrendingClient({ fallbackData }: TrendingClientProps = {}) {
   usePredefinedPageTitle('trending');
   useScrollReveal({ threshold: 0.12, rootMargin: "0px 0px -120px 0px", once: true });
+  const isDesktopViewport = useIsDesktop();
   const prefersReducedMotion = useReducedMotion() ?? false;
-  const choreoEnabled = !prefersReducedMotion;
+  const desktopChoreoEnabled = !prefersReducedMotion && isDesktopViewport;
+  const mobileMotionEnabled = !prefersReducedMotion && !isDesktopViewport;
   const [currentPage, setCurrentPage] = useState(1);
 
   const [isDesktop, setIsDesktop] = useState(false);
@@ -287,7 +293,7 @@ export default function TrendingClient({ fallbackData }: TrendingClientProps = {
           <m.nav
             className="relative z-10 pb-1"
             aria-label="Breadcrumb"
-            {...getChoreoItemMotion({ order: 0, intent: "inline", enabled: choreoEnabled })}
+            {...getChoreoItemMotion({ order: 0, intent: "inline", enabled: desktopChoreoEnabled })}
           >
             <ol className="flex items-center gap-2 text-sm sm:text-base">
               <li>
@@ -309,7 +315,7 @@ export default function TrendingClient({ fallbackData }: TrendingClientProps = {
           {/* Title and Description Block */}
           <m.div
             className="relative z-10 mb-6 sm:mb-8 px-4 sm:px-6 text-center pt-4"
-            {...getChoreoItemMotion({ order: 1, intent: "heading", enabled: choreoEnabled })}
+            {...getChoreoItemMotion({ order: 1, intent: "heading", enabled: desktopChoreoEnabled })}
           >
             <div className="my-4">
               <h1
@@ -338,7 +344,7 @@ export default function TrendingClient({ fallbackData }: TrendingClientProps = {
           </m.div>
 
           <m.div
-            {...getChoreoItemMotion({ order: 2, intent: "section", enabled: choreoEnabled })}
+            {...getChoreoItemMotion({ order: 2, intent: "section", enabled: desktopChoreoEnabled })}
           >
             <SearchFilterBar
               searchWrapRef={searchWrapRef}
@@ -360,7 +366,7 @@ export default function TrendingClient({ fallbackData }: TrendingClientProps = {
 
           <m.div
             className="py-3 sm:py-4"
-            {...getChoreoItemMotion({ order: 3, intent: "section", enabled: choreoEnabled })}
+            {...getChoreoItemMotion({ order: 3, intent: "section", enabled: desktopChoreoEnabled })}
           >
             <div className="pt-4 sm:pt-6 md:pt-10">
             {/* Show skeleton loader while businesses are loading */}
@@ -415,7 +421,11 @@ export default function TrendingClient({ fallbackData }: TrendingClientProps = {
                   <>
                     {/* Loading Spinner Overlay for Pagination */}
                     {isPaginationLoading && (
-                      <div className="fixed inset-0 z-[9998] bg-off-white/95 backdrop-blur-sm flex items-center justify-center min-h-[100dvh]">
+                      <div
+                        className={`fixed inset-0 z-[9998] bg-off-white/95 ${
+                          isDesktopViewport ? "backdrop-blur-sm" : ""
+                        } flex items-center justify-center min-h-[100dvh]`}
+                      >
                         <Loader size="lg" variant="wavy" color="sage"  />
                       </div>
                     )}
@@ -472,27 +482,14 @@ export default function TrendingClient({ fallbackData }: TrendingClientProps = {
                         ) : (
                           <m.div
                             key={currentPage}
-                            initial={{ opacity: 0, y: 20, scale: 0.98, filter: "blur(8px)" }}
-                            animate={{ opacity: isPaginationLoading ? 0 : 1, y: 0, scale: 1, filter: "blur(0px)" }}
-                            exit={{ opacity: 0, y: -20, scale: 0.98, filter: "blur(8px)" }}
-                            transition={{
-                              duration: 0.4,
-                              ease: [0.16, 1, 0.3, 1],
-                            }}
+                            {...getMobileSafeContainerMotion(mobileMotionEnabled)}
                           >
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2">
                               {currentBusinesses.map((business, index) => (
                                 <m.div
                                   key={business.id}
                                   className="list-none"
-                                  initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                                  transition={{
-                                    type: "spring",
-                                    damping: 25,
-                                    stiffness: 200,
-                                    delay: index * 0.06 + 0.1,
-                                  }}
+                                  {...getMobileSafeItemMotion(index, mobileMotionEnabled)}
                                 >
                                   <div className="md:hidden w-full">
                                     <BusinessCard business={business} compact />

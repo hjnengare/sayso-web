@@ -260,9 +260,7 @@ export default function HeroCarousel() {
 
   // Respect reduced motion for carousel timing and text animation intensity.
   const prefersReduced = useReducedMotion() ?? false;
-  const prefersDataSaver =
-    typeof navigator !== "undefined" &&
-    Boolean((navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData);
+  const isMobileHero = heroViewport === "mobile";
 
 
 
@@ -475,10 +473,20 @@ export default function HeroCarousel() {
         hidden: {},
         visible: { transition: { staggerChildren: 0.15, delayChildren: 0.2 } },
       };
+  const slideFadeDuration = prefersReduced ? 0.35 : isMobileHero ? 0.55 : 1.2;
   const heroTitleEntranceVariants = prefersReduced
     ? {
         hidden: { opacity: 0 },
         visible: { opacity: 1, transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] as const } },
+      }
+    : isMobileHero
+    ? {
+        hidden: { opacity: 0, y: 10 },
+        visible: {
+          opacity: 1,
+          y: 0,
+          transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] as const },
+        },
       }
     : {
         hidden: { opacity: 0, y: 20, filter: "blur(4px)" },
@@ -494,6 +502,15 @@ export default function HeroCarousel() {
         hidden: { opacity: 0 },
         visible: { opacity: 1, transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] as const } },
       }
+    : isMobileHero
+    ? {
+        hidden: { opacity: 0, y: 8 },
+        visible: {
+          opacity: 1,
+          y: 0,
+          transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] as const },
+        },
+      }
     : {
         hidden: { opacity: 0, y: 20, filter: "blur(4px)" },
         visible: {
@@ -507,6 +524,15 @@ export default function HeroCarousel() {
     ? {
         hidden: { opacity: 0 },
         visible: { opacity: 1, transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] as const } },
+      }
+    : isMobileHero
+    ? {
+        hidden: { opacity: 0, y: 8 },
+        visible: {
+          opacity: 1,
+          y: 0,
+          transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] as const },
+        },
       }
     : {
         hidden: { opacity: 0, y: 20, filter: "blur(4px)" },
@@ -524,6 +550,13 @@ export default function HeroCarousel() {
         exit: { opacity: 0 },
         transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] as const },
       }
+    : isMobileHero
+    ? {
+        initial: { opacity: 0, y: 8 },
+        animate: { opacity: 1, y: 0 },
+        exit: { opacity: 0, y: -6 },
+        transition: { duration: 0.24, ease: [0.22, 1, 0.36, 1] as const },
+      }
     : {
         initial: { opacity: 0, y: 8, filter: "blur(2px)" },
         animate: { opacity: 1, y: 0, filter: "blur(0px)" },
@@ -536,6 +569,13 @@ export default function HeroCarousel() {
         animate: { opacity: 1 },
         exit: { opacity: 0 },
         transition: { duration: 0.18, ease: [0.22, 1, 0.36, 1] as const },
+      }
+    : isMobileHero
+    ? {
+        initial: { opacity: 0, y: 6 },
+        animate: { opacity: 1, y: 0 },
+        exit: { opacity: 0, y: -4 },
+        transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] as const },
       }
     : {
         initial: { opacity: 0, y: 6, filter: "blur(1.5px)" },
@@ -566,7 +606,9 @@ export default function HeroCarousel() {
         className="absolute inset-0 z-0 bg-gradient-to-br from-white/20 via-transparent to-sage/10 pointer-events-none rounded-none will-change-transform"
       />
       <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_center,_rgba(255,255,255,0.15)_0%,_transparent_70%)] pointer-events-none rounded-none" />
-      <div className="absolute inset-0 z-0 backdrop-blur-[1px] bg-off-white/5 mix-blend-overlay pointer-events-none rounded-none" />
+      {!isMobileHero && (
+        <div className="absolute inset-0 z-0 backdrop-blur-[1px] bg-off-white/5 mix-blend-overlay pointer-events-none rounded-none" />
+      )}
       {/* Slides — all capped slides rendered; opacity driven by currentIndex. No mount/unmount flicker. */}
       {slides.map((slide, idx) => {
         const isActive = idx === currentIndex;
@@ -577,7 +619,7 @@ export default function HeroCarousel() {
           key={slide.id}
           initial={false}
           animate={{ opacity: isActive ? 1 : 0, zIndex: isActive ? 10 : 0 }}
-          transition={{ opacity: { duration: 1.2, ease: "easeInOut" }, zIndex: { duration: 0 } }}
+          transition={{ opacity: { duration: slideFadeDuration, ease: "easeInOut" }, zIndex: { duration: 0 } }}
           aria-hidden={!isActive}
           className="absolute inset-0 z-10 overflow-hidden will-change-[opacity] transform-gpu [backface-visibility:hidden] rounded-none"
         >

@@ -86,6 +86,7 @@ export default function HomeClient({ initialTrending }: { initialTrending?: impo
   const isDev = process.env.NODE_ENV === "development";
   const prefersReducedMotion = useReducedMotion() ?? false;
   const choreoEnabled = !prefersReducedMotion;
+  const sectionChoreoEnabled = choreoEnabled && isDesktop;
 
   // Defer below-fold Events fetch to prioritize above-fold content (For You, Trending)
   const [eventsReady, setEventsReady] = useState(false);
@@ -486,7 +487,7 @@ export default function HomeClient({ initialTrending }: { initialTrending?: impo
               /* Search Results Mode */
               <m.div
                 className="px-4 sm:px-6 lg:px-8"
-                {...getChoreoItemMotion({ order: 0, intent: "section", enabled: choreoEnabled })}
+                {...getChoreoItemMotion({ order: 0, intent: "section", enabled: sectionChoreoEnabled })}
               >
                 <SearchResultsPanel
                   query={liveQuery.trim() || searchQueryParam.trim()}
@@ -506,7 +507,7 @@ export default function HomeClient({ initialTrending }: { initialTrending?: impo
                   {!isFiltered && (
                     <m.div
                       className="relative z-10 snap-start"
-                      {...getChoreoItemMotion({ order: 0, intent: "section", enabled: choreoEnabled })}
+                      {...getChoreoItemMotion({ order: 0, intent: "section", enabled: sectionChoreoEnabled })}
                     >
                       {!user ? (
                         /* Not signed in: Show Locked For You Section (teaser only) */
@@ -581,7 +582,7 @@ export default function HomeClient({ initialTrending }: { initialTrending?: impo
                   {isFiltered && (
                     <m.div
                       className="relative z-10 snap-start"
-                      {...getChoreoItemMotion({ order: 0, intent: "section", enabled: choreoEnabled })}
+                      {...getChoreoItemMotion({ order: 0, intent: "section", enabled: sectionChoreoEnabled })}
                     >
                       {allBusinessesLoading ? (
                         <BusinessRowSkeleton title="Filtered Results" />
@@ -605,7 +606,7 @@ export default function HomeClient({ initialTrending }: { initialTrending?: impo
                   {!isFiltered && (
                     <m.div
                       className="relative z-10 snap-start"
-                      {...getChoreoItemMotion({ order: 1, intent: "section", enabled: choreoEnabled })}
+                      {...getChoreoItemMotion({ order: 1, intent: "section", enabled: sectionChoreoEnabled })}
                     >
                       {trendingLoading && <BusinessRowSkeleton title="Trending Now" />}
                       {!trendingLoading && hasTrendingBusinesses && (
@@ -629,7 +630,7 @@ export default function HomeClient({ initialTrending }: { initialTrending?: impo
                   {/* Events & Specials */}
                   <m.div
                     className="relative z-10 snap-start"
-                    {...getChoreoItemMotion({ order: 2, intent: "section", enabled: choreoEnabled })}
+                    {...getChoreoItemMotion({ order: 2, intent: "section", enabled: sectionChoreoEnabled })}
                   >
                     <EventsSpecials
                       events={eventsAndSpecials}
@@ -644,7 +645,7 @@ export default function HomeClient({ initialTrending }: { initialTrending?: impo
                   {/* Community Highlights (Featured by Category) */}
                   <m.div
                     className="relative z-10 snap-start"
-                    {...getChoreoItemMotion({ order: 3, intent: "section", enabled: choreoEnabled })}
+                    {...getChoreoItemMotion({ order: 3, intent: "section", enabled: sectionChoreoEnabled })}
                   >
                     {featuredError && !featuredLoading ? (
                       <div className="mx-auto w-full max-w-[2000px] px-2 py-4 text-sm text-coral space-y-1">

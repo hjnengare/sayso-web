@@ -410,7 +410,7 @@ function EventCard({
         onTouchStart={handleCardTouchStart}
       >
       <article
-        className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden group cursor-pointer w-full flex flex-col backdrop-blur-xl shadow-md pb-4"
+        className="relative bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 rounded-[12px] overflow-hidden group cursor-pointer w-full flex flex-col backdrop-blur-none md:backdrop-blur-xl shadow-md pb-4"
       >
           {/* MEDIA - Full bleed with premium overlay */}
           <div className="relative w-full flex-shrink-0 z-10">
@@ -455,7 +455,7 @@ function EventCard({
 
               {/* Rating badge - same style as Business Card */}
               {hasRating && displayRating !== undefined && (
-                <div className="absolute right-4 top-4 z-20 inline-flex items-center gap-1 rounded-full bg-off-white/95 backdrop-blur-xl px-3 py-1.5 text-charcoal">
+                <div className="absolute right-4 top-4 z-20 inline-flex items-center gap-1 rounded-full bg-off-white/95 backdrop-blur-none md:backdrop-blur-xl px-3 py-1.5 text-charcoal">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="rounded-full p-1" aria-hidden>
                     <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill={`url(#starGradient${starGradientId}Event)`} stroke={`url(#starGradient${starGradientId}Event)`} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
@@ -467,7 +467,7 @@ function EventCard({
               <div data-event-card-action className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-20 flex-col items-center gap-2 transition-all duration-300 ease-out translate-x-12 opacity-0 md:group-hover:translate-x-0 md:group-hover:opacity-100">
                 <button
                   type="button"
-                  className={`w-10 h-10 bg-off-white/90 backdrop-blur-sm rounded-full flex items-center justify-center transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 shadow-md active:translate-y-[1px] transform-gpu touch-manipulation select-none ${hasReviewed ? 'opacity-50 cursor-not-allowed' : 'hover:bg-off-white/60 hover:scale-110 hover:text-charcoal/90 active:scale-95'}`}
+                  className={`w-10 h-10 bg-off-white/90 backdrop-blur-none md:backdrop-blur-sm rounded-full flex items-center justify-center transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 shadow-md active:translate-y-[1px] transform-gpu touch-manipulation select-none ${hasReviewed ? 'opacity-50 cursor-not-allowed' : 'hover:bg-off-white/60 hover:scale-110 hover:text-charcoal/90 active:scale-95'}`}
                   onClick={handleWriteReview}
                   disabled={hasReviewed}
                   aria-label={hasReviewed ? `You have already reviewed ${event.title}` : `Write a review for ${event.title}`}
@@ -477,7 +477,7 @@ function EventCard({
                 </button>
                 <button
                   type="button"
-                  className="w-10 h-10 bg-off-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-off-white/60 hover:scale-110 hover:text-charcoal/90 active:scale-95 active:translate-y-[1px] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 shadow-md transform-gpu touch-manipulation select-none"
+                  className="w-10 h-10 bg-off-white/90 backdrop-blur-none md:backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-off-white/60 hover:scale-110 hover:text-charcoal/90 active:scale-95 active:translate-y-[1px] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 shadow-md transform-gpu touch-manipulation select-none"
                   onClick={handleBookmark}
                   aria-label={isItemSaved(event.id) ? `Remove from saved ${event.title}` : `Save ${event.title}`}
                   title={isItemSaved(event.id) ? 'Remove from saved' : 'Save'}
@@ -486,7 +486,7 @@ function EventCard({
                 </button>
                 <button
                   type="button"
-                  className="w-10 h-10 bg-off-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-off-white/60 hover:scale-110 hover:text-charcoal/90 active:scale-95 active:translate-y-[1px] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 shadow-md transform-gpu touch-manipulation select-none"
+                  className="w-10 h-10 bg-off-white/90 backdrop-blur-none md:backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-off-white/60 hover:scale-110 hover:text-charcoal/90 active:scale-95 active:translate-y-[1px] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sage/30 shadow-md transform-gpu touch-manipulation select-none"
                   onClick={handleShare}
                   aria-label={`Share ${event.title}`}
                   title="Share"
@@ -497,7 +497,7 @@ function EventCard({
 
               {/* Smart Countdown Badge */}
               {countdown.show && countdown.status === "upcoming" && (
-                <div className="absolute left-3 bottom-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-off-white/95 backdrop-blur-md px-3 py-1.5 shadow-[0_2px_12px_rgba(0,0,0,0.15)]">
+                <div className="absolute left-3 bottom-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-off-white/95 backdrop-blur-none md:backdrop-blur-md px-3 py-1.5 shadow-[0_2px_12px_rgba(0,0,0,0.15)]">
                   <>
                     {countdown.days > 0 && (
                       <div className="flex items-baseline gap-0.5">
