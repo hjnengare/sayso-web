@@ -52,7 +52,7 @@ export default function BusinessOwnedEventsSection({
   }
 
   return (
-    <section className="w-full pt-8 pb-2">
+    <section className="w-full pb-2">
       {/* Partial-error banner mirrors /events-specials handling */}
       {error && hasEvents && (
         <div className="rounded-[16px] border border-charcoal/10 bg-off-white/70 backdrop-blur-md px-4 py-3 flex items-start justify-between gap-3 mb-4">
