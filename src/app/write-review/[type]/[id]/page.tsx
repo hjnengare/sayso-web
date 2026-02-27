@@ -14,6 +14,7 @@ import OptimizedImage from "../../../components/Performance/OptimizedImage";
 import { useReviewForm } from "../../../hooks/useReviewForm";
 import { useDealbreakerQuickTags } from "../../../hooks/useDealbreakerQuickTags";
 import { useReviewTarget } from "../../../hooks/useReviewTarget";
+import { fireBadgeCelebration } from "../../../lib/celebration/badgeCelebration";
 
 function IconStar({ className = "" }: { className?: string }) {
   return (
@@ -256,14 +257,7 @@ function WriteReviewContent() {
           .then((res) => res.json())
           .then((data) => {
             if (data?.newBadges?.length > 0) {
-              const n = data.newBadges.length;
-              showToast(
-                n === 1
-                  ? `You earned a new badge: ${data.newBadges[0].name}!`
-                  : `You earned ${n} new badges!`,
-                "success",
-                4000
-              );
+              void fireBadgeCelebration(`review-badge-${Date.now()}`);
             }
           })
           .catch(() => {});

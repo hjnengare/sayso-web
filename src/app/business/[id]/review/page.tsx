@@ -22,6 +22,7 @@ import WavyTypedTitle from "@/app/components/Animations/WavyTypedTitle";
 import { isPlaceholderImage } from "../../../utils/subcategoryPlaceholders";
 import { useDealbreakerQuickTags } from "../../../hooks/useDealbreakerQuickTags";
 import { useBusinessDetail } from "../../../hooks/useBusinessDetail";
+import { fireBadgeCelebration } from "../../../lib/celebration/badgeCelebration";
 
 const urbanist = Urbanist({
   weight: ["400", "600", "700", "800"],
@@ -412,14 +413,7 @@ function WriteReviewContent() {
         .then((res) => res.json())
         .then((data) => {
           if (data?.newBadges?.length > 0) {
-            const n = data.newBadges.length;
-            showToast(
-              n === 1
-                ? `You earned a new badge: ${data.newBadges[0].name}!`
-                : `You earned ${n} new badges!`,
-              "success",
-              4000
-            );
+            void fireBadgeCelebration(`review-badge-${Date.now()}`);
           }
         })
         .catch(() => {});

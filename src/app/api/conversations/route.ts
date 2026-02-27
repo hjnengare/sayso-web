@@ -181,7 +181,30 @@ export const GET = withUser(async (req: NextRequest, { user, supabase }) => {
         );
       }
 
-      const items = (conversations || []).map((conversation: any) =>
+      // Enrich conversations that are missing their businesses join (MINIMAL schema fallback)
+      const missingBusinessIds = (conversations || [])
+        .filter((c: any) => c.business_id && !c.businesses)
+        .map((c: any) => c.business_id as string);
+
+      let enrichedConversations: any[] = conversations || [];
+
+      if (missingBusinessIds.length > 0) {
+        const { data: fetchedBusinesses } = await supabase
+          .from('businesses')
+          .select('id, name, slug, image_url, category, verified')
+          .in('id', missingBusinessIds);
+
+        if (fetchedBusinesses && fetchedBusinesses.length > 0) {
+          const businessById = new Map(fetchedBusinesses.map((b: any) => [b.id, b]));
+          enrichedConversations = enrichedConversations.map((c: any) =>
+            c.business_id && !c.businesses && businessById.has(c.business_id)
+              ? { ...c, businesses: businessById.get(c.business_id) }
+              : c
+          );
+        }
+      }
+
+      const items = enrichedConversations.map((conversation: any) =>
         formatConversationListItem(conversation, 'user')
       );
 

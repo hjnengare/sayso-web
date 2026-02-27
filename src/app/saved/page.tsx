@@ -153,27 +153,20 @@ export default function SavedPage() {
             >
               {/* Breadcrumb Navigation */}
               <nav className="pb-1" aria-label="Breadcrumb">
-                <ol className="flex items-center gap-2 text-sm sm:text-base">
+                <ol className="flex items-center gap-2 text-sm sm:text-base" style={{ fontFamily: 'Urbanist, system-ui, sans-serif' }}>
                   <li>
                     <Link
                       href="/home"
                       className="text-charcoal/70 hover:text-charcoal transition-colors duration-200 font-medium"
-                      style={{
-                        fontFamily: "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                      }}
                     >
                       Home
                     </Link>
                   </li>
                   <li className="flex items-center">
-                    <span className="inline-flex items-center justify-center w-12 h-12 rounded-full text-charcoal/85 transition duration-200 ease-out hover:scale-[1.03] align-middle">
-                      <ChevronRight className="w-4 h-4" aria-hidden />
-                    </span>
+                    <ChevronRight className="w-4 h-4 text-charcoal/60" aria-hidden />
                   </li>
                   <li>
-                    <span className="text-charcoal font-semibold" style={{
-                      fontFamily: "Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-                    }}>
+                    <span className="text-charcoal font-semibold" aria-current="page">
                       Saved
                     </span>
                   </li>

@@ -883,19 +883,6 @@ function ProfileContent() {
                     )}
                   </div>
 
-                      {/* Saved Businesses - Mobile Only */}
-                      {savedBusinesses.length > 0 && (
-                        <section
-                          className="md:hidden bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border-none rounded-[12px] shadow-md p-6 space-y-4 profile-load-item profile-load-delay-3"
-                          aria-label="Saved businesses"
-                        >
-                          <SavedBusinessRow
-                            title="Your Saved Gems"
-                            businesses={savedBusinesses}
-                            showCount={true}
-                          />
-                        </section>
-                      )}
 
                       <div className="profile-load-item profile-load-delay-4">
                         {achievementsLoading ? (
@@ -951,10 +938,10 @@ function ProfileContent() {
                                   initial={{ opacity: 0, scale: 0.9 }}
                                   animate={{ opacity: 1, scale: 1 }}
                                   transition={{ delay: idx * 0.04, type: "spring", stiffness: 300, damping: 25 }}
-                                  whileHover={{ scale: 1.04, y: -2 }}
-                                  className="cursor-default transition-shadow duration-300 hover:shadow-md"
+                                  whileHover={{ scale: 1.05, y: -3 }}
+                                  className="cursor-default transition-all duration-300 bg-off-white/70 rounded-xl ring-1 ring-black/5 shadow-sm hover:shadow-lg p-2"
                                 >
-                                  <ProfileBadgeRibbon className="shadow-sm">
+                                  <ProfileBadgeRibbon>
                                     <div className="flex h-full w-full flex-col items-center justify-center text-center px-1.5 py-1 sm:px-2">
                                       <div className="relative mb-1 h-7 w-7 sm:h-8 sm:w-8">
                                         <Image
