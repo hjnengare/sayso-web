@@ -1,15 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useEventsSpecials } from "../hooks/useEventsSpecials";
 import Link from "next/link";
 import { m, useReducedMotion } from "framer-motion";
 import Footer from "../components/Footer/Footer";
 import { getChoreoItemMotion } from "../lib/motion/choreography";
-import {
-  getMobileSafeContainerMotion,
-  getMobileSafeItemMotion,
-} from "../lib/motion/mobileMotionPolicy";
 import FilterTabs from "../components/EventsPage/FilterTabs";
 import ResultsCount from "../components/EventsPage/ResultsCount";
 import EventCard from "../components/EventCard/EventCard";
@@ -47,11 +43,10 @@ const itemVariants = {
 
 export default function EventsSpecialsPage() {
   const prefersReducedMotion = useReducedMotion() ?? false;
-  const isDesktop = useIsDesktop();
-  const desktopChoreoEnabled = !prefersReducedMotion && isDesktop;
-  const mobileMotionEnabled = !prefersReducedMotion && !isDesktop;
+  const choreoEnabled = !prefersReducedMotion;
   const [selectedFilter, setSelectedFilter] = useState<"all" | "event" | "special">("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isDesktop, setIsDesktop] = useState(false);
   const [optimisticSkeletons, setOptimisticSkeletons] = useState(0);
 
   // Debounce search query for smoother real-time filtering (300ms delay)
@@ -109,9 +104,12 @@ export default function EventsSpecialsPage() {
   const eventsSectionItems = filteredEvents.filter((event) => event.type === "event");
   const specialsSectionItems = filteredEvents.filter((event) => event.type === "special");
 
-  const optimisticSkeletonCount = isDesktop
-    ? optimisticSkeletons
-    : Math.min(optimisticSkeletons, 8);
+  useEffect(() => {
+    const updateIsDesktop = () => setIsDesktop(typeof window !== "undefined" && window.innerWidth >= 1024);
+    updateIsDesktop();
+    window.addEventListener("resize", updateIsDesktop);
+    return () => window.removeEventListener("resize", updateIsDesktop);
+  }, []);
 
   const handleFilterChange = (filter: "all" | "event" | "special") => {
     setSelectedFilter(filter);
@@ -169,7 +167,7 @@ export default function EventsSpecialsPage() {
             </m.div>
           ))}
           {/* Optimistic skeleton cards during load more */}
-          {optimisticSkeletonCount > 0 && Array.from({ length: optimisticSkeletonCount }).map((_, idx) => (
+          {optimisticSkeletons > 0 && Array.from({ length: optimisticSkeletons }).map((_, idx) => (
             <m.div
               key={`skeleton-${idx}`}
               variants={itemVariants}
@@ -182,20 +180,33 @@ export default function EventsSpecialsPage() {
       ) : (
         <m.div
           key={title}
-          {...getMobileSafeContainerMotion(mobileMotionEnabled)}
+          initial={{ opacity: 0, y: 20, scale: 0.98, filter: "blur(8px)" }}
+          animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+          exit={{ opacity: 0, y: -20, scale: 0.98, filter: "blur(8px)" }}
+          transition={{
+            duration: 0.4,
+            ease: [0.16, 1, 0.3, 1],
+          }}
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2">
             {items.map((event, index) => (
               <m.div
                 key={event.id}
                 className="list-none"
-                {...getMobileSafeItemMotion(index, mobileMotionEnabled)}
+                initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{
+                  type: "spring",
+                  damping: 25,
+                  stiffness: 200,
+                  delay: index * 0.06 + 0.1,
+                }}
               >
                 <EventCard event={event} index={index} fullWidth />
               </m.div>
             ))}
             {/* Optimistic skeleton cards during load more */}
-            {optimisticSkeletonCount > 0 && Array.from({ length: optimisticSkeletonCount }).map((_, idx) => (
+            {optimisticSkeletons > 0 && Array.from({ length: optimisticSkeletons }).map((_, idx) => (
               <div key={`skeleton-${idx}`} className="list-none">
                 <EventCardSkeleton fullWidth />
               </div>
@@ -225,7 +236,7 @@ export default function EventsSpecialsPage() {
           <m.nav
             className="relative z-10 pb-1"
             aria-label="Breadcrumb"
-            {...getChoreoItemMotion({ order: 0, intent: "inline", enabled: desktopChoreoEnabled })}
+            {...getChoreoItemMotion({ order: 0, intent: "inline", enabled: choreoEnabled })}
           >
             <ol className="flex items-center gap-2 text-sm sm:text-base">
               <li>
@@ -251,7 +262,7 @@ export default function EventsSpecialsPage() {
           {/* Title and Description Block */}
           <m.div
             className="relative z-10 mb-6 sm:mb-8 px-4 sm:px-6 text-center pt-4"
-            {...getChoreoItemMotion({ order: 1, intent: "heading", enabled: desktopChoreoEnabled })}
+            {...getChoreoItemMotion({ order: 1, intent: "heading", enabled: choreoEnabled })}
           >
             <div className="my-4">
               <h1 
@@ -281,7 +292,7 @@ export default function EventsSpecialsPage() {
 
           <m.div
             className="relative z-10 py-4 px-4"
-            {...getChoreoItemMotion({ order: 2, intent: "section", enabled: desktopChoreoEnabled })}
+            {...getChoreoItemMotion({ order: 2, intent: "section", enabled: choreoEnabled })}
           >
             <SearchInput
               variant="header"
@@ -308,7 +319,7 @@ export default function EventsSpecialsPage() {
 
           <m.div
             className="py-3 sm:py-4 flex flex-col gap-3"
-            {...getChoreoItemMotion({ order: 3, intent: "section", enabled: desktopChoreoEnabled })}
+            {...getChoreoItemMotion({ order: 3, intent: "section", enabled: choreoEnabled })}
           >
             <FilterTabs selectedFilter={selectedFilter} onFilterChange={handleFilterChange} />
             <ResultsCount count={filteredEvents.length} filterType={selectedFilter} />
@@ -316,7 +327,7 @@ export default function EventsSpecialsPage() {
 
           <m.div
             className="py-3 sm:py-4"
-            {...getChoreoItemMotion({ order: 4, intent: "section", enabled: desktopChoreoEnabled })}
+            {...getChoreoItemMotion({ order: 4, intent: "section", enabled: choreoEnabled })}
           >
             {isLoading ? (
               <EventsGridSkeleton count={ITEMS_PER_PAGE} fullWidthCards />
@@ -360,11 +371,7 @@ export default function EventsSpecialsPage() {
             ) : (
               <div className="space-y-6 sm:space-y-8">
                 {showPartialErrorBanner && (
-                  <div
-                    className={`rounded-[16px] border border-charcoal/10 bg-off-white/70 ${
-                      isDesktop ? "backdrop-blur-md" : ""
-                    } px-4 py-3 flex items-start justify-between gap-3`}
-                  >
+                  <div className="rounded-[16px] border border-charcoal/10 bg-off-white/70 backdrop-blur-md px-4 py-3 flex items-start justify-between gap-3">
                     <div className="text-sm text-charcoal/70">
                       Some results may be missing: {combinedErrorMessage}
                     </div>

@@ -5,10 +5,6 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { AnimatePresence, m, useReducedMotion } from "framer-motion";
 import { getChoreoItemMotion } from "../lib/motion/choreography";
-import {
-  getMobileSafeContainerMotion,
-  getMobileSafeItemMotion,
-} from "../lib/motion/mobileMotionPolicy";
 import Footer from "../components/Footer/Footer";
 import BusinessCard from "../components/BusinessCard/BusinessCard";
 import { useForYouBusinesses } from "../hooks/useBusinesses";
@@ -60,13 +56,9 @@ const BusinessesMap = dynamic(() => import("../components/maps/BusinessesMap"), 
 
 const ITEMS_PER_PAGE = 12;
 
-function ForYouGridLoadingOverlay({ mobile }: { mobile: boolean }) {
+function ForYouGridLoadingOverlay() {
   return (
-    <div
-      className={`fixed inset-0 z-[9998] bg-off-white/95 ${
-        mobile ? "" : "backdrop-blur-sm"
-      } overflow-y-auto`}
-    >
+    <div className="fixed inset-0 z-[9998] bg-off-white/95 backdrop-blur-sm overflow-y-auto">
       <div className="mx-auto w-full max-w-[2000px] px-2 py-6 sm:py-8 md:py-10">
         <BusinessGridSkeleton />
       </div>
@@ -88,7 +80,6 @@ export default function ForYouClient({
   initialError = null,
 }: ForYouClientProps) {
   usePredefinedPageTitle('forYou');
-  const isDesktopViewport = useIsDesktopHook();
   // ✅ USER PREFERENCES: From onboarding, persistent, used for personalization
   const { interests, subcategories, dealbreakers, loading: prefsLoading } = useUserPreferences({
     initialData: initialPreferences,
@@ -96,8 +87,7 @@ export default function ForYouClient({
   });
   const hasInitialBusinesses = initialBusinesses.length > 0;
   const prefersReducedMotion = useReducedMotion() ?? false;
-  const desktopChoreoEnabled = !prefersReducedMotion && isDesktopViewport;
-  const mobileMotionEnabled = !prefersReducedMotion && !isDesktopViewport;
+  const choreoEnabled = !prefersReducedMotion;
   const preferences = useMemo(
     () => ({ interests, subcategories, dealbreakers }),
     [interests, subcategories, dealbreakers]
@@ -493,7 +483,7 @@ export default function ForYouClient({
           <m.nav
             className="relative z-10 pb-1"
             aria-label="Breadcrumb"
-            {...getChoreoItemMotion({ order: 0, intent: "inline", enabled: desktopChoreoEnabled })}
+            {...getChoreoItemMotion({ order: 0, intent: "inline", enabled: choreoEnabled })}
           >
             <ol className="flex items-center gap-2 text-sm sm:text-base">
               <li>
@@ -515,7 +505,7 @@ export default function ForYouClient({
           {/* Title and Description Block */}
           <m.div
             className="relative z-10 mb-6 sm:mb-8 px-4 sm:px-6 text-center pt-4"
-            {...getChoreoItemMotion({ order: 1, intent: "heading", enabled: desktopChoreoEnabled })}
+            {...getChoreoItemMotion({ order: 1, intent: "heading", enabled: choreoEnabled })}
           >
             <div className="my-4">
               <h1
@@ -559,7 +549,7 @@ export default function ForYouClient({
           <m.div
             ref={searchWrapRef}
             className="relative z-10 py-3 sm:py-4 px-4"
-            {...getChoreoItemMotion({ order: 2, intent: "section", enabled: desktopChoreoEnabled })}
+            {...getChoreoItemMotion({ order: 2, intent: "section", enabled: choreoEnabled })}
           >
             <SearchInput
               variant="header"
@@ -574,7 +564,7 @@ export default function ForYouClient({
 
           {/* Inline Filters - Only show when searching */}
           <m.div
-            {...getChoreoItemMotion({ order: 3, intent: "section", enabled: desktopChoreoEnabled })}
+            {...getChoreoItemMotion({ order: 3, intent: "section", enabled: choreoEnabled })}
           >
             <InlineFilters
               show={isSearchActive && debouncedSearchQuery.trim().length > 0}
@@ -586,7 +576,7 @@ export default function ForYouClient({
 
           {/* Active Filter Badges - Show when filters are active */}
           <m.div
-            {...getChoreoItemMotion({ order: 4, intent: "section", enabled: desktopChoreoEnabled })}
+            {...getChoreoItemMotion({ order: 4, intent: "section", enabled: choreoEnabled })}
           >
             <ActiveFilterBadges
               filters={filters}
@@ -602,7 +592,7 @@ export default function ForYouClient({
 
           <m.div
             className="py-3 sm:py-4"
-            {...getChoreoItemMotion({ order: 5, intent: "section", enabled: desktopChoreoEnabled })}
+            {...getChoreoItemMotion({ order: 5, intent: "section", enabled: choreoEnabled })}
           >
             <div ref={resultsContainerRef} className="pt-4 sm:pt-6 md:pt-10">
           {/* ✅ Show skeleton loader while prefs are loading OR businesses are loading OR simple search is loading */}
@@ -668,7 +658,7 @@ export default function ForYouClient({
 
                   {/* Skeleton Overlay for Pagination */}
                   {isPaginationLoading && (
-                    <ForYouGridLoadingOverlay mobile={!isDesktopViewport} />
+                    <ForYouGridLoadingOverlay />
                   )}
 
                   {/* List | Map Toggle */}
@@ -751,14 +741,27 @@ export default function ForYouClient({
                       ) : (
                         <m.div
                           key={currentPage}
-                          {...getMobileSafeContainerMotion(mobileMotionEnabled)}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: isPaginationLoading ? 0 : 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{
+                            duration: 0.25,
+                            ease: [0.25, 0.1, 0.25, 1],
+                          }}
                         >
                           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-3 md:gap-3 lg:gap-2 xl:gap-2 2xl:gap-2">
                             {currentBusinesses.map((business, index) => (
                               <m.div
                                 key={business.id}
                                 className="list-none"
-                                {...getMobileSafeItemMotion(index, mobileMotionEnabled)}
+                                initial={{ opacity: 0, y: 15 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{
+                                  type: "spring",
+                                  damping: 30,
+                                  stiffness: 300,
+                                  delay: index * 0.03,
+                                }}
                               >
                                 <div className="md:hidden w-full">
                                   <BusinessCard business={business} compact />

@@ -351,15 +351,12 @@ export default function CommunityHighlights({
 
                     @media (max-width: 767px) {
                       .badge-marquee {
-                        overflow-x: auto;
-                        overflow-y: hidden;
-                        -webkit-overflow-scrolling: touch;
+                        /* Safari/Chrome mobile fallback: avoid mask clipping animated content */
                         mask-image: none;
                         -webkit-mask-image: none;
                       }
                       .badge-track {
-                        animation: none !important;
-                        padding-bottom: 6px;
+                        animation-duration: 8s;
                       }
                     }
 
@@ -384,11 +381,6 @@ export default function CommunityHighlights({
 
                     @media (prefers-reduced-motion: reduce) {
                       .badge-track { animation: none !important; }
-                      .badge-marquee {
-                        overflow-x: auto;
-                        overflow-y: hidden;
-                        -webkit-overflow-scrolling: touch;
-                      }
                     }
 
                     @keyframes badge-scroll {

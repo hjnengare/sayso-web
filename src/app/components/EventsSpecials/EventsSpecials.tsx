@@ -8,10 +8,6 @@ import EventCardSkeleton from "../EventCard/EventCardSkeleton";
 import type { Event } from "../../lib/types/Event";
 import ScrollableSection from "../ScrollableSection/ScrollableSection";
 import { m, useReducedMotion } from "framer-motion";
-import {
-  getMobileSafeContainerMotion,
-  getMobileSafeItemMotion,
-} from "../../lib/motion/mobileMotionPolicy";
 import FilterPillGroup from "../Filters/FilterPillGroup";
 import { useMemo, useState } from "react";
 import { useIsDesktop } from "../../hooks/useIsDesktop";
@@ -112,8 +108,7 @@ export default function EventsSpecials({
 }) {
   const router = useRouter();
   const isDesktop = useIsDesktop();
-  const prefersReducedMotion = useReducedMotion() ?? false;
-  const mobileMotionEnabled = !disableAnimations && !prefersReducedMotion && !isDesktop;
+  const prefersReducedMotion = useReducedMotion();
   const [activeTypeFilter, setActiveTypeFilter] = useState<ListingTypeFilter>(null);
   const containerClass = fullBleed
     ? "w-full relative z-10 px-2 sm:px-3"
@@ -321,20 +316,16 @@ export default function EventsSpecials({
                     </m.div>
                   )
                 ) : (
-                  <m.div
-                    className="flex gap-3 items-stretch"
-                    {...getMobileSafeContainerMotion(mobileMotionEnabled)}
-                  >
+                  <>
                     {filteredEvents.map((event, index) => (
-                      <m.div
+                      <div
                         key={getStableEventRailKey(event)}
                         className="snap-start snap-always flex-shrink-0 w-[100vw] sm:w-auto min-w-[clamp(220px,18vw,320px)] list-none flex justify-center"
-                        {...getMobileSafeItemMotion(index, mobileMotionEnabled)}
                       >
                         <EventCard event={event} index={index} dateRibbonPosition={dateRibbonPosition} />
-                      </m.div>
+                      </div>
                     ))}
-                  </m.div>
+                  </>
                 )}
               </ScrollableSection>
             </div>
