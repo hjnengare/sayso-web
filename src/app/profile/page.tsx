@@ -689,8 +689,8 @@ function ProfileContent() {
                                     )}
                                   </div>
                                 ) : (
-                                  <div className="w-24 h-24 sm:w-32 sm:h-32 flex items-center justify-center bg-card-bg/20 rounded-full border-4 border-coral shadow-xl">
-                                    <User className="text-navbar-bg" size={44} strokeWidth={2.5} />
+                                  <div className="w-24 h-24 sm:w-32 sm:h-32 flex items-center justify-center bg-off-white/80 rounded-full border-4 border-coral shadow-xl">
+                                    <User className="text-charcoal/80" size={44} strokeWidth={2.5} />
                                   </div>
                                 )}
                               </m.div>
