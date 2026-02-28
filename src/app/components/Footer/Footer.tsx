@@ -202,7 +202,7 @@ export default function Footer() {
             {/* Download App CTA */}
             <div className="flex flex-col gap-3">
               <p className="font-urbanist text-sm text-off-white font-700">
-                Get the app
+                Get The App
               </p>
               <div className="flex flex-row flex-wrap lg:flex-col gap-3" role="group" aria-label="App download badges">
                 {appDownloadBadges.map((badge) => {
