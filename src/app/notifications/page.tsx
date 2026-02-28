@@ -1,11 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
 import { m, AnimatePresence, useReducedMotion } from "framer-motion";
 import { getChoreoItemMotion } from "../lib/motion/choreography";
-import { Bell, Check, X, MessageSquare, MessageCircle, Star, Heart, TrendingUp, Clock, ChevronRight, Award, ThumbsUp, CheckCircle, ImageIcon, Trophy } from "lucide-react";
+import {
+  Bell, Check, X, MessageSquare, MessageCircle, Star, Heart,
+  TrendingUp, ChevronRight, Award, ThumbsUp, CheckCircle,
+  ImageIcon, Trophy, User,
+} from "lucide-react";
 import Footer from "../components/Footer/Footer";
 import { usePredefinedPageTitle } from "../hooks/usePageTitle";
 import { useNotifications } from "../contexts/NotificationsContext";
@@ -13,25 +18,51 @@ import { useAuth } from "../contexts/AuthContext";
 import { LiveIndicator } from "../components/Realtime/RealtimeIndicators";
 import FilterPillGroup from "../components/Filters/FilterPillGroup";
 
-function getNotificationIcon(type: string) {
+/* ── Icon + colour per notification type ────────────────────────────────── */
+function getNotificationMeta(type: string) {
   switch (type) {
-    case 'review': return MessageSquare;
-    case 'business': return TrendingUp;
-    case 'user': return Heart;
-    case 'highlyRated': return Star;
-    case 'message': return MessageCircle;
+    case 'review':
+      return { Icon: MessageSquare, wrapBg: 'bg-coral/10', iconColor: 'text-coral' };
+    case 'highlyRated':
+      return { Icon: Star, wrapBg: 'bg-coral/10', iconColor: 'text-coral' };
+    case 'review_helpful':
+      return { Icon: ThumbsUp, wrapBg: 'bg-coral/10', iconColor: 'text-coral' };
+    case 'user':
+      return { Icon: Heart, wrapBg: 'bg-coral/10', iconColor: 'text-coral' };
+    case 'message':
+    case 'comment_reply':
+      return { Icon: MessageCircle, wrapBg: 'bg-sage/10', iconColor: 'text-sage' };
     case 'badge_earned':
-    case 'gamification': return Award;
-    case 'review_helpful': return ThumbsUp;
+    case 'gamification':
+      return { Icon: Award, wrapBg: 'bg-amber-500/10', iconColor: 'text-amber-600' };
+    case 'milestone_achievement':
+      return { Icon: Trophy, wrapBg: 'bg-amber-500/10', iconColor: 'text-amber-600' };
+    case 'business':
+      return { Icon: TrendingUp, wrapBg: 'bg-sage/10', iconColor: 'text-sage' };
     case 'business_approved':
-    case 'claim_approved': return CheckCircle;
-    case 'comment_reply': return MessageCircle;
-    case 'photo_approved': return ImageIcon;
-    case 'milestone_achievement': return Trophy;
-    default: return Bell;
+    case 'claim_approved':
+    case 'claim_status_changed':
+      return { Icon: CheckCircle, wrapBg: 'bg-sage/10', iconColor: 'text-sage' };
+    case 'photo_approved':
+      return { Icon: ImageIcon, wrapBg: 'bg-sage/10', iconColor: 'text-sage' };
+    default:
+      return { Icon: Bell, wrapBg: 'bg-charcoal/8', iconColor: 'text-charcoal/55' };
   }
 }
 
+/* ── Time grouping from timeAgo string ───────────────────────────────────── */
+function getTimeGroup(timeAgo: string): string {
+  const t = timeAgo.toLowerCase();
+  if (
+    t.includes("just") ||
+    t.includes("second") ||
+    t.includes("minute") ||
+    t.includes("hour")
+  ) return "Today";
+  if (t === "1 day" || t.startsWith("1 day")) return "Yesterday";
+  if (t.includes("day")) return "This Week";
+  return "Earlier";
+}
 
 type FilterType = 'All' | 'Unread' | 'Read';
 
@@ -45,16 +76,141 @@ interface NotificationListProps {
   markAllAsRead?: () => void;
   deleteNotification?: (id: string) => void;
   isRealtimeConnected?: boolean;
-  renderCard?: (
-    content: React.ReactNode,
-    notification: any,
-    isRead: boolean,
-    hasLink: boolean,
-    onClickProps: Record<string, any>
-  ) => React.ReactNode;
 }
 
-function BusinessNotificationList({
+/* ── Single notification row (Reddit-style) ──────────────────────────────── */
+function NotificationRow({
+  notification,
+  isRead,
+  isPersonal,
+  markAsRead,
+  deleteNotification,
+}: {
+  notification: any;
+  isRead: boolean;
+  isPersonal: boolean;
+  markAsRead?: (id: string) => void;
+  deleteNotification?: (id: string) => void;
+}) {
+  const router = useRouter();
+  const { Icon, wrapBg, iconColor } = getNotificationMeta(notification.type);
+  const hasLink = Boolean(notification.link?.trim());
+  const hasImage = Boolean(notification.image?.trim());
+
+  const handleRowClick = () => {
+    if (!isRead) markAsRead?.(notification.id);
+    if (hasLink) router.push(notification.link!);
+  };
+
+  return (
+    <m.div
+      layout
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
+      transition={{ duration: 0.18 }}
+      className={`flex items-start gap-3 px-4 py-3.5 group relative transition-colors duration-150 ${
+        isRead ? 'hover:bg-charcoal/[0.025]' : 'bg-coral/[0.03] hover:bg-coral/[0.055]'
+      } ${hasLink ? 'cursor-pointer' : ''}`}
+      onClick={hasLink || !isRead ? handleRowClick : undefined}
+    >
+      {/* Unread dot — far left, vertically centred to first text line */}
+      <div className="flex-shrink-0 flex items-start pt-[17px] w-3">
+        <span
+          className={`block w-2 h-2 rounded-full transition-all duration-200 ${
+            isRead ? 'opacity-0' : 'bg-coral'
+          }`}
+        />
+      </div>
+
+      {/* Avatar / type icon */}
+      <div className="flex-shrink-0 relative">
+        {hasImage ? (
+          <>
+            <div className="w-10 h-10 rounded-full overflow-hidden bg-charcoal/8 ring-1 ring-charcoal/8">
+              <Image
+                src={notification.image}
+                alt={notification.image_alt || ""}
+                width={40}
+                height={40}
+                className="w-full h-full object-cover"
+                unoptimized
+              />
+            </div>
+            {/* Type badge overlay — bottom-right */}
+            <span className={`absolute -bottom-0.5 -right-0.5 w-[18px] h-[18px] rounded-full flex items-center justify-center ring-[1.5px] ring-card-bg ${wrapBg}`}>
+              <Icon className={`w-2.5 h-2.5 ${iconColor}`} strokeWidth={2.5} />
+            </span>
+          </>
+        ) : (
+          <span className={`flex w-10 h-10 items-center justify-center rounded-full ${wrapBg}`}>
+            <Icon className={`w-5 h-5 ${iconColor}`} strokeWidth={2} />
+          </span>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 min-w-0">
+        <p
+          className={`text-[13.5px] leading-snug ${
+            isRead ? 'text-charcoal/55 font-normal' : 'text-charcoal font-semibold'
+          }`}
+          style={{ fontFamily: "'Urbanist', system-ui, sans-serif" }}
+        >
+          {notification.title}
+        </p>
+        {notification.message && (
+          <p
+            className={`text-[12.5px] leading-snug mt-0.5 ${
+              isRead ? 'text-charcoal/38' : 'text-charcoal/58'
+            }`}
+            style={{ fontFamily: "'Urbanist', system-ui, sans-serif" }}
+          >
+            {notification.message}
+          </p>
+        )}
+        <p
+          className={`text-[11px] mt-1.5 font-medium tabular-nums ${
+            isRead ? 'text-charcoal/30' : 'text-charcoal/45'
+          }`}
+          style={{ fontFamily: "'Urbanist', system-ui, sans-serif" }}
+        >
+          {notification.timeAgo} ago
+        </p>
+      </div>
+
+      {/* Hover-reveal actions */}
+      {isPersonal && (
+        <div
+          className="flex-shrink-0 flex items-center gap-0.5 self-start mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {!isRead && (
+            <button
+              type="button"
+              onClick={() => markAsRead?.(notification.id)}
+              className="w-7 h-7 rounded-full flex items-center justify-center text-charcoal/35 hover:bg-sage/10 hover:text-sage transition-colors duration-150"
+              aria-label="Mark as read"
+            >
+              <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => deleteNotification?.(notification.id)}
+            className="w-7 h-7 rounded-full flex items-center justify-center text-charcoal/35 hover:bg-coral/10 hover:text-coral transition-colors duration-150"
+            aria-label="Delete notification"
+          >
+            <X className="w-3.5 h-3.5" strokeWidth={2.5} />
+          </button>
+        </div>
+      )}
+    </m.div>
+  );
+}
+
+/* ── Notification list ───────────────────────────────────────────────────── */
+function NotificationList({
   notifications,
   readNotifications,
   filterType,
@@ -64,51 +220,77 @@ function BusinessNotificationList({
   markAllAsRead,
   deleteNotification,
   isRealtimeConnected = false,
-  renderCard,
 }: NotificationListProps) {
-  const router = useRouter();
-
-  const unreadCount = notifications.filter(n => !readNotifications.has(n.id)).length;
+  const unreadCount = notifications.filter((n) => !readNotifications.has(n.id)).length;
 
   const filtered = useMemo(() => {
     if (filterType === 'All') return notifications;
-    if (filterType === 'Unread') return notifications.filter(n => !readNotifications.has(n.id));
-    return notifications.filter(n => readNotifications.has(n.id));
+    if (filterType === 'Unread') return notifications.filter((n) => !readNotifications.has(n.id));
+    return notifications.filter((n) => readNotifications.has(n.id));
   }, [notifications, readNotifications, filterType]);
+
+  /* Group by time */
+  const grouped = useMemo(() => {
+    const order = ['Today', 'Yesterday', 'This Week', 'Earlier'];
+    const map: Record<string, any[]> = {};
+    for (const n of filtered) {
+      const g = getTimeGroup(n.timeAgo ?? '');
+      if (!map[g]) map[g] = [];
+      map[g].push(n);
+    }
+    return order.filter((g) => map[g]?.length).map((g) => ({ label: g, items: map[g] }));
+  }, [filtered]);
 
   if (notifications.length === 0) {
     return (
-      <div className="flex flex-col flex-1 items-center justify-center py-8 text-center">
+      <div className="flex flex-col items-center justify-center py-20 text-center">
         <div className="w-16 h-16 mb-4 bg-charcoal/8 rounded-full flex items-center justify-center">
-          <Bell className="w-8 h-8 text-charcoal/40" strokeWidth={1.5} />
+          <Bell className="w-8 h-8 text-charcoal/35" strokeWidth={1.5} />
         </div>
-        <p className="text-body-sm text-charcoal/50 font-urbanist">No notifications yet</p>
+        <p
+          className="text-[15px] font-semibold text-charcoal/50"
+          style={{ fontFamily: "'Urbanist', system-ui, sans-serif" }}
+        >
+          No notifications yet
+        </p>
+        <p
+          className="text-[13px] text-charcoal/38 mt-1"
+          style={{ fontFamily: "'Urbanist', system-ui, sans-serif" }}
+        >
+          You'll see updates from your activity here.
+        </p>
       </div>
     );
   }
 
   return (
     <div>
-      {/* Title row */}
+      {/* ── Toolbar: count + live + mark-all ── */}
       <div className="flex items-center justify-between gap-4 flex-wrap mb-4">
         <div className="flex items-center gap-2.5">
-          <p className="text-body-sm text-charcoal/60 font-urbanist">
+          <p
+            className="text-[13px] text-charcoal/55 font-medium"
+            style={{ fontFamily: "'Urbanist', system-ui, sans-serif" }}
+          >
             {filtered.length} {filtered.length === 1 ? 'notification' : 'notifications'}
-            {filterType !== 'All' && ` (${filterType.toLowerCase()})`}
+            {filterType !== 'All' && (
+              <span className="text-charcoal/38"> · {filterType.toLowerCase()}</span>
+            )}
           </p>
           {isRealtimeConnected && <LiveIndicator isLive={isRealtimeConnected} />}
         </div>
         {isPersonal && unreadCount > 0 && (
           <button
             onClick={markAllAsRead}
-            className="px-4 py-2 rounded-lg font-urbanist text-body-sm transition-all duration-200 hover:bg-charcoal/5 text-charcoal/60 hover:text-charcoal whitespace-nowrap"
+            className="text-[13px] font-semibold text-sage hover:text-sage/75 transition-colors duration-150 whitespace-nowrap"
+            style={{ fontFamily: "'Urbanist', system-ui, sans-serif" }}
           >
             Mark all as read
           </button>
         )}
       </div>
 
-      {/* Filter pills */}
+      {/* ── Filter pills ── */}
       <div className="mb-5">
         <FilterPillGroup
           options={[
@@ -124,91 +306,49 @@ function BusinessNotificationList({
         />
       </div>
 
-      {/* Cards */}
+      {/* ── List ── */}
       {filtered.length === 0 ? (
-        <p className="text-center text-body-sm text-charcoal/50 font-urbanist py-10">
+        <p
+          className="text-center text-[13px] text-charcoal/45 py-12"
+          style={{ fontFamily: "'Urbanist', system-ui, sans-serif" }}
+        >
           No {filterType.toLowerCase()} notifications
         </p>
       ) : (
         <AnimatePresence mode="wait" initial={false}>
-          <div className="space-y-0" key={filterType}>
-            {filtered.map((notification, index) => {
-              const isRead = readNotifications.has(notification.id);
-              const Icon = getNotificationIcon(notification.type);
-const hasLink = Boolean(notification.link?.trim());
+          <div key={filterType} className="bg-card-bg rounded-2xl overflow-hidden shadow-sm">
+            {grouped.map((group, gi) => (
+              <div key={group.label}>
+                {/* Group header */}
+                <div className="px-4 py-2 bg-off-white/55 border-b border-charcoal/[0.06]">
+                  <p
+                    className="text-[10.5px] font-bold uppercase tracking-[0.1em] text-charcoal/38"
+                    style={{ fontFamily: "'Urbanist', system-ui, sans-serif" }}
+                  >
+                    {group.label}
+                  </p>
+                </div>
 
-              const card = (
-                <>
-                  <span className="grid flex-shrink-0 h-8 w-8 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
-                    <Icon className="w-4 h-4 text-charcoal/85" strokeWidth={2} />
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <p className={`text-body mb-1 leading-snug font-urbanist ${isRead ? 'text-charcoal/50 font-normal' : 'text-charcoal font-medium'}`}>
-                          {notification.message} {notification.title}
-                        </p>
-                        <div className={`flex items-center gap-1.5 text-caption ${isRead ? 'text-charcoal/40' : 'text-charcoal/60'}`}>
-                          <span className="grid h-5 w-5 flex-shrink-0 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors">
-                            <Clock className="w-2.5 h-2.5 text-charcoal/85" strokeWidth={2} />
-                          </span>
-                          <span className="font-urbanist">{notification.timeAgo} ago</span>
-                        </div>
-                      </div>
-                      {isPersonal && (
-                        <div className="flex items-center gap-0.5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-                          {!isRead && (
-                            <button
-                              type="button"
-                              onClick={() => markAsRead?.(notification.id)}
-                              className="grid h-6 w-6 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors"
-                              aria-label="Mark as read"
-                            >
-                              <Check className="w-3 h-3 text-charcoal/85" strokeWidth={2} />
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => deleteNotification?.(notification.id)}
-                            className="grid h-6 w-6 place-items-center rounded-full bg-off-white/70 hover:bg-off-white/90 transition-colors"
-                            aria-label="Delete notification"
-                          >
-                            <X className="w-3 h-3 text-charcoal/85" strokeWidth={2} />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </>
-              );
+                {/* Rows */}
+                <div className="divide-y divide-charcoal/[0.06]">
+                  {group.items.map((notification) => (
+                    <NotificationRow
+                      key={notification.id}
+                      notification={notification}
+                      isRead={readNotifications.has(notification.id)}
+                      isPersonal={isPersonal}
+                      markAsRead={markAsRead}
+                      deleteNotification={deleteNotification}
+                    />
+                  ))}
+                </div>
 
-              const onClickProps = hasLink ? {
-                onClick: () => router.push(notification.link!),
-                onKeyDown: (e: any) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push(notification.link!); } },
-                role: 'button' as const,
-                tabIndex: 0,
-              } : {};
-
-              if (renderCard) {
-                return renderCard(card, notification, isRead, hasLink, onClickProps);
-              }
-
-              return (
-                <m.div
-                  key={notification.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ delay: index * 0.05 }}
-                  className={`bg-transparent text-charcoal rounded-xl p-3.5 sm:p-4 mb-2.5 last:mb-0 transition-all duration-200 ${
-                    isRead ? 'opacity-60' : 'border border-charcoal/10'
-                  } ${hasLink ? 'cursor-pointer hover:border-navbar-bg/30 hover:shadow-sm' : ''}`}
-                  {...onClickProps}
-                >
-                  <div className="flex items-start gap-3">{card}</div>
-                </m.div>
-              );
-            })}
+                {/* Divider between groups */}
+                {gi < grouped.length - 1 && (
+                  <div className="h-px bg-charcoal/[0.08]" />
+                )}
+              </div>
+            ))}
           </div>
         </AnimatePresence>
       )}
@@ -216,50 +356,7 @@ const hasLink = Boolean(notification.link?.trim());
   );
 }
 
-// Personal-only list with saved-page card styling
-function PersonalNotificationList(props: NotificationListProps) {
-  const { notifications } = props;
-  if (notifications.length === 0) {
-    return (
-      <div
-        className="mx-auto w-full max-w-[2000px] px-2 font-urbanist flex flex-1 items-center justify-center"
-        style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
-      >
-        <div className="text-center w-full">
-          <div className="w-20 h-20 mx-auto mb-6 bg-charcoal/10 rounded-full flex items-center justify-center">
-            <Bell className="w-10 h-10 text-charcoal/60" strokeWidth={1.5} />
-          </div>
-          <h3 className="text-h2 font-semibold text-charcoal mb-2">No notifications yet</h3>
-          <p className="text-body-sm text-charcoal/60 mb-6 max-w-md mx-auto font-medium">
-            You'll see updates from your activity here.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <BusinessNotificationList
-      {...props}
-      renderCard={(content, notification, isRead, hasLink, onClickProps) => (
-        <m.div
-          key={notification.id}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.2 }}
-          className={`bg-card-bg text-charcoal rounded-[12px] p-4 sm:p-5 mb-3 last:mb-0 transition-all duration-200   shadow-md ${
-            isRead ? 'opacity-70' : ''
-          } ${hasLink ? 'cursor-pointer hover:shadow-lg hover:border-navbar-bg/30' : ''}`}
-          {...onClickProps}
-        >
-          <div className="flex items-start gap-3">{content}</div>
-        </m.div>
-      )}
-    />
-  );
-}
-
+/* ── Skeleton ─────────────────────────────────────────────────────────────── */
 function NotificationsPageSkeleton() {
   return (
     <div className="relative z-10 min-h-[100dvh] flex flex-col flex-1 animate-pulse">
@@ -272,7 +369,7 @@ function NotificationsPageSkeleton() {
         <div className="px-2 flex flex-col flex-1">
           <div className="mb-5 flex items-center justify-between gap-4">
             <div className="h-4 w-40 rounded bg-charcoal/10" />
-            <div className="h-8 w-28 rounded-full bg-charcoal/10" />
+            <div className="h-5 w-28 rounded bg-charcoal/10" />
           </div>
 
           <div className="mb-5 flex items-center gap-2">
@@ -281,16 +378,21 @@ function NotificationsPageSkeleton() {
             <div className="h-8 w-16 rounded-full bg-charcoal/10" />
           </div>
 
-          <div className="space-y-3">
+          <div className="bg-card-bg rounded-2xl overflow-hidden shadow-sm">
+            {/* Group header */}
+            <div className="px-4 py-2 bg-off-white/55 border-b border-charcoal/[0.06]">
+              <div className="h-3 w-12 rounded bg-charcoal/10" />
+            </div>
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="rounded-[12px] border border-charcoal/10 bg-card-bg p-4 sm:p-5">
-                <div className="flex items-start gap-3">
-                  <div className="h-8 w-8 rounded-full bg-charcoal/10" />
-                  <div className="flex-1 min-w-0">
-                    <div className="h-4 w-11/12 rounded bg-charcoal/10" />
-                    <div className="mt-2 h-4 w-8/12 rounded bg-charcoal/10" />
-                    <div className="mt-3 h-3 w-28 rounded bg-charcoal/10" />
-                  </div>
+              <div key={i} className="flex items-start gap-3 px-4 py-3.5 border-b border-charcoal/[0.06] last:border-0">
+                <div className="w-3 flex-shrink-0 pt-3">
+                  <div className="w-2 h-2 rounded-full bg-charcoal/10" />
+                </div>
+                <div className="w-10 h-10 rounded-full bg-charcoal/10 flex-shrink-0" />
+                <div className="flex-1 min-w-0 space-y-2">
+                  <div className="h-3.5 w-4/5 rounded bg-charcoal/10" />
+                  <div className="h-3 w-3/5 rounded bg-charcoal/10" />
+                  <div className="h-2.5 w-20 rounded bg-charcoal/10" />
                 </div>
               </div>
             ))}
@@ -301,13 +403,13 @@ function NotificationsPageSkeleton() {
   );
 }
 
+/* ── Page ─────────────────────────────────────────────────────────────────── */
 export default function NotificationsPage() {
   usePredefinedPageTitle('notifications');
   const prefersReducedMotion = useReducedMotion() ?? false;
   const choreoEnabled = !prefersReducedMotion;
   const { user } = useAuth();
-  const userCurrentRole =
-    user?.profile?.account_role || user?.profile?.role || "user";
+  const userCurrentRole = user?.profile?.account_role || user?.profile?.role || "user";
   const isBusinessAccountUser = userCurrentRole === "business_owner";
   const headingTitle = isBusinessAccountUser ? "Business Notifications" : "Your Notifications";
   const headingSubtitle = isBusinessAccountUser
@@ -332,8 +434,6 @@ export default function NotificationsPage() {
     return () => setIsRealtimeConnected(false);
   }, [user?.id]);
 
-  const isLoading = isPersonalLoading;
-
   return (
     <div
       className="min-h-[100dvh] flex flex-col bg-off-white relative font-urbanist"
@@ -345,11 +445,12 @@ export default function NotificationsPage() {
 
       <main className="min-h-[100dvh] flex-1 flex flex-col relative z-10">
         <div className="flex-1 flex flex-col pb-12 sm:pb-16 md:pb-20">
+
+          {/* Breadcrumb */}
           <m.div
             className="mx-auto w-full max-w-[2000px] px-2 relative mb-4"
             {...getChoreoItemMotion({ order: 0, intent: "inline", enabled: choreoEnabled })}
           >
-            {/* Breadcrumb */}
             <nav className="pb-1" aria-label="Breadcrumb">
               <ol className="flex items-center gap-2 text-sm sm:text-base">
                 <li>
@@ -364,15 +465,13 @@ export default function NotificationsPage() {
                   <ChevronRight className="w-4 h-4 text-charcoal/60" />
                 </li>
                 <li>
-                  <span className="text-charcoal font-semibold">
-                    Notifications
-                  </span>
+                  <span className="text-charcoal font-semibold">Notifications</span>
                 </li>
               </ol>
             </nav>
           </m.div>
 
-          {isLoading ? (
+          {isPersonalLoading ? (
             <NotificationsPageSkeleton />
           ) : (
             <m.div
@@ -380,6 +479,7 @@ export default function NotificationsPage() {
               {...getChoreoItemMotion({ order: 1, intent: "section", enabled: choreoEnabled })}
             >
               <div className="mx-auto w-full max-w-[2000px] px-2 flex flex-col flex-1">
+
                 {/* Title */}
                 <m.div
                   className="mb-6 sm:mb-8 px-2"
@@ -399,21 +499,24 @@ export default function NotificationsPage() {
                   </p>
                 </m.div>
 
+                {/* List */}
                 <m.div
                   className="px-2 flex flex-col flex-1"
                   {...getChoreoItemMotion({ order: 3, intent: "section", enabled: choreoEnabled })}
                 >
-                  <PersonalNotificationList
+                  <NotificationList
                     notifications={personalNotifications}
                     readNotifications={personalReadNotifications}
                     filterType={personalFilter}
                     setFilterType={setPersonalFilter}
-                    isPersonal={true}
+                    isPersonal={!isBusinessAccountUser}
                     markAsRead={markAsRead}
                     markAllAsRead={markAllAsRead}
                     deleteNotification={deleteNotification}
+                    isRealtimeConnected={isRealtimeConnected}
                   />
                 </m.div>
+
               </div>
             </m.div>
           )}
