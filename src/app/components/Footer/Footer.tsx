@@ -200,7 +200,7 @@ export default function Footer() {
             ))}
 
             {/* Download App CTA */}
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2">
               <p className="font-urbanist text-sm text-off-white font-700">
                 Get The App
               </p>
