@@ -125,7 +125,7 @@ export function PersonalHeaderRole({
             <button
               type="button"
               onClick={handleMobileSearchToggle}
-              className={`w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
+              className={`w-10 h-10 flex items-center justify-center rounded-full transition-all duration-200 ${
                 whiteText ? "text-white hover:text-white/80" : "text-charcoal/80 hover:text-sage"
               }`}
               aria-label="Open search"
@@ -138,7 +138,7 @@ export function PersonalHeaderRole({
             <div className="relative">
               <OptimizedLink
                 href={isGuest ? "/onboarding" : "/notifications"}
-                className={`z-[2] w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 cursor-pointer pointer-events-auto select-none ${
+                className={`z-[2] w-10 h-10 flex items-center justify-center rounded-full transition-all duration-200 cursor-pointer pointer-events-auto select-none ${
                   isNotificationsActive
                     ? "text-sage bg-card-bg/5"
                     : whiteText
@@ -161,7 +161,7 @@ export function PersonalHeaderRole({
             <div className="relative">
               <OptimizedLink
                 href={messagesHref}
-                className={`z-[2] w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 cursor-pointer pointer-events-auto select-none ${
+                className={`z-[2] w-10 h-10 flex items-center justify-center rounded-full transition-all duration-200 cursor-pointer pointer-events-auto select-none ${
                   isMessagesActive
                     ? "text-sage bg-card-bg/5"
                     : whiteText
@@ -184,7 +184,7 @@ export function PersonalHeaderRole({
             <button
               type="button"
               onClick={() => setIsMobileMenuOpen(true)}
-              className={`w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 ${
+              className={`w-10 h-10 flex items-center justify-center rounded-full transition-all duration-200 ${
                 whiteText ? "text-white hover:text-white/80" : "text-charcoal/80 hover:text-sage"
               }`}
               aria-label="Open menu"
