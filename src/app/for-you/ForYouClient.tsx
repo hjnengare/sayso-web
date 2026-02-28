@@ -224,8 +224,11 @@ export default function ForYouClient({
   }, [refetch]);
 
   const combinedError = error ?? (hasClientFetchSettled ? null : initialError);
-  const shouldShowSkeleton = !hasInitialBusinesses && (loading || prefsLoading || simpleSearchLoading);
-  const canRenderResults = !simpleSearchLoading && (!prefsLoading || hasInitialBusinesses);
+  // Show skeleton until we have SSR data OR the first client fetch cycle has settled.
+  // Without !hasClientFetchSettled, the empty-state CTA flashes before the fetch fires on
+  // client-side navigation (loading is still false at the initial render).
+  const shouldShowSkeleton = !hasInitialBusinesses && (!hasClientFetchSettled || loading || prefsLoading || simpleSearchLoading);
+  const canRenderResults = hasClientFetchSettled && !simpleSearchLoading && (!prefsLoading || hasInitialBusinesses);
   const canShowError = !!combinedError && !loading && canRenderResults;
 
   // Note: Prioritization of recently reviewed businesses is now handled on the backend
