@@ -676,7 +676,7 @@ function ProfileContent() {
                                       alt={displayLabel}
                                       width={120}
                                       height={120}
-                                      className="w-24 h-24 sm:w-32 sm:h-32 object-cover rounded-full border-4 border-coral shadow-xl"
+                                      className="w-24 h-24 sm:w-32 sm:h-32 object-cover rounded-full shadow-xl"
                                       priority
                                       onError={() => setImgError(true)}
                                     />
@@ -689,7 +689,7 @@ function ProfileContent() {
                                     )}
                                   </div>
                                 ) : (
-                                  <div className="w-24 h-24 sm:w-32 sm:h-32 flex items-center justify-center bg-off-white/80 rounded-full border-4 border-coral shadow-xl">
+                                  <div className="w-24 h-24 sm:w-32 sm:h-32 flex items-center justify-center bg-off-white/80 rounded-full shadow-xl">
                                     <User className="text-charcoal/80" size={44} strokeWidth={2.5} />
                                   </div>
                                 )}
