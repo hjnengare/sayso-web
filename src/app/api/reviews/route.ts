@@ -878,7 +878,7 @@ export async function POST(req: NextRequest) {
       };
     }
 
-    // Cache invalidation and revalidation: so business detail and lists show fresh data after post
+    // Cache invalidation and revalidation: so business, event, and special pages show fresh data after post
     try {
       if (resolvedBusiness?.id) {
         invalidateBusinessCache(resolvedBusiness.id, resolvedBusiness.slug ?? undefined);
@@ -889,6 +889,12 @@ export async function POST(req: NextRequest) {
         if (process.env.NODE_ENV !== 'production') {
           console.log('[Review API] Revalidation done', { businessId: resolvedBusiness.id, slug: resolvedBusiness.slug ?? null });
         }
+      }
+      // Revalidate the event or special detail page so the rating updates immediately
+      if (reviewType === 'event' && targetId) {
+        revalidatePath(`/event/${targetId}`);
+      } else if (reviewType === 'special' && targetId) {
+        revalidatePath(`/special/${targetId}`);
       }
       // Also revalidate profile page for logged-in users
       if (!isAnonymous) {

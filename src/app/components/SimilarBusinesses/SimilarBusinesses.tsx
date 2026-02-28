@@ -181,6 +181,7 @@ export default function SimilarBusinesses({
                 startDelayMs={300}
                 waveVariant="subtle"
                 loopWave={true}
+                disableWave={true}
                 style={{
                   fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
                 }}
@@ -243,6 +244,7 @@ export default function SimilarBusinesses({
               loopWave={false}
               triggerOnTypingComplete={false}
               enableScrollTrigger={true}
+              disableWave={true}
               style={{
                 fontFamily: "'Urbanist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
               }}

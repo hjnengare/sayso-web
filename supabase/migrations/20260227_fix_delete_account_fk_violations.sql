@@ -7,7 +7,8 @@
 -- audit trail is preserved while the deletion proceeds cleanly.
 --
 -- Tables / columns fixed:
---   business_ownership_requests  reviewed_by, verified_by
+--   business_ownership_requests  reviewed_by
+--   business_owners              verified_by
 --   business_claims              reviewed_by
 --   business_claim_documents     reviewed_by
 --   businesses                   approved_by, rejected_by
@@ -21,11 +22,11 @@ ALTER TABLE public.business_ownership_requests
   ADD CONSTRAINT business_ownership_requests_reviewed_by_fkey
   FOREIGN KEY (reviewed_by) REFERENCES auth.users(id) ON DELETE SET NULL;
 
--- business_ownership_requests.verified_by
-ALTER TABLE public.business_ownership_requests
-  DROP CONSTRAINT IF EXISTS business_ownership_requests_verified_by_fkey;
-ALTER TABLE public.business_ownership_requests
-  ADD CONSTRAINT business_ownership_requests_verified_by_fkey
+-- business_owners.verified_by
+ALTER TABLE public.business_owners
+  DROP CONSTRAINT IF EXISTS business_owners_verified_by_fkey;
+ALTER TABLE public.business_owners
+  ADD CONSTRAINT business_owners_verified_by_fkey
   FOREIGN KEY (verified_by) REFERENCES auth.users(id) ON DELETE SET NULL;
 
 -- business_claims.reviewed_by
