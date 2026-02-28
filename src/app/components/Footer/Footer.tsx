@@ -91,6 +91,7 @@ export default function Footer() {
       title: "Community",
       links: [
         { name: "Badges", href: "/badges" },
+        { name: "Achievements", href: "/achievements" },
         { name: "For You", href: "/for-you" },
         { name: "Saved", href: "/saved" },
       ],
