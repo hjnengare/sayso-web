@@ -22,7 +22,8 @@ export type NotificationType =
   | 'claim_approved'
   | 'comment_reply'
   | 'photo_approved'
-  | 'milestone_achievement';
+  | 'milestone_achievement'
+  | 'event_reminder';
 
 interface CreateNotificationParams {
   userId: string;

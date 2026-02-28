@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use, useRef } from "react";
+import { useState, useEffect, use, useRef, useCallback } from "react";
 import { useEventDetail } from "../../hooks/useEventDetail";
 import { useEventReviews } from "../../hooks/useEventReviews";
 import { useEventRatings } from "../../hooks/useEventRatings";
@@ -40,6 +40,7 @@ interface EventDetailPageProps {
 export default function EventDetailPage({ params }: EventDetailPageProps) {
   const hasReviewed = false;
   const mapSectionRef = useRef<HTMLDivElement>(null);
+  const [relatedEvents, setRelatedEvents] = useState<Event[]>([]);
 
   const scrollToMap = () => {
     mapSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -67,6 +68,15 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
   );
 
   const isNotFound = errorStatus === 404 || (event !== null && event.type !== "event" && event.type !== "special");
+
+  // Fetch related events once the main event is loaded
+  useEffect(() => {
+    if (!event?.id) return;
+    fetch(`/api/events-and-specials/${event.id}/related?limit=4`)
+      .then((r) => r.json())
+      .then((data) => setRelatedEvents(data.events ?? []))
+      .catch(() => {});
+  }, [event?.id]);
 
   const hasDirectCta =
     Boolean(event?.bookingUrl || event?.purchaseUrl || (event as any)?.ticketmaster_url || (event as any)?.url) ||
@@ -181,6 +191,65 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
                       <EventInfo event={event} sharedTitleLayoutId={eventTitleLayoutId} />
                       <EventDescription event={event} />
                       <EventDetailsCard event={event} />
+
+                      {/* Related Events */}
+                      {relatedEvents.length > 0 && (
+                        <div className="bg-gradient-to-br from-card-bg via-card-bg to-card-bg/95 backdrop-blur-xl border-none rounded-[12px] shadow-md p-4 sm:p-6">
+                          <h3
+                            className="text-h3 font-semibold text-charcoal mb-4"
+                            style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                          >
+                            More {event.type === 'special' ? 'Specials' : 'Events'} Near You
+                          </h3>
+                          <ul className="space-y-3">
+                            {relatedEvents.map((rel) => (
+                              <li key={rel.id}>
+                                <Link
+                                  href={rel.href ?? `/event/${rel.id}`}
+                                  className="flex items-center gap-3 group"
+                                >
+                                  <div className="w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-charcoal/5">
+                                    {rel.image ? (
+                                      <img
+                                        src={rel.image}
+                                        alt={rel.title}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center text-charcoal/30 text-lg">
+                                        🎟
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <p
+                                      className="text-sm font-semibold text-charcoal group-hover:text-navbar-bg transition-colors line-clamp-1"
+                                      style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                                    >
+                                      {rel.title}
+                                    </p>
+                                    <p
+                                      className="text-xs text-charcoal/60 line-clamp-1"
+                                      style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+                                    >
+                                      {rel.startDate}{rel.city ? ` · ${rel.city}` : ''}
+                                    </p>
+                                  </div>
+                                  {rel.availabilityStatus && (
+                                    <span className={`flex-shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                      rel.availabilityStatus === 'sold_out'
+                                        ? 'bg-coral/15 text-coral'
+                                        : 'bg-amber-500/15 text-amber-600'
+                                    }`} style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+                                      {rel.availabilityStatus === 'sold_out' ? 'Sold Out' : 'Limited'}
+                                    </span>
+                                  )}
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
 
                       {(() => {
                         // Compute the current event's date label to exclude from "More dates"

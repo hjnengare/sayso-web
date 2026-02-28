@@ -246,11 +246,11 @@ export default function SpecialDetailPage({ params }: SpecialDetailPageProps) {
                   src={special.image || "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=1920&h=1080&fit=crop&crop=center&q=90"}
                   alt={special.alt || special.title}
                   fill
-                  className="object-contain"
+                  className="object-cover"
                   priority
                   quality={80}
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 1080px"
-                  style={{ objectFit: 'contain' }}
+                  style={{ objectFit: 'cover' }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
                 

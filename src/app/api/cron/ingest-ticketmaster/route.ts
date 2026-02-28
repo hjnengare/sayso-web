@@ -20,6 +20,7 @@ interface TmEvent {
   dates?: {
     start?: { dateTime?: string; localDate?: string };
     end?: { dateTime?: string; localDate?: string };
+    status?: { code?: string };
   };
   _embedded?: {
     venues?: Array<{
@@ -55,6 +56,7 @@ interface EventRow {
   rating: number;
   booking_url: string | null;
   booking_contact: null;
+  availability_status: 'sold_out' | null;
 }
 
 interface BatchFailure {
@@ -255,6 +257,7 @@ function mapEvent(event: TmEvent, bizId: string, userId: string): EventRow | nul
     rating: 0,
     booking_url: event.url ?? null,
     booking_contact: null,
+    availability_status: ['offsale', 'cancelled'].includes(event.dates?.status?.code ?? '') ? 'sold_out' : null,
   };
 }
 

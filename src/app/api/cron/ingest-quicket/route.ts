@@ -58,6 +58,7 @@ interface EventRow {
   rating: number;
   booking_url: string | null;
   booking_contact: null;
+  availability_status: 'sold_out' | 'limited' | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -124,6 +125,14 @@ function matchesCity(event: QuicketEvent): boolean {
   const addr = (event.venue?.addressLine1 ?? "").toLowerCase();
   if (cityLower.some((c) => addr.includes(c))) return true;
   return false;
+}
+
+function getAvailabilityStatus(tickets: QuicketEvent["tickets"]): 'sold_out' | 'limited' | null {
+  const nd = tickets?.filter((t) => !t.donation);
+  if (!nd?.length) return null;
+  if (nd.every((t) => t.soldOut === true)) return 'sold_out';
+  if (nd.some((t) => t.soldOut === true)) return 'limited';
+  return null;
 }
 
 function getCheapestPrice(tickets: QuicketEvent["tickets"]): number | null {
@@ -272,6 +281,7 @@ function mapEvent(event: QuicketEvent, bizId: string, userId: string): EventRow 
     rating: 0,
     booking_url: event.url || null,
     booking_contact: null,
+    availability_status: getAvailabilityStatus(event.tickets),
   };
 }
 
@@ -288,6 +298,9 @@ function consolidate(rows: EventRow[]): EventRow[] {
     if (row.image && !existing.image) existing.image = row.image;
     if (row.booking_url && !existing.booking_url) existing.booking_url = row.booking_url;
     if (row.price != null && (existing.price == null || row.price < existing.price)) existing.price = row.price;
+    // Escalate availability: sold_out > limited > null
+    if (row.availability_status === 'sold_out') existing.availability_status = 'sold_out';
+    else if (row.availability_status === 'limited' && existing.availability_status == null) existing.availability_status = 'limited';
   }
   return Array.from(map.values());
 }

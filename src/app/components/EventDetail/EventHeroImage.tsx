@@ -85,8 +85,21 @@ export default function EventHeroImage({
         </span>
       </div>
 
+      {/* Availability badge */}
+      {event.availabilityStatus && (
+        <div className="absolute top-6 right-6 z-20">
+          <span className={`px-3 py-1.5 rounded-full text-sm font-semibold backdrop-blur-xl ${
+            event.availabilityStatus === 'sold_out'
+              ? 'bg-coral/90 text-white'
+              : 'bg-amber-500/90 text-white'
+          }`} style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
+            {event.availabilityStatus === 'sold_out' ? 'Sold Out' : 'Limited Spots'}
+          </span>
+        </div>
+      )}
+
       {event.rating != null && (
-        <div className="absolute top-6 right-6 z-20 inline-flex items-center gap-1 rounded-full bg-off-white/95 backdrop-blur-xl px-3 py-1.5 text-charcoal border-none">
+        <div className={`absolute top-6 z-20 inline-flex items-center gap-1 rounded-full bg-off-white/95 backdrop-blur-xl px-3 py-1.5 text-charcoal border-none ${event.availabilityStatus ? 'right-36' : 'right-6'}`}>
           <GoldStar size={14} className="w-3.5 h-3.5" />
           <span className="text-body-sm font-semibold text-charcoal" style={{ 
             fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', 

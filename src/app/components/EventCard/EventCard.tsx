@@ -628,6 +628,22 @@ function EventCard({
                 Community-hosted event
               </span>
             )}
+            {event.availabilityStatus === 'sold_out' && (
+              <span
+                className="inline-flex items-center px-2.5 py-1 rounded-full bg-coral/15 text-coral text-sm font-semibold w-fit"
+                style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
+              >
+                Sold Out
+              </span>
+            )}
+            {event.availabilityStatus === 'limited' && (
+              <span
+                className="inline-flex items-center px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-600 text-sm font-semibold w-fit"
+                style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', fontWeight: 600 }}
+              >
+                Limited Spots
+              </span>
+            )}
             {/* Review count - same styling as Business Card */}
             <div className="flex flex-col items-center gap-1 mb-0.5 pt-1" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
               <div className="inline-flex items-center justify-center gap-1 min-h-[12px]">

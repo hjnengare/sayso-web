@@ -43,6 +43,7 @@ export type EventsAndSpecialsRow = {
   cta_source?: "website" | "whatsapp" | "quicket" | "webtickets" | "other" | null;
   whatsapp_number?: string | null;
   whatsapp_prefill_template?: string | null;
+  availability_status?: 'sold_out' | 'limited' | null;
 };
 
 export function mapEventsAndSpecialsRowToEventCard(
@@ -114,5 +115,6 @@ export function mapEventsAndSpecialsRowToEventCard(
     ...(computedRange ? { date_range_label: computedRange } : null),
     href: row.type === "event" ? `/event/${row.id}` : `/special/${row.id}`,
     source: "business",
+    availabilityStatus: row.availability_status ?? null,
   };
 }

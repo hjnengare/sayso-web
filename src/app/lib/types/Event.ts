@@ -44,4 +44,5 @@ export interface Event {
   createdBy?: string;
   createdAt?: string;
   isBusinessOwned?: boolean;
+  availabilityStatus?: 'sold_out' | 'limited' | null;
 }
