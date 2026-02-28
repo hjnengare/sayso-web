@@ -473,50 +473,59 @@ export default function HeroCarousel() {
       }
     : {
         hidden: {},
-        visible: { transition: { staggerChildren: 0.15, delayChildren: 0.2 } },
+        visible: { transition: { staggerChildren: 0.2, delayChildren: 0.15 } },
       };
+
+  // Title: dramatic scale + large Y travel + heavy blur → feels cinematic
   const heroTitleEntranceVariants = prefersReduced
     ? {
         hidden: { opacity: 0 },
         visible: { opacity: 1, transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] as const } },
       }
     : {
-        hidden: { opacity: 0, y: 20, filter: "blur(4px)" },
+        hidden: { opacity: 0, y: 32, scale: 0.95, filter: "blur(8px)" },
         visible: {
           opacity: 1,
           y: 0,
+          scale: 1,
           filter: "blur(0px)",
-          transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] as const },
+          transition: { duration: 0.75, ease: [0.16, 1, 0.3, 1] as const },
         },
       };
+
+  // Subtitle: clean slide-up, no scale, lighter blur → refined, not competing with title
   const heroSubtitleEntranceVariants = prefersReduced
     ? {
         hidden: { opacity: 0 },
         visible: { opacity: 1, transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] as const } },
       }
     : {
-        hidden: { opacity: 0, y: 20, filter: "blur(4px)" },
+        hidden: { opacity: 0, y: 22, filter: "blur(3px)" },
         visible: {
           opacity: 1,
           y: 0,
           filter: "blur(0px)",
-          transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] as const },
+          transition: { duration: 0.65, ease: [0.22, 1, 0.36, 1] as const },
         },
       };
+
+  // CTA: spring overshoot pop, no blur → physical, tactile feel
   const heroCtaEntranceVariants = prefersReduced
     ? {
         hidden: { opacity: 0 },
         visible: { opacity: 1, transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] as const } },
       }
     : {
-        hidden: { opacity: 0, y: 20, filter: "blur(4px)" },
+        hidden: { opacity: 0, y: 16, scale: 0.91 },
         visible: {
           opacity: 1,
           y: 0,
-          filter: "blur(0px)",
-          transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] as const },
+          scale: 1,
+          transition: { duration: 0.55, ease: [0.34, 1.56, 0.64, 1] as const },
         },
       };
+
+  // Swap: richer crossfade when carousel advances to next slide
   const heroTitleSwapMotion = prefersReduced
     ? {
         initial: { opacity: 0 },
@@ -525,10 +534,10 @@ export default function HeroCarousel() {
         transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] as const },
       }
     : {
-        initial: { opacity: 0, y: 8, filter: "blur(2px)" },
-        animate: { opacity: 1, y: 0, filter: "blur(0px)" },
-        exit: { opacity: 0, y: -6, filter: "blur(2px)" },
-        transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] as const },
+        initial: { opacity: 0, y: 14, scale: 0.97, filter: "blur(3px)" },
+        animate: { opacity: 1, y: 0, scale: 1, filter: "blur(0px)" },
+        exit: { opacity: 0, y: -10, scale: 1.02, filter: "blur(3px)" },
+        transition: { duration: 0.38, ease: [0.22, 1, 0.36, 1] as const },
       };
   const heroSubtitleSwapMotion = prefersReduced
     ? {
@@ -538,10 +547,10 @@ export default function HeroCarousel() {
         transition: { duration: 0.18, ease: [0.22, 1, 0.36, 1] as const },
       }
     : {
-        initial: { opacity: 0, y: 6, filter: "blur(1.5px)" },
+        initial: { opacity: 0, y: 10, filter: "blur(2px)" },
         animate: { opacity: 1, y: 0, filter: "blur(0px)" },
-        exit: { opacity: 0, y: -4, filter: "blur(1.5px)" },
-        transition: { duration: 0.26, ease: [0.22, 1, 0.36, 1] as const },
+        exit: { opacity: 0, y: -6, filter: "blur(2px)" },
+        transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] as const },
       };
 
   return (
@@ -620,8 +629,8 @@ export default function HeroCarousel() {
             variants={heroTextStaggerVariants}
           >
             <m.h2
-              className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-off-white drop-shadow-lg mb-3 sm:mb-4 leading-tight tracking-tight whitespace-pre-line [word-break:normal] [overflow-wrap:normal] [hyphens:none]"
-              style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}
+              className="text-[2rem] sm:text-4xl lg:text-5xl xl:text-6xl font-extrabold text-off-white drop-shadow-lg mb-3 sm:mb-4 leading-[1.1] tracking-[-0.02em] whitespace-pre-line [word-break:normal] [overflow-wrap:normal] [hyphens:none]"
+              style={{ fontFamily: 'Urbanist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif', textShadow: '0 2px 24px rgba(0,0,0,0.4)' }}
               variants={heroTitleEntranceVariants}
             >
               <span className="inline-grid items-center justify-items-center whitespace-pre-line [word-break:normal] [overflow-wrap:normal] [hyphens:none]">
